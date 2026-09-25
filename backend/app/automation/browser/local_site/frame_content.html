@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Embedded Frame Content</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #fffbe6; padding: 10px; margin: 0; }
+        .frame-status { font-weight: bold; color: #d46b08; }
+    </style>
+</head>
+<body>
+    <div id="frame_status" data-testid="frame_status" role="status" class="frame-status">FRAME_READY</div>
+    <button id="btn_frame_action" data-testid="btn_frame_action" role="button" onclick="document.getElementById('frame_status').innerText = 'FRAME_ACTION_EXECUTED';">Frame Action Button</button>
+</body>
+</html>

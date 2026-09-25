@@ -44,6 +44,12 @@ class BrowserAutomationWorker:
             )
         return self.target_page.get_dom_snapshot(), None
 
+    def observe_node(self, target_identity: str) -> ObservedState:
+        """Observe physical state of target node."""
+        if self.is_crashed:
+            return ObservedState(target_found=False, window_title="Worker Unavailable")
+        return self.target_page.observe_node(target_identity)
+
     def execute_action(
         self,
         action: ExecutionAction,

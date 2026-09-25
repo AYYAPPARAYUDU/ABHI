@@ -93,7 +93,50 @@ class SafetyPolicyEngine:
                     task_id=action.task_id
                 )
 
-        # 4. Check Risk Tier & Human Consent Gate
+        # 4. Browser Specific Policy Checks
+        if action.action_type == ActionType.BROWSER_NAVIGATE or "url" in action.parameters:
+            target_url = action.parameters.get("url", "").strip().lower()
+            if target_url:
+                allowed = any(target_url.startswith(prefix) for prefix in ["http://127.0.0.1", "http://localhost", "file://"])
+                if not allowed:
+                    return False, AutomationError(
+                        error_code=AutomationErrorCode.POLICY_DENIED,
+                        message=f"Navigation to external or unauthorized origin '{target_url}' is prohibited in Stage 5.3.",
+                        action_id=action.action_id,
+                        task_id=action.task_id
+                    )
+
+        if action.action_type == ActionType.BROWSER_FILL:
+            target_id = action.grounding.target_identity.lower()
+            meta_str = str(action.grounding.metadata).lower()
+            params_str = str(action.parameters).lower()
+            sensitive_keywords = ["password", "credit_card", "secret", "cvv", "ssn", "auth_token", "api_key", "pin"]
+            for s_word in sensitive_keywords:
+                if s_word in target_id or s_word in meta_str or s_word in params_str:
+                    return False, AutomationError(
+                        error_code=AutomationErrorCode.POLICY_DENIED,
+                        message=f"Interaction with sensitive/credential field containing '{s_word}' is strictly prohibited by policy.",
+                        action_id=action.action_id,
+                        task_id=action.task_id
+                    )
+
+        if action.action_type in [ActionType.KEY_COMBINATION, ActionType.BROWSER_PRESS_KEY]:
+            key = action.parameters.get("key_combination") or action.parameters.get("key")
+            if key:
+                normalized_key = key.strip().upper()
+                approved_keys = {
+                    "ENTER", "ESCAPE", "TAB", "ARROW_UP", "ARROW_DOWN", "ARROW_LEFT", "ARROW_RIGHT",
+                    "CTRL+A", "CTRL+C", "CTRL+V", "CTRL+Z", "CTRL+S", "SPACE", "BACKSPACE"
+                }
+                if normalized_key not in approved_keys:
+                    return False, AutomationError(
+                        error_code=AutomationErrorCode.POLICY_DENIED,
+                        message=f"Key combination '{key}' is not permitted by policy whitelist.",
+                        action_id=action.action_id,
+                        task_id=action.task_id
+                    )
+
+        # 5. Check Risk Tier & Human Consent Gate
         if action.risk_tier in ["Tier 3", "Tier 4", "CRITICAL", "HIGH"]:
             if not user_consent_granted:
                 return False, AutomationError(

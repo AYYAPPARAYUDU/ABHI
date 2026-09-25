@@ -167,7 +167,7 @@ def test_stage5_2_approved_and_unapproved_key_combinations(uia_pipeline):
     )
     res_invalid = pipe.run_desktop_action(action_invalid)
     assert res_invalid.is_success is False
-    assert res_invalid.stage_reached == "PHYSICAL_EXECUTION"
+    assert res_invalid.stage_reached == "POLICY_VALIDATION"
     assert res_invalid.error.error_code == AutomationErrorCode.POLICY_DENIED
 
 

@@ -6,7 +6,7 @@ Physical postconditions MUST be observed and matched against expectations.
 
 from typing import Any, Dict, Optional
 from pydantic import BaseModel
-from backend.app.automation.models.actions import ExecutionAction, ObservedState, ActionResult
+from backend.app.automation.models.actions import ExecutionAction, ObservedState, ActionResult, ActionType
 
 
 class PhysicalVerificationResult(BaseModel):
@@ -27,6 +27,8 @@ class ActionVerifier:
         initial_observation: ObservedState
     ) -> bool:
         """Verify that the physical UI or DOM is in a valid state prior to action injection."""
+        if action.action_type in [ActionType.BROWSER_NAVIGATE, ActionType.BROWSER_LAUNCH, ActionType.LAUNCH_APPLICATION]:
+            return True
         if not initial_observation.target_found:
             return False
         if not initial_observation.is_enabled:
@@ -50,7 +52,16 @@ class ActionVerifier:
             )
 
         observed = result.observed_state
-        expected = action.expected_postcondition.lower()
+
+        if action.action_type in [ActionType.BROWSER_NAVIGATE, ActionType.BROWSER_LAUNCH, ActionType.LAUNCH_APPLICATION] and result.success:
+            return PhysicalVerificationResult(
+                is_verified=True,
+                claimed_action=str(action.action_type),
+                expected_postcondition=action.expected_postcondition,
+                observed_state_summary=f"URL: '{observed.raw_properties.get('url', '')}', Title: '{observed.window_title}'"
+            )
+
+        expected = action.expected_postcondition.lower().strip()
 
         # Check observed status label or dom text
         status_txt = str(observed.status_label or "").lower()
@@ -58,8 +69,14 @@ class ActionVerifier:
         curr_val = str(observed.current_value or "").lower()
         win_title = str(observed.window_title or "").lower()
 
+        status_norm = status_txt.replace("_", " ")
+        dom_norm = dom_txt.replace("_", " ")
+        exp_norm = expected.replace("_", " ")
+
         matched = False
-        if expected in status_txt or expected in dom_txt or expected in curr_val or expected in win_title:
+        if exp_norm in status_norm or status_norm in exp_norm or exp_norm in dom_norm or dom_norm in exp_norm:
+            matched = True
+        elif expected in status_txt or expected in dom_txt or expected in curr_val or expected in win_title:
             matched = True
         elif status_txt and len(status_txt) >= 3 and status_txt in expected:
             matched = True

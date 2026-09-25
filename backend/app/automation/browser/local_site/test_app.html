@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deterministic Local Automation Test Website v1.0</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f4f6f9;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .status-box {
+            padding: 12px;
+            margin: 16px 0;
+            background: #e9ecef;
+            border-left: 4px solid #007bff;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 18px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .ambiguous-group {
+            margin-top: 20px;
+            padding: 12px;
+            border: 1px dashed #dc3545;
+            background: #fff5f5;
+        }
+        iframe {
+            width: 100%;
+            height: 120px;
+            border: 1px solid #ddd;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Local Automation Test Website</h1>
+        <p>Deterministic test target for Phase 5 Stage 5.3 Playwright automation.</p>
+
+        <div id="status_box" data-testid="status_box" role="status" class="status-box">READY</div>
+
+        <div class="form-group">
+            <label for="txt_message">Message Input</label>
+            <input type="text" id="txt_message" name="message" data-testid="txt_message" placeholder="Type your message" aria-label="Message Input" />
+        </div>
+
+        <div class="form-group">
+            <button id="btn_execute" data-testid="btn_execute" role="button">Execute Action</button>
+            <button id="btn_reset" data-testid="btn_reset" role="button">Reset All</button>
+            <button id="btn_disabled" data-testid="btn_disabled" role="button" disabled>Disabled Action</button>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" id="chk_enabled" data-testid="chk_enabled" aria-label="Enable Feature" />
+                Enable Feature
+            </label>
+        </div>
+
+        <div class="form-group">
+            <label for="sel_category">Category Selection</label>
+            <select id="sel_category" data-testid="sel_category" aria-label="Category Selection">
+                <option value="opt_default">Default Option</option>
+                <option value="opt_alpha">Alpha Tier</option>
+                <option value="opt_beta">Beta Tier</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <a id="link_next" data-testid="link_next" href="subpage.html">Go to Subpage</a>
+        </div>
+
+        <hr />
+
+        <h3>Deterministic Form</h3>
+        <form id="test_form" data-testid="test_form" onsubmit="event.preventDefault(); document.getElementById('status_box').innerText = 'FORM_SUBMITTED:' + document.getElementById('form_username').value;">
+            <div class="form-group">
+                <label for="form_username">Form Username</label>
+                <input type="text" id="form_username" name="username" data-testid="form_username" placeholder="Username" aria-label="Form Username" />
+            </div>
+            <button type="submit" id="btn_submit_form" data-testid="btn_submit_form" role="button">Submit Form</button>
+        </form>
+
+        <hr />
+
+        <h3>Sensitive Credential Field (For Policy Block Testing)</h3>
+        <div class="form-group">
+            <label for="txt_password">Password</label>
+            <input type="password" id="txt_password" name="password" data-testid="txt_password" placeholder="Password" />
+        </div>
+
+        <hr />
+
+        <div class="ambiguous-group">
+            <h4>Intentionally Ambiguous Elements (For Ambiguity Detection Testing)</h4>
+            <button class="duplicate-btn" role="button">Ambiguous Action</button>
+            <button class="duplicate-btn" role="button">Ambiguous Action</button>
+        </div>
+
+        <hr />
+
+        <h3>Embedded IFrame Target</h3>
+        <iframe id="test_frame" name="test_frame" src="frame_content.html" title="Test Embedded Frame"></iframe>
+    </div>
+
+    <script>
+        const statusBox = document.getElementById('status_box');
+        const txtMsg = document.getElementById('txt_message');
+        const btnExec = document.getElementById('btn_execute');
+        const btnReset = document.getElementById('btn_reset');
+        const chkEnabled = document.getElementById('chk_enabled');
+        const selCategory = document.getElementById('sel_category');
+
+        btnExec.addEventListener('click', () => {
+            statusBox.innerText = 'EXECUTED';
+        });
+
+        btnReset.addEventListener('click', () => {
+            statusBox.innerText = 'READY';
+            txtMsg.value = '';
+            chkEnabled.checked = false;
+            selCategory.value = 'opt_default';
+        });
+
+        chkEnabled.addEventListener('change', () => {
+            statusBox.innerText = chkEnabled.checked ? 'CHECKBOX_CHECKED' : 'CHECKBOX_UNCHECKED';
+        });
+
+        selCategory.addEventListener('change', () => {
+            statusBox.innerText = 'CATEGORY_SELECTED:' + selCategory.value;
+        });
+
+        txtMsg.addEventListener('input', () => {
+            statusBox.innerText = 'TEXT_ENTERED:' + txtMsg.value;
+        });
+    </script>
+</body>
+</html>

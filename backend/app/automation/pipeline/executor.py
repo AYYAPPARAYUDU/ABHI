@@ -95,7 +95,21 @@ class ExecutionPipeline:
                 error=lease_err
             )
 
-        # 3. Target Grounding Verification
+        # 3. Worker Crash Check
+        if getattr(self.windows_worker, "is_crashed", False):
+            return PipelineExecutionResult(
+                is_success=False,
+                action_id=action.action_id,
+                stage_reached="PHYSICAL_EXECUTION",
+                error=AutomationError(
+                    error_code=AutomationErrorCode.WORKER_UNAVAILABLE,
+                    message="Windows Automation Worker process is unavailable / crashed.",
+                    action_id=action.action_id,
+                    task_id=action.task_id
+                )
+            )
+
+        # 4. Target Grounding Verification
         if action.grounding.confidence < 0.70:
             return PipelineExecutionResult(
                 is_success=False,
@@ -195,8 +209,34 @@ class ExecutionPipeline:
                 error=lease_err
             )
 
-        # 3. Precondition Verification
-        initial_obs = self.browser_worker.target_page.observe_node(action.grounding.target_identity)
+        # 3. Worker Crash Check
+        if getattr(self.browser_worker, "is_crashed", False):
+            return PipelineExecutionResult(
+                is_success=False,
+                action_id=action.action_id,
+                stage_reached="PHYSICAL_EXECUTION",
+                error=AutomationError(
+                    error_code=AutomationErrorCode.WORKER_UNAVAILABLE,
+                    message="Browser Automation Worker process is unavailable / crashed.",
+                    action_id=action.action_id,
+                    task_id=action.task_id
+                )
+            )
+
+        # 4. Precondition Verification
+        meta = action.grounding.metadata or {}
+        frame_id = meta.get("frame_identity") or action.parameters.get("frame_identity")
+
+        if hasattr(self.browser_worker, "observe_node"):
+            try:
+                initial_obs = self.browser_worker.observe_node(action.grounding.target_identity, frame_identity=frame_id)
+            except TypeError:
+                initial_obs = self.browser_worker.observe_node(action.grounding.target_identity)
+        elif hasattr(self.browser_worker, "target_page"):
+            initial_obs = self.browser_worker.target_page.observe_node(action.grounding.target_identity)
+        else:
+            initial_obs = ObservedState(target_found=True, is_enabled=True)
+
         precond_ok = self.verifier.verify_precondition(action, initial_obs)
         if not precond_ok:
             return PipelineExecutionResult(
