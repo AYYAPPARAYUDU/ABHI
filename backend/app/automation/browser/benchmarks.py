@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 import numpy as np
 
+from backend.app.automation.browser.local_site.server import local_http_test_server
 from backend.app.automation.browser.playwright_worker import PlaywrightBrowserWorker
 from backend.app.automation.grounding.browser_grounder import BrowserGrounder
 from backend.app.automation.leases.lease_manager import LeaseManager
@@ -34,8 +35,8 @@ class BrowserAutomationBenchmarkSuite:
 
     def run_benchmarks(self) -> Dict[str, Any]:
         """Execute full Playwright browser benchmark suite and record measured metrics."""
-        local_site_dir = Path(__file__).parent / "local_site"
-        test_app_url = f"file:///{str(local_site_dir / 'test_app.html').replace(os.sep, '/')}"
+        local_http_test_server.start()
+        test_app_url = f"{local_http_test_server.base_url}/test_app.html"
 
         leases = LeaseManager()
         policy = SafetyPolicyEngine()

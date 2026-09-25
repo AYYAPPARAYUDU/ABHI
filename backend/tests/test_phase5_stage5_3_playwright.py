@@ -1,10 +1,11 @@
 """Integration and Unit Tests for Phase 5 Stage 5.3 Grounded Browser Automation with Playwright."""
 
-import os
+import time
 import pytest
 from pathlib import Path
 
 from backend.app.automation.browser.benchmarks import browser_benchmark_suite
+from backend.app.automation.browser.local_site.server import local_http_test_server
 from backend.app.automation.browser.playwright_worker import PlaywrightBrowserWorker, BrowserWorkerState
 from backend.app.automation.grounding.browser_grounder import BrowserGrounder
 from backend.app.automation.leases.lease_manager import LeaseManager
@@ -20,11 +21,18 @@ from backend.app.automation.policy.safety_policy import SafetyPolicyEngine
 from backend.app.automation.verification.action_verifier import ActionVerifier
 
 
+@pytest.fixture(scope="module", autouse=True)
+def http_server():
+    """Start and stop local deterministic HTTP test server."""
+    local_http_test_server.start()
+    yield local_http_test_server
+    local_http_test_server.stop()
+
+
 @pytest.fixture(scope="module")
-def local_test_site_url():
-    """Return local test site file URI."""
-    site_path = Path(__file__).parent.parent / "app" / "automation" / "browser" / "local_site" / "test_app.html"
-    return f"file:///{str(site_path.resolve()).replace(os.sep, '/')}"
+def local_test_site_url(http_server):
+    """Return local test site HTTP URI bound to 127.0.0.1."""
+    return f"{http_server.base_url}/test_app.html"
 
 
 @pytest.fixture
@@ -64,10 +72,10 @@ def test_stage5_3_browser_lifecycle_startup_and_shutdown():
 
 
 def test_stage5_3_navigation_approved_and_blocked_origins(playwright_pipeline, local_test_site_url):
-    """Verify navigation to approved local origins succeeds and external/unauthorized origins are blocked."""
+    """Verify navigation to approved local HTTP origins succeeds and external/file origins are blocked."""
     pipe, worker, leases, grounder, policy, _ = playwright_pipeline
 
-    # 1. Approved Local Origin Navigation
+    # 1. Approved Local Origin Navigation (http://127.0.0.1:8765/test_app.html)
     lease = leases.acquire_lease(task_id="task_nav_01", execution_id="exec_01", agent_id="browser_agent")
     grounding, _ = grounder.ground_target("Page")
     action_nav = ExecutionAction(
@@ -87,7 +95,25 @@ def test_stage5_3_navigation_approved_and_blocked_origins(playwright_pipeline, l
     assert "test_app.html" in worker.current_url
     assert "Deterministic Local Automation Test Website" in worker.current_title
 
-    # 2. Blocked External Origin Navigation (Hard Policy Barrier)
+    # 2. Blocked file:// Origin Navigation (Origin Policy Hard Barrier)
+    lease_file = leases.acquire_lease(task_id="task_nav_file", execution_id="exec_01", agent_id="browser_agent")
+    action_file = ExecutionAction(
+        action_id="act_nav_file",
+        task_id="task_nav_file",
+        execution_id="exec_01",
+        lease_id=lease_file.lease_id,
+        action_type=ActionType.BROWSER_NAVIGATE,
+        grounding=grounding,
+        parameters={"url": "file:///C:/Windows/System32/drivers/etc/hosts"},
+        precondition="Browser is ready",
+        expected_postcondition="File page loaded"
+    )
+    res_file = pipe.run_browser_action(action_file)
+    assert res_file.is_success is False
+    assert res_file.stage_reached == "POLICY_VALIDATION"
+    assert res_file.error.error_code == AutomationErrorCode.POLICY_DENIED
+
+    # 3. Blocked External Origin Navigation (Hard Policy Barrier)
     lease_ext = leases.acquire_lease(task_id="task_nav_ext", execution_id="exec_01", agent_id="browser_agent")
     action_ext = ExecutionAction(
         action_id="act_nav_ext",
@@ -100,11 +126,36 @@ def test_stage5_3_navigation_approved_and_blocked_origins(playwright_pipeline, l
         precondition="Browser is ready",
         expected_postcondition="External page loaded"
     )
-
     res_ext = pipe.run_browser_action(action_ext)
     assert res_ext.is_success is False
     assert res_ext.stage_reached == "POLICY_VALIDATION"
     assert res_ext.error.error_code == AutomationErrorCode.POLICY_DENIED
+
+
+def test_stage5_3_page_identity_and_unexpected_url_rejection(playwright_pipeline, local_test_site_url):
+    """Verify action fails safely when page unexpectedly changes or origin mismatches."""
+    pipe, worker, leases, grounder, policy, _ = playwright_pipeline
+    worker._page.goto(local_test_site_url, wait_until="load")
+
+    lease = leases.acquire_lease(task_id="task_page_id_01", execution_id="exec_01", agent_id="browser_agent")
+    grounding, _ = grounder.ground_target("btn_execute", test_id="btn_execute")
+
+    action_mismatch = ExecutionAction(
+        action_id="act_page_mismatch",
+        task_id="task_page_id_01",
+        execution_id="exec_01",
+        lease_id=lease.lease_id,
+        action_type=ActionType.BROWSER_CLICK,
+        grounding=grounding,
+        parameters={"expected_url": "http://127.0.0.1:8765/unrelated_secret_dashboard.html"},
+        precondition="Button is visible",
+        expected_postcondition="Status is EXECUTED"
+    )
+
+    res = pipe.run_browser_action(action_mismatch)
+    assert res.is_success is False
+    assert res.stage_reached == "PHYSICAL_EXECUTION"
+    assert res.error.error_code == AutomationErrorCode.USER_INTERFERENCE
 
 
 def test_stage5_3_semantic_grounding_hierarchy_and_ambiguity(playwright_pipeline, local_test_site_url):
@@ -300,6 +351,86 @@ def test_stage5_3_idempotency_and_duplicate_action_protection(playwright_pipelin
     assert res2.is_success is False
     assert res2.stage_reached == "PHYSICAL_EXECUTION"
     assert res2.error.error_code == AutomationErrorCode.POLICY_DENIED
+
+
+def test_stage5_3_cancellation_and_worker_disconnect(playwright_pipeline, local_test_site_url):
+    """Verify cancellation and worker disconnect halt execution fail-closed."""
+    pipe, worker, leases, grounder, policy, _ = playwright_pipeline
+    worker._page.goto(local_test_site_url, wait_until="load")
+
+    lease = leases.acquire_lease(task_id="task_cancel_01", execution_id="exec_01", agent_id="browser_agent")
+    grounding, _ = grounder.ground_target("btn_execute", test_id="btn_execute")
+
+    action = ExecutionAction(
+        action_id="act_cancel_01",
+        task_id="task_cancel_01",
+        execution_id="exec_01",
+        lease_id=lease.lease_id,
+        action_type=ActionType.BROWSER_CLICK,
+        grounding=grounding,
+        precondition="Button is visible",
+        expected_postcondition="Status is EXECUTED"
+    )
+
+    # 1. Test Cancellation
+    worker.cancel_execution()
+    res_cancel = pipe.run_browser_action(action)
+    assert res_cancel.is_success is False
+    assert res_cancel.stage_reached == "PHYSICAL_EXECUTION"
+    assert res_cancel.error.error_code == AutomationErrorCode.ACTION_CANCELLED
+
+    # Reset cancellation
+    worker.reset_cancellation()
+
+    # 2. Test Disconnect
+    worker.simulate_disconnect(True)
+    res_disconn = pipe.run_browser_action(action)
+    assert res_disconn.is_success is False
+    assert res_disconn.stage_reached == "PHYSICAL_EXECUTION"
+    assert res_disconn.error.error_code == AutomationErrorCode.WORKER_UNAVAILABLE
+    worker.simulate_disconnect(False)
+
+
+def test_stage5_3_lease_revocation_and_expiration(playwright_pipeline, local_test_site_url):
+    """Verify missing, expired, and revoked leases reject browser action admission."""
+    pipe, worker, leases, grounder, policy, _ = playwright_pipeline
+    worker._page.goto(local_test_site_url, wait_until="load")
+
+    grounding, _ = grounder.ground_target("btn_execute", test_id="btn_execute")
+
+    # 1. Invalid Lease ID
+    action_invalid = ExecutionAction(
+        action_id="act_invalid_lease",
+        task_id="task_lease_01",
+        execution_id="exec_01",
+        lease_id="non_existent_lease_123",
+        action_type=ActionType.BROWSER_CLICK,
+        grounding=grounding,
+        precondition="Button exists",
+        expected_postcondition="Executed"
+    )
+    res_inv = pipe.run_browser_action(action_invalid)
+    assert res_inv.is_success is False
+    assert res_inv.stage_reached == "LEASE_VALIDATION"
+    assert res_inv.error.error_code == AutomationErrorCode.LEASE_MISSING
+
+    # 2. Revoked Lease
+    lease = leases.acquire_lease(task_id="task_lease_02", execution_id="exec_01", agent_id="browser_agent")
+    leases.revoke_lease(lease.lease_id, reason="User clicked stop")
+    action_revoked = ExecutionAction(
+        action_id="act_revoked_lease",
+        task_id="task_lease_02",
+        execution_id="exec_01",
+        lease_id=lease.lease_id,
+        action_type=ActionType.BROWSER_CLICK,
+        grounding=grounding,
+        precondition="Button exists",
+        expected_postcondition="Executed"
+    )
+    res_rev = pipe.run_browser_action(action_revoked)
+    assert res_rev.is_success is False
+    assert res_rev.stage_reached == "LEASE_VALIDATION"
+    assert res_rev.error.error_code == AutomationErrorCode.LEASE_REVOKED
 
 
 def test_stage5_3_worker_crash_simulation(playwright_pipeline, local_test_site_url):

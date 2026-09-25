@@ -60,6 +60,8 @@ class PlaywrightBrowserWorker:
         self.headless = headless
         self.state: BrowserWorkerState = BrowserWorkerState.STOPPED
         self.is_crashed = False
+        self.is_disconnected = False
+        self._is_cancelled = False
         
         self._playwright: Optional[Playwright] = None
         self._browser: Optional[Browser] = None
@@ -67,6 +69,26 @@ class PlaywrightBrowserWorker:
         self._page: Optional[Page] = None
         self._executed_actions: Set[Tuple[str, str, str]] = set()
         self._telemetry_events: List[Dict[str, Any]] = []
+
+    def simulate_disconnect(self, disconnected: bool = True) -> None:
+        """Simulate IPC/Supervisor connection loss."""
+        self.is_disconnected = disconnected
+        if disconnected:
+            self.emit_telemetry("WORKER_DISCONNECTED")
+
+    def cancel_execution(self) -> None:
+        """Propagate cancellation and prevent any subsequent side effects."""
+        self._is_cancelled = True
+        self.emit_telemetry("EXECUTION_CANCELLED")
+
+    def cancel_current_action(self) -> None:
+        """Cancel current action."""
+        self._is_cancelled = True
+        self.emit_telemetry("ACTION_CANCELLED")
+
+    def reset_cancellation(self) -> None:
+        """Reset cancellation flag."""
+        self._is_cancelled = False
 
     def emit_telemetry(self, event_type: str, details: Optional[Dict[str, Any]] = None) -> None:
         """Record structured browser telemetry events."""
@@ -336,7 +358,7 @@ class PlaywrightBrowserWorker:
         """Execute a grounded Playwright browser action with lease, policy, and postcondition observation."""
         start_ts = time.perf_counter()
 
-        # 1. Worker Crash Check
+        # 1. Worker Crash & Disconnect Check
         if self.is_crashed:
             return None, AutomationError(
                 error_code=AutomationErrorCode.WORKER_UNAVAILABLE,
@@ -345,9 +367,39 @@ class PlaywrightBrowserWorker:
                 task_id=action.task_id
             )
 
+        if self.is_disconnected:
+            return None, AutomationError(
+                error_code=AutomationErrorCode.WORKER_UNAVAILABLE,
+                message="Browser Automation Worker is disconnected from Supervisor.",
+                action_id=action.action_id,
+                task_id=action.task_id
+            )
+
+        if self._is_cancelled:
+            return None, AutomationError(
+                error_code=AutomationErrorCode.ACTION_CANCELLED,
+                message="Action execution was cancelled.",
+                action_id=action.action_id,
+                task_id=action.task_id
+            )
+
         # Ensure browser is started
         if not self._browser or self.state == BrowserWorkerState.STOPPED:
             self.start()
+
+        # Page identity verification
+        expected_url = action.parameters.get("expected_url")
+        if expected_url and action.action_type != ActionType.BROWSER_NAVIGATE:
+            curr = self.current_url.rstrip("/")
+            exp = expected_url.rstrip("/")
+            if exp not in curr and curr not in exp:
+                return None, AutomationError(
+                    error_code=AutomationErrorCode.USER_INTERFERENCE,
+                    message=f"Page identity mismatch: Expected '{expected_url}' but active page is '{self.current_url}'. Action halted.",
+                    details={"expected_url": expected_url, "current_url": self.current_url},
+                    action_id=action.action_id,
+                    task_id=action.task_id
+                )
 
         # 2. Idempotency Check
         idemp_key = (action.task_id, action.execution_id, action.action_id)

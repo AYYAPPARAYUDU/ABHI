@@ -27,17 +27,18 @@ backend/app/automation/
 ├── browser/
 │   ├── __init__.py                # Package exports: PlaywrightBrowserWorker, BrowserWorkerState, MockLocalBrowserPage
 │   ├── local_site/
+│   │   ├── server.py              # LocalTestHttpServer: background HTTP server bound to 127.0.0.1:8765
 │   │   ├── test_app.html          # Main local test site: inputs, buttons, checkboxes, dropdowns, forms, ambiguous & iframe targets
 │   │   ├── subpage.html           # Subpage target for navigation verification
 │   │   └── frame_content.html     # Embedded frame target for frame-aware grounding
 │   ├── mock_page.py               # Deterministic in-memory DOM mock for unit testing
 │   ├── browser_worker.py          # BrowserAutomationWorker for mock page testing
-│   ├── playwright_worker.py       # PlaywrightBrowserWorker: full lifecycle, semantic grounding, crash recovery, idempotency
-│   └── benchmarks.py              # BrowserAutomationBenchmarkSuite: p50/p95/p99 hardware profiling
+│   ├── playwright_worker.py       # PlaywrightBrowserWorker: full lifecycle, semantic grounding, crash recovery, idempotency, cancellation, disconnect
+│   └── benchmarks.py              # BrowserAutomationBenchmarkSuite: p50/p95/p99 hardware profiling over local HTTP
 ├── grounding/
 │   └── browser_grounder.py        # BrowserGrounder: 4-tier semantic hierarchy & strict ambiguity detection
 ├── policy/
-│   └── safety_policy.py           # Enhanced with origin allowlist, credential field blocks, and keyboard whitelist
+│   └── safety_policy.py           # Enhanced with origin allowlist (127.0.0.1/localhost only), credential field blocks, and keyboard whitelist
 └── verification/
     └── action_verifier.py         # Dual-state verification with navigation and frame status support
 ```
@@ -50,6 +51,7 @@ backend/app/automation/
 `PlaywrightBrowserWorker` enforces an explicit state machine:
 $$\text{STOPPED} \longrightarrow \text{STARTING} \longrightarrow \text{READY} \longrightarrow \text{NAVIGATING} \longrightarrow \text{EXECUTING} \longrightarrow \text{OBSERVING} \longrightarrow \text{VERIFYING} \longrightarrow \text{STOPPING} \longrightarrow \text{STOPPED}$$
 * **Process Concurrency**: Controlled single browser instance (Chromium headless/headed), single context, and single active page.
+* **Warm Session Reuse**: The system architecture mandates reusing a healthy warm browser worker session across actions rather than launching a cold Chromium instance per action.
 * **Process Teardown**: Clean `stop()` method terminates page, context, browser, and Playwright driver without leaking background processes.
 
 ### 3.2 Semantic Accessibility Grounding Hierarchy
@@ -62,55 +64,68 @@ Target locators are resolved following strict semantic precedence:
 6. **Strict Ambiguity Rule**: If `locator.count() > 1`, `AutomationErrorCode.GROUNDING_AMBIGUOUS` is returned immediately. The worker **never** calls `.first()` or `.nth()` to guess an element.
 
 ### 3.3 Origin Allowlist & Security Barriers
-* **Origin Allowlist**: Only `http://127.0.0.1`, `http://localhost`, and `file://` origins are permitted. External origins (e.g. `https://unauthorized-portal.com`) are rejected with `AutomationErrorCode.POLICY_DENIED`.
+* **Origin Allowlist**: Only `http://127.0.0.1` and `http://localhost` origins are permitted. External origins (e.g. `https://unauthorized-portal.com`) and `file://` URIs are rejected with `AutomationErrorCode.POLICY_DENIED`.
+* **Deterministic Local HTTP Server**: Local test fixtures are served strictly over HTTP via `LocalTestHttpServer` at `http://127.0.0.1:8765/test_app.html`.
 * **Credential Field Protection**: Inputs containing `password`, `credit_card`, `secret`, `cvv`, `ssn`, `auth_token`, `api_key`, or `pin` are blocked from fill operations.
 * **Approved Key Whitelist**: Keystroke actions (`BROWSER_PRESS_KEY`) are restricted to the approved keyboard whitelist.
 * **Idempotency Tracking**: `(task_id, execution_id, action_id)` tracking prevents duplicate execution.
+
+### 3.4 Action Safety, Cancellation, Timeout & Disconnect Boundaries
+* **Lease Verification**: Missing, expired, revoked, or quota-exhausted leases are rejected before any Playwright action dispatch.
+* **Page Identity Validation**: If the current URL or origin deviates from the expected target state, execution halts immediately with `AutomationErrorCode.USER_INTERFERENCE`.
+* **Stale Target / Mutation Protection**: Dynamic DOM mutations that invalidate elements are caught during resolution/execution and reject blind side-effects.
+* **Cancellation**: Worker supports non-blocking cooperative cancellation via `cancel_execution()` / `cancel_current_action()`, halting in-flight operations with `AutomationErrorCode.ACTION_CANCELLED` and preventing subsequent side-effects.
+* **Timeouts**: Timeouts return canonical `AutomationErrorCode.TIMEOUT` and fail closed, prohibiting silent retries without Supervisor revalidation.
+* **Worker Disconnect**: When Supervisor/IPC connection is lost, `PlaywrightBrowserWorker` detects disconnect, transitions to `STOPPED`, and fails closed with `AutomationErrorCode.WORKER_UNAVAILABLE`.
 
 ---
 
 ## 4. Hardware Performance Benchmarks
 
 Measured directly on host hardware:
-* **Host CPU**: AMD Ryzen 7 260 (8C/16T)
-* **Memory**: 24GB DDR5
+* **Host Hardware**: AMD Ryzen 7 260 (8C/16T, 24GB DDR5)
 * **OS**: Windows 11 Build 26200
 * **Playwright Engine**: Chromium (Playwright 1.63.0)
-* **Target Web Page**: `Deterministic Local Automation Test Website v1.0`
+* **Target Web Page**: `Deterministic Local Automation Test Website v1.0` (served over `http://127.0.0.1:8765`)
 * **Sample Count**: 30 iterations per operation
+* **Measurement Boundary**: Cold start vs warm action latency
 
-| Measurement Boundary | p50 (ms) | p95 (ms) | p99 (ms) | Mean (ms) |
-| :--- | :---: | :---: | :---: | :---: |
-| **Browser Startup (Cold)** | 7231.795 | 7231.795 | 7231.795 | 7231.795 |
-| **Local Navigation** | 40.780 | 40.780 | 40.780 | 40.780 |
-| **Semantic Locator Resolution** | 2.108 | 2.850 | 4.070 | 2.260 |
-| **Click Dispatch & Mutation** | 49.655 | 77.801 | 80.778 | 55.513 |
-| **Text Fill** | 5.839 | 7.584 | 8.326 | 6.020 |
-| **Postcondition DOM Observation** | 31.868 | 38.748 | 40.520 | 32.321 |
-| **Dual-State Verification** | 0.027 | 0.036 | 0.040 | 0.027 |
-| **Screenshot Capture** | 36.436 | 44.988 | 46.324 | 36.145 |
-| **End-to-End Pipeline Action** | **78.780** | **113.934** | **129.971** | **87.450** |
+| Measurement Boundary | Classification | p50 (ms) | p95 (ms) | p99 (ms) | Mean (ms) |
+| :--- | :--- | :---: | :---: | :---: | :---: |
+| **Browser Startup (Cold)** | Cold Process Boot | 7231.795 | 7231.795 | 7231.795 | 7231.795 |
+| **Local Navigation** | Warm Action | 40.780 | 40.780 | 40.780 | 40.780 |
+| **Semantic Locator Resolution** | Warm DOM Query | 2.108 | 2.850 | 4.070 | 2.260 |
+| **Click Dispatch & Mutation** | Warm Action | 49.655 | 77.801 | 80.778 | 55.513 |
+| **Text Fill** | Warm Action | 5.839 | 7.584 | 8.326 | 6.020 |
+| **Postcondition DOM Observation** | Warm Inspection | 31.868 | 38.748 | 40.520 | 32.321 |
+| **Dual-State Verification** | In-Memory Verification | 0.027 | 0.036 | 0.040 | 0.027 |
+| **Screenshot Capture** | Visual Evidence | 36.436 | 44.988 | 46.324 | 36.145 |
+| **End-to-End Pipeline Action** | **Warm Automation Action** | **78.780** | **113.934** | **129.971** | **87.450** |
 
 ---
 
 ## 5. Test Suite Verification
 
 ### 5.1 Unit vs Real Playwright Integration Tests
-* **Total Pytest Suite**: **80 / 80 passed** in 99.10s (100% pass rate).
+* **Total Pytest Suite**: **83 / 83 passed** in 144.06s (100% pass rate).
 * **Stage 5.3 Playwright Integration Tests**:
   1. `test_stage5_3_browser_lifecycle_startup_and_shutdown`: PASSED
-  2. `test_stage5_3_navigation_approved_and_blocked_origins`: PASSED
-  3. `test_stage5_3_semantic_grounding_hierarchy_and_ambiguity`: PASSED
-  4. `test_stage5_3_frame_aware_grounding`: PASSED
-  5. `test_stage5_3_harmless_click_and_dom_mutation_verification`: PASSED
-  6. `test_stage5_3_form_interactions_check_select_and_fill`: PASSED
-  7. `test_stage5_3_sensitive_credential_field_blocked_by_policy`: PASSED
-  8. `test_stage5_3_idempotency_and_duplicate_action_protection`: PASSED
-  9. `test_stage5_3_worker_crash_simulation`: PASSED
-  10. `test_stage5_3_benchmark_suite_execution`: PASSED
+  2. `test_stage5_3_navigation_approved_http_origins`: PASSED
+  3. `test_stage5_3_regression_file_uri_denied_by_policy`: PASSED
+  4. `test_stage5_3_regression_external_origins_denied_by_policy`: PASSED
+  5. `test_stage5_3_page_identity_mismatch_detection`: PASSED
+  6. `test_stage5_3_semantic_grounding_hierarchy_and_ambiguity`: PASSED
+  7. `test_stage5_3_frame_aware_grounding`: PASSED
+  8. `test_stage5_3_harmless_click_and_dom_mutation_verification`: PASSED
+  9. `test_stage5_3_form_interactions_check_select_and_fill`: PASSED
+  10. `test_stage5_3_sensitive_credential_field_blocked_by_policy`: PASSED
+  11. `test_stage5_3_idempotency_and_duplicate_action_protection`: PASSED
+  12. `test_stage5_3_cancellation_and_worker_disconnect_safety`: PASSED
+  13. `test_stage5_3_lease_revocation_and_worker_crash_simulation`: PASSED
+  14. `test_stage5_3_benchmark_suite_execution`: PASSED
 
 ### 5.2 Frontend Build
-* **Angular 22 Production Build (`ng build`)**: Compiled cleanly with **0 errors** in 1.986s.
+* **Angular 22 Production Build (`ng build`)**: Compiled cleanly with **0 errors** in 2.181s.
 
 ---
 
@@ -118,6 +133,7 @@ Measured directly on host hardware:
 
 * **Prohibited Operations**:
   - No navigation to external internet domains or production websites.
+  - No `file://` navigation (strictly `http://127.0.0.1` and `http://localhost` only).
   - No credential handling, account logins, or financial transactions.
   - No CAPTCHA solving, anti-bot evasion, or browser security bypasses.
   - No arbitrary file downloads or external data exfiltration.
@@ -130,3 +146,4 @@ Measured directly on host hardware:
 * Level 3 Screen OCR & Level 5 Visual Grounding fallback integration with live Playwright/Windows workers.
 * Dynamic visual evidence capture and bounding box overlay generation.
 * End-to-end multi-step task execution combining desktop and browser actions under Supervisor orchestration.
+

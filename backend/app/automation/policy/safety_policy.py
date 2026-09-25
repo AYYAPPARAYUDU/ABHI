@@ -97,11 +97,11 @@ class SafetyPolicyEngine:
         if action.action_type == ActionType.BROWSER_NAVIGATE or "url" in action.parameters:
             target_url = action.parameters.get("url", "").strip().lower()
             if target_url:
-                allowed = any(target_url.startswith(prefix) for prefix in ["http://127.0.0.1", "http://localhost", "file://"])
+                allowed = any(target_url.startswith(prefix) for prefix in ["http://127.0.0.1", "http://localhost"])
                 if not allowed:
                     return False, AutomationError(
                         error_code=AutomationErrorCode.POLICY_DENIED,
-                        message=f"Navigation to external or unauthorized origin '{target_url}' is prohibited in Stage 5.3.",
+                        message=f"Navigation to external, file://, or unauthorized origin '{target_url}' is prohibited in Stage 5.3.",
                         action_id=action.action_id,
                         task_id=action.task_id
                     )
