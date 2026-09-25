@@ -21,10 +21,13 @@ class SupervisorState(str, Enum):
     PLANNING = "PLANNING"
     WAITING_USER_CONSENT = "WAITING_USER_CONSENT"
     DISPATCHING = "DISPATCHING"
+    EXECUTING = "EXECUTING"
+    PAUSED_USER_INTERFERENCE = "PAUSED_USER_INTERFERENCE"
     VERIFYING = "VERIFYING"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     CANCELLED = "CANCELLED"
+    EMERGENCY_STOPPED = "EMERGENCY_STOPPED"
 
 
 class TaskStatusResponse(BaseModel):
@@ -45,6 +48,7 @@ class CentralSupervisor:
     def __init__(self):
         self._active_tasks: Dict[str, TaskStatusResponse] = {}
         self._pending_consents: Dict[str, asyncio.Event] = {}
+        self._pause_events: Dict[str, asyncio.Event] = {}
 
     async def _emit_telemetry(self, task_id: str, event_type: str, payload: Dict[str, Any]):
         """Emit real-time telemetry message to all connected WebSocket clients."""
@@ -69,6 +73,8 @@ class CentralSupervisor:
             created_at_ts=now_ts
         )
         self._active_tasks[tid] = status_obj
+        self._pause_events[tid] = asyncio.Event()
+        self._pause_events[tid].set()  # Initial state: not paused
 
         # Persist task record in SQLite
         await memory_repo.create_task(goal=goal, task_id=tid)
@@ -103,21 +109,83 @@ class CentralSupervisor:
                 return True
         return False
 
+    async def pause_task(self, task_id: str, reason: str = "User manual input contention") -> bool:
+        """Pause active task due to human manual input or interference."""
+        status_obj = self._active_tasks.get(task_id)
+        if not status_obj or status_obj.state in [
+            SupervisorState.COMPLETED, SupervisorState.FAILED,
+            SupervisorState.CANCELLED, SupervisorState.EMERGENCY_STOPPED
+        ]:
+            return False
+
+        logger.warning(f"Pausing task '{task_id}': {reason}")
+        status_obj.state = SupervisorState.PAUSED_USER_INTERFERENCE
+        status_obj.error_message = f"Paused: {reason}"
+
+        if task_id in self._pause_events:
+            self._pause_events[task_id].clear()  # Block progression
+
+        await memory_repo.update_task_state(task_id=task_id, state="PAUSED_USER_INTERFERENCE")
+        await self._emit_telemetry(task_id, "TASK_PAUSED", {"reason": reason})
+        return True
+
+    async def resume_task(self, task_id: str) -> bool:
+        """Resume a paused task."""
+        status_obj = self._active_tasks.get(task_id)
+        if not status_obj or status_obj.state != SupervisorState.PAUSED_USER_INTERFERENCE:
+            return False
+
+        logger.info(f"Resuming task '{task_id}' from user interference pause")
+        status_obj.state = SupervisorState.DISPATCHING
+        status_obj.error_message = None
+
+        if task_id in self._pause_events:
+            self._pause_events[task_id].set()  # Unblock progression
+
+        await memory_repo.update_task_state(task_id=task_id, state="DISPATCHING")
+        await self._emit_telemetry(task_id, "TASK_RESUMED", {})
+        return True
+
+    async def emergency_stop(self, task_id: Optional[str] = None) -> bool:
+        """High-priority Emergency Stop immediately halting active automation."""
+        target_tasks = [self._active_tasks[task_id]] if task_id and task_id in self._active_tasks else list(self._active_tasks.values())
+        if not target_tasks:
+            return False
+
+        for status_obj in target_tasks:
+            tid = status_obj.task_id
+            logger.critical(f"EMERGENCY STOP invoked for task '{tid}'")
+            status_obj.state = SupervisorState.EMERGENCY_STOPPED
+            status_obj.error_message = "Immediate emergency stop triggered."
+
+            # Unblock pending events to exit loops cleanly
+            if tid in self._pending_consents:
+                self._pending_consents[tid].set()
+            if tid in self._pause_events:
+                self._pause_events[tid].set()
+
+            await memory_repo.update_task_state(task_id=tid, state="EMERGENCY_STOPPED", error_message="Emergency Stop Triggered")
+            await self._emit_telemetry(tid, "EMERGENCY_STOP_TRIGGERED", {"reason": "Open Palm or Operator Override"})
+
+        return True
+
     async def cancel_task(self, task_id: str) -> bool:
-        """Emergency Stop & Task Cancellation."""
+        """Task Cancellation."""
         status_obj = self._active_tasks.get(task_id)
         if not status_obj:
             return False
 
-        logger.warning(f"Emergency Stop invoked for task '{task_id}'")
+        logger.warning(f"Cancellation invoked for task '{task_id}'")
         status_obj.state = SupervisorState.CANCELLED
-        status_obj.error_message = "Task cancelled by emergency stop."
+        status_obj.error_message = "Task cancelled by user."
 
         if task_id in self._pending_consents:
             self._pending_consents[task_id].set()
+        if task_id in self._pause_events:
+            self._pause_events[task_id].set()
 
         await memory_repo.update_task_state(task_id=task_id, state="CANCELLED", error_message="Cancelled by user")
-        await self._emit_telemetry(task_id, "TASK_CANCELLED", {"reason": "Emergency Stop"})
+        await self._emit_telemetry(task_id, "TASK_CANCELLED", {"reason": "User Request"})
         return True
 
     async def _orchestrate_task(self, task_id: str, goal: str):
@@ -134,19 +202,25 @@ class CentralSupervisor:
 
             # 2. Execute DAG nodes topologically
             while not dag.is_complete and not dag.is_failed:
-                if status_obj.state == SupervisorState.CANCELLED:
+                if status_obj.state in [SupervisorState.CANCELLED, SupervisorState.EMERGENCY_STOPPED]:
+                    break
+
+                # Handle pause state
+                if task_id in self._pause_events:
+                    await self._pause_events[task_id].wait()
+
+                if status_obj.state in [SupervisorState.CANCELLED, SupervisorState.EMERGENCY_STOPPED]:
                     break
 
                 runnable_nodes = dag.get_runnable_nodes()
                 if not runnable_nodes:
-                    # Check if all completed or stuck in dependency deadlock
                     if dag.is_complete:
                         break
                     else:
                         raise RuntimeError("DAG execution deadlocked: no runnable nodes found.")
 
                 for node in runnable_nodes:
-                    if status_obj.state == SupervisorState.CANCELLED:
+                    if status_obj.state in [SupervisorState.CANCELLED, SupervisorState.EMERGENCY_STOPPED]:
                         break
 
                     # Check Tier 3 Consent Gate
@@ -165,9 +239,15 @@ class CentralSupervisor:
                         await event.wait()
                         del self._pending_consents[task_id]
 
-                        if status_obj.state == SupervisorState.CANCELLED:
+                        if status_obj.state in [SupervisorState.CANCELLED, SupervisorState.EMERGENCY_STOPPED]:
                             node.status = NodeStatus.SKIPPED
                             break
+
+                    # Check Pause prior to dispatch
+                    if task_id in self._pause_events:
+                        await self._pause_events[task_id].wait()
+                    if status_obj.state in [SupervisorState.CANCELLED, SupervisorState.EMERGENCY_STOPPED]:
+                        break
 
                     # Dispatch Node Execution
                     status_obj.state = SupervisorState.DISPATCHING
@@ -200,7 +280,6 @@ class CentralSupervisor:
                             "duration_ms": exec_result.execution_duration_ms
                         })
                     else:
-                        # Auto-correction / Retry logic
                         node.retry_count += 1
                         if node.retry_count <= node.max_retries and ver_result.retryable:
                             logger.warning(
@@ -220,7 +299,7 @@ class CentralSupervisor:
             # 3. Finalize Task Outcome
             duration = int((time.perf_counter() - start_ts) * 1000)
             status_obj.duration_ms = duration
-            if dag.is_complete and status_obj.state != SupervisorState.CANCELLED:
+            if dag.is_complete and status_obj.state not in [SupervisorState.CANCELLED, SupervisorState.EMERGENCY_STOPPED]:
                 status_obj.state = SupervisorState.COMPLETED
                 status_obj.active_node_id = None
                 await memory_repo.update_task_state(
@@ -230,7 +309,7 @@ class CentralSupervisor:
                     duration_ms=duration
                 )
                 await self._emit_telemetry(task_id, "TASK_COMPLETED", {"duration_ms": duration})
-            elif status_obj.state != SupervisorState.CANCELLED:
+            elif status_obj.state not in [SupervisorState.CANCELLED, SupervisorState.EMERGENCY_STOPPED]:
                 status_obj.state = SupervisorState.FAILED
                 await memory_repo.update_task_state(
                     task_id=task_id,

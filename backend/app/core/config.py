@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     LANCEDB_DIR: str = Field(default="./database/vector", description="LanceDB vector store directory")
     MEDIA_STORAGE_DIR: str = Field(default="./database/media", description="Generated media directory")
 
+    # TTS Local-First & Privacy Policy Settings
+    TTS_BACKEND: str = Field(default="piper", description="TTS engine backend: piper, kokoro, or edge_tts_online")
+    TTS_ALLOW_ONLINE_FALLBACK: bool = Field(
+        default=False,
+        description="Whether to permit online cloud TTS fallback when local TTS is unavailable. Default False (strict local-first)."
+    )
+
     # Logging Settings
     LOG_LEVEL: str = Field(default="INFO", description="Log level: DEBUG, INFO, WARNING, ERROR")
     LOG_DIR: str = Field(default="./logs", description="Directory to store audit log files")
