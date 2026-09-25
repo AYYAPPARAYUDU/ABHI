@@ -1,21 +1,23 @@
 # Communication Contract & IPC Protocol Specifications
 
-## 1. Communication Channels & Protocols
+**Status:** RECONCILED & HARDENED (Phase 2 Baseline)
 
-| Channel | Producer | Consumer | Protocol / Format | Latency Target | Purpose |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **UI Telemetry & Events** | Gateway Subsystem | Angular Frontend | Bidirectional WebSocket (`/ws/telemetry`) (JSON) | < 10 ms | Real-time agent state, DAG step updates, live logs, 3D avatar pulse commands. |
-| **User Commands & Queries** | Angular Frontend | Gateway Subsystem | WebSocket / REST POST (`/api/v1/agent/task`) (JSON) | < 15 ms | Submitting text/voice prompts, user consent approvals, emergency stop. |
-| **Audio PCM Streaming** | Audio Daemon | Gateway / Frontend | WebSocket Binary Frames (Float32 / 16kHz PCM) | < 25 ms | Live microphone streaming for VAD and live speech waveform rendering. |
-| **Vision Telemetry** | Perception Worker | Gateway / Frontend | IPC Queue / WebSocket (`JSON` landmarks) | < 15 ms | 3D Face rotation angles (yaw/pitch/roll), hand gesture trigger tokens. |
-| **Model Inference Calls** | Gateway / Agents | Ollama Service | HTTP/1.1 REST (`http://localhost:11434/api/generate`) | < 50 ms TTFT | LLM generation, tool calls, and structured JSON parsing. |
-| **Internal Worker IPC** | Gateway Core | Worker Subprocesses | Python `multiprocessing.Queue` / Anonymous Pipes (Pickle/JSON) | < 1 ms | Dispatching heavy OCR, media generation, and Playwright execution tasks. |
+## 1. IPC Mechanisms & Transport Rules
+
+To eliminate serialization vulnerabilities and performance bottlenecks, the system enforces a strict transport separation based on data type:
+
+| Data Type | Primary Transport | Format / Schema | Security & Serialization Rule |
+| :--- | :--- | :--- | :--- |
+| **Control & State Messages** | WebSocket (`/ws/telemetry`) & Subprocess Pipes | Versioned JSON-RPC 2.0 Envelopes | Strictly validated via Pydantic schemas. Unrestricted `pickle` is forbidden. |
+| **Audio Stream (Real-Time)** | WebSocket Binary Frames | Float32 16kHz PCM Raw Buffer | Zero-copy binary frames with fixed header. |
+| **Vision Telemetry** | Local IPC Queue / WebSocket | JSON (Landmarks & Angles) | Typed arrays of normalized float coordinates. |
+| **Large Media / Artifacts** | Local Filesystem Exchange | File Paths in `database/media/` | Only file paths, checksums, and metadata pass through IPC; raw binaries are read on-demand from disk. |
 
 ---
 
 ## 2. Standardized JSON Message Envelope Contract
 
-All WebSocket and IPC message payloads MUST conform to the canonical typed message schema:
+All control and telemetry messages MUST conform to the canonical JSON schema:
 
 ```json
 {
@@ -43,10 +45,16 @@ All WebSocket and IPC message payloads MUST conform to the canonical typed messa
 
 ---
 
-## 3. Resilience, Timeouts & Reconnection Policies
+## 3. Measurable Engineering Service Level Objectives (SLOs)
 
-1. **WebSocket Heartbeat:** The Gateway issues a `PING` frame every 15 seconds; the Angular client must respond with `PONG` within 5 seconds. Reconnection uses exponential backoff (1s, 2s, 4s, max 10s).
-2. **Model Call Timeouts:**
-   * Ollama LLM queries: 30-second timeout per generation turn with streaming cancelation support.
-   * Tool execution calls: Configurable timeout (5s for quick OS checks, 60s for browser page loads, 180s for image diffusion).
-3. **Emergency Stop (E-Stop):** Dedicated high-priority WebSocket channel message `SAFETY_EMERGENCY_STOP` immediately forces worker process suspension without waiting for step completion.
+The system defines concrete performance budgets and acceptable fallback behaviors:
+
+| Metric | Target (p50) | Target (p95) | Timeout Limit | Measurement Method | Acceptable Fallback Behavior |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Frontend WebSocket Telemetry** | < 5 ms | < 15 ms | 50 ms | Round-trip client-server ping benchmark | Drop non-critical visual frame; maintain state synchronization. |
+| **Perception Landmark Latency** | < 10 ms | < 15 ms | 30 ms | DirectShow frame capture to landmark emit | Skip frame; maintain current avatar pose. |
+| **LLM Time to First Token (TTFT)** | < 350 ms | < 600 ms | 15.0 s | Ollama `/api/generate` first chunk arrival | Return cached intent or retry generation once. |
+| **Database Query Latency** | < 2 ms | < 10 ms | 100 ms | Async SQLAlchemy SQLite execution timer | Retry SQLite transaction on busy lock (WAL mode). |
+| **UI Automation Action Latency** | < 50 ms | < 200 ms | 5.0 s | Windows UIA element click confirmation | Fallback to visual OCR coordinate click. |
+| **Browser Navigation Wait** | < 500 ms | < 2.5 s | 15.0 s | Playwright `networkidle` load event | Inspect DOM readiness; proceed if interactive. |
+| **Image Generation (SDXL-Turbo)** | < 1.2 s | < 2.5 s | 10.0 s | PyTorch Diffusers pipeline execution | Terminate generation worker; report VRAM state. |

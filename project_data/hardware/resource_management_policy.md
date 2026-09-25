@@ -1,8 +1,12 @@
 # Hardware Resource Management & VRAM Arbitration Policy
 
-## 1. Hardware Resource Budget (Based on Measured Specs)
+**Status:** RECONCILED & AUDITED (Phase 2 Baseline)
 
-* **Physical Constraints:** 8,151 MiB (8 GB) GDDR6 VRAM, 24 GB DDR5 RAM, 8-Core / 16-Thread AMD CPU.
+## 1. Physical Hardware Constraints (Measured Baseline)
+
+* **Discrete GPU:** NVIDIA GeForce RTX 5050 Laptop GPU (8,151 MiB / 8.0 GB VRAM, Driver 592.82, CUDA 13.1).
+* **System RAM:** 24,425,460 KB (~24 GB DDR5).
+* **CPU:** AMD Ryzen 7 260 w/ Radeon 780M Graphics (8 Physical Cores, 16 Logical Processors).
 
 ```
                       [TOTAL VRAM BUDGET: 8,151 MiB (8.0 GB)]
@@ -16,36 +20,40 @@
 
 ---
 
-## 2. VRAM Arbitration State Machine
+## 2. VRAM State Discovery & Admission Control Protocol
 
-Because simultaneous execution of an 8B LLM and a 1024x1024 Diffusion Image Generator exceeds 8 GB VRAM, the Gateway enforces a **VRAM Arbiter State Machine**:
+The Gateway enforces a strict **VRAM Arbiter State Machine** before launching any GPU-intensive worker:
 
 ```
-[Normal Conversational / Agent Automation Mode]
-  • Ollama LLM (`qwen3:8b`) is RESIDENT in VRAM (~5.2 GB).
-  • Perception Models (MediaPipe, Silero VAD) execute on CPU / DirectML.
-  • Whisper STT (INT8 quantized) executes on shared GPU/CPU memory (~1.1 GB).
-                        │
-                        ▼ (User or Agent triggers Image / Video Generation)
-[State Transition: VRAM Eviction & Offload]
-  1. Supervisor pauses active LLM streaming turns.
-  2. Gateway signals Ollama to unload LLM from VRAM (`keep_alive: "0s"`).
-  3. PyTorch CUDA cache is flushed (`torch.cuda.empty_cache()`).
-                        │
-                        ▼
-[Media Generation Execution Mode]
-  • Dedicated Media Worker loads Diffusion Checkpoint into VRAM (~5.5 GB).
-  • Generation completes in ~1.0–2.5 seconds (SDXL-Turbo).
-  • Media Worker deallocates weights and flushes CUDA cache.
-                        │
-                        ▼
-[State Transition: LLM Restoration]
-  • Gateway re-warms `qwen3:8b` in Ollama; Supervisor resumes task execution.
+[Task Dispatched (e.g. Generate Image / Video)]
+                      │
+                      ▼
+[Step 1: Resource Discovery & Query]
+  • Query Ollama `/api/ps` -> Check currently loaded model and VRAM residency.
+  • Query Host VRAM status -> Ensure system display headroom > 1.0 GB.
+                      │
+                      ▼
+[Step 2: Admission Control Evaluation]
+  • If Required VRAM + Active VRAM > 7.0 GB:
+      - Issue unload request to Ollama: `POST /api/generate` with `{"model": "...", "keep_alive": "0s"}`.
+      - Poll `/api/ps` until Ollama confirms model VRAM footprint is 0 MB.
+                      │
+                      ▼
+[Step 3: Worker Reservation & Startup]
+  • Spawn dedicated Media Worker subprocess with exclusive CUDA context.
+  • Execute PyTorch Diffusers pipeline.
+                      │
+                      ▼
+[Step 4: Resource Release & Model Restoration]
+  • Worker terminates -> Windows/CUDA automatically reclaims all VRAM.
+  • Gateway re-warms primary LLM in Ollama (`keep_alive: "5m"`).
+  • Supervisor resumes conversational agent loop.
 ```
 
 ---
 
-## 3. CPU, Threading & Memory Policies
+## 3. CPU Core Allocation & Memory Management
 
-1. **CPU Core Affinity & Async IO:** FastAPI event loop runs on core asynchronous threads (`asyncio`). CPU-bound image transformations and OCR tasks run in `ThreadPoolExecutor` capped at 4 worker threads to leave 12 logical threads free for the OS and UI.
-2. **Periodic Memory Trimming:** Background memory cleanup (`gc.collect()`) triggers every 10 minutes or after heavy generation workloads.
+1. **Async Event Loop Isolation:** The FastAPI gateway and WebSocket hub execute on standard non-blocking asynchronous threads (`asyncio`).
+2. **CPU-Intensive Tasks:** Image transformations, format transcoding, and OCR bounding box calculations run in a dedicated `ThreadPoolExecutor` capped at 4 worker threads, ensuring at least 12 logical threads remain unblocked for the OS, Chrome, and UI rendering.
+3. **Periodic Garbage Collection:** Python memory compaction (`gc.collect()`) triggers every 10 minutes or immediately following heavy media worker termination.
