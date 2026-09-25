@@ -1,0 +1,47 @@
+# Environment Strategy & Configuration Management
+
+## 1. Environment Stratification
+
+| Environment | Purpose | Configuration Source | DB Strategy | Log Level |
+| :--- | :--- | :--- | :--- | :--- |
+| **Development (`dev`)** | Local active engineering, fast hot-reloading | `.env` file | Local SQLite in `database/relational/` | `DEBUG` |
+| **Testing (`test`)** | Automated pytest & CI suites | In-memory / temp SQLite | In-memory SQLite (`:memory:`) | `INFO` |
+| **Production (`prod`)** | Stable personal AI operation | Environment variables + DPAPI | Local encrypted SQLite + WAL mode | `INFO` |
+
+---
+
+## 2. Environment Configuration Template (`.env.example`)
+
+```ini
+# ==============================================================================
+# LOCAL-FIRST PERSONAL AI COMPUTER AUTOMATION SYSTEM - ENVIRONMENT CONFIGURATION
+# ==============================================================================
+
+# Application Environment & Server Settings
+APP_ENV=development
+APP_DEBUG=true
+APP_HOST=127.0.0.1
+APP_PORT=8000
+APP_SECRET_KEY=change_this_to_a_secure_random_hex_string_in_local_env
+
+# CORS Settings (Allow Local Frontend Access)
+CORS_ORIGINS=["http://localhost:4200", "http://127.0.0.1:4200"]
+
+# Ollama Local LLM Engine Settings
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_DEFAULT_MODEL=qwen3:8b
+OLLAMA_TIMEOUT_SECONDS=60
+OLLAMA_KEEP_ALIVE=5m
+
+# Storage & Database File Paths
+DATABASE_DIR=./database
+DATABASE_SQLITE_URL=sqlite+aiosqlite:///./database/relational/system.db
+LANCEDB_DIR=./database/vector
+MEDIA_STORAGE_DIR=./database/media
+
+# Logging & Observability Settings
+LOG_LEVEL=INFO
+LOG_DIR=./logs
+LOG_MAX_BYTES=52428800
+LOG_BACKUP_COUNT=5
+```
