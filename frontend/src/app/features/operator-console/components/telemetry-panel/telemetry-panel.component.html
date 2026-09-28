@@ -1,0 +1,93 @@
+<div class="telemetry-card p-3">
+  <!-- Header with Filter Tabs -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+    <div class="d-flex align-items-center gap-2">
+      <span class="panel-icon">📡</span>
+      <h2 class="panel-title m-0">LIVE TELEMETRY STREAM</h2>
+      <span class="badge bg-dark border border-secondary text-secondary font-monospace ms-2">
+        {{ filteredEvents().length }} / {{ rawEvents().length }}
+      </span>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <!-- Filter input -->
+      <input
+        type="text"
+        class="form-control form-control-sm search-input font-monospace"
+        placeholder="Filter events..."
+        [ngModel]="filterText()"
+        (ngModelChange)="filterText.set($event)"
+      />
+      
+      <!-- Category Select -->
+      <select
+        class="form-select form-select-sm category-select font-monospace"
+        [ngModel]="selectedCategory()"
+        (ngModelChange)="selectedCategory.set($event)"
+      >
+        <option value="ALL">ALL CATEGORIES</option>
+        <option value="ORCHESTRATION">ORCHESTRATION</option>
+        <option value="WORKER">WORKER</option>
+        <option value="GROUNDING">GROUNDING</option>
+        <option value="VERIFICATION">VERIFICATION</option>
+        <option value="RECOVERY">RECOVERY</option>
+        <option value="SAFETY">SAFETY</option>
+      </select>
+
+      <!-- Clear buffer button -->
+      <button
+        class="btn btn-outline-secondary btn-sm font-monospace text-nowrap"
+        (click)="clearBuffer()"
+        title="Clear live memory buffer"
+      >
+        CLEAR
+      </button>
+    </div>
+  </div>
+
+  <!-- Events Stream Container -->
+  <div class="events-scroll-container">
+    <div *ngIf="filteredEvents().length === 0" class="text-center p-3 text-muted font-monospace small">
+      No telemetry events match the current filter.
+    </div>
+
+    <div class="events-list">
+      <div
+        *ngFor="let evt of filteredEvents(); trackBy: trackByEventId"
+        class="event-row p-2 mb-1 rounded"
+        [ngClass]="getEventClass(evt)"
+      >
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2 overflow-hidden">
+            <span class="event-badge font-monospace" [ngClass]="getBadgeClass(evt)">
+              {{ evt.type }}
+            </span>
+            <span *ngIf="evt.component" class="event-source font-monospace text-muted small">
+              [{{ evt.component }}]
+            </span>
+          </div>
+          <div class="d-flex align-items-center gap-2 text-nowrap">
+            <span *ngIf="evt.status" class="event-status font-monospace small" [ngClass]="getStatusClass(evt.status)">
+              {{ evt.status }}
+            </span>
+            <span class="event-timestamp font-monospace text-secondary small">
+              {{ evt.timestamp | date:'HH:mm:ss.SSS' }}
+            </span>
+            <button
+              class="btn btn-link btn-xs p-0 text-decoration-none text-muted"
+              (click)="toggleDetails(evt)"
+              title="Toggle details"
+            >
+              {{ isExpanded(evt) ? '▲' : '▼' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Expandable JSON Payload -->
+        <div *ngIf="isExpanded(evt)" class="payload-box mt-2 p-2 rounded">
+          <pre class="m-0 font-monospace small text-light">{{ getEventJson(evt) }}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -2,9 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { App } from './app';
-import { OperatorStateService } from './services/operator-state.service';
-import { TelemetryService } from './services/telemetry.service';
-import { TelemetryEvent } from './models/telemetry.model';
+import { OperatorStateService } from './core/services/operator-state.service';
+import { TelemetryService } from './core/websocket/telemetry.service';
+import { TelemetryEvent } from './core/models/telemetry.model';
 
 describe('Phase 6 Stage 6.1 — Angular Operator Console & Live Telemetry Suite', () => {
   let stateService: OperatorStateService;

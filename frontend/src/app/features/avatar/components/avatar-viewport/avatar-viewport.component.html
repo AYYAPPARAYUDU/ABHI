@@ -1,0 +1,20 @@
+<div class="avatar-container position-relative">
+  <div class="avatar-header d-flex align-items-center justify-content-between p-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="avatar-pulse-dot" [ngClass]="getPulseClass()"></span>
+      <span class="avatar-title font-monospace">NEURAL AVATAR CORE</span>
+    </div>
+    <span class="avatar-state-tag font-monospace" [ngClass]="getStateTagClass()">
+      {{ avatarState() }}
+    </span>
+  </div>
+
+  <div #canvasContainer class="canvas-wrapper"></div>
+
+  <div class="avatar-overlay-data font-monospace p-2">
+    <div class="d-flex justify-content-between text-muted small">
+      <span>WebGL 2.0 • Hologram Core</span>
+      <span>Presentation Mode</span>
+    </div>
+  </div>
+</div>
