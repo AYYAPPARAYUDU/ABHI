@@ -1,0 +1,21 @@
+.transcription-container {
+  font-family: var(--font-sans);
+}
+
+.transcript-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.transcript-card {
+  background: rgba(13, 17, 27, 0.95);
+  transition: border-color 0.15s ease-in-out;
+}
+
+.transcript-card:hover {
+  border-color: rgba(0, 240, 255, 0.3) !important;
+}
+
+.smaller {
+  font-size: 0.7rem;
+}

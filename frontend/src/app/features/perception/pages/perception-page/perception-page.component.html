@@ -1,66 +1,26 @@
-<div class="perception-page">
+<div class="perception-page container-fluid px-0">
+  <!-- Top: Full-Width Perception Health Matrix -->
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <app-perception-health></app-perception-health>
+    </div>
+  </div>
+
   <div class="row g-3">
-    <!-- Visual Grounding & Verification -->
-    <div class="col-12 col-lg-7 d-flex flex-column gap-3">
-      <app-visual-grounding-panel></app-visual-grounding-panel>
-
-      <!-- Multimodal Perception Matrix -->
-      <app-panel title="PERCEPTION SENSOR METRICS & VAD TELEMETRY" icon="🎙️" badge="PHASE 4 ENGINE">
-        <div class="row g-3">
-          <!-- Voice VAD -->
-          <div class="col-12 col-md-6">
-            <div class="sensor-card p-3 rounded bg-dark border border-secondary border-opacity-25">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="font-monospace text-muted small">VOICE / VAD ENGINE:</span>
-                <span class="badge bg-success bg-opacity-25 text-success font-monospace">ACTIVE</span>
-              </div>
-              <div class="sensor-value font-monospace text-light fw-bold">SILERO_VAD + WHISPER</div>
-              <div class="text-muted small font-monospace mt-1">Noise floor: -48dBFS | Sample rate: 16kHz</div>
-            </div>
-          </div>
-
-          <!-- Vision & OCR -->
-          <div class="col-12 col-md-6">
-            <div class="sensor-card p-3 rounded bg-dark border border-secondary border-opacity-25">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="font-monospace text-muted small">SCREEN OCR & VISION:</span>
-                <span class="badge bg-info bg-opacity-25 text-info font-monospace">STANDBY</span>
-              </div>
-              <div class="sensor-value font-monospace text-light fw-bold">TESSERACT + UIA</div>
-              <div class="text-muted small font-monospace mt-1">Confidence threshold: 0.70 | Fallback: ENABLED</div>
-            </div>
-          </div>
-
-          <!-- Face & Head Pose Tracking -->
-          <div class="col-12 col-md-6">
-            <div class="sensor-card p-3 rounded bg-dark border border-secondary border-opacity-25">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="font-monospace text-muted small">FACE TRACKER / POSE:</span>
-                <span class="badge bg-secondary bg-opacity-25 text-secondary font-monospace">LOCAL_ONLY</span>
-              </div>
-              <div class="sensor-value font-monospace text-light fw-bold">MEDIAPIPE_FACE_MESH</div>
-              <div class="text-muted small font-monospace mt-1">Yaw: 0.0° | Pitch: 0.0° | Engagement: OPTIMAL</div>
-            </div>
-          </div>
-
-          <!-- Hand Gesture Recognition -->
-          <div class="col-12 col-md-6">
-            <div class="sensor-card p-3 rounded bg-dark border border-secondary border-opacity-25">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="font-monospace text-muted small">GESTURE CONTROLLER:</span>
-                <span class="badge bg-secondary bg-opacity-25 text-secondary font-monospace">READY</span>
-              </div>
-              <div class="sensor-value font-monospace text-light fw-bold">MEDIAPIPE_HANDS</div>
-              <div class="text-muted small font-monospace mt-1">Active gestures: PALM_STOP, POINT, THUMBS_UP</div>
-            </div>
-          </div>
-        </div>
-      </app-panel>
+    <!-- Left Column: Voice, Transcription, Screen OCR -->
+    <div class="col-12 col-xl-7 d-flex flex-column gap-3">
+      <app-voice-state></app-voice-state>
+      <app-transcription-view></app-transcription-view>
+      <app-screen-vision-state></app-screen-vision-state>
     </div>
 
-    <!-- Right Column: Avatar Viewport & Perception Logs -->
-    <div class="col-12 col-lg-5 d-flex flex-column gap-3">
+    <!-- Right Column: Avatar Viewport, Face & Head Attention, Hand Gestures, Telemetry -->
+    <div class="col-12 col-xl-5 d-flex flex-column gap-3">
+      <!-- 3D Avatar Viewport responding to live perception -->
       <app-avatar-viewport></app-avatar-viewport>
+
+      <app-face-state></app-face-state>
+      <app-gesture-state></app-gesture-state>
       <app-telemetry-panel></app-telemetry-panel>
     </div>
   </div>

@@ -1,0 +1,63 @@
+<app-panel title="SCREEN VISION & OCR GROUNDING" icon="🖥️" [badge]="screenVision().status">
+  <div class="screen-vision-container d-flex flex-column gap-3 font-monospace">
+    <!-- Active Observation Header Card -->
+    <div class="p-3 rounded hud-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-light fw-bold">OBSERVATION METADATA</span>
+          <span class="badge bg-opacity-25" [ngClass]="getStatusBadgeClass()">
+            {{ screenVision().status }}
+          </span>
+        </div>
+        <div class="text-muted small mt-1">
+          ID: <span class="text-light">{{ screenVision().observationId }}</span> | Grounding: <span class="text-info">{{ screenVision().groundingLevel }}</span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-info font-monospace"
+        (click)="triggerScan()"
+        [disabled]="screenVision().status === 'OBSERVING'"
+      >
+        {{ screenVision().status === 'OBSERVING' ? 'Scanning...' : '⚡ Scan OCR' }}
+      </button>
+    </div>
+
+    <!-- OCR Metrics Grid -->
+    <div class="row g-2 small">
+      <div class="col-6 col-md-3">
+        <div class="stat-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="text-muted text-uppercase smaller">Target</div>
+          <div class="text-info fw-bold text-truncate">{{ screenVision().target }}</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="stat-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="text-muted text-uppercase smaller">Confidence</div>
+          <div class="text-success fw-bold">{{ (screenVision().confidence * 100).toFixed(0) }}%</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="stat-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="text-muted text-uppercase smaller">UI Elements</div>
+          <div class="text-light fw-bold">{{ screenVision().detectedElementsCount }} detected</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="stat-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="text-muted text-uppercase smaller">Latency</div>
+          <div class="text-light fw-bold">{{ screenVision().processingTimeMs }} ms</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visual Privacy Statement -->
+    <div class="privacy-card p-2 rounded border border-secondary border-opacity-25 bg-black text-muted smaller">
+      🛡️ <span class="text-light">Visual Privacy:</span> Displaying OCR structured bounding box metadata. Raw full-resolution screen bitmaps are not streamed or stored in frontend memory.
+    </div>
+  </div>
+</app-panel>

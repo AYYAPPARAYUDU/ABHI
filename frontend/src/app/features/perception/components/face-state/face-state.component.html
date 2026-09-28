@@ -1,0 +1,81 @@
+<app-panel title="FACE & HEAD ATTENTION TELEMETRY" icon="👤" [badge]="faceHead().attention">
+  <div class="face-state-container d-flex flex-column gap-3 font-monospace">
+    <!-- Presence & Attention Header Card -->
+    <div class="p-3 rounded hud-card d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <div class="face-indicator-avatar rounded-circle d-flex align-items-center justify-content-center">
+          <span class="fs-4">{{ faceHead().faceDetected ? '👀' : '👤' }}</span>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-light fw-bold">OPERATOR PRESENCE:</span>
+            <span class="badge" [class.bg-success]="faceHead().faceDetected" [class.bg-secondary]="!faceHead().faceDetected">
+              {{ faceHead().faceDetected ? 'DETECTED' : 'AWAY' }}
+            </span>
+          </div>
+          <div class="text-muted small">
+            Attention State:
+            <span class="badge bg-opacity-25" [ngClass]="getAttentionBadgeClass()">
+              {{ faceHead().attention }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-end text-muted small">
+        <div>Landmarks: {{ faceHead().landmarksCount }} pts</div>
+        <div>Blink: <span [class.text-warning]="faceHead().blinkDetected">{{ faceHead().blinkDetected ? 'YES' : 'NO' }}</span></div>
+      </div>
+    </div>
+
+    <!-- 3D Head Pose Euler Angles (Pitch, Yaw, Roll) -->
+    <div class="row g-2">
+      <div class="col-4">
+        <div class="angle-box p-2 rounded bg-dark border border-secondary border-opacity-25 text-center">
+          <div class="text-muted text-uppercase smaller">Yaw (H-Gaze)</div>
+          <div class="text-info fw-bold fs-6">{{ faceHead().headPose.yaw > 0 ? '+' : '' }}{{ faceHead().headPose.yaw.toFixed(1) }}°</div>
+          <div class="progress mt-1" style="height: 4px;">
+            <div
+              class="progress-bar bg-info"
+              role="progressbar"
+              [style.width.%]="50 + (faceHead().headPose.yaw / 45) * 50"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="angle-box p-2 rounded bg-dark border border-secondary border-opacity-25 text-center">
+          <div class="text-muted text-uppercase smaller">Pitch (V-Gaze)</div>
+          <div class="text-info fw-bold fs-6">{{ faceHead().headPose.pitch > 0 ? '+' : '' }}{{ faceHead().headPose.pitch.toFixed(1) }}°</div>
+          <div class="progress mt-1" style="height: 4px;">
+            <div
+              class="progress-bar bg-info"
+              role="progressbar"
+              [style.width.%]="50 + (faceHead().headPose.pitch / 45) * 50"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-4">
+        <div class="angle-box p-2 rounded bg-dark border border-secondary border-opacity-25 text-center">
+          <div class="text-muted text-uppercase smaller">Roll (Tilt)</div>
+          <div class="text-info fw-bold fs-6">{{ faceHead().headPose.roll > 0 ? '+' : '' }}{{ faceHead().headPose.roll.toFixed(1) }}°</div>
+          <div class="progress mt-1" style="height: 4px;">
+            <div
+              class="progress-bar bg-info"
+              role="progressbar"
+              [style.width.%]="50 + (faceHead().headPose.roll / 45) * 50"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Safety Architecture Notice -->
+    <div class="safety-banner p-2 rounded border border-info border-opacity-25 bg-black text-muted smaller">
+      🔒 <span class="text-info">Safety Boundary:</span> Face/head pose telemetry is presentation-only and drives avatar orientation HUD. Facial gestures cannot trigger physical automation actions.
+    </div>
+  </div>
+</app-panel>

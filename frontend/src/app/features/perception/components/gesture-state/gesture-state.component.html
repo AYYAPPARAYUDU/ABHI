@@ -1,0 +1,59 @@
+<app-panel title="SPATIAL GESTURES & SAFETY INTERLOCK" icon="✋" [badge]="gesture().detectedGesture">
+  <div class="gesture-state-container d-flex flex-column gap-3 font-monospace">
+    <!-- Active Gesture Card -->
+    <div class="p-3 rounded hud-card d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <div class="gesture-emoji-avatar rounded-circle d-flex align-items-center justify-content-center">
+          <span class="fs-2">{{ emoji() }}</span>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-light fw-bold fs-6">{{ gesture().detectedGesture }}</span>
+            <span class="badge" [class.bg-success]="gesture().stabilized" [class.bg-secondary]="!gesture().stabilized">
+              {{ gesture().stabilized ? 'STABILIZED (3/3)' : 'UNSTABLE (' + gesture().stabilizationFrames + '/3)' }}
+            </span>
+          </div>
+          <div class="text-muted small">
+            Hand: {{ gesture().handedness }} | Confidence: {{ (gesture().confidence * 100).toFixed(0) }}%
+          </div>
+        </div>
+      </div>
+
+      <!-- Authoritative Safety Mode Badge -->
+      <div class="text-end">
+        <div class="text-muted smaller">SAFETY STATE:</div>
+        <span class="badge bg-opacity-25" [ngClass]="getSafetyBadgeClass()">
+          {{ gesture().authoritativeSafetyState }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Supported Gesture Safety Protocol Grid -->
+    <div class="row g-2 small">
+      <div class="col-6">
+        <div class="protocol-card p-2 rounded bg-dark border" [class.border-danger]="gesture().detectedGesture === 'OPEN_PALM'">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-danger">✋ OPEN_PALM</span>
+            <span class="badge bg-danger bg-opacity-25 text-danger smaller">ESTOP</span>
+          </div>
+          <div class="text-muted smaller mt-1">Triggers immediate fail-closed Emergency Stop upon 3-frame stabilization.</div>
+        </div>
+      </div>
+
+      <div class="col-6">
+        <div class="protocol-card p-2 rounded bg-dark border" [class.border-success]="gesture().detectedGesture === 'THUMBS_UP'">
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-success">👍 THUMBS_UP</span>
+            <span class="badge bg-success bg-opacity-25 text-success smaller">CONSENT</span>
+          </div>
+          <div class="text-muted smaller mt-1">Authorizes pending Tier 3 Operator Consent gate without keyboard input.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Explicit Architecture Distinction Notice -->
+    <div class="safety-banner p-2 rounded border border-warning border-opacity-25 bg-black text-muted smaller">
+      ⚠️ <span class="text-warning">Separation of Concerns:</span> Visual gesture detection is a raw perception signal. Actions are only executed when verified by the backend Supervisor and Safety Policy engine.
+    </div>
+  </div>
+</app-panel>

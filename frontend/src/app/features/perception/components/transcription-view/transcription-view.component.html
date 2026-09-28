@@ -1,0 +1,42 @@
+<app-panel title="MULTILINGUAL SPEECH TRANSCRIPTION STREAM" icon="📝" [badge]="(transcriptions().length) + ' UTTERANCES'">
+  <div class="transcription-container d-flex flex-column gap-2">
+    <!-- Active In-Flight Utterance -->
+    <div class="active-utterance p-3 rounded border border-primary border-opacity-50 bg-dark" *ngIf="voice().isListening || voice().sessionState === 'TRANSCRIBING'">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="badge bg-primary font-monospace">ACTIVE SPEECH SEGMENT</span>
+        <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+      </div>
+      <div class="fs-6 font-monospace text-light">
+        {{ voice().transcript || 'Detecting voice activity...' }}
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="p-4 text-center text-muted font-monospace small" *ngIf="transcriptions().length === 0 && !voice().isListening">
+      No speech transcriptions recorded in current bounded buffer. Toggle microphone or speak to begin.
+    </div>
+
+    <!-- Bounded Utterance History List -->
+    <div class="transcript-list d-flex flex-column gap-2" *ngIf="transcriptions().length > 0">
+      <div
+        *ngFor="let item of transcriptions()"
+        class="transcript-card p-2 rounded border border-secondary border-opacity-25 bg-dark font-monospace"
+      >
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-secondary bg-opacity-50 text-uppercase smaller">{{ item.language }}</span>
+            <span class="badge bg-success bg-opacity-25 text-success smaller">{{ (item.confidence * 100).toFixed(0) }}% CONF</span>
+            <span class="badge bg-info bg-opacity-25 text-info smaller" *ngIf="item.canonicalIntent">
+              INTENT: {{ item.canonicalIntent }}
+            </span>
+          </div>
+          <span class="text-muted smaller">{{ formatTime(item.timestamp) }}</span>
+        </div>
+
+        <div class="utterance-text text-light small">
+          "{{ item.utterance }}"
+        </div>
+      </div>
+    </div>
+  </div>
+</app-panel>

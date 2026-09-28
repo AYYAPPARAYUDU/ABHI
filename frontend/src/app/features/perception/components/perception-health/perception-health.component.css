@@ -1,0 +1,16 @@
+.perception-health-container {
+  font-family: var(--font-sans);
+}
+
+.health-card {
+  background: rgba(13, 17, 27, 0.95);
+  transition: border-color 0.15s ease-in-out;
+}
+
+.health-card:hover {
+  border-color: rgba(0, 240, 255, 0.3) !important;
+}
+
+.smaller {
+  font-size: 0.72rem;
+}

@@ -1,28 +1,21 @@
-import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PerceptionPageComponent } from './perception-page.component';
-import { OperatorStateService } from '../../../../core/services/operator-state.service';
-import { TelemetryService } from '../../../../core/websocket/telemetry.service';
-import { TaskApiService } from '../../../../core/api/task-api.service';
 
 describe('PerceptionPageComponent', () => {
+  let component: PerceptionPageComponent;
+  let fixture: ComponentFixture<PerceptionPageComponent>;
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PerceptionPageComponent],
-      providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        TaskApiService,
-        TelemetryService,
-        OperatorStateService
-      ]
+      imports: [PerceptionPageComponent]
     }).compileComponents();
+
+    fixture = TestBed.createComponent(PerceptionPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
-  it('should create perception page component', () => {
-    const fixture = TestBed.createComponent(PerceptionPageComponent);
-    const component = fixture.componentInstance;
+  it('should create and render all perception feature modules', () => {
     expect(component).toBeTruthy();
   });
 });

@@ -1,0 +1,16 @@
+.screen-vision-container {
+  font-family: var(--font-sans);
+}
+
+.hud-card {
+  background: rgba(18, 22, 34, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.stat-box {
+  background: rgba(10, 14, 23, 0.9);
+}
+
+.smaller {
+  font-size: 0.72rem;
+}

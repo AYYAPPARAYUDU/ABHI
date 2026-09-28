@@ -30,6 +30,22 @@
   │   ├── models/               # MultimodalInput, CommandPreview, InteractionState
   │   ├── services/             # InteractionService (session lifecycle, gesture debouncing)
   │   └── pages/                # InteractionPageComponent (/interaction)
+  ├── features/perception/      # Phase 6 Stage 6.4 Perception Experience & HUD
+  │   ├── components/
+  │   │   ├── voice-state/      # Live VAD / microphone state metrics
+  │   │   ├── transcription-view/# Multilingual recognized transcript stream
+  │   │   ├── face-state/       # 3D Head pose Euler angles & gaze attention HUD
+  │   │   ├── gesture-state/    # Spatial hand gesture stabilization HUD
+  │   │   ├── screen-vision-state/# Screen OCR & visual grounding telemetry
+  │   │   └── perception-health/# Health matrix for all perception engines
+  │   ├── models/               # PerceptionState, VoiceStateInfo, HeadPoseData
+  │   ├── services/             # PerceptionService (centralized sensor telemetry)
+  │   └── pages/                # PerceptionPageComponent (/perception)
+  ├── features/avatar/          # Three.js 3D Avatar presentation & viewport
+  │   ├── components/
+  │   │   └── avatar-viewport/  # Procedural Holographic Particle Core
+  │   └── pages/
+  │       └── avatar-page/      # Dedicated Avatar Viewport & telemetry feedback
   └── shared/                   # Reusable UI controls, icons, badges
   ```
 

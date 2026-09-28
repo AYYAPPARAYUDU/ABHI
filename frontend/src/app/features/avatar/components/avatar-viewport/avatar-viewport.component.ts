@@ -2,6 +2,7 @@ import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, effect, inj
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
 import { OperatorStateService } from '../../../../core/services/operator-state.service';
+import { PerceptionService } from '../../../perception/services/perception.service';
 import { AvatarState } from '../../../../core/models/telemetry.model';
 
 @Component({
@@ -15,9 +16,13 @@ export class AvatarViewportComponent implements AfterViewInit, OnDestroy {
   @ViewChild('canvasContainer', { static: true }) containerRef!: ElementRef<HTMLDivElement>;
 
   private readonly stateService = inject(OperatorStateService);
+  private readonly perceptionService = inject(PerceptionService);
   private readonly ngZone = inject(NgZone);
 
   readonly avatarState = this.stateService.avatarState;
+  readonly voiceState = this.perceptionService.voice;
+  readonly gestureState = this.perceptionService.gesture;
+  readonly faceHeadState = this.perceptionService.faceHead;
 
   private scene!: THREE.Scene;
   private camera!: THREE.PerspectiveCamera;
@@ -33,7 +38,11 @@ export class AvatarViewportComponent implements AfterViewInit, OnDestroy {
   constructor() {
     effect(() => {
       const state = this.avatarState();
-      this.updateAvatarTheme(state);
+      const isVoiceListening = this.voiceState().isListening;
+      const gesture = this.gestureState().detectedGesture;
+      const isEstop = this.gestureState().authoritativeSafetyState === 'EMERGENCY_STOP_TRIGGERED';
+
+      this.updateAvatarTheme(state, isVoiceListening, gesture, isEstop);
     });
   }
 
@@ -103,7 +112,7 @@ export class AvatarViewportComponent implements AfterViewInit, OnDestroy {
     this.particleSystem = new THREE.Points(geometry, particleMaterial);
     this.scene.add(this.particleSystem);
 
-    // 5. Inner Core Mesh (Glowing Orb)
+    // 5. Inner Core Mesh (Glowing Icosahedron Orb)
     const coreGeo = new THREE.IcosahedronGeometry(0.7, 2);
     const coreMat = new THREE.MeshStandardMaterial({
       color: 0x00f0ff,
@@ -135,33 +144,40 @@ export class AvatarViewportComponent implements AfterViewInit, OnDestroy {
     this.orbitalRing2.rotation.y = Math.PI / 4;
     this.scene.add(this.orbitalRing2);
 
-    this.updateAvatarTheme(this.avatarState());
+    this.updateAvatarTheme(this.avatarState(), this.voiceState().isListening, this.gestureState().detectedGesture, false);
   }
 
   private startAnimationLoop(): void {
     if (!this.renderer) return;
-    let clock = new THREE.Clock();
+    const clock = new THREE.Clock();
 
     const animate = () => {
       if (!this.renderer) return;
       this.animationFrameId = requestAnimationFrame(animate);
       const elapsed = clock.getElapsedTime();
       const state = this.avatarState();
+      const isVoiceListening = this.voiceState().isListening;
+      const headPose = this.faceHeadState().headPose;
 
-      // Dynamic rotation based on avatar state
+      // Dynamic rotation and pulsation based on state
       let speedMultiplier = 1.0;
+      if (isVoiceListening) speedMultiplier = 2.0;
       if (state === 'THINKING' || state === 'PLANNING') speedMultiplier = 2.2;
       if (state === 'EXECUTING') speedMultiplier = 3.0;
       if (state === 'VERIFYING') speedMultiplier = 1.8;
       if (state === 'RECOVERING') speedMultiplier = 2.5;
 
+      // Subtle Head Pose Orientation Influence (Presentation Only)
+      const yawInfluence = (headPose.yaw || 0) * 0.005;
+      const pitchInfluence = -(headPose.pitch || 0) * 0.005;
+
       if (this.particleSystem) {
-        this.particleSystem.rotation.y = elapsed * 0.25 * speedMultiplier;
-        this.particleSystem.rotation.x = Math.sin(elapsed * 0.15) * 0.1;
+        this.particleSystem.rotation.y = elapsed * 0.25 * speedMultiplier + yawInfluence;
+        this.particleSystem.rotation.x = Math.sin(elapsed * 0.15) * 0.1 + pitchInfluence;
       }
 
       if (this.innerCoreMesh) {
-        this.innerCoreMesh.rotation.y = -elapsed * 0.4 * speedMultiplier;
+        this.innerCoreMesh.rotation.y = -elapsed * 0.4 * speedMultiplier + yawInfluence;
         this.innerCoreMesh.rotation.z = Math.cos(elapsed * 0.2) * 0.15;
         const scale = 1.0 + Math.sin(elapsed * 2.5 * speedMultiplier) * 0.08;
         this.innerCoreMesh.scale.set(scale, scale, scale);
@@ -180,38 +196,34 @@ export class AvatarViewportComponent implements AfterViewInit, OnDestroy {
     animate();
   }
 
-  private updateAvatarTheme(state: AvatarState): void {
+  private updateAvatarTheme(
+    state: AvatarState,
+    isVoiceListening: boolean,
+    gesture: string,
+    isEstop: boolean
+  ): void {
     if (!this.particleSystem || !this.innerCoreMesh) return;
 
     let hexColor = 0x00f0ff; // Default cyan
 
-    switch (state) {
-      case 'THINKING':
-      case 'PLANNING':
-        hexColor = 0xffb700; // Gold
-        break;
-      case 'WAITING_CONSENT':
-        hexColor = 0xf59e0b; // Amber
-        break;
-      case 'EXECUTING':
-        hexColor = 0x3b82f6; // Blue
-        break;
-      case 'VERIFYING':
-        hexColor = 0x06b6d4; // Cyan-teal
-        break;
-      case 'RECOVERING':
-        hexColor = 0xa855f7; // Violet
-        break;
-      case 'SUCCESS':
-        hexColor = 0x00ff88; // Emerald
-        break;
-      case 'ERROR':
-      case 'EMERGENCY_STOP':
-        hexColor = 0xff2a55; // Crimson
-        break;
-      default:
-        hexColor = 0x00f0ff;
-        break;
+    if (isEstop || state === 'EMERGENCY_STOP' || gesture === 'OPEN_PALM') {
+      hexColor = 0xdc2626; // Emergency stop crimson
+    } else if (isVoiceListening || state === 'LISTENING') {
+      hexColor = 0x00ffa3; // Listening green ripple
+    } else if (state === 'WAITING_CONSENT' || gesture === 'THUMBS_UP') {
+      hexColor = 0xf59e0b; // Consent amber / confirmation
+    } else if (state === 'THINKING' || state === 'PLANNING') {
+      hexColor = 0xa855f7; // Neural orbital violet
+    } else if (state === 'EXECUTING') {
+      hexColor = 0x3b82f6; // Execution blue
+    } else if (state === 'VERIFYING') {
+      hexColor = 0x06b6d4; // Cyan-teal
+    } else if (state === 'RECOVERING') {
+      hexColor = 0xa855f7; // Violet recovery
+    } else if (state === 'SUCCESS') {
+      hexColor = 0x00ff88; // Emerald success
+    } else if (state === 'ERROR') {
+      hexColor = 0xff2a55; // Red error
     }
 
     (this.particleSystem.material as THREE.PointsMaterial).color.setHex(hexColor);
@@ -243,7 +255,7 @@ export class AvatarViewportComponent implements AfterViewInit, OnDestroy {
     if (!container) return;
 
     this.resizeObserver = new ResizeObserver((entries) => {
-      for (let entry of entries) {
+      for (const entry of entries) {
         const { width, height } = entry.contentRect;
         if (width > 0 && height > 0 && this.renderer && this.camera) {
           this.camera.aspect = width / height;

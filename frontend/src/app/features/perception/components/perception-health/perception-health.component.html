@@ -1,0 +1,118 @@
+<app-panel title="PERCEPTION SUBSYSTEMS HEALTH MATRIX" icon="🩺" badge="HEALTHY">
+  <div class="perception-health-container d-flex flex-column gap-3 font-monospace">
+    <!-- Subsystems Grid -->
+    <div class="row g-2">
+      <!-- 1. Microphone -->
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="health-card p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light small fw-bold">🎙️ MICROPHONE</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getHealthBadgeClass(health().microphone)">
+              {{ health().microphone }}
+            </span>
+          </div>
+          <div class="text-muted smaller">Silero VAD / 16kHz Input</div>
+        </div>
+      </div>
+
+      <!-- 2. STT Engine -->
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="health-card p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light small fw-bold">🗣️ STT ENGINE</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getHealthBadgeClass(health().stt)">
+              {{ health().stt }}
+            </span>
+          </div>
+          <div class="text-muted smaller">Faster-Whisper (Int8 Local)</div>
+        </div>
+      </div>
+
+      <!-- 3. TTS Engine -->
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="health-card p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light small fw-bold">🔊 TTS ENGINE</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getHealthBadgeClass(health().tts)">
+              {{ health().tts }}
+            </span>
+          </div>
+          <div class="text-muted smaller">Piper / Kokoro Local TTS</div>
+        </div>
+      </div>
+
+      <!-- 4. Face Tracker -->
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="health-card p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light small fw-bold">👤 FACE TRACKER</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getHealthBadgeClass(health().faceTracker)">
+              {{ health().faceTracker }}
+            </span>
+          </div>
+          <div class="text-muted smaller">MediaPipe 468-Mesh / Pose</div>
+        </div>
+      </div>
+
+      <!-- 5. Hand Tracker -->
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="health-card p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light small fw-bold">✋ HAND TRACKER</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getHealthBadgeClass(health().handTracker)">
+              {{ health().handTracker }}
+            </span>
+          </div>
+          <div class="text-muted smaller">MediaPipe 21-pt Keypoints</div>
+        </div>
+      </div>
+
+      <!-- 6. Screen OCR -->
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="health-card p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light small fw-bold">🖥️ SCREEN OCR</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getHealthBadgeClass(health().screenOcr)">
+              {{ health().screenOcr }}
+            </span>
+          </div>
+          <div class="text-muted smaller">Tesseract / Bounding Boxes</div>
+        </div>
+      </div>
+
+      <!-- 7. Perception Daemon -->
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="health-card p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light small fw-bold">⚙️ DAEMON CORE</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getHealthBadgeClass(health().perceptionDaemon)">
+              {{ health().perceptionDaemon }}
+            </span>
+          </div>
+          <div class="text-muted smaller">Cognitive Runtime Loop</div>
+        </div>
+      </div>
+
+      <!-- 8. Telemetry Stream -->
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="health-card p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light small fw-bold">📡 TELEMETRY WS</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getHealthBadgeClass(health().telemetry)">
+              {{ health().telemetry }}
+            </span>
+          </div>
+          <div class="text-muted smaller">Single Real-Time WS Channel</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Refresh Action Footer -->
+    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25">
+      <span class="text-muted smaller">All perception models executing 100% locally on host hardware.</span>
+      <button type="button" class="btn btn-sm btn-outline-secondary font-monospace" (click)="refresh()">
+        🔄 Refresh Subsystems
+      </button>
+    </div>
+  </div>
+</app-panel>

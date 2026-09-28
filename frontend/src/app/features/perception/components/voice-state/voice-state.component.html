@@ -1,0 +1,77 @@
+<app-panel title="VOICE & VAD PERCEPTION ENGINE" icon="🎙️" [badge]="voice().sessionState">
+  <div class="voice-state-container d-flex flex-column gap-3">
+    <!-- Active Waveform & Mic Toggle Banner -->
+    <div class="hud-card p-3 rounded d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <button
+          type="button"
+          class="btn btn-icon-lg rounded-circle"
+          [class.btn-listening]="voice().isListening"
+          [class.btn-idle]="!voice().isListening"
+          (click)="toggleMic()"
+          [attr.aria-label]="voice().isListening ? 'Mute microphone' : 'Activate microphone'"
+        >
+          <span class="fs-4">{{ voice().isListening ? '🛑' : '🎙️' }}</span>
+        </button>
+
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="fw-bold font-monospace text-light">LOCAL MICROPHONE</span>
+            <span class="badge font-monospace bg-opacity-25" [ngClass]="getStateBadgeClass()">
+              {{ voice().sessionState }}
+            </span>
+          </div>
+          <div class="text-muted small font-monospace">
+            {{ voice().isListening ? 'Listening on default 16kHz input...' : 'Microphone in standby' }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Waveform Animation -->
+      <div class="waveform-box d-flex align-items-center gap-1" *ngIf="voice().isListening">
+        <span class="wave-bar bar-1"></span>
+        <span class="wave-bar bar-2"></span>
+        <span class="wave-bar bar-3"></span>
+        <span class="wave-bar bar-4"></span>
+        <span class="wave-bar bar-5"></span>
+      </div>
+    </div>
+
+    <!-- Telemetric Metrics Grid -->
+    <div class="row g-2 font-monospace small">
+      <div class="col-6 col-md-3">
+        <div class="stat-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="text-muted text-uppercase smaller">Language</div>
+          <div class="text-info fw-bold">{{ voice().language.toUpperCase() }}</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="stat-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="text-muted text-uppercase smaller">Confidence</div>
+          <div class="text-success fw-bold">{{ (voice().confidence * 100).toFixed(0) }}%</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="stat-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="text-muted text-uppercase smaller">Noise Floor</div>
+          <div class="text-light fw-bold">{{ voice().noiseFloorDb }} dBFS</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="stat-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="text-muted text-uppercase smaller">Sample Rate</div>
+          <div class="text-light fw-bold">{{ voice().sampleRate / 1000 }} kHz</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current Live Transcription Snippet -->
+    <div class="current-transcript-card p-2 rounded border border-secondary border-opacity-25 bg-black" *ngIf="voice().transcript">
+      <div class="text-muted small font-monospace mb-1">LATEST AUDIO TRANSCRIPTION:</div>
+      <div class="text-light font-monospace">"{{ voice().transcript }}"</div>
+    </div>
+  </div>
+</app-panel>
