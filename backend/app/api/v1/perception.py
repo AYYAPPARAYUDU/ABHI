@@ -44,6 +44,25 @@ class ScreenOCRRequest(BaseModel):
     target_query: Optional[str] = None
 
 
+class CommandPreviewRequest(BaseModel):
+    raw_input: str = Field(..., description="Raw text, voice transcription, or gesture command")
+    source: str = Field(default="text", description="Input source: text, voice, gesture, face")
+    source_language: Optional[str] = Field(default=None, description="Optional explicit language code")
+    confidence: float = Field(default=1.0, ge=0.0, le=1.0)
+
+
+class CommandPreviewResponse(BaseModel):
+    command: str
+    interpreted_action: str
+    target: str
+    source: str
+    language: str
+    confidence: float
+    status: str
+    requires_consent: bool
+    slots: Dict[str, Any]
+
+
 @router.post("/transcribe", response_model=TranscriptionResult)
 async def transcribe_audio(request: TranscribeRequest) -> TranscriptionResult:
     """Transcribe audio stream/buffer into text."""
@@ -61,6 +80,36 @@ async def synthesize_speech(request: SynthesizeRequest) -> SpeechSynthesisResult
 async def canonicalize_text(request: CanonicalizeRequest) -> CanonicalCommand:
     """Canonicalize multilingual human instruction into standard structured command."""
     return language_canonicalizer.canonicalize(request.text, source_language=request.source_language)
+
+
+@router.post("/preview", response_model=CommandPreviewResponse)
+async def preview_command(request: CommandPreviewRequest) -> CommandPreviewResponse:
+    """Generate structured command preview and intent validation before execution."""
+    canonical = language_canonicalizer.canonicalize(
+        request.raw_input,
+        source_language=request.source_language
+    )
+    
+    # Evaluate risk tier and consent requirements
+    raw_lower = request.raw_input.lower()
+    critical_keywords = ["delete", "remove", "drop", "format", "shutdown", "erase", "kill", "terminate"]
+    requires_consent = any(kw in raw_lower for kw in critical_keywords)
+    
+    # Extract target slot or fallback
+    target_slot = canonical.slots.get("target") or canonical.slots.get("query") or request.raw_input
+    action_label = canonical.canonical_intent.split(":")[0].upper().replace(" ", "_") if ":" in canonical.canonical_intent else "EXECUTE_GOAL"
+    
+    return CommandPreviewResponse(
+        command=request.raw_input,
+        interpreted_action=action_label,
+        target=str(target_slot),
+        source=request.source.upper(),
+        language=canonical.detected_language or "en",
+        confidence=round(canonical.confidence * request.confidence, 2),
+        status="Awaiting Operator Confirmation" if requires_consent else "Ready for Dispatch",
+        requires_consent=requires_consent,
+        slots=canonical.slots
+    )
 
 
 @router.post("/vision/face", response_model=FaceLandmarksResult)

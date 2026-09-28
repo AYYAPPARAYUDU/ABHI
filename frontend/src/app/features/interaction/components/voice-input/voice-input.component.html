@@ -1,0 +1,58 @@
+<div class="voice-input-card p-3 rounded border border-secondary border-opacity-25 bg-dark text-light" role="region" aria-label="Voice Interaction Interface">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-5" aria-hidden="true">🎙️</span>
+      <h3 class="h6 mb-0 font-monospace text-info">VOICE INTERACTION & LOCAL STT</h3>
+    </div>
+    <span
+      class="badge font-monospace"
+      [ngClass]="{
+        'bg-success': voiceState() === 'SUCCESS' || voiceState() === 'READY',
+        'bg-warning text-dark': voiceState() === 'LISTENING' || voiceState() === 'TRANSCRIBING' || voiceState() === 'UNDERSTANDING',
+        'bg-danger': voiceState() === 'ERROR' || voiceState() === 'REQUIRES_CONFIRMATION',
+        'bg-secondary': voiceState() === 'IDLE'
+      }"
+    >
+      {{ voiceState() }}
+    </span>
+  </div>
+
+  <!-- Central Audio Wave & Mic Trigger -->
+  <div class="d-flex flex-column align-items-center justify-content-center p-3 my-2 bg-black rounded border border-secondary border-opacity-25">
+    <button
+      type="button"
+      class="mic-btn rounded-circle d-flex align-items-center justify-content-center mb-3 border-0"
+      [ngClass]="{ 'mic-active': isListening(), 'mic-idle': !isListening() }"
+      (click)="toggleVoice()"
+      [attr.aria-label]="isListening() ? 'Stop Voice Listening' : 'Start Voice Listening'"
+    >
+      <span class="fs-2">{{ isListening() ? '⏹️' : '🎙️' }}</span>
+    </button>
+
+    <!-- Animated Waveform indicator -->
+    <div class="waveform d-flex align-items-center gap-1 mb-2" [class.animating]="isListening()">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </div>
+
+    <!-- Active Transcription Text -->
+    <div class="text-center font-monospace small px-3">
+      <div class="text-muted small mb-1">LIVE TRANSCRIPTION:</div>
+      <div class="text-light fs-6 fw-bold text-break" id="voice-transcription-display">
+        {{ transcript() || 'Press microphone to speak in English, Telugu, Hindi, or Tamil...' }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Telemetry Metadata: Language, Confidence, Engine -->
+  <div class="d-flex align-items-center justify-content-between text-muted small font-monospace pt-2 border-top border-secondary border-opacity-25">
+    <span>DETECTED LANG: <strong class="text-info">{{ state().detectedLanguage.toUpperCase() }}</strong></span>
+    <span>CONFIDENCE: <strong class="text-success">{{ (state().confidence * 100) | number:'1.0-0' }}%</strong></span>
+    <span>ENGINE: <strong class="text-light">Faster-Whisper (Int8)</strong></span>
+  </div>
+</div>

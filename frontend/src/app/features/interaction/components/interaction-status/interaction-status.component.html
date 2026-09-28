@@ -1,0 +1,38 @@
+<div class="interaction-status-card p-3 rounded border border-secondary border-opacity-25 bg-dark text-light" role="region" aria-label="Interaction Pipeline Log">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-5" aria-hidden="true">📜</span>
+      <h3 class="h6 mb-0 font-monospace text-info">INTERACTION AUDIT & EVENT LOG</h3>
+    </div>
+    <span class="badge bg-secondary font-monospace">{{ history().length }} EVENTS</span>
+  </div>
+
+  <!-- Priority Chain Status Strip -->
+  <div class="d-flex flex-wrap gap-2 py-2 px-3 mb-2 bg-black rounded border border-secondary border-opacity-25 font-monospace small">
+    <span>PRIORITY: <strong class="text-danger">STOP (1)</strong> &gt; <strong class="text-success">CONSENT (2)</strong> &gt; <strong class="text-info">COMMAND (3)</strong></span>
+    <span class="ms-auto text-muted">SUPERVISOR: <strong>CENTRAL_DAG</strong></span>
+  </div>
+
+  <!-- History Items List -->
+  <div class="history-list overflow-auto" style="max-height: 200px;">
+    <div *ngIf="history().length === 0" class="text-muted small font-monospace text-center py-4">
+      No interaction events recorded yet. Type or speak a command above.
+    </div>
+
+    <div
+      *ngFor="let item of history()"
+      class="history-item p-2 mb-1 bg-black bg-opacity-50 rounded border border-secondary border-opacity-10 d-flex align-items-center justify-content-between font-monospace small"
+    >
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-primary bg-opacity-25 text-info">{{ item.source }}</span>
+        <span class="text-light fw-bold">"{{ item.normalizedText }}"</span>
+        <span class="text-muted">➔ {{ item.intent }}</span>
+      </div>
+      <div class="d-flex align-items-center gap-2 text-muted">
+        <span>{{ item.language.toUpperCase() }}</span>
+        <span class="text-success">{{ (item.confidence * 100) | number:'1.0-0' }}%</span>
+        <span>{{ item.timestamp | date:'HH:mm:ss' }}</span>
+      </div>
+    </div>
+  </div>
+</div>

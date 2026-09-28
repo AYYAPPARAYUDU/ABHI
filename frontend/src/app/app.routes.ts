@@ -21,6 +21,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'interaction',
+    loadComponent: () =>
+      import('./features/interaction/pages/interaction-page/interaction-page.component').then(
+        (m) => m.InteractionPageComponent
+      )
+  },
+  {
     path: 'perception',
     loadComponent: () =>
       import('./features/perception/pages/perception-page/perception-page.component').then(

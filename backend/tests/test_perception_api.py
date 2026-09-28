@@ -82,3 +82,29 @@ async def test_perception_screen_ocr():
         ocr_data = res.json()
         assert ocr_data["image_width"] == 1920
         assert len(ocr_data["detected_elements"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_perception_command_preview():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # Standard harmless command
+        res = await client.post(
+            "/api/v1/perception/preview",
+            json={"raw_input": "Open calculator", "source": "voice", "confidence": 0.95}
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["interpreted_action"] == "OPEN_APPLICATION"
+        assert data["target"] == "calculator"
+        assert data["requires_consent"] is False
+        assert data["confidence"] > 0.8
+
+        # Critical command requiring consent
+        res_crit = await client.post(
+            "/api/v1/perception/preview",
+            json={"raw_input": "Delete temporary database files", "source": "text"}
+        )
+        assert res_crit.status_code == 200
+        crit_data = res_crit.json()
+        assert crit_data["requires_consent"] is True

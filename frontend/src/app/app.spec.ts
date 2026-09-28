@@ -101,6 +101,15 @@ describe('Phase 6 Stage 6.2 — Application Shell, Routing & Design System Suite
       expect(location.path()).toBe('/avatar');
     });
 
+    it('should navigate to /interaction and load InteractionPageComponent', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      await router.navigate(['/interaction']);
+      await fixture.whenStable();
+
+      expect(location.path()).toBe('/interaction');
+    });
+
     it('should navigate to /system and load SystemPageComponent', async () => {
       const fixture = TestBed.createComponent(App);
       fixture.detectChanges();

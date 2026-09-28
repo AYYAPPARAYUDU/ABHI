@@ -108,4 +108,89 @@ export class TaskApiService {
     }
     return await response.json();
   }
+
+  /**
+   * Canonicalize natural language text into standardized internal intent.
+   */
+  async canonicalize(text: string, sourceLanguage?: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/perception/canonicalize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, source_language: sourceLanguage || null })
+    });
+    if (!response.ok) {
+      throw new Error(`Canonicalization request failed: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Generate structured command preview and intent validation before execution.
+   */
+  async getCommandPreview(
+    rawInput: string,
+    source: string = 'text',
+    sourceLanguage?: string,
+    confidence: number = 1.0
+  ): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/perception/preview`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        raw_input: rawInput,
+        source: source.toLowerCase(),
+        source_language: sourceLanguage || null,
+        confidence
+      })
+    });
+    if (!response.ok) {
+      throw new Error(`Command preview request failed: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Transcribe raw audio buffer/base64 into structured text.
+   */
+  async transcribeAudio(audioBase64?: string, language?: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/perception/transcribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audio_base64: audioBase64 || null, language: language || null })
+    });
+    if (!response.ok) {
+      throw new Error(`Transcription request failed: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Synthesize text into speech audio response.
+   */
+  async synthesizeSpeech(text: string, voice: string = 'default_neutral', rate: number = 1.0): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/perception/synthesize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, voice, rate })
+    });
+    if (!response.ok) {
+      throw new Error(`Speech synthesis request failed: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Query status and capabilities of perception engines.
+   */
+  async getPerceptionStatus(): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/perception/status`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Perception status request failed: ${response.status}`);
+    }
+    return await response.json();
+  }
 }
+

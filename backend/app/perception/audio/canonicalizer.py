@@ -28,7 +28,7 @@ class LanguageCanonicalizer:
     INTENT_KEYWORDS = {
         "OPEN_APPLICATION": [
             "open", "launch", "kholo", "start", "chalu karo", "ouvrir", "abrir",
-            "ఓపెన్ చేయి", "ఓపెన్", "తెరవండి", "திறக்கவும்", "खोलो"
+            "ఓపెన్ చేయి", "ఓపెన్", "తెరవండి", "திறக்கவும்", "திற", "खोलो"
         ],
         "SEARCH_KNOWLEDGE": [
             "search", "find", "lookup", "kripya dhoondo", "khojo", "chercher", "buscar",

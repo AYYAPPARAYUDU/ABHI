@@ -1,0 +1,69 @@
+<div class="interaction-page-container container-fluid py-3 px-3 px-md-4" role="main" aria-label="Multimodal Interaction & Command Cockpit">
+  <!-- Page Header Strip -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+    <div>
+      <h1 class="h4 mb-1 text-light font-monospace fw-bold d-flex align-items-center gap-2">
+        <span>🎙️</span>
+        <span>MULTIMODAL COMMAND INTERFACE</span>
+      </h1>
+      <p class="text-muted small mb-0 font-monospace">
+        Unified Voice, Multilingual Text, and Spatial Hand Gesture Input Engine
+      </p>
+    </div>
+
+    <!-- Mode Selector Tabs -->
+    <div class="btn-group font-monospace" role="group" aria-label="Input Mode Switcher">
+      <button
+        type="button"
+        class="btn btn-sm"
+        [ngClass]="activeMode() === 'TEXT' ? 'btn-primary' : 'btn-outline-secondary text-light'"
+        (click)="setMode('TEXT')"
+        aria-label="Text Input Mode"
+      >
+        ⌨️ TEXT
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm"
+        [ngClass]="activeMode() === 'VOICE' ? 'btn-primary' : 'btn-outline-secondary text-light'"
+        (click)="setMode('VOICE')"
+        aria-label="Voice Input Mode"
+      >
+        🎙️ VOICE
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm"
+        [ngClass]="activeMode() === 'GESTURE' ? 'btn-primary' : 'btn-outline-secondary text-light'"
+        (click)="setMode('GESTURE')"
+        aria-label="Gesture Input Mode"
+      >
+        ✋ GESTURE
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Multi-Column Layout -->
+  <div class="row g-3">
+    <!-- Left Column: Primary Interaction Modalities -->
+    <div class="col-12 col-lg-7 d-flex flex-column gap-3">
+      <!-- Voice Input Component -->
+      <app-voice-input></app-voice-input>
+
+      <!-- Text Command Input Component -->
+      <app-command-input></app-command-input>
+
+      <!-- Structured Command Preview (Appears when intent is evaluated) -->
+      <app-command-preview *ngIf="preview()"></app-command-preview>
+    </div>
+
+    <!-- Right Column: Gesture & Face Telemetry + Audit Log -->
+    <div class="col-12 col-lg-5 d-flex flex-column gap-3">
+      <!-- Live Gesture and Face Status -->
+      <app-gesture-status></app-gesture-status>
+
+      <!-- Interaction History Log -->
+      <app-interaction-status></app-interaction-status>
+    </div>
+  </div>
+</div>

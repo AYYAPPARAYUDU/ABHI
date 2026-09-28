@@ -1,0 +1,73 @@
+<div class="command-input-card p-3 rounded border border-secondary border-opacity-25 bg-dark text-light" role="region" aria-label="Text Command Input Interface">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-5" aria-hidden="true">⌨️</span>
+      <h3 class="h6 mb-0 font-monospace text-info">TEXT COMMAND INTERACTION</h3>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <label for="lang-select" class="small text-muted font-monospace">LANG:</label>
+      <select
+        id="lang-select"
+        class="form-select form-select-sm bg-black text-light border-secondary font-monospace"
+        [value]="selectedLanguage()"
+        (change)="selectedLanguage.set($any($event.target).value)"
+        aria-label="Select Input Language"
+      >
+        <option value="auto">Auto-Detect</option>
+        <option value="en">English (EN)</option>
+        <option value="te">Telugu (TE)</option>
+        <option value="hi">Hindi (HI)</option>
+        <option value="ta">Tamil (TA)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Multilingual Command Input Form -->
+  <div class="input-group mb-2">
+    <input
+      type="text"
+      id="natural-language-command-input"
+      class="form-control bg-black text-light border-secondary font-monospace"
+      placeholder="Type natural language command in English, Telugu, Hindi, Tamil..."
+      [ngModel]="commandText()"
+      (ngModelChange)="onTextChange($event)"
+      (keydown)="onKeyDown($event)"
+      aria-label="Natural Language Instruction Input"
+    />
+    <button
+      class="btn btn-primary font-monospace px-3"
+      type="button"
+      id="submit-command-btn"
+      (click)="submit()"
+      [disabled]="!commandText().trim()"
+      aria-label="Preview and Submit Command"
+    >
+      PREVIEW ➔
+    </button>
+    <button
+      class="btn btn-outline-secondary font-monospace"
+      type="button"
+      (click)="clear()"
+      [disabled]="!commandText()"
+      aria-label="Clear Text Input"
+    >
+      CLEAR
+    </button>
+  </div>
+
+  <!-- Multilingual Sample Chips -->
+  <div class="mt-2">
+    <span class="small text-muted font-monospace me-2">PRESETS:</span>
+    <div class="d-inline-flex flex-wrap gap-1">
+      <button
+        *ngFor="let ex of multilingualExamples"
+        type="button"
+        class="btn btn-sm btn-outline-secondary py-0 px-2 font-monospace rounded-pill text-light opacity-75"
+        (click)="selectExample(ex.text, ex.lang)"
+        [title]="'Execute ' + ex.label"
+      >
+        {{ ex.label }}
+      </button>
+    </div>
+  </div>
+</div>

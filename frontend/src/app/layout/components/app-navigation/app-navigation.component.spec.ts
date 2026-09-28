@@ -34,6 +34,6 @@ describe('AppNavigationComponent', () => {
 
     const el = fixture.nativeElement as HTMLElement;
     const links = el.querySelectorAll('a.nav-tab');
-    expect(links.length).toBe(5);
+    expect(links.length).toBe(6);
   });
 });
