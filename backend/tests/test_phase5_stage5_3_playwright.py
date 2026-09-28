@@ -132,6 +132,70 @@ def test_stage5_3_navigation_approved_and_blocked_origins(playwright_pipeline, l
     assert res_ext.error.error_code == AutomationErrorCode.POLICY_DENIED
 
 
+def test_stage5_3_malicious_hostname_collisions_and_scheme_rejection(playwright_pipeline):
+    """Verify malicious hostname prefix collisions, credentials, and non-http schemes are strictly rejected."""
+    pipe, worker, leases, grounder, policy, _ = playwright_pipeline
+    grounding, _ = grounder.ground_target("Page")
+
+    # 1. Hostname prefix collisions and userinfo injections (MUST return POLICY_DENIED)
+    hostile_urls = [
+        "http://localhost.evil.com",
+        "http://localhost.evil.com/phishing",
+        "http://127.0.0.1.evil.com",
+        "http://127.0.0.1.evil.com/login",
+        "http://localhost@evil.com",
+        "http://127.0.0.1@evil.com",
+        "http://user:pass@localhost:8765",
+        "file:///etc/passwd",
+        "https://localhost:8765",
+        "ftp://localhost:21",
+        "about:blank",
+        "javascript:alert(1)",
+        "data:text/html,<h1>PWNED</h1>"
+    ]
+
+    for idx, hostile_url in enumerate(hostile_urls):
+        lease = leases.acquire_lease(task_id=f"task_hostile_{idx}", execution_id="exec_01", agent_id="browser_agent")
+        action = ExecutionAction(
+            action_id=f"act_hostile_{idx}",
+            task_id=f"task_hostile_{idx}",
+            execution_id="exec_01",
+            lease_id=lease.lease_id,
+            action_type=ActionType.BROWSER_NAVIGATE,
+            grounding=grounding,
+            parameters={"url": hostile_url},
+            precondition="Browser is ready",
+            expected_postcondition="Should fail"
+        )
+        res = pipe.run_browser_action(action)
+        assert res.is_success is False, f"Expected {hostile_url} to be blocked, but succeeded."
+        assert res.stage_reached == "POLICY_VALIDATION", f"Expected POLICY_VALIDATION for {hostile_url}, got {res.stage_reached}."
+        assert res.error.error_code == AutomationErrorCode.POLICY_DENIED, f"Expected POLICY_DENIED for {hostile_url}, got {res.error.error_code}."
+
+    # 2. Approved exact origins with ports (MUST be allowed by policy)
+    approved_urls = [
+        "http://127.0.0.1:8765/test_app.html",
+        "http://localhost:8765/test_app.html",
+        "http://127.0.0.1/index.html",
+        "http://localhost/index.html"
+    ]
+    for idx, app_url in enumerate(approved_urls):
+        dummy_action = ExecutionAction(
+            action_id=f"act_app_{idx}",
+            task_id=f"task_app_{idx}",
+            execution_id="exec_01",
+            lease_id="test_lease",
+            action_type=ActionType.BROWSER_NAVIGATE,
+            grounding=grounding,
+            parameters={"url": app_url},
+            precondition="Browser is ready",
+            expected_postcondition="Page loaded"
+        )
+        is_ok, err = policy.validate_action(dummy_action, agent_id="browser_agent")
+        assert is_ok is True, f"Expected {app_url} to pass policy, but got {err}"
+        assert err is None
+
+
 def test_stage5_3_page_identity_and_unexpected_url_rejection(playwright_pipeline, local_test_site_url):
     """Verify action fails safely when page unexpectedly changes or origin mismatches."""
     pipe, worker, leases, grounder, policy, _ = playwright_pipeline

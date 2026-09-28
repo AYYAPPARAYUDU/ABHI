@@ -13,8 +13,8 @@ async def test_supervisor_goal_submission_and_completion():
     status_obj = await central_supervisor.submit_goal(goal="search local documentation for architecture")
     assert status_obj.task_id is not None
 
-    # Wait for async execution loop to complete (up to 30 seconds for local 8B LLM)
-    for _ in range(60):
+    # Wait for async execution loop to complete (up to 60 seconds for local 8B LLM)
+    for _ in range(120):
         await asyncio.sleep(0.5)
         current = central_supervisor.get_task_status(status_obj.task_id)
         if current and current.state in [SupervisorState.COMPLETED, SupervisorState.FAILED, SupervisorState.CANCELLED]:

@@ -4,6 +4,7 @@ Enforces execution barriers, risk tiers, and capability permissions to prevent
 unauthorized or destructive actions against the Windows desktop and browser.
 """
 
+from urllib.parse import urlparse
 from typing import Any, Dict, List, Optional, Set, Tuple
 from backend.app.automation.models.actions import ExecutionAction, ActionType, GroundingLevel
 from backend.app.automation.models.errors import AutomationError, AutomationErrorCode
@@ -95,13 +96,35 @@ class SafetyPolicyEngine:
 
         # 4. Browser Specific Policy Checks
         if action.action_type == ActionType.BROWSER_NAVIGATE or "url" in action.parameters:
-            target_url = action.parameters.get("url", "").strip().lower()
-            if target_url:
-                allowed = any(target_url.startswith(prefix) for prefix in ["http://127.0.0.1", "http://localhost"])
-                if not allowed:
+            raw_url = str(action.parameters.get("url", "")).strip()
+            if raw_url:
+                is_valid_origin = False
+                try:
+                    parsed = urlparse(raw_url)
+                    # Scheme must be strictly http
+                    # Hostname must be strictly 'localhost' or '127.0.0.1'
+                    # No userinfo (username/password or @ in authority)
+                    # Port must be valid if specified (1-65535)
+                    if (
+                        parsed.scheme.lower() == "http"
+                        and parsed.hostname
+                        and parsed.hostname.lower() in {"localhost", "127.0.0.1"}
+                        and not parsed.username
+                        and not parsed.password
+                        and "@" not in parsed.netloc
+                    ):
+                        if parsed.port is not None:
+                            if 1 <= parsed.port <= 65535:
+                                is_valid_origin = True
+                        else:
+                            is_valid_origin = True
+                except Exception:
+                    is_valid_origin = False
+
+                if not is_valid_origin:
                     return False, AutomationError(
                         error_code=AutomationErrorCode.POLICY_DENIED,
-                        message=f"Navigation to external, file://, or unauthorized origin '{target_url}' is prohibited in Stage 5.3.",
+                        message=f"Navigation to external, file://, malformed, or unauthorized origin '{raw_url}' is prohibited in Stage 5.3.",
                         action_id=action.action_id,
                         task_id=action.task_id
                     )

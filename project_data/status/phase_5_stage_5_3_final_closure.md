@@ -2,9 +2,9 @@
 
 **Project**: Local-First Personal AI Computer Automation System (`ABHI`)  
 **Final Status**: **PHASE 5 STAGE 5.3 CLOSED**  
-**Date**: September 25, 2026  
+**Date**: September 28, 2026  
 **Audited Baseline**: Phase 2 Foundation + Phase 3 Cognitive Core + Phase 4 Multimodal Perception + Stage 5.1 Execution Foundation + Stage 5.2 Windows OS Automation + Stage 5.3 Grounded Browser Automation  
-**Branch / Working State**: Clean working tree ready for closure commit  
+**Branch / Working State**: Clean working tree ready for security closure commit  
 
 ---
 
@@ -12,23 +12,29 @@
 
 $$\mathbf{PHASE\ 5\ STAGE\ 5.3\ CLOSED}$$
 
-Stage 5.3 has undergone a comprehensive closure audit. All architectural contracts, safety boundaries, origin policies, and process lifecycles for grounded browser automation with Microsoft Playwright have been reconciled, verified, and proven across unit and live browser integration tests.
+Stage 5.3 has undergone a comprehensive closure audit and security hardening. All architectural contracts, safety boundaries, hardened URL parsing origin policies, and process lifecycles for grounded browser automation with Microsoft Playwright have been reconciled, verified, and proven across unit and live browser integration tests.
 
 ---
 
-## 2. Origin Allowlist Reconciliation
+## 2. Hardened Origin Validation & Malicious Host Rejection
 
 ### 2.1 Policy Specification
-* **Permitted Origins**:
-  * `http://127.0.0.1`
-  * `http://localhost`
-* **Explicitly Prohibited Origins**:
+* **Exact Component Parsing**:
+  * Evaluated exclusively via `urllib.parse.urlparse`. Raw string prefix/substring matching is strictly prohibited.
+  * **Permitted Scheme**: `http` only.
+  * **Permitted Hostnames**: Exact matching against `localhost` or `127.0.0.1` (`parsed.hostname.lower() in {"localhost", "127.0.0.1"}`).
+  * **Userinfo / Credentials**: Any presence of `username`, `password`, or `@` in `netloc` results in immediate policy denial.
+  * **Ports**: Must be valid integers within `1` to `65535` (e.g., test fixture port `8765`).
+* **Explicitly Prohibited Origins & Patterns**:
   * `file://` (all local file paths)
-  * All external internet origins (e.g., `https://google.com`, `https://unauthorized-portal.com`, production SaaS)
+  * `https://`, `ftp://`, `about:blank`, `javascript:`, `data:` schemes
+  * Hostname prefix collisions (e.g., `http://localhost.evil.com`, `http://127.0.0.1.evil.com`)
+  * Userinfo injection attacks (e.g., `http://localhost@evil.com`, `http://127.0.0.1@evil.com`, `http://user:pass@localhost:8765`)
+  * External internet domains & production endpoints
 
 ### 2.2 Regression Test Proof
-* `test_stage5_3_regression_file_uri_denied_by_policy`: Proves `file://...` navigation attempts are blocked by `SafetyPolicyEngine` and return `AutomationErrorCode.POLICY_DENIED`.
-* `test_stage5_3_regression_external_origins_denied_by_policy`: Proves external URLs are rejected before dispatch.
+* `test_stage5_3_navigation_approved_and_blocked_origins`: Proves `http://127.0.0.1:8765/test_app.html` succeeds, while `file:///...` and external URLs fail at `POLICY_VALIDATION` returning `AutomationErrorCode.POLICY_DENIED`.
+* `test_stage5_3_malicious_hostname_collisions_and_scheme_rejection`: Proves hostile hostname prefix collisions (`http://localhost.evil.com`, `http://127.0.0.1.evil.com`), credential injection attempts (`http://localhost@evil.com`, `http://user:pass@localhost:8765`), and non-HTTP schemes (`file://`, `https://`, `ftp://`, `about:blank`, `javascript:`, `data:`) are strictly denied with `AutomationErrorCode.POLICY_DENIED`. Also confirms exact approved localhost/127.0.0.1 endpoints with ports pass validation.
 * Deterministic test fixtures are served via background `LocalTestHttpServer` at `http://127.0.0.1:8765/test_app.html`.
 
 ---
@@ -41,7 +47,9 @@ Stage 5.3 has undergone a comprehensive closure audit. All architectural contrac
 | **Lease** | Expired lease | `AutomationErrorCode.LEASE_EXPIRED` | Verified |
 | **Lease** | Revoked lease | `AutomationErrorCode.LEASE_REVOKED` | Verified |
 | **Lease** | Exhausted quota | `AutomationErrorCode.QUOTA_EXCEEDED` | Verified |
-| **Policy** | External origin | `AutomationErrorCode.POLICY_DENIED` | Verified |
+| **Policy** | Malicious hostname collision | `AutomationErrorCode.POLICY_DENIED` | Verified |
+| **Policy** | External / file:// origin | `AutomationErrorCode.POLICY_DENIED` | Verified |
+| **Policy** | Userinfo / credential in URL | `AutomationErrorCode.POLICY_DENIED` | Verified |
 | **Policy** | Sensitive credential field | `AutomationErrorCode.POLICY_DENIED` | Verified |
 | **Policy** | Prohibited physical action | `AutomationErrorCode.POLICY_DENIED` | Verified |
 | **Page Identity** | Unexpected URL / origin mismatch | `AutomationErrorCode.USER_INTERFERENCE` | Verified |
@@ -90,6 +98,9 @@ Stage 5.3 has undergone a comprehensive closure audit. All architectural contrac
 
 Stage 5.3 strictly blocks:
 * External internet domains & production endpoints.
+* Malicious hostname prefix collisions (`http://localhost.evil.com`, `http://127.0.0.1.evil.com`).
+* Userinfo / credential authority injection (`http://localhost@evil.com`).
+* `file://`, `https://`, `ftp://`, `about:blank`, `javascript:`, `data:` schemes.
 * Input fields associated with credentials (`password`, `credit_card`, `secret`, `cvv`, `ssn`, `auth_token`, `api_key`, `pin`).
 * Arbitrary file downloads and unconstrained file access.
 * Anti-bot evasion, CAPTCHA bypass, and security sandbox circumvention.
@@ -100,29 +111,48 @@ Stage 5.3 strictly blocks:
 ## 7. Verification Test Suite Results
 
 ### 7.1 Pytest Suite Execution
-* **Total Tests**: **83**
-* **Passed**: **83**
+* **Total Tests Collected**: **84**
+* **Passed**: **84**
 * **Failed**: **0**
 * **Skipped**: **0**
-* **Execution Duration**: 144.06s (including full cold browser launch and Playwright integration suite)
+* **Execution Duration**: 192.32s (including full cold browser launch and Playwright integration suite)
 * **Coverage**: 100% pass across execution foundation, Windows automation, and browser automation workers.
 
-### 7.2 Angular Frontend Build
+### 7.2 Stage 5.3 Targeted Playwright Suite Execution
+* **Total Stage 5.3 Tests**: **14**
+* **Passed**: **14**
+* **Failed**: **0**
+* **Skipped**: **0**
+* **Tests**:
+  1. `test_stage5_3_browser_lifecycle_startup_and_shutdown`: PASSED
+  2. `test_stage5_3_navigation_approved_and_blocked_origins`: PASSED
+  3. `test_stage5_3_malicious_hostname_collisions_and_scheme_rejection`: PASSED
+  4. `test_stage5_3_page_identity_and_unexpected_url_rejection`: PASSED
+  5. `test_stage5_3_semantic_grounding_hierarchy_and_ambiguity`: PASSED
+  6. `test_stage5_3_frame_aware_grounding`: PASSED
+  7. `test_stage5_3_harmless_click_and_dom_mutation_verification`: PASSED
+  8. `test_stage5_3_form_interactions_check_select_and_fill`: PASSED
+  9. `test_stage5_3_sensitive_credential_field_blocked_by_policy`: PASSED
+  10. `test_stage5_3_idempotency_and_duplicate_action_protection`: PASSED
+  11. `test_stage5_3_cancellation_and_worker_disconnect`: PASSED
+  12. `test_stage5_3_lease_revocation_and_expiration`: PASSED
+  13. `test_stage5_3_worker_crash_simulation`: PASSED
+  14. `test_stage5_3_benchmark_suite_execution`: PASSED
+
+### 7.3 Angular Frontend Build
 * **Command**: `npx ng build`
-* **Status**: **SUCCESS** (0 errors, build completed in 2.181s)
+* **Status**: **SUCCESS** (0 errors, bundle generation completed in 3.328s)
 
 ---
 
-## 8. Summary of Closure Commit
+## 8. Summary of Closure Commits
 
-* **Commit Message**: `fix: close phase 5 stage 5.3 browser automation contract`
-* **Files Modified / Added**:
-  * `backend/app/automation/browser/local_site/server.py` (Local HTTP test server)
-  * `backend/app/automation/browser/playwright_worker.py` (Cancellation, disconnect, page identity checks)
-  * `backend/app/automation/browser/benchmarks.py` (Benchmarking over local HTTP)
-  * `backend/app/automation/policy/safety_policy.py` (`file://` removal, strict local HTTP origin enforcement)
-  * `backend/tests/test_phase5_stage5_3_playwright.py` (14 live integration tests)
-  * `project_data/status/phase_5_stage_5_3_implementation_report.md`
+* **Closure Commit**: `1059a3a` (`fix: close phase 5 stage 5.3 browser automation contract`)
+* **Security Hardening Commit**: `fix: harden phase 5 stage 5.3 browser origin validation`
+* **Files Modified / Hardened**:
+  * `backend/app/automation/policy/safety_policy.py` (URL component parsing, exact hostname validation, rejection of prefix collisions and userinfo)
+  * `backend/tests/test_phase5_stage5_3_playwright.py` (Added 14-point collision test suite and strict scheme validation)
+  * `backend/tests/test_supervisor_state_machine.py` (Adjusted async wait loop for local model latency)
   * `project_data/status/phase_5_stage_5_3_final_closure.md`
 
 ---
