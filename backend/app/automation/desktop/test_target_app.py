@@ -68,6 +68,11 @@ class DeterministicLocalTestApp:
             }
         ]
 
+    @property
+    def state(self) -> str:
+        """Alias property for status_label."""
+        return self.status_label
+
     def get_uia_tree(self) -> List[Dict[str, Any]]:
         """Return the Windows UI Automation tree of the test target."""
         return self._elements

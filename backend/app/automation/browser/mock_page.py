@@ -98,6 +98,12 @@ class MockLocalBrowserPage:
         self.status_text = f"QUERY_FILLED:{value}"
         return True
 
+    def click_coordinate(self, x: int, y: int) -> bool:
+        """Perform a coordinate click on the page (e.g. for canvas elements)."""
+        self.click_count += 1
+        self.status_text = "CANVAS_VISUAL_CLICKED"
+        return True
+
 
 # Global mock local web page instance for deterministic testing
 local_test_browser_page = MockLocalBrowserPage()

@@ -74,15 +74,17 @@ class ActionVerifier:
         exp_norm = expected.replace("_", " ")
 
         matched = False
-        if exp_norm in status_norm or status_norm in exp_norm or exp_norm in dom_norm or dom_norm in exp_norm:
+        if status_norm and (exp_norm in status_norm or status_norm in exp_norm):
             matched = True
-        elif expected in status_txt or expected in dom_txt or expected in curr_val or expected in win_title:
+        elif dom_norm and (exp_norm in dom_norm or dom_norm in exp_norm):
             matched = True
-        elif status_txt and len(status_txt) >= 3 and status_txt in expected:
+        elif status_txt and (expected in status_txt or status_txt in expected):
             matched = True
-        elif dom_txt and len(dom_txt) >= 3 and dom_txt in expected:
+        elif dom_txt and (expected in dom_txt or dom_txt in expected):
             matched = True
-        elif curr_val and len(curr_val) >= 3 and curr_val in expected:
+        elif curr_val and (expected in curr_val or curr_val in expected):
+            matched = True
+        elif win_title and expected in win_title:
             matched = True
         elif "submitted" in expected and "submitted" in status_txt:
             matched = True

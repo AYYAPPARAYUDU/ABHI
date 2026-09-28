@@ -53,11 +53,13 @@ class ScreenEvidence(BaseModel):
 
 class FallbackDecisionTrace(BaseModel):
     """Authoritative audit record detailing why semantic grounding transitioned to visual fallback."""
-    preferred_method: GroundingLevel
-    failure_reason: str
-    fallback_method: GroundingLevel
-    fallback_confidence: float
-    observation_id: str
-    final_decision: str  # "EXECUTE" | "REJECT" | "RE_GROUND"
+    preferred_method: GroundingLevel = GroundingLevel.LEVEL_1_UIA
+    failure_reason: str = "NONE"
+    fallback_method: Optional[GroundingLevel] = None
+    fallback_confidence: float = 0.0
+    observation_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    final_decision: str = "EXECUTE"  # "EXECUTE" | "REJECT" | "RE_GROUND"
+    task_id: Optional[str] = None
+    execution_id: Optional[str] = None
     timestamp: float = Field(default_factory=time.time)
     metadata: Dict[str, Any] = Field(default_factory=dict)

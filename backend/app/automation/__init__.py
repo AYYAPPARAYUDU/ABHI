@@ -18,6 +18,21 @@ from backend.app.automation.desktop.windows_worker import WindowsAutomationWorke
 from backend.app.automation.browser.browser_worker import BrowserAutomationWorker, browser_worker
 from backend.app.automation.verification.action_verifier import ActionVerifier, PhysicalVerificationResult, action_verifier
 from backend.app.automation.pipeline.executor import ExecutionPipeline, PipelineExecutionResult, execution_pipeline
+from backend.app.automation.orchestration import (
+    OrchestrationState,
+    SupervisorDecisionTrace,
+    OrchestrationExecutionContext,
+    OrchestrationTaskResult,
+    GroundingStrategySelector,
+    grounding_strategy_selector,
+    SupervisorOrchestrator,
+    supervisor_orchestrator,
+    GroundedDesktopAgent,
+    GroundedBrowserAgent,
+    register_grounded_agents,
+    OrchestrationBenchmarkSuite,
+    orchestration_benchmark_suite
+)
 
 __all__ = [
     "GroundingLevel",
@@ -47,5 +62,18 @@ __all__ = [
     "action_verifier",
     "ExecutionPipeline",
     "PipelineExecutionResult",
-    "execution_pipeline"
+    "execution_pipeline",
+    "OrchestrationState",
+    "SupervisorDecisionTrace",
+    "OrchestrationExecutionContext",
+    "OrchestrationTaskResult",
+    "GroundingStrategySelector",
+    "grounding_strategy_selector",
+    "SupervisorOrchestrator",
+    "supervisor_orchestrator",
+    "GroundedDesktopAgent",
+    "GroundedBrowserAgent",
+    "register_grounded_agents",
+    "OrchestrationBenchmarkSuite",
+    "orchestration_benchmark_suite"
 ]

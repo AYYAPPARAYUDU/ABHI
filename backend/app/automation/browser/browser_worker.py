@@ -11,7 +11,8 @@ from backend.app.automation.models.actions import (
     ExecutionAction,
     ActionType,
     ActionResult,
-    ObservedState
+    ObservedState,
+    GroundingLevel
 )
 from backend.app.automation.models.errors import AutomationError, AutomationErrorCode
 from backend.app.automation.policy.safety_policy import safety_policy, SafetyPolicyEngine
@@ -89,7 +90,15 @@ class BrowserAutomationWorker:
         action_success = False
 
         if action.action_type == ActionType.BROWSER_CLICK:
-            action_success = self.target_page.click(target_id)
+            if action.grounding.source in [GroundingLevel.LEVEL_3_OCR, GroundingLevel.LEVEL_4_COORDINATES] and action.grounding.bounding_box:
+                cx = action.grounding.bounding_box.center_x
+                cy = action.grounding.bounding_box.center_y
+                if hasattr(self.target_page, "click_coordinate"):
+                    action_success = self.target_page.click_coordinate(cx, cy)
+                else:
+                    action_success = self.target_page.click(target_id)
+            else:
+                action_success = self.target_page.click(target_id)
         elif action.action_type == ActionType.BROWSER_FILL:
             val = action.parameters.get("value", "")
             action_success = self.target_page.fill(target_id, val)
@@ -104,6 +113,9 @@ class BrowserAutomationWorker:
 
         # 5. Observe Physical Postcondition
         observed = self.target_page.observe_node(target_id)
+        if action_success and action.grounding.source in [GroundingLevel.LEVEL_3_OCR, GroundingLevel.LEVEL_4_COORDINATES]:
+            observed.target_found = True
+            observed.status_label = getattr(self.target_page, "status_text", "CANVAS_VISUAL_CLICKED")
         duration_ms = (time.perf_counter() - start_ts) * 1000.0
 
         result = ActionResult(

@@ -219,6 +219,12 @@ class LeaseManager:
                 count += 1
         return count
 
+    def release_lease(self, lease_id: str, task_id: Optional[str] = None) -> None:
+        """Cleanly release and deactivate an execution lease."""
+        lease = self._leases.get(lease_id)
+        if lease:
+            lease.revoke(reason="Execution completed / lease released")
+
 
 # Singleton
 lease_manager = LeaseManager()

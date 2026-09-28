@@ -35,6 +35,7 @@ class VisualGrounder:
 
     def __init__(self, ocr_engine: Optional[ScreenOCREngine] = None, max_visual_age: float = DEFAULT_MAX_VISUAL_AGE_SECONDS):
         self.ocr = ocr_engine or screen_ocr
+        self.ocr_engine = self.ocr
         self.max_visual_age = max_visual_age
 
     def validate_bounding_box(
