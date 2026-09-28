@@ -1,0 +1,20 @@
+.research-list-scroll {
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.research-card {
+  transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+.research-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(56, 189, 248, 0.5) !important;
+}
+
+.text-truncate-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

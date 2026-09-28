@@ -1,0 +1,55 @@
+<div class="llm-evaluation-page container-fluid p-0">
+  <!-- Top Header with Title, Mode & Run Trigger -->
+  <app-evaluation-header></app-evaluation-header>
+
+  <div class="p-3 d-flex flex-column gap-3">
+    <!-- Replay Scrubber and VCR Controls -->
+    <app-evaluation-replay></app-evaluation-replay>
+
+    <!-- Daily Scorecard Summary Row -->
+    <app-daily-scorecard></app-daily-scorecard>
+
+    <!-- 3D Analytics Row: Capability Galaxy & 3D Evolution Timeline -->
+    <div class="row g-3">
+      <div class="col-12 col-xl-6">
+        <app-capability-galaxy></app-capability-galaxy>
+      </div>
+      <div class="col-12 col-xl-6">
+        <app-evolution-timeline-3d></app-evolution-timeline-3d>
+      </div>
+    </div>
+
+    <!-- 2D Analytics & Performance Row: Capability Breakdown, Benchmark Heatmap & Regressions -->
+    <div class="row g-3">
+      <div class="col-12 col-lg-4">
+        <app-capability-radar></app-capability-radar>
+      </div>
+      <div class="col-12 col-lg-4">
+        <app-benchmark-heatmap></app-benchmark-heatmap>
+      </div>
+      <div class="col-12 col-lg-4">
+        <app-regression-alert></app-regression-alert>
+      </div>
+    </div>
+
+    <!-- Evolution Lab & Model Matrix Row -->
+    <div class="row g-3">
+      <div class="col-12 col-lg-6">
+        <app-model-comparison></app-model-comparison>
+      </div>
+      <div class="col-12 col-lg-6">
+        <app-evolution-pipeline></app-evolution-pipeline>
+      </div>
+    </div>
+
+    <!-- Research Feed & Resource Profiling Row -->
+    <div class="row g-3">
+      <div class="col-12 col-lg-8">
+        <app-research-feed></app-research-feed>
+      </div>
+      <div class="col-12 col-lg-4">
+        <app-resource-metrics></app-resource-metrics>
+      </div>
+    </div>
+  </div>
+</div>

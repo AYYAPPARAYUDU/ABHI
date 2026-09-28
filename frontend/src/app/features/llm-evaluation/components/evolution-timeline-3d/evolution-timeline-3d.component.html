@@ -1,0 +1,21 @@
+<div class="evolution-timeline-3d-container card bg-dark border-secondary border-opacity-50 shadow-sm p-3">
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-5">📈</span>
+      <h3 class="h6 mb-0 font-monospace text-light fw-bold">3D MODEL EVOLUTION TIMELINE</h3>
+    </div>
+    <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 font-monospace small">
+      DAY {{ replayService.currentDayIndex() }} OF {{ replayService.totalDays }}
+    </span>
+  </div>
+
+  <div class="canvas-viewport position-relative rounded overflow-hidden border border-secondary border-opacity-25">
+    <canvas #timelineCanvas class="w-100 h-100"></canvas>
+    
+    <div class="timeline-legend position-absolute bottom-0 start-0 p-2 m-2 rounded bg-dark bg-opacity-75 border border-secondary border-opacity-25 font-monospace small">
+      <span class="text-muted" style="font-size: 0.75rem;">
+        Green Marker: Active Replay Cursor • Blue Pillars: Evaluated Days • Gray: Future
+      </span>
+    </div>
+  </div>
+</div>

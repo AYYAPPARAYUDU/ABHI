@@ -1,0 +1,45 @@
+<div class="card bg-dark border-secondary border-opacity-50 shadow-sm p-3 h-100">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-5">⚡</span>
+      <h3 class="h6 mb-0 font-monospace text-light fw-bold">RESOURCE BUDGET & PROFILING</h3>
+    </div>
+    <span class="badge bg-secondary bg-opacity-25 text-light font-monospace small">
+      HOST: RTX 5050 / 24GB RAM
+    </span>
+  </div>
+
+  <div class="row g-2">
+    <!-- CPU Usage -->
+    <div class="col-6 col-md-3">
+      <div class="p-2 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-25 font-monospace text-center">
+        <span class="text-muted small d-block">CPU PEAK</span>
+        <span class="fs-5 fw-bold text-light">{{ resource.cpu_percent }}%</span>
+      </div>
+    </div>
+
+    <!-- RAM Usage -->
+    <div class="col-6 col-md-3">
+      <div class="p-2 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-25 font-monospace text-center">
+        <span class="text-muted small d-block">RAM USED</span>
+        <span class="fs-5 fw-bold text-info">{{ resource.memory_mb }} MB</span>
+      </div>
+    </div>
+
+    <!-- VRAM Usage -->
+    <div class="col-6 col-md-3">
+      <div class="p-2 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-25 font-monospace text-center">
+        <span class="text-muted small d-block">VRAM USED</span>
+        <span class="fs-5 fw-bold text-warning">{{ resource.gpu_memory_mb }} MB</span>
+      </div>
+    </div>
+
+    <!-- Benchmark Duration -->
+    <div class="col-6 col-md-3">
+      <div class="p-2 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-25 font-monospace text-center">
+        <span class="text-muted small d-block">BENCHMARK TIME</span>
+        <span class="fs-5 fw-bold text-success">{{ resource.duration_seconds }}s</span>
+      </div>
+    </div>
+  </div>
+</div>

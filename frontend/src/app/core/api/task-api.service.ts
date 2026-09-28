@@ -426,5 +426,218 @@ export class TaskApiService {
     }
     return await response.json();
   }
+
+  // ==========================================
+  // PHASE 6.7: LLM EVALUATION & EVOLUTION LAB
+  // ==========================================
+
+  /**
+   * Fetch evaluation subsystem status and scheduler state.
+   */
+  async getEvaluationStatus(): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/status`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to get evaluation status: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * List historical evaluation runs.
+   */
+  async listEvaluationRuns(): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/runs`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list evaluation runs: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Retrieve single evaluation run by ID.
+   */
+  async getEvaluationRun(runId: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/runs/${encodeURIComponent(runId)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to get evaluation run ${runId}: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Retrieve historical timeline events for visualization replay.
+   */
+  async getEvaluationTimeline(): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/timeline`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to get evaluation timeline: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * List models in versioned registry.
+   */
+  async listEvaluationModels(): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/models`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list evaluation models: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * List benchmark adapter statuses.
+   */
+  async listEvaluationBenchmarks(): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/benchmarks`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list evaluation benchmarks: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * List research corpus papers.
+   */
+  async listResearchPapers(): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/research`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list research papers: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Ingest verified research paper into local knowledge.
+   */
+  async ingestResearchPaper(sourceId: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/research/ingest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source_id: sourceId })
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to ingest research paper: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Quarantine unverified research paper.
+   */
+  async quarantineResearchPaper(sourceId: string, reason: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/research/quarantine`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ source_id: sourceId, reason })
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to quarantine research paper: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * List candidate evolution experiments.
+   */
+  async listEvaluationExperiments(): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/experiments`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list experiments: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Trigger local evaluation run.
+   */
+  async triggerEvaluationRun(scheduleType: string = 'QUICK_DAILY', modelId?: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ schedule_type: scheduleType, model_id: modelId || null })
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to trigger evaluation run: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Register a new candidate model experiment.
+   */
+  async createCandidateExperiment(payload: {
+    hypothesis: string;
+    candidate_type: string;
+    candidate_model_name: string;
+    candidate_version: string;
+    quantization?: string;
+  }): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/candidate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to create candidate experiment: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Promote candidate model to production.
+   */
+  async promoteCandidate(candidateId: string, overrideReason?: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/promote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ candidate_id: candidateId, override_reason: overrideReason || null })
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to promote candidate: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Instant rollback to previous production model.
+   */
+  async rollbackModel(targetModelId?: string, reason: string = 'Operator initiated rollback'): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/rollback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target_model_id: targetModelId || null, reason })
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to rollback model: ${response.status}`);
+    }
+    return await response.json();
+  }
 }
+
 

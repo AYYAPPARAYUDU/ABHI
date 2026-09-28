@@ -1,0 +1,16 @@
+.capability-galaxy-container {
+  background: rgba(13, 17, 23, 0.9);
+}
+
+.canvas-viewport {
+  height: 360px;
+  background: #0a0e17;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+}

@@ -1,0 +1,34 @@
+<div class="card bg-dark border-secondary border-opacity-50 shadow-sm p-3 h-100">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-5">📊</span>
+      <h3 class="h6 mb-0 font-monospace text-light fw-bold">CAPABILITY BREAKDOWN & DELTA</h3>
+    </div>
+    <span class="badge bg-secondary bg-opacity-25 text-light font-monospace small">
+      10 VECTORS
+    </span>
+  </div>
+
+  <div class="d-flex flex-column gap-3">
+    <div *ngFor="let item of capabilitiesList()" class="capability-row">
+      <div class="d-flex align-items-center justify-content-between font-monospace small mb-1">
+        <span class="text-light fw-bold">{{ item.name }}</span>
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-success fw-bold">{{ item.delta }}</span>
+          <span class="text-muted">{{ item.score }}%</span>
+        </div>
+      </div>
+      <div class="progress" style="height: 6px; background-color: rgba(255,255,255,0.08);">
+        <div
+          class="progress-bar"
+          [ngClass]="item.colorClass"
+          role="progressbar"
+          [style.width.%]="item.score"
+          [attr.aria-valuenow]="item.score"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        ></div>
+      </div>
+    </div>
+  </div>
+</div>

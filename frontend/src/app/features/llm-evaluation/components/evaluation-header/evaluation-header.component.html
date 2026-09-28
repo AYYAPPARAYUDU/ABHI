@@ -1,0 +1,63 @@
+<div class="evaluation-header d-flex flex-wrap align-items-center justify-content-between p-3 border-bottom border-secondary border-opacity-25 bg-dark bg-opacity-75">
+  <!-- Title & Mode Indicator -->
+  <div class="d-flex align-items-center gap-3">
+    <div class="header-icon-glow d-flex align-items-center justify-content-center">
+      <span class="fs-4">🔬</span>
+    </div>
+    <div>
+      <div class="d-flex align-items-center gap-2">
+        <h1 class="h4 mb-0 fw-bold font-monospace text-light">LLM RESEARCH & EVOLUTION LAB</h1>
+        <span
+          class="badge font-monospace"
+          [ngClass]="replayService.isLiveMode() ? 'bg-success text-light' : 'bg-primary bg-opacity-50 text-light'"
+        >
+          {{ replayService.isLiveMode() ? 'LIVE PRODUCTION' : 'HISTORICAL REPLAY' }}
+        </span>
+      </div>
+      <div class="text-muted small font-monospace">
+        Local-First Benchmarks • Regression Gates • Scholar Knowledge Ingestion
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Model & Scheduler Badges -->
+  <div class="d-flex align-items-center gap-3 mt-2 mt-md-0">
+    <div class="model-badge d-flex align-items-center gap-2 px-3 py-1 rounded border border-info border-opacity-50 bg-info bg-opacity-10">
+      <span class="text-info font-monospace small">MODEL:</span>
+      <span class="text-light fw-bold font-monospace small">
+        {{ evalService.productionModel()?.model_name || 'qwen3:8b' }} (v{{ evalService.productionModel()?.version || '1.0.0' }})
+      </span>
+    </div>
+
+    <!-- Live / Replay Toggle -->
+    <div class="btn-group btn-group-sm" role="group" aria-label="Mode Selection">
+      <button
+        type="button"
+        class="btn btn-outline-primary font-monospace btn-sm"
+        [class.active]="!replayService.isLiveMode()"
+        (click)="onToggleLive(false)"
+      >
+        ⏮️ REPLAY
+      </button>
+      <button
+        type="button"
+        class="btn btn-outline-success font-monospace btn-sm"
+        [class.active]="replayService.isLiveMode()"
+        (click)="onToggleLive(true)"
+      >
+        ⚡ LIVE
+      </button>
+    </div>
+
+    <!-- Trigger Daily Eval Button -->
+    <button
+      type="button"
+      class="btn btn-primary btn-sm font-monospace fw-bold d-flex align-items-center gap-2"
+      [disabled]="evalService.isRunningEvaluation()"
+      (click)="onTriggerEval('QUICK_DAILY')"
+    >
+      <span *ngIf="evalService.isRunningEvaluation()" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+      <span>{{ evalService.isRunningEvaluation() ? 'EVALUATING...' : '▶ RUN DAILY EVAL' }}</span>
+    </button>
+  </div>
+</div>

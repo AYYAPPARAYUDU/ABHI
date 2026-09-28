@@ -70,6 +70,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'llm-evaluation',
+    loadComponent: () =>
+      import('./features/llm-evaluation/pages/llm-evaluation-page/llm-evaluation-page.component').then(
+        (m) => m.LlmEvaluationPageComponent
+      )
+  },
+  {
     path: '**',
     redirectTo: 'console'
   }

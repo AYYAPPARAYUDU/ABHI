@@ -1,0 +1,7 @@
+.capability-row {
+  transition: transform 0.15s ease;
+}
+
+.capability-row:hover {
+  transform: translateX(3px);
+}

@@ -1,0 +1,20 @@
+.evaluation-replay-bar {
+  background: rgba(13, 17, 23, 0.9);
+  border-radius: 8px;
+}
+
+.status-indicator-pill {
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+
+.custom-range::-webkit-slider-thumb {
+  background-color: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
+  cursor: pointer;
+}
+
+.custom-range::-moz-range-thumb {
+  background-color: #38bdf8;
+  box-shadow: 0 0 10px #38bdf8;
+  cursor: pointer;
+}

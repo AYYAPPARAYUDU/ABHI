@@ -1,0 +1,30 @@
+{
+  "source_id": "arxiv_2310_11511",
+  "title": "Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection",
+  "authors": [
+    "Akari Asai",
+    "Zeqiu Wu",
+    "Yizhong Wang",
+    "Avirup Sil",
+    "Hannaneh Hajishirzi"
+  ],
+  "publication_date": "2023-10-17",
+  "retrieval_date": "2026-09-28T00:00:00Z",
+  "url": "https://arxiv.org/abs/2310.11511",
+  "doi": "10.48550/arXiv.2310.11511",
+  "arxiv_id": "2310.11511",
+  "openalex_id": "W4387679808",
+  "tier": "TIER_A",
+  "topics": [
+    "RAG",
+    "Self-Reflection",
+    "Grounding",
+    "Hallucination Mitigation"
+  ],
+  "abstract": "Framework that trains a single arbitrary language model to adaptively retrieve passages on-demand and generate special reflection tokens for groundedness and citation accuracy.",
+  "license": "CC-BY-4.0",
+  "ingestion_status": "INGESTED",
+  "hash": "sha256:7c118b26dac87409",
+  "quarantined": false,
+  "quarantine_reason": null
+}

@@ -1,0 +1,17 @@
+.evaluation-header {
+  backdrop-filter: blur(12px);
+  background: rgba(13, 17, 23, 0.85);
+}
+
+.header-icon-glow {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+}
+
+.model-badge {
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.1);
+}

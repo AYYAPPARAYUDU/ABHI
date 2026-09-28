@@ -1,0 +1,92 @@
+<div class="card bg-dark border-secondary border-opacity-50 shadow-sm p-3 h-100">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-5">🧪</span>
+      <h3 class="h6 mb-0 font-monospace text-light fw-bold">MODEL EVOLUTION PIPELINE & EXPERIMENTS</h3>
+    </div>
+    <div class="d-flex gap-2">
+      <button
+        type="button"
+        class="btn btn-outline-danger btn-sm font-monospace"
+        title="Immediate Rollback to Previous Known-Good Production Model"
+        (click)="onRollback()"
+      >
+        ↺ ROLLBACK PROD
+      </button>
+    </div>
+  </div>
+
+  <!-- Create Experiment Form -->
+  <div class="p-3 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-25 mb-3">
+    <span class="text-info font-monospace small fw-bold mb-2 d-block">PROPOSE IMPROVEMENT HYPOTHESIS</span>
+    <div class="row g-2">
+      <div class="col-12 col-md-6">
+        <input
+          type="text"
+          class="form-control form-control-sm bg-dark text-light border-secondary border-opacity-50 font-monospace"
+          placeholder="e.g. Self-RAG reflection tokens for factual citation accuracy..."
+          [(ngModel)]="hypothesis"
+        />
+      </div>
+      <div class="col-6 col-md-3">
+        <select
+          class="form-select form-select-sm bg-dark text-light border-secondary border-opacity-50 font-monospace"
+          [(ngModel)]="candidateType"
+        >
+          <option value="RAG_ONLY">1. RAG-Only Update</option>
+          <option value="PROMPT_CONFIG">2. Prompt / Config</option>
+          <option value="ADAPTER_LORA">3. Small LoRA Adapter</option>
+          <option value="FINE_TUNED">4. Fine-Tuned Model</option>
+          <option value="MODEL_REPLACEMENT">5. Model Replacement</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-3">
+        <button
+          type="button"
+          class="btn btn-primary btn-sm font-monospace w-100"
+          [disabled]="!hypothesis.trim()"
+          (click)="onCreateExperiment()"
+        >
+          + LAUNCH EXP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Experiments List -->
+  <div class="d-flex flex-column gap-2">
+    <div
+      *ngFor="let exp of evalService.experiments()"
+      class="p-3 rounded border border-secondary border-opacity-25 bg-dark bg-opacity-50 font-monospace small"
+    >
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+        <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50">
+          {{ exp.candidate_type }}
+        </span>
+        <span class="text-muted">{{ exp.created_at | date:'short' }}</span>
+      </div>
+
+      <div class="text-light fw-bold mb-2">{{ exp.hypothesis }}</div>
+
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top border-secondary border-opacity-25">
+        <div class="text-muted">
+          Base: <span class="text-info">{{ exp.base_model_id }}</span> → Candidate: <span class="text-warning">{{ exp.candidate_model_id }}</span>
+        </div>
+
+        <div class="d-flex gap-2">
+          <span class="badge font-monospace" [ngClass]="exp.decision === 'PROMOTED' ? 'bg-success' : 'bg-secondary'">
+            {{ exp.decision }}
+          </span>
+          <button
+            *ngIf="exp.decision !== 'PROMOTED'"
+            type="button"
+            class="btn btn-outline-success btn-sm font-monospace"
+            (click)="onPromote(exp.candidate_model_id)"
+          >
+            PROMOTE TO PROD
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

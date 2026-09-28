@@ -10,6 +10,7 @@ from backend.app.api.v1.perception import router as perception_router
 from backend.app.api.v1.runtime import router as runtime_router
 from backend.app.api.v1.memory import router as memory_router
 from backend.app.api.v1.knowledge import router as knowledge_router
+from backend.app.api.v1.evaluation import router as evaluation_router
 from backend.app.api.websockets.telemetry import router as ws_router
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
@@ -65,6 +66,7 @@ app.include_router(perception_router, prefix="/api/v1")
 app.include_router(runtime_router, prefix="/api/v1")
 app.include_router(memory_router, prefix="/api/v1")
 app.include_router(knowledge_router, prefix="/api/v1")
+app.include_router(evaluation_router, prefix="/api/v1")
 app.include_router(ws_router)
 
 

@@ -46,6 +46,16 @@ class Settings(BaseSettings):
         description="Whether to permit online cloud TTS fallback when local TTS is unavailable. Default False (strict local-first)."
     )
 
+    # Evaluation & Evolution Lab Settings
+    DAILY_EVAL_MAX_CPU: float = Field(default=0.80, description="Max CPU utilization threshold for daily evaluation")
+    DAILY_EVAL_MAX_MEMORY_MB: int = Field(default=16384, description="Max RAM allowed for evaluation runs")
+    DAILY_EVAL_MAX_GPU_MB: int = Field(default=6144, description="Max VRAM allowed for evaluation runs")
+    DEEP_EVAL_ENABLED: bool = Field(default=False, description="Enable deep academic benchmark suites")
+    CANDIDATE_TRAINING_ENABLED: bool = Field(default=False, description="Permit local candidate training/fine-tuning")
+    RESEARCH_SYNC_ENABLED: bool = Field(default=True, description="Enable online research metadata synchronization")
+    RESEARCH_STORAGE_DIR: str = Field(default="./project_data/research", description="Research papers and metadata directory")
+    EVALUATION_REPORT_DIR: str = Field(default="./project_data/status/llm_evaluations", description="Persistent evaluation reports directory")
+
     # Logging Settings
     LOG_LEVEL: str = Field(default="INFO", description="Log level: DEBUG, INFO, WARNING, ERROR")
     LOG_DIR: str = Field(default="./logs", description="Directory to store audit log files")
@@ -67,7 +77,9 @@ class Settings(BaseSettings):
             os.path.join(self.DATABASE_DIR, "vector"),
             os.path.join(self.DATABASE_DIR, "media"),
             os.path.join(self.DATABASE_DIR, "migrations"),
-            self.LOG_DIR
+            self.LOG_DIR,
+            self.RESEARCH_STORAGE_DIR,
+            self.EVALUATION_REPORT_DIR
         ]:
             Path(path_str).mkdir(parents=True, exist_ok=True)
 

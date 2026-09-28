@@ -1,0 +1,61 @@
+<div class="card bg-dark border-secondary border-opacity-50 shadow-sm p-3 h-100">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-5">📚</span>
+      <h3 class="h6 mb-0 font-monospace text-light fw-bold">SCHOLARLY RESEARCH FEED</h3>
+    </div>
+    <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 font-monospace small">
+      {{ evalService.researchPapers().length }} DISCOVERED
+    </span>
+  </div>
+
+  <div class="d-flex flex-column gap-3 research-list-scroll">
+    <div
+      *ngFor="let paper of evalService.researchPapers()"
+      class="research-card p-3 rounded border"
+      [ngClass]="paper.quarantined ? 'border-danger bg-danger bg-opacity-10' : 'border-secondary border-opacity-25 bg-dark bg-opacity-50'"
+    >
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+        <span class="badge font-monospace" [ngClass]="paper.tier === 'TIER_A' ? 'bg-success' : 'bg-primary'">
+          {{ paper.tier }}
+        </span>
+        <span class="text-muted font-monospace small">{{ paper.publication_date }}</span>
+      </div>
+
+      <h4 class="h6 text-light font-monospace fw-bold mb-1">{{ paper.title }}</h4>
+      <div class="text-muted small font-monospace mb-2">
+        Authors: {{ paper.authors.join(', ') }}
+      </div>
+
+      <p class="text-muted small mb-2 text-truncate-2">{{ paper.abstract }}</p>
+
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top border-secondary border-opacity-25">
+        <div class="d-flex gap-1">
+          <span *ngFor="let t of paper.topics" class="badge bg-secondary bg-opacity-25 text-light font-monospace small">
+            {{ t }}
+          </span>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button
+            *ngIf="paper.ingestion_status !== 'INGESTED' && !paper.quarantined"
+            type="button"
+            class="btn btn-outline-success btn-sm font-monospace"
+            (click)="onIngest(paper)"
+          >
+            ✓ INGEST
+          </button>
+          <button
+            *ngIf="!paper.quarantined"
+            type="button"
+            class="btn btn-outline-warning btn-sm font-monospace"
+            (click)="onQuarantine(paper)"
+          >
+            ⚠️ QUARANTINE
+          </button>
+          <span *ngIf="paper.quarantined" class="badge bg-danger font-monospace">QUARANTINED</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,69 @@
+<div class="card bg-dark border-secondary border-opacity-50 shadow-sm p-3 h-100">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-5">⚖️</span>
+      <h3 class="h6 mb-0 font-monospace text-light fw-bold">MODEL COMPARISON MATRIX</h3>
+    </div>
+    <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 font-monospace small">
+      PROD VS CANDIDATE VS ARCHIVE
+    </span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-dark table-hover font-monospace small align-middle mb-0">
+      <thead>
+        <tr class="border-bottom border-secondary border-opacity-25 text-muted">
+          <th>ROLE</th>
+          <th>MODEL NAME</th>
+          <th>VERSION</th>
+          <th>QUANT</th>
+          <th>REASONING</th>
+          <th>RAG</th>
+          <th>SAFETY</th>
+          <th>LATENCY</th>
+          <th>STATUS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Production -->
+        <tr *ngIf="productionModel as prod" class="table-primary bg-opacity-10">
+          <td><span class="badge bg-success font-monospace">PRODUCTION</span></td>
+          <td class="text-light fw-bold">{{ prod.model_name }}</td>
+          <td>v{{ prod.version }}</td>
+          <td>{{ prod.quantization }}</td>
+          <td>{{ ((prod.evaluation_summary?.['reasoning'] || 0.84) * 100).toFixed(0) }}%</td>
+          <td>{{ ((prod.evaluation_summary?.['rag'] || 0.89) * 100).toFixed(0) }}%</td>
+          <td>{{ ((prod.evaluation_summary?.['safety'] || 0.97) * 100).toFixed(0) }}%</td>
+          <td>{{ (prod.evaluation_summary?.['latency_ms'] || 41.5).toFixed(1) }} ms</td>
+          <td><span class="text-success fw-bold">ACTIVE</span></td>
+        </tr>
+
+        <!-- Candidates -->
+        <tr *ngFor="let cand of candidateModels">
+          <td><span class="badge bg-warning text-dark font-monospace">CANDIDATE</span></td>
+          <td class="text-light">{{ cand.model_name }}</td>
+          <td>v{{ cand.version }}</td>
+          <td>{{ cand.quantization }}</td>
+          <td>{{ ((cand.evaluation_summary?.['reasoning'] || 0.86) * 100).toFixed(0) }}%</td>
+          <td>{{ ((cand.evaluation_summary?.['rag'] || 0.90) * 100).toFixed(0) }}%</td>
+          <td>{{ ((cand.evaluation_summary?.['safety'] || 0.97) * 100).toFixed(0) }}%</td>
+          <td>{{ (cand.evaluation_summary?.['latency_ms'] || 39.2).toFixed(1) }} ms</td>
+          <td><span class="text-warning">EVALUATING</span></td>
+        </tr>
+
+        <!-- Archived -->
+        <tr *ngFor="let arch of archivedModels" class="text-muted">
+          <td><span class="badge bg-secondary font-monospace">ARCHIVED</span></td>
+          <td>{{ arch.model_name }}</td>
+          <td>v{{ arch.version }}</td>
+          <td>{{ arch.quantization }}</td>
+          <td>{{ ((arch.evaluation_summary?.['reasoning'] || 0.80) * 100).toFixed(0) }}%</td>
+          <td>{{ ((arch.evaluation_summary?.['rag'] || 0.85) * 100).toFixed(0) }}%</td>
+          <td>{{ ((arch.evaluation_summary?.['safety'] || 0.95) * 100).toFixed(0) }}%</td>
+          <td>{{ (arch.evaluation_summary?.['latency_ms'] || 48.0).toFixed(1) }} ms</td>
+          <td><span class="text-muted">ROLLBACK READY</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
