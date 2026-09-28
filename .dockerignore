@@ -1,0 +1,62 @@
+# ==============================================================================
+# ABHI DOCKERIGNORE - MINIMAL BUILD CONTEXT SPECIFICATION
+# ==============================================================================
+
+# Version Control & IDE
+.git
+.github
+.gitignore
+.gitattributes
+.idea
+.vscode
+*.swp
+*.swo
+
+# Node & Frontend Build Artifacts
+frontend/node_modules/
+node_modules/
+frontend/.angular/
+.angular/
+frontend/dist/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Python & Backend Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+env/
+*.egg-info/
+build/
+
+# Local Environment Secrets & Overrides
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Runtime Logs (Directories preserved, log files excluded)
+logs/*.log
+logs/*.jsonl
+logs/*.pid
+
+# Persistent Database Files (Mounted via Docker volumes at runtime)
+database/relational/*.db*
+database/vector/*
+database/media/*
+database/memory/*
+
+# Operating System & Temporary Files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+*.temp

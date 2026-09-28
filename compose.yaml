@@ -1,0 +1,134 @@
+# ==============================================================================
+# LOCAL-FIRST PERSONAL AI COMPUTER AUTOMATION SYSTEM - DOCKER COMPOSE
+# Hybrid Architecture: Portable Container Stack + Native Windows Automation Host
+# ==============================================================================
+
+services:
+  # ----------------------------------------------------------------------------
+  # FastAPI Gateway & Multi-Agent Cognitive Core
+  # ----------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    image: abhi-backend:latest
+    container_name: abhi-backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_HOST=0.0.0.0
+      - APP_PORT=8000
+      - CORS_ORIGINS=["http://localhost:4200", "http://127.0.0.1:4200", "http://localhost:80", "http://127.0.0.1:80"]
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_DEFAULT_MODEL=qwen3:8b
+      - DATABASE_DIR=/app/database
+      - DATABASE_SQLITE_URL=sqlite+aiosqlite:////app/database/relational/system.db
+      - LANCEDB_DIR=/app/database/vector
+      - MEDIA_STORAGE_DIR=/app/database/media
+      - LOG_DIR=/app/logs
+    volumes:
+      # Persistent storage preserving SQLite WAL, LanceDB vector tables, and rotating logs
+      - ./database:/app/database
+      - ./logs:/app/logs
+    extra_hosts:
+      # Seamless bridge to native Windows host services (Host Ollama & local APIs)
+      - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 4G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - abhi-network
+
+  # ----------------------------------------------------------------------------
+  # Angular 22 Operator Console (Nginx Web Server & SPA Gateway)
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    image: abhi-frontend:latest
+    container_name: abhi-frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4200:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          cpus: "0.1"
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - abhi-network
+
+  # ----------------------------------------------------------------------------
+  # Ollama Local LLM Engine (Optional Container Profile)
+  # Default setup uses Native Windows Host Ollama to maximize RTX 5050 GPU performance.
+  # ----------------------------------------------------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    container_name: abhi-ollama
+    profiles:
+      - ollama-container
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 8G
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - abhi-network
+
+# ------------------------------------------------------------------------------
+# Isolated Bridge Network
+# ------------------------------------------------------------------------------
+networks:
+  abhi-network:
+    name: abhi-network
+    driver: bridge
+
+# ------------------------------------------------------------------------------
+# Named Persistent Storage Volumes
+# ------------------------------------------------------------------------------
+volumes:
+  ollama-data:
+    name: abhi-ollama-data

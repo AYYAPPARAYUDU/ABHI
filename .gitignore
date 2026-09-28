@@ -29,6 +29,7 @@ database/memory/*.db
 database/vector/
 database/media/
 database/backups/
+backend/database/
 
 # System Logs & Observability
 logs/
