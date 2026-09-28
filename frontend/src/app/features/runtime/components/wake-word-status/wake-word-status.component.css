@@ -1,0 +1,23 @@
+.wake-word-container {
+  font-family: var(--font-sans);
+}
+
+.hud-card {
+  background: rgba(18, 22, 34, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.wake-icon-box {
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+}
+
+.stat-box {
+  background: rgba(10, 14, 23, 0.9);
+}
+
+.smaller {
+  font-size: 0.72rem;
+}

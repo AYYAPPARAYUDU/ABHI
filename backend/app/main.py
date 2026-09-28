@@ -7,6 +7,7 @@ from backend.app.api.v1.health import router as health_router
 from backend.app.api.v1.models import router as models_router
 from backend.app.api.v1.tasks import router as tasks_router
 from backend.app.api.v1.perception import router as perception_router
+from backend.app.api.v1.runtime import router as runtime_router
 from backend.app.api.websockets.telemetry import router as ws_router
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
@@ -59,6 +60,7 @@ app.include_router(health_router, prefix="/api/v1")
 app.include_router(models_router, prefix="/api/v1")
 app.include_router(tasks_router, prefix="/api/v1")
 app.include_router(perception_router, prefix="/api/v1")
+app.include_router(runtime_router, prefix="/api/v1")
 app.include_router(ws_router)
 
 

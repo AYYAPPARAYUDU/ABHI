@@ -1,0 +1,24 @@
+<div class="runtime-page container-fluid px-0">
+  <!-- Top: Windows Session Startup Health Matrix -->
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <app-startup-status></app-startup-status>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Left Column: Runtime Status, Wake Word Spotter, Operational Modes -->
+    <div class="col-12 col-xl-7 d-flex flex-column gap-3">
+      <app-runtime-status></app-runtime-status>
+      <app-wake-word-status></app-wake-word-status>
+      <app-runtime-mode></app-runtime-mode>
+    </div>
+
+    <!-- Right Column: 3D Avatar Core, Identity Levels & PIN Auth, Telemetry Stream -->
+    <div class="col-12 col-xl-5 d-flex flex-column gap-3">
+      <app-avatar-viewport></app-avatar-viewport>
+      <app-identity-status></app-identity-status>
+      <app-telemetry-panel></app-telemetry-panel>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+.startup-status-container {
+  font-family: var(--font-sans);
+}
+
+.hud-card {
+  background: rgba(18, 22, 34, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.service-box {
+  background: rgba(13, 17, 27, 0.95);
+  transition: border-color 0.15s ease-in-out;
+}
+
+.service-box:hover {
+  border-color: rgba(0, 240, 255, 0.3) !important;
+}
+
+.smaller {
+  font-size: 0.72rem;
+}

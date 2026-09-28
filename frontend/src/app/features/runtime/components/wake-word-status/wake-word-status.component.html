@@ -1,0 +1,76 @@
+<app-panel title="LOCAL WAKE-WORD DETECTION ENGINE" icon="🎙️" badge="ON-DEVICE ONNX">
+  <div class="wake-word-container d-flex flex-column gap-3 font-monospace">
+    <!-- Active Wake Word Banner -->
+    <div class="p-3 rounded hud-card d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <div class="wake-icon-box rounded-circle d-flex align-items-center justify-content-center">
+          <span class="fs-4">📢</span>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="text-light fw-bold fs-6">KEYWORD SPOTTER: "ABHI"</span>
+            <span class="badge" [class.bg-success]="state().wake_word_active" [class.bg-secondary]="!state().wake_word_active">
+              {{ state().wake_word_active ? 'ACTIVE' : 'DORMANT' }}
+            </span>
+          </div>
+          <div class="text-muted small">
+            Engine: <span class="text-info">openWakeWord (Local ONNX)</span> | Resource: <span class="text-success">&lt;0.5% CPU (0% GPU)</span>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-sm btn-outline-info font-monospace" (click)="triggerWake()">
+        ⚡ Simulate "ABHI"
+      </button>
+    </div>
+
+    <!-- Wake Detection Metrics Grid -->
+    <div class="row g-2 small">
+      <div class="col-6 col-md-3">
+        <div class="stat-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="text-muted text-uppercase smaller">Keyword</div>
+          <div class="text-info fw-bold">"ABHI"</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="stat-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="text-muted text-uppercase smaller">Threshold</div>
+          <div class="text-success fw-bold">0.75 Conf</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="stat-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="text-muted text-uppercase smaller">Cooldown</div>
+          <div class="text-light fw-bold">2.0s Debounce</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div class="stat-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="text-muted text-uppercase smaller">Model Footprint</div>
+          <div class="text-light fw-bold">~4.2 MB RAM</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Latest Trigger Event Output -->
+    <div class="latest-event-box p-2 rounded border border-secondary border-opacity-25 bg-black" *ngIf="lastEvent()">
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="text-muted smaller">LATEST WAKE EVENT:</span>
+        <span class="badge" [class.bg-success]="lastEvent()?.detected" [class.bg-warning]="!lastEvent()?.detected">
+          {{ lastEvent()?.detected ? 'DETECTED' : 'SUPPRESSED (COOLDOWN)' }}
+        </span>
+      </div>
+      <div class="text-light smaller mt-1">
+        Keyword: {{ lastEvent()?.keyword }} | Conf: {{ (lastEvent()?.confidence! * 100).toFixed(0) }}% | Cooldown Remaining: {{ lastEvent()?.cooldown_remaining_sec }}s
+      </div>
+    </div>
+
+    <!-- Safety Invariant Notice -->
+    <div class="safety-banner p-2 rounded border border-info border-opacity-25 bg-black text-muted smaller">
+      🔒 <span class="text-info">Safety Invariant:</span> Wake-word detection only awakens listening mode; it NEVER automatically authorizes or executes tasks without subsequent operator command.
+    </div>
+  </div>
+</app-panel>

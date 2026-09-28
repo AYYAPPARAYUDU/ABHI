@@ -98,5 +98,18 @@ if (Test-Path $pidFile) {
 } else {
     Write-Host "  Worker Process:   INACTIVE" -ForegroundColor Yellow
 }
+# ------------------------------------------------------------------------------
+# 6. ABHI Runtime Lifecycle & Security Mode
+# ------------------------------------------------------------------------------
+Write-Host "`n[6] ABHI Runtime Lifecycle & Security Mode:" -ForegroundColor Yellow
+try {
+    $runtimeState = Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/runtime/state" -Method Get -TimeoutSec 3 -ErrorAction Stop
+    Write-Host ("  Runtime Mode:     {0}" -f $runtimeState.current_mode) -ForegroundColor Green
+    Write-Host ("  Identity Level:   {0}" -f $runtimeState.identity_level) -ForegroundColor Cyan
+    Write-Host ("  Wake Word Active: {0}" -f $runtimeState.wake_word_active) -ForegroundColor Green
+    Write-Host ("  Power Policy:     Mic: {0}, Cam: {1}" -f $runtimeState.microphone_power_policy, $runtimeState.camera_power_policy) -ForegroundColor DarkGray
+} catch {
+    Write-Host "  Runtime State API: INACTIVE or UNREACHABLE" -ForegroundColor Yellow
+}
 
 Write-Host "`n=======================================================`n" -ForegroundColor Cyan

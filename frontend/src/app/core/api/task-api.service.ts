@@ -192,5 +192,96 @@ export class TaskApiService {
     }
     return await response.json();
   }
+
+  /**
+   * Query authoritative ABHI runtime lifecycle state, mode, and power policies.
+   */
+  async getRuntimeState(): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/runtime/state`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Runtime state request failed: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Set ABHI runtime mode (wake, sleep, rest, arm, lock, emergency_stop).
+   */
+  async setRuntimeMode(mode: string, source: string = 'ui'): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/runtime/mode`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode, source })
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Runtime mode transition failed (${response.status}): ${err}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Trigger or simulate a wake word acoustic event with debouncing.
+   */
+  async triggerWake(confidence: number = 0.95, source: string = 'ui_button'): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/runtime/wake`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confidence, source })
+    });
+    if (!response.ok) {
+      throw new Error(`Wake trigger request failed: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Verify ABHI-local application PIN to unlock assistant.
+   */
+  async verifyLocalPin(pin: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/runtime/auth/pin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin })
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`PIN authentication failed: ${err}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Change ABHI-local application PIN.
+   */
+  async changeLocalPin(currentPin: string, newPin: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/runtime/auth/pin/change`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ current_pin: currentPin, new_pin: newPin })
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Change PIN failed: ${err}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Inspect dependencies and health for Windows user session auto-startup.
+   */
+  async getStartupHealth(): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/runtime/startup-health`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Startup health request failed: ${response.status}`);
+    }
+    return await response.json();
+  }
 }
 

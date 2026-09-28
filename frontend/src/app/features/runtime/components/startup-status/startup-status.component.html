@@ -1,0 +1,107 @@
+<app-panel title="WINDOWS SESSION AUTO-START HEALTH SEQUENCE" icon="🚀" [badge]="startup().status">
+  <div class="startup-status-container d-flex flex-column gap-3 font-monospace small">
+    <!-- Auto-Start Invariant Banner -->
+    <div class="p-3 rounded hud-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-light fw-bold fs-6">AUTO-STARTUP POLICY:</span>
+          <span class="badge bg-success bg-opacity-25 text-success">{{ startup().auto_start_policy }}</span>
+        </div>
+        <div class="text-muted smaller mt-1">
+          ABHI launches automatically on Windows logon, performs health verification, and enters <span class="text-success fw-bold">ARMED</span> mode without initiating tasks.
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-sm btn-outline-secondary font-monospace" (click)="refresh()">
+        🔄 Verify Dependencies
+      </button>
+    </div>
+
+    <!-- Core Dependencies Grid -->
+    <div class="row g-2">
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="service-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light fw-bold smaller">🌐 BACKEND GATEWAY</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getServiceBadge(startup().services.backend_api)">
+              {{ startup().services.backend_api }}
+            </span>
+          </div>
+          <div class="text-muted smaller">FastAPI / Uvicorn (Port 8000)</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="service-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light fw-bold smaller">🗄️ SQLITE DATABASE</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getServiceBadge(startup().services.sqlite_database)">
+              {{ startup().services.sqlite_database }}
+            </span>
+          </div>
+          <div class="text-muted smaller">WAL Mode / Relational Core</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="service-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light fw-bold smaller">🧠 OLLAMA ENGINE</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getServiceBadge(startup().services.ollama_engine)">
+              {{ startup().services.ollama_engine }}
+            </span>
+          </div>
+          <div class="text-muted smaller">qwen3:8b / abhi:latest Local</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="service-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light fw-bold smaller">🎙️ WAKE-WORD SPOTTER</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getServiceBadge(startup().services.wake_word_engine)">
+              {{ startup().services.wake_word_engine }}
+            </span>
+          </div>
+          <div class="text-muted smaller">"ABHI" Keyword Spotter</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="service-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light fw-bold smaller">⚙️ PERCEPTION DAEMON</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getServiceBadge(startup().services.perception_daemon)">
+              {{ startup().services.perception_daemon }}
+            </span>
+          </div>
+          <div class="text-muted smaller">Vision & Audio Stream Loop</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="service-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light fw-bold smaller">🪟 WINDOWS UIA WORKER</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getServiceBadge(startup().services.windows_host_worker)">
+              {{ startup().services.windows_host_worker }}
+            </span>
+          </div>
+          <div class="text-muted smaller">Native Host Desktop Daemon</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-xl-3">
+        <div class="service-box p-2 rounded bg-dark border border-secondary border-opacity-25">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="text-light fw-bold smaller">📡 TELEMETRY WS</span>
+            <span class="badge bg-opacity-25 smaller" [ngClass]="getServiceBadge(startup().services.websocket_telemetry)">
+              {{ startup().services.websocket_telemetry }}
+            </span>
+          </div>
+          <div class="text-muted smaller">Real-Time State Streaming</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</app-panel>

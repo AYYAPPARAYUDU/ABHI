@@ -1,0 +1,18 @@
+.runtime-mode-container {
+  font-family: var(--font-sans);
+}
+
+.mode-card {
+  background: rgba(13, 17, 27, 0.95);
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  transition: all 0.2s ease-in-out;
+}
+
+.active-mode {
+  border-color: rgba(0, 240, 255, 0.5) !important;
+  background: rgba(0, 240, 255, 0.05) !important;
+}
+
+.smaller {
+  font-size: 0.72rem;
+}

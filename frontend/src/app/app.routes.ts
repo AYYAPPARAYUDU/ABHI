@@ -42,6 +42,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'runtime',
+    loadComponent: () =>
+      import('./features/runtime/pages/runtime-page/runtime-page.component').then(
+        (m) => m.RuntimePageComponent
+      )
+  },
+  {
     path: 'system',
     loadComponent: () =>
       import('./features/system/pages/system-page/system-page.component').then(

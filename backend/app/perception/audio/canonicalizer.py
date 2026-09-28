@@ -26,6 +26,15 @@ class LanguageCanonicalizer:
 
     # Heuristic fast mappings for common patterns
     INTENT_KEYWORDS = {
+        "ABHI_WAKE": [
+            "wake up", "wake", "activate", "uth jao", "uth", "उठ जाओ", "उठो", "जागो", "లే", "మేల్కొను", "எழுந்திரு", "active"
+        ],
+        "ABHI_REST": [
+            "sleep", "rest", "go to sleep", "take rest", "so jao", "aaram karo", "పడుకో", "విశ్రాంతి", "தூங்கு", "ஓய்வெடு"
+        ],
+        "ABHI_LOCK": [
+            "lock", "lock abhi", "band karo", "లాక్", "பூட்டு"
+        ],
         "OPEN_APPLICATION": [
             "open", "launch", "kholo", "start", "chalu karo", "ouvrir", "abrir",
             "ఓపెన్ చేయి", "ఓపెన్", "తెరవండి", "திறக்கவும்", "திற", "खोलो"
@@ -38,7 +47,7 @@ class LanguageCanonicalizer:
             "read", "padho", "view", "dikhao", "display", "choodu", "చూడు", "చదువు", "lire", "leer"
         ],
         "SYSTEM_STATUS": [
-            "status", "health", "system", "kaise ho", "diagnostics", "halat", "stithi", "స్థితి"
+            "status", "health", "system", "kaise ho", "diagnostics", "halat", "stithi", "స్థితి", "நிலை"
         ]
     }
 

@@ -1,0 +1,99 @@
+<app-panel title="OPERATIONAL RUNTIME MODES" icon="🔄" badge="STATE MACHINE">
+  <div class="runtime-mode-container d-flex flex-column gap-2 font-monospace small">
+    <!-- 1. Armed Mode Card -->
+    <div
+      class="mode-card p-3 rounded border bg-dark d-flex justify-content-between align-items-center"
+      [class.active-mode]="state().current_mode === 'ARMED'"
+    >
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-bold text-success fs-6">🛡️ ARMED (IDLE READY)</span>
+          <span class="badge bg-success bg-opacity-25 text-success smaller" *ngIf="state().current_mode === 'ARMED'">ACTIVE</span>
+        </div>
+        <div class="text-muted smaller mt-1">
+          Lightweight wake-word detector active on CPU. Heavy STT/LLM dormant. 0% GPU allocation.
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-success font-monospace"
+        (click)="setMode('arm')"
+        [disabled]="state().current_mode === 'ARMED'"
+      >
+        Set Armed
+      </button>
+    </div>
+
+    <!-- 2. Resting Mode Card -->
+    <div
+      class="mode-card p-3 rounded border bg-dark d-flex justify-content-between align-items-center"
+      [class.active-mode]="state().current_mode === 'RESTING'"
+    >
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-bold text-warning fs-6">💤 RESTING (DORMANT)</span>
+          <span class="badge bg-warning bg-opacity-25 text-warning smaller" *ngIf="state().current_mode === 'RESTING'">ACTIVE</span>
+        </div>
+        <div class="text-muted smaller mt-1">
+          Minimal power footprint. Vision and TTS dormant. Say "ABHI" to wake assistant.
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-warning font-monospace"
+        (click)="setMode('sleep')"
+        [disabled]="state().current_mode === 'RESTING'"
+      >
+        Set Resting
+      </button>
+    </div>
+
+    <!-- 3. Listening Mode Card -->
+    <div
+      class="mode-card p-3 rounded border bg-dark d-flex justify-content-between align-items-center"
+      [class.active-mode]="state().current_mode === 'LISTENING'"
+    >
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-bold text-info fs-6">🎙️ LISTENING (AWAKE)</span>
+          <span class="badge bg-info bg-opacity-25 text-info smaller" *ngIf="state().current_mode === 'LISTENING'">ACTIVE</span>
+        </div>
+        <div class="text-muted smaller mt-1">
+          Actively transcribing operator voice commands via local Faster-Whisper.
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-info font-monospace"
+        (click)="setMode('wake')"
+        [disabled]="state().current_mode === 'LISTENING'"
+      >
+        Set Listening
+      </button>
+    </div>
+
+    <!-- 4. Locked Mode Card -->
+    <div
+      class="mode-card p-3 rounded border bg-dark d-flex justify-content-between align-items-center"
+      [class.active-mode]="state().current_mode === 'LOCKED'"
+    >
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-bold text-danger fs-6">🔒 LOCKED (SECURE)</span>
+          <span class="badge bg-danger bg-opacity-25 text-danger smaller" *ngIf="state().current_mode === 'LOCKED'">ACTIVE</span>
+        </div>
+        <div class="text-muted smaller mt-1">
+          Application locked. Requires local PIN verification to resume interaction.
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-danger font-monospace"
+        (click)="setMode('lock')"
+        [disabled]="state().current_mode === 'LOCKED'"
+      >
+        Lock Now
+      </button>
+    </div>
+  </div>
+</app-panel>

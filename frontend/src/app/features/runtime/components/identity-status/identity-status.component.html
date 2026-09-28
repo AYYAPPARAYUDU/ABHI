@@ -1,0 +1,104 @@
+<app-panel title="IDENTITY LEVELS & LOCAL AUTHENTICATION" icon="🛡️" [badge]="state().identity_level">
+  <div class="identity-status-container d-flex flex-column gap-3 font-monospace small">
+    <!-- Current Identity Level Card -->
+    <div class="p-3 rounded hud-card d-flex align-items-center justify-content-between">
+      <div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-light fw-bold fs-6">CURRENT IDENTITY LEVEL:</span>
+          <span class="badge bg-info bg-opacity-25 text-info fs-6">{{ state().identity_level }}</span>
+        </div>
+        <div class="text-muted smaller mt-1">
+          Active Operator: <span class="text-light">{{ state().active_user }}</span> | Status: <span class="text-success">AUTHORIZED</span>
+        </div>
+      </div>
+
+      <div class="text-end">
+        <span class="badge" [class.bg-danger]="state().is_locked" [class.bg-success]="!state().is_locked">
+          {{ state().is_locked ? 'LOCKED' : 'ACTIVE SESSION' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Identity Hierarchy Table -->
+    <div class="table-responsive bg-dark rounded border border-secondary border-opacity-25 p-2">
+      <table class="table table-dark table-sm mb-0 smaller">
+        <thead>
+          <tr class="text-muted">
+            <th>LEVEL</th>
+            <th>CLASSIFICATION</th>
+            <th>SCOPE & PRIVILEGES</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr [class.table-active]="state().identity_level === 'LEVEL_0_ANONYMOUS'">
+            <td class="text-danger fw-bold">LEVEL 0</td>
+            <td>Anonymous / Locked</td>
+            <td class="text-muted">No execution. Requires local PIN to resume.</td>
+          </tr>
+          <tr [class.table-active]="state().identity_level === 'LEVEL_1_WAKE_WORD'">
+            <td class="text-info fw-bold">LEVEL 1</td>
+            <td>Wake Word ("ABHI")</td>
+            <td class="text-muted">Activates listening HUD & safe informational tasks.</td>
+          </tr>
+          <tr [class.table-active]="state().identity_level === 'LEVEL_2_LOCAL_PRESENCE'">
+            <td class="text-success fw-bold">LEVEL 2</td>
+            <td>Local Presence / PIN</td>
+            <td class="text-muted">Standard computer automation (Tier 1 & Tier 2).</td>
+          </tr>
+          <tr [class.table-active]="state().identity_level === 'LEVEL_3_OPERATOR_CONSENT'">
+            <td class="text-warning fw-bold">LEVEL 3</td>
+            <td>Operator Consent</td>
+            <td class="text-muted">Critical Tier 3 tasks (deletion, system alteration).</td>
+          </tr>
+          <tr [class.table-active]="state().identity_level === 'LEVEL_4_WINDOWS_HELLO'">
+            <td class="text-primary fw-bold">LEVEL 4</td>
+            <td>Windows Hello / OS</td>
+            <td class="text-muted">Windows session login & administrative hardware access.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Local PIN Authentication Card -->
+    <div class="pin-auth-box p-3 rounded bg-dark border border-secondary border-opacity-25">
+      <div class="fw-bold text-light mb-2">ABHI-LOCAL APPLICATION PIN (DEFAULT: "1234")</div>
+      <div class="d-flex align-items-center gap-2">
+        <input
+          type="password"
+          class="form-control form-control-sm font-monospace bg-black text-light border-secondary"
+          placeholder="Enter 4-digit PIN..."
+          [value]="pinInput()"
+          (input)="pinInput.set($any($event.target).value)"
+          maxlength="8"
+          [disabled]="isAuthenticating() || state().lockout_remaining_sec > 0"
+        />
+        <button
+          type="button"
+          class="btn btn-sm btn-primary font-monospace text-nowrap"
+          (click)="unlock()"
+          [disabled]="isAuthenticating() || !pinInput() || state().lockout_remaining_sec > 0"
+        >
+          {{ isAuthenticating() ? 'Verifying...' : 'Unlock / Verify' }}
+        </button>
+      </div>
+
+      <!-- Lockout Alert -->
+      <div class="alert alert-danger p-2 mt-2 mb-0 smaller font-monospace" *ngIf="state().lockout_remaining_sec > 0">
+        ⚠️ Authentication locked out. Try again in {{ state().lockout_remaining_sec }}s.
+      </div>
+
+      <!-- Error / Success Feedback -->
+      <div class="text-danger smaller mt-2" *ngIf="authError() && state().lockout_remaining_sec === 0">
+        ❌ {{ authError() }}
+      </div>
+      <div class="text-success smaller mt-2" *ngIf="successMsg()">
+        ✅ {{ successMsg() }}
+      </div>
+    </div>
+
+    <!-- Strict OS Security Boundary Notice -->
+    <div class="security-banner p-2 rounded border border-warning border-opacity-25 bg-black text-muted smaller">
+      🔒 <span class="text-warning">OS Security Boundary:</span> ABHI local PIN authentication controls ABHI application state only. ABHI never stores, replays, or bypasses Windows Hello, Windows passwords, or the Windows lock screen.
+    </div>
+  </div>
+</app-panel>
