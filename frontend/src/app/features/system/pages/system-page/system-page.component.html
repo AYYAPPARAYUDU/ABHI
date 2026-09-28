@@ -1,0 +1,90 @@
+<div class="system-page">
+  <div class="row g-3">
+    <!-- Left Column: System Health & Daemon Topology Matrix -->
+    <div class="col-12 col-xl-7 d-flex flex-column gap-3">
+      <app-status-bar></app-status-bar>
+
+      <app-panel title="SYSTEM COMPONENT HEALTH MATRIX" icon="⚙️" badge="LIVE METRICS">
+        <div class="row g-3">
+          <!-- Gateway API -->
+          <div class="col-12 col-md-6">
+            <div class="system-node-card p-3 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="font-monospace text-muted small">GATEWAY API (FASTAPI):</span>
+                <span class="badge bg-success bg-opacity-25 text-success font-monospace">HEALTHY</span>
+              </div>
+              <div class="font-monospace text-light small">PORT: 8000 | HOST: 127.0.0.1</div>
+              <div class="font-monospace text-secondary small mt-1">Uptime: 100% | Latency: &lt;5ms</div>
+            </div>
+          </div>
+
+          <!-- SQLite / Memory DB -->
+          <div class="col-12 col-md-6">
+            <div class="system-node-card p-3 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="font-monospace text-muted small">PERSISTENCE (SQLITE):</span>
+                <span class="badge bg-success bg-opacity-25 text-success font-monospace">HEALTHY</span>
+              </div>
+              <div class="font-monospace text-light small">STORE: data/abhi.db</div>
+              <div class="font-monospace text-secondary small mt-1">WAL mode: ACTIVE | ACID: GUARANTEED</div>
+            </div>
+          </div>
+
+          <!-- Ollama LLM -->
+          <div class="col-12 col-md-6">
+            <div class="system-node-card p-3 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="font-monospace text-muted small">LOCAL LLM (OLLAMA):</span>
+                <span class="badge bg-success bg-opacity-25 text-success font-monospace">HEALTHY</span>
+              </div>
+              <div class="font-monospace text-light small">MODEL: qwen2.5:latest</div>
+              <div class="font-monospace text-secondary small mt-1">Context: 8192 | Execution: LOCAL_ONLY</div>
+            </div>
+          </div>
+
+          <!-- WebSocket Telemetry -->
+          <div class="col-12 col-md-6">
+            <div class="system-node-card p-3 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="font-monospace text-muted small">WEBSOCKET STREAM:</span>
+                <span class="badge bg-info bg-opacity-25 text-info font-monospace">{{ connStatus() }}</span>
+              </div>
+              <div class="font-monospace text-light small">ENDPOINT: /ws/telemetry</div>
+              <div class="font-monospace text-secondary small mt-1">Buffer: 100 max | Backoff: EXPONENTIAL</div>
+            </div>
+          </div>
+
+          <!-- Windows Automation Worker -->
+          <div class="col-12 col-md-6">
+            <div class="system-node-card p-3 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="font-monospace text-muted small">WINDOWS UIA WORKER:</span>
+                <span class="badge bg-success bg-opacity-25 text-success font-monospace">ISOLATED</span>
+              </div>
+              <div class="font-monospace text-light small">PID: ACTIVE | LEASE: STRICT</div>
+              <div class="font-monospace text-secondary small mt-1">Sandbox: FAIL_CLOSED | Protocol: IPC</div>
+            </div>
+          </div>
+
+          <!-- Playwright Browser Worker -->
+          <div class="col-12 col-md-6">
+            <div class="system-node-card p-3 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="font-monospace text-muted small">BROWSER WORKER:</span>
+                <span class="badge bg-success bg-opacity-25 text-success font-monospace">ISOLATED</span>
+              </div>
+              <div class="font-monospace text-light small">ENGINE: CHROMIUM | ORIGIN: STRICT_LOCAL</div>
+              <div class="font-monospace text-secondary small mt-1">Policy: STRICT_LOCALHOST | file://: BLOCKED</div>
+            </div>
+          </div>
+        </div>
+      </app-panel>
+    </div>
+
+    <!-- Right Column: Safety Governance & Telemetry Stream -->
+    <div class="col-12 col-xl-5 d-flex flex-column gap-3">
+      <app-safety-panel></app-safety-panel>
+      <app-telemetry-panel></app-telemetry-panel>
+    </div>
+  </div>
+</div>

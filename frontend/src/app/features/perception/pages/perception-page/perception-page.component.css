@@ -1,0 +1,17 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.sensor-card {
+  transition: all var(--abhi-transition-normal);
+}
+
+.sensor-card:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.sensor-value {
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+}

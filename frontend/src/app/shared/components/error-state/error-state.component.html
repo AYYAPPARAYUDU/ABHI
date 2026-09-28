@@ -1,0 +1,12 @@
+<div class="error-state p-3 rounded d-flex align-items-center justify-content-between gap-3" role="alert">
+  <div class="d-flex align-items-center gap-2">
+    <span class="error-icon">⚠️</span>
+    <div>
+      <div class="error-title font-monospace fw-bold text-danger">{{ title || 'Error Occurred' }}</div>
+      <div class="error-message font-monospace text-secondary small">{{ message }}</div>
+    </div>
+  </div>
+  <button *ngIf="showRetry" type="button" class="btn btn-outline-danger btn-sm font-monospace text-nowrap" (click)="retry.emit()">
+    RETRY
+  </button>
+</div>

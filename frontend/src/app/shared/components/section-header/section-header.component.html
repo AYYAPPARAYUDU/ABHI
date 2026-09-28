@@ -1,0 +1,13 @@
+<div class="section-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+  <div class="d-flex align-items-center gap-2">
+    <span *ngIf="icon" class="header-icon">{{ icon }}</span>
+    <div>
+      <h2 class="header-title m-0 font-monospace">{{ title }}</h2>
+      <p *ngIf="subtitle" class="header-subtitle m-0 text-muted small font-monospace">{{ subtitle }}</p>
+    </div>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <span *ngIf="tag" class="badge bg-secondary bg-opacity-25 text-secondary font-monospace">{{ tag }}</span>
+    <ng-content></ng-content>
+  </div>
+</div>

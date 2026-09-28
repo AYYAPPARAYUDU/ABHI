@@ -1,0 +1,12 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.avatar-stage-container {
+  background: var(--abhi-bg-surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--abhi-border-subtle);
+  min-height: 520px;
+}

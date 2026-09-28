@@ -1,0 +1,6 @@
+<div class="empty-state text-center p-4 rounded">
+  <div *ngIf="icon" class="empty-state-icon mb-2">{{ icon }}</div>
+  <h4 *ngIf="title" class="empty-state-title font-monospace text-light m-0 mb-1">{{ title }}</h4>
+  <p *ngIf="message" class="empty-state-message font-monospace text-muted small m-0 mb-3">{{ message }}</p>
+  <ng-content></ng-content>
+</div>

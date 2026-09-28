@@ -1,0 +1,39 @@
+<div class="avatar-page">
+  <div class="row g-3">
+    <!-- Center Stage: Large 3D Cognitive Core Viewport -->
+    <div class="col-12 col-xl-8">
+      <div class="avatar-stage-container p-3 rounded">
+        <app-avatar-viewport></app-avatar-viewport>
+      </div>
+    </div>
+
+    <!-- Right Column: Avatar State Machine & Telemetry Controls -->
+    <div class="col-12 col-xl-4 d-flex flex-column gap-3">
+      <app-panel title="3D COGNITIVE CORE STATE ENGINE" icon="🧠" badge="THREE.JS WEBGL">
+        <div class="d-flex flex-column gap-2 font-monospace small">
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+            <span class="text-muted">CURRENT COGNITIVE STATE:</span>
+            <span class="fw-bold text-info">{{ avatarState() }}</span>
+          </div>
+
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+            <span class="text-muted">RENDER ZONE:</span>
+            <span class="badge bg-primary bg-opacity-25 text-primary">OUTSIDE_ANGULAR</span>
+          </div>
+
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+            <span class="text-muted">GEOMETRY / SHADER:</span>
+            <span class="text-light">ICOSAHEDRON_PULSE</span>
+          </div>
+
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+            <span class="text-muted">ADAPTIVE THROTTLING:</span>
+            <span class="text-success">60 FPS ACTIVE / 0 FPS BLUR</span>
+          </div>
+        </div>
+      </app-panel>
+
+      <app-execution-timeline></app-execution-timeline>
+    </div>
+  </div>
+</div>

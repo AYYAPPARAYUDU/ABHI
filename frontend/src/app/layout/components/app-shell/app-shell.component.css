@@ -1,0 +1,19 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background-color: var(--abhi-bg-base);
+}
+
+.app-shell {
+  background-color: var(--abhi-bg-base);
+}
+
+.app-content {
+  max-width: 1920px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.app-footer {
+  background: var(--abhi-bg-surface-1);
+}

@@ -1,0 +1,24 @@
+<div class="app-shell d-flex flex-column min-vh-100 text-light">
+  <!-- Top App Header -->
+  <app-header></app-header>
+
+  <!-- Global Safety / Alert Banner (reactive) -->
+  <app-global-safety-bar></app-global-safety-bar>
+
+  <!-- Primary Feature Navigation Bar -->
+  <app-navigation></app-navigation>
+
+  <!-- Main Viewport / Routed Content Area -->
+  <main class="app-content flex-grow-1 p-3 container-fluid" role="main">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- App Footer -->
+  <footer class="app-footer p-2 text-center border-top border-secondary border-opacity-25 font-monospace text-secondary small" role="contentinfo">
+    <span>ABHI // LOCAL-FIRST PERSONAL AI COMPUTER AUTOMATION SYSTEM</span>
+    <span class="ms-3 text-muted">STAGE 6.2 PRODUCTION SHELL</span>
+  </footer>
+
+  <!-- Modal Dialogs (Consent Gate) -->
+  <app-consent-modal></app-consent-modal>
+</div>

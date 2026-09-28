@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, effect, inject } from '@angular/core';
+import { Component, ElementRef, ViewChild, AfterViewInit, OnDestroy, effect, inject, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
 import { OperatorStateService } from '../../../../core/services/operator-state.service';
@@ -15,6 +15,8 @@ export class AvatarViewportComponent implements AfterViewInit, OnDestroy {
   @ViewChild('canvasContainer', { static: true }) containerRef!: ElementRef<HTMLDivElement>;
 
   private readonly stateService = inject(OperatorStateService);
+  private readonly ngZone = inject(NgZone);
+
   readonly avatarState = this.stateService.avatarState;
 
   private scene!: THREE.Scene;
@@ -37,7 +39,9 @@ export class AvatarViewportComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.initThreeScene();
-    this.startAnimationLoop();
+    this.ngZone.runOutsideAngular(() => {
+      this.startAnimationLoop();
+    });
     this.setupResizeObserver();
   }
 
@@ -53,7 +57,7 @@ export class AvatarViewportComponent implements AfterViewInit, OnDestroy {
 
     // 2. WebGL Renderer
     try {
-      this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
       this.renderer.setSize(width, height);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
       container.appendChild(this.renderer.domElement);
@@ -254,12 +258,36 @@ export class AvatarViewportComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
     }
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+    if (this.particleSystem) {
+      this.particleSystem.geometry.dispose();
+      (this.particleSystem.material as THREE.Material).dispose();
+    }
+    if (this.innerCoreMesh) {
+      this.innerCoreMesh.geometry.dispose();
+      (this.innerCoreMesh.material as THREE.Material).dispose();
+    }
+    if (this.orbitalRing1) {
+      this.orbitalRing1.geometry.dispose();
+      (this.orbitalRing1.material as THREE.Material).dispose();
+    }
+    if (this.orbitalRing2) {
+      this.orbitalRing2.geometry.dispose();
+      (this.orbitalRing2.material as THREE.Material).dispose();
     }
     if (this.renderer) {
       this.renderer.dispose();
+      if (this.renderer.domElement && this.renderer.domElement.parentNode) {
+        this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+      }
+    }
+    if (this.scene) {
+      this.scene.clear();
     }
   }
 }

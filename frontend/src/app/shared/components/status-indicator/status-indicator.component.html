@@ -1,0 +1,11 @@
+<span
+  class="status-indicator d-inline-flex align-items-center gap-2"
+  [ngClass]="'status-' + status.toLowerCase()"
+  role="status"
+  [attr.aria-label]="label || status"
+>
+  <span class="status-dot" [class.status-pulse]="pulse"></span>
+  <span *ngIf="showLabel" class="status-label font-monospace small">
+    {{ label || status }}
+  </span>
+</span>

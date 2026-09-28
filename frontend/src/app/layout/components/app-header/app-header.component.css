@@ -1,0 +1,52 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.app-header {
+  background: var(--abhi-bg-surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: var(--abhi-z-header);
+}
+
+.brand-logo-glow {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--abhi-radius-sm);
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  box-shadow: var(--abhi-shadow-glow-blue);
+}
+
+.logo-symbol {
+  font-size: 1.25rem;
+}
+
+.brand-title {
+  font-size: 1.2rem;
+  letter-spacing: 0.12em;
+  color: var(--abhi-text-heading);
+}
+
+.brand-sub {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
+.emergency-btn {
+  letter-spacing: 0.08em;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  animation: dangerPulse 2s infinite ease-in-out;
+  transition: all var(--abhi-transition-fast);
+}
+
+.emergency-btn:hover {
+  transform: scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .emergency-btn {
+    animation: none;
+  }
+}

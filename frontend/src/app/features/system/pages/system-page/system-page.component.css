@@ -1,0 +1,12 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.system-node-card {
+  transition: all var(--abhi-transition-normal);
+}
+
+.system-node-card:hover {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}

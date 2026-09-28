@@ -1,0 +1,60 @@
+<nav class="app-navigation d-flex align-items-center justify-content-between px-3 py-2 border-bottom border-secondary border-opacity-25" aria-label="Primary Navigation">
+  <div class="d-flex align-items-center gap-2 nav-links-group">
+    <a
+      routerLink="/console"
+      routerLinkActive="active"
+      class="nav-tab d-inline-flex align-items-center gap-2 px-3 py-2 rounded text-decoration-none font-monospace"
+      aria-label="Operator Console Cockpit"
+    >
+      <span class="nav-icon">🎛️</span>
+      <span class="nav-label">CONSOLE</span>
+    </a>
+
+    <a
+      routerLink="/tasks"
+      routerLinkActive="active"
+      class="nav-tab d-inline-flex align-items-center gap-2 px-3 py-2 rounded text-decoration-none font-monospace"
+      aria-label="Task Execution & History"
+    >
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">TASKS</span>
+      <span *ngIf="currentTask()" class="badge bg-primary bg-opacity-50 text-light ms-1 font-monospace">1</span>
+    </a>
+
+    <a
+      routerLink="/perception"
+      routerLinkActive="active"
+      class="nav-tab d-inline-flex align-items-center gap-2 px-3 py-2 rounded text-decoration-none font-monospace"
+      aria-label="Perception & Multimodal Vision/Voice Status"
+    >
+      <span class="nav-icon">👁️</span>
+      <span class="nav-label">PERCEPTION</span>
+    </a>
+
+    <a
+      routerLink="/avatar"
+      routerLinkActive="active"
+      class="nav-tab d-inline-flex align-items-center gap-2 px-3 py-2 rounded text-decoration-none font-monospace"
+      aria-label="3D Cognitive Core Avatar Stage"
+    >
+      <span class="nav-icon">🤖</span>
+      <span class="nav-label">AVATAR</span>
+    </a>
+
+    <a
+      routerLink="/system"
+      routerLinkActive="active"
+      class="nav-tab d-inline-flex align-items-center gap-2 px-3 py-2 rounded text-decoration-none font-monospace"
+      aria-label="System Diagnostics & Workers Matrix"
+    >
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">SYSTEM</span>
+    </a>
+  </div>
+
+  <!-- Realtime Session Status -->
+  <div class="d-none d-md-flex align-items-center gap-3 text-muted small font-monospace">
+    <span>SUPERVISOR: <strong class="text-light">CENTRAL_DAG</strong></span>
+    <span>DISPATCH: <strong class="text-info">IDEMPOTENT</strong></span>
+  </div>
+</nav>

@@ -1,0 +1,39 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.global-safety-bar {
+  z-index: var(--abhi-z-safety-bar);
+  transition: all var(--abhi-transition-normal);
+}
+
+.bar-estop {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  color: #fca5a5;
+  animation: dangerPulse 2s infinite ease-in-out;
+}
+
+.bar-consent {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.6) !important;
+  color: #fde68a;
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+.bar-paused {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.4) !important;
+  color: #a5f3fc;
+}
+
+.bar-icon {
+  font-size: 1.1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar-estop, .bar-consent {
+    animation: none;
+  }
+}

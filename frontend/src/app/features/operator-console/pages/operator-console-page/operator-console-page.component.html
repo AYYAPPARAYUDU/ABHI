@@ -1,0 +1,49 @@
+<div class="operator-console-page">
+  <!-- Top Status Bar -->
+  <div class="mb-3">
+    <app-status-bar></app-status-bar>
+  </div>
+
+  <!-- Main Grid Workspace -->
+  <div class="row g-3">
+    <!-- Left Column: 3D Holographic Avatar & Visual Grounding -->
+    <div class="col-12 col-xl-5 d-flex flex-column gap-3">
+      <!-- Avatar Viewport -->
+      <section aria-label="Avatar Viewport">
+        <app-avatar-viewport></app-avatar-viewport>
+      </section>
+
+      <!-- Visual Grounding & Verification Panel -->
+      <section aria-label="Visual Grounding & Verification">
+        <app-visual-grounding-panel></app-visual-grounding-panel>
+      </section>
+    </div>
+
+    <!-- Right Column: Task Dispatch, Safety Governance & Execution Timeline -->
+    <div class="col-12 col-xl-7 d-flex flex-column gap-3">
+      <!-- Task Submission & Progress Panel -->
+      <section aria-label="Task Management">
+        <app-task-panel></app-task-panel>
+      </section>
+
+      <!-- Safety, Lease & Consent Panel -->
+      <section aria-label="Safety Governance">
+        <app-safety-panel></app-safety-panel>
+      </section>
+
+      <!-- Execution Timeline -->
+      <section aria-label="Execution Timeline">
+        <app-execution-timeline></app-execution-timeline>
+      </section>
+    </div>
+  </div>
+
+  <!-- Bottom Full-Width Telemetry Panel -->
+  <div class="row mt-3">
+    <div class="col-12">
+      <section aria-label="Live Telemetry Log">
+        <app-telemetry-panel></app-telemetry-panel>
+      </section>
+    </div>
+  </div>
+</div>

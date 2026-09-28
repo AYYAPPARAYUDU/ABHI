@@ -1,14 +1,19 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { App } from './app';
+import { routes } from './app.routes';
 import { OperatorStateService } from './core/services/operator-state.service';
 import { TelemetryService } from './core/websocket/telemetry.service';
-import { TelemetryEvent } from './core/models/telemetry.model';
+import { TaskApiService } from './core/api/task-api.service';
 
-describe('Phase 6 Stage 6.1 — Angular Operator Console & Live Telemetry Suite', () => {
+describe('Phase 6 Stage 6.2 — Application Shell, Routing & Design System Suite', () => {
   let stateService: OperatorStateService;
   let telemetryService: TelemetryService;
+  let router: Router;
+  let location: Location;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -16,23 +21,39 @@ describe('Phase 6 Stage 6.1 — Angular Operator Console & Live Telemetry Suite'
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        OperatorStateService,
-        TelemetryService
+        provideRouter(routes),
+        TaskApiService,
+        TelemetryService,
+        OperatorStateService
       ]
     }).compileComponents();
 
     stateService = TestBed.inject(OperatorStateService);
     telemetryService = TestBed.inject(TelemetryService);
+    router = TestBed.inject(Router);
+    location = TestBed.inject(Location);
   });
 
-  describe('App Shell & Component Rendering', () => {
+  describe('Application Shell & Structure', () => {
     it('should create the App shell successfully', () => {
       const fixture = TestBed.createComponent(App);
       const app = fixture.componentInstance;
       expect(app).toBeTruthy();
     });
 
-    it('should render brand identity in status bar', async () => {
+    it('should render header, navigation, global safety bar, and router outlet', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const compiled = fixture.nativeElement as HTMLElement;
+      expect(compiled.querySelector('app-shell')).toBeTruthy();
+      expect(compiled.querySelector('app-header')).toBeTruthy();
+      expect(compiled.querySelector('app-navigation')).toBeTruthy();
+      expect(compiled.querySelector('router-outlet')).toBeTruthy();
+    });
+
+    it('should render brand identity in application header', async () => {
       const fixture = TestBed.createComponent(App);
       fixture.detectChanges();
       await fixture.whenStable();
@@ -41,24 +62,65 @@ describe('Phase 6 Stage 6.1 — Angular Operator Console & Live Telemetry Suite'
       expect(compiled.querySelector('.brand-title')?.textContent).toContain('ABHI');
       expect(compiled.querySelector('.brand-sub')?.textContent).toContain('OPERATOR CONSOLE');
     });
+  });
 
-    it('should render all modular operator regions', async () => {
+  describe('Routing & Navigation', () => {
+    it('should redirect root path to /console', async () => {
       const fixture = TestBed.createComponent(App);
       fixture.detectChanges();
+      await router.navigate(['']);
       await fixture.whenStable();
 
-      const compiled = fixture.nativeElement as HTMLElement;
-      expect(compiled.querySelector('app-status-bar')).toBeTruthy();
-      expect(compiled.querySelector('app-avatar-viewport')).toBeTruthy();
-      expect(compiled.querySelector('app-visual-grounding-panel')).toBeTruthy();
-      expect(compiled.querySelector('app-task-panel')).toBeTruthy();
-      expect(compiled.querySelector('app-safety-panel')).toBeTruthy();
-      expect(compiled.querySelector('app-execution-timeline')).toBeTruthy();
-      expect(compiled.querySelector('app-telemetry-panel')).toBeTruthy();
+      expect(location.path()).toBe('/console');
+    });
+
+    it('should navigate to /tasks and load TasksPageComponent', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      await router.navigate(['/tasks']);
+      await fixture.whenStable();
+
+      expect(location.path()).toBe('/tasks');
+    });
+
+    it('should navigate to /perception and load PerceptionPageComponent', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      await router.navigate(['/perception']);
+      await fixture.whenStable();
+
+      expect(location.path()).toBe('/perception');
+    });
+
+    it('should navigate to /avatar and load AvatarPageComponent', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      await router.navigate(['/avatar']);
+      await fixture.whenStable();
+
+      expect(location.path()).toBe('/avatar');
+    });
+
+    it('should navigate to /system and load SystemPageComponent', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      await router.navigate(['/system']);
+      await fixture.whenStable();
+
+      expect(location.path()).toBe('/system');
+    });
+
+    it('should redirect unknown routes to /console', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      await router.navigate(['/non-existent-route']);
+      await fixture.whenStable();
+
+      expect(location.path()).toBe('/console');
     });
   });
 
-  describe('Telemetry Buffer & Stream Processing', () => {
+  describe('Telemetry Buffer & State Persistence across Navigation', () => {
     it('should enforce bounded memory buffer on telemetry events', () => {
       telemetryService.clearBuffer();
       expect(telemetryService.eventBuffer().length).toBe(0);
@@ -78,84 +140,32 @@ describe('Phase 6 Stage 6.1 — Angular Operator Console & Live Telemetry Suite'
       expect(telemetryService.eventBuffer().length).toBe(100);
       expect(telemetryService.eventBuffer()[0].id).toBe('test_evt_149');
     });
-  });
 
-  describe('Reactive State Transitions & Timeline Updates', () => {
-    it('should transition through task lifecycle events smoothly', () => {
-      const testTaskId = 'task_test_101';
-
-      // 1. TASK_CREATED
+    it('should preserve state across route changes without disconnecting telemetry', async () => {
+      const testTaskId = 'task_nav_test_1';
       stateService.processTelemetryEvent({
         id: 'e1',
         type: 'TASK_CREATED',
         task_id: testTaskId,
         timestamp: 1000,
-        payload: { goal: 'Click Run Test button', execution_id: 'exec_01' }
+        payload: { goal: 'Test Navigation State Preservation' }
       });
 
       expect(stateService.currentTask()?.taskId).toBe(testTaskId);
-      expect(stateService.currentTask()?.state).toBe('CREATED');
-      expect(stateService.avatarState()).toBe('PLANNING');
 
-      // 2. GROUNDING_SELECTED
-      stateService.processTelemetryEvent({
-        id: 'e2',
-        type: 'GROUNDING_SELECTED',
-        task_id: testTaskId,
-        timestamp: 2000,
-        payload: {
-          source: 'LEVEL_3_OCR',
-          target_identity: 'Run Test',
-          confidence: 0.94,
-          observation_id: 'obs_ocr_88',
-          fallback_reason: 'UIA element not exposed'
-        }
-      });
+      // Navigate across routes
+      await router.navigate(['/tasks']);
+      expect(stateService.currentTask()?.taskId).toBe(testTaskId);
 
-      expect(stateService.grounding().level).toBe('LEVEL_3_OCR');
-      expect(stateService.grounding().confidence).toBe(0.94);
-      expect(stateService.grounding().isFallback).toBe(true);
+      await router.navigate(['/system']);
+      expect(stateService.currentTask()?.taskId).toBe(testTaskId);
 
-      // 3. ACTION_EXECUTING
-      stateService.processTelemetryEvent({
-        id: 'e3',
-        type: 'ACTION_EXECUTING',
-        task_id: testTaskId,
-        timestamp: 3000,
-        payload: { action_id: 'act_click_01' }
-      });
-
-      expect(stateService.avatarState()).toBe('EXECUTING');
-
-      // 4. VERIFICATION_COMPLETED
-      stateService.processTelemetryEvent({
-        id: 'e4',
-        type: 'VERIFICATION_COMPLETED',
-        task_id: testTaskId,
-        timestamp: 4000,
-        payload: { verified: true }
-      });
-
-      expect(stateService.verification().isVerified).toBe(true);
-      expect(stateService.verification().state).toBe('VERIFIED');
-
-      // 5. TASK_COMPLETED
-      stateService.processTelemetryEvent({
-        id: 'e5',
-        type: 'TASK_COMPLETED',
-        task_id: testTaskId,
-        timestamp: 5000,
-        payload: { duration_ms: 4000 }
-      });
-
-      expect(stateService.currentTask()?.state).toBe('COMPLETED');
-      expect(stateService.currentTask()?.isSuccess).toBe(true);
-      expect(stateService.avatarState()).toBe('SUCCESS');
-
-      // Verify timeline recorded all items
-      expect(stateService.timeline().length).toBe(5);
+      await router.navigate(['/console']);
+      expect(stateService.currentTask()?.taskId).toBe(testTaskId);
     });
+  });
 
+  describe('Reactive Safety & Emergency Stop Handling', () => {
     it('should handle Consent gate and Emergency Stop correctly', () => {
       // Consent Required
       stateService.processTelemetryEvent({

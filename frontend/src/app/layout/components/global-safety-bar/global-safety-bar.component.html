@@ -1,0 +1,31 @@
+<div
+  *ngIf="safety().emergencyStopped || safety().consentPending || safety().isPaused"
+  class="global-safety-bar d-flex align-items-center justify-content-between px-3 py-2 border-bottom"
+  [ngClass]="safety().emergencyStopped ? 'bar-estop' : safety().consentPending ? 'bar-consent' : 'bar-paused'"
+  role="alert"
+  aria-live="assertive"
+>
+  <div class="d-flex align-items-center gap-2">
+    <span class="bar-icon">{{ safety().emergencyStopped ? '🛑' : safety().consentPending ? '⚠️' : '⏸️' }}</span>
+    <span class="bar-text font-monospace fw-bold small">
+      {{
+        safety().emergencyStopped
+          ? 'EMERGENCY STOP ENGAGED — AUTOMATION LEASE REVOKED. HARDWARE CONTROL HALTED.'
+          : safety().consentPending
+          ? 'TIER 3 ACTION AUTHORIZATION PENDING — SUPERVISOR BLOCKED WAITING FOR OPERATOR APPROVAL.'
+          : 'EXECUTION PAUSED / CONTENTION DETECTED — WAITING FOR USER RESUME.'
+      }}
+    </span>
+  </div>
+
+  <div class="d-flex align-items-center gap-2">
+    <button
+      *ngIf="safety().consentPending"
+      type="button"
+      class="btn btn-warning btn-sm font-monospace py-0 px-2 fw-bold"
+      (click)="onOpenConsent()"
+    >
+      REVIEW AUTHORIZATION
+    </button>
+  </div>
+</div>

@@ -1,0 +1,45 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.app-navigation {
+  background: var(--abhi-bg-surface-1);
+  z-index: var(--abhi-z-nav);
+}
+
+.nav-links-group {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav-links-group::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-tab {
+  color: var(--abhi-text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: all var(--abhi-transition-fast);
+}
+
+.nav-tab:hover {
+  color: var(--abhi-text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--abhi-border-subtle);
+}
+
+.nav-tab.active {
+  color: #ffffff;
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+}
+
+.nav-icon {
+  font-size: 1rem;
+}

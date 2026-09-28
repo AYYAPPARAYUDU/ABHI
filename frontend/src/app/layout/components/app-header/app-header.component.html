@@ -1,0 +1,48 @@
+<header class="app-header d-flex flex-wrap align-items-center justify-content-between px-3 py-2 border-bottom border-secondary border-opacity-25" role="banner">
+  <!-- Brand Identity -->
+  <div class="d-flex align-items-center gap-3">
+    <div class="brand-logo-glow d-flex align-items-center justify-content-center">
+      <span class="logo-symbol">🤖</span>
+    </div>
+    <div>
+      <div class="d-flex align-items-center gap-2">
+        <span class="brand-title font-monospace fw-bold">ABHI</span>
+        <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 font-monospace small">v2.0</span>
+      </div>
+      <div class="brand-sub font-monospace text-muted small">OPERATOR CONSOLE & AUTOMATION COCKPIT</div>
+    </div>
+  </div>
+
+  <!-- Telemetry & System Quick Badges -->
+  <div class="d-flex align-items-center gap-2">
+    <!-- WebSocket Connection Status -->
+    <app-status-indicator
+      [status]="telemetryStatusText()"
+      [label]="'WS: ' + telemetryStatusText()"
+      [pulse]="telemetryStatusText() === 'CONNECTED'"
+    ></app-status-indicator>
+
+    <!-- System Health -->
+    <app-status-indicator
+      [status]="health().overall"
+      [label]="'SYSTEM: ' + health().overall"
+    ></app-status-indicator>
+
+    <!-- Active Lease / Safety Quick Indicator -->
+    <app-status-indicator
+      [status]="safety().emergencyStopped ? 'HALTED' : safety().consentPending ? 'PENDING' : safety().policyStatus"
+      [label]="safety().emergencyStopped ? 'ESTOP ENGAGED' : 'SAFETY: ' + safety().policyStatus"
+    ></app-status-indicator>
+
+    <!-- Emergency Stop Button -->
+    <button
+      type="button"
+      class="btn btn-danger btn-sm font-monospace fw-bold ms-2 px-3 emergency-btn"
+      (click)="onEmergencyStop()"
+      [attr.aria-pressed]="safety().emergencyStopped"
+      aria-label="Trigger Physical Emergency Stop"
+    >
+      🛑 ESTOP
+    </button>
+  </div>
+</header>

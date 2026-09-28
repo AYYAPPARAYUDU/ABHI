@@ -1,0 +1,96 @@
+:host {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.status-indicator {
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--abhi-radius-pill);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--abhi-border-subtle);
+  transition: all var(--abhi-transition-fast);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--abhi-text-muted);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.status-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+/* Status variants */
+.status-healthy .status-dot,
+.status-connected .status-dot,
+.status-approved .status-dot,
+.status-active .status-dot,
+.status-success .status-dot {
+  background-color: var(--abhi-status-healthy);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+.status-healthy, .status-connected, .status-approved, .status-active, .status-success {
+  border-color: rgba(16, 185, 129, 0.25);
+  color: var(--abhi-status-healthy);
+}
+
+.status-degraded .status-dot,
+.status-reconnecting .status-dot,
+.status-warning .status-dot,
+.status-paused .status-dot,
+.status-pending .status-dot {
+  background-color: var(--abhi-status-degraded);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+.status-degraded, .status-reconnecting, .status-warning, .status-paused, .status-pending {
+  border-color: rgba(245, 158, 11, 0.25);
+  color: var(--abhi-status-degraded);
+}
+
+.status-unavailable .status-dot,
+.status-disconnected .status-dot,
+.status-denied .status-dot,
+.status-error .status-dot,
+.status-failed .status-dot,
+.status-halted .status-dot,
+.status-stopped .status-dot {
+  background-color: var(--abhi-status-unavailable);
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+.status-unavailable, .status-disconnected, .status-denied, .status-error, .status-failed, .status-halted, .status-stopped {
+  border-color: rgba(239, 68, 68, 0.25);
+  color: var(--abhi-status-unavailable);
+}
+
+.status-info .status-dot,
+.status-running .status-dot,
+.status-executing .status-dot {
+  background-color: var(--abhi-accent-cyan);
+  box-shadow: 0 0 8px rgba(6, 182, 212, 0.6);
+}
+.status-info, .status-running, .status-executing {
+  border-color: rgba(6, 182, 212, 0.25);
+  color: var(--abhi-accent-cyan);
+}
+
+.status-pulse {
+  animation: dotPulse 1.8s infinite ease-in-out;
+}
+
+@keyframes dotPulse {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-pulse {
+    animation: none;
+  }
+}

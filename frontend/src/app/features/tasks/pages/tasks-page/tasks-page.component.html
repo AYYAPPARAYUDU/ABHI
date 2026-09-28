@@ -1,0 +1,56 @@
+<div class="tasks-page">
+  <div class="row g-3">
+    <!-- Left Column: Task Submission & Current Task State -->
+    <div class="col-12 col-lg-6 d-flex flex-column gap-3">
+      <app-task-panel></app-task-panel>
+      <app-safety-panel></app-safety-panel>
+    </div>
+
+    <!-- Right Column: Execution Timeline & Task Execution History -->
+    <div class="col-12 col-lg-6 d-flex flex-column gap-3">
+      <app-execution-timeline></app-execution-timeline>
+      
+      <!-- Task Engine Status Card -->
+      <app-panel title="AUTOMATION ENGINE & WORKER STATUS" icon="⚡" badge="ADR-0006">
+        <div class="row g-2">
+          <div class="col-6">
+            <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="text-muted small font-monospace">WINDOWS UIA WORKER:</div>
+              <div class="d-flex align-items-center justify-content-between mt-1">
+                <span class="font-monospace fw-bold text-success">{{ health().windowsWorker }}</span>
+                <span class="badge bg-success bg-opacity-25 text-success font-monospace">ISOLATED</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="text-muted small font-monospace">BROWSER WORKER:</div>
+              <div class="d-flex align-items-center justify-content-between mt-1">
+                <span class="font-monospace fw-bold text-success">{{ health().browserWorker }}</span>
+                <span class="badge bg-success bg-opacity-25 text-success font-monospace">PLAYWRIGHT</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="text-muted small font-monospace">OCR GROUNDING:</div>
+              <div class="d-flex align-items-center justify-content-between mt-1">
+                <span class="font-monospace fw-bold text-info">READY</span>
+                <span class="badge bg-info bg-opacity-25 text-info font-monospace">LEVEL 3</span>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="text-muted small font-monospace">SUPERVISOR DAG:</div>
+              <div class="d-flex align-items-center justify-content-between mt-1">
+                <span class="font-monospace fw-bold text-success">IDEMPOTENT</span>
+                <span class="badge bg-primary bg-opacity-25 text-primary font-monospace">ACTIVE</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </app-panel>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,26 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.empty-state {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--abhi-border-subtle);
+}
+
+.empty-state-icon {
+  font-size: 2rem;
+  opacity: 0.7;
+}
+
+.empty-state-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.empty-state-message {
+  max-width: 400px;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
