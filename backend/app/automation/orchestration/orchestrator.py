@@ -29,11 +29,20 @@ from backend.app.automation.models.actions import (
 )
 from backend.app.automation.models.errors import AutomationError, AutomationErrorCode
 from backend.app.automation.orchestration.models import (
+    ExecutionAuditRecord,
     OrchestrationExecutionContext,
     OrchestrationResult,
     OrchestrationState,
     OrchestrationTaskResult,
     SupervisorDecisionTrace
+)
+from backend.app.automation.orchestration.persistence import (
+    execution_journal,
+    ExecutionJournal
+)
+from backend.app.automation.orchestration.recovery import (
+    execution_recovery_engine,
+    ExecutionRecoveryEngine
 )
 from backend.app.automation.orchestration.strategy_selector import (
     grounding_strategy_selector,
@@ -55,7 +64,9 @@ class SupervisorOrchestrator:
         selector: Optional[GroundingStrategySelector] = None,
         win_worker: Optional[WindowsAutomationWorker] = None,
         web_worker: Optional[Any] = None,
-        verifier: Optional[ActionVerifier] = None
+        verifier: Optional[ActionVerifier] = None,
+        journal: Optional[ExecutionJournal] = None,
+        recovery_engine: Optional[ExecutionRecoveryEngine] = None
     ):
         self.policy = policy or safety_policy
         self.leases = leases or lease_manager
@@ -63,6 +74,8 @@ class SupervisorOrchestrator:
         self.windows_worker = win_worker or windows_worker
         self.browser_worker = web_worker or browser_worker
         self.verifier = verifier or action_verifier
+        self.journal = journal or execution_journal
+        self.recovery_engine = recovery_engine or execution_recovery_engine
 
         # Active tasks state tracking
         self._active_tasks: Dict[str, OrchestrationTaskResult] = {}
@@ -71,7 +84,7 @@ class SupervisorOrchestrator:
         self._executed_action_hashes: Set[str] = set()
 
     async def _emit_event(self, task_id: str, event_type: str, payload: Dict[str, Any]):
-        """Emit authoritative structured telemetry event to WebSocket clients."""
+        """Emit authoritative structured telemetry event and record in persistent audit journal."""
         try:
             await ws_manager.broadcast({
                 "channel": "orchestrator",
@@ -82,6 +95,15 @@ class SupervisorOrchestrator:
             })
         except Exception as e:
             logger.debug(f"Telemetry broadcast warning: {e}")
+
+        task_res = self._active_tasks.get(task_id)
+        exec_id = task_res.execution_id if task_res else "unknown"
+        self.journal.record_audit(ExecutionAuditRecord(
+            task_id=task_id,
+            execution_id=exec_id,
+            state_transition=event_type,
+            payload=payload
+        ))
 
     async def create_task(self, goal: str, task_id: Optional[str] = None) -> OrchestrationTaskResult:
         """Create and initialize a new orchestrated execution task."""
@@ -99,6 +121,7 @@ class SupervisorOrchestrator:
         self._pause_events[tid] = asyncio.Event()
         self._pause_events[tid].set()
 
+        self.journal.persist_task(task_res)
         await self._emit_event(tid, "TASK_CREATED", {"goal": goal, "execution_id": exec_id})
         return task_res
 
@@ -126,7 +149,7 @@ class SupervisorOrchestrator:
 
         # Check for duplicate action idempotency
         action_hash = f"{task_id}:{target_name}:{action_type.value}:{precondition}:{expected_postcondition}"
-        if action_hash in self._executed_action_hashes:
+        if action_hash in self._executed_action_hashes or self.journal.check_idempotency(action_hash):
             logger.warning(f"Duplicate action detected: {action_hash}")
             # Reject as duplicate action
             err = AutomationError(
@@ -138,11 +161,13 @@ class SupervisorOrchestrator:
             task_res.state = OrchestrationState.FAILED
             task_res.is_success = False
             task_res.error = err
+            self.journal.persist_task(task_res)
             await self._emit_event(task_id, "TASK_FAILED", {"error": err.message})
             return task_res
 
         # 1. PLANNING
         task_res.state = OrchestrationState.PLANNING
+        self.journal.persist_task(task_res)
         await self._emit_event(task_id, "TASK_PLANNED", {
             "action_id": action_id,
             "target": target_name,
@@ -237,7 +262,24 @@ class SupervisorOrchestrator:
 
                 action_id = f"act_{uuid.uuid4().hex[:8]}"
 
+                # Worker Crash Early Detection
+                if hasattr(self.windows_worker, "is_crashed") and self.windows_worker.is_crashed:
+                    task_res.state = OrchestrationState.FAILED
+                    task_res.is_success = False
+                    task_res.error = AutomationError(
+                        error_code=AutomationErrorCode.WORKER_UNAVAILABLE,
+                        message="Windows Automation Worker process is unavailable / crashed.",
+                        action_id=action_id
+                    )
+                    decision_trace.final_state = OrchestrationState.FAILED.value
+                    task_res.decision_traces.append(decision_trace)
+                    self.journal.persist_task(task_res)
+                    await self._emit_event(task_id, "WORKER_FAILURE_DETECTED", {"worker": "WindowsAutomationWorker"})
+                    await self._emit_event(task_id, "TASK_FAILED", {"error": task_res.error.message})
+                    return task_res
+
                 # 4. GROUNDING STRATEGY SELECTION
+
                 task_res.state = OrchestrationState.GROUNDING if retry_count == 0 else OrchestrationState.REGROUNDING
                 await self._emit_event(task_id, "GROUNDING_STARTED" if retry_count == 0 else "REGROUNDING_STARTED", {
                     "target": target_name,
@@ -287,6 +329,7 @@ class SupervisorOrchestrator:
                     expected_postcondition=expected_postcondition,
                     risk_tier=risk_tier
                 )
+                self.journal.persist_action(action)
 
                 # 5. PRECONDITION CHECK
                 task_res.state = OrchestrationState.PRECONDITION_CHECK
@@ -328,6 +371,7 @@ class SupervisorOrchestrator:
                         )
                         decision_trace.final_state = OrchestrationState.FAILED.value
                         task_res.decision_traces.append(decision_trace)
+                        self.journal.persist_task(task_res)
                         break
 
                 # 6. DISPATCHING & EXECUTING
@@ -341,11 +385,18 @@ class SupervisorOrchestrator:
                 decision_trace.execution_result = exec_res.model_dump() if exec_res else {"error": exec_err.message if exec_err else "None"}
 
                 if not exec_res or exec_err:
+                    if exec_err and exec_err.error_code == AutomationErrorCode.WORKER_UNAVAILABLE:
+                        await self._emit_event(task_id, "WORKER_FAILURE_DETECTED", {
+                            "worker": "WindowsAutomationWorker",
+                            "action_id": action_id,
+                            "error": exec_err.message
+                        })
                     task_res.state = OrchestrationState.FAILED
                     task_res.is_success = False
                     task_res.error = exec_err
                     decision_trace.final_state = OrchestrationState.FAILED.value
                     task_res.decision_traces.append(decision_trace)
+                    self.journal.persist_task(task_res)
                     await self._emit_event(task_id, "TASK_FAILED", {"error": exec_err.message if exec_err else "Execution error"})
                     return task_res
 
@@ -365,13 +416,15 @@ class SupervisorOrchestrator:
                 if ver_res.is_verified:
                     await self._emit_event(task_id, "VERIFICATION_COMPLETED", {"is_verified": True})
                     await self._emit_event(task_id, "ACTION_COMPLETED", {"action_id": action_id})
-                    
+
                     self._executed_action_hashes.add(action_hash)
+                    self.journal.record_idempotency(action_hash, task_id, action.action_id)
                     task_res.is_success = True
                     task_res.state = OrchestrationState.COMPLETED
                     decision_trace.final_state = OrchestrationState.COMPLETED.value
                     task_res.decision_traces.append(decision_trace)
                     task_res.executed_actions.append(action.model_dump())
+                    self.journal.persist_task(task_res)
                     break
                 else:
                     await self._emit_event(task_id, "VERIFICATION_FAILED", {"details": ver_res.mismatch_details})
@@ -392,6 +445,7 @@ class SupervisorOrchestrator:
                         )
                         decision_trace.final_state = OrchestrationState.FAILED.value
                         task_res.decision_traces.append(decision_trace)
+                        self.journal.persist_task(task_res)
                         break
 
         finally:
@@ -433,7 +487,7 @@ class SupervisorOrchestrator:
 
         # Check for duplicate action idempotency
         action_hash = f"{task_id}:{target_name}:{action_type.value}:{precondition}:{expected_postcondition}"
-        if action_hash in self._executed_action_hashes:
+        if action_hash in self._executed_action_hashes or self.journal.check_idempotency(action_hash):
             logger.warning(f"Duplicate browser action detected: {action_hash}")
             err = AutomationError(
                 error_code=AutomationErrorCode.DUPLICATE_ACTION,
@@ -444,11 +498,13 @@ class SupervisorOrchestrator:
             task_res.state = OrchestrationState.FAILED
             task_res.is_success = False
             task_res.error = err
+            self.journal.persist_task(task_res)
             await self._emit_event(task_id, "TASK_FAILED", {"error": err.message})
             return task_res
 
         # 1. PLANNING
         task_res.state = OrchestrationState.PLANNING
+        self.journal.persist_task(task_res)
         await self._emit_event(task_id, "TASK_PLANNED", {
             "action_id": action_id,
             "target": target_name,
@@ -543,7 +599,24 @@ class SupervisorOrchestrator:
 
                 action_id = f"act_{uuid.uuid4().hex[:8]}"
 
+                # Worker Crash Early Detection
+                if hasattr(self.browser_worker, "is_crashed") and self.browser_worker.is_crashed:
+                    task_res.state = OrchestrationState.FAILED
+                    task_res.is_success = False
+                    task_res.error = AutomationError(
+                        error_code=AutomationErrorCode.WORKER_UNAVAILABLE,
+                        message="Browser Automation Worker process is unavailable / crashed.",
+                        action_id=action_id
+                    )
+                    decision_trace.final_state = OrchestrationState.FAILED.value
+                    task_res.decision_traces.append(decision_trace)
+                    self.journal.persist_task(task_res)
+                    await self._emit_event(task_id, "WORKER_FAILURE_DETECTED", {"worker": "BrowserAutomationWorker"})
+                    await self._emit_event(task_id, "TASK_FAILED", {"error": task_res.error.message})
+                    return task_res
+
                 # 4. GROUNDING STRATEGY SELECTION
+
                 task_res.state = OrchestrationState.GROUNDING if retry_count == 0 else OrchestrationState.REGROUNDING
                 await self._emit_event(task_id, "GROUNDING_STARTED" if retry_count == 0 else "REGROUNDING_STARTED", {
                     "target": target_name,
@@ -594,6 +667,7 @@ class SupervisorOrchestrator:
                     expected_postcondition=expected_postcondition,
                     risk_tier=risk_tier
                 )
+                self.journal.persist_action(action)
 
                 # 5. PRECONDITION CHECK
                 task_res.state = OrchestrationState.PRECONDITION_CHECK
@@ -634,6 +708,7 @@ class SupervisorOrchestrator:
                         )
                         decision_trace.final_state = OrchestrationState.FAILED.value
                         task_res.decision_traces.append(decision_trace)
+                        self.journal.persist_task(task_res)
                         break
 
                 # 6. DISPATCHING & EXECUTING
@@ -647,11 +722,18 @@ class SupervisorOrchestrator:
                 decision_trace.execution_result = exec_res.model_dump() if exec_res else {"error": exec_err.message if exec_err else "None"}
 
                 if not exec_res or exec_err:
+                    if exec_err and exec_err.error_code == AutomationErrorCode.WORKER_UNAVAILABLE:
+                        await self._emit_event(task_id, "WORKER_FAILURE_DETECTED", {
+                            "worker": "BrowserAutomationWorker",
+                            "action_id": action_id,
+                            "error": exec_err.message
+                        })
                     task_res.state = OrchestrationState.FAILED
                     task_res.is_success = False
                     task_res.error = exec_err
                     decision_trace.final_state = OrchestrationState.FAILED.value
                     task_res.decision_traces.append(decision_trace)
+                    self.journal.persist_task(task_res)
                     await self._emit_event(task_id, "TASK_FAILED", {"error": exec_err.message if exec_err else "Execution error"})
                     return task_res
 
@@ -673,11 +755,13 @@ class SupervisorOrchestrator:
                     await self._emit_event(task_id, "ACTION_COMPLETED", {"action_id": action_id})
 
                     self._executed_action_hashes.add(action_hash)
+                    self.journal.record_idempotency(action_hash, task_id, action.action_id)
                     task_res.is_success = True
                     task_res.state = OrchestrationState.COMPLETED
                     decision_trace.final_state = OrchestrationState.COMPLETED.value
                     task_res.decision_traces.append(decision_trace)
                     task_res.executed_actions.append(action.model_dump())
+                    self.journal.persist_task(task_res)
                     break
                 else:
                     await self._emit_event(task_id, "VERIFICATION_FAILED", {"details": ver_res.mismatch_details})
@@ -697,6 +781,7 @@ class SupervisorOrchestrator:
                         )
                         decision_trace.final_state = OrchestrationState.FAILED.value
                         task_res.decision_traces.append(decision_trace)
+                        self.journal.persist_task(task_res)
                         break
 
         finally:
@@ -786,6 +871,7 @@ class SupervisorOrchestrator:
             if tid in self._pause_events:
                 self._pause_events[tid].set()
 
+            self.journal.persist_task(task_res)
             await self._emit_event(tid, "TASK_EMERGENCY_STOPPED", {"reason": "Operator Override"})
 
         return True
@@ -809,9 +895,38 @@ class SupervisorOrchestrator:
         if task_id in self._pause_events:
             self._pause_events[task_id].set()
 
+        self.journal.persist_task(task_res)
         await self._emit_event(task_id, "TASK_CANCELLED", {"reason": "User Request"})
         return True
+
+    async def reconcile_task(self, task_id: str) -> OrchestrationTaskResult:
+        """Reconcile a single interrupted task using the recovery engine."""
+        task_res = await self.recovery_engine.reconcile_task(
+            task_id=task_id,
+            orchestrator=self
+        )
+        self._active_tasks[task_id] = task_res
+        return task_res
+
+    async def reconcile_interrupted_tasks(self) -> List[OrchestrationTaskResult]:
+        """Discover and reconcile all interrupted tasks from previous sessions."""
+        interrupted = self.recovery_engine.discover_interrupted_tasks()
+        results: List[OrchestrationTaskResult] = []
+        for task in interrupted:
+            res = await self.reconcile_task(task.task_id)
+            results.append(res)
+        return results
+
+    def validate_crash_consistency(self) -> Tuple[bool, List[str]]:
+        """Validate consistency of persisted journal state."""
+        return self.journal.validate_crash_consistency()
+
+    def recover_leases(self) -> int:
+        """Invalidate stale leases after process recovery."""
+        stale_count = self.leases.invalidate_all_leases(reason="Supervisor recovery lease reset")
+        return stale_count
 
 
 # Global Orchestrator Singleton
 supervisor_orchestrator = SupervisorOrchestrator()
+

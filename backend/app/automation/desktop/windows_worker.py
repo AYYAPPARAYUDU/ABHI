@@ -43,6 +43,12 @@ class WindowsAutomationWorker:
         """Simulate unexpected worker process crash for testing fault isolation."""
         self.is_crashed = crashed
 
+    def restart_worker(self, target_app: Optional[DeterministicLocalTestApp] = None) -> None:
+        """Cleanly restart worker and clear failure flags."""
+        if target_app:
+            self.target_app = target_app
+        self.is_crashed = False
+
     def inspect_active_window(self) -> Tuple[List[Dict[str, Any]], Optional[AutomationError]]:
         """Return the semantic UIA tree of the active window."""
         if self.is_crashed:

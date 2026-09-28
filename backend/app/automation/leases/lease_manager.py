@@ -225,6 +225,26 @@ class LeaseManager:
         if lease:
             lease.revoke(reason="Execution completed / lease released")
 
+    def invalidate_all_leases(self, reason: str = "Process restart / Recovery") -> int:
+        """Invalidate and revoke all registered leases upon process failure or restart."""
+        count = 0
+        for lease in self._leases.values():
+            if not lease.revoked:
+                lease.revoke(reason)
+                count += 1
+        return count
+
+    def reconcile_leases(self) -> int:
+        """Reconcile and prune expired/revoked leases from active memory."""
+        now = time.time()
+        pruned = 0
+        for lid in list(self._leases.keys()):
+            l = self._leases[lid]
+            if l.revoked or now > l.expires_at or now > l.absolute_expiry:
+                del self._leases[lid]
+                pruned += 1
+        return pruned
+
 
 # Singleton
 lease_manager = LeaseManager()

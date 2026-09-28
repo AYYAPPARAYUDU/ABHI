@@ -24,11 +24,33 @@ class OrchestrationState(str, Enum):
     VERIFYING = "VERIFYING"
     REGROUNDING = "REGROUNDING"
     RETRYING = "RETRYING"
+    RECOVERING = "RECOVERING"
+    RECONCILING = "RECONCILING"
     PAUSED_USER_INTERFERENCE = "PAUSED_USER_INTERFERENCE"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     CANCELLED = "CANCELLED"
     EMERGENCY_STOPPED = "EMERGENCY_STOPPED"
+
+
+class ExecutionAuditRecord(BaseModel):
+    """Immutable machine-readable execution journal entry for security, recovery, and audit tracking."""
+    record_id: str = Field(default_factory=lambda: f"audit_{uuid.uuid4().hex[:12]}")
+    task_id: str
+    execution_id: str
+    action_id: Optional[str] = None
+    timestamp: float = Field(default_factory=time.time)
+    state_transition: str
+    worker: Optional[str] = None
+    grounding_method: Optional[str] = None
+    lease_status: Optional[str] = None
+    policy_result: Optional[Dict[str, Any]] = None
+    precondition_result: Optional[Dict[str, Any]] = None
+    observation_reference: Optional[str] = None
+    verification_result: Optional[Dict[str, Any]] = None
+    recovery_event: Optional[str] = None
+    final_state: Optional[str] = None
+    payload: Dict[str, Any] = Field(default_factory=dict)
 
 
 class SupervisorDecisionTrace(BaseModel):

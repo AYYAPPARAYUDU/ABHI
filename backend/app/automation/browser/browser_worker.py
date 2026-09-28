@@ -36,6 +36,12 @@ class BrowserAutomationWorker:
         """Simulate unexpected browser worker crash for fault isolation testing."""
         self.is_crashed = crashed
 
+    def restart_worker(self, target_page: Optional[MockLocalBrowserPage] = None) -> None:
+        """Cleanly restart browser worker and clear crash state."""
+        if target_page:
+            self.target_page = target_page
+        self.is_crashed = False
+
     def inspect_dom(self) -> Tuple[List[Dict[str, Any]], Optional[AutomationError]]:
         """Return the semantic DOM snapshot of the current page."""
         if self.is_crashed:
