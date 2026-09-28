@@ -94,6 +94,52 @@ class MemoryRepository:
                 res = await s.execute(stmt)
                 return res.scalar_one_or_none()
 
+    async def list_tasks(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        state: Optional[str] = None,
+        search: Optional[str] = None,
+        session: Optional[AsyncSession] = None
+    ) -> List[TaskExecutionRecord]:
+        """List tasks with pagination, state filtering, and text search."""
+        stmt = select(TaskExecutionRecord)
+        if state:
+            stmt = stmt.where(TaskExecutionRecord.state == state)
+        if search:
+            stmt = stmt.where(TaskExecutionRecord.goal.ilike(f"%{search}%"))
+        stmt = stmt.order_by(TaskExecutionRecord.created_at.desc()).offset(offset).limit(limit)
+
+        if session:
+            res = await session.execute(stmt)
+            return list(res.scalars().all())
+        else:
+            async with AsyncSessionFactory() as s:
+                res = await s.execute(stmt)
+                return list(res.scalars().all())
+
+    async def count_tasks(
+        self,
+        state: Optional[str] = None,
+        search: Optional[str] = None,
+        session: Optional[AsyncSession] = None
+    ) -> int:
+        """Count total tasks matching criteria."""
+        from sqlalchemy import func
+        stmt = select(func.count(TaskExecutionRecord.task_id))
+        if state:
+            stmt = stmt.where(TaskExecutionRecord.state == state)
+        if search:
+            stmt = stmt.where(TaskExecutionRecord.goal.ilike(f"%{search}%"))
+
+        if session:
+            res = await session.execute(stmt)
+            return res.scalar_one() or 0
+        else:
+            async with AsyncSessionFactory() as s:
+                res = await s.execute(stmt)
+                return res.scalar_one() or 0
+
     async def save_episodic_memory(
         self,
         context_summary: str,
@@ -128,6 +174,40 @@ class MemoryRepository:
                 await s.refresh(record)
                 return record
 
+    async def get_episodic_memory(
+        self,
+        memory_id: str,
+        session: Optional[AsyncSession] = None
+    ) -> Optional[EpisodicMemoryRecord]:
+        """Retrieve episodic memory by ID."""
+        if session:
+            stmt = select(EpisodicMemoryRecord).where(EpisodicMemoryRecord.memory_id == memory_id)
+            res = await session.execute(stmt)
+            return res.scalar_one_or_none()
+        else:
+            async with AsyncSessionFactory() as s:
+                stmt = select(EpisodicMemoryRecord).where(EpisodicMemoryRecord.memory_id == memory_id)
+                res = await s.execute(stmt)
+                return res.scalar_one_or_none()
+
+    async def delete_episodic_memory(
+        self,
+        memory_id: str,
+        session: Optional[AsyncSession] = None
+    ) -> bool:
+        """Delete an episodic memory record."""
+        from sqlalchemy import delete
+        stmt = delete(EpisodicMemoryRecord).where(EpisodicMemoryRecord.memory_id == memory_id)
+        if session:
+            res = await session.execute(stmt)
+            await session.commit()
+            return res.rowcount > 0
+        else:
+            async with AsyncSessionFactory() as s:
+                res = await s.execute(stmt)
+                await s.commit()
+                return res.rowcount > 0
+
     async def list_recent_memories(
         self,
         limit: int = 10,
@@ -147,6 +227,65 @@ class MemoryRepository:
             async with AsyncSessionFactory() as s:
                 res = await s.execute(stmt)
                 return list(res.scalars().all())
+
+    async def list_memories_paginated(
+        self,
+        limit: int = 50,
+        offset: int = 0,
+        category: Optional[str] = None,
+        search: Optional[str] = None,
+        session: Optional[AsyncSession] = None
+    ) -> List[EpisodicMemoryRecord]:
+        """List episodic memories with pagination, category filter, and text search."""
+        from sqlalchemy import or_
+        stmt = select(EpisodicMemoryRecord)
+        if category:
+            stmt = stmt.where(EpisodicMemoryRecord.category == category)
+        if search:
+            stmt = stmt.where(
+                or_(
+                    EpisodicMemoryRecord.context_summary.ilike(f"%{search}%"),
+                    EpisodicMemoryRecord.solution_summary.ilike(f"%{search}%"),
+                    EpisodicMemoryRecord.tags.ilike(f"%{search}%")
+                )
+            )
+        stmt = stmt.order_by(EpisodicMemoryRecord.created_at.desc()).offset(offset).limit(limit)
+
+        if session:
+            res = await session.execute(stmt)
+            return list(res.scalars().all())
+        else:
+            async with AsyncSessionFactory() as s:
+                res = await s.execute(stmt)
+                return list(res.scalars().all())
+
+    async def count_memories(
+        self,
+        category: Optional[str] = None,
+        search: Optional[str] = None,
+        session: Optional[AsyncSession] = None
+    ) -> int:
+        """Count total episodic memories matching criteria."""
+        from sqlalchemy import func, or_
+        stmt = select(func.count(EpisodicMemoryRecord.memory_id))
+        if category:
+            stmt = stmt.where(EpisodicMemoryRecord.category == category)
+        if search:
+            stmt = stmt.where(
+                or_(
+                    EpisodicMemoryRecord.context_summary.ilike(f"%{search}%"),
+                    EpisodicMemoryRecord.solution_summary.ilike(f"%{search}%"),
+                    EpisodicMemoryRecord.tags.ilike(f"%{search}%")
+                )
+            )
+
+        if session:
+            res = await session.execute(stmt)
+            return res.scalar_one() or 0
+        else:
+            async with AsyncSessionFactory() as s:
+                res = await s.execute(stmt)
+                return res.scalar_one() or 0
 
     async def set_user_profile(
         self,
@@ -192,6 +331,20 @@ class MemoryRepository:
             async with AsyncSessionFactory() as s:
                 record = await s.get(UserProfileRecord, key)
                 return record.value_json if record else None
+
+    async def list_all_user_profiles(
+        self,
+        session: Optional[AsyncSession] = None
+    ) -> List[UserProfileRecord]:
+        """List all user profile records."""
+        stmt = select(UserProfileRecord).order_by(UserProfileRecord.key)
+        if session:
+            res = await session.execute(stmt)
+            return list(res.scalars().all())
+        else:
+            async with AsyncSessionFactory() as s:
+                res = await s.execute(stmt)
+                return list(res.scalars().all())
 
 
 # Global memory repository instance

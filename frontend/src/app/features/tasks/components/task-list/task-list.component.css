@@ -1,0 +1,17 @@
+.task-list-container {
+  border-radius: 10px;
+}
+
+.search-input-group .form-control:focus {
+  border-color: #0dcaf0;
+  box-shadow: 0 0 8px rgba(13, 202, 240, 0.25);
+}
+
+.border-dashed {
+  border-style: dashed !important;
+}
+
+.filter-pills .btn {
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+}

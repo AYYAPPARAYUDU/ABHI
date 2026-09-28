@@ -1,0 +1,8 @@
+.knowledge-search-container {
+  border-radius: 10px;
+}
+
+.knowledge-search-container .form-control:focus {
+  border-color: #0dcaf0;
+  box-shadow: 0 0 8px rgba(13, 202, 240, 0.25);
+}

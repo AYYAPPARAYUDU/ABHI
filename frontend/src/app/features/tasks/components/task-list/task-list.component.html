@@ -1,0 +1,129 @@
+<div class="task-list-container card bg-dark border border-secondary border-opacity-25 p-3">
+  <!-- Header & Search Controls -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <h5 class="text-light mb-0 fw-bold">📋 Task History & Execution Records</h5>
+      <small class="text-muted font-monospace">Total: {{ taskHistory.totalTasks() }} persistent records</small>
+    </div>
+
+    <!-- Search Box -->
+    <div class="input-group search-input-group" style="max-width: 280px;">
+      <span class="input-group-text bg-black border-secondary border-opacity-50 text-muted">🔍</span>
+      <input
+        type="text"
+        class="form-control bg-black text-light border-secondary border-opacity-50 font-monospace small"
+        placeholder="Search goal / ID..."
+        [(ngModel)]="searchQuery"
+        (input)="onSearchChange()"
+        aria-label="Search tasks"
+      />
+      <button
+        *ngIf="searchQuery"
+        class="btn btn-outline-secondary border-opacity-50 text-muted"
+        (click)="clearSearch()"
+      >
+        ✕
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Status Tabs -->
+  <div class="d-flex flex-wrap gap-2 mb-3 filter-pills">
+    <button
+      class="btn btn-sm font-monospace"
+      [class.btn-primary]="taskHistory.filters().state === 'ALL'"
+      [class.btn-outline-secondary]="taskHistory.filters().state !== 'ALL'"
+      (click)="taskHistory.setStateFilter('ALL')"
+    >
+      ALL ({{ taskHistory.totalTasks() }})
+    </button>
+    <button
+      class="btn btn-sm font-monospace"
+      [class.btn-success]="taskHistory.filters().state === 'COMPLETED'"
+      [class.btn-outline-secondary]="taskHistory.filters().state !== 'COMPLETED'"
+      (click)="taskHistory.setStateFilter('COMPLETED')"
+    >
+      COMPLETED
+    </button>
+    <button
+      class="btn btn-sm font-monospace"
+      [class.btn-info]="taskHistory.filters().state === 'EXECUTING'"
+      [class.btn-outline-secondary]="taskHistory.filters().state !== 'EXECUTING'"
+      (click)="taskHistory.setStateFilter('EXECUTING')"
+    >
+      EXECUTING
+    </button>
+    <button
+      class="btn btn-sm font-monospace"
+      [class.btn-danger]="taskHistory.filters().state === 'FAILED'"
+      [class.btn-outline-secondary]="taskHistory.filters().state !== 'FAILED'"
+      (click)="taskHistory.setStateFilter('FAILED')"
+    >
+      FAILED
+    </button>
+    <button
+      class="btn btn-sm font-monospace"
+      [class.btn-secondary]="taskHistory.filters().state === 'CANCELLED'"
+      [class.btn-outline-secondary]="taskHistory.filters().state !== 'CANCELLED'"
+      (click)="taskHistory.setStateFilter('CANCELLED')"
+    >
+      CANCELLED
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="taskHistory.isLoading()" class="text-center py-4 text-muted">
+    <div class="spinner-border spinner-border-sm text-info mb-2" role="status"></div>
+    <div class="font-monospace small">Querying SQLite relational persistence journal...</div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="taskHistory.errorMessage()" class="alert alert-danger font-monospace small mb-3">
+    ⚠️ {{ taskHistory.errorMessage() }}
+  </div>
+
+  <!-- Empty State -->
+  <div
+    *ngIf="!taskHistory.isLoading() && taskHistory.tasks().length === 0"
+    class="text-center py-5 border border-dashed border-secondary border-opacity-25 rounded bg-black bg-opacity-25 my-2"
+  >
+    <div class="display-6 mb-2">📭</div>
+    <h6 class="text-muted">No task execution records found</h6>
+    <p class="text-muted small font-monospace">Tasks submitted via voice, text, or console appear here automatically.</p>
+  </div>
+
+  <!-- Task Grid -->
+  <div *ngIf="!taskHistory.isLoading() && taskHistory.tasks().length > 0" class="row g-2 mb-3">
+    <div class="col-12 col-md-6 col-lg-4" *ngFor="let t of taskHistory.tasks()">
+      <app-task-card
+        [task]="t"
+        [isSelected]="taskHistory.selectedTask()?.task_id === t.task_id"
+        (taskSelected)="taskHistory.selectTask($event)"
+      ></app-task-card>
+    </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div
+    *ngIf="taskHistory.totalPages() > 1"
+    class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25 text-muted small font-monospace"
+  >
+    <span>Page {{ taskHistory.filters().page }} of {{ taskHistory.totalPages() }}</span>
+    <div class="btn-group btn-group-sm">
+      <button
+        class="btn btn-outline-secondary"
+        [disabled]="taskHistory.filters().page <= 1"
+        (click)="taskHistory.setPage(taskHistory.filters().page - 1)"
+      >
+        ◀ Prev
+      </button>
+      <button
+        class="btn btn-outline-secondary"
+        [disabled]="taskHistory.filters().page >= taskHistory.totalPages()"
+        (click)="taskHistory.setPage(taskHistory.filters().page + 1)"
+      >
+        Next ▶
+      </button>
+    </div>
+  </div>
+</div>

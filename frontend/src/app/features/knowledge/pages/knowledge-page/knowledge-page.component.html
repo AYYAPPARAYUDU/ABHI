@@ -1,0 +1,45 @@
+<div class="knowledge-page container-fluid px-0">
+  <!-- Top: Knowledge Search Bar -->
+  <div class="row g-3 mb-3">
+    <div class="col-12">
+      <app-knowledge-search></app-knowledge-search>
+    </div>
+  </div>
+
+  <!-- Selected Chunk Detail View -->
+  <div *ngIf="knowledgeService.selectedChunk()" class="row g-3 mb-3">
+    <div class="col-12">
+      <app-knowledge-detail></app-knowledge-detail>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Main Column: Ranked Hybrid Search Results -->
+    <div class="col-12 col-xl-7">
+      <app-search-results></app-search-results>
+    </div>
+
+    <!-- Right Column: Planning Context & Knowledge Sources -->
+    <div class="col-12 col-xl-5 d-flex flex-column gap-3">
+      <app-retrieval-context></app-retrieval-context>
+      <app-source-card></app-source-card>
+
+      <app-panel title="LANCEDB LOCAL RAG FOUNDATION" icon="⚡" badge="ADR-0005">
+        <div class="d-flex flex-column gap-2 font-monospace small">
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+            <div class="text-info fw-bold">LOCAL VECTOR ENGINE</div>
+            <div class="text-muted small">Embedded LanceDB vector database storing 384-dimensional dense vectors.</div>
+          </div>
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+            <div class="text-success fw-bold">HYBRID RETRIEVAL</div>
+            <div class="text-muted small">Dense cosine vector distance merged with BM25 lexical keyword scoring.</div>
+          </div>
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+            <div class="text-primary fw-bold">ZERO CLOUD EXPORT</div>
+            <div class="text-muted small">All vector computations, chunking, and storage remain 100% on-device.</div>
+          </div>
+        </div>
+      </app-panel>
+    </div>
+  </div>
+</div>

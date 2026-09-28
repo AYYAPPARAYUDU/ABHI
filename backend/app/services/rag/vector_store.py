@@ -176,6 +176,56 @@ class LocalVectorStore:
         search_results.sort(key=lambda x: x.score, reverse=True)
         return search_results[:top_k]
 
+    def count_chunks(self) -> int:
+        """Return total count of indexed vector chunks."""
+        try:
+            if hasattr(self.table, "count_rows"):
+                return self.table.count_rows()
+            return len(self.table)
+        except Exception:
+            try:
+                return len(self.table.to_arrow())
+            except Exception:
+                return 0
+
+    def list_sources(self) -> List[Dict[str, Any]]:
+        """List distinct sources and chunk distributions."""
+        try:
+            arrow_tbl = self.table.to_arrow()
+            records = arrow_tbl.to_pylist()
+            source_counts: Dict[str, int] = {}
+            for r in records:
+                src = str(r.get("source", "unknown"))
+                source_counts[src] = source_counts.get(src, 0) + 1
+
+            return [
+                {"source": src, "chunk_count": count}
+                for src, count in sorted(source_counts.items(), key=lambda x: x[1], reverse=True)
+            ]
+        except Exception as e:
+            logger.warning(f"Error listing vector sources: {str(e)}")
+            return []
+
+    def get_all_chunks(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
+        """Retrieve indexed chunks with pagination."""
+        try:
+            arrow_tbl = self.table.to_arrow()
+            records = arrow_tbl.to_pylist()
+            sliced = records[offset:offset + limit]
+            return [
+                {
+                    "chunk_id": str(r.get("chunk_id", "")),
+                    "source": str(r.get("source", "")),
+                    "text": str(r.get("text", "")),
+                    "tags": str(r.get("tags", "")).split(",") if r.get("tags") else [],
+                    "created_at_ts": r.get("created_at_ts", 0)
+                }
+                for r in sliced
+            ]
+        except Exception as e:
+            logger.warning(f"Error retrieving vector chunks: {str(e)}")
+            return []
+
 
 # Global vector store singleton
 vector_store = LocalVectorStore()

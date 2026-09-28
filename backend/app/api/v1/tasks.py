@@ -25,6 +25,40 @@ async def submit_task(request: SubmitGoalRequest):
     return await central_supervisor.submit_goal(goal=request.goal, task_id=request.task_id)
 
 
+@router.get("", response_model=Dict[str, Any])
+async def list_tasks(
+    limit: int = 50,
+    offset: int = 0,
+    state: Optional[str] = None,
+    query: Optional[str] = None
+):
+    """List historical and active tasks with pagination and filtering."""
+    tasks = await memory_repo.list_tasks(limit=limit, offset=offset, state=state, search=query)
+    total = await memory_repo.count_tasks(state=state, search=query)
+
+    task_list = []
+    for t in tasks:
+        # If task is active in supervisor memory, merge in latest dynamic status
+        active_status = central_supervisor.get_task_status(t.task_id)
+        task_list.append({
+            "task_id": t.task_id,
+            "goal": t.goal,
+            "state": active_status.state if active_status else t.state,
+            "dag": active_status.dag if active_status else t.dag_data,
+            "error_message": t.error_message,
+            "duration_ms": t.duration_ms,
+            "created_at": t.created_at.isoformat() if t.created_at else None,
+            "completed_at": t.completed_at.isoformat() if t.completed_at else None
+        })
+
+    return {
+        "tasks": task_list,
+        "total": total,
+        "limit": limit,
+        "offset": offset
+    }
+
+
 @router.get("/{task_id}", response_model=Dict[str, Any])
 async def get_task_status(task_id: str):
     """Retrieve execution status and DAG details for a task."""

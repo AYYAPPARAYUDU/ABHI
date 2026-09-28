@@ -1,0 +1,30 @@
+<div
+  class="task-card card bg-dark border p-3 cursor-pointer transition-all"
+  [class.border-cyan]="isSelected"
+  [class.border-secondary]="!isSelected"
+  [class.border-opacity-50]="!isSelected"
+  [class.selected-glow]="isSelected"
+  (click)="taskSelected.emit(task.task_id)"
+  tabindex="0"
+  (keyup.enter)="taskSelected.emit(task.task_id)"
+  role="button"
+  [attr.aria-label]="'Task ' + task.task_id + ': ' + task.goal"
+>
+  <div class="d-flex justify-content-between align-items-start mb-2">
+    <span class="badge border font-monospace px-2 py-1 small" [ngClass]="getStatusBadgeClass(task.state)">
+      {{ task.state }}
+    </span>
+    <span class="text-muted font-monospace small">
+      ⏱️ {{ formatDuration(task.duration_ms) }}
+    </span>
+  </div>
+
+  <h6 class="text-light fw-semibold mb-2 text-truncate-2">
+    {{ task.goal }}
+  </h6>
+
+  <div class="d-flex justify-content-between align-items-center mt-auto text-muted small font-monospace">
+    <span class="text-truncate" style="max-width: 140px;">🆔 {{ task.task_id }}</span>
+    <span>{{ task.created_at ? (task.created_at | date:'shortTime') : 'Recent' }}</span>
+  </div>
+</div>

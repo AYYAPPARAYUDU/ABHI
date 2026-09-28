@@ -1,0 +1,20 @@
+<div class="execution-history-card card bg-dark border border-secondary border-opacity-25 p-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="text-light fw-bold mb-0">⚡ Supervisor Central Execution Pipeline</h6>
+    <span class="badge bg-info bg-opacity-25 text-info border border-info font-monospace small">FAIL-CLOSED</span>
+  </div>
+
+  <div class="timeline-stepper d-flex flex-column gap-2">
+    <div
+      *ngFor="let stage of stages; let i = index"
+      class="timeline-item d-flex align-items-start gap-2 p-2 rounded bg-black bg-opacity-30 border border-secondary border-opacity-25 font-monospace small"
+    >
+      <span class="badge bg-primary bg-opacity-50 text-light rounded-pill px-2">{{ i + 1 }}</span>
+      <div class="flex-grow-1">
+        <div class="text-light fw-bold">{{ stage.label }}</div>
+        <div class="text-muted small">{{ stage.desc }}</div>
+      </div>
+      <span class="text-success small">✓ VERIFIED</span>
+    </div>
+  </div>
+</div>

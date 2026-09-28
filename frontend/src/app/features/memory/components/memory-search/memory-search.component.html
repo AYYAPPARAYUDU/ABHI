@@ -1,0 +1,19 @@
+<div class="memory-search-bar input-group">
+  <span class="input-group-text bg-black border-secondary border-opacity-50 text-muted">🔍</span>
+  <input
+    type="text"
+    class="form-control bg-black text-light border-secondary border-opacity-50 font-monospace small"
+    placeholder="Search episodic memories / tags..."
+    [(ngModel)]="searchQuery"
+    (input)="onSearchChange()"
+    aria-label="Search episodic memories"
+  />
+  <button
+    *ngIf="searchQuery"
+    class="btn btn-outline-secondary border-opacity-50 text-muted"
+    (click)="clearSearch()"
+    aria-label="Clear memory search"
+  >
+    ✕
+  </button>
+</div>

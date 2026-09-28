@@ -1,0 +1,39 @@
+<div class="knowledge-search-container card bg-dark border border-secondary border-opacity-25 p-3">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="text-light fw-bold mb-0">📚 LanceDB Hybrid RAG Vector Search</h5>
+    <span class="badge bg-primary bg-opacity-25 text-info border border-info font-monospace small">
+      384-DIM DENSE + BM25
+    </span>
+  </div>
+  <p class="text-muted small font-monospace mb-3">
+    Query local document chunks, operating manual, and knowledge sources stored serverless in Apache Arrow / LanceDB.
+  </p>
+
+  <form (ngSubmit)="onSearch()" class="input-group">
+    <span class="input-group-text bg-black border-secondary border-opacity-50 text-info font-monospace">RAG:</span>
+    <input
+      type="text"
+      class="form-control bg-black text-light border-secondary border-opacity-50 font-monospace"
+      placeholder="e.g. Windows automation, UIA controls, DAG planning..."
+      [(ngModel)]="searchQuery"
+      name="query"
+      aria-label="RAG query"
+    />
+    <button
+      type="submit"
+      class="btn btn-info font-monospace px-3"
+      [disabled]="knowledgeService.isSearching() || !searchQuery.trim()"
+    >
+      <span *ngIf="knowledgeService.isSearching()" class="spinner-border spinner-border-sm me-1" role="status"></span>
+      🔍 Search RAG
+    </button>
+    <button
+      *ngIf="searchQuery || knowledgeService.activeQuery()"
+      type="button"
+      class="btn btn-outline-secondary font-monospace"
+      (click)="onClear()"
+    >
+      Clear
+    </button>
+  </form>
+</div>

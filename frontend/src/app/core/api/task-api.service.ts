@@ -283,5 +283,148 @@ export class TaskApiService {
     }
     return await response.json();
   }
+
+  /**
+   * List historical and active tasks with pagination and query filtering.
+   */
+  async listTasks(limit: number = 50, offset: number = 0, state?: string, query?: string): Promise<any> {
+    const params = new URLSearchParams();
+    params.set('limit', limit.toString());
+    params.set('offset', offset.toString());
+    if (state && state !== 'ALL') params.set('state', state);
+    if (query && query.trim()) params.set('query', query.trim());
+
+    const response = await fetch(`${this.baseUrl}/api/v1/tasks?${params.toString()}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list tasks: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * List episodic memories with pagination, category filter, and search.
+   */
+  async listMemories(limit: number = 50, offset: number = 0, category?: string, query?: string): Promise<any> {
+    const params = new URLSearchParams();
+    params.set('limit', limit.toString());
+    params.set('offset', offset.toString());
+    if (category && category !== 'all') params.set('category', category);
+    if (query && query.trim()) params.set('query', query.trim());
+
+    const response = await fetch(`${this.baseUrl}/api/v1/memory?${params.toString()}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list memories: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Retrieve detailed episodic memory.
+   */
+  async getMemoryDetail(memoryId: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/memory/${encodeURIComponent(memoryId)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve memory ${memoryId}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Forget / Delete an episodic memory record.
+   */
+  async forgetMemory(memoryId: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/memory/${encodeURIComponent(memoryId)}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to delete memory ${memoryId}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * List all stored user preferences and profile parameters.
+   */
+  async listUserProfiles(): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/api/v1/memory/profiles/all`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list user profiles: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Execute hybrid vector semantic search and BM25 keyword matching via LanceDB.
+   */
+  async searchKnowledge(query: string, topK: number = 5, sourceFilter?: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/knowledge/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, top_k: topK, source_filter: sourceFilter || null })
+    });
+    if (!response.ok) {
+      throw new Error(`Knowledge search failed: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * List indexed knowledge sources and storage stats.
+   */
+  async listKnowledgeSources(): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/knowledge/sources`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list knowledge sources: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Retrieve indexed knowledge chunks.
+   */
+  async getKnowledgeChunks(limit: number = 50, offset: number = 0): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/knowledge/chunks?limit=${limit}&offset=${offset}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list knowledge chunks: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Retrieve structured contextual chunks for task planning.
+   */
+  async getRetrievalContext(query: string, topK: number = 3): Promise<any> {
+    const params = new URLSearchParams();
+    params.set('query', query);
+    params.set('top_k', topK.toString());
+
+    const response = await fetch(`${this.baseUrl}/api/v1/knowledge/context?${params.toString()}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve context: ${response.status}`);
+    }
+    return await response.json();
+  }
 }
 

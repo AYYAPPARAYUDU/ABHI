@@ -1,0 +1,23 @@
+<div class="retrieval-context-card card bg-dark border border-secondary border-opacity-25 p-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="text-light fw-bold mb-0">🧩 Contextual Planning Retrieval Preview</h6>
+    <span class="badge bg-primary bg-opacity-25 text-primary font-monospace small">AGENT PROMPT INJECTION</span>
+  </div>
+
+  <div *ngIf="knowledgeService.retrievalContext().length > 0" class="d-flex flex-column gap-2">
+    <div
+      *ngFor="let ctx of knowledgeService.retrievalContext(); let idx = index"
+      class="p-2 rounded bg-black bg-opacity-50 border border-secondary border-opacity-25 font-monospace small"
+    >
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="text-info fw-bold">[{{ idx + 1 }}] {{ ctx.citation }}</span>
+        <span class="badge bg-success bg-opacity-25 text-success">Score: {{ (ctx.score * 100).toFixed(1) }}%</span>
+      </div>
+      <div class="text-light small text-truncate-2">{{ ctx.excerpt }}</div>
+    </div>
+  </div>
+
+  <div *ngIf="knowledgeService.retrievalContext().length === 0" class="text-muted small font-monospace p-2 border border-secondary border-opacity-25 rounded bg-black bg-opacity-25">
+    Execute a search to view structured prompt context chunks retrieved by LanceDB.
+  </div>
+</div>

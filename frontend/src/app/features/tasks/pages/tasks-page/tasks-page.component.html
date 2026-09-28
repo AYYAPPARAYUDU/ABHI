@@ -1,56 +1,23 @@
-<div class="tasks-page">
+<div class="tasks-page container-fluid px-0">
+  <!-- Top: Selected Task Detail (if any selected) -->
+  <div *ngIf="taskHistory.selectedTask()" class="row g-3 mb-3">
+    <div class="col-12">
+      <app-task-detail></app-task-detail>
+    </div>
+  </div>
+
   <div class="row g-3">
-    <!-- Left Column: Task Submission & Current Task State -->
-    <div class="col-12 col-lg-6 d-flex flex-column gap-3">
+    <!-- Left Column: Task Submission & Live Task List -->
+    <div class="col-12 col-xl-7 d-flex flex-column gap-3">
       <app-task-panel></app-task-panel>
-      <app-safety-panel></app-safety-panel>
+      <app-task-list></app-task-list>
     </div>
 
-    <!-- Right Column: Execution Timeline & Task Execution History -->
-    <div class="col-12 col-lg-6 d-flex flex-column gap-3">
+    <!-- Right Column: Execution Timeline, Pipeline History & Safety Gate -->
+    <div class="col-12 col-xl-5 d-flex flex-column gap-3">
+      <app-safety-panel></app-safety-panel>
       <app-execution-timeline></app-execution-timeline>
-      
-      <!-- Task Engine Status Card -->
-      <app-panel title="AUTOMATION ENGINE & WORKER STATUS" icon="⚡" badge="ADR-0006">
-        <div class="row g-2">
-          <div class="col-6">
-            <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
-              <div class="text-muted small font-monospace">WINDOWS UIA WORKER:</div>
-              <div class="d-flex align-items-center justify-content-between mt-1">
-                <span class="font-monospace fw-bold text-success">{{ health().windowsWorker }}</span>
-                <span class="badge bg-success bg-opacity-25 text-success font-monospace">ISOLATED</span>
-              </div>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
-              <div class="text-muted small font-monospace">BROWSER WORKER:</div>
-              <div class="d-flex align-items-center justify-content-between mt-1">
-                <span class="font-monospace fw-bold text-success">{{ health().browserWorker }}</span>
-                <span class="badge bg-success bg-opacity-25 text-success font-monospace">PLAYWRIGHT</span>
-              </div>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
-              <div class="text-muted small font-monospace">OCR GROUNDING:</div>
-              <div class="d-flex align-items-center justify-content-between mt-1">
-                <span class="font-monospace fw-bold text-info">READY</span>
-                <span class="badge bg-info bg-opacity-25 text-info font-monospace">LEVEL 3</span>
-              </div>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
-              <div class="text-muted small font-monospace">SUPERVISOR DAG:</div>
-              <div class="d-flex align-items-center justify-content-between mt-1">
-                <span class="font-monospace fw-bold text-success">IDEMPOTENT</span>
-                <span class="badge bg-primary bg-opacity-25 text-primary font-monospace">ACTIVE</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </app-panel>
+      <app-execution-history></app-execution-history>
     </div>
   </div>
 </div>

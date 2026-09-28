@@ -1,0 +1,54 @@
+<div class="memory-page container-fluid px-0">
+  <!-- Selected Memory Detail Header -->
+  <div *ngIf="memoryService.selectedMemory()" class="row g-3 mb-3">
+    <div class="col-12">
+      <app-memory-detail></app-memory-detail>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Main Column: Memory List & Search Grid -->
+    <div class="col-12 col-xl-8">
+      <app-memory-list></app-memory-list>
+    </div>
+
+    <!-- Right Column: User Profiles & Persistent Parameters -->
+    <div class="col-12 col-xl-4 d-flex flex-column gap-3">
+      <app-panel title="PERSISTENT USER PROFILES & PREFERENCES" icon="👤" badge="SQLITE">
+        <div *ngIf="memoryService.userProfiles().length > 0" class="d-flex flex-column gap-2">
+          <div
+            *ngFor="let prof of memoryService.userProfiles()"
+            class="p-2 rounded bg-black bg-opacity-40 border border-secondary border-opacity-25 font-monospace small"
+          >
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="text-info fw-bold">🔑 {{ prof.key }}</span>
+              <span class="text-muted small">{{ prof.updated_at ? (prof.updated_at | date:'shortTime') : '-' }}</span>
+            </div>
+            <pre class="text-light small mb-0 bg-dark p-1 rounded" style="font-size: 0.75rem;">{{ prof.value | json }}</pre>
+          </div>
+        </div>
+
+        <div *ngIf="memoryService.userProfiles().length === 0" class="text-muted small font-monospace p-2 border border-secondary border-opacity-25 rounded bg-black bg-opacity-25">
+          No explicit profile preferences customized yet. Default system profiles active.
+        </div>
+      </app-panel>
+
+      <app-panel title="SEGMENTED MEMORY ARCHITECTURE" icon="🛡️" badge="ADR-0004">
+        <div class="d-flex flex-column gap-2 font-monospace small">
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+            <div class="text-info fw-bold">EPISODIC STORAGE</div>
+            <div class="text-muted small">Successful task traces, user workflows, and error recoveries.</div>
+          </div>
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+            <div class="text-success fw-bold">PRIVACY BOUNDARY</div>
+            <div class="text-muted small">No secrets, passwords, or authentication keys persisted in memory.</div>
+          </div>
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+            <div class="text-primary fw-bold">OPERATOR FORGET</div>
+            <div class="text-muted small">Full operator control to permanently expunge learned episodic records.</div>
+          </div>
+        </div>
+      </app-panel>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+<div class="source-card card bg-dark border border-secondary border-opacity-25 p-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="text-light fw-bold mb-0">🗂️ Indexed Knowledge Sources</h6>
+    <span class="badge bg-info bg-opacity-25 text-info font-monospace small">
+      {{ sourcesInfo?.total_chunks || 0 }} Chunks
+    </span>
+  </div>
+
+  <div *ngIf="sourcesInfo && sourcesInfo.sources.length > 0" class="d-flex flex-column gap-2">
+    <div
+      *ngFor="let s of sourcesInfo.sources"
+      class="d-flex justify-content-between align-items-center p-2 rounded bg-black bg-opacity-40 border border-secondary border-opacity-25 font-monospace small"
+    >
+      <div class="d-flex align-items-center gap-2 text-truncate">
+        <span>📄</span>
+        <span class="text-light fw-semibold text-truncate">{{ s.source }}</span>
+      </div>
+      <span class="badge bg-secondary bg-opacity-50 text-light">{{ s.chunk_count }} chunks</span>
+    </div>
+  </div>
+
+  <div *ngIf="!sourcesInfo || sourcesInfo.sources.length === 0" class="text-muted small font-monospace p-2 border border-secondary border-opacity-25 rounded bg-black bg-opacity-25">
+    No external sources indexed yet. Native system ontology active.
+  </div>
+</div>

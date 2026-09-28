@@ -1,0 +1,79 @@
+<div class="memory-list-container card bg-dark border border-secondary border-opacity-25 p-3">
+  <!-- Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+    <div>
+      <h5 class="text-light mb-0 fw-bold">🧠 Episodic Memory & Learned Knowledge</h5>
+      <small class="text-muted font-monospace">Local segmented memory repository (SQLite Relational Store)</small>
+    </div>
+    <div style="min-width: 260px;">
+      <app-memory-search></app-memory-search>
+    </div>
+  </div>
+
+  <!-- Success Notification -->
+  <div *ngIf="memoryService.successMessage()" class="alert alert-success font-monospace small mb-3">
+    ✓ {{ memoryService.successMessage() }}
+  </div>
+
+  <!-- Category Filter Pills -->
+  <div class="mb-3">
+    <app-memory-type-filter></app-memory-type-filter>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="memoryService.isLoading()" class="text-center py-4 text-muted">
+    <div class="spinner-border spinner-border-sm text-info mb-2" role="status"></div>
+    <div class="font-monospace small">Querying episodic memory records...</div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="memoryService.errorMessage()" class="alert alert-danger font-monospace small mb-3">
+    ⚠️ {{ memoryService.errorMessage() }}
+  </div>
+
+  <!-- Empty State -->
+  <div
+    *ngIf="!memoryService.isLoading() && memoryService.memories().length === 0"
+    class="text-center py-5 border border-dashed border-secondary border-opacity-25 rounded bg-black bg-opacity-25 my-2"
+  >
+    <div class="display-6 mb-2">💭</div>
+    <h6 class="text-muted">No episodic memories found</h6>
+    <p class="text-muted small font-monospace">Learned task patterns and user preferences will be cataloged here automatically.</p>
+  </div>
+
+  <!-- Memory Grid -->
+  <div *ngIf="!memoryService.isLoading() && memoryService.memories().length > 0" class="row g-2 mb-3">
+    <div class="col-12 col-md-6 col-lg-4" *ngFor="let m of memoryService.memories()">
+      <app-memory-card
+        [memory]="m"
+        [isSelected]="memoryService.selectedMemory()?.memory_id === m.memory_id"
+        (memorySelected)="memoryService.selectMemory($event)"
+        (forgetMemory)="memoryService.forgetMemory($event)"
+      ></app-memory-card>
+    </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div
+    *ngIf="memoryService.totalPages() > 1"
+    class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25 text-muted small font-monospace"
+  >
+    <span>Page {{ memoryService.filters().page }} of {{ memoryService.totalPages() }}</span>
+    <div class="btn-group btn-group-sm">
+      <button
+        class="btn btn-outline-secondary"
+        [disabled]="memoryService.filters().page <= 1"
+        (click)="memoryService.setPage(memoryService.filters().page - 1)"
+      >
+        ◀ Prev
+      </button>
+      <button
+        class="btn btn-outline-secondary"
+        [disabled]="memoryService.filters().page >= memoryService.totalPages()"
+        (click)="memoryService.setPage(memoryService.filters().page + 1)"
+      >
+        Next ▶
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,19 @@
+<div class="memory-type-filter d-flex flex-wrap gap-2">
+  <button
+    class="btn btn-sm font-monospace text-uppercase"
+    [class.btn-primary]="currentCategory === 'all'"
+    [class.btn-outline-secondary]="currentCategory !== 'all'"
+    (click)="setCategory('all')"
+  >
+    🌐 ALL ({{ memoryService.totalMemories() }})
+  </button>
+  <button
+    *ngFor="let cat of memoryService.categories()"
+    class="btn btn-sm font-monospace text-uppercase"
+    [class.btn-info]="currentCategory === cat"
+    [class.btn-outline-secondary]="currentCategory !== cat"
+    (click)="setCategory(cat)"
+  >
+    📁 {{ cat }}
+  </button>
+</div>

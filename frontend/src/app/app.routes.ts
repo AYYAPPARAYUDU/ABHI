@@ -21,6 +21,20 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'memory',
+    loadComponent: () =>
+      import('./features/memory/pages/memory-page/memory-page.component').then(
+        (m) => m.MemoryPageComponent
+      )
+  },
+  {
+    path: 'knowledge',
+    loadComponent: () =>
+      import('./features/knowledge/pages/knowledge-page/knowledge-page.component').then(
+        (m) => m.KnowledgePageComponent
+      )
+  },
+  {
     path: 'interaction',
     loadComponent: () =>
       import('./features/interaction/pages/interaction-page/interaction-page.component').then(

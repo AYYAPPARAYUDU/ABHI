@@ -1,0 +1,51 @@
+<div
+  class="memory-card card bg-dark border p-3 cursor-pointer transition-all"
+  [class.border-cyan]="isSelected"
+  [class.border-secondary]="!isSelected"
+  [class.border-opacity-50]="!isSelected"
+  [class.selected-glow]="isSelected"
+  (click)="memorySelected.emit(memory.memory_id)"
+  tabindex="0"
+  (keyup.enter)="memorySelected.emit(memory.memory_id)"
+  role="button"
+  [attr.aria-label]="'Memory ' + memory.memory_id + ': ' + memory.context_summary"
+>
+  <div class="d-flex justify-content-between align-items-start mb-2">
+    <div class="d-flex gap-1 flex-wrap">
+      <span class="badge border font-monospace px-2 py-1 small" [ngClass]="getPrivacyBadgeClass(memory.privacy_class)">
+        🔒 {{ memory.privacy_class }}
+      </span>
+      <span class="badge bg-secondary bg-opacity-25 text-light font-monospace small">
+        📁 {{ memory.category }}
+      </span>
+    </div>
+    <button
+      class="btn btn-sm btn-outline-danger border-0 p-1 text-opacity-75"
+      title="Forget this memory"
+      (click)="onForgetClick($event)"
+      aria-label="Forget memory"
+    >
+      🗑️
+    </button>
+  </div>
+
+  <h6 class="text-light fw-semibold mb-2 text-truncate-2">
+    {{ memory.context_summary }}
+  </h6>
+
+  <p class="text-muted small mb-2 text-truncate-2 font-monospace">
+    💡 {{ memory.solution_summary }}
+  </p>
+
+  <!-- Tags -->
+  <div *ngIf="memory.tags && memory.tags.length" class="d-flex gap-1 flex-wrap mb-2">
+    <span *ngFor="let tag of memory.tags" class="badge bg-black border border-secondary border-opacity-25 text-muted small font-monospace">
+      #{{ tag }}
+    </span>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mt-auto text-muted small font-monospace">
+    <span class="text-truncate" style="max-width: 140px;">ID: {{ memory.memory_id }}</span>
+    <span>{{ memory.created_at ? (memory.created_at | date:'shortDate') : 'Recent' }}</span>
+  </div>
+</div>

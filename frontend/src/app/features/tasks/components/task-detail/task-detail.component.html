@@ -1,0 +1,71 @@
+<div *ngIf="selectedTask" class="task-detail-card card bg-dark border border-secondary border-opacity-25 p-3">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-start pb-3 border-bottom border-secondary border-opacity-25 mb-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge border font-monospace px-2 py-1" [ngClass]="selectedTask.state === 'COMPLETED' ? 'bg-success bg-opacity-25 text-success border-success' : 'bg-primary bg-opacity-25 text-info border-info'">
+          {{ selectedTask.state }}
+        </span>
+        <h5 class="text-light mb-0 fw-bold">{{ selectedTask.goal }}</h5>
+      </div>
+      <div class="text-muted small font-monospace">Task UUID: {{ selectedTask.task_id }}</div>
+    </div>
+    <button class="btn btn-sm btn-outline-secondary font-monospace" (click)="taskHistory.clearSelection()">
+      ✕ Close Detail
+    </button>
+  </div>
+
+  <!-- Error Message (if any) -->
+  <div *ngIf="selectedTask.error_message" class="alert alert-danger font-monospace small mb-3">
+    <strong>Execution Error:</strong> {{ selectedTask.error_message }}
+  </div>
+
+  <!-- Metadata Grid -->
+  <div class="row g-2 mb-3 font-monospace small">
+    <div class="col-6 col-md-3">
+      <div class="p-2 rounded bg-black bg-opacity-50 border border-secondary border-opacity-25">
+        <div class="text-muted">DURATION</div>
+        <div class="text-light fw-bold">{{ selectedTask.duration_ms ? selectedTask.duration_ms + ' ms' : '-' }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-2 rounded bg-black bg-opacity-50 border border-secondary border-opacity-25">
+        <div class="text-muted">CREATED AT</div>
+        <div class="text-light fw-bold">{{ selectedTask.created_at ? (selectedTask.created_at | date:'mediumTime') : '-' }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-2 rounded bg-black bg-opacity-50 border border-secondary border-opacity-25">
+        <div class="text-muted">GROUNDING</div>
+        <div class="text-info fw-bold">SEMANTIC + VISUAL</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-2 rounded bg-black bg-opacity-50 border border-secondary border-opacity-25">
+        <div class="text-muted">SAFETY GATE</div>
+        <div class="text-success fw-bold">FAIL-CLOSED LEASE</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAG Nodes Hierarchy -->
+  <div class="dag-nodes-section mb-2">
+    <h6 class="text-light font-monospace small text-uppercase mb-2">🌿 Deterministic DAG Execution Nodes</h6>
+    <div *ngIf="getDagNodes(selectedTask.dag).length > 0" class="d-flex flex-column gap-2">
+      <div
+        *ngFor="let node of getDagNodes(selectedTask.dag)"
+        class="d-flex justify-content-between align-items-center p-2 rounded bg-black bg-opacity-40 border border-secondary border-opacity-25 font-monospace small"
+      >
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-secondary bg-opacity-50">{{ node.id }}</span>
+          <span class="text-light fw-bold">{{ node.action }}</span>
+          <span *ngIf="node.target" class="text-muted">→ {{ node.target }}</span>
+        </div>
+        <span [ngClass]="getStatusColor(node.state)" class="fw-bold">{{ node.state }}</span>
+      </div>
+    </div>
+    <div *ngIf="getDagNodes(selectedTask.dag).length === 0" class="text-muted small font-monospace p-2 border border-secondary border-opacity-25 rounded bg-black bg-opacity-25">
+      Single atomic node execution (central supervisor directed).
+    </div>
+  </div>
+</div>
