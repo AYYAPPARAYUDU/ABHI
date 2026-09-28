@@ -1,0 +1,117 @@
+.timeline-card {
+  background: rgba(18, 22, 34, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(16px);
+}
+
+.panel-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.panel-icon {
+  font-size: 1rem;
+}
+
+.timeline-scroll-container {
+  max-height: 240px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.timeline-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.timeline-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.timeline-item {
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 3px solid #64748b;
+  transition: all 0.2s ease;
+}
+
+.timeline-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.timeline-icon-box {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.timeline-step-title {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+}
+
+.timeline-details {
+  font-size: 0.72rem;
+  line-height: 1.3;
+}
+
+/* Status variants */
+.item-completed {
+  border-left-color: #10b981;
+}
+.item-completed .status-symbol {
+  color: #10b981;
+}
+.item-completed .timeline-step-title {
+  color: #34d399;
+}
+
+.item-failed {
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+.item-failed .status-symbol {
+  color: #ef4444;
+}
+.item-failed .timeline-step-title {
+  color: #f87171;
+}
+
+.item-recovering {
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+.item-recovering .status-symbol {
+  color: #f59e0b;
+}
+.item-recovering .timeline-step-title {
+  color: #fbbf24;
+}
+
+.item-stopped {
+  border-left-color: #ec4899;
+  background: rgba(236, 72, 153, 0.08);
+}
+.item-stopped .status-symbol {
+  color: #ec4899;
+}
+.item-stopped .timeline-step-title {
+  color: #f472b6;
+}
+
+.item-progress {
+  border-left-color: #3b82f6;
+}
+.item-progress .status-symbol {
+  color: #3b82f6;
+}
+.item-progress .timeline-step-title {
+  color: #60a5fa;
+}

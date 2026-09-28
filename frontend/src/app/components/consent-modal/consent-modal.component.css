@@ -1,0 +1,44 @@
+.consent-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(4, 7, 15, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+}
+
+.consent-modal-card {
+  background: #0f172a;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 32px rgba(245, 158, 11, 0.2);
+  width: 100%;
+  max-width: 520px;
+}
+
+.shield-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.modal-title {
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+}
+
+.consent-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.action-info-box {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}

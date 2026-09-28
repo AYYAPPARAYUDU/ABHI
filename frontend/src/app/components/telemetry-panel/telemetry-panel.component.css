@@ -1,0 +1,111 @@
+.telemetry-card {
+  background: rgba(18, 22, 34, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(16px);
+}
+
+.panel-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.panel-icon {
+  font-size: 1rem;
+}
+
+.search-input, .category-select {
+  background: rgba(10, 14, 23, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  max-width: 180px;
+}
+
+.search-input:focus, .category-select:focus {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: #3b82f6;
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+.events-scroll-container {
+  max-height: 280px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.events-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.events-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.event-row {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: all 0.15s ease;
+}
+
+.event-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.event-badge {
+  font-size: 0.72rem;
+  padding: 0.2em 0.5em;
+  border-radius: 4px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.event-source {
+  font-size: 0.72rem;
+}
+
+.event-status {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.event-timestamp {
+  font-size: 0.72rem;
+}
+
+.payload-box {
+  background: rgba(10, 14, 23, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.payload-box pre {
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.event-error {
+  border-left: 3px solid #ef4444;
+}
+
+.event-emergency {
+  border-left: 3px solid #ec4899;
+}
+
+.event-warning {
+  border-left: 3px solid #f59e0b;
+}
+
+.event-success {
+  border-left: 3px solid #10b981;
+}
+
+.event-normal {
+  border-left: 3px solid #64748b;
+}

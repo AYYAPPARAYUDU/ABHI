@@ -43,16 +43,21 @@ from backend.app.cognitive.registry.models import AgentTaskRequest
 from backend.app.perception.vision.screen_ocr import ScreenOCREngine, ScreenOCRResult, DetectedUIElement, BoundingBox
 
 
+from backend.app.automation.orchestration.persistence import ExecutionJournal
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def isolated_orchestration_env():
+def isolated_orchestration_env(tmp_path):
     """Builds an isolated end-to-end orchestration environment."""
     policy = SafetyPolicyEngine()
     leases = LeaseManager()
     verifier = ActionVerifier()
+    db_file = str(tmp_path / "test_journal.db")
+    journal = ExecutionJournal(db_path=db_file)
 
     # Visual OCR stack
     ocr_engine = ScreenOCREngine()
@@ -80,7 +85,8 @@ def isolated_orchestration_env():
         selector=selector,
         win_worker=desk_worker,
         web_worker=web_worker,
-        verifier=verifier
+        verifier=verifier,
+        journal=journal
     )
 
     return {

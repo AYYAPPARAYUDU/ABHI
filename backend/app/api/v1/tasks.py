@@ -47,23 +47,41 @@ async def get_task_status(task_id: str):
     }
 
 
+@router.post("/emergency-stop")
+async def emergency_stop_all():
+    """Trigger immediate emergency stop across all active cognitive & physical execution tasks."""
+    from backend.app.automation.orchestration.orchestrator import supervisor_orchestrator
+    await supervisor_orchestrator.emergency_stop()
+    for tid in list(central_supervisor._active_tasks.keys()):
+        await central_supervisor.cancel_task(tid)
+    return {"status": "emergency_stopped", "success": True}
+
+
 @router.post("/{task_id}/consent")
 async def provide_consent(task_id: str, request: ConsentRequest):
-    """Provide human consent approval/rejection for a Tier 3 Critical action."""
-    success = await central_supervisor.provide_consent(
+    """Provide human consent approval/rejection for a Tier 3 Critical action or orchestrated execution."""
+    from backend.app.automation.orchestration.orchestrator import supervisor_orchestrator
+    success1 = await central_supervisor.provide_consent(
         task_id=task_id,
         node_id=request.node_id,
         approved=request.approved
     )
-    if not success:
+    success2 = await supervisor_orchestrator.provide_consent(
+        task_id=task_id,
+        approved=request.approved
+    )
+    if not success1 and not success2:
         raise HTTPException(status_code=400, detail="No pending consent found or task not waiting for consent.")
     return {"status": "ok", "task_id": task_id, "approved": request.approved}
 
 
 @router.post("/{task_id}/cancel")
 async def cancel_task(task_id: str):
-    """Emergency Stop / Cancel an active task."""
-    success = await central_supervisor.cancel_task(task_id)
-    if not success:
+    """Cancel an active task."""
+    from backend.app.automation.orchestration.orchestrator import supervisor_orchestrator
+    success1 = await central_supervisor.cancel_task(task_id)
+    success2 = await supervisor_orchestrator.cancel_task(task_id)
+    if not success1 and not success2:
         raise HTTPException(status_code=404, detail=f"Active task '{task_id}' not found.")
     return {"status": "cancelled", "task_id": task_id}
+

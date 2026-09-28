@@ -1,0 +1,42 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.safety-panel-card {
+  background: rgba(17, 26, 46, 0.75);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.panel-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #e2e8f0;
+}
+
+.safety-item {
+  background: rgba(10, 15, 29, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  min-height: 64px;
+  transition: all 0.2s ease;
+}
+
+.alert-glow {
+  border-color: rgba(255, 183, 0, 0.6);
+  box-shadow: 0 0 14px rgba(255, 183, 0, 0.3);
+  animation: pulse-border 1.5s infinite alternate;
+}
+
+.error-glow {
+  border-color: rgba(255, 42, 85, 0.6);
+  box-shadow: 0 0 14px rgba(255, 42, 85, 0.4);
+}
+
+@keyframes pulse-border {
+  from { border-color: rgba(255, 183, 0, 0.4); }
+  to { border-color: rgba(255, 183, 0, 0.9); }
+}
