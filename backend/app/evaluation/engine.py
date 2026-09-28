@@ -1,7 +1,8 @@
-"""Evaluation Engine, Delta Analyzer & Report Generator for Phase 6.7.
+"""Evaluation Engine, Delta Analyzer & Evidence Report Generator for Phase 6.8.
 
-Orchestrates daily evaluation execution, capability vector synthesis, regression
-analysis, persistent report generation, and historical timeline replay data.
+Orchestrates real local model evaluation runs, captures raw output evidence,
+synthesizes capability vectors, ensures historical integrity (distinguishing ACTUAL vs SIMULATED),
+and generates reproducible Markdown audit reports.
 """
 
 import asyncio
@@ -14,6 +15,7 @@ from backend.app.core.logging import logger
 from backend.app.evaluation.models import (
     ScheduleType,
     EvaluationStatus,
+    ProvenanceType,
     CapabilityVector,
     MultilingualScores,
     RAGMetrics,
@@ -23,7 +25,10 @@ from backend.app.evaluation.models import (
     EvaluationRun,
     EvaluationTimelineEvent,
     ExperimentRecord,
-    CandidateType
+    CandidateType,
+    CaseEvidenceRecord,
+    ModelSnapshot,
+    EvaluationSnapshot
 )
 from backend.app.evaluation.registry import model_registry
 from backend.app.evaluation.research import research_service
@@ -31,7 +36,7 @@ from backend.app.evaluation.runners import runner_manager
 
 
 class EvaluationEngine:
-    """Core Orchestrator for Daily Evaluation, Evolution Lab & Historical Replay."""
+    """Core Orchestrator for Real LLM Evaluation, Evolution Lab & Evidence Hardening."""
 
     def __init__(self):
         self._runs: Dict[str, EvaluationRun] = {}
@@ -47,6 +52,7 @@ class EvaluationEngine:
         """
         Seed rich 21-day historical evaluation timeline so the operator
         can immediately experience Day 1 -> Day 21 replay on first launch.
+        Explicitly marked with ProvenanceType.SIMULATED for transparency.
         """
         base_capabilities = {
             "reasoning": 0.70,
@@ -63,7 +69,6 @@ class EvaluationEngine:
         }
 
         for day in range(1, 22):
-            # Model evolution progression over 21 days
             progress_factor = day / 21.0
             r_score = min(0.86, base_capabilities["reasoning"] + (progress_factor * 0.12))
             c_score = min(0.88, base_capabilities["coding"] + (progress_factor * 0.11))
@@ -114,7 +119,6 @@ class EvaluationEngine:
             run_id = f"eval_run_day_{day:02d}"
             timestamp = f"2026-09-{day:02d}T04:00:00Z"
             
-            # Regression alerts on specific days for realistic evolution demonstration
             regressions: List[RegressionAlert] = []
             improvements: List[RegressionAlert] = []
             
@@ -152,6 +156,8 @@ class EvaluationEngine:
                 start_time=timestamp,
                 end_time=f"2026-09-{day:02d}T04:02:15Z",
                 status=EvaluationStatus.COMPLETED,
+                provenance=ProvenanceType.SIMULATED,
+                is_baseline=False,
                 model_id="model_qwen3_8b_v1_prod",
                 model_version=f"1.{day // 7}.{day % 7}",
                 schedule_type=ScheduleType.QUICK_DAILY,
@@ -166,13 +172,13 @@ class EvaluationEngine:
             )
             self._runs[run_id] = run
 
-            # Add Timeline Event
             self._timeline.append(
                 EvaluationTimelineEvent(
                     timestamp=timestamp,
                     run_id=run_id,
                     day_index=day,
                     event_type="DAILY_EVAL",
+                    provenance=ProvenanceType.SIMULATED,
                     model_version=run.model_version,
                     benchmark="ABHI_INTERNAL",
                     capability="composite",
@@ -239,8 +245,8 @@ class EvaluationEngine:
         model_id: Optional[str] = None
     ) -> Tuple[bool, EvaluationRun]:
         """
-        Execute an authoritative daily evaluation run.
-        Guarantees idempotency and bounded resource consumption.
+        Execute an authoritative daily evaluation run against real local model.
+        Captures raw output evidence records, calculates deltas, and persists report.
         """
         async with self._lock:
             target_model = model_registry.get_model(model_id) if model_id else model_registry.get_production_model()
@@ -248,7 +254,7 @@ class EvaluationEngine:
             run_id = f"eval_run_day_{next_day:02d}"
             now_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
-            logger.info(f"Starting Evaluation Run {run_id} (Day {next_day}) for model {target_model.model_id}...")
+            logger.info(f"Starting Real LLM Evaluation Run {run_id} (Day {next_day}) for model {target_model.model_id}...")
 
             # 1. Sync & Validate research if enabled
             if settings.RESEARCH_SYNC_ENABLED:
@@ -257,44 +263,21 @@ class EvaluationEngine:
                 except Exception as e:
                     logger.warning(f"Research discovery encountered offline/sync notice: {e}")
 
-            # 2. Execute benchmark suites
+            # 2. Execute real benchmark suite against Ollama
             exec_res = await runner_manager.execute_evaluation_suite(target_model.model_id, schedule_type)
-            res_metrics = exec_res["resource_metrics"]
-
-            # 3. Synthesize capabilities
-            # Fetch previous run to compute deltas
-            prev_run = self._runs.get(f"eval_run_day_{next_day - 1:02d}")
             
-            cap = CapabilityVector(
-                reasoning=0.84,
-                coding=0.86,
-                knowledge=0.88,
-                instruction_following=0.92,
-                multilingual=0.80,
-                rag=0.89,
-                tool_use=0.88,
-                safety=0.97,
-                groundedness=0.89,
-                latency_ms=41.5,
-                resource_efficiency=0.91
-            )
-            multi = MultilingualScores(en=0.92, te=0.81, hi=0.83, ta=0.79, mixed=0.77)
-            rag = RAGMetrics(
-                retrieval_relevance=0.89,
-                context_precision=0.87,
-                context_recall=0.85,
-                answer_groundedness=0.90,
-                citation_correctness=0.92
-            )
-            safety = SafetyMetrics(
-                prompt_injection_resistance=0.97,
-                tool_boundary_adherence=0.98,
-                privacy_leakage_score=0.99,
-                destructive_action_refusal=0.97,
-                execution_boundary_adherence=1.00
-            )
+            cap = exec_res["capabilities"]
+            multi = exec_res["multilingual"]
+            rag = exec_res["rag_metrics"]
+            safety = exec_res["safety_metrics"]
+            res_metrics = exec_res["resource_metrics"]
+            evidence_records = exec_res["evidence_records"]
+            model_snap = exec_res["model_snapshot"]
+            eval_snap = exec_res["evaluation_snapshot"]
+            provenance = exec_res["provenance"]
 
-            # Analyze regressions / improvements
+            # 3. Analyze regressions / improvements vs previous run
+            prev_run = self._runs.get(f"eval_run_day_{next_day - 1:02d}")
             regressions: List[RegressionAlert] = []
             improvements: List[RegressionAlert] = []
             if prev_run:
@@ -329,17 +312,22 @@ class EvaluationEngine:
                 start_time=now_iso,
                 end_time=end_iso,
                 status=EvaluationStatus.COMPLETED,
+                provenance=provenance,
+                is_baseline=True,
                 model_id=target_model.model_id,
                 model_version=target_model.version,
                 schedule_type=schedule_type,
+                model_snapshot=model_snap,
+                evaluation_snapshot=eval_snap,
                 capabilities=cap,
                 multilingual=multi,
                 rag_metrics=rag,
                 safety_metrics=safety,
                 resource_metrics=res_metrics,
+                evidence_records=evidence_records,
                 regressions=regressions,
                 improvements=improvements,
-                dataset_snapshot="ABHI_CORE_V2",
+                dataset_snapshot="ABHI_INTERNAL_V1_DETERMINISTIC",
                 research_snapshot=f"CORPUS_SNAPSHOT_D{next_day}"
             )
 
@@ -352,8 +340,9 @@ class EvaluationEngine:
                     run_id=run_id,
                     day_index=next_day,
                     event_type="DAILY_EVAL",
+                    provenance=provenance,
                     model_version=target_model.version,
-                    benchmark="ABHI_INTERNAL",
+                    benchmark="ABHI_INTERNAL_DETERMINISTIC",
                     capability="composite",
                     score=round((cap.reasoning + cap.coding + cap.rag + cap.safety) / 4.0, 3),
                     delta=round(0.012, 3),
@@ -368,19 +357,25 @@ class EvaluationEngine:
                 )
             )
 
-            # Generate persistent report markdown
+            # Generate persistent report markdown with concrete evidence
             self._generate_report_markdown(run)
 
-            logger.info(f"Evaluation Run {run_id} completed successfully.")
+            logger.info(f"Real LLM Evaluation Run {run_id} completed successfully (Provenance: {provenance}).")
             return True, run
 
     def _generate_report_markdown(self, run: EvaluationRun) -> str:
-        """Generate and save markdown evaluation report."""
-        report_content = f"""# ABHI Daily LLM Evaluation Report — Day {run.day_index}
+        """Generate and save markdown evaluation report with concrete evidence."""
+        evidence_rows = ""
+        for rec in run.evidence_records[:6]:
+            evidence_rows += f"| `{rec.case_id}` | `{rec.category}` | `{rec.language}` | `{rec.metric_name}` | {rec.score:.2f} | `{rec.latency_ms:.1f}ms` ({rec.tokens_per_sec:.1f} t/s) |\n"
+
+        report_content = f"""# ABHI Daily LLM Evaluation Report — Day {run.day_index} (Provenance: {run.provenance})
 
 **Run ID:** `{run.run_id}`  
 **Model:** `{run.model_id}` (Version `{run.model_version}`)  
 **Schedule:** `{run.schedule_type}`  
+**Provenance:** `{run.provenance}`  
+**Is Production Baseline:** `{run.is_baseline}`  
 **Timestamp:** `{run.start_time}`  
 **Status:** `{run.status}`  
 
@@ -401,7 +396,14 @@ class EvaluationEngine:
 
 ---
 
-## 2. Multilingual Breakdown
+## 2. Concrete Real-Run Case Evidence Samples
+| Case ID | Category | Language | Metric | Score | Latency & Speed |
+|:---|:---|:---|:---|:---|:---|
+{evidence_rows}
+
+---
+
+## 3. Multilingual Breakdown
 - **English:** `{run.multilingual.en:.2f}`
 - **Telugu:** `{run.multilingual.te:.2f}`
 - **Hindi:** `{run.multilingual.hi:.2f}`
@@ -410,7 +412,7 @@ class EvaluationEngine:
 
 ---
 
-## 3. Safety & Grounding Metrics
+## 4. Safety & Grounding Metrics
 - **Prompt Injection Defense:** `{run.safety_metrics.prompt_injection_resistance:.2f}`
 - **Tool Boundary Adherence:** `{run.safety_metrics.tool_boundary_adherence:.2f}`
 - **Destructive Refusal:** `{run.safety_metrics.destructive_action_refusal:.2f}`
@@ -419,20 +421,20 @@ class EvaluationEngine:
 
 ---
 
-## 4. Resource Profile
+## 5. Resource Profile & Inference Performance
 - **CPU:** `{run.resource_metrics.cpu_percent:.1f}%`
 - **RAM:** `{run.resource_metrics.memory_mb:.1f} MB`
 - **GPU VRAM:** `{run.resource_metrics.gpu_memory_mb:.1f} MB`
+- **Inference Speed:** `{run.resource_metrics.tokens_per_sec:.1f} tokens/sec`
 - **Duration:** `{run.resource_metrics.duration_seconds:.2f}s`
 
 ---
-*Report automatically generated by ABHI Local-First LLM Evaluation Engine.*
+*Report automatically generated by ABHI Local-First Real LLM Evaluation Engine.*
 """
         report_file = self._report_dir / f"evaluation_report_day_{run.day_index:02d}.md"
         with open(report_file, "w", encoding="utf-8") as f:
             f.write(report_content)
 
-        # Update root daily report link
         root_report = Path("project_data/status/daily_llm_evaluation_report.md")
         root_report.parent.mkdir(parents=True, exist_ok=True)
         with open(root_report, "w", encoding="utf-8") as f:
@@ -463,7 +465,7 @@ class EvaluationEngine:
             candidate_type=candidate_type,
             base_model_id=model_registry.get_production_model().model_id,
             candidate_model_id=cand.model_id,
-            dataset_snapshot="ABHI_CORE_V2",
+            dataset_snapshot="ABHI_INTERNAL_V1_DETERMINISTIC",
             status="EVALUATING",
             results={},
             decision="PENDING",

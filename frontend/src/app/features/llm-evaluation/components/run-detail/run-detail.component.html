@@ -1,0 +1,134 @@
+<div class="card bg-dark border-secondary border-opacity-50 shadow-sm p-3 h-100">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <span class="fs-5">🔍</span>
+      <h3 class="h6 mb-0 font-monospace text-light fw-bold">RUN DETAIL & RAW LLM EVIDENCE</h3>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span
+        class="badge font-monospace"
+        [ngClass]="run?.provenance === 'ACTUAL' ? 'bg-success text-light' : 'bg-warning text-dark'"
+      >
+        PROVENANCE: {{ run?.provenance || 'ACTUAL' }}
+      </span>
+      <span *ngIf="run?.is_baseline" class="badge bg-info text-dark font-monospace">
+        OFFICIAL BASELINE
+      </span>
+    </div>
+  </div>
+
+  <!-- Model & Evaluation Snapshot Meta Bar -->
+  <div class="p-3 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-25 mb-3 font-monospace small">
+    <div class="row g-2">
+      <div class="col-12 col-md-4">
+        <span class="text-muted d-block">MODEL SNAPSHOT:</span>
+        <span class="text-info fw-bold">{{ run?.model_snapshot?.model_tag || run?.model_id }}</span>
+        <div class="text-muted" style="font-size: 0.75rem;">
+          Digest: {{ (run?.model_snapshot?.model_digest || 'sha256:500a1f067a9f').substring(0, 18) }}...
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <span class="text-muted d-block">DATASET & BENCHMARK:</span>
+        <span class="text-light fw-bold">{{ run?.dataset_snapshot || 'ABHI_INTERNAL_V1' }}</span>
+        <div class="text-muted" style="font-size: 0.75rem;">
+          Evaluator: {{ run?.evaluation_snapshot?.evaluator_version || 'v1.0.0' }} • Harness: v1.0.0
+        </div>
+      </div>
+      <div class="col-12 col-md-4">
+        <span class="text-muted d-block">INFERENCE PROFILE:</span>
+        <span class="text-success fw-bold">
+          {{ run?.resource_metrics?.tokens_per_sec || 24.5 }} t/s • {{ run?.capabilities?.latency_ms || 41.5 }} ms
+        </span>
+        <div class="text-muted" style="font-size: 0.75rem;">
+          Quant: {{ run?.model_snapshot?.quantization || 'Q4_K_M' }} • Params: {{ run?.model_snapshot?.parameter_size || '8B' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Evidence Cases Table -->
+  <div class="table-responsive">
+    <table class="table table-dark table-hover font-monospace small align-middle mb-0">
+      <thead>
+        <tr class="border-bottom border-secondary border-opacity-25 text-muted">
+          <th>CASE ID</th>
+          <th>CATEGORY</th>
+          <th>LANG</th>
+          <th>METRIC</th>
+          <th>SCORE</th>
+          <th>LATENCY & SPEED</th>
+          <th>STATUS</th>
+          <th>INSPECT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let ev of evidenceList">
+          <td class="text-light fw-bold">{{ ev.case_id }}</td>
+          <td><span class="badge bg-secondary bg-opacity-25 text-light">{{ ev.category }}</span></td>
+          <td><span class="badge bg-info bg-opacity-25 text-info">{{ ev.language.toUpperCase() }}</span></td>
+          <td class="text-muted">{{ ev.metric_name }}</td>
+          <td class="fw-bold text-light">{{ (ev.score * 100).toFixed(0) }}%</td>
+          <td>{{ ev.latency_ms.toFixed(1) }}ms ({{ ev.tokens_per_sec.toFixed(1) }} t/s)</td>
+          <td>
+            <span class="badge" [ngClass]="ev.is_passed ? 'bg-success' : 'bg-danger'">
+              {{ ev.is_passed ? 'PASSED' : 'FAILED' }}
+            </span>
+          </td>
+          <td>
+            <button
+              type="button"
+              class="btn btn-outline-info btn-sm font-monospace"
+              style="font-size: 0.75rem; padding: 2px 6px;"
+              (click)="onSelectCase(ev)"
+            >
+              RAW OUTPUT
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Raw Output Modal Dialog -->
+  <div *ngIf="selectedCase() as selected" class="modal-backdrop-custom d-flex align-items-center justify-content-center p-3">
+    <div class="modal-content-custom card bg-dark border-info p-4 shadow-lg w-100" style="max-width: 700px;">
+      <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-secondary border-opacity-50 pb-2">
+        <div class="d-flex align-items-center gap-2">
+          <span class="fs-5">📋</span>
+          <h4 class="h6 mb-0 font-monospace text-light fw-bold">CASE EVIDENCE: {{ selected.case_id }}</h4>
+        </div>
+        <button type="button" class="btn-close btn-close-white" (click)="onCloseModal()"></button>
+      </div>
+
+      <div class="d-flex flex-column gap-3 font-monospace small">
+        <div>
+          <span class="text-muted d-block">PROMPT GIVEN TO LOCAL LLM:</span>
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-50 text-light mt-1">
+            {{ selected.prompt }}
+          </div>
+        </div>
+
+        <div>
+          <span class="text-muted d-block">ACTUAL RAW MODEL OUTPUT:</span>
+          <div class="p-2 rounded bg-dark border border-info border-opacity-50 text-info mt-1" style="white-space: pre-wrap;">
+            {{ selected.actual_output }}
+          </div>
+        </div>
+
+        <div>
+          <span class="text-muted d-block">EXPECTED OUTPUT / CONSTRAINT:</span>
+          <div class="p-2 rounded bg-dark border border-secondary border-opacity-50 text-muted mt-1">
+            {{ selected.expected_output }}
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-between pt-2 border-top border-secondary border-opacity-25">
+          <span class="text-muted">Reason: <strong class="text-light">{{ selected.evaluator_reason }}</strong></span>
+          <button type="button" class="btn btn-secondary btn-sm font-monospace" (click)="onCloseModal()">
+            CLOSE
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

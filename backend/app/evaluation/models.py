@@ -1,4 +1,4 @@
-"""Data Models, Schemas and Enums for Phase 6.7 LLM Evaluation, Research & Evolution Lab."""
+"""Data Models, Schemas and Enums for Phase 6.7 & 6.8 LLM Evaluation, Research & Evolution Lab."""
 
 from enum import Enum
 from typing import Dict, List, Optional, Any
@@ -17,6 +17,12 @@ class EvaluationStatus(str, Enum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     CANCELLED = "CANCELLED"
+
+
+class ProvenanceType(str, Enum):
+    ACTUAL = "ACTUAL"
+    SIMULATED = "SIMULATED"
+    MISSING = "MISSING"
 
 
 class ModelPromotionState(str, Enum):
@@ -55,6 +61,59 @@ class CandidateType(str, Enum):
     ADAPTER_LORA = "ADAPTER_LORA"
     FINE_TUNED = "FINE_TUNED"
     MODEL_REPLACEMENT = "MODEL_REPLACEMENT"
+
+
+class GenerationConfig(BaseModel):
+    temperature: float = Field(default=0.1)
+    top_p: float = Field(default=0.9)
+    top_k: int = Field(default=40)
+    seed: Optional[int] = Field(default=42)
+    num_predict: int = Field(default=256)
+    context_size: int = Field(default=8192)
+
+
+class ModelSnapshot(BaseModel):
+    model_id: str
+    model_tag: str
+    model_digest: str = "sha256:unknown"
+    runtime: str = "Ollama-Local"
+    quantization: str = "Q4_K_M"
+    context_size: int = 8192
+    parameter_size: str = "8B"
+    generation_config: GenerationConfig = Field(default_factory=GenerationConfig)
+    timestamp: str = ""
+
+
+class EvaluationSnapshot(BaseModel):
+    run_id: str
+    dataset_id: str = "ABHI_INTERNAL_V1"
+    dataset_version: str = "1.0.0"
+    benchmark_version: str = "ABHI_EVAL_HARNESS_V1"
+    evaluator_version: str = "1.0.0"
+    model_snapshot: ModelSnapshot = Field(default_factory=lambda: ModelSnapshot(model_id="qwen3:8b", model_tag="qwen3:8b"))
+    prompt_template_version: str = "v1.0"
+    retrieval_snapshot: str = "LANCEDB_SNAPSHOT_LATEST"
+    safety_policy_version: str = "AILUMINATE_ALIGNED_V1"
+    timestamp: str = ""
+
+
+class CaseEvidenceRecord(BaseModel):
+    case_id: str
+    category: str
+    language: str = "en"
+    prompt: str
+    expected_output: str
+    actual_output: str
+    metric_name: str
+    score: float
+    is_passed: bool
+    latency_ms: float = 0.0
+    tokens_per_sec: float = 0.0
+    prompt_tokens: int = 0
+    output_tokens: int = 0
+    evaluator_reason: str = ""
+    provenance: ProvenanceType = ProvenanceType.ACTUAL
+    timestamp: str = ""
 
 
 class CapabilityVector(BaseModel):
@@ -100,6 +159,7 @@ class ResourceUsageSnapshot(BaseModel):
     memory_mb: float = Field(default=0.0)
     gpu_memory_mb: float = Field(default=0.0)
     duration_seconds: float = Field(default=0.0)
+    tokens_per_sec: float = Field(default=0.0)
 
 
 class RegressionAlert(BaseModel):
@@ -130,14 +190,19 @@ class EvaluationRun(BaseModel):
     start_time: str
     end_time: Optional[str] = None
     status: EvaluationStatus = EvaluationStatus.PENDING
+    provenance: ProvenanceType = ProvenanceType.ACTUAL
+    is_baseline: bool = False
     model_id: str
     model_version: str
     schedule_type: ScheduleType = ScheduleType.QUICK_DAILY
+    model_snapshot: Optional[ModelSnapshot] = None
+    evaluation_snapshot: Optional[EvaluationSnapshot] = None
     capabilities: CapabilityVector = Field(default_factory=CapabilityVector)
     multilingual: MultilingualScores = Field(default_factory=MultilingualScores)
     rag_metrics: RAGMetrics = Field(default_factory=RAGMetrics)
     safety_metrics: SafetyMetrics = Field(default_factory=SafetyMetrics)
     resource_metrics: ResourceUsageSnapshot = Field(default_factory=ResourceUsageSnapshot)
+    evidence_records: List[CaseEvidenceRecord] = Field(default_factory=list)
     regressions: List[RegressionAlert] = Field(default_factory=list)
     improvements: List[RegressionAlert] = Field(default_factory=list)
     dataset_snapshot: str = "ABHI_CORE_V1"
@@ -200,6 +265,7 @@ class EvaluationTimelineEvent(BaseModel):
     run_id: str
     day_index: int
     event_type: str  # DAILY_EVAL, RESEARCH_INGEST, CANDIDATE_EVAL, PROMOTION, ROLLBACK
+    provenance: ProvenanceType = ProvenanceType.ACTUAL
     model_version: str
     benchmark: str
     capability: str
@@ -213,6 +279,7 @@ class RunEvaluationRequest(BaseModel):
     schedule_type: ScheduleType = ScheduleType.QUICK_DAILY
     model_id: Optional[str] = None
     force: bool = False
+    use_real_model: bool = True
 
 
 class CandidateCreateRequest(BaseModel):

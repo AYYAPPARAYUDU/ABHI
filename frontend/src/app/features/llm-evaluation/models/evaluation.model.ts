@@ -1,10 +1,64 @@
 export type ScheduleType = 'QUICK_DAILY' | 'STANDARD_DAILY' | 'DEEP_MANUAL';
 export type EvaluationStatus = 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+export type ProvenanceType = 'ACTUAL' | 'SIMULATED' | 'MISSING';
 export type ModelPromotionState = 'PRODUCTION' | 'CANDIDATE' | 'ARCHIVED' | 'REJECTED' | 'QUARANTINED';
 export type SourceTier = 'TIER_A' | 'TIER_B' | 'TIER_C';
 export type ResearchIngestionStatus = 'DISCOVERED' | 'VALIDATED' | 'INGESTED' | 'QUARANTINED' | 'IGNORED';
 export type RegressionSeverity = 'CRITICAL' | 'MAJOR' | 'MINOR' | 'IMPROVEMENT' | 'UNCHANGED';
 export type CandidateType = 'RAG_ONLY' | 'PROMPT_CONFIG' | 'ADAPTER_LORA' | 'FINE_TUNED' | 'MODEL_REPLACEMENT';
+
+export interface GenerationConfig {
+  temperature: number;
+  top_p: number;
+  top_k: number;
+  seed?: number;
+  num_predict: number;
+  context_size: number;
+}
+
+export interface ModelSnapshot {
+  model_id: string;
+  model_tag: string;
+  model_digest: string;
+  runtime: string;
+  quantization: string;
+  context_size: number;
+  parameter_size: string;
+  generation_config: GenerationConfig;
+  timestamp: string;
+}
+
+export interface EvaluationSnapshot {
+  run_id: string;
+  dataset_id: string;
+  dataset_version: string;
+  benchmark_version: string;
+  evaluator_version: string;
+  model_snapshot: ModelSnapshot;
+  prompt_template_version: string;
+  retrieval_snapshot: string;
+  safety_policy_version: string;
+  timestamp: string;
+}
+
+export interface CaseEvidenceRecord {
+  case_id: string;
+  category: string;
+  language: string;
+  prompt: string;
+  expected_output: string;
+  actual_output: string;
+  metric_name: string;
+  score: number;
+  is_passed: boolean;
+  latency_ms: number;
+  tokens_per_sec: number;
+  prompt_tokens: number;
+  output_tokens: number;
+  evaluator_reason: string;
+  provenance: ProvenanceType;
+  timestamp: string;
+}
 
 export interface CapabilityVector {
   reasoning: number;
@@ -49,6 +103,7 @@ export interface ResourceUsageSnapshot {
   memory_mb: number;
   gpu_memory_mb: number;
   duration_seconds: number;
+  tokens_per_sec?: number;
 }
 
 export interface RegressionAlert {
@@ -69,14 +124,19 @@ export interface EvaluationRun {
   start_time: string;
   end_time?: string;
   status: EvaluationStatus;
+  provenance: ProvenanceType;
+  is_baseline?: boolean;
   model_id: string;
   model_version: string;
   schedule_type: ScheduleType;
+  model_snapshot?: ModelSnapshot;
+  evaluation_snapshot?: EvaluationSnapshot;
   capabilities: CapabilityVector;
   multilingual: MultilingualScores;
   rag_metrics: RAGMetrics;
   safety_metrics: SafetyMetrics;
   resource_metrics: ResourceUsageSnapshot;
+  evidence_records?: CaseEvidenceRecord[];
   regressions: RegressionAlert[];
   improvements: RegressionAlert[];
   dataset_snapshot: string;
@@ -139,6 +199,7 @@ export interface EvaluationTimelineEvent {
   run_id: string;
   day_index: number;
   event_type: string;
+  provenance: ProvenanceType;
   model_version: string;
   benchmark: string;
   capability: string;

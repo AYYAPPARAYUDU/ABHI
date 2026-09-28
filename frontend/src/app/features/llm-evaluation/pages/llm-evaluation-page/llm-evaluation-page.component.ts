@@ -13,6 +13,7 @@ import { ModelComparisonComponent } from '../../components/model-comparison/mode
 import { RegressionAlertComponent } from '../../components/regression-alert/regression-alert.component';
 import { EvolutionPipelineComponent } from '../../components/evolution-pipeline/evolution-pipeline.component';
 import { ResourceMetricsComponent } from '../../components/resource-metrics/resource-metrics.component';
+import { RunDetailComponent } from '../../components/run-detail/run-detail.component';
 
 @Component({
   selector: 'app-llm-evaluation-page',
@@ -30,7 +31,8 @@ import { ResourceMetricsComponent } from '../../components/resource-metrics/reso
     ModelComparisonComponent,
     RegressionAlertComponent,
     EvolutionPipelineComponent,
-    ResourceMetricsComponent
+    ResourceMetricsComponent,
+    RunDetailComponent
   ],
   templateUrl: './llm-evaluation-page.component.html',
   styleUrls: ['./llm-evaluation-page.component.css']
