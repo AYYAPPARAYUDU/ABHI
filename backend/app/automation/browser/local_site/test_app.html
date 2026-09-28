@@ -138,8 +138,15 @@
 
         <hr />
 
+        <hr />
+
         <h3>Embedded IFrame Target</h3>
         <iframe id="test_frame" name="test_frame" src="frame_content.html" title="Test Embedded Frame"></iframe>
+
+        <hr />
+
+        <h3>Custom Canvas Visual Target (Non-DOM Text for OCR Fallback)</h3>
+        <canvas id="canvas_action" width="220" height="45" style="border: 2px solid #00E5FF; background: #0f172a; cursor: pointer;"></canvas>
     </div>
 
     <script>
@@ -149,6 +156,7 @@
         const btnReset = document.getElementById('btn_reset');
         const chkEnabled = document.getElementById('chk_enabled');
         const selCategory = document.getElementById('sel_category');
+        const canvasAction = document.getElementById('canvas_action');
 
         btnExec.addEventListener('click', () => {
             statusBox.innerText = 'EXECUTED';
@@ -172,6 +180,16 @@
         txtMsg.addEventListener('input', () => {
             statusBox.innerText = 'TEXT_ENTERED:' + txtMsg.value;
         });
+
+        if (canvasAction) {
+            const ctx = canvasAction.getContext('2d');
+            ctx.fillStyle = '#00E5FF';
+            ctx.font = '16px sans-serif';
+            ctx.fillText('Canvas Visual Button', 20, 28);
+            canvasAction.addEventListener('click', () => {
+                statusBox.innerText = 'CANVAS_VISUAL_CLICKED';
+            });
+        }
     </script>
 </body>
 </html>

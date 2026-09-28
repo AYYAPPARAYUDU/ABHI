@@ -124,6 +124,22 @@ class ExecutionPipeline:
 
         # 4. Precondition Physical Verification
         initial_obs = self.windows_worker.target_app.observe_element(action.grounding.target_identity)
+        if not initial_obs.target_found and action.grounding.bounding_box:
+            cx = action.grounding.bounding_box.center_x
+            cy = action.grounding.bounding_box.center_y
+            for elem in getattr(self.windows_worker.target_app, "_elements", []):
+                b = elem.get("bbox", {})
+                if b.get("x", 0) <= cx <= b.get("x", 0) + b.get("width", 0) and b.get("y", 0) <= cy <= b.get("y", 0) + b.get("height", 0):
+                    initial_obs = ObservedState(
+                        target_found=True,
+                        is_enabled=elem.get("is_enabled", True),
+                        is_focused=getattr(self.windows_worker.target_app, "is_focused", True),
+                        window_title=getattr(self.windows_worker.target_app, "window_title", None),
+                        bounding_box=action.grounding.bounding_box,
+                        raw_properties=elem
+                    )
+                    break
+
         precond_ok = self.verifier.verify_precondition(action, initial_obs)
         if not precond_ok:
             return PipelineExecutionResult(

@@ -117,7 +117,15 @@ class WindowsAutomationWorker:
         action_success = False
 
         if action.action_type == ActionType.CLICK_ELEMENT:
-            action_success = self.target_app.click(target_id)
+            if action.grounding.source in [GroundingLevel.LEVEL_3_OCR, GroundingLevel.LEVEL_4_COORDINATES] and action.grounding.bounding_box:
+                cx = action.grounding.bounding_box.center_x
+                cy = action.grounding.bounding_box.center_y
+                if hasattr(self.target_app, "click_coordinate"):
+                    action_success = self.target_app.click_coordinate(cx, cy)
+                else:
+                    action_success = self.target_app.click(target_id)
+            else:
+                action_success = self.target_app.click(target_id)
 
         elif action.action_type == ActionType.TYPE_TEXT:
             text_to_type = action.parameters.get("text", "")

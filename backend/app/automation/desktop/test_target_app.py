@@ -77,8 +77,9 @@ class DeterministicLocalTestApp:
         for elem in self._elements:
             if (
                 elem["automation_id"] == element_id
-                or elem["name"].lower() == element_id.lower()
-                or element_id.lower() in elem["name"].lower()
+                or (elem["name"] and elem["name"].lower() == element_id.lower())
+                or (elem["name"] and element_id.lower() in elem["name"].lower())
+                or elem.get("rendered_visual_text", "").lower() == element_id.lower()
             ):
                 b = elem["bbox"]
                 curr_val = self.input_text if elem["automation_id"] == "txt_username" else None
@@ -116,7 +117,20 @@ class DeterministicLocalTestApp:
         elif element_id == "chk_agree" or "agree" in element_id.lower():
             self.checkbox_checked = not self.checkbox_checked
             self.status_label = "CHECKBOX_CHECKED" if self.checkbox_checked else "CHECKBOX_UNCHECKED"
+        elif "canvas" in element_id.lower() or "export" in element_id.lower():
+            self.status_label = "EXPORT_REPORT_TRIGGERED"
 
+        return True
+
+    def click_coordinate(self, x: int, y: int) -> bool:
+        """Perform a click on raw screen coordinates (Level 4 controlled fallback)."""
+        for elem in self._elements:
+            b = elem["bbox"]
+            if b["x"] <= x <= (b["x"] + b["width"]) and b["y"] <= y <= (b["y"] + b["height"]):
+                return self.click(elem["automation_id"])
+
+        self.click_count += 1
+        self.status_label = f"COORDINATE_CLICKED:({x},{y})"
         return True
 
     def type_text(self, element_id: str, text: str) -> bool:

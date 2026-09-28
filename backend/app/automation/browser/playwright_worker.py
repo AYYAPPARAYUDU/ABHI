@@ -448,11 +448,17 @@ class PlaywrightBrowserWorker:
                 action_success = True
 
             elif action.action_type == ActionType.BROWSER_CLICK:
-                loc, loc_err = self.resolve_locator(target_id, frame_identity=frame_id)
-                if loc_err or not loc:
-                    return None, loc_err
-                loc.click(timeout=timeout_ms)
-                action_success = True
+                if action.grounding.source in [GroundingLevel.LEVEL_3_OCR, GroundingLevel.LEVEL_4_COORDINATES] and action.grounding.bounding_box:
+                    cx = action.grounding.bounding_box.center_x
+                    cy = action.grounding.bounding_box.center_y
+                    self._page.mouse.click(cx, cy)
+                    action_success = True
+                else:
+                    loc, loc_err = self.resolve_locator(target_id, frame_identity=frame_id)
+                    if loc_err or not loc:
+                        return None, loc_err
+                    loc.click(timeout=timeout_ms)
+                    action_success = True
 
             elif action.action_type == ActionType.BROWSER_FILL:
                 val = action.parameters.get("value", "")

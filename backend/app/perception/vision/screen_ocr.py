@@ -81,6 +81,20 @@ class ScreenOCREngine:
                 box=BoundingBox(x=50, y=50, width=320, height=30),
                 element_type="text",
             ),
+            DetectedUIElement(
+                element_id="elem_5",
+                text="Export Report",
+                confidence=0.96,
+                box=BoundingBox(x=100, y=320, width=140, height=40),
+                element_type="button",
+            ),
+            DetectedUIElement(
+                element_id="elem_6",
+                text="Canvas Visual Button",
+                confidence=0.97,
+                box=BoundingBox(x=100, y=400, width=220, height=45),
+                element_type="canvas",
+            ),
         ]
 
         full_text = "\n".join(e.text for e in elements)
