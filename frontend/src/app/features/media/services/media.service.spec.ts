@@ -158,6 +158,7 @@ describe('MediaService', () => {
 
     // After flush, refreshAll requests trigger
     httpMock.expectOne('/api/v1/media/models').flush([]);
+    httpMock.expectOne('/api/v1/media/edit/models').flush([]);
     httpMock.expectOne('/api/v1/media/jobs').flush([]);
     httpMock.expectOne('/api/v1/media/artifacts').flush([]);
     httpMock.expectOne('/api/v1/media/resources').flush({ gpu_detected: true, pressure_level: 'NORMAL', active_media_models: [] });
@@ -176,6 +177,7 @@ describe('MediaService', () => {
     cancelReq.flush({ status: 'SUCCESS' });
 
     httpMock.expectOne('/api/v1/media/models').flush([]);
+    httpMock.expectOne('/api/v1/media/edit/models').flush([]);
     httpMock.expectOne('/api/v1/media/jobs').flush([]);
     httpMock.expectOne('/api/v1/media/artifacts').flush([]);
     httpMock.expectOne('/api/v1/media/resources').flush({ gpu_detected: true, pressure_level: 'NORMAL', active_media_models: [] });
@@ -192,6 +194,96 @@ describe('MediaService', () => {
     delReq.flush({ status: 'SUCCESS' });
 
     httpMock.expectOne('/api/v1/media/video/artifacts').flush([]);
+  });
+
+  it('should fetch edit models and compute production/candidate edit models', () => {
+    service.fetchEditModels().subscribe((models) => {
+      expect(models.length).toBe(1);
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/edit/models');
+    expect(req.request.method).toBe('GET');
+    req.flush([
+      {
+        model_id: 'instruct-pix2pix-local',
+        name: 'InstructPix2Pix Local',
+        version: '1.0',
+        digest: 'sha256:abcd',
+        runtime: 'diffusers',
+        format: 'safetensors',
+        quantization: 'fp16',
+        supported_devices: ['GPU', 'CPU'],
+        base_vram_mb: 3200,
+        base_ram_mb: 4000,
+        gpu_compute_percent: 65,
+        supported_resolutions: [[512, 512]],
+        supported_operations: ['IMAGE_TO_IMAGE'],
+        max_expansion_pixels: 512,
+        capabilities: ['image_editing'],
+        license_metadata: 'CreativeML',
+        source: 'local',
+        status: 'AVAILABLE',
+        is_production: true,
+        is_candidate: false,
+      },
+    ]);
+
+    expect(service.editModels().length).toBe(1);
+    expect(service.productionEditModels().length).toBe(1);
+    expect(service.candidateEditModels().length).toBe(0);
+  });
+
+  it('should call image edit endpoints and refresh all on editImage', () => {
+    service.editImage({
+      source_artifact_id: 'art_orig_1',
+      operation: 'IMAGE_TO_IMAGE',
+      prompt: 'Make it vintage oil painting',
+      model_id: 'instruct-pix2pix-local',
+    }).subscribe();
+
+    const editReq = httpMock.expectOne('/api/v1/media/image/edit');
+    expect(editReq.request.method).toBe('POST');
+    editReq.flush({
+      job_id: 'job_edit_01',
+      media_type: 'IMAGE',
+      operation: 'EDIT',
+      status: 'ADMITTED',
+      created_at: 1000,
+    });
+
+    httpMock.expectOne('/api/v1/media/models').flush([]);
+    httpMock.expectOne('/api/v1/media/edit/models').flush([]);
+    httpMock.expectOne('/api/v1/media/jobs').flush([]);
+    httpMock.expectOne('/api/v1/media/artifacts').flush([]);
+    httpMock.expectOne('/api/v1/media/resources').flush({ gpu_detected: true, pressure_level: 'NORMAL', active_media_models: [] });
+    httpMock.expectOne('/api/v1/media/video/models').flush([]);
+    httpMock.expectOne('/api/v1/media/video/jobs').flush([]);
+    httpMock.expectOne('/api/v1/media/video/artifacts').flush([]);
+  });
+
+  it('should fetch artifact lineage and masks', () => {
+    service.fetchArtifactLineage('art_child_1').subscribe();
+    const linReq = httpMock.expectOne('/api/v1/media/artifacts/art_child_1/lineage');
+    expect(linReq.request.method).toBe('GET');
+    linReq.flush({
+      lineage_id: 'lin_01',
+      parent_artifact_id: 'art_parent_1',
+      child_artifact_id: 'art_child_1',
+      job_id: 'job_edit_01',
+      operation: 'IMAGE_TO_IMAGE',
+      prompt: 'Test prompt',
+      model_id: 'instruct-pix2pix-local',
+      model_version: '1.0',
+      parameters_hash: 'hash',
+      created_at: 1000,
+    });
+    expect(service.activeLineage()?.lineage_id).toBe('lin_01');
+
+    service.fetchArtifactMasks('art_parent_1').subscribe();
+    const maskReq = httpMock.expectOne('/api/v1/media/artifacts/art_parent_1/masks');
+    expect(maskReq.request.method).toBe('GET');
+    maskReq.flush([]);
+    expect(service.artifactMasks().length).toBe(0);
   });
 
   it('should compute isGeneratingVideo as true when activeVideoJob is GENERATING', () => {

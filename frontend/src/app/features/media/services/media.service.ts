@@ -10,6 +10,10 @@ import {
   ImageGenerationRequestDTO,
   VideoGenerationRequestDTO,
   MediaResourceStatusDTO,
+  ImageEditModelDefinitionDTO,
+  ImageEditRequestDTO,
+  MaskArtifactDTO,
+  ArtifactLineageRecordDTO,
 } from '../models/media.model';
 
 @Injectable({
@@ -35,6 +39,22 @@ export class MediaService {
   activeVideoJob = signal<MediaJobDTO | null>(null);
   isVideoLoading = signal<boolean>(false);
   videoErrorMessage = signal<string | null>(null);
+
+  // Core Signals (Image Editing Domain - Phase 8 Stage 8.3)
+  editModels = signal<ImageEditModelDefinitionDTO[]>([]);
+  activeLineage = signal<ArtifactLineageRecordDTO | null>(null);
+  artifactMasks = signal<MaskArtifactDTO[]>([]);
+  isEditLoading = signal<boolean>(false);
+  editErrorMessage = signal<string | null>(null);
+
+  // Computed Signals (Editing)
+  productionEditModels = computed<ImageEditModelDefinitionDTO[]>(() => {
+    return this.editModels().filter((m) => m.is_production);
+  });
+
+  candidateEditModels = computed<ImageEditModelDefinitionDTO[]>(() => {
+    return this.editModels().filter((m) => m.is_candidate);
+  });
 
   // Computed Signals (Image)
   isGenerating = computed<boolean>(() => {
@@ -150,6 +170,97 @@ export class MediaService {
     );
   }
 
+  // Image Edit API Methods (Phase 8 Stage 8.3)
+  fetchEditModels(): Observable<ImageEditModelDefinitionDTO[]> {
+    return this.http.get<ImageEditModelDefinitionDTO[]>(`${this.baseUrl}/edit/models`).pipe(
+      tap({
+        next: (data) => this.editModels.set(data),
+        error: (err) => this.editErrorMessage.set(err.message || 'Failed to fetch image edit models'),
+      })
+    );
+  }
+
+  editImage(request: ImageEditRequestDTO): Observable<MediaJobDTO> {
+    this.isEditLoading.set(true);
+    this.editErrorMessage.set(null);
+    return this.http.post<MediaJobDTO>(`${this.baseUrl}/image/edit`, request).pipe(
+      tap({
+        next: (job) => {
+          this.activeJob.set(job);
+          this.isEditLoading.set(false);
+          this.refreshAll();
+        },
+        error: (err) => {
+          this.isEditLoading.set(false);
+          this.editErrorMessage.set(err.error?.detail || err.message || 'Image editing failed');
+        },
+      })
+    );
+  }
+
+  inpaintImage(request: ImageEditRequestDTO): Observable<MediaJobDTO> {
+    this.isEditLoading.set(true);
+    this.editErrorMessage.set(null);
+    return this.http.post<MediaJobDTO>(`${this.baseUrl}/image/inpaint`, request).pipe(
+      tap({
+        next: (job) => {
+          this.activeJob.set(job);
+          this.isEditLoading.set(false);
+          this.refreshAll();
+        },
+        error: (err) => {
+          this.isEditLoading.set(false);
+          this.editErrorMessage.set(err.error?.detail || err.message || 'Image inpainting failed');
+        },
+      })
+    );
+  }
+
+  outpaintImage(request: ImageEditRequestDTO): Observable<MediaJobDTO> {
+    this.isEditLoading.set(true);
+    this.editErrorMessage.set(null);
+    return this.http.post<MediaJobDTO>(`${this.baseUrl}/image/outpaint`, request).pipe(
+      tap({
+        next: (job) => {
+          this.activeJob.set(job);
+          this.isEditLoading.set(false);
+          this.refreshAll();
+        },
+        error: (err) => {
+          this.isEditLoading.set(false);
+          this.editErrorMessage.set(err.error?.detail || err.message || 'Image outpainting failed');
+        },
+      })
+    );
+  }
+
+  uploadMask(data: { source_artifact_id: string; mask_base64: string; mask_semantics?: string }): Observable<MaskArtifactDTO> {
+    return this.http.post<MaskArtifactDTO>(`${this.baseUrl}/image/mask`, data).pipe(
+      tap({
+        next: (mask) => {
+          this.artifactMasks.update((masks) => [mask, ...masks]);
+        },
+      })
+    );
+  }
+
+  fetchArtifactLineage(artifactId: string): Observable<ArtifactLineageRecordDTO> {
+    return this.http.get<ArtifactLineageRecordDTO>(`${this.baseUrl}/artifacts/${artifactId}/lineage`).pipe(
+      tap({
+        next: (lineage) => this.activeLineage.set(lineage),
+        error: () => this.activeLineage.set(null),
+      })
+    );
+  }
+
+  fetchArtifactMasks(artifactId: string): Observable<MaskArtifactDTO[]> {
+    return this.http.get<MaskArtifactDTO[]>(`${this.baseUrl}/artifacts/${artifactId}/masks`).pipe(
+      tap({
+        next: (masks) => this.artifactMasks.set(masks),
+      })
+    );
+  }
+
   cancelJob(jobId: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/jobs/${jobId}/cancel`, {}).pipe(
       tap(() => {
@@ -235,6 +346,7 @@ export class MediaService {
 
   refreshAll(): void {
     this.fetchModels().subscribe();
+    this.fetchEditModels().subscribe();
     this.fetchJobs().subscribe();
     this.fetchArtifacts().subscribe();
     this.fetchResourceStatus().subscribe();
@@ -243,3 +355,4 @@ export class MediaService {
     this.fetchVideoArtifacts().subscribe();
   }
 }
+

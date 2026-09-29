@@ -126,7 +126,11 @@ class MediaStorageManager:
         # 4. SHA-256
         sha256_hash = self.compute_sha256(file_path)
         artifact_id = f"art_{hashlib.sha256(f'{job_id}_{sha256_hash}'.encode()).hexdigest()[:16]}"
-        rel_path = str(file_path.relative_to(self.base_dir.parent)).replace("\\", "/")
+        try:
+            rel_path = str(file_path.relative_to(self.base_dir.parent)).replace("\\", "/")
+        except ValueError:
+            rel_path = str(file_path).replace("\\", "/")
+
 
         artifact = MediaArtifact(
             artifact_id=artifact_id,

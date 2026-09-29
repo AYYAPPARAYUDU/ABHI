@@ -152,3 +152,42 @@ class VideoSegmentRecord(Base):
     status = Column(String(32), default="PENDING")
     created_at = Column(Float, nullable=False)
     verified = Column(Boolean, default=False)
+
+
+class MaskArtifactRecord(Base):
+    """Relational table tracking validated mask artifacts."""
+    __tablename__ = "media_masks"
+
+    mask_id = Column(String(64), primary_key=True, index=True)
+    source_artifact_id = Column(String(64), nullable=False, index=True)
+    path = Column(String(256), nullable=False)
+    filename = Column(String(128), nullable=False)
+    format = Column(String(8), default="PNG")
+    width = Column(Integer, nullable=False)
+    height = Column(Integer, nullable=False)
+    size_bytes = Column(Integer, nullable=False)
+    sha256 = Column(String(64), unique=True, index=True, nullable=False)
+    semantics = Column(String(32), default="WHITE_EDIT_BLACK_PRESERVE")
+    editable_pixel_count = Column(Integer, default=0)
+    editable_ratio = Column(Float, default=0.0)
+    created_at = Column(Float, nullable=False)
+    provenance = Column(String(16), default="ACTUAL")
+
+
+class ArtifactLineageRecord(Base):
+    """Relational table tracking immutable artifact lineage and editing transformations."""
+    __tablename__ = "artifact_lineage"
+
+    lineage_id = Column(String(64), primary_key=True, index=True)
+    parent_artifact_id = Column(String(64), nullable=False, index=True)
+    child_artifact_id = Column(String(64), nullable=False, index=True)
+    job_id = Column(String(64), nullable=False, index=True)
+    operation = Column(String(32), default="IMAGE_TO_IMAGE", nullable=False)
+    mask_artifact_id = Column(String(64), nullable=True)
+    prompt = Column(Text, nullable=False)
+    model_id = Column(String(64), nullable=False)
+    model_version = Column(String(16), default="1.0.0")
+    parameters_hash = Column(String(64), nullable=False)
+    diff_evidence_json = Column(Text, nullable=True)
+    created_at = Column(Float, nullable=False)
+

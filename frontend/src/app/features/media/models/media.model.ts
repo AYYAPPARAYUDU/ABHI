@@ -186,3 +186,97 @@ export interface MediaResourceStatusDTO {
   pressure_level: string;
   active_media_models: ImageModelDefinitionDTO[];
 }
+
+export type ImageEditType = 'IMAGE_TO_IMAGE' | 'INPAINTING' | 'OUTPAINTING';
+export type MaskSemantics = 'WHITE_EDIT_BLACK_PRESERVE' | 'ALPHA_TRANSPARENT_EDIT';
+
+export interface OutpaintBoundsDTO {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+
+export interface MaskArtifactDTO {
+  mask_id: string;
+  source_artifact_id: string;
+  path: string;
+  filename: string;
+  format: string;
+  width: number;
+  height: number;
+  size_bytes: number;
+  sha256: string;
+  created_at: number;
+  mask_semantics: MaskSemantics;
+  edit_area_ratio: number;
+  provenance: string;
+}
+
+export interface EditDifferenceEvidenceDTO {
+  changed_pixel_count: number;
+  changed_pixel_ratio: number;
+  bounding_box?: number[] | null;
+  source_dimensions: number[];
+  output_dimensions: number[];
+  mask_overlap_ratio?: number | null;
+  evaluation_method: string;
+}
+
+export interface ImageEditRequestDTO {
+  source_artifact_id: string;
+  operation: ImageEditType;
+  prompt: string;
+  negative_prompt?: string | null;
+  model_id: string;
+  mask_artifact_id?: string | null;
+  mask_base64?: string | null;
+  strength?: number;
+  width?: number | null;
+  height?: number | null;
+  steps?: number;
+  guidance?: number;
+  seed?: number | null;
+  output_format?: ImageFormat;
+  quality_profile?: QualityProfile;
+  preferred_device?: string;
+  outpaint_bounds?: OutpaintBoundsDTO | null;
+}
+
+export interface ArtifactLineageRecordDTO {
+  lineage_id: string;
+  parent_artifact_id: string;
+  child_artifact_id: string;
+  job_id: string;
+  operation: ImageEditType;
+  mask_artifact_id?: string | null;
+  prompt: string;
+  model_id: string;
+  model_version: string;
+  parameters_hash: string;
+  difference_evidence?: EditDifferenceEvidenceDTO | null;
+  created_at: number;
+}
+
+export interface ImageEditModelDefinitionDTO {
+  model_id: string;
+  name: string;
+  version: string;
+  digest: string;
+  runtime: string;
+  format: string;
+  quantization: string;
+  supported_devices: string[];
+  base_vram_mb: number;
+  base_ram_mb: number;
+  gpu_compute_percent: number;
+  supported_resolutions: number[][];
+  supported_operations: ImageEditType[];
+  max_expansion_pixels: number;
+  capabilities: string[];
+  license_metadata: string;
+  source: string;
+  status: string;
+  is_production: boolean;
+  is_candidate: boolean;
+}

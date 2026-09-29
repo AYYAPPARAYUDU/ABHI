@@ -280,3 +280,143 @@ async def delete_video_artifact(artifact_id: str):
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
     return {"status": "SUCCESS", "message": msg, "artifact_id": artifact_id}
+
+
+# ==========================================
+# Image Edit & Inpaint Endpoints (Phase 8 Stage 8.3)
+# ==========================================
+
+from pydantic import BaseModel, Field
+from backend.app.media.edit_models import (
+    ImageEditRequest,
+    ImageEditType,
+    ImageEditModelDefinition,
+    MaskArtifact,
+    MaskSemantics,
+    OutpaintBounds,
+    ArtifactLineageRecord,
+)
+from backend.app.media.edit_coordinator import image_edit_coordinator
+
+
+class MaskCreateRequest(BaseModel):
+    """Payload for registering a base64 or encoded mask."""
+    source_artifact_id: str
+    mask_base64: str = Field(..., description="Base64 encoded PNG mask bytes")
+    semantics: MaskSemantics = Field(default=MaskSemantics.WHITE_EDIT_BLACK_PRESERVE)
+
+
+@router.get("/edit/models", response_model=List[ImageEditModelDefinition])
+async def list_image_edit_models():
+    """Discover all registered local image editing and inpainting models."""
+    return image_edit_coordinator.get_models()
+
+
+@router.get("/edit/models/{model_id}", response_model=ImageEditModelDefinition)
+async def get_image_edit_model(model_id: str):
+    """Retrieve details for a specific image editing model."""
+    model = image_edit_coordinator.get_model(model_id)
+    if not model:
+        raise HTTPException(status_code=404, detail=f"Edit model {model_id} not found")
+    return model
+
+
+@router.post("/image/edit", response_model=MediaJob, status_code=status.HTTP_201_CREATED)
+async def edit_image(request: ImageEditRequest):
+    """Submit a local image-to-image editing request."""
+    request.operation = ImageEditType.IMAGE_TO_IMAGE
+    success, job, msg = image_edit_coordinator.submit_image_edit(request)
+    if not success and job.status == MediaJobStatus.FAILED and ("not registered" in (job.failure_reason or "") or "not found" in (job.failure_reason or "")):
+        raise HTTPException(status_code=400, detail=job.failure_reason)
+    return job
+
+
+@router.post("/image/inpaint", response_model=MediaJob, status_code=status.HTTP_201_CREATED)
+async def inpaint_image(request: ImageEditRequest):
+    """Submit a local inpainting request with mask guidance."""
+    request.operation = ImageEditType.INPAINTING
+    success, job, msg = image_edit_coordinator.submit_image_edit(request)
+    if not success and job.status == MediaJobStatus.FAILED and ("not registered" in (job.failure_reason or "") or "not found" in (job.failure_reason or "") or "requires" in (job.failure_reason or "")):
+        raise HTTPException(status_code=400, detail=job.failure_reason)
+    return job
+
+
+@router.post("/image/outpaint", response_model=MediaJob, status_code=status.HTTP_201_CREATED)
+async def outpaint_image(request: ImageEditRequest):
+    """Submit a local outpainting request with directional canvas bounds."""
+    request.operation = ImageEditType.OUTPAINTING
+    success, job, msg = image_edit_coordinator.submit_image_edit(request)
+    if not success and job.status == MediaJobStatus.FAILED and ("not registered" in (job.failure_reason or "") or "not found" in (job.failure_reason or "")):
+        raise HTTPException(status_code=400, detail=job.failure_reason)
+    return job
+
+
+@router.post("/image/mask", response_model=MaskArtifact, status_code=status.HTTP_201_CREATED)
+async def create_mask(payload: MaskCreateRequest):
+    """Upload and validate an interactive mask for a source artifact."""
+    import base64
+    source_art = media_coordinator.get_artifact(payload.source_artifact_id)
+    if not source_art:
+        raise HTTPException(status_code=404, detail=f"Source artifact {payload.source_artifact_id} not found")
+
+    try:
+        # Strip header if present (e.g. data:image/png;base64,...)
+        raw_b64 = payload.mask_base64
+        if "," in raw_b64:
+            raw_b64 = raw_b64.split(",", 1)[1]
+        mask_bytes = base64.b64decode(raw_b64)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid base64 mask data: {str(e)}")
+
+    ok, mask_art, msg = image_edit_coordinator.storage.validate_and_register_mask(
+        mask_bytes=mask_bytes,
+        source_artifact_id=source_art.artifact_id,
+        expected_width=source_art.width,
+        expected_height=source_art.height,
+        semantics=payload.semantics
+    )
+    if not ok or not mask_art:
+        raise HTTPException(status_code=400, detail=msg)
+
+    image_edit_coordinator.register_mask(mask_art)
+    return mask_art
+
+
+@router.get("/masks/{mask_id}", response_model=MaskArtifact)
+async def get_mask(mask_id: str):
+    """Retrieve metadata for a specific mask artifact."""
+    mask = image_edit_coordinator.get_mask(mask_id)
+    if not mask:
+        raise HTTPException(status_code=404, detail=f"Mask {mask_id} not found")
+    return mask
+
+
+@router.get("/masks/{mask_id}/file")
+async def get_mask_file(mask_id: str):
+    """Serve the raw PNG mask image binary."""
+    mask = image_edit_coordinator.get_mask(mask_id)
+    if not mask:
+        raise HTTPException(status_code=404, detail=f"Mask {mask_id} not found")
+
+    file_path = (image_edit_coordinator.storage.base_dir.parent / mask.path).resolve()
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"Mask file missing on disk: {file_path}")
+
+    return FileResponse(
+        path=str(file_path),
+        media_type="image/png",
+        filename=mask.filename
+    )
+
+
+@router.get("/artifacts/{artifact_id}/lineage")
+async def get_artifact_lineage(artifact_id: str):
+    """Retrieve complete transformation lineage graph for an artifact."""
+    return image_edit_coordinator.get_lineage(artifact_id)
+
+
+@router.get("/artifacts/{artifact_id}/masks", response_model=List[MaskArtifact])
+async def list_artifact_masks(artifact_id: str):
+    """List all registered mask artifacts created for a source image."""
+    return image_edit_coordinator.list_masks_for_artifact(artifact_id)
+

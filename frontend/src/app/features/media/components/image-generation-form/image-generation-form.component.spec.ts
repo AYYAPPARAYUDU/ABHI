@@ -48,4 +48,27 @@ describe('ImageGenerationFormComponent', () => {
       })
     );
   });
+
+  it('should allow toggling preferred execution device', () => {
+    component.preferredDevice.set('CPU');
+    expect(component.preferredDevice()).toBe('CPU');
+    component.preferredDevice.set('GPU');
+    expect(component.preferredDevice()).toBe('GPU');
+  });
+
+  it('should include negative prompt and seed when specified', () => {
+    const emitSpy = vi.spyOn(component.generate, 'emit');
+    component.prompt.set('A crystal palace');
+    component.negativePrompt.set('low quality, blurry');
+    component.seed.set(4242);
+    component.onSubmit();
+
+    expect(emitSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: 'A crystal palace',
+        negative_prompt: 'low quality, blurry',
+        seed: 4242,
+      })
+    );
+  });
 });

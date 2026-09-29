@@ -8,7 +8,16 @@ import { MediaModelCatalogComponent } from '../../components/media-model-catalog
 import { VideoGenerationFormComponent } from '../../components/video-generation-form/video-generation-form.component';
 import { VideoJobQueueComponent } from '../../components/video-job-queue/video-job-queue.component';
 import { VideoArtifactGalleryComponent } from '../../components/video-artifact-gallery/video-artifact-gallery.component';
-import { ImageGenerationRequestDTO, VideoGenerationRequestDTO } from '../../models/media.model';
+import { ImageEditFormComponent } from '../../components/image-edit-form/image-edit-form.component';
+import { MaskCanvasEditorComponent } from '../../components/mask-canvas-editor/mask-canvas-editor.component';
+import { ImageDiffViewerComponent } from '../../components/image-diff-viewer/image-diff-viewer.component';
+import { ArtifactLineageGraphComponent } from '../../components/artifact-lineage-graph/artifact-lineage-graph.component';
+import {
+  ImageGenerationRequestDTO,
+  VideoGenerationRequestDTO,
+  ImageEditRequestDTO,
+  MediaArtifactDTO,
+} from '../../models/media.model';
 
 @Component({
   selector: 'app-media-page',
@@ -22,6 +31,10 @@ import { ImageGenerationRequestDTO, VideoGenerationRequestDTO } from '../../mode
     VideoGenerationFormComponent,
     VideoJobQueueComponent,
     VideoArtifactGalleryComponent,
+    ImageEditFormComponent,
+    MaskCanvasEditorComponent,
+    ImageDiffViewerComponent,
+    ArtifactLineageGraphComponent,
   ],
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 p-6 space-y-6">
@@ -30,21 +43,21 @@ import { ImageGenerationRequestDTO, VideoGenerationRequestDTO } from '../../mode
         <div>
           <div class="flex items-center gap-3">
             <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-              <span class="text-2xl">🎬</span> Local Media & Video Generation Studio
+              <span class="text-2xl">✨</span> Local Media, Inpainting & Video Studio
             </h1>
-            <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-              Phase 8.2 Active
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+              Phase 8.3 Active
             </span>
           </div>
           <p class="text-xs text-slate-400 mt-1">
-            Local image synthesis, temporal video diffusion, chunked VRAM budgeting, and verified artifact storage
+            Non-destructive local image editing, inpainting, canvas outpainting, diffusion synthesis & lineage tracking
           </p>
         </div>
 
         <!-- Telemetry & Status Badges -->
         <div class="flex items-center gap-2.5 flex-wrap">
           <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2 text-right">
-            <span class="block text-[10px] text-slate-500 uppercase tracking-wider">VRAM Usable Headroom</span>
+            <span class="block text-[10px] text-slate-500 uppercase tracking-wider">VRAM Headroom</span>
             <span class="text-xs font-mono font-semibold text-cyan-400">
               {{ mediaService.vramFreeMB() }} MB Free
             </span>
@@ -69,7 +82,15 @@ import { ImageGenerationRequestDTO, VideoGenerationRequestDTO } from '../../mode
       </div>
 
       <!-- Studio Navigation Tabs -->
-      <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+      <div class="flex items-center gap-2 border-b border-slate-800 pb-3 flex-wrap">
+        <button
+          type="button"
+          (click)="activeTab.set('edit')"
+          [ngClass]="activeTab() === 'edit' ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/30' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
+          class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
+        >
+          <span>🎨</span> Edit & Inpainting Studio (Phase 8.3)
+        </button>
         <button
           type="button"
           (click)="activeTab.set('video')"
@@ -84,19 +105,72 @@ import { ImageGenerationRequestDTO, VideoGenerationRequestDTO } from '../../mode
           [ngClass]="activeTab() === 'image' ? 'bg-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
           class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
         >
-          <span>🖼️</span> Image Studio (Phase 8.1)
+          <span>🖼️</span> Image Synthesis (Phase 8.1)
         </button>
       </div>
 
       <!-- Error Message Banner -->
-      <div *ngIf="mediaService.errorMessage() || mediaService.videoErrorMessage()" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 rounded-xl flex items-center justify-between">
-        <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() }}</span>
+      <div *ngIf="mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage()" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 rounded-xl flex items-center justify-between">
+        <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() }}</span>
         <button (click)="clearErrors()" class="text-red-400 hover:text-white">✕</button>
+      </div>
+
+      <!-- EDIT & INPAINTING STUDIO TAB CONTENT (Phase 8.3) -->
+      <div *ngIf="activeTab() === 'edit'" class="space-y-6">
+        <!-- Top Section: Form (Left) & Mask Studio (Right) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Left: Edit Form (5 cols) -->
+          <div class="lg:col-span-5 space-y-6">
+            <app-image-edit-form
+              [sourceArtifact]="selectedSourceArtifact()"
+              [editModels]="mediaService.editModels()"
+              [maskBase64]="currentMaskBase64()"
+              [isLoading]="mediaService.isEditLoading()"
+              (editSubmitted)="onEditSubmitted($event)"
+            ></app-image-edit-form>
+
+            <app-artifact-lineage-graph
+              [selectedArtifact]="selectedSourceArtifact()"
+              [lineageRecord]="mediaService.activeLineage()"
+            ></app-artifact-lineage-graph>
+          </div>
+
+          <!-- Right: Interactive Mask Studio & Diff Viewer (7 cols) -->
+          <div class="lg:col-span-7 space-y-6">
+            <app-mask-canvas-editor
+              [sourceArtifact]="selectedSourceArtifact()"
+              (maskApplied)="onMaskApplied($event)"
+            ></app-mask-canvas-editor>
+
+            @if (selectedSourceArtifact() && latestEditedArtifact()) {
+              <app-image-diff-viewer
+                [originalArtifact]="selectedSourceArtifact()"
+                [editedArtifact]="latestEditedArtifact()"
+                [lineageRecord]="mediaService.activeLineage()"
+              ></app-image-diff-viewer>
+            }
+          </div>
+        </div>
+
+        <!-- Bottom: Artifact Gallery to Select Source Image -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-semibold text-slate-200">
+              Source Image Artifacts (Click image to load into Edit Studio)
+            </h3>
+            <span class="text-xs text-slate-400">
+              {{ mediaService.artifacts().length }} Registered Local Artifacts
+            </span>
+          </div>
+          <app-media-artifact-gallery
+            [artifacts]="mediaService.artifacts()"
+            (delete)="onDeleteImageArtifact($event)"
+          ></app-media-artifact-gallery>
+        </div>
       </div>
 
       <!-- VIDEO STUDIO TAB CONTENT (Phase 8.2) -->
       <div *ngIf="activeTab() === 'video'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Left: Video Generation Form (7 cols) -->
         <div class="lg:col-span-7 space-y-6">
           <app-video-generation-form
             [models]="mediaService.videoModels()"
@@ -110,7 +184,6 @@ import { ImageGenerationRequestDTO, VideoGenerationRequestDTO } from '../../mode
           ></app-video-artifact-gallery>
         </div>
 
-        <!-- Right: Video Queue & Models (5 cols) -->
         <div class="lg:col-span-5 space-y-6">
           <app-video-job-queue
             [jobs]="mediaService.videoJobs()"
@@ -122,7 +195,6 @@ import { ImageGenerationRequestDTO, VideoGenerationRequestDTO } from '../../mode
 
       <!-- IMAGE STUDIO TAB CONTENT (Phase 8.1) -->
       <div *ngIf="activeTab() === 'image'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Left: Image Generation Form (7 cols) -->
         <div class="lg:col-span-7 space-y-6">
           <app-image-generation-form
             [models]="mediaService.models()"
@@ -136,7 +208,6 @@ import { ImageGenerationRequestDTO, VideoGenerationRequestDTO } from '../../mode
           ></app-media-artifact-gallery>
         </div>
 
-        <!-- Right: Queue & Catalog (5 cols) -->
         <div class="lg:col-span-5 space-y-6">
           <app-media-job-queue
             [jobs]="mediaService.jobs()"
@@ -153,10 +224,57 @@ import { ImageGenerationRequestDTO, VideoGenerationRequestDTO } from '../../mode
 })
 export class MediaPageComponent implements OnInit {
   mediaService = inject(MediaService);
-  activeTab = signal<'video' | 'image'>('video');
+  activeTab = signal<'edit' | 'video' | 'image'>('edit');
+
+  selectedSourceArtifact = signal<MediaArtifactDTO | null>(null);
+  currentMaskBase64 = signal<string | null>(null);
+  latestEditedArtifact = signal<MediaArtifactDTO | null>(null);
 
   ngOnInit(): void {
     this.mediaService.refreshAll();
+    // Auto-select first artifact as default if available
+    const arts = this.mediaService.artifacts();
+    if (arts.length > 0) {
+      this.selectedSourceArtifact.set(arts[0]);
+      this.mediaService.fetchArtifactLineage(arts[0].artifact_id).subscribe();
+    }
+  }
+
+  onSelectArtifactForEdit(art: MediaArtifactDTO): void {
+    this.selectedSourceArtifact.set(art);
+    this.currentMaskBase64.set(null);
+    this.mediaService.fetchArtifactLineage(art.artifact_id).subscribe();
+  }
+
+  onMaskApplied(maskBase64: string): void {
+    this.currentMaskBase64.set(maskBase64);
+  }
+
+  onEditSubmitted(request: ImageEditRequestDTO): void {
+    let obs;
+    if (request.operation === 'INPAINTING') {
+      obs = this.mediaService.inpaintImage(request);
+    } else if (request.operation === 'OUTPAINTING') {
+      obs = this.mediaService.outpaintImage(request);
+    } else {
+      obs = this.mediaService.editImage(request);
+    }
+
+    obs.subscribe({
+      next: (job) => {
+        if (job.artifact_id) {
+          // Find the newly produced artifact
+          setTimeout(() => {
+            const arts = this.mediaService.artifacts();
+            const child = arts.find((a) => a.artifact_id === job.artifact_id);
+            if (child) {
+              this.latestEditedArtifact.set(child);
+              this.mediaService.fetchArtifactLineage(child.artifact_id).subscribe();
+            }
+          }, 500);
+        }
+      },
+    });
   }
 
   onGenerateVideo(request: VideoGenerationRequestDTO): void {
@@ -181,10 +299,16 @@ export class MediaPageComponent implements OnInit {
 
   onDeleteImageArtifact(artifactId: string): void {
     this.mediaService.deleteArtifact(artifactId).subscribe();
+    if (this.selectedSourceArtifact()?.artifact_id === artifactId) {
+      this.selectedSourceArtifact.set(null);
+      this.latestEditedArtifact.set(null);
+    }
   }
 
   clearErrors(): void {
     this.mediaService.errorMessage.set(null);
     this.mediaService.videoErrorMessage.set(null);
+    this.mediaService.editErrorMessage.set(null);
   }
 }
+

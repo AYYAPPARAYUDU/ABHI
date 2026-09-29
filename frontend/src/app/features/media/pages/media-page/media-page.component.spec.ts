@@ -31,10 +31,46 @@ describe('MediaPageComponent', () => {
     expect(mediaService.refreshAll).toHaveBeenCalled();
   });
 
-  it('should switch between video and image studio tabs', () => {
+  it('should switch between edit, video and image studio tabs', () => {
+    expect(component.activeTab()).toBe('edit');
+    component.activeTab.set('video');
     expect(component.activeTab()).toBe('video');
     component.activeTab.set('image');
     expect(component.activeTab()).toBe('image');
+    component.activeTab.set('edit');
+    expect(component.activeTab()).toBe('edit');
+  });
+
+  it('should delegate edit and inpainting calls to service', () => {
+    const editSpy = vi.spyOn(mediaService, 'editImage').mockReturnValue(of({} as any));
+    const inpaintSpy = vi.spyOn(mediaService, 'inpaintImage').mockReturnValue(of({} as any));
+    const outpaintSpy = vi.spyOn(mediaService, 'outpaintImage').mockReturnValue(of({} as any));
+
+    component.onEditSubmitted({
+      source_artifact_id: 'art_123',
+      operation: 'IMAGE_TO_IMAGE',
+      prompt: 'Make it sunset',
+      model_id: 'instruct-pix2pix-local',
+    });
+    expect(editSpy).toHaveBeenCalled();
+
+    component.onEditSubmitted({
+      source_artifact_id: 'art_123',
+      operation: 'INPAINTING',
+      prompt: 'Add crown',
+      model_id: 'sdxl-inpainting-local',
+      mask_base64: 'data:image/png;base64,mock',
+    });
+    expect(inpaintSpy).toHaveBeenCalled();
+
+    component.onEditSubmitted({
+      source_artifact_id: 'art_123',
+      operation: 'OUTPAINTING',
+      prompt: 'Extend hills',
+      model_id: 'kandinsky-outpainting-candidate',
+      outpaint_bounds: { top: 0, bottom: 0, left: 128, right: 128 },
+    });
+    expect(outpaintSpy).toHaveBeenCalled();
   });
 
   it('should delegate video generation and deletion calls to service', () => {
@@ -64,15 +100,17 @@ describe('MediaPageComponent', () => {
   it('should clear error messages when requested', () => {
     mediaService.errorMessage.set('Test image error');
     mediaService.videoErrorMessage.set('Test video error');
+    mediaService.editErrorMessage.set('Test edit error');
 
     component.clearErrors();
 
     expect(mediaService.errorMessage()).toBeNull();
     expect(mediaService.videoErrorMessage()).toBeNull();
+    expect(mediaService.editErrorMessage()).toBeNull();
   });
 
-  it('should initialize activeTab with video default', () => {
-    expect(component.activeTab()).toBe('video');
+  it('should initialize activeTab with edit default', () => {
+    expect(component.activeTab()).toBe('edit');
   });
 
   it('should handle video generation error state without crashing', () => {

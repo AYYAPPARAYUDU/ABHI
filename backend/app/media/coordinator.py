@@ -364,6 +364,11 @@ class MediaCoordinator:
             arts.sort(key=lambda a: a.created_at, reverse=True)
             return arts[:limit]
 
+    def register_artifact(self, artifact: MediaArtifact) -> None:
+        """Register a media artifact directly into the in-memory cache."""
+        with self._lock:
+            self._artifacts[artifact.artifact_id] = artifact
+
     def delete_artifact(self, artifact_id: str) -> Tuple[bool, str]:
         with self._lock:
             art = self._artifacts.get(artifact_id)
