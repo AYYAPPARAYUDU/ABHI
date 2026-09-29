@@ -1,0 +1,72 @@
+<div class="experiment-board-container">
+  <div class="board-header">
+    <h3>Controlled Improvement Experiment Board</h3>
+    <p class="board-subtitle">Visual tracking of candidate hypotheses across adaptation, evaluation gates, and promotion.</p>
+  </div>
+
+  <div class="kanban-columns">
+    <div *ngFor="let col of columns" class="kanban-col">
+      <div class="col-header" [style.border-top-color]="col.color">
+        <div class="col-title">{{ col.title }}</div>
+        <div class="col-badge">{{ getCandidatesByStatus(col.status).length }}</div>
+      </div>
+
+      <div class="col-cards">
+        <div
+          *ngFor="let cand of getCandidatesByStatus(col.status)"
+          class="board-card"
+          [class.selected]="evalService.selectedCandidate()?.candidate_id === cand.candidate_id"
+          (click)="selectCandidate(cand)"
+        >
+          <div class="card-top">
+            <span class="type-tag">{{ cand.candidate_type }}</span>
+            <span class="id-tag">#{{ cand.candidate_id.substring(cand.candidate_id.length - 6) }}</span>
+          </div>
+
+          <h5 class="cand-title">{{ cand.name }}</h5>
+          <p class="hyp-desc">{{ cand.hypothesis.title }}</p>
+
+          <div class="stats-box">
+            <div class="stat">
+              <span>Target</span>
+              <strong>{{ cand.hypothesis.target_capability }}</strong>
+            </div>
+            <div class="stat">
+              <span>Goal</span>
+              <strong class="accent">{{ cand.hypothesis.baseline_score }} → {{ cand.hypothesis.target_score }}</strong>
+            </div>
+          </div>
+
+          <div *ngIf="cand.head_to_head" class="score-banner">
+            <span>Result:</span>
+            <strong>{{ cand.head_to_head.candidate_composite_score }}</strong>
+            <span class="gate-status" [class.pass]="cand.head_to_head.all_gates_passed">
+              {{ cand.head_to_head.all_gates_passed ? '✓ Gates Passed' : '✗ Regressed' }}
+            </span>
+          </div>
+
+          <div class="card-actions">
+            <button
+              *ngIf="cand.status === 'READY'"
+              class="btn-action train"
+              (click)="triggerTrain(cand, $event)"
+            >
+              Start Adaptation
+            </button>
+            <button
+              *ngIf="cand.status === 'READY' || cand.status === 'EVALUATING'"
+              class="btn-action eval"
+              (click)="triggerEval(cand, $event)"
+            >
+              Evaluate
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="getCandidatesByStatus(col.status).length === 0" class="empty-col">
+          <span>No experiments</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

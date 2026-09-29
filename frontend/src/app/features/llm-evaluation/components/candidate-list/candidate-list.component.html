@@ -1,0 +1,134 @@
+<div class="candidate-list-container">
+  <div class="header-actions">
+    <div class="title-group">
+      <h3>Candidate Adaptation Registry</h3>
+      <span class="count-badge">{{ evalService.candidates().length }} Candidates</span>
+    </div>
+    <button class="btn-primary create-btn" (click)="openCreateModal()">
+      <span class="icon">+</span> New Candidate Experiment
+    </button>
+  </div>
+
+  <div class="candidate-grid">
+    <div
+      *ngFor="let cand of evalService.candidates()"
+      class="candidate-card"
+      [class.selected]="evalService.selectedCandidate()?.candidate_id === cand.candidate_id"
+      (click)="selectCandidate(cand)"
+    >
+      <div class="card-header">
+        <div class="type-badge">{{ cand.candidate_type }}</div>
+        <div class="status-pill" [ngClass]="getStatusClass(cand.status)">{{ cand.status }}</div>
+      </div>
+
+      <div class="card-body">
+        <h4 class="cand-name">{{ cand.name }}</h4>
+        <p class="hypothesis-title">{{ cand.hypothesis.title }}</p>
+        <p class="hypothesis-desc">{{ cand.hypothesis.description }}</p>
+
+        <div class="metric-row">
+          <div class="metric-item">
+            <span class="metric-label">Target Area</span>
+            <span class="metric-val highlight">{{ cand.hypothesis.target_capability }}</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Baseline</span>
+            <span class="metric-val">{{ cand.hypothesis.baseline_score }}</span>
+          </div>
+          <div class="metric-item">
+            <span class="metric-label">Target</span>
+            <span class="metric-val accent">{{ cand.hypothesis.target_score }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="cand.head_to_head" class="h2h-summary">
+          <div class="h2h-score">
+            <span>Composite:</span>
+            <strong>{{ cand.head_to_head.candidate_composite_score }}</strong>
+            <span class="delta" [class.positive]="cand.head_to_head.delta_composite > 0">
+              ({{ cand.head_to_head.delta_composite > 0 ? '+' : '' }}{{ cand.head_to_head.delta_composite }})
+            </span>
+          </div>
+          <div class="verdict-tag" [class.pass]="cand.head_to_head.all_gates_passed">
+            {{ cand.head_to_head.summary_verdict }}
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button
+          class="btn-secondary btn-sm"
+          [disabled]="evalService.isEvaluatingCandidate()"
+          (click)="evaluateCandidate(cand, $event)"
+        >
+          Evaluate Head-to-Head
+        </button>
+        <button
+          *ngIf="cand.status === 'PASSED'"
+          class="btn-promote btn-sm"
+          (click)="promoteCandidate(cand, $event)"
+        >
+          Promote to Production
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Candidate Modal -->
+  <div *ngIf="showCreateModal" class="modal-backdrop" (click)="closeCreateModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h4>Register Controlled Candidate Experiment</h4>
+        <button class="close-btn" (click)="closeCreateModal()">×</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Candidate Name</label>
+          <input type="text" [(ngModel)]="newCand.candidate_name" placeholder="e.g. Qwen3-8B Indic-Canonical Prompt V2" />
+        </div>
+
+        <div class="form-group">
+          <label>Candidate Type</label>
+          <select [(ngModel)]="newCand.candidate_type">
+            <option value="PROMPT_CANDIDATE">PROMPT_CANDIDATE (Prompt / System Config)</option>
+            <option value="RAG_CANDIDATE">RAG_CANDIDATE (LanceDB Hybrid Re-ranking)</option>
+            <option value="ADAPTER_CANDIDATE">ADAPTER_CANDIDATE (LoRA Rank 16/32)</option>
+            <option value="QLORA_CANDIDATE">QLORA_CANDIDATE (4-bit Parameter Adaptation)</option>
+            <option value="MODEL_REPLACEMENT_CANDIDATE">MODEL_REPLACEMENT_CANDIDATE</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Measurable Hypothesis Title</label>
+          <input type="text" [(ngModel)]="newCand.hypothesis_title" placeholder="e.g. Telugu Command Argument Normalization" />
+        </div>
+
+        <div class="form-group">
+          <label>Detailed Hypothesis & Rationale</label>
+          <textarea [(ngModel)]="newCand.hypothesis_description" rows="3" placeholder="Describe the expected mechanism and non-regression risks..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Target Capability</label>
+            <input type="text" [(ngModel)]="newCand.target_capability" placeholder="multilingual_te" />
+          </div>
+          <div class="form-group">
+            <label>Baseline Score</label>
+            <input type="number" step="0.01" [(ngModel)]="newCand.baseline_score" />
+          </div>
+          <div class="form-group">
+            <label>Target Score</label>
+            <input type="number" step="0.01" [(ngModel)]="newCand.target_score" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="closeCreateModal()">Cancel</button>
+        <button class="btn-primary" (click)="submitCreate()">Register Experiment</button>
+      </div>
+    </div>
+  </div>
+</div>

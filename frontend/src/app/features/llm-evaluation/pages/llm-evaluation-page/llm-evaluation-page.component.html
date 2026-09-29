@@ -2,61 +2,117 @@
   <!-- Top Header with Title, Mode & Run Trigger -->
   <app-evaluation-header></app-evaluation-header>
 
+  <!-- Global Tab Navigation -->
+  <div class="sub-nav-bar px-3 pt-2">
+    <div class="nav-tabs-wrapper">
+      <button
+        *ngFor="let tab of tabs"
+        class="nav-tab-btn"
+        [class.active]="evalService.activeTab() === tab.id"
+        (click)="setTab(tab.id)"
+      >
+        <span class="tab-icon">{{ tab.icon }}</span>
+        <span class="tab-label">{{ tab.label }}</span>
+        <span *ngIf="tab.id === 'CANDIDATES'" class="badge-mini">{{ evalService.candidates().length }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Notification & Live Telemetry Banners -->
+  <div class="px-3 pt-2">
+    <div *ngIf="evalService.successMessage() as msg" class="alert-banner success">
+      <span>✓ {{ msg }}</span>
+    </div>
+    <div *ngIf="evalService.errorMessage() as err" class="alert-banner error">
+      <span>⚠️ {{ err }}</span>
+    </div>
+
+    <!-- Active Training Subprocess Progress Monitor -->
+    <app-training-progress *ngIf="evalService.activeTrainingJob()"></app-training-progress>
+  </div>
+
   <div class="p-3 d-flex flex-column gap-3">
-    <!-- Replay Scrubber and VCR Controls -->
-    <app-evaluation-replay></app-evaluation-replay>
+    <!-- TAB 1: DAILY SCORECARD, REPLAY & EVIDENCE -->
+    <ng-container *ngIf="evalService.activeTab() === 'DAILY'">
+      <!-- Replay Scrubber and VCR Controls -->
+      <app-evaluation-replay></app-evaluation-replay>
 
-    <!-- Daily Scorecard Summary Row -->
-    <app-daily-scorecard></app-daily-scorecard>
+      <!-- Daily Scorecard Summary Row -->
+      <app-daily-scorecard></app-daily-scorecard>
 
-    <!-- 3D Analytics Row: Capability Galaxy & 3D Evolution Timeline -->
-    <div class="row g-3">
-      <div class="col-12 col-xl-6">
-        <app-capability-galaxy></app-capability-galaxy>
+      <!-- 3D Analytics Row: Capability Galaxy & 3D Evolution Timeline -->
+      <div class="row g-3">
+        <div class="col-12 col-xl-6">
+          <app-capability-galaxy></app-capability-galaxy>
+        </div>
+        <div class="col-12 col-xl-6">
+          <app-evolution-timeline-3d></app-evolution-timeline-3d>
+        </div>
       </div>
-      <div class="col-12 col-xl-6">
-        <app-evolution-timeline-3d></app-evolution-timeline-3d>
-      </div>
-    </div>
 
-    <!-- 2D Analytics & Performance Row: Capability Breakdown, Benchmark Heatmap & Regressions -->
-    <div class="row g-3">
-      <div class="col-12 col-lg-4">
-        <app-capability-radar></app-capability-radar>
+      <!-- 2D Analytics & Performance Row -->
+      <div class="row g-3">
+        <div class="col-12 col-lg-4">
+          <app-capability-radar></app-capability-radar>
+        </div>
+        <div class="col-12 col-lg-4">
+          <app-benchmark-heatmap></app-benchmark-heatmap>
+        </div>
+        <div class="col-12 col-lg-4">
+          <app-regression-alert></app-regression-alert>
+        </div>
       </div>
-      <div class="col-12 col-lg-4">
-        <app-benchmark-heatmap></app-benchmark-heatmap>
-      </div>
-      <div class="col-12 col-lg-4">
-        <app-regression-alert></app-regression-alert>
-      </div>
-    </div>
 
-    <!-- Evolution Lab & Model Matrix Row -->
-    <div class="row g-3">
-      <div class="col-12 col-lg-6">
-        <app-model-comparison></app-model-comparison>
+      <!-- Raw LLM Benchmark Case Evidence & Snapshot Inspection -->
+      <div class="row g-3">
+        <div class="col-12">
+          <app-run-detail></app-run-detail>
+        </div>
       </div>
-      <div class="col-12 col-lg-6">
-        <app-evolution-pipeline></app-evolution-pipeline>
-      </div>
-    </div>
+    </ng-container>
 
-    <!-- Research Feed & Resource Profiling Row -->
-    <div class="row g-3">
-      <div class="col-12 col-lg-8">
-        <app-research-feed></app-research-feed>
-      </div>
-      <div class="col-12 col-lg-4">
-        <app-resource-metrics></app-resource-metrics>
-      </div>
-    </div>
+    <!-- TAB 2: CANDIDATE ADAPTATION REGISTRY -->
+    <ng-container *ngIf="evalService.activeTab() === 'CANDIDATES'">
+      <!-- Resource Headroom & Training Guard -->
+      <app-resource-monitor></app-resource-monitor>
 
-    <!-- Raw LLM Benchmark Case Evidence & Snapshot Inspection -->
-    <div class="row g-3">
-      <div class="col-12">
-        <app-run-detail></app-run-detail>
+      <!-- Candidate Registry and Create Experiment Modal -->
+      <app-candidate-list></app-candidate-list>
+    </ng-container>
+
+    <!-- TAB 3: EXPERIMENT KANBAN BOARD & PIPELINE -->
+    <ng-container *ngIf="evalService.activeTab() === 'EXPERIMENTS'">
+      <app-experiment-timeline></app-experiment-timeline>
+      <app-experiment-board></app-experiment-board>
+    </ng-container>
+
+    <!-- TAB 4: 3D MODEL LINEAGE GRAPH -->
+    <ng-container *ngIf="evalService.activeTab() === 'LINEAGE'">
+      <app-model-lineage-3d></app-model-lineage-3d>
+    </ng-container>
+
+    <!-- TAB 5: MODELS, COMPARISON & ROLLBACK -->
+    <ng-container *ngIf="evalService.activeTab() === 'MODELS'">
+      <div class="row g-3">
+        <div class="col-12 col-lg-6">
+          <app-model-comparison></app-model-comparison>
+        </div>
+        <div class="col-12 col-lg-6">
+          <app-evolution-pipeline></app-evolution-pipeline>
+        </div>
       </div>
-    </div>
+    </ng-container>
+
+    <!-- TAB 6: RESEARCH CORPUS -->
+    <ng-container *ngIf="evalService.activeTab() === 'RESEARCH'">
+      <div class="row g-3">
+        <div class="col-12 col-lg-8">
+          <app-research-feed></app-research-feed>
+        </div>
+        <div class="col-12 col-lg-4">
+          <app-resource-metrics></app-resource-metrics>
+        </div>
+      </div>
+    </ng-container>
   </div>
 </div>

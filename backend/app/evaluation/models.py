@@ -1,4 +1,4 @@
-"""Data Models, Schemas and Enums for Phase 6.7 & 6.8 LLM Evaluation, Research & Evolution Lab."""
+"""Data Models, Schemas and Enums for Phase 6.7, 6.8 & 6.9 LLM Evaluation, Research & Evolution Lab."""
 
 from enum import Enum
 from typing import Dict, List, Optional, Any
@@ -56,11 +56,48 @@ class RegressionSeverity(str, Enum):
 
 
 class CandidateType(str, Enum):
+    RAG_CANDIDATE = "RAG_CANDIDATE"
+    PROMPT_CANDIDATE = "PROMPT_CANDIDATE"
+    CONFIG_CANDIDATE = "CONFIG_CANDIDATE"
+    RETRIEVAL_CANDIDATE = "RETRIEVAL_CANDIDATE"
+    ADAPTER_CANDIDATE = "ADAPTER_CANDIDATE"
+    QLORA_CANDIDATE = "QLORA_CANDIDATE"
+    MODEL_REPLACEMENT_CANDIDATE = "MODEL_REPLACEMENT_CANDIDATE"
+    # Explicit distinct string values for Stage 6.7 compatibility
     RAG_ONLY = "RAG_ONLY"
     PROMPT_CONFIG = "PROMPT_CONFIG"
     ADAPTER_LORA = "ADAPTER_LORA"
     FINE_TUNED = "FINE_TUNED"
     MODEL_REPLACEMENT = "MODEL_REPLACEMENT"
+
+
+class CandidateStatus(str, Enum):
+    DRAFT = "DRAFT"
+    READY = "READY"
+    TRAINING = "TRAINING"
+    EVALUATING = "EVALUATING"
+    PASSED = "PASSED"
+    REJECTED = "REJECTED"
+    QUARANTINED = "QUARANTINED"
+    PROMOTED = "PROMOTED"
+    ARCHIVED = "ARCHIVED"
+
+
+class FailureCategory(str, Enum):
+    LANGUAGE_ERROR = "LANGUAGE_ERROR"
+    GROUNDING_ERROR = "GROUNDING_ERROR"
+    RAG_ERROR = "RAG_ERROR"
+    PLANNING_ERROR = "PLANNING_ERROR"
+    TOOL_BOUNDARY_ERROR = "TOOL_BOUNDARY_ERROR"
+    SAFETY_ERROR = "SAFETY_ERROR"
+    FORMAT_ERROR = "FORMAT_ERROR"
+    HALLUCINATION = "HALLUCINATION"
+
+
+class ContaminationStatus(str, Enum):
+    NO_OVERLAP = "NO_OVERLAP"
+    POSSIBLE_OVERLAP = "POSSIBLE_OVERLAP"
+    KNOWN_OVERLAP = "KNOWN_OVERLAP"
 
 
 class GenerationConfig(BaseModel):
@@ -86,7 +123,7 @@ class ModelSnapshot(BaseModel):
 
 class EvaluationSnapshot(BaseModel):
     run_id: str
-    dataset_id: str = "ABHI_INTERNAL_V1"
+    dataset_id: str = "ABHI_INTERNAL_V1_DETERMINISTIC"
     dataset_version: str = "1.0.0"
     benchmark_version: str = "ABHI_EVAL_HARNESS_V1"
     evaluator_version: str = "1.0.0"
@@ -250,7 +287,7 @@ class ModelRecord(BaseModel):
 class ExperimentRecord(BaseModel):
     experiment_id: str
     hypothesis: str
-    candidate_type: CandidateType = CandidateType.RAG_ONLY
+    candidate_type: CandidateType = CandidateType.RAG_CANDIDATE
     base_model_id: str
     candidate_model_id: str
     dataset_snapshot: str = "ABHI_EVAL_V1"
@@ -274,6 +311,140 @@ class EvaluationTimelineEvent(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
+# --- Stage 6.9 Candidate Adaptation, Datasets, Lineage & Baseline Models ---
+
+class CandidateDataset(BaseModel):
+    dataset_id: str
+    version: str = "1.0.0"
+    source: str = "Failure-Cases & Sanitize Research"
+    case_count: int = 12
+    provenance: str = "LOCAL_SANITIZED"
+    hash: str = "sha256:9b4e78f10a2b"
+    contamination_status: ContaminationStatus = ContaminationStatus.NO_OVERLAP
+    train_cases_count: int = 8
+    validation_cases_count: int = 4
+    holdout_protected: bool = True
+    created_at: str = ""
+
+
+class ImprovementHypothesis(BaseModel):
+    hypothesis_id: str
+    title: str
+    description: str
+    failure_category: Optional[FailureCategory] = FailureCategory.LANGUAGE_ERROR
+    target_capability: str = "multilingual_te"
+    baseline_score: float = 0.85
+    target_score: float = 0.95
+    research_source_id: Optional[str] = None
+    risk_areas: List[str] = Field(default_factory=lambda: ["en", "hi", "safety"])
+
+
+class EvaluationGateResult(BaseModel):
+    gate_name: str
+    passed: bool
+    severity: RegressionSeverity = RegressionSeverity.CRITICAL
+    metric_name: str
+    baseline_val: float
+    candidate_val: float
+    delta: float
+    threshold: float
+    reason: str
+
+
+class HeadToHeadComparison(BaseModel):
+    candidate_id: str
+    baseline_id: str = "BASELINE_V1_LOCKED"
+    model_id: str = "qwen3:8b"
+    baseline_composite_score: float = 0.917
+    candidate_composite_score: float = 0.942
+    delta_composite: float = 0.025
+    unweighted_baseline_mean: float = 0.9583
+    unweighted_candidate_mean: float = 0.9833
+    delta_unweighted: float = 0.0250
+    gates: List[EvaluationGateResult] = Field(default_factory=list)
+    all_gates_passed: bool = True
+    capabilities_delta: Dict[str, float] = Field(default_factory=dict)
+    multilingual_delta: Dict[str, float] = Field(default_factory=dict)
+    safety_delta: Dict[str, float] = Field(default_factory=dict)
+    resource_delta: Dict[str, float] = Field(default_factory=dict)
+    summary_verdict: str = "PASSED_ALL_GATES"
+
+
+class CandidateRecord(BaseModel):
+    candidate_id: str
+    candidate_type: CandidateType = CandidateType.PROMPT_CANDIDATE
+    parent_model_id: str = "model_qwen3_8b_v1_prod"
+    parent_model_version: str = "1.0.0"
+    name: str
+    hypothesis: ImprovementHypothesis
+    dataset: Optional[CandidateDataset] = None
+    status: CandidateStatus = CandidateStatus.READY
+    created_at: str
+    updated_at: str
+    evaluation_run_id: Optional[str] = None
+    head_to_head: Optional[HeadToHeadComparison] = None
+    adapter_path: Optional[str] = None
+    configuration_overrides: Dict[str, Any] = Field(default_factory=dict)
+
+
+class ModelLineageNode(BaseModel):
+    node_id: str
+    name: str
+    version: str
+    node_type: str  # BASE_MODEL, PROMPT_OVERRIDE, RAG_CONFIG, ADAPTER, PROMOTED_PROD
+    parent_id: Optional[str] = None
+    composite_score: float = 0.917
+    status: str = "PRODUCTION"
+    is_current_prod: bool = False
+    created_at: str = ""
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class LockedBaselineContract(BaseModel):
+    baseline_id: str = "BASELINE_V1_LOCKED"
+    locked_at: str = "2026-09-28T17:40:00Z"
+    model_id: str = "qwen3:8b"
+    model_tag: str = "abhi:latest"
+    model_digest: str = "sha256:500a1f067a9f43a992fb2b87"
+    unweighted_case_mean: float = 0.9583
+    weighted_10_pillar_composite: float = 0.917
+    steady_state_tps: float = 28.4
+    end_to_end_latency_ms_per_token: float = 41.2
+    aggregation_formula: str = "FORMULA_V1_WEIGHTED_10_PILLAR"
+    throughput_methodology: str = "ThroughputMethodologyV1"
+    weights_spec: Dict[str, float] = Field(
+        default_factory=lambda: {
+            "reasoning": 0.12,
+            "knowledge": 0.08,
+            "coding": 0.12,
+            "instruction_following": 0.10,
+            "multilingual_composite": 0.12,
+            "rag_grounding": 0.12,
+            "tool_boundary": 0.10,
+            "safety_compliance": 0.14,
+            "groundedness": 0.05,
+            "resource_efficiency": 0.05
+        }
+    )
+    protected_holdout_hash: str = "sha256:7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
+
+
+class TrainingJobStatus(BaseModel):
+    job_id: str
+    candidate_id: str
+    state: str = "READY"  # QUEUED, PREPARING, TRAINING, COMPLETED, FAILED, CANCELLED
+    progress_percent: float = 0.0
+    current_epoch: int = 0
+    total_epochs: int = 3
+    current_step: int = 0
+    total_steps: int = 100
+    current_loss: Optional[float] = None
+    vram_usage_mb: float = 0.0
+    ram_usage_mb: float = 0.0
+    elapsed_seconds: float = 0.0
+    error_message: Optional[str] = None
+
+
 # API Request/Response DTOs
 class RunEvaluationRequest(BaseModel):
     schedule_type: ScheduleType = ScheduleType.QUICK_DAILY
@@ -282,12 +453,37 @@ class RunEvaluationRequest(BaseModel):
     use_real_model: bool = True
 
 
-class CandidateCreateRequest(BaseModel):
+class LegacyCandidateCreateRequest(BaseModel):
     hypothesis: str
-    candidate_type: CandidateType = CandidateType.RAG_ONLY
+    candidate_type: CandidateType = CandidateType.RAG_CANDIDATE
     candidate_model_name: str
     candidate_version: str
     quantization: Optional[str] = "Q4_K_M"
+
+
+class CandidateCreateRequest(BaseModel):
+    hypothesis_title: str
+    hypothesis_description: str
+    candidate_type: CandidateType = CandidateType.PROMPT_CANDIDATE
+    candidate_name: str
+    target_capability: str = "multilingual_te"
+    baseline_score: float = 0.85
+    target_score: float = 0.95
+    failure_category: Optional[FailureCategory] = FailureCategory.LANGUAGE_ERROR
+    research_source_id: Optional[str] = None
+    configuration_overrides: Dict[str, Any] = Field(default_factory=dict)
+
+
+class EvaluateCandidateRequest(BaseModel):
+    candidate_id: str
+    schedule_type: ScheduleType = ScheduleType.QUICK_DAILY
+
+
+class StartTrainingRequest(BaseModel):
+    candidate_id: str
+    epochs: int = 3
+    batch_size: int = 2
+    learning_rate: float = 2e-4
 
 
 class PromoteCandidateRequest(BaseModel):

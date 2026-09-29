@@ -15,17 +15,17 @@ export class EvolutionPipelineComponent {
   readonly evalService = inject(EvaluationService);
 
   hypothesis = '';
-  candidateType: CandidateType = 'RAG_ONLY';
+  candidateType: CandidateType = 'RAG_CANDIDATE';
   candidateName = 'qwen3:8b-exp';
   candidateVersion = '1.1.0';
 
   onCreateExperiment(): void {
     if (!this.hypothesis.trim()) return;
     this.evalService.createCandidate({
-      hypothesis: this.hypothesis,
+      hypothesis_title: this.hypothesis,
+      hypothesis_description: this.hypothesis,
       candidate_type: this.candidateType,
-      candidate_model_name: this.candidateName,
-      candidate_version: this.candidateVersion
+      candidate_name: this.candidateName
     });
     this.hypothesis = '';
   }

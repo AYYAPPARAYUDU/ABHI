@@ -1,0 +1,49 @@
+<div class="lineage-container">
+  <div class="lineage-header">
+    <div class="title-wrap">
+      <h4>3D Model Lineage & Adaptation Topology</h4>
+      <span class="legend-badge">Interactive WebGL DAG</span>
+    </div>
+    <div class="legend-pills">
+      <span class="pill prod">Base Production</span>
+      <span class="pill prompt">Prompt Override</span>
+      <span class="pill rag">RAG Config</span>
+      <span class="pill lora">LoRA Adapter</span>
+    </div>
+  </div>
+
+  <div class="canvas-wrapper">
+    <canvas #lineageCanvas (click)="onCanvasClick($event)"></canvas>
+
+    <div *ngIf="selectedNode" class="node-inspector">
+      <div class="inspector-header">
+        <h5>{{ selectedNode.name }}</h5>
+        <button class="close-btn" (click)="closeInspect()">×</button>
+      </div>
+      <div class="inspector-body">
+        <div class="info-row">
+          <span>Type:</span>
+          <strong>{{ selectedNode.node_type }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Version:</span>
+          <strong>{{ selectedNode.version }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Composite Score:</span>
+          <strong class="highlight">{{ selectedNode.composite_score }}</strong>
+        </div>
+        <div class="info-row">
+          <span>Status:</span>
+          <strong [class.prod-text]="selectedNode.is_current_prod">{{ selectedNode.status }}</strong>
+        </div>
+        <div *ngIf="selectedNode.metadata" class="meta-box">
+          <div *ngFor="let item of selectedNode.metadata | keyvalue" class="meta-item">
+            <span class="meta-key">{{ item.key }}:</span>
+            <span class="meta-val">{{ item.value }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

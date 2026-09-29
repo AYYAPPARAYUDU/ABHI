@@ -638,6 +638,136 @@ export class TaskApiService {
     }
     return await response.json();
   }
+
+  /**
+   * Get authoritative locked baseline contract.
+   */
+  async getLockedBaseline(): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/locked-baseline`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to get locked baseline: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * List candidate adaptation records.
+   */
+  async listCandidates(): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/candidates`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list candidates: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Create a new candidate adaptation record.
+   */
+  async createCandidateAdaptation(payload: any): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/candidates`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to create candidate adaptation: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Start candidate parameter training or index preparation job.
+   */
+  async startTrainingJob(payload: { candidate_id: string; epochs?: number; batch_size?: number; learning_rate?: number }): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/candidates/train`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Failed to start training: ${err}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Get training job status and telemetry.
+   */
+  async getTrainingStatus(jobId: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/candidates/training/${jobId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to get training status: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Cancel an active training job.
+   */
+  async cancelTrainingJob(jobId: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/candidates/training/${jobId}/cancel`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to cancel training job: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Evaluate candidate head-to-head against locked baseline.
+   */
+  async evaluateCandidate(candidateId: string, scheduleType: string = 'QUICK_DAILY'): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/candidates/evaluate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ candidate_id: candidateId, schedule_type: scheduleType })
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to evaluate candidate: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Get model lineage graph nodes for 3D/2D visualizer.
+   */
+  async getModelLineage(): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/lineage`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to get model lineage: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Get host hardware and GPU VRAM headroom for adaptation.
+   */
+  async getResourceHeadroom(): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/evaluation/resources`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to get resource headroom: ${response.status}`);
+    }
+    return await response.json();
+  }
 }
 
 

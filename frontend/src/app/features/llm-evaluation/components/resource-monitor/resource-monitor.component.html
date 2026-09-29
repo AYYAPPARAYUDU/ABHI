@@ -1,0 +1,38 @@
+<div class="resource-monitor-container">
+  <div class="monitor-header">
+    <div class="header-left">
+      <h5>Hardware Headroom & Training Isolation Guard</h5>
+      <span class="subtext">AMD Ryzen 7 260 (8C/16T) • 24 GB RAM • RTX 5050 (8 GB VRAM)</span>
+    </div>
+    <div class="headroom-badge" [class.safe]="isSafe" [class.limit]="!isSafe">
+      <span class="dot"></span>
+      {{ statusText }}
+    </div>
+  </div>
+
+  <div class="gauges-grid">
+    <div class="gauge-card">
+      <span class="g-label">CPU Utilization</span>
+      <div class="g-val">{{ cpu }}%</div>
+      <div class="mini-bar">
+        <div class="mini-fill" [style.width.%]="cpu"></div>
+      </div>
+    </div>
+
+    <div class="gauge-card">
+      <span class="g-label">Available Host RAM</span>
+      <div class="g-val highlight">{{ freeRam }} MB</div>
+      <div class="mini-bar">
+        <div class="mini-fill ram" [style.width.%]="(freeRam / 24000) * 100"></div>
+      </div>
+    </div>
+
+    <div class="gauge-card">
+      <span class="g-label">Estimated Free VRAM</span>
+      <div class="g-val accent">{{ freeVram }} MB</div>
+      <div class="mini-bar">
+        <div class="mini-fill vram" [style.width.%]="(freeVram / 8192) * 100"></div>
+      </div>
+    </div>
+  </div>
+</div>

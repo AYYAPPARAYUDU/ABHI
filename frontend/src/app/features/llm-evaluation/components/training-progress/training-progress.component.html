@@ -1,0 +1,54 @@
+<div *ngIf="evalService.activeTrainingJob() as job" class="training-progress-container">
+  <div class="progress-header">
+    <div class="title-status">
+      <span class="live-dot"></span>
+      <h4>Adaptation Job: {{ job.candidate_id }}</h4>
+      <span class="state-pill" [class.running]="job.state === 'TRAINING'">{{ job.state }}</span>
+    </div>
+    <button
+      *ngIf="job.state === 'TRAINING' || job.state === 'QUEUED'"
+      class="btn-cancel"
+      (click)="cancelTraining()"
+    >
+      Stop Adaptation
+    </button>
+  </div>
+
+  <div class="bar-wrapper">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" [style.width.%]="job.progress_percent"></div>
+    </div>
+    <span class="progress-pct">{{ job.progress_percent }}%</span>
+  </div>
+
+  <div class="telemetry-grid">
+    <div class="telemetry-item">
+      <span class="label">Epoch</span>
+      <span class="val">{{ job.current_epoch }} / {{ job.total_epochs }}</span>
+    </div>
+    <div class="telemetry-item">
+      <span class="label">Step</span>
+      <span class="val">{{ job.current_step }} / {{ job.total_steps }}</span>
+    </div>
+    <div class="telemetry-item">
+      <span class="label">Current Loss</span>
+      <span class="val loss">{{ job.current_loss !== undefined ? job.current_loss : '—' }}</span>
+    </div>
+    <div class="telemetry-item">
+      <span class="label">VRAM Allocated</span>
+      <span class="val">{{ job.vram_usage_mb }} MB</span>
+    </div>
+    <div class="telemetry-item">
+      <span class="label">Host RAM</span>
+      <span class="val">{{ job.ram_usage_mb }} MB</span>
+    </div>
+    <div class="telemetry-item">
+      <span class="label">Elapsed</span>
+      <span class="val">{{ job.elapsed_seconds }}s</span>
+    </div>
+  </div>
+
+  <div *ngIf="job.error_message" class="error-notice">
+    <strong>Notice:</strong> {{ job.error_message }}
+  </div>
+</div>

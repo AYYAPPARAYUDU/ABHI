@@ -5,7 +5,42 @@ export type ModelPromotionState = 'PRODUCTION' | 'CANDIDATE' | 'ARCHIVED' | 'REJ
 export type SourceTier = 'TIER_A' | 'TIER_B' | 'TIER_C';
 export type ResearchIngestionStatus = 'DISCOVERED' | 'VALIDATED' | 'INGESTED' | 'QUARANTINED' | 'IGNORED';
 export type RegressionSeverity = 'CRITICAL' | 'MAJOR' | 'MINOR' | 'IMPROVEMENT' | 'UNCHANGED';
-export type CandidateType = 'RAG_ONLY' | 'PROMPT_CONFIG' | 'ADAPTER_LORA' | 'FINE_TUNED' | 'MODEL_REPLACEMENT';
+export type CandidateType =
+  | 'RAG_CANDIDATE'
+  | 'PROMPT_CANDIDATE'
+  | 'CONFIG_CANDIDATE'
+  | 'RETRIEVAL_CANDIDATE'
+  | 'ADAPTER_CANDIDATE'
+  | 'QLORA_CANDIDATE'
+  | 'MODEL_REPLACEMENT_CANDIDATE'
+  | 'RAG_ONLY'
+  | 'PROMPT_CONFIG'
+  | 'ADAPTER_LORA'
+  | 'FINE_TUNED'
+  | 'MODEL_REPLACEMENT';
+
+export type CandidateStatus =
+  | 'DRAFT'
+  | 'READY'
+  | 'TRAINING'
+  | 'EVALUATING'
+  | 'PASSED'
+  | 'REJECTED'
+  | 'QUARANTINED'
+  | 'PROMOTED'
+  | 'ARCHIVED';
+
+export type FailureCategory =
+  | 'LANGUAGE_ERROR'
+  | 'GROUNDING_ERROR'
+  | 'RAG_ERROR'
+  | 'PLANNING_ERROR'
+  | 'TOOL_BOUNDARY_ERROR'
+  | 'SAFETY_ERROR'
+  | 'FORMAT_ERROR'
+  | 'HALLUCINATION';
+
+export type ContaminationStatus = 'NO_OVERLAP' | 'POSSIBLE_OVERLAP' | 'KNOWN_OVERLAP';
 
 export interface GenerationConfig {
   temperature: number;
@@ -208,9 +243,131 @@ export interface EvaluationTimelineEvent {
   metadata: Record<string, any>;
 }
 
+// --- Stage 6.9 Candidate Adaptation Models ---
+
+export interface CandidateDataset {
+  dataset_id: string;
+  version: string;
+  source: string;
+  case_count: number;
+  provenance: string;
+  hash: string;
+  contamination_status: ContaminationStatus;
+  train_cases_count: number;
+  validation_cases_count: number;
+  holdout_protected: boolean;
+  created_at: string;
+}
+
+export interface ImprovementHypothesis {
+  hypothesis_id: string;
+  title: string;
+  description: string;
+  failure_category?: FailureCategory;
+  target_capability: string;
+  baseline_score: number;
+  target_score: number;
+  research_source_id?: string;
+  risk_areas: string[];
+}
+
+export interface EvaluationGateResult {
+  gate_name: string;
+  passed: boolean;
+  severity: RegressionSeverity;
+  metric_name: string;
+  baseline_val: number;
+  candidate_val: number;
+  delta: number;
+  threshold: number;
+  reason: string;
+}
+
+export interface HeadToHeadComparison {
+  candidate_id: string;
+  baseline_id: string;
+  model_id: string;
+  baseline_composite_score: number;
+  candidate_composite_score: number;
+  delta_composite: number;
+  unweighted_baseline_mean: number;
+  unweighted_candidate_mean: number;
+  delta_unweighted: number;
+  gates: EvaluationGateResult[];
+  all_gates_passed: boolean;
+  capabilities_delta: Record<string, number>;
+  multilingual_delta: Record<string, number>;
+  safety_delta: Record<string, number>;
+  resource_delta: Record<string, number>;
+  summary_verdict: string;
+}
+
+export interface CandidateRecord {
+  candidate_id: string;
+  candidate_type: CandidateType;
+  parent_model_id: string;
+  parent_model_version: string;
+  name: string;
+  hypothesis: ImprovementHypothesis;
+  dataset?: CandidateDataset;
+  status: CandidateStatus;
+  created_at: string;
+  updated_at: string;
+  evaluation_run_id?: string;
+  head_to_head?: HeadToHeadComparison;
+  adapter_path?: string;
+  configuration_overrides: Record<string, any>;
+}
+
+export interface ModelLineageNode {
+  node_id: string;
+  name: string;
+  version: string;
+  node_type: string;
+  parent_id?: string;
+  composite_score: number;
+  status: string;
+  is_current_prod: boolean;
+  created_at: string;
+  metadata: Record<string, any>;
+}
+
+export interface LockedBaselineContract {
+  baseline_id: string;
+  locked_at: string;
+  model_id: string;
+  model_tag: string;
+  model_digest: string;
+  unweighted_case_mean: number;
+  weighted_10_pillar_composite: number;
+  steady_state_tps: number;
+  end_to_end_latency_ms_per_token: number;
+  aggregation_formula: string;
+  throughput_methodology: string;
+  weights_spec: Record<string, number>;
+  protected_holdout_hash: string;
+}
+
+export interface TrainingJobStatus {
+  job_id: string;
+  candidate_id: string;
+  state: string;
+  progress_percent: number;
+  current_epoch: number;
+  total_epochs: number;
+  current_step: number;
+  total_steps: number;
+  current_loss?: number;
+  vram_usage_mb: number;
+  ram_usage_mb: number;
+  elapsed_seconds: number;
+  error_message?: string;
+}
+
 export interface EvaluationStatusResponse {
   status: string;
   production_model: ModelRecord;
+  locked_baseline?: LockedBaselineContract;
   total_evaluation_runs: number;
   latest_run: EvaluationRun | null;
   scheduler: {
@@ -222,4 +379,5 @@ export interface EvaluationStatusResponse {
   };
   total_research_papers: number;
   total_models: number;
+  total_candidates?: number;
 }

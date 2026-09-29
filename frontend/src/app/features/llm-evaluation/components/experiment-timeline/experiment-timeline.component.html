@@ -1,0 +1,20 @@
+<div class="experiment-timeline-container">
+  <div class="timeline-header">
+    <h4>Stage 6.9 Controlled Evolution & Experiment Pipeline</h4>
+    <span class="badge">Lifecycle Traceability</span>
+  </div>
+
+  <div class="pipeline-track">
+    <div *ngFor="let stage of stages; let idx = index" class="timeline-node">
+      <div class="node-marker">
+        <span class="icon">{{ stage.icon }}</span>
+        <span class="step-num">{{ idx + 1 }}</span>
+      </div>
+      <div class="node-content">
+        <h6 class="stage-name">{{ stage.name }}</h6>
+        <p class="stage-desc">{{ stage.desc }}</p>
+      </div>
+      <div *ngIf="idx < stages.length - 1" class="node-connector"></div>
+    </div>
+  </div>
+</div>

@@ -14,6 +14,12 @@ import { RegressionAlertComponent } from '../../components/regression-alert/regr
 import { EvolutionPipelineComponent } from '../../components/evolution-pipeline/evolution-pipeline.component';
 import { ResourceMetricsComponent } from '../../components/resource-metrics/resource-metrics.component';
 import { RunDetailComponent } from '../../components/run-detail/run-detail.component';
+import { CandidateListComponent } from '../../components/candidate-list/candidate-list.component';
+import { ExperimentBoardComponent } from '../../components/experiment-board/experiment-board.component';
+import { ModelLineage3dComponent } from '../../components/model-lineage-3d/model-lineage-3d.component';
+import { ExperimentTimelineComponent } from '../../components/experiment-timeline/experiment-timeline.component';
+import { TrainingProgressComponent } from '../../components/training-progress/training-progress.component';
+import { ResourceMonitorComponent } from '../../components/resource-monitor/resource-monitor.component';
 
 @Component({
   selector: 'app-llm-evaluation-page',
@@ -32,11 +38,30 @@ import { RunDetailComponent } from '../../components/run-detail/run-detail.compo
     RegressionAlertComponent,
     EvolutionPipelineComponent,
     ResourceMetricsComponent,
-    RunDetailComponent
+    RunDetailComponent,
+    CandidateListComponent,
+    ExperimentBoardComponent,
+    ModelLineage3dComponent,
+    ExperimentTimelineComponent,
+    TrainingProgressComponent,
+    ResourceMonitorComponent
   ],
   templateUrl: './llm-evaluation-page.component.html',
   styleUrls: ['./llm-evaluation-page.component.css']
 })
 export class LlmEvaluationPageComponent {
   readonly evalService = inject(EvaluationService);
+
+  readonly tabs: { id: 'DAILY' | 'CANDIDATES' | 'EXPERIMENTS' | 'MODELS' | 'LINEAGE' | 'RESEARCH' | 'ROLLBACK'; label: string; icon: string }[] = [
+    { id: 'DAILY', label: 'Daily Scorecard & Evidence', icon: '📊' },
+    { id: 'CANDIDATES', label: 'Candidate Adaptation', icon: '🧪' },
+    { id: 'EXPERIMENTS', label: 'Experiment Board', icon: '📋' },
+    { id: 'LINEAGE', label: '3D Model Lineage', icon: '🌐' },
+    { id: 'MODELS', label: 'Model Comparison & Rollback', icon: '⚖️' },
+    { id: 'RESEARCH', label: 'Research Corpus', icon: '📚' }
+  ];
+
+  setTab(tabId: any): void {
+    this.evalService.setActiveTab(tabId);
+  }
 }
