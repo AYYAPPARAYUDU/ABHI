@@ -21,6 +21,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'applications',
+    loadComponent: () =>
+      import('./features/applications/pages/applications-page/applications-page.component').then(
+        (m) => m.ApplicationsPageComponent
+      )
+  },
+  {
     path: 'memory',
     loadComponent: () =>
       import('./features/memory/pages/memory-page/memory-page.component').then(

@@ -83,6 +83,15 @@ describe('Phase 6 Stage 6.2 — Application Shell, Routing & Design System Suite
       expect(location.path()).toBe('/tasks');
     });
 
+    it('should navigate to /applications and load ApplicationsPageComponent', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      await router.navigate(['/applications']);
+      await fixture.whenStable();
+
+      expect(location.path()).toBe('/applications');
+    });
+
     it('should navigate to /perception and load PerceptionPageComponent', async () => {
       const fixture = TestBed.createComponent(App);
       fixture.detectChanges();

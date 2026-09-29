@@ -1,0 +1,39 @@
+<div class="table-responsive">
+  <table class="table table-dark table-hover align-middle mb-0 font-monospace small">
+    <thead>
+      <tr class="text-secondary border-bottom border-secondary border-opacity-25">
+        <th scope="col">CAPABILITY</th>
+        <th scope="col">SKILL ID</th>
+        <th scope="col">RISK TIER</th>
+        <th scope="col">DESCRIPTION</th>
+        <th scope="col">VERIFICATION</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let cap of capabilities" class="border-bottom border-secondary border-opacity-10">
+        <td class="text-light fw-bold">
+          <code>{{ cap.capability_name }}</code>
+        </td>
+        <td class="text-info">
+          {{ cap.skill_id }}
+        </td>
+        <td>
+          <span class="badge border" [ngClass]="getRiskBadgeClass(cap.risk_level)">
+            {{ cap.risk_level }}
+          </span>
+        </td>
+        <td class="text-secondary">
+          {{ cap.description }}
+        </td>
+        <td class="text-muted">
+          {{ cap.verification_policy || 'OBSERVED_STATE_MATCH' }}
+        </td>
+      </tr>
+      <tr *ngIf="capabilities.length === 0">
+        <td colspan="5" class="text-center text-muted py-4">
+          No capabilities registered for this application.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

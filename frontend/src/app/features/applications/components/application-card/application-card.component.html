@@ -1,0 +1,70 @@
+<div
+  class="app-card card bg-dark border p-3 h-100 cursor-pointer transition-all"
+  [class.border-info]="isSelected"
+  [class.border-secondary]="!isSelected"
+  [class.border-opacity-25]="!isSelected"
+  [class.bg-opacity-75]="!isSelected"
+  (click)="onCardClick()"
+>
+  <!-- Card Header -->
+  <div class="d-flex justify-content-between align-items-start mb-2">
+    <div class="d-flex align-items-center gap-2">
+      <div class="app-icon-container p-2 rounded bg-black bg-opacity-50 border border-secondary border-opacity-25 text-info">
+        🖥️
+      </div>
+      <div>
+        <h6 class="text-light mb-0 fw-bold">{{ application.display_name }}</h6>
+        <span class="text-muted small font-monospace">{{ application.application_id }}</span>
+      </div>
+    </div>
+
+    <!-- Toggle Switch -->
+    <div class="form-check form-switch" (click)="$event.stopPropagation()">
+      <input
+        class="form-check-input"
+        type="checkbox"
+        role="switch"
+        [id]="'switch_' + application.application_id"
+        [checked]="application.enabled"
+        (change)="onToggle($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Description -->
+  <p class="text-secondary small mb-3 flex-grow-1">
+    {{ application.description }}
+  </p>
+
+  <!-- Capabilities & State Metadata -->
+  <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25 mt-auto">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge font-monospace" [ngClass]="getStateBadgeClass(application.state)">
+        {{ application.state }}
+      </span>
+      <span class="badge bg-black bg-opacity-50 border border-secondary border-opacity-25 font-monospace text-light">
+        {{ application.capabilities_count }} capabilities
+      </span>
+    </div>
+
+    <!-- Actions -->
+    <div class="d-flex gap-1" (click)="$event.stopPropagation()">
+      <button
+        class="btn btn-xs btn-outline-info font-monospace py-1 px-2"
+        [disabled]="!application.enabled"
+        (click)="onLaunch($event)"
+        title="Launch Application"
+      >
+        ▶ Launch
+      </button>
+      <button
+        class="btn btn-xs btn-outline-secondary font-monospace py-1 px-2"
+        [disabled]="!application.enabled"
+        (click)="onFocus($event)"
+        title="Focus Window"
+      >
+        🔍 Focus
+      </button>
+    </div>
+  </div>
+</div>

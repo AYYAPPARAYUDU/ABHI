@@ -1,0 +1,10 @@
+.table {
+  background-color: transparent;
+}
+
+code {
+  color: #0dcaf0;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
