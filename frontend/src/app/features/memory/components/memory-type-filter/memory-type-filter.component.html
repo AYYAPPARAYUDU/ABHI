@@ -1,19 +1,51 @@
-<div class="memory-type-filter d-flex flex-wrap gap-2">
-  <button
-    class="btn btn-sm font-monospace text-uppercase"
-    [class.btn-primary]="currentCategory === 'all'"
-    [class.btn-outline-secondary]="currentCategory !== 'all'"
-    (click)="setCategory('all')"
-  >
-    🌐 ALL ({{ memoryService.totalMemories() }})
-  </button>
-  <button
-    *ngFor="let cat of memoryService.categories()"
-    class="btn btn-sm font-monospace text-uppercase"
-    [class.btn-info]="currentCategory === cat"
-    [class.btn-outline-secondary]="currentCategory !== cat"
-    (click)="setCategory(cat)"
-  >
-    📁 {{ cat }}
-  </button>
+<div class="memory-type-filter d-flex flex-column gap-2">
+  <!-- Memory Type Row -->
+  <div class="d-flex flex-wrap align-items-center gap-2">
+    <span class="text-muted small font-monospace me-1">TYPE:</span>
+    <button
+      *ngFor="let t of memoryService.memoryTypes()"
+      class="btn btn-sm font-monospace text-uppercase px-2 py-1"
+      [class.btn-primary]="currentType === t"
+      [class.btn-outline-secondary]="currentType !== t"
+      (click)="setType(t)"
+    >
+      {{ t }}
+    </button>
+  </div>
+
+  <!-- Privacy Classification Row -->
+  <div class="d-flex flex-wrap align-items-center gap-2">
+    <span class="text-muted small font-monospace me-1">PRIVACY:</span>
+    <button
+      *ngFor="let p of memoryService.privacyClasses()"
+      class="btn btn-sm font-monospace text-uppercase px-2 py-1"
+      [class.btn-warning]="currentPrivacy === p"
+      [class.btn-outline-secondary]="currentPrivacy !== p"
+      (click)="setPrivacy(p)"
+    >
+      🔒 {{ p }}
+    </button>
+  </div>
+
+  <!-- Category Filter Row -->
+  <div class="d-flex flex-wrap align-items-center gap-2">
+    <span class="text-muted small font-monospace me-1">DOMAIN:</span>
+    <button
+      class="btn btn-sm font-monospace text-uppercase px-2 py-1"
+      [class.btn-info]="currentCategory === 'all'"
+      [class.btn-outline-secondary]="currentCategory !== 'all'"
+      (click)="setCategory('all')"
+    >
+      🌐 ALL ({{ memoryService.totalMemories() }})
+    </button>
+    <button
+      *ngFor="let cat of memoryService.categories()"
+      class="btn btn-sm font-monospace text-uppercase px-2 py-1"
+      [class.btn-info]="currentCategory === cat"
+      [class.btn-outline-secondary]="currentCategory !== cat"
+      (click)="setCategory(cat)"
+    >
+      📁 {{ cat }}
+    </button>
+  </div>
 </div>

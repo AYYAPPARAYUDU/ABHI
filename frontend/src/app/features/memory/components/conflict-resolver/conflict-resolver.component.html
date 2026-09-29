@@ -1,0 +1,82 @@
+<div class="conflict-resolver-container">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h5 class="text-light fw-bold mb-1">Memory Conflict & Contradiction Center</h5>
+      <p class="text-muted small mb-0 font-monospace">
+        Detected discrepancies between active memories and new candidate inputs requiring operator adjudication.
+      </p>
+    </div>
+    <span class="badge bg-dark border border-warning text-warning px-3 py-2 font-monospace">
+      {{ conflicts.length }} Active Contradictions
+    </span>
+  </div>
+
+  <div *ngIf="conflicts.length === 0" class="text-center py-5 border border-secondary border-dashed rounded bg-dark bg-opacity-50">
+    <div class="fs-2 mb-2">✨</div>
+    <h6 class="text-light">No Memory Conflicts Detected</h6>
+    <p class="text-muted small mb-0 font-monospace">
+      All persistent semantic facts and user preferences are in deterministic alignment.
+    </p>
+  </div>
+
+  <div *ngIf="conflicts.length > 0" class="d-flex flex-column gap-3">
+    <div *ngFor="let conf of conflicts" class="card bg-dark border border-warning border-opacity-50 p-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-warning bg-opacity-25 text-warning border border-warning font-monospace">
+            ⚠️ Contradiction
+          </span>
+          <span class="text-light fw-bold font-monospace">Key: '{{ conf.key }}'</span>
+        </div>
+        <span class="text-muted small font-monospace">Conflict ID: {{ conf.conflict_id }}</span>
+      </div>
+
+      <!-- Side-by-Side Candidates Comparison -->
+      <div class="row g-3 mb-3">
+        <!-- Candidate A (Existing) -->
+        <div class="col-12 col-md-6">
+          <div class="p-3 bg-black bg-opacity-50 border border-secondary rounded h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-secondary text-light font-monospace">Candidate A (Existing)</span>
+              <span class="text-muted small font-monospace">Source: {{ conf.candidate_a.source }}</span>
+            </div>
+            <div class="fs-5 text-light fw-bold font-monospace mb-2">
+              {{ conf.candidate_a.value }}
+            </div>
+            <div class="text-muted small font-monospace mb-3">
+              Confidence: {{ (conf.candidate_a.confidence * 100) | number:'1.0-0' }}%
+            </div>
+            <button
+              class="btn btn-outline-success btn-sm mt-auto font-monospace"
+              (click)="onSelectCandidate(conf.conflict_id, 'A')"
+            >
+              ✓ Keep Candidate A
+            </button>
+          </div>
+        </div>
+
+        <!-- Candidate B (New) -->
+        <div class="col-12 col-md-6">
+          <div class="p-3 bg-black bg-opacity-50 border border-secondary rounded h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-info text-dark font-monospace">Candidate B (New)</span>
+              <span class="text-muted small font-monospace">Source: {{ conf.candidate_b.source }}</span>
+            </div>
+            <div class="fs-5 text-cyan fw-bold font-monospace mb-2">
+              {{ conf.candidate_b.value }}
+            </div>
+            <div class="text-muted small font-monospace mb-3">
+              Confidence: {{ (conf.candidate_b.confidence * 100) | number:'1.0-0' }}%
+            </div>
+            <button
+              class="btn btn-outline-info btn-sm mt-auto font-monospace"
+              (click)="onSelectCandidate(conf.conflict_id, 'B')"
+            >
+              ✓ Adopt Candidate B
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

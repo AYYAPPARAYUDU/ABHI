@@ -521,11 +521,19 @@ class BrowserSkillAdapter:
             return {"url": canonical_url, "title": "Mock Browser Page", "status": "LOADED"}, None, None
 
         action = ExecutionAction(
+            action_id=action_id,
             task_id=task_id,
             execution_id=execution_id,
             action_type=ActionType.BROWSER_NAVIGATE,
             lease_id=lease_id or "default_lease",
-            parameters={"url": canonical_url}
+            grounding=ActionGrounding(
+                source=GroundingLevel.LEVEL_1_UIA,
+                target_identity="browser_window",
+                confidence=1.0
+            ),
+            parameters={"url": canonical_url},
+            precondition="Browser window is ready",
+            expected_postcondition=f"Page loaded: {canonical_url}"
         )
         res, act_err = await asyncio.to_thread(self.worker.execute_action, action, True)
         if act_err or not res or not res.success:
@@ -656,15 +664,19 @@ class BrowserSkillAdapter:
             return {"clicked_target": target_id, "status": "CLICKED"}, None, None
 
         action = ExecutionAction(
+            action_id=action_id,
             task_id=task_id,
             execution_id=execution_id,
             action_type=ActionType.BROWSER_CLICK,
             lease_id=lease_id or "default_lease",
             grounding=ActionGrounding(
-                source=GroundingLevel.LEVEL_1_ACCESSIBILITY,
-                target_identity=target_id
+                source=GroundingLevel.LEVEL_1_UIA,
+                target_identity=target_id,
+                confidence=1.0
             ),
-            parameters=params
+            parameters=params,
+            precondition=f"Element '{target_id}' is ready",
+            expected_postcondition=f"Element '{target_id}' is clicked"
         )
         res, act_err = await asyncio.to_thread(self.worker.execute_action, action, True)
         if act_err or not res or not res.success:
@@ -697,15 +709,19 @@ class BrowserSkillAdapter:
             return {"characters_typed": len(text), "is_sensitive": is_sensitive}, None, None
 
         action = ExecutionAction(
+            action_id=action_id,
             task_id=task_id,
             execution_id=execution_id,
             action_type=ActionType.BROWSER_FILL,
             lease_id=lease_id or "default_lease",
             grounding=ActionGrounding(
-                source=GroundingLevel.LEVEL_1_ACCESSIBILITY,
-                target_identity=target_id
+                source=GroundingLevel.LEVEL_1_UIA,
+                target_identity=target_id,
+                confidence=1.0
             ),
-            parameters={"value": text}
+            parameters={"value": text},
+            precondition=f"Field '{target_id}' is ready",
+            expected_postcondition=f"Field '{target_id}' filled"
         )
         res, act_err = await asyncio.to_thread(self.worker.execute_action, action, True)
         if act_err or not res or not res.success:
@@ -737,15 +753,19 @@ class BrowserSkillAdapter:
             return {"selected_value": val, "target": target_id}, None, None
 
         action = ExecutionAction(
+            action_id=action_id,
             task_id=task_id,
             execution_id=execution_id,
             action_type=ActionType.BROWSER_SELECT_OPTION,
             lease_id=lease_id or "default_lease",
             grounding=ActionGrounding(
-                source=GroundingLevel.LEVEL_1_ACCESSIBILITY,
-                target_identity=target_id
+                source=GroundingLevel.LEVEL_1_UIA,
+                target_identity=target_id,
+                confidence=1.0
             ),
-            parameters={"value": val}
+            parameters={"value": val},
+            precondition=f"Select target '{target_id}' is ready",
+            expected_postcondition=f"Option '{val}' selected"
         )
         res, act_err = await asyncio.to_thread(self.worker.execute_action, action, True)
         if act_err or not res or not res.success:
@@ -761,15 +781,19 @@ class BrowserSkillAdapter:
             return {"key_pressed": key}, None, None
 
         action = ExecutionAction(
+            action_id=action_id,
             task_id=task_id,
             execution_id=execution_id,
             action_type=ActionType.BROWSER_PRESS_KEY,
             lease_id=lease_id or "default_lease",
             grounding=ActionGrounding(
-                source=GroundingLevel.LEVEL_1_ACCESSIBILITY,
-                target_identity=target_id or "body"
+                source=GroundingLevel.LEVEL_1_UIA,
+                target_identity=target_id or "body",
+                confidence=1.0
             ),
-            parameters={"key": key}
+            parameters={"key": key},
+            precondition="Window ready for key input",
+            expected_postcondition=f"Dispatched key '{key}'"
         )
         res, act_err = self.worker.execute_action(action, user_consent_granted=True)
         if act_err or not res or not res.success:
@@ -785,11 +809,19 @@ class BrowserSkillAdapter:
             return {"scrolled": True, "delta_x": dx, "delta_y": dy}, None, None
 
         action = ExecutionAction(
+            action_id=action_id,
             task_id=task_id,
             execution_id=execution_id,
             action_type=ActionType.BROWSER_SCROLL,
             lease_id=lease_id or "default_lease",
-            parameters={"delta_x": dx, "delta_y": dy}
+            grounding=ActionGrounding(
+                source=GroundingLevel.LEVEL_1_UIA,
+                target_identity="body",
+                confidence=1.0
+            ),
+            parameters={"delta_x": dx, "delta_y": dy},
+            precondition="Viewport is scrollable",
+            expected_postcondition=f"Scrolled dx={dx} dy={dy}"
         )
         res, act_err = self.worker.execute_action(action, user_consent_granted=True)
         return {"scrolled": True, "delta_x": dx, "delta_y": dy}, None, None

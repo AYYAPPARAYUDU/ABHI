@@ -1,0 +1,81 @@
+"""Cognitive Personal & Procedural Memory Subsystem (Stage 7.5)."""
+
+from backend.app.cognitive.memory.models import (
+    AuthorityLevel,
+    DeletionType,
+    EpisodicMemoryModel,
+    MemoryAuditEntry,
+    MemoryConflict,
+    MemoryContextBudget,
+    MemoryContract,
+    MemoryRetrievalQuery,
+    MemoryRetrievalResult,
+    MemorySource,
+    MemoryStatus,
+    MemoryType,
+    PrivacyClassification,
+    ProcedureMetrics,
+    ProcedureModel,
+    ProcedureParameter,
+    ProcedurePostcondition,
+    ProcedurePrecondition,
+    ProcedureStep,
+    ProcedureVersionRecord,
+    SemanticMemoryModel,
+    UserPreferenceModel,
+    WorkingMemory,
+)
+from backend.app.cognitive.memory.policy import (
+    AuthorityHierarchy,
+    MemoryWritePolicy,
+    SensitivityDetector,
+)
+from backend.app.cognitive.memory.evaluator import (
+    DeterministicConfidenceModel,
+    MemoryConflictDetector,
+    MemoryDecayEngine,
+    MemoryDeduplicator,
+)
+from backend.app.cognitive.memory.procedural import (
+    ProceduralMemoryEngine,
+)
+from backend.app.cognitive.memory.manager import (
+    PersonalMemoryManager,
+    personal_memory_manager,
+)
+
+__all__ = [
+    "MemoryType",
+    "MemoryStatus",
+    "PrivacyClassification",
+    "MemorySource",
+    "DeletionType",
+    "AuthorityLevel",
+    "MemoryContract",
+    "WorkingMemory",
+    "EpisodicMemoryModel",
+    "SemanticMemoryModel",
+    "UserPreferenceModel",
+    "ProcedureParameter",
+    "ProcedureStep",
+    "ProcedurePrecondition",
+    "ProcedurePostcondition",
+    "ProcedureMetrics",
+    "ProcedureModel",
+    "ProcedureVersionRecord",
+    "MemoryConflict",
+    "MemoryAuditEntry",
+    "MemoryContextBudget",
+    "MemoryRetrievalQuery",
+    "MemoryRetrievalResult",
+    "SensitivityDetector",
+    "MemoryWritePolicy",
+    "AuthorityHierarchy",
+    "DeterministicConfidenceModel",
+    "MemoryDecayEngine",
+    "MemoryConflictDetector",
+    "MemoryDeduplicator",
+    "ProceduralMemoryEngine",
+    "PersonalMemoryManager",
+    "personal_memory_manager",
+]

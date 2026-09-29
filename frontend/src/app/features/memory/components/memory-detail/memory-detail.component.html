@@ -3,22 +3,39 @@
   <div class="d-flex justify-content-between align-items-start pb-3 border-bottom border-secondary border-opacity-25 mb-3">
     <div>
       <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-        <span class="badge bg-info bg-opacity-25 text-info border border-info font-monospace px-2 py-1">
-          🔒 {{ selectedMemory.privacy_class }}
+        <span class="badge bg-primary bg-opacity-25 text-primary border border-primary font-monospace px-2 py-1">
+          {{ selectedMemory.memory_type }}
         </span>
-        <span class="badge bg-secondary bg-opacity-25 text-light font-monospace px-2 py-1">
-          📁 {{ selectedMemory.category }}
+        <span class="badge bg-info bg-opacity-25 text-info border border-info font-monospace px-2 py-1">
+          🔒 {{ selectedMemory.privacy_classification || selectedMemory.privacy_class }}
         </span>
         <span class="badge bg-success bg-opacity-25 text-success border border-success font-monospace px-2 py-1">
-          ✓ {{ selectedMemory.outcome }}
+          ● {{ selectedMemory.status }}
+        </span>
+        <span class="badge bg-dark border border-secondary text-cyan font-monospace px-2 py-1">
+          ⭐ {{ ((selectedMemory.confidence || 1.0) * 100) | number:'1.0-0' }}% Confidence
         </span>
       </div>
-      <h5 class="text-light mb-0 fw-bold">{{ selectedMemory.context_summary }}</h5>
+      <h5 class="text-light mb-0 fw-bold">{{ selectedMemory.title || selectedMemory.context_summary }}</h5>
       <div class="text-muted small font-monospace mt-1">Memory ID: {{ selectedMemory.memory_id }}</div>
     </div>
     <div class="d-flex gap-2">
-      <button class="btn btn-sm btn-outline-danger font-monospace" (click)="onForget()">
-        🗑️ Forget Memory
+      <button
+        *ngIf="selectedMemory.status === 'CANDIDATE' || !selectedMemory.confirmed_by_user"
+        class="btn btn-sm btn-outline-success font-monospace"
+        (click)="onConfirm()"
+      >
+        ✓ Confirm
+      </button>
+      <button
+        *ngIf="selectedMemory.status === 'CANDIDATE'"
+        class="btn btn-sm btn-outline-warning font-monospace"
+        (click)="onReject()"
+      >
+        ✕ Reject
+      </button>
+      <button class="btn btn-sm btn-outline-danger font-monospace" (click)="onForget('PRIVACY_ERASURE')">
+        🔒 Privacy Erasure
       </button>
       <button class="btn btn-sm btn-outline-secondary font-monospace" (click)="memoryService.clearSelection()">
         ✕ Close
@@ -26,30 +43,42 @@
     </div>
   </div>
 
-  <!-- Solution Summary -->
+  <!-- Solution Summary / Explanation -->
   <div class="p-3 rounded bg-black bg-opacity-40 border border-secondary border-opacity-25 mb-3">
-    <div class="text-info font-monospace small fw-bold mb-1">💡 LEARNED SOLUTION / APPLIED WORKFLOW</div>
-    <div class="text-light font-monospace small">{{ selectedMemory.solution_summary }}</div>
+    <div class="text-info font-monospace small fw-bold mb-1">💡 SUMMARY & APPLIED CONTEXT</div>
+    <div class="text-light font-monospace small">{{ selectedMemory.summary || selectedMemory.solution_summary }}</div>
+  </div>
+
+  <!-- Content Payload (JSON) if present -->
+  <div *ngIf="selectedMemory.content" class="p-3 rounded bg-black bg-opacity-60 border border-secondary border-opacity-25 mb-3">
+    <div class="text-muted font-monospace small fw-bold mb-1">📦 STRUCTURED PAYLOAD</div>
+    <pre class="text-cyan font-monospace small mb-0">{{ selectedMemory.content | json }}</pre>
   </div>
 
   <!-- Metadata Grid -->
   <div class="row g-2 mb-3 font-monospace small">
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
+      <div class="p-2 rounded bg-black bg-opacity-50 border border-secondary border-opacity-25">
+        <div class="text-muted">SOURCE</div>
+        <div class="text-light fw-bold text-truncate">{{ selectedMemory.source || 'SYSTEM' }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
       <div class="p-2 rounded bg-black bg-opacity-50 border border-secondary border-opacity-25">
         <div class="text-muted">TASK LINK</div>
-        <div class="text-light fw-bold text-truncate">{{ selectedMemory.task_id || 'Direct Interaction' }}</div>
+        <div class="text-light fw-bold text-truncate">{{ selectedMemory.task_id || 'Direct' }}</div>
       </div>
     </div>
-    <div class="col-6 col-md-4">
+    <div class="col-6 col-md-3">
       <div class="p-2 rounded bg-black bg-opacity-50 border border-secondary border-opacity-25">
-        <div class="text-muted">PERSISTENCE</div>
-        <div class="text-success fw-bold">SQLITE WAL</div>
+        <div class="text-muted">CONFIRMED</div>
+        <div class="text-success fw-bold">{{ selectedMemory.confirmed_by_user ? 'YES' : 'NO' }}</div>
       </div>
     </div>
-    <div class="col-12 col-md-4">
+    <div class="col-6 col-md-3">
       <div class="p-2 rounded bg-black bg-opacity-50 border border-secondary border-opacity-25">
         <div class="text-muted">RECORDED AT</div>
-        <div class="text-light fw-bold">{{ selectedMemory.created_at ? (selectedMemory.created_at | date:'medium') : 'Recent' }}</div>
+        <div class="text-light fw-bold text-truncate">{{ selectedMemory.created_at ? (selectedMemory.created_at | date:'short') : 'Active' }}</div>
       </div>
     </div>
   </div>

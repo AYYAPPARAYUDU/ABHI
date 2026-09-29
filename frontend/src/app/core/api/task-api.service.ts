@@ -305,14 +305,25 @@ export class TaskApiService {
   }
 
   /**
-   * List episodic memories with pagination, category filter, and search.
+   * List memories with multi-attribute filtering (category, type, privacy, query).
    */
-  async listMemories(limit: number = 50, offset: number = 0, category?: string, query?: string): Promise<any> {
+  async listMemories(
+    limit: number = 50,
+    offset: number = 0,
+    category?: string,
+    query?: string,
+    memoryType?: string,
+    privacy?: string,
+    status?: string
+  ): Promise<any> {
     const params = new URLSearchParams();
     params.set('limit', limit.toString());
     params.set('offset', offset.toString());
     if (category && category !== 'all') params.set('category', category);
     if (query && query.trim()) params.set('query', query.trim());
+    if (memoryType && memoryType !== 'ALL') params.set('memory_type', memoryType);
+    if (privacy && privacy !== 'ALL') params.set('privacy', privacy);
+    if (status && status !== 'ALL') params.set('status', status);
 
     const response = await fetch(`${this.baseUrl}/api/v1/memory?${params.toString()}`, {
       method: 'GET',
@@ -325,7 +336,7 @@ export class TaskApiService {
   }
 
   /**
-   * Retrieve detailed episodic memory.
+   * Retrieve detailed memory record.
    */
   async getMemoryDetail(memoryId: string): Promise<any> {
     const response = await fetch(`${this.baseUrl}/api/v1/memory/${encodeURIComponent(memoryId)}`, {
@@ -339,15 +350,151 @@ export class TaskApiService {
   }
 
   /**
-   * Forget / Delete an episodic memory record.
+   * Confirm memory candidate.
    */
-  async forgetMemory(memoryId: string): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/api/v1/memory/${encodeURIComponent(memoryId)}`, {
+  async confirmMemory(memoryId: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/memory/${encodeURIComponent(memoryId)}/confirm`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to confirm memory ${memoryId}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Reject memory candidate.
+   */
+  async rejectMemory(memoryId: string, reason?: string): Promise<any> {
+    const params = reason ? `?reason=${encodeURIComponent(reason)}` : '';
+    const response = await fetch(`${this.baseUrl}/api/v1/memory/${encodeURIComponent(memoryId)}/reject${params}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to reject memory ${memoryId}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Delete memory with explicit deletion semantics (SOFT_DELETE, HARD_DELETE, PRIVACY_ERASURE).
+   */
+  async forgetMemory(memoryId: string, deletionType: string = 'SOFT_DELETE'): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/memory/${encodeURIComponent(memoryId)}?deletion_type=${deletionType}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' }
     });
     if (!response.ok) {
       throw new Error(`Failed to delete memory ${memoryId}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * List detected memory contradictions / conflicts.
+   */
+  async listMemoryConflicts(): Promise<any[]> {
+    const response = await fetch(`${this.baseUrl}/api/v1/memory/conflicts`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list conflicts: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Resolve a memory contradiction.
+   */
+  async resolveMemoryConflict(conflictId: string, chosenCandidate: string, notes?: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/memory/conflicts/${encodeURIComponent(conflictId)}/resolve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chosen_candidate: chosenCandidate, notes: notes || '' })
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to resolve conflict ${conflictId}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * List stored procedural memory workflows.
+   */
+  async listProcedures(status?: string, skillId?: string, query?: string): Promise<any> {
+    const params = new URLSearchParams();
+    if (status && status !== 'ALL') params.set('status', status);
+    if (skillId) params.set('skill_id', skillId);
+    if (query && query.trim()) params.set('query', query.trim());
+
+    const response = await fetch(`${this.baseUrl}/api/v1/procedures?${params.toString()}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to list procedures: ${response.status}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Retrieve detailed procedure.
+   */
+  async getProcedureDetail(procedureId: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/procedures/${encodeURIComponent(procedureId)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to retrieve procedure ${procedureId}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Validate candidate procedure.
+   */
+  async validateProcedure(procedureId: string, registeredSkillIds?: string[]): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/procedures/${encodeURIComponent(procedureId)}/validate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ registered_skill_ids: registeredSkillIds || null })
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to validate procedure ${procedureId}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Promote candidate procedure to ACTIVE.
+   */
+  async promoteProcedure(procedureId: string, validatorNotes?: string): Promise<any> {
+    const params = validatorNotes ? `?validator_notes=${encodeURIComponent(validatorNotes)}` : '';
+    const response = await fetch(`${this.baseUrl}/api/v1/procedures/${encodeURIComponent(procedureId)}/promote${params}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to promote procedure ${procedureId}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Deprecate a procedure.
+   */
+  async deprecateProcedure(procedureId: string, reason: string): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/procedures/${encodeURIComponent(procedureId)}/deprecate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason })
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to deprecate procedure ${procedureId}`);
     }
     return await response.json();
   }

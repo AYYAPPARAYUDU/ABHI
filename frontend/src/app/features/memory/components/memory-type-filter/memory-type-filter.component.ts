@@ -16,7 +16,23 @@ export class MemoryTypeFilterComponent {
     return this.memoryService.filters().category;
   }
 
+  get currentType(): string {
+    return this.memoryService.filters().memoryType;
+  }
+
+  get currentPrivacy(): string {
+    return this.memoryService.filters().privacy;
+  }
+
   setCategory(cat: string): void {
     this.memoryService.setCategoryFilter(cat);
+  }
+
+  setType(type: string): void {
+    this.memoryService.setTypeFilter(type);
+  }
+
+  setPrivacy(privacy: string): void {
+    this.memoryService.setPrivacyFilter(privacy);
   }
 }

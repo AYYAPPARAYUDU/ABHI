@@ -1,0 +1,92 @@
+<div class="procedure-library-container">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h5 class="text-light fw-bold mb-1">Procedural Memory Library</h5>
+      <p class="text-muted small mb-0 font-monospace">
+        Reusable multi-step workflows synthesized and promoted from repeated verified executions.
+      </p>
+    </div>
+    <span class="badge bg-dark border border-secondary text-cyan px-3 py-2 font-monospace">
+      {{ procedures.length }} Registered Procedures
+    </span>
+  </div>
+
+  <div *ngIf="procedures.length === 0" class="text-center py-5 border border-secondary border-dashed rounded bg-dark bg-opacity-50">
+    <div class="fs-2 mb-2">📦</div>
+    <h6 class="text-light">No Procedures Available</h6>
+    <p class="text-muted small mb-0 font-monospace">
+      Complete repeated successful tasks to automatically synthesize procedural candidates.
+    </p>
+  </div>
+
+  <div *ngIf="procedures.length > 0" class="row g-3">
+    <div *ngFor="let proc of procedures" class="col-12 col-md-6 col-xl-4">
+      <div
+        class="procedure-card card bg-dark border p-3 cursor-pointer transition-all"
+        [class.border-cyan]="selectedProcedureId === proc.procedure_id"
+        [class.border-secondary]="selectedProcedureId !== proc.procedure_id"
+        [class.border-opacity-50]="selectedProcedureId !== proc.procedure_id"
+        (click)="procedureSelected.emit(proc.procedure_id)"
+      >
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="badge border font-monospace px-2 py-1 small" [ngClass]="getStatusBadgeClass(proc.status)">
+            ● {{ proc.status }}
+          </span>
+          <div class="d-flex gap-1 align-items-center">
+            <span class="badge bg-black border border-secondary text-muted font-monospace small">
+              v{{ proc.version }}
+            </span>
+            <button
+              *ngIf="proc.status === 'CANDIDATE'"
+              class="btn btn-sm btn-outline-success border-0 p-1"
+              title="Promote candidate procedure"
+              (click)="onPromote($event, proc.procedure_id)"
+            >
+              🚀 Promote
+            </button>
+            <button
+              *ngIf="proc.status === 'ACTIVE'"
+              class="btn btn-sm btn-outline-danger border-0 p-1"
+              title="Deprecate procedure"
+              (click)="onDeprecate($event, proc.procedure_id)"
+            >
+              ⚠️ Deprecate
+            </button>
+          </div>
+        </div>
+
+        <h6 class="text-light fw-bold mb-1">{{ proc.name }}</h6>
+        <p class="text-muted small mb-3 text-truncate-2 font-monospace">{{ proc.description }}</p>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid p-2 bg-black bg-opacity-50 rounded border border-secondary border-opacity-25 mb-3">
+          <div class="d-flex justify-content-between text-muted small font-monospace">
+            <span>Success Rate:</span>
+            <span class="text-cyan fw-bold">{{ (proc.metrics.success_rate * 100) | number:'1.0-1' }}%</span>
+          </div>
+          <div class="d-flex justify-content-between text-muted small font-monospace">
+            <span>Invocations:</span>
+            <span class="text-light">{{ proc.metrics.invocation_count }}</span>
+          </div>
+          <div class="d-flex justify-content-between text-muted small font-monospace">
+            <span>Avg Duration:</span>
+            <span class="text-light">{{ (proc.metrics.average_duration_ms / 1000) | number:'1.1-2' }}s</span>
+          </div>
+        </div>
+
+        <!-- Required Skills -->
+        <div class="d-flex flex-wrap gap-1 mb-2">
+          <span *ngFor="let skill of proc.required_skills" class="badge bg-dark border border-secondary text-light font-monospace small">
+            ⚡ {{ skill }}
+          </span>
+        </div>
+
+        <!-- Footer -->
+        <div class="d-flex justify-content-between align-items-center mt-auto text-muted small font-monospace pt-2 border-top border-secondary border-opacity-25">
+          <span>{{ proc.steps.length }} Steps</span>
+          <span>ID: {{ proc.procedure_id }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

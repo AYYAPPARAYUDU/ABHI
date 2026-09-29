@@ -8,44 +8,75 @@
   tabindex="0"
   (keyup.enter)="memorySelected.emit(memory.memory_id)"
   role="button"
-  [attr.aria-label]="'Memory ' + memory.memory_id + ': ' + memory.context_summary"
+  [attr.aria-label]="'Memory ' + memory.memory_id + ': ' + (memory.title || memory.summary)"
 >
+  <!-- Header Badges -->
   <div class="d-flex justify-content-between align-items-start mb-2">
     <div class="d-flex gap-1 flex-wrap">
-      <span class="badge border font-monospace px-2 py-1 small" [ngClass]="getPrivacyBadgeClass(memory.privacy_class)">
-        🔒 {{ memory.privacy_class }}
+      <span class="badge border font-monospace px-2 py-1 small" [ngClass]="getTypeBadgeClass(memory.memory_type)">
+        {{ memory.memory_type }}
       </span>
-      <span class="badge bg-secondary bg-opacity-25 text-light font-monospace small">
-        📁 {{ memory.category }}
+      <span class="badge border font-monospace px-2 py-1 small" [ngClass]="getPrivacyBadgeClass(memory.privacy_classification)">
+        🔒 {{ memory.privacy_classification || memory.privacy_class }}
+      </span>
+      <span class="badge font-monospace px-2 py-1 small" [ngClass]="getStatusBadgeClass(memory.status)">
+        ● {{ memory.status }}
       </span>
     </div>
-    <button
-      class="btn btn-sm btn-outline-danger border-0 p-1 text-opacity-75"
-      title="Forget this memory"
-      (click)="onForgetClick($event)"
-      aria-label="Forget memory"
-    >
-      🗑️
-    </button>
+    
+    <!-- Action Icons -->
+    <div class="d-flex gap-1">
+      <button
+        *ngIf="memory.status === 'CANDIDATE' || !memory.confirmed_by_user"
+        class="btn btn-sm btn-outline-success border-0 p-1"
+        title="Confirm memory"
+        (click)="onConfirmClick($event)"
+        aria-label="Confirm memory"
+      >
+        ✓
+      </button>
+      <button
+        *ngIf="memory.status === 'CANDIDATE'"
+        class="btn btn-sm btn-outline-warning border-0 p-1"
+        title="Reject memory"
+        (click)="onRejectClick($event)"
+        aria-label="Reject memory"
+      >
+        ✕
+      </button>
+      <button
+        class="btn btn-sm btn-outline-danger border-0 p-1 text-opacity-75"
+        title="Forget memory"
+        (click)="onForgetClick($event)"
+        aria-label="Forget memory"
+      >
+        🗑️
+      </button>
+    </div>
   </div>
 
   <h6 class="text-light fw-semibold mb-2 text-truncate-2">
-    {{ memory.context_summary }}
+    {{ memory.title || memory.context_summary || 'Personal Memory' }}
   </h6>
 
   <p class="text-muted small mb-2 text-truncate-2 font-monospace">
-    💡 {{ memory.solution_summary }}
+    💡 {{ memory.summary || memory.solution_summary }}
   </p>
 
-  <!-- Tags -->
-  <div *ngIf="memory.tags && memory.tags.length" class="d-flex gap-1 flex-wrap mb-2">
-    <span *ngFor="let tag of memory.tags" class="badge bg-black border border-secondary border-opacity-25 text-muted small font-monospace">
-      #{{ tag }}
+  <!-- Tags & Provenance -->
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <div *ngIf="memory.tags && memory.tags.length" class="d-flex gap-1 flex-wrap">
+      <span *ngFor="let tag of memory.tags | slice:0:3" class="badge bg-black border border-secondary border-opacity-25 text-muted small font-monospace">
+        #{{ tag }}
+      </span>
+    </div>
+    <span class="badge bg-dark border border-secondary border-opacity-50 text-cyan small font-monospace">
+      ⭐ {{ ((memory.confidence || 1.0) * 100) | number:'1.0-0' }}%
     </span>
   </div>
 
-  <div class="d-flex justify-content-between align-items-center mt-auto text-muted small font-monospace">
+  <div class="d-flex justify-content-between align-items-center mt-auto text-muted small font-monospace pt-2 border-top border-secondary border-opacity-25">
     <span class="text-truncate" style="max-width: 140px;">ID: {{ memory.memory_id }}</span>
-    <span>{{ memory.created_at ? (memory.created_at | date:'shortDate') : 'Recent' }}</span>
+    <span>{{ memory.created_at ? (memory.created_at | date:'shortDate') : 'Active' }}</span>
   </div>
 </div>

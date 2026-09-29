@@ -1,4 +1,38 @@
 <div class="memory-page container-fluid px-0">
+  <!-- Top Navigation Tabs -->
+  <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary border-opacity-25 pb-2">
+    <div class="d-flex gap-2">
+      <button
+        class="btn btn-sm font-monospace text-uppercase"
+        [class.btn-primary]="memoryService.activeTab() === 'memories'"
+        [class.btn-outline-secondary]="memoryService.activeTab() !== 'memories'"
+        (click)="onTabChange('memories')"
+      >
+        🧠 Personal Memory Store ({{ memoryService.totalMemories() }})
+      </button>
+      <button
+        class="btn btn-sm font-monospace text-uppercase"
+        [class.btn-primary]="memoryService.activeTab() === 'procedures'"
+        [class.btn-outline-secondary]="memoryService.activeTab() !== 'procedures'"
+        (click)="onTabChange('procedures')"
+      >
+        📦 Procedural Library ({{ memoryService.procedures().length }})
+      </button>
+      <button
+        class="btn btn-sm font-monospace text-uppercase"
+        [class.btn-warning]="memoryService.activeTab() === 'conflicts'"
+        [class.btn-outline-secondary]="memoryService.activeTab() !== 'conflicts'"
+        (click)="onTabChange('conflicts')"
+      >
+        ⚠️ Conflicts ({{ memoryService.conflicts().length }})
+      </button>
+    </div>
+
+    <div *ngIf="memoryService.successMessage()" class="badge bg-success bg-opacity-25 text-success border border-success font-monospace px-3 py-2">
+      ✓ {{ memoryService.successMessage() }}
+    </div>
+  </div>
+
   <!-- Selected Memory Detail Header -->
   <div *ngIf="memoryService.selectedMemory()" class="row g-3 mb-3">
     <div class="col-12">
@@ -6,49 +40,70 @@
     </div>
   </div>
 
-  <div class="row g-3">
-    <!-- Main Column: Memory List & Search Grid -->
-    <div class="col-12 col-xl-8">
-      <app-memory-list></app-memory-list>
+  <!-- Tab Content -->
+  <div [ngSwitch]="memoryService.activeTab()">
+    <!-- 1. Memories Tab -->
+    <div *ngSwitchCase="'memories'" class="row g-3">
+      <div class="col-12 col-xl-8">
+        <app-memory-list></app-memory-list>
+      </div>
+      <div class="col-12 col-xl-4 d-flex flex-column gap-3">
+        <app-panel title="PERSISTENT USER PROFILES & PREFERENCES" icon="👤" badge="SQLITE">
+          <div *ngIf="memoryService.userProfiles().length > 0" class="d-flex flex-column gap-2">
+            <div
+              *ngFor="let prof of memoryService.userProfiles()"
+              class="p-2 rounded bg-black bg-opacity-40 border border-secondary border-opacity-25 font-monospace small"
+            >
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-info fw-bold">🔑 {{ prof.key }}</span>
+                <span class="text-muted small">{{ prof.updated_at ? (prof.updated_at | date:'shortTime') : '-' }}</span>
+              </div>
+              <pre class="text-light small mb-0 bg-dark p-1 rounded" style="font-size: 0.75rem;">{{ prof.value | json }}</pre>
+            </div>
+          </div>
+          <div *ngIf="memoryService.userProfiles().length === 0" class="text-muted small font-monospace p-2 border border-secondary border-opacity-25 rounded bg-black bg-opacity-25">
+            No explicit profile preferences customized yet. Default system profiles active.
+          </div>
+        </app-panel>
+
+        <app-panel title="MEMORY AUTHORITY HIERARCHY" icon="🛡️" badge="GOVERNANCE">
+          <div class="d-flex flex-column gap-2 font-monospace small">
+            <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="text-danger fw-bold">1. SYSTEM SECURITY POLICY (100)</div>
+              <div class="text-muted small">Immutable security rules & execution leases.</div>
+            </div>
+            <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="text-warning fw-bold">2. CURRENT USER INSTRUCTION (90)</div>
+              <div class="text-muted small">Live interactive goal & runtime directives.</div>
+            </div>
+            <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="text-info fw-bold">3. VERIFIED WORLD STATE (70)</div>
+              <div class="text-muted small">Real-time UIA, DOM & perception observations.</div>
+            </div>
+            <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
+              <div class="text-success fw-bold">4. CONFIRMED PERSONAL MEMORY (60)</div>
+              <div class="text-muted small">Operator-validated preferences & procedures.</div>
+            </div>
+          </div>
+        </app-panel>
+      </div>
     </div>
 
-    <!-- Right Column: User Profiles & Persistent Parameters -->
-    <div class="col-12 col-xl-4 d-flex flex-column gap-3">
-      <app-panel title="PERSISTENT USER PROFILES & PREFERENCES" icon="👤" badge="SQLITE">
-        <div *ngIf="memoryService.userProfiles().length > 0" class="d-flex flex-column gap-2">
-          <div
-            *ngFor="let prof of memoryService.userProfiles()"
-            class="p-2 rounded bg-black bg-opacity-40 border border-secondary border-opacity-25 font-monospace small"
-          >
-            <div class="d-flex justify-content-between align-items-center mb-1">
-              <span class="text-info fw-bold">🔑 {{ prof.key }}</span>
-              <span class="text-muted small">{{ prof.updated_at ? (prof.updated_at | date:'shortTime') : '-' }}</span>
-            </div>
-            <pre class="text-light small mb-0 bg-dark p-1 rounded" style="font-size: 0.75rem;">{{ prof.value | json }}</pre>
-          </div>
-        </div>
+    <!-- 2. Procedures Tab -->
+    <div *ngSwitchCase="'procedures'">
+      <app-procedure-library
+        [procedures]="memoryService.procedures()"
+        (promoteProcedure)="onPromoteProcedure($event)"
+        (deprecateProcedure)="onDeprecateProcedure($event)"
+      ></app-procedure-library>
+    </div>
 
-        <div *ngIf="memoryService.userProfiles().length === 0" class="text-muted small font-monospace p-2 border border-secondary border-opacity-25 rounded bg-black bg-opacity-25">
-          No explicit profile preferences customized yet. Default system profiles active.
-        </div>
-      </app-panel>
-
-      <app-panel title="SEGMENTED MEMORY ARCHITECTURE" icon="🛡️" badge="ADR-0004">
-        <div class="d-flex flex-column gap-2 font-monospace small">
-          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
-            <div class="text-info fw-bold">EPISODIC STORAGE</div>
-            <div class="text-muted small">Successful task traces, user workflows, and error recoveries.</div>
-          </div>
-          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
-            <div class="text-success fw-bold">PRIVACY BOUNDARY</div>
-            <div class="text-muted small">No secrets, passwords, or authentication keys persisted in memory.</div>
-          </div>
-          <div class="p-2 rounded bg-dark border border-secondary border-opacity-25">
-            <div class="text-primary fw-bold">OPERATOR FORGET</div>
-            <div class="text-muted small">Full operator control to permanently expunge learned episodic records.</div>
-          </div>
-        </div>
-      </app-panel>
+    <!-- 3. Conflicts Tab -->
+    <div *ngSwitchCase="'conflicts'">
+      <app-conflict-resolver
+        [conflicts]="memoryService.conflicts()"
+        (resolveConflict)="onResolveConflict($event)"
+      ></app-conflict-resolver>
     </div>
   </div>
 </div>

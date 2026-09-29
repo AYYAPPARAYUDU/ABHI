@@ -12,16 +12,27 @@ describe('MemoryDetailComponent', () => {
     memoryServiceMock = {
       selectedMemory: signal({
         memory_id: 'mem_xyz_789',
-        category: 'desktop',
-        context_summary: 'User opened notepad',
-        solution_summary: 'Typed text with UIA worker',
+        memory_type: 'PREFERENCE',
+        title: 'Preferred Theme',
+        category: 'ui',
+        context_summary: 'User preferred dark theme',
+        solution_summary: 'Applied dark mode setting to console',
+        summary: 'Applied dark mode setting to console',
+        content: { theme: 'dark', accent: 'cyan' },
         outcome: 'SUCCESS',
-        tags: ['notepad', 'uia'],
-        privacy_class: 'task_derived',
+        tags: ['theme', 'dark'],
+        confidence: 1.0,
+        privacy_class: 'user_provided',
+        privacy_classification: 'PERSONAL',
+        status: 'CANDIDATE',
+        source: 'USER_EXPLICIT',
+        confirmed_by_user: false,
         created_at: new Date().toISOString()
       }) as any,
-      clearSelection: vi.fn(),
-      forgetMemory: vi.fn()
+      confirmMemory: vi.fn(),
+      rejectMemory: vi.fn(),
+      forgetMemory: vi.fn(),
+      clearSelection: vi.fn()
     };
 
     await TestBed.configureTestingModule({
@@ -38,5 +49,29 @@ describe('MemoryDetailComponent', () => {
 
   it('should create memory detail component', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should render selected memory title and content', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Preferred Theme');
+    expect(compiled.textContent).toContain('100% Confidence');
+    expect(compiled.textContent).toContain('STRUCTURED PAYLOAD');
+  });
+
+  it('should trigger confirmMemory on confirm button click', () => {
+    component.onConfirm();
+    expect(memoryServiceMock.confirmMemory).toHaveBeenCalledWith('mem_xyz_789');
+  });
+
+  it('should trigger rejectMemory on reject button click', () => {
+    vi.spyOn(window, 'prompt').mockReturnValue('Invalid memory');
+    component.onReject();
+    expect(memoryServiceMock.rejectMemory).toHaveBeenCalledWith('mem_xyz_789', 'Invalid memory');
+  });
+
+  it('should trigger forgetMemory on privacy erasure click', () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    component.onForget('PRIVACY_ERASURE');
+    expect(memoryServiceMock.forgetMemory).toHaveBeenCalledWith('mem_xyz_789', 'PRIVACY_ERASURE');
   });
 });

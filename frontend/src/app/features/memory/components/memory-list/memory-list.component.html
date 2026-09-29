@@ -48,7 +48,9 @@
         [memory]="m"
         [isSelected]="memoryService.selectedMemory()?.memory_id === m.memory_id"
         (memorySelected)="memoryService.selectMemory($event)"
-        (forgetMemory)="memoryService.forgetMemory($event)"
+        (confirmMemory)="memoryService.confirmMemory($event)"
+        (rejectMemory)="memoryService.rejectMemory($event)"
+        (forgetMemory)="memoryService.forgetMemory($event.id, $event.deletionType)"
       ></app-memory-card>
     </div>
   </div>

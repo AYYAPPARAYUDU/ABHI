@@ -355,6 +355,8 @@ async def test_scenario_b_find_latest_pdf():
 @pytest.mark.asyncio
 async def test_scenario_c_browser_python_docs():
     """Scenario C: 'Open browser and search Python documentation'."""
+    from backend.app.services.skills.browser.adapter import browser_skill_adapter
+    browser_skill_adapter._mock_mode = True
     runtime = SkillExecutionRuntime(skill_registry)
     session = await runtime.execute_session(
         task_id="t_scenario_c",
