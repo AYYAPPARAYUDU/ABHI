@@ -1,6 +1,4 @@
-"""Unit tests for Screen OCR & UI Spatial Grounding."""
-
-from app.perception.vision.screen_ocr import ScreenOCREngine, ScreenOCRResult, DetectedUIElement
+from backend.app.perception.vision.screen_ocr import ScreenOCREngine, ScreenOCRResult, DetectedUIElement
 
 
 def test_screen_ocr_parsing():

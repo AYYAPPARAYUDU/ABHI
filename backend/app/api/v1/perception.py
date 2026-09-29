@@ -4,13 +4,13 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from app.perception.audio.vad import VoiceActivityDetector, AudioVADState
-from app.perception.audio.stt import speech_to_text, TranscriptionResult
-from app.perception.audio.tts import text_to_speech, SpeechSynthesisResult
-from app.perception.audio.canonicalizer import language_canonicalizer, CanonicalCommand
-from app.perception.vision.face_tracker import face_tracker, FaceLandmarksResult
-from app.perception.vision.hand_tracker import hand_tracker, HandLandmarksResult
-from app.perception.vision.screen_ocr import screen_ocr, ScreenOCRResult, DetectedUIElement
+from backend.app.perception.audio.vad import VoiceActivityDetector, AudioVADState
+from backend.app.perception.audio.stt import speech_to_text, TranscriptionResult
+from backend.app.perception.audio.tts import text_to_speech, SpeechSynthesisResult
+from backend.app.perception.audio.canonicalizer import language_canonicalizer, CanonicalCommand
+from backend.app.perception.vision.face_tracker import face_tracker, FaceLandmarksResult
+from backend.app.perception.vision.hand_tracker import hand_tracker, HandLandmarksResult
+from backend.app.perception.vision.screen_ocr import screen_ocr, ScreenOCRResult, DetectedUIElement
 
 router = APIRouter(prefix="/perception", tags=["Perception"])
 

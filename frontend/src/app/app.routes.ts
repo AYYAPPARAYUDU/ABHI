@@ -98,6 +98,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'resources',
+    loadComponent: () =>
+      import('./features/resources/pages/resources-page/resources-page.component').then(
+        (m) => m.ResourcesPageComponent
+      )
+  },
+  {
     path: '**',
     redirectTo: 'console'
   }

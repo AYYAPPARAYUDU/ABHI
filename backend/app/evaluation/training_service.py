@@ -56,13 +56,13 @@ class TrainingService:
         }
 
         if candidate_type in [CandidateType.ADAPTER_CANDIDATE, CandidateType.QLORA_CANDIDATE]:
-            # Requires at least 3.5 GB free VRAM and 4 GB free RAM
-            if estimated_vram_free_mb < 3500.0 or free_ram_mb < 4000.0:
+            # Requires at least 2.5 GB free VRAM and 0.5 GB free RAM
+            if estimated_vram_free_mb < 2500.0 or free_ram_mb < 500.0:
                 return False, "NOT_RUN_RESOURCE_LIMIT: Insufficient VRAM/RAM for parameter training", metrics
 
         if candidate_type in [CandidateType.PROMPT_CANDIDATE, CandidateType.RAG_CANDIDATE, CandidateType.CONFIG_CANDIDATE]:
             # Lightweight adaptation
-            if free_ram_mb < 1000.0:
+            if free_ram_mb < 500.0:
                 return False, "NOT_RUN_RESOURCE_LIMIT: Insufficient host RAM for index preparation", metrics
 
         return True, "RESOURCE_HEADROOM_OK", metrics

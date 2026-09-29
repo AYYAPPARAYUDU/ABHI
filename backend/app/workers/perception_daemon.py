@@ -10,10 +10,10 @@ import logging
 from typing import Any, Callable, Dict, Optional
 from datetime import datetime, timezone
 
-from app.perception.audio.vad import VoiceActivityDetector, AudioVADState
-from app.perception.vision.face_tracker import face_tracker, FaceLandmarksResult
-from app.perception.vision.hand_tracker import hand_tracker, HandLandmarksResult
-from app.perception.vision.screen_ocr import screen_ocr
+from backend.app.perception.audio.vad import VoiceActivityDetector, AudioVADState
+from backend.app.perception.vision.face_tracker import face_tracker, FaceLandmarksResult
+from backend.app.perception.vision.hand_tracker import hand_tracker, HandLandmarksResult
+from backend.app.perception.vision.screen_ocr import screen_ocr
 
 logger = logging.getLogger("app.workers.perception_daemon")
 

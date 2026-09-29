@@ -1,7 +1,7 @@
 """Unit tests for Face tracking, head pose, and hand gesture recognition."""
 
-from app.perception.vision.face_tracker import FaceTracker, FaceLandmarksResult, HeadPose
-from app.perception.vision.hand_tracker import HandTracker, HandGesture, HandLandmarksResult
+from backend.app.perception.vision.face_tracker import FaceTracker, FaceLandmarksResult, HeadPose
+from backend.app.perception.vision.hand_tracker import HandTracker, HandGesture, HandLandmarksResult
 
 
 def test_face_tracker_baseline():

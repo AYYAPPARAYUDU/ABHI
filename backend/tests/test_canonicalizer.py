@@ -1,6 +1,4 @@
-"""Unit tests for Multilingual Language Canonicalizer."""
-
-from app.perception.audio.canonicalizer import LanguageCanonicalizer, CanonicalCommand
+from backend.app.perception.audio.canonicalizer import LanguageCanonicalizer, CanonicalCommand
 
 
 def test_canonicalizer_telugu():

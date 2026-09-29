@@ -1,9 +1,9 @@
 """Unit tests for Audio VAD, Energy, STT, and TTS engines."""
 
 import pytest
-from app.perception.audio.vad import VoiceActivityDetector, AudioVADState
-from app.perception.audio.stt import SpeechToTextEngine, TranscriptionResult
-from app.perception.audio.tts import TextToSpeechEngine, SpeechSynthesisResult
+from backend.app.perception.audio.vad import VoiceActivityDetector, AudioVADState
+from backend.app.perception.audio.stt import SpeechToTextEngine, TranscriptionResult
+from backend.app.perception.audio.tts import TextToSpeechEngine, SpeechSynthesisResult
 
 
 def test_vad_energy_silence():

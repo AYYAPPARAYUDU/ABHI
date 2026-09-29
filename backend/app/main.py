@@ -16,12 +16,14 @@ from backend.app.api.v1.applications import router as applications_router
 from backend.app.api.v1.browser import router as browser_router
 from backend.app.api.v1.workflow import workflow_router
 from backend.app.api.v1.procedures import router as procedures_router
+from backend.app.api.v1.resources import router as resources_router
 from backend.app.api.websockets.telemetry import router as ws_router
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
 from backend.app.core.security import SecurityHeadersMiddleware
 from backend.app.services.llm.ollama_client import ollama_client
 from backend.app.services.memory.database import init_db
+from backend.app.runtime.resources import resource_manager
 
 
 @asynccontextmanager
@@ -39,6 +41,13 @@ async def lifespan(app: FastAPI):
         logger.info(f"Ollama connected successfully. Available models: {[m.name for m in models]}")
     else:
         logger.warning(f"Ollama service is unreachable at {settings.OLLAMA_BASE_URL}.")
+
+    # 3. Initialize Resource Manager & Hardware Discovery
+    try:
+        res_startup = resource_manager.startup()
+        logger.info(f"Resource Manager initialized: mode={res_startup['mode']}, degraded={res_startup['degraded_mode']}")
+    except Exception as e:
+        logger.error(f"Resource manager startup error: {e}")
 
     logger.info("Backend Gateway & Cognitive Core startup complete.")
     yield
@@ -77,6 +86,7 @@ app.include_router(memory_router, prefix="/api/v1")
 app.include_router(procedures_router, prefix="/api/v1")
 app.include_router(knowledge_router, prefix="/api/v1")
 app.include_router(evaluation_router, prefix="/api/v1")
+app.include_router(resources_router, prefix="/api/v1")
 app.include_router(ws_router)
 
 
