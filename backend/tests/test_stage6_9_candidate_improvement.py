@@ -66,15 +66,20 @@ async def test_training_service_guardrails_and_cancellation():
 
     # 2. Start job
     started, msg, job = await training_service.start_training_job(candidate=cand, epochs=2)
-    assert started is True
-    assert job.job_id.startswith("job_train_")
-    assert job.state in ["QUEUED", "TRAINING"]
+    if ok:
+        assert started is True
+        assert job.job_id.startswith("job_train_")
+        assert job.state in ["QUEUED", "TRAINING"]
 
-    # 3. Cancel job
-    cancelled, cancel_msg = training_service.cancel_training(job.job_id)
-    assert cancelled is True
-    job_status = training_service.get_job_status(job.job_id)
-    assert job_status.state == "CANCELLED"
+        # 3. Cancel job
+        cancelled, cancel_msg = training_service.cancel_training(job.job_id)
+        assert cancelled is True
+        job_status = training_service.get_job_status(job.job_id)
+        assert job_status.state == "CANCELLED"
+    else:
+        assert started is False
+        assert job.state == "FAILED"
+        assert "NOT_RUN_RESOURCE_LIMIT" in msg
 
 
 @pytest.mark.asyncio

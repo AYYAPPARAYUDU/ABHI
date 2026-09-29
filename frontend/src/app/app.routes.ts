@@ -105,6 +105,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'media',
+    loadComponent: () =>
+      import('./features/media/pages/media-page/media-page.component').then(
+        (m) => m.MediaPageComponent
+      )
+  },
+  {
     path: '**',
     redirectTo: 'console'
   }

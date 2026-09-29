@@ -18,6 +18,7 @@ from backend.app.services.skills.registry import SkillRegistry, skill_registry
 from backend.app.services.skills.discovery import SkillDiscoveryEngine, skill_discovery
 from backend.app.services.skills.checkpoint import CheckpointManager, checkpoint_manager
 from backend.app.services.skills.builtin_skills import register_builtin_skills
+from backend.app.services.skills.builtin_media_skills import register_media_skills
 from backend.app.services.skills.runtime import SkillExecutionRuntime, skill_runtime
 
 __all__ = [
