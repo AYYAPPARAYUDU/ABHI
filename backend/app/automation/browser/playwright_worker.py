@@ -178,14 +178,20 @@ class PlaywrightBrowserWorker:
     def current_url(self) -> str:
         """Return the current page URL."""
         if self._page and not self.is_crashed:
-            return self._page.url
+            try:
+                return self._page.url
+            except Exception:
+                return ""
         return ""
 
     @property
     def current_title(self) -> str:
         """Return the current page title."""
         if self._page and not self.is_crashed:
-            return self._page.title()
+            try:
+                return self._page.title()
+            except Exception:
+                return ""
         return ""
 
     def resolve_locator(

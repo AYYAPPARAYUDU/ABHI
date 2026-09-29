@@ -1,0 +1,33 @@
+<div class="capabilities-container glass-panel" data-testid="browser-capabilities-table">
+  <div class="table-header">
+    <h4 class="table-title">Registered Web Capabilities ({{ capabilities.length }})</h4>
+    <span class="table-subtitle">Deterministic Skill Contracts & Verification Policies</span>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="cap-table">
+      <thead>
+        <tr>
+          <th>Capability</th>
+          <th>Skill ID</th>
+          <th>Risk</th>
+          <th>Description</th>
+          <th>Verification Policy</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let cap of capabilities">
+          <td class="font-bold text-accent">{{ cap.name }}</td>
+          <td><code class="skill-code">{{ cap.skill_id }}</code></td>
+          <td>
+            <span class="risk-badge" [ngClass]="getRiskBadgeClass(cap.risk_level)">
+              {{ cap.risk_level }}
+            </span>
+          </td>
+          <td class="text-sm text-slate-300">{{ cap.description }}</td>
+          <td><span class="policy-tag">{{ cap.verification_policy }}</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

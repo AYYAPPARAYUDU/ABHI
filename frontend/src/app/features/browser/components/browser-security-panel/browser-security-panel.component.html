@@ -1,0 +1,35 @@
+<div class="security-panel glass-panel" data-testid="browser-security-panel">
+  <div class="panel-header">
+    <div class="header-title">
+      <span class="icon-shield">🛡️</span>
+      <div>
+        <h4 class="title-text">Browser Guardrails & Security Audit</h4>
+        <span class="subtitle-text">Untrusted Web Content Defense & Policy Isolation</span>
+      </div>
+    </div>
+    <button class="btn btn-outline-sm" (click)="onClear()" *ngIf="securityEvents.length > 0" data-testid="btn-clear-events">
+      Clear Audit Stream
+    </button>
+  </div>
+
+  <div class="security-stream" *ngIf="securityEvents.length > 0; else noEvents">
+    <div class="event-item" *ngFor="let evt of securityEvents">
+      <div class="event-header">
+        <span class="event-type">{{ evt.event_type }}</span>
+        <span class="badge" [ngClass]="getSeverityBadge(evt.severity)">{{ evt.severity }}</span>
+      </div>
+      <div class="event-details">
+        <code>{{ evt.details | json }}</code>
+      </div>
+      <div class="event-time">
+        {{ evt.timestamp | date:'HH:mm:ss.SSS' }}
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noEvents>
+    <div class="empty-state">
+      <span class="text-muted">No active security policy violations or prompt injection attempts detected.</span>
+    </div>
+  </ng-template>
+</div>

@@ -1,0 +1,54 @@
+<div class="browser-card glass-panel" data-testid="browser-status-card">
+  <div class="card-header">
+    <div class="header-main">
+      <span class="icon-globe">🌐</span>
+      <div>
+        <h3 class="card-title">Playwright Browser Automation</h3>
+        <span class="badge" [ngClass]="status?.worker_state === 'READY' ? 'badge-success' : 'badge-idle'">
+          {{ status?.worker_state || 'STOPPED' }}
+        </span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="onStart()" data-testid="btn-start-session">
+        + New Session
+      </button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-item">
+      <span class="stat-label">Active Sessions</span>
+      <span class="stat-val text-accent">{{ activeSessions.length }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Sandboxed Downloads</span>
+      <span class="stat-val text-cyan">{{ status?.downloads_count || 0 }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Security Alerts</span>
+      <span class="stat-val" [ngClass]="promptInjectionAlertsCount > 0 ? 'text-warning' : 'text-muted'">
+        {{ promptInjectionAlertsCount }}
+      </span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Execution Mode</span>
+      <span class="stat-val text-muted">{{ status?.is_headless ? 'Headless Chromium' : 'Headed Window' }}</span>
+    </div>
+  </div>
+
+  <div class="active-url-box" *ngIf="status?.current_url">
+    <span class="url-label">ACTIVE URL:</span>
+    <code class="url-code">{{ status?.current_url }}</code>
+  </div>
+
+  <div class="sessions-list" *ngIf="activeSessions.length > 0">
+    <div class="session-item" *ngFor="let sess of activeSessions">
+      <div class="sess-info">
+        <span class="sess-id">{{ sess.session_id }}</span>
+        <span class="sess-origin">{{ sess.current_origin || 'Local Origin' }}</span>
+      </div>
+      <button class="btn btn-sm btn-danger" (click)="onStop(sess.session_id)">Stop</button>
+    </div>
+  </div>
+</div>

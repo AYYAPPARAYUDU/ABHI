@@ -1,0 +1,2 @@
+Deterministic test download artifact for Phase 7 Stage 7.3 Playwright browser automation verification.
+Confined safely within the local-first ABHI automation runtime sandbox.

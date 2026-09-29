@@ -1,0 +1,96 @@
+.capabilities-container {
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.table-header {
+  margin-bottom: 1rem;
+}
+
+.table-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.table-subtitle {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.cap-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.cap-table th {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cap-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.text-accent { color: #38bdf8; font-weight: 600; }
+.text-sm { font-size: 0.8rem; }
+.text-slate-300 { color: #cbd5e1; }
+
+.skill-code {
+  font-family: monospace;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  color: #a5b4fc;
+}
+
+.risk-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+}
+
+.risk-readonly {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+.risk-low {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.risk-medium {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.risk-high {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.policy-tag {
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+}

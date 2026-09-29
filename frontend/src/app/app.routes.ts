@@ -28,6 +28,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'browser',
+    loadComponent: () =>
+      import('./features/browser/pages/browser-page/browser-page.component').then(
+        (m) => m.BrowserPageComponent
+      )
+  },
+  {
     path: 'memory',
     loadComponent: () =>
       import('./features/memory/pages/memory-page/memory-page.component').then(

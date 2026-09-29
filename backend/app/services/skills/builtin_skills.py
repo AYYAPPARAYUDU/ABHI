@@ -1027,78 +1027,12 @@ def register_builtin_skills(target_registry: Optional[Any] = None) -> None:
         overwrite=True
     )
 
-    # 3. Browser Skills
-    reg.register(
-        SkillDefinition(
-            skill_id="browser.open_url",
-            name="Open Browser URL",
-            version="1.0.0",
-            description="Open an approved HTTP/HTTPS URL in the Playwright browser automation worker.",
-            category=SkillCategory.BROWSER,
-            risk_level=SkillRiskLevel.LOW,
-            permissions=["BROWSER_NAVIGATE"],
-            input_schema={"type": "object", "required": ["url"], "properties": {"url": {"type": "string"}}},
-            output_schema={"type": "object", "properties": {"url": {"type": "string"}}},
-            supported_workers=["browser_worker"],
-            verification_policy="URL_ORIGIN_MATCH"
-        ),
-        _handle_browser_open_url,
-        overwrite=True
-    )
-
-    reg.register(
-        SkillDefinition(
-            skill_id="browser.read_page",
-            name="Read Browser Page",
-            version="1.0.0",
-            description="Read the active webpage title and extract document text content.",
-            category=SkillCategory.BROWSER,
-            risk_level=SkillRiskLevel.READ_ONLY,
-            permissions=["BROWSER_READ"],
-            input_schema={"type": "object", "properties": {}},
-            output_schema={"type": "object", "properties": {"page_title": {"type": "string"}}},
-            supported_workers=["browser_worker"],
-            verification_policy="PAGE_LOADED"
-        ),
-        _handle_browser_read_page,
-        overwrite=True
-    )
-
-    reg.register(
-        SkillDefinition(
-            skill_id="browser.click",
-            name="Click Web Element",
-            version="1.0.0",
-            description="Click a verified grounded element on the active browser page.",
-            category=SkillCategory.BROWSER,
-            risk_level=SkillRiskLevel.LOW,
-            permissions=["BROWSER_CONTROL"],
-            input_schema={"type": "object", "properties": {"selector": {"type": "string"}, "target_description": {"type": "string"}}},
-            output_schema={"type": "object", "properties": {"clicked_target": {"type": "string"}}},
-            supported_workers=["browser_worker"],
-            verification_policy="DOM_STATE_UPDATED"
-        ),
-        _handle_browser_click,
-        overwrite=True
-    )
-
-    reg.register(
-        SkillDefinition(
-            skill_id="browser.type",
-            name="Type Text in Browser",
-            version="1.0.0",
-            description="Type text into a focused or selected input field on the active webpage.",
-            category=SkillCategory.BROWSER,
-            risk_level=SkillRiskLevel.MEDIUM,
-            permissions=["BROWSER_CONTROL"],
-            input_schema={"type": "object", "required": ["text"], "properties": {"text": {"type": "string"}, "target_description": {"type": "string"}}},
-            output_schema={"type": "object", "properties": {"characters_typed": {"type": "integer"}}},
-            supported_workers=["browser_worker"],
-            verification_policy="INPUT_VALUE_MATCH"
-        ),
-        _handle_browser_type,
-        overwrite=True
-    )
+    # 3. Advanced Browser Skills (Phase 7 Stage 7.3)
+    try:
+        from backend.app.services.skills.browser.adapter import browser_skill_adapter
+        browser_skill_adapter.register_all_skills(reg)
+    except Exception as e:
+        logger.warning(f"Could not auto-register advanced browser skills: {e}")
 
     # 4. Perception Skills
     reg.register(
@@ -1160,3 +1094,4 @@ def register_builtin_skills(target_registry: Optional[Any] = None) -> None:
 
 # Auto-register on import
 register_builtin_skills()
+
