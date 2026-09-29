@@ -11,6 +11,7 @@ from backend.app.api.v1.runtime import router as runtime_router
 from backend.app.api.v1.memory import router as memory_router
 from backend.app.api.v1.knowledge import router as knowledge_router
 from backend.app.api.v1.evaluation import router as evaluation_router
+from backend.app.api.v1.skills import router as skills_router
 from backend.app.api.websockets.telemetry import router as ws_router
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
@@ -62,6 +63,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(models_router, prefix="/api/v1")
 app.include_router(tasks_router, prefix="/api/v1")
+app.include_router(skills_router, prefix="/api/v1")
 app.include_router(perception_router, prefix="/api/v1")
 app.include_router(runtime_router, prefix="/api/v1")
 app.include_router(memory_router, prefix="/api/v1")

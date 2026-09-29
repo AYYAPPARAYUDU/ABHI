@@ -109,6 +109,104 @@ async def provide_consent(task_id: str, request: ConsentRequest):
     return {"status": "ok", "task_id": task_id, "approved": request.approved}
 
 
+@router.get("/{task_id}/execution", response_model=Dict[str, Any])
+async def get_task_execution(task_id: str):
+    """Retrieve detailed execution session, checkpoints, active skill, and timeline for a task."""
+    from backend.app.services.skills import checkpoint_manager, skill_runtime
+
+    session = skill_runtime.get_session(task_id)
+    checkpoints = checkpoint_manager.get_checkpoints(task_id)
+    sup_status = central_supervisor.get_task_status(task_id)
+
+    if session:
+        return {
+            "session_id": session.session_id,
+            "task_id": session.task_id,
+            "goal": session.goal,
+            "state": session.state,
+            "active_skill": session.active_skill,
+            "active_node_id": session.active_node_id,
+            "lease_id": session.lease_id,
+            "elapsed_time_ms": session.elapsed_time_ms,
+            "retry_count": session.retry_count,
+            "recovery_count": session.recovery_count,
+            "replan_count": session.replan_count,
+            "checkpoints": [cp.model_dump() for cp in checkpoints],
+            "error_message": session.error_message
+        }
+    elif sup_status:
+        return {
+            "session_id": f"sess_{task_id}",
+            "task_id": task_id,
+            "goal": sup_status.goal,
+            "state": sup_status.state,
+            "active_skill": sup_status.active_node_id,
+            "active_node_id": sup_status.active_node_id,
+            "lease_id": None,
+            "elapsed_time_ms": sup_status.duration_ms,
+            "retry_count": 0,
+            "recovery_count": 0,
+            "replan_count": 0,
+            "checkpoints": [cp.model_dump() for cp in checkpoints],
+            "error_message": sup_status.error_message
+        }
+
+    # Fallback to DB
+    db_record = await memory_repo.get_task(task_id)
+    if not db_record:
+        raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found.")
+
+    return {
+        "session_id": f"sess_{task_id}",
+        "task_id": db_record.task_id,
+        "goal": db_record.goal,
+        "state": db_record.state,
+        "active_skill": None,
+        "active_node_id": None,
+        "lease_id": None,
+        "elapsed_time_ms": db_record.duration_ms,
+        "retry_count": 0,
+        "recovery_count": 0,
+        "replan_count": 0,
+        "checkpoints": [cp.model_dump() for cp in checkpoints],
+        "error_message": db_record.error_message
+    }
+
+
+class PlanPreviewRequest(BaseModel):
+    goal: str = Field(..., min_length=1)
+
+
+@router.post("/plan-preview", response_model=Dict[str, Any])
+async def generate_plan_preview(request: PlanPreviewRequest):
+    """Generate multi-step plan preview and risk analysis without executing side effects."""
+    from backend.app.cognitive.planner.planner import task_planner
+    from backend.app.services.skills import skill_discovery
+
+    dag = await task_planner.create_plan(task_id="preview_temp", goal=request.goal)
+    candidates = skill_discovery.discover(request.goal, max_results=5)
+
+    has_high_risk = any(n.risk_tier == "Tier 3" for n in dag.nodes.values())
+    steps_preview = []
+    for nid, node in dag.nodes.items():
+        steps_preview.append({
+            "node_id": nid,
+            "title": node.title,
+            "action": node.action,
+            "risk_tier": node.risk_tier,
+            "requires_consent": node.risk_tier == "Tier 3"
+        })
+
+    return {
+        "goal": request.goal,
+        "dag_id": dag.dag_id,
+        "steps": steps_preview,
+        "total_steps": len(steps_preview),
+        "requires_confirmation": has_high_risk,
+        "recommended_skills": [c.model_dump() for c in candidates]
+    }
+
+
 @router.post("/{task_id}/cancel")
 async def cancel_task(task_id: str):
     """Cancel an active task."""
@@ -118,4 +216,6 @@ async def cancel_task(task_id: str):
     if not success1 and not success2:
         raise HTTPException(status_code=404, detail=f"Active task '{task_id}' not found.")
     return {"status": "cancelled", "task_id": task_id}
+
+
 
