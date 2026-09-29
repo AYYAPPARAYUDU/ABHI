@@ -1,11 +1,14 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MediaService } from '../../services/media.service';
 import { ImageGenerationFormComponent } from '../../components/image-generation-form/image-generation-form.component';
 import { MediaJobQueueComponent } from '../../components/media-job-queue/media-job-queue.component';
 import { MediaArtifactGalleryComponent } from '../../components/media-artifact-gallery/media-artifact-gallery.component';
 import { MediaModelCatalogComponent } from '../../components/media-model-catalog/media-model-catalog.component';
-import { ImageGenerationRequestDTO } from '../../models/media.model';
+import { VideoGenerationFormComponent } from '../../components/video-generation-form/video-generation-form.component';
+import { VideoJobQueueComponent } from '../../components/video-job-queue/video-job-queue.component';
+import { VideoArtifactGalleryComponent } from '../../components/video-artifact-gallery/video-artifact-gallery.component';
+import { ImageGenerationRequestDTO, VideoGenerationRequestDTO } from '../../models/media.model';
 
 @Component({
   selector: 'app-media-page',
@@ -16,6 +19,9 @@ import { ImageGenerationRequestDTO } from '../../models/media.model';
     MediaJobQueueComponent,
     MediaArtifactGalleryComponent,
     MediaModelCatalogComponent,
+    VideoGenerationFormComponent,
+    VideoJobQueueComponent,
+    VideoArtifactGalleryComponent,
   ],
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 p-6 space-y-6">
@@ -24,21 +30,21 @@ import { ImageGenerationRequestDTO } from '../../models/media.model';
         <div>
           <div class="flex items-center gap-3">
             <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-              <span class="text-2xl">🎨</span> Local Media & Image Runtime
+              <span class="text-2xl">🎬</span> Local Media & Video Generation Studio
             </h1>
             <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-              Phase 8.1 Active
+              Phase 8.2 Active
             </span>
           </div>
           <p class="text-xs text-slate-400 mt-1">
-            Privacy-first local image synthesis, resource-aware hardware admission, and verified artifact storage
+            Local image synthesis, temporal video diffusion, chunked VRAM budgeting, and verified artifact storage
           </p>
         </div>
 
         <!-- Telemetry & Status Badges -->
         <div class="flex items-center gap-2.5 flex-wrap">
           <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2 text-right">
-            <span class="block text-[10px] text-slate-500 uppercase tracking-wider">VRAM Headroom</span>
+            <span class="block text-[10px] text-slate-500 uppercase tracking-wider">VRAM Usable Headroom</span>
             <span class="text-xs font-mono font-semibold text-cyan-400">
               {{ mediaService.vramFreeMB() }} MB Free
             </span>
@@ -62,27 +68,71 @@ import { ImageGenerationRequestDTO } from '../../models/media.model';
         </div>
       </div>
 
-      <!-- Error Message Banner -->
-      @if (mediaService.errorMessage()) {
-        <div class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 rounded-xl flex items-center justify-between">
-          <span>⚠️ {{ mediaService.errorMessage() }}</span>
-          <button (click)="mediaService.errorMessage.set(null)" class="text-red-400 hover:text-white">✕</button>
-        </div>
-      }
+      <!-- Studio Navigation Tabs -->
+      <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+        <button
+          type="button"
+          (click)="activeTab.set('video')"
+          [ngClass]="activeTab() === 'video' ? 'bg-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
+          class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
+        >
+          <span>🎥</span> Video Studio (Phase 8.2)
+        </button>
+        <button
+          type="button"
+          (click)="activeTab.set('image')"
+          [ngClass]="activeTab() === 'image' ? 'bg-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
+          class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
+        >
+          <span>🖼️</span> Image Studio (Phase 8.1)
+        </button>
+      </div>
 
-      <!-- Main Layout: 2 Columns on Desktop -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Left: Generation Studio (7 cols) -->
+      <!-- Error Message Banner -->
+      <div *ngIf="mediaService.errorMessage() || mediaService.videoErrorMessage()" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 rounded-xl flex items-center justify-between">
+        <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() }}</span>
+        <button (click)="clearErrors()" class="text-red-400 hover:text-white">✕</button>
+      </div>
+
+      <!-- VIDEO STUDIO TAB CONTENT (Phase 8.2) -->
+      <div *ngIf="activeTab() === 'video'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left: Video Generation Form (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+          <app-video-generation-form
+            [models]="mediaService.videoModels()"
+            [isGenerating]="mediaService.isVideoLoading()"
+            (generate)="onGenerateVideo($event)"
+          ></app-video-generation-form>
+
+          <app-video-artifact-gallery
+            [artifacts]="mediaService.videoArtifacts()"
+            (delete)="onDeleteVideoArtifact($event)"
+          ></app-video-artifact-gallery>
+        </div>
+
+        <!-- Right: Video Queue & Models (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+          <app-video-job-queue
+            [jobs]="mediaService.videoJobs()"
+            [activeJob]="mediaService.activeVideoJob()"
+            (cancel)="onCancelVideoJob($event)"
+          ></app-video-job-queue>
+        </div>
+      </div>
+
+      <!-- IMAGE STUDIO TAB CONTENT (Phase 8.1) -->
+      <div *ngIf="activeTab() === 'image'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left: Image Generation Form (7 cols) -->
         <div class="lg:col-span-7 space-y-6">
           <app-image-generation-form
             [models]="mediaService.models()"
             [isLoading]="mediaService.isLoading()"
-            (generate)="onGenerate($event)"
+            (generate)="onGenerateImage($event)"
           ></app-image-generation-form>
 
           <app-media-artifact-gallery
             [artifacts]="mediaService.artifacts()"
-            (delete)="onDeleteArtifact($event)"
+            (delete)="onDeleteImageArtifact($event)"
           ></app-media-artifact-gallery>
         </div>
 
@@ -90,7 +140,7 @@ import { ImageGenerationRequestDTO } from '../../models/media.model';
         <div class="lg:col-span-5 space-y-6">
           <app-media-job-queue
             [jobs]="mediaService.jobs()"
-            (cancel)="onCancelJob($event)"
+            (cancel)="onCancelImageJob($event)"
           ></app-media-job-queue>
 
           <app-media-model-catalog
@@ -103,20 +153,38 @@ import { ImageGenerationRequestDTO } from '../../models/media.model';
 })
 export class MediaPageComponent implements OnInit {
   mediaService = inject(MediaService);
+  activeTab = signal<'video' | 'image'>('video');
 
   ngOnInit(): void {
     this.mediaService.refreshAll();
   }
 
-  onGenerate(request: ImageGenerationRequestDTO): void {
+  onGenerateVideo(request: VideoGenerationRequestDTO): void {
+    this.mediaService.generateVideo(request).subscribe();
+  }
+
+  onCancelVideoJob(jobId: string): void {
+    this.mediaService.cancelVideoJob(jobId).subscribe();
+  }
+
+  onDeleteVideoArtifact(artifactId: string): void {
+    this.mediaService.deleteVideoArtifact(artifactId).subscribe();
+  }
+
+  onGenerateImage(request: ImageGenerationRequestDTO): void {
     this.mediaService.generateImage(request).subscribe();
   }
 
-  onCancelJob(jobId: string): void {
+  onCancelImageJob(jobId: string): void {
     this.mediaService.cancelJob(jobId).subscribe();
   }
 
-  onDeleteArtifact(artifactId: string): void {
+  onDeleteImageArtifact(artifactId: string): void {
     this.mediaService.deleteArtifact(artifactId).subscribe();
+  }
+
+  clearErrors(): void {
+    this.mediaService.errorMessage.set(null);
+    this.mediaService.videoErrorMessage.set(null);
   }
 }

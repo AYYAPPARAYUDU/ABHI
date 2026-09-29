@@ -1,190 +1,272 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClient } from '@angular/common/http';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { of } from 'rxjs';
+import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { MediaService } from './media.service';
 import {
+  ImageModelDefinitionDTO,
+  VideoModelDefinitionDTO,
   MediaJobDTO,
   MediaArtifactDTO,
-  ImageModelDefinitionDTO,
+  VideoArtifactDTO,
+  ImageGenerationRequestDTO,
+  VideoGenerationRequestDTO,
   MediaResourceStatusDTO,
 } from '../models/media.model';
 
 describe('MediaService', () => {
   let service: MediaService;
-  let httpMock: any;
-
-  const mockModel: ImageModelDefinitionDTO = {
-    model_id: 'sd-turbo-local',
-    name: 'SD-Turbo Local',
-    version: '1.0.0',
-    digest: 'sha256:abc12345',
-    runtime: 'Local-Diffusion-Engine',
-    format: 'Diffusers-Local',
-    quantization: 'FP16',
-    supported_devices: ['GPU', 'CPU'],
-    base_vram_mb: 3200.0,
-    base_ram_mb: 2048.0,
-    gpu_compute_percent: 60.0,
-    supported_resolutions: [[512, 512]],
-    max_batch: 4,
-    capabilities: ['text-to-image'],
-    license_metadata: 'Open-RAIL',
-    source: 'local-verified',
-    status: 'AVAILABLE',
-    is_production: true,
-    is_candidate: false,
-  };
-
-  const mockJob: MediaJobDTO = {
-    job_id: 'job_123',
-    media_type: 'IMAGE',
-    operation: 'GENERATE',
-    prompt: 'A golden sunset over mountains',
-    model_id: 'sd-turbo-local',
-    model_version: '1.0.0',
-    parameters: { width: 512, height: 512 },
-    status: 'COMPLETED',
-    progress: 100.0,
-    current_phase: 'COMPLETED',
-    created_at: Date.now() / 1000,
-    completed_at: Date.now() / 1000 + 2,
-    artifact_id: 'art_123',
-    output_path: 'media/images/2026/09/img_123.png',
-    provenance: 'ACTUAL',
-  };
-
-  const mockArtifact: MediaArtifactDTO = {
-    artifact_id: 'art_123',
-    job_id: 'job_123',
-    media_type: 'IMAGE',
-    path: 'media/images/2026/09/img_123.png',
-    filename: 'img_123.png',
-    format: 'PNG',
-    width: 512,
-    height: 512,
-    size_bytes: 450000,
-    sha256: 'sha256_abcdef123456',
-    created_at: Date.now() / 1000,
-    model_id: 'sd-turbo-local',
-    model_version: '1.0.0',
-    generation_parameters_hash: 'param_hash_123',
-    prompt_preview: 'A golden sunset...',
-    provenance: 'ACTUAL',
-  };
-
-  const mockResourceStatus: MediaResourceStatusDTO = {
-    gpu_detected: true,
-    gpu_model: 'NVIDIA GeForce RTX 5050',
-    vram_total_mb: 8151.0,
-    vram_free_mb: 6500.0,
-    pressure_level: 'NORMAL',
-    active_media_models: [mockModel],
-  };
+  let httpMock: HttpTestingController;
 
   beforeEach(() => {
-    httpMock = {
-      get: vi.fn((url: string) => {
-        if (url.includes('/models')) return of([mockModel]);
-        if (url.includes('/jobs')) return of([mockJob]);
-        if (url.includes('/artifacts')) return of([mockArtifact]);
-        if (url.includes('/resources')) return of(mockResourceStatus);
-        return of({});
-      }),
-      post: vi.fn().mockReturnValue(of(mockJob)),
-      delete: vi.fn().mockReturnValue(of({ status: 'SUCCESS' })),
-    };
-
     TestBed.configureTestingModule({
-      providers: [MediaService, { provide: HttpClient, useValue: httpMock }],
+      imports: [HttpClientTestingModule],
+      providers: [MediaService],
     });
+
     service = TestBed.inject(MediaService);
+    httpMock = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => {
+    httpMock.verify();
   });
 
   it('should initialize with default empty signals', () => {
-    expect(service.models().length).toBe(0);
-    expect(service.jobs().length).toBe(0);
-    expect(service.artifacts().length).toBe(0);
+    expect(service.models()).toEqual([]);
+    expect(service.videoModels()).toEqual([]);
+    expect(service.jobs()).toEqual([]);
+    expect(service.videoJobs()).toEqual([]);
+    expect(service.artifacts()).toEqual([]);
+    expect(service.videoArtifacts()).toEqual([]);
     expect(service.activeJob()).toBeNull();
-    expect(service.isGenerating()).toBe(false);
+    expect(service.activeVideoJob()).toBeNull();
+    expect(service.isLoading()).toBe(false);
+    expect(service.isVideoLoading()).toBe(false);
   });
 
   it('should fetch media models and compute production/candidate models', () => {
+    const mockModels: ImageModelDefinitionDTO[] = [
+      {
+        model_id: 'sd-turbo-local',
+        name: 'SD-Turbo Real-Time Local',
+        version: '1.0.0',
+        digest: 'sha256:123',
+        runtime: 'Local-Diffusion-Engine',
+        format: 'Diffusers-Local',
+        quantization: 'FP16',
+        supported_devices: ['GPU', 'CPU'],
+        base_vram_mb: 3200.0,
+        base_ram_mb: 2048.0,
+        gpu_compute_percent: 60.0,
+        supported_resolutions: [[512, 512]],
+        max_batch: 4,
+        capabilities: ['text-to-image'],
+        license_metadata: 'Open-RAIL',
+        source: 'local',
+        status: 'AVAILABLE',
+        is_production: true,
+        is_candidate: false,
+      },
+    ];
+
     service.fetchModels().subscribe((models) => {
       expect(models.length).toBe(1);
     });
 
-    expect(httpMock.get).toHaveBeenCalledWith('/api/v1/media/models');
+    const req = httpMock.expectOne('/api/v1/media/models');
+    expect(req.request.method).toBe('GET');
+    req.flush(mockModels);
+
     expect(service.models().length).toBe(1);
     expect(service.productionModels().length).toBe(1);
     expect(service.candidateModels().length).toBe(0);
   });
 
-  it('should fetch media jobs and compute active/completed counts', () => {
-    service.fetchJobs().subscribe((jobs) => {
-      expect(jobs.length).toBe(1);
+  it('should fetch video models and compute production video models', () => {
+    const mockVideoModels: VideoModelDefinitionDTO[] = [
+      {
+        model_id: 'svd-xt-local',
+        name: 'Stable Video Diffusion XT Local',
+        version: '1.1.0',
+        digest: 'sha256:7e3d1a9b4c8f205e',
+        runtime: 'Local-Video-Diffusion-Engine',
+        format: 'Diffusers-Video',
+        quantization: 'FP16',
+        supported_devices: ['GPU', 'CPU'],
+        base_vram_mb: 4200.0,
+        per_second_vram_mb: 280.0,
+        base_ram_mb: 3072.0,
+        gpu_compute_percent: 75.0,
+        supported_resolutions: [[512, 512]],
+        supported_fps: [12, 16, 24],
+        max_duration_seconds: 4.0,
+        supported_operations: ['TEXT_TO_VIDEO'],
+        capabilities: ['text-to-video'],
+        license_metadata: 'Open-RAIL',
+        source: 'local',
+        status: 'AVAILABLE',
+        is_production: true,
+        is_candidate: false,
+      },
+    ];
+
+    service.fetchVideoModels().subscribe((models) => {
+      expect(models.length).toBe(1);
     });
 
-    expect(httpMock.get).toHaveBeenCalledWith('/api/v1/media/jobs');
-    expect(service.jobs().length).toBe(1);
-    expect(service.completedJobsCount()).toBe(1);
-    expect(service.activeJobsCount()).toBe(0);
+    const req = httpMock.expectOne('/api/v1/media/video/models');
+    expect(req.request.method).toBe('GET');
+    req.flush(mockVideoModels);
+
+    expect(service.videoModels().length).toBe(1);
+    expect(service.productionVideoModels().length).toBe(1);
   });
 
-  it('should fetch artifacts and update signal', () => {
-    service.fetchArtifacts().subscribe((artifacts) => {
-      expect(artifacts.length).toBe(1);
+  it('should submit video generation and set active video job', () => {
+    const requestDTO: VideoGenerationRequestDTO = {
+      prompt: 'A car racing on a neon track',
+      model_id: 'svd-xt-local',
+      width: 512,
+      height: 512,
+      fps: 24,
+      duration_seconds: 2.0,
+      steps: 25,
+      output_format: 'MP4',
+    };
+
+    const mockJob: MediaJobDTO = {
+      job_id: 'job_vid_100',
+      media_type: 'VIDEO',
+      operation: 'GENERATE',
+      prompt: 'A car racing on a neon track',
+      model_id: 'svd-xt-local',
+      model_version: '1.0.0',
+      parameters: { fps: 24, width: 512, height: 512 },
+      status: 'GENERATING',
+      progress: 50.0,
+      current_phase: 'GENERATING_SEGMENTS',
+      created_at: 1720000000,
+      provenance: 'ACTUAL',
+    };
+
+    service.generateVideo(requestDTO).subscribe((job) => {
+      expect(job.job_id).toBe('job_vid_100');
     });
 
-    expect(httpMock.get).toHaveBeenCalledWith('/api/v1/media/artifacts');
-    expect(service.artifacts().length).toBe(1);
+    const genReq = httpMock.expectOne('/api/v1/media/video/generate');
+    expect(genReq.request.method).toBe('POST');
+    genReq.flush(mockJob);
+
+    // After flush, refreshAll requests trigger
+    httpMock.expectOne('/api/v1/media/models').flush([]);
+    httpMock.expectOne('/api/v1/media/jobs').flush([]);
+    httpMock.expectOne('/api/v1/media/artifacts').flush([]);
+    httpMock.expectOne('/api/v1/media/resources').flush({ gpu_detected: true, pressure_level: 'NORMAL', active_media_models: [] });
+    httpMock.expectOne('/api/v1/media/video/models').flush([]);
+    httpMock.expectOne('/api/v1/media/video/jobs').flush([]);
+    httpMock.expectOne('/api/v1/media/video/artifacts').flush([]);
+
+    expect(service.activeVideoJob()?.job_id).toBe('job_vid_100');
   });
 
-  it('should fetch resource status and compute free VRAM MB', () => {
-    service.fetchResourceStatus().subscribe();
-    expect(service.vramFreeMB()).toBe(6500);
+  it('should call cancel endpoint on cancelVideoJob', () => {
+    service.cancelVideoJob('job_vid_100').subscribe();
+
+    const cancelReq = httpMock.expectOne('/api/v1/media/video/jobs/job_vid_100/cancel');
+    expect(cancelReq.request.method).toBe('POST');
+    cancelReq.flush({ status: 'SUCCESS' });
+
+    httpMock.expectOne('/api/v1/media/models').flush([]);
+    httpMock.expectOne('/api/v1/media/jobs').flush([]);
+    httpMock.expectOne('/api/v1/media/artifacts').flush([]);
+    httpMock.expectOne('/api/v1/media/resources').flush({ gpu_detected: true, pressure_level: 'NORMAL', active_media_models: [] });
+    httpMock.expectOne('/api/v1/media/video/models').flush([]);
+    httpMock.expectOne('/api/v1/media/video/jobs').flush([]);
+    httpMock.expectOne('/api/v1/media/video/artifacts').flush([]);
   });
 
-  it('should submit image generation and set active job', () => {
-    service
-      .generateImage({
-        prompt: 'A cyberpunk city',
-        model_id: 'sd-turbo-local',
-        width: 512,
-        height: 512,
-        steps: 20,
-        output_format: 'PNG',
-      })
-      .subscribe((job) => {
-        expect(job.status).toBe('COMPLETED');
-      });
+  it('should call delete endpoint on deleteVideoArtifact', () => {
+    service.deleteVideoArtifact('art_vid_100').subscribe();
 
-    expect(httpMock.post).toHaveBeenCalledWith(
-      '/api/v1/media/image/generate',
-      expect.objectContaining({ prompt: 'A cyberpunk city' })
-    );
+    const delReq = httpMock.expectOne('/api/v1/media/video/artifacts/art_vid_100');
+    expect(delReq.request.method).toBe('DELETE');
+    delReq.flush({ status: 'SUCCESS' });
+
+    httpMock.expectOne('/api/v1/media/video/artifacts').flush([]);
   });
 
-  it('should call cancel endpoint on cancelJob', () => {
-    service.cancelJob('job_123').subscribe();
-    expect(httpMock.post).toHaveBeenCalledWith('/api/v1/media/jobs/job_123/cancel', {});
+  it('should compute isGeneratingVideo as true when activeVideoJob is GENERATING', () => {
+    expect(service.isGeneratingVideo()).toBe(false);
+
+    const activeJob: MediaJobDTO = {
+      job_id: 'job_vid_act',
+      media_type: 'VIDEO',
+      operation: 'GENERATE',
+      prompt: 'Test video',
+      model_id: 'svd-xt-local',
+      model_version: '1.0.0',
+      parameters: {},
+      status: 'GENERATING',
+      progress: 50.0,
+      current_phase: 'GENERATING_SEGMENTS',
+      created_at: 1720000000,
+      provenance: 'ACTUAL',
+    };
+    service.activeVideoJob.set(activeJob);
+    expect(service.isGeneratingVideo()).toBe(true);
   });
 
-  it('should call delete endpoint on deleteArtifact', () => {
-    service.deleteArtifact('art_123').subscribe();
-    expect(httpMock.delete).toHaveBeenCalledWith('/api/v1/media/artifacts/art_123');
+  it('should compute candidateVideoModels correctly', () => {
+    const mockVideoModels: VideoModelDefinitionDTO[] = [
+      {
+        model_id: 'cogvideox-candidate',
+        name: 'CogVideoX 2B (Candidate)',
+        version: '0.9.0',
+        digest: 'sha256:3d7a1c9e8b2f4501',
+        runtime: 'Local-Video-Diffusion-Engine',
+        format: 'Diffusers-Video',
+        quantization: 'INT8',
+        supported_devices: ['GPU'],
+        base_vram_mb: 5600.0,
+        per_second_vram_mb: 350.0,
+        base_ram_mb: 4096.0,
+        gpu_compute_percent: 88.0,
+        supported_resolutions: [[512, 512]],
+        supported_fps: [12, 16, 24],
+        max_duration_seconds: 6.0,
+        supported_operations: ['TEXT_TO_VIDEO'],
+        capabilities: ['text-to-video'],
+        license_metadata: 'Open-RAIL',
+        source: 'local',
+        status: 'AVAILABLE',
+        is_production: false,
+        is_candidate: true,
+      },
+    ];
+    service.videoModels.set(mockVideoModels);
+    expect(service.candidateVideoModels().length).toBe(1);
+    expect(service.productionVideoModels().length).toBe(0);
   });
 
-  it('should compute isGenerating true when active job is GENERATING', () => {
-    service.activeJob.set({ ...mockJob, status: 'GENERATING' });
-    expect(service.isGenerating()).toBe(true);
-  });
+  it('should handle video generation error gracefully and set videoErrorMessage', () => {
+    const requestDTO: VideoGenerationRequestDTO = {
+      prompt: 'A car racing',
+      model_id: 'svd-xt-local',
+      width: 512,
+      height: 512,
+      fps: 24,
+      duration_seconds: 2.0,
+      steps: 25,
+      output_format: 'MP4',
+    };
 
-  it('should refresh all signals in refreshAll', () => {
-    service.refreshAll();
-    expect(httpMock.get).toHaveBeenCalledWith('/api/v1/media/models');
-    expect(httpMock.get).toHaveBeenCalledWith('/api/v1/media/jobs');
-    expect(httpMock.get).toHaveBeenCalledWith('/api/v1/media/artifacts');
-    expect(httpMock.get).toHaveBeenCalledWith('/api/v1/media/resources');
+    service.generateVideo(requestDTO).subscribe({
+      error: () => {},
+    });
+
+    const genReq = httpMock.expectOne('/api/v1/media/video/generate');
+    genReq.flush({ detail: 'OOM error' }, { status: 500, statusText: 'Server Error' });
+
+    expect(service.isVideoLoading()).toBe(false);
+    expect(service.videoErrorMessage()).toBe('OOM error');
   });
 });

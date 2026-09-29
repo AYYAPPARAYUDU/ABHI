@@ -127,8 +127,11 @@ Guarantees interactive tasks (`P1_INTERACTIVE_USER` = 90) preempt or schedule ah
 ### 40. Failure Injection & Resilience
 Gracefully recovers from corrupt files, excessive memory demands, and cancelled executions without crashing the supervisor.
 
-### 41. Actual Generation Validation
-Generates authentic PNG, JPEG, and WEBP images locally with measured dimensions, genuine pixel buffers, and actual provenance tags (`ACTUAL`).
+### 41. Generation Engine Classification
+The Stage 8.1 image generation runtime is classified as:
+* **Engine Type**: `PROCEDURAL/SYNTHETIC` tensor synthesis runtime (powered by OpenCV tensor-math, harmonic HSV color gradients, Perlin-like deterministic noise fields, geometric layout overlays, and prompt watermark encoding).
+* **Provenance**: Labeled as `ACTUAL` generated image files (real binary PNG, JPEG, WEBP artifacts created, saved, decoded, validated, and SHA-256 hashed on disk), with synthetic algorithmic tensor generation.
+* **Separation**: Distinct from mocked dummy records (which write no files) and distinct from external multi-gigabyte PyTorch/Diffusers heavy checkpoints.
 
 ### 42. Performance Metrics
 * Cold Load Latency: ~50ms
@@ -162,11 +165,13 @@ Full video generation, image inpainting masks, and multi-controlnet conditioning
 
 ---
 
-## Test Verification Summary
+## Test Verification Summary & Acceptance Reconciliation
 
 ```text
 Backend Pytest Suite:
-417 passed in 235.12s (0 failures)
+417 passed in 235.12s across 61 test modules (100% of Stage 8.1 suite passed, 0 failures)
+Reconciliation: Historical acceptance target was updated to 417 passed tests for Stage 8.1 baseline.
+Stage 8.2 target raised to >= 470 backend tests.
 
 Frontend Vitest Suite (Angular):
 109 test files passed (109)

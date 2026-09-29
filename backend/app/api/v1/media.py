@@ -151,3 +151,132 @@ async def get_media_resource_status():
             m.model_dump() for m in media_coordinator.get_models()
         ]
     }
+
+
+# ==========================================
+# Video Subsystem Endpoints (Phase 8 Stage 8.2)
+# ==========================================
+
+from backend.app.media.video_models import (
+    VideoGenerationRequest,
+    VideoArtifact,
+    VideoModelDefinition,
+)
+from backend.app.media.video_coordinator import video_coordinator
+
+
+@router.get("/video/models", response_model=List[VideoModelDefinition])
+async def list_video_models():
+    """Discover all registered local video generation models and their resource profiles."""
+    return video_coordinator.get_models()
+
+
+@router.get("/video/models/{model_id}", response_model=VideoModelDefinition)
+async def get_video_model(model_id: str):
+    """Retrieve details for a specific video model."""
+    model = video_coordinator.get_model(model_id)
+    if not model:
+        raise HTTPException(status_code=404, detail=f"Video model {model_id} not found")
+    return model
+
+
+@router.get("/video/jobs", response_model=List[MediaJob])
+async def list_video_jobs(
+    limit: int = Query(default=50, ge=1, le=200),
+    status: Optional[str] = Query(default=None)
+):
+    """List recent video generation jobs with optional status filter."""
+    jobs = video_coordinator.list_jobs(limit=limit)
+    if status:
+        jobs = [j for j in jobs if j.status.value == status.upper()]
+    return jobs
+
+
+@router.get("/video/jobs/{job_id}", response_model=MediaJob)
+async def get_video_job(job_id: str):
+    """Retrieve detailed state, progress, and output for a specific video job."""
+    job = video_coordinator.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail=f"Video job {job_id} not found")
+    return job
+
+
+@router.post("/video/generate", response_model=MediaJob, status_code=status.HTTP_201_CREATED)
+async def generate_video(request: VideoGenerationRequest):
+    """Submit a local video generation request through safety policy, admission, and runtime."""
+    success, job, msg = video_coordinator.submit_video_generation(request)
+    if not success and job.status == MediaJobStatus.FAILED and "not registered" in (job.failure_reason or ""):
+        raise HTTPException(status_code=400, detail=job.failure_reason)
+    return job
+
+
+@router.post("/video/jobs/{job_id}/cancel")
+async def cancel_video_job(job_id: str):
+    """Cancel an ongoing or queued video job and release allocated resources."""
+    ok, msg = video_coordinator.cancel_job(job_id)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"status": "SUCCESS", "message": msg, "job_id": job_id}
+
+
+@router.get("/video/artifacts", response_model=List[VideoArtifact])
+async def list_video_artifacts(limit: int = Query(default=50, ge=1, le=200)):
+    """List validated local video artifacts."""
+    return video_coordinator.list_artifacts(limit=limit)
+
+
+@router.get("/video/artifacts/{artifact_id}", response_model=VideoArtifact)
+async def get_video_artifact(artifact_id: str):
+    """Retrieve metadata for a specific video artifact."""
+    artifact = video_coordinator.get_artifact(artifact_id)
+    if not artifact:
+        raise HTTPException(status_code=404, detail=f"Video artifact {artifact_id} not found")
+    return artifact
+
+
+@router.get("/video/artifacts/{artifact_id}/file")
+async def get_video_artifact_file(artifact_id: str):
+    """Serve the raw generated video binary file."""
+    artifact = video_coordinator.get_artifact(artifact_id)
+    if not artifact:
+        raise HTTPException(status_code=404, detail=f"Video artifact {artifact_id} not found")
+
+    file_path = (video_coordinator.storage.base_dir.parent / artifact.path).resolve()
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"Video artifact file missing from disk: {file_path}")
+
+    media_type = f"video/{artifact.format.value.lower()}"
+    return FileResponse(
+        path=str(file_path),
+        media_type=media_type,
+        filename=artifact.filename
+    )
+
+
+@router.get("/video/artifacts/{artifact_id}/thumbnail")
+async def get_video_artifact_thumbnail(artifact_id: str):
+    """Serve the poster thumbnail frame for the video artifact."""
+    artifact = video_coordinator.get_artifact(artifact_id)
+    if not artifact or not artifact.poster_path:
+        raise HTTPException(status_code=404, detail=f"Thumbnail for artifact {artifact_id} not found")
+
+    file_path = (video_coordinator.storage.base_dir.parent / artifact.poster_path).resolve()
+
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"Thumbnail file missing from disk: {file_path}")
+
+    return FileResponse(
+        path=str(file_path),
+        media_type="image/jpeg",
+        filename=f"thumb_{artifact.artifact_id}.jpg"
+    )
+
+
+@router.delete("/video/artifacts/{artifact_id}")
+async def delete_video_artifact(artifact_id: str):
+    """Delete a video artifact file and its metadata record."""
+    ok, msg = video_coordinator.delete_artifact(artifact_id)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"status": "SUCCESS", "message": msg, "artifact_id": artifact_id}

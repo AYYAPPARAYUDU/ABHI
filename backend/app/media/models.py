@@ -162,25 +162,13 @@ class ImageModelDefinition(BaseModel):
     is_candidate: bool = Field(default=False)
 
 
-# Generic Video Placeholders for Phase 8 Stage 8.2 Extension
-class VideoJob(BaseModel):
-    """Future extension contract for video generation."""
-    job_id: str
-    media_type: MediaType = MediaType.VIDEO
-    operation: MediaOperation = MediaOperation.GENERATE
-    status: MediaJobStatus = MediaJobStatus.QUEUED
-    fps: int = 24
-    duration_sec: float = 4.0
-    model_id: str = "local-video-v1"
-
-
-class VideoArtifact(BaseModel):
-    """Future extension contract for video output artifact."""
-    artifact_id: str
-    job_id: str
-    media_type: MediaType = MediaType.VIDEO
-    path: str
-    duration_sec: float
-    fps: int
-    size_bytes: int
-    sha256: str
+# Video contracts imported from video_models for unified domain access
+from backend.app.media.video_models import (
+    VideoFormat,
+    VideoType,
+    VideoSegmentStatus,
+    VideoSegmentCheckpoint,
+    VideoGenerationRequest,
+    VideoArtifact,
+    VideoModelDefinition,
+)

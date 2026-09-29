@@ -1,9 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { of } from 'rxjs';
 import { MediaPageComponent } from './media-page.component';
 import { MediaService } from '../../services/media.service';
+import { of } from 'rxjs';
 
 describe('MediaPageComponent', () => {
   let component: MediaPageComponent;
@@ -18,16 +17,13 @@ describe('MediaPageComponent', () => {
 
     mediaService = TestBed.inject(MediaService);
     vi.spyOn(mediaService, 'refreshAll').mockImplementation(() => {});
-    vi.spyOn(mediaService, 'generateImage').mockReturnValue(of({} as any));
-    vi.spyOn(mediaService, 'cancelJob').mockReturnValue(of({} as any));
-    vi.spyOn(mediaService, 'deleteArtifact').mockReturnValue(of({} as any));
 
     fixture = TestBed.createComponent(MediaPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-  it('should create the page component', () => {
+  it('should create the media page component', () => {
     expect(component).toBeTruthy();
   });
 
@@ -35,23 +31,80 @@ describe('MediaPageComponent', () => {
     expect(mediaService.refreshAll).toHaveBeenCalled();
   });
 
-  it('should delegate generateImage call to service', () => {
-    component.onGenerate({
-      prompt: 'A golden temple',
+  it('should switch between video and image studio tabs', () => {
+    expect(component.activeTab()).toBe('video');
+    component.activeTab.set('image');
+    expect(component.activeTab()).toBe('image');
+  });
+
+  it('should delegate video generation and deletion calls to service', () => {
+    const generateSpy = vi.spyOn(mediaService, 'generateVideo').mockReturnValue(of({} as any));
+    const cancelSpy = vi.spyOn(mediaService, 'cancelVideoJob').mockReturnValue(of({} as any));
+    const deleteSpy = vi.spyOn(mediaService, 'deleteVideoArtifact').mockReturnValue(of({} as any));
+
+    component.onGenerateVideo({
+      prompt: 'A flying dragon',
+      model_id: 'svd-xt-local',
+      width: 512,
+      height: 512,
+      fps: 24,
+      duration_seconds: 2.0,
+      steps: 25,
+      output_format: 'MP4',
+    });
+    expect(generateSpy).toHaveBeenCalled();
+
+    component.onCancelVideoJob('job_123');
+    expect(cancelSpy).toHaveBeenCalledWith('job_123');
+
+    component.onDeleteVideoArtifact('art_123');
+    expect(deleteSpy).toHaveBeenCalledWith('art_123');
+  });
+
+  it('should clear error messages when requested', () => {
+    mediaService.errorMessage.set('Test image error');
+    mediaService.videoErrorMessage.set('Test video error');
+
+    component.clearErrors();
+
+    expect(mediaService.errorMessage()).toBeNull();
+    expect(mediaService.videoErrorMessage()).toBeNull();
+  });
+
+  it('should initialize activeTab with video default', () => {
+    expect(component.activeTab()).toBe('video');
+  });
+
+  it('should handle video generation error state without crashing', () => {
+    mediaService.videoErrorMessage.set('Generation failed: Out of VRAM');
+    fixture.detectChanges();
+    expect(mediaService.videoErrorMessage()).toBe('Generation failed: Out of VRAM');
+  });
+
+  it('should trigger image generation and cancellation handlers', () => {
+    const genSpy = vi.spyOn(mediaService, 'generateImage').mockReturnValue(of({} as any));
+    const cancelSpy = vi.spyOn(mediaService, 'cancelJob').mockReturnValue(of({} as any));
+    const delSpy = vi.spyOn(mediaService, 'deleteArtifact').mockReturnValue(of({} as any));
+
+    component.onGenerateImage({
+      prompt: 'A sunset landscape',
       model_id: 'sd-turbo-local',
       width: 512,
       height: 512,
       steps: 20,
       output_format: 'PNG',
     });
-    expect(mediaService.generateImage).toHaveBeenCalled();
+    expect(genSpy).toHaveBeenCalled();
+
+    component.onCancelImageJob('job_img_1');
+    expect(cancelSpy).toHaveBeenCalledWith('job_img_1');
+
+    component.onDeleteImageArtifact('art_img_1');
+    expect(delSpy).toHaveBeenCalledWith('art_img_1');
   });
 
-  it('should delegate cancelJob and deleteArtifact calls to service', () => {
-    component.onCancelJob('job_test_1');
-    expect(mediaService.cancelJob).toHaveBeenCalledWith('job_test_1');
-
-    component.onDeleteArtifact('art_test_1');
-    expect(mediaService.deleteArtifact).toHaveBeenCalledWith('art_test_1');
+  it('should compute vramFreeMB and activeJobsCount via service signals', () => {
+    expect(mediaService.vramFreeMB()).toBeDefined();
+    expect(mediaService.activeJobsCount()).toBe(0);
   });
 });

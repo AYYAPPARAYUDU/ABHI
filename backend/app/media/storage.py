@@ -55,7 +55,8 @@ class MediaStorageManager:
 
     def generate_artifact_path(self, job_id: str, index: int, format: ImageFormat) -> Tuple[Path, str]:
         """Generate canonical relative and absolute paths: media/images/YYYY/MM/img_<job_id>_<index>.<format>"""
-        now = datetime.utcnow()
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
         year_month = now.strftime("%Y/%m")
         target_dir = (self.images_dir / now.strftime("%Y") / now.strftime("%m")).resolve()
         target_dir.mkdir(parents=True, exist_ok=True)
