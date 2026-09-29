@@ -1,0 +1,33 @@
+<div class="milestones-card glass-card">
+  <div class="card-header">
+    <div class="title-wrap">
+      <span class="header-icon">🎯</span>
+      <h3>Bounded Milestones</h3>
+    </div>
+    <div class="overall-progress-chip">
+      <span>{{ progressPercentage() | number:'1.0-1' }}% Progress</span>
+      <div class="mini-progress-bar">
+        <div class="fill" [style.width.%]="progressPercentage()"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="milestones-grid">
+    @for (ms of milestones(); track ms.milestone_id; let idx = $index) {
+      <div class="milestone-item" [ngClass]="getStatusClass(ms.status)">
+        <div class="ms-index">{{ idx + 1 }}</div>
+        <div class="ms-info">
+          <div class="ms-header">
+            <h4 class="ms-title">{{ ms.title }}</h4>
+            <span class="badge ms-status-badge">{{ ms.status }}</span>
+          </div>
+          <p class="ms-desc">{{ ms.description }}</p>
+          <div class="ms-condition">
+            <span class="cond-label">Success Condition:</span>
+            <code>{{ ms.observable_success_condition }}</code>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

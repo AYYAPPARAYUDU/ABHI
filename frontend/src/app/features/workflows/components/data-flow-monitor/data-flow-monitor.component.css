@@ -1,0 +1,134 @@
+.dataflow-card {
+  padding: 1.25rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  padding-bottom: 0.75rem;
+}
+
+.title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-icon {
+  font-size: 1.25rem;
+}
+
+.flows-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.flow-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 8px;
+}
+
+.flow-path {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 220px;
+}
+
+.app-tag {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.source-app {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.dest-app {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.arrow-indicator {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.flow-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex-grow: 1;
+}
+
+.flow-obj-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.obj-label {
+  color: #94a3b8;
+}
+
+.obj-name {
+  color: #f1f5f9;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.class-badge {
+  background: rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-size: 0.65rem;
+}
+
+.reason-text {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.flow-policy {
+  min-width: 90px;
+  text-align: right;
+}
+
+.policy-allowed {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.policy-denied {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.policy-consent {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.policy-pending {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+}

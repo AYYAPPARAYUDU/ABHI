@@ -1,0 +1,41 @@
+@if (handoff() && !handoff()!.resolved) {
+  <div class="modal-overlay">
+    <div class="handoff-dialog glass-card">
+      <div class="dialog-header">
+        <div class="warning-icon-wrap">
+          <span class="warning-icon">✋</span>
+        </div>
+        <div class="header-titles">
+          <h3>Human Intervention Required</h3>
+          <span class="handoff-reason-tag">{{ handoff()!.reason }}</span>
+        </div>
+      </div>
+
+      <div class="dialog-body">
+        <p class="description-text">{{ handoff()!.message }}</p>
+
+        <div class="required-action-box">
+          <span class="box-title">Next Action Required:</span>
+          <p class="action-desc">{{ handoff()!.next_action_description }}</p>
+        </div>
+
+        <div class="resolution-input-wrap">
+          <label for="resNotes">Operator Notes / Verification:</label>
+          <input
+            id="resNotes"
+            type="text"
+            [(ngModel)]="resolutionNotes"
+            placeholder="e.g. Completed MFA login, CAPTCHA solved"
+            class="handoff-input"
+          />
+        </div>
+      </div>
+
+      <div class="dialog-footer">
+        <button class="btn btn-primary resolve-btn" (click)="onResolve()">
+          ✓ Mark Resolved & Resume Execution
+        </button>
+      </div>
+    </div>
+  </div>
+}

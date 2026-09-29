@@ -14,6 +14,7 @@ from backend.app.api.v1.evaluation import router as evaluation_router
 from backend.app.api.v1.skills import router as skills_router
 from backend.app.api.v1.applications import router as applications_router
 from backend.app.api.v1.browser import router as browser_router
+from backend.app.api.v1.workflow import workflow_router
 from backend.app.api.websockets.telemetry import router as ws_router
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
@@ -68,6 +69,7 @@ app.include_router(tasks_router, prefix="/api/v1")
 app.include_router(skills_router, prefix="/api/v1")
 app.include_router(applications_router, prefix="/api/v1")
 app.include_router(browser_router, prefix="/api/v1")
+app.include_router(workflow_router, prefix="/api/v1")
 app.include_router(perception_router, prefix="/api/v1")
 app.include_router(runtime_router, prefix="/api/v1")
 app.include_router(memory_router, prefix="/api/v1")

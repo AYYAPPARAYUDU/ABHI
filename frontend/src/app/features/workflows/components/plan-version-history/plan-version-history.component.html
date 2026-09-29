@@ -1,0 +1,38 @@
+<div class="version-history-card glass-card">
+  <div class="card-header">
+    <div class="title-wrap">
+      <span class="header-icon">📜</span>
+      <h3>Plan Version History (Immutable Revisions)</h3>
+    </div>
+  </div>
+
+  <div class="versions-list">
+    @for (plan of getAllPlans(); track plan.plan_id) {
+      <div class="version-item" [class.active-plan]="plan.is_active">
+        <div class="version-badge-col">
+          <span class="version-tag">Plan v{{ plan.version }}</span>
+          @if (plan.is_active) {
+            <span class="badge active-badge">ACTIVE</span>
+          } @else {
+            <span class="badge superseded-badge">SUPERSEDED</span>
+          }
+        </div>
+
+        <div class="version-details">
+          <div class="version-meta-row">
+            <span class="plan-id-code">{{ plan.plan_id }}</span>
+            <span class="meta-item">Cost: <strong>{{ plan.estimated_cost }}</strong></span>
+            <span class="meta-item">Est: <strong>{{ plan.estimated_duration_ms }} ms</strong></span>
+            <span class="meta-item">Risk: <strong [class.risk-warn]="plan.risk_summary === 'HIGH'">{{ plan.risk_summary }}</strong></span>
+          </div>
+
+          @if (plan.superseded_by_plan_id) {
+            <div class="superseded-info">
+              <span>↳ Superseded by: <code>{{ plan.superseded_by_plan_id }}</code></span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

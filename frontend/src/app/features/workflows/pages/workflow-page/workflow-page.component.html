@@ -1,0 +1,134 @@
+<div class="workflow-page-container">
+  <!-- Top Banner & Goal Definition Header -->
+  <header class="page-header glass-card">
+    <div class="header-left">
+      <div class="title-with-badge">
+        <h1>Long-Horizon Autonomous Workflows</h1>
+        <span class="stage-tag">Phase 7 • Stage 7.4</span>
+      </div>
+      <p class="subtitle">Bounded Multi-Step Autonomous Goal Pursuit with Immutable Revisions & Provenance Tracking</p>
+    </div>
+
+    <!-- Quick Workflow Control Buttons -->
+    @if (workflowService.activeWorkflow()) {
+      <div class="header-actions">
+        <button
+          class="btn btn-secondary"
+          (click)="onReplan()"
+          [disabled]="workflowService.isLoading()"
+        >
+          🔄 Request Replan
+        </button>
+
+        @if (workflowService.activeWorkflow()?.is_paused) {
+          <button class="btn btn-primary" (click)="onResume()">
+            ▶ Resume
+          </button>
+        } @else {
+          <button class="btn btn-warning" (click)="onPause()">
+            ⏸ Pause
+          </button>
+        }
+
+        <button class="btn btn-danger" (click)="onCancel()">
+          ⏹ Cancel
+        </button>
+
+        <button class="btn btn-success" (click)="onStart()">
+          🚀 Execute Workflow
+        </button>
+      </div>
+    }
+  </header>
+
+  <!-- Goal Submission Card -->
+  <section class="goal-input-card glass-card">
+    <div class="input-row">
+      <input
+        type="text"
+        [(ngModel)]="newGoalText"
+        placeholder="Enter user goal (e.g. Find latest quarterly PDF in Downloads, summarize findings and write report.txt)..."
+        class="goal-text-input"
+        (keyup.enter)="onSubmitGoal()"
+      />
+
+      <select [(ngModel)]="selectedAutonomy" class="autonomy-select">
+        <option value="LEVEL_1">LEVEL 1: Read-Only</option>
+        <option value="LEVEL_2">LEVEL 2: Low-Risk Local</option>
+        <option value="LEVEL_3">LEVEL 3: Multi-Step Local</option>
+        <option value="LEVEL_4">LEVEL 4: Cross-App</option>
+        <option value="LEVEL_5">LEVEL 5: High-Risk</option>
+      </select>
+
+      <button
+        class="btn btn-primary submit-goal-btn"
+        (click)="onSubmitGoal()"
+        [disabled]="workflowService.isLoading() || !newGoalText.trim()"
+      >
+        Plan & Queue Goal
+      </button>
+    </div>
+  </section>
+
+  <!-- Active Goal Overview -->
+  @if (workflowService.activeWorkflow(); as wf) {
+    <section class="goal-summary-card glass-card">
+      <div class="summary-top">
+        <div class="goal-info">
+          <span class="label">ACTIVE GOAL CONTRACT</span>
+          <h2 class="goal-title">{{ wf.goal?.original_request }}</h2>
+          <div class="goal-constraints-list">
+            @for (c of wf.goal?.constraints || []; track c.key) {
+              <span class="constraint-chip">
+                <strong>{{ c.constraint_type }}:</strong> {{ c.key }} = {{ c.value }}
+              </span>
+            }
+          </div>
+        </div>
+
+        <div class="eval-status-box">
+          <span class="eval-status-badge" [class.status-comp]="wf.evaluation?.status === 'COMPLETED'">
+            {{ wf.evaluation?.status }}
+          </span>
+          <span class="eval-desc">{{ wf.evaluation?.explanation }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Grid: DAG on Left, Context & History on Right -->
+    <div class="workflow-main-grid">
+      <div class="grid-col-left">
+        <app-workflow-dag-viewer
+          [nodes]="workflowService.currentPlanNodes()"
+          [planId]="wf.active_plan?.plan_id || ''"
+          [version]="wf.active_plan?.version || 1"
+        ></app-workflow-dag-viewer>
+
+        <app-milestone-tracker
+          [milestones]="wf.active_plan?.milestones || []"
+          [progressPercentage]="workflowService.progressPercentage()"
+          [activeMilestone]="wf.evaluation?.active_milestone || null"
+        ></app-milestone-tracker>
+      </div>
+
+      <div class="grid-col-right">
+        <app-plan-version-history
+          [activePlan]="wf.active_plan || null"
+          [planHistory]="wf.plan_history || []"
+        ></app-plan-version-history>
+
+        <app-data-flow-monitor
+          [dataFlows]="workflowService.dataFlows()"
+        ></app-data-flow-monitor>
+      </div>
+    </div>
+  }
+
+  <!-- Human Intervention Modal -->
+  @if (workflowService.hasPendingHandoff()) {
+    <app-human-handoff-modal
+      [handoff]="workflowService.pendingHandoff()"
+      (resolve)="onResolveHandoff($event)"
+    ></app-human-handoff-modal>
+  }
+</div>

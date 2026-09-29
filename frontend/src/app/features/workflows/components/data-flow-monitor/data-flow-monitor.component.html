@@ -1,0 +1,35 @@
+<div class="dataflow-card glass-card">
+  <div class="card-header">
+    <div class="title-wrap">
+      <span class="header-icon">🔄</span>
+      <h3>Cross-Application Data Provenance</h3>
+    </div>
+  </div>
+
+  <div class="flows-list">
+    @for (flow of dataFlows(); track flow.transfer_id) {
+      <div class="flow-item">
+        <div class="flow-path">
+          <span class="app-tag source-app">{{ flow.source_application }}</span>
+          <span class="arrow-indicator">➔</span>
+          <span class="app-tag dest-app">{{ flow.destination_application }}</span>
+        </div>
+
+        <div class="flow-meta">
+          <div class="flow-obj-row">
+            <span class="obj-label">Object:</span>
+            <code class="obj-name">{{ flow.source_object }}</code>
+            <span class="badge class-badge">{{ flow.data_classification }}</span>
+          </div>
+          <p class="reason-text">{{ flow.transfer_reason }}</p>
+        </div>
+
+        <div class="flow-policy">
+          <span class="badge" [ngClass]="getPolicyBadgeClass(flow.policy_decision)">
+            {{ flow.policy_decision }}
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+</div>

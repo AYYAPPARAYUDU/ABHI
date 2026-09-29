@@ -8,6 +8,9 @@ import { TelemetryService } from '../../../core/websocket/telemetry.service';
 import { TaskApiService } from '../../../core/api/task-api.service';
 
 describe('AppNavigationComponent', () => {
+  let fixture: any;
+  let component: AppNavigationComponent;
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppNavigationComponent],
@@ -20,20 +23,19 @@ describe('AppNavigationComponent', () => {
         OperatorStateService
       ]
     }).compileComponents();
+
+    fixture = TestBed.createComponent(AppNavigationComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
   it('should create navigation component', () => {
-    const fixture = TestBed.createComponent(AppNavigationComponent);
-    const component = fixture.componentInstance;
     expect(component).toBeTruthy();
   });
 
   it('should render all primary navigation links', () => {
-    const fixture = TestBed.createComponent(AppNavigationComponent);
-    fixture.detectChanges();
-
     const el = fixture.nativeElement as HTMLElement;
     const links = el.querySelectorAll('a.nav-tab');
-    expect(links.length).toBe(12);
+    expect(links.length).toBe(13);
   });
 });

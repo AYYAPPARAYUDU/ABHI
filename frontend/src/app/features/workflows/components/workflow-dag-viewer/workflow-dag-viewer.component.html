@@ -1,0 +1,60 @@
+<div class="dag-container glass-card">
+  <div class="dag-header">
+    <div class="dag-title-row">
+      <span class="dag-icon">⚡</span>
+      <h3>Execution DAG & Action Graph</h3>
+    </div>
+    <div class="dag-meta">
+      <span class="badge version-badge">Plan v{{ version() }}</span>
+      <span class="plan-id-text">{{ planId() }}</span>
+    </div>
+  </div>
+
+  <div class="dag-nodes-list">
+    @for (node of nodes(); track node.node_id; let idx = $index) {
+      <div class="dag-node-card" [class.node-running]="node.status === 'RUNNING'" [class.node-completed]="node.status === 'COMPLETED'">
+        <div class="node-sequence-indicator">
+          <span class="step-num">{{ idx + 1 }}</span>
+          @if (idx < nodes().length - 1) {
+            <div class="connector-line"></div>
+          }
+        </div>
+
+        <div class="node-content">
+          <div class="node-top-bar">
+            <h4 class="node-title">{{ node.title || node.node_id }}</h4>
+            <div class="node-badges">
+              <span class="badge" [ngClass]="getRiskBadgeClass(node.risk_level)">{{ node.risk_level }}</span>
+              <span class="badge" [ngClass]="getStatusBadgeClass(node.status)">{{ node.status }}</span>
+            </div>
+          </div>
+
+          <div class="node-details">
+            <div class="detail-item">
+              <span class="detail-label">Skill:</span>
+              <span class="detail-val skill-tag">{{ node.skill_id }} (v{{ node.skill_version }})</span>
+            </div>
+            @if (node.dependencies && node.dependencies.length > 0) {
+              <div class="detail-item">
+                <span class="detail-label">Depends on:</span>
+                <span class="detail-val dep-tag">{{ node.dependencies.join(', ') }}</span>
+              </div>
+            }
+            @if (node.execution_duration_ms > 0) {
+              <div class="detail-item">
+                <span class="detail-label">Duration:</span>
+                <span class="detail-val">{{ node.execution_duration_ms }} ms</span>
+              </div>
+            }
+          </div>
+
+          @if (node.error_message) {
+            <div class="node-error-alert">
+              ⚠️ {{ node.error_message }}
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>
