@@ -1,10 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { AppHeaderComponent } from '../app-header/app-header.component';
-import { AppNavigationComponent } from '../app-navigation/app-navigation.component';
+import { FloatingSidebarComponent } from '../floating-sidebar/floating-sidebar.component';
+import { ContextualTopbarComponent } from '../contextual-topbar/contextual-topbar.component';
 import { GlobalSafetyBarComponent } from '../global-safety-bar/global-safety-bar.component';
 import { ConsentModalComponent } from '../../../features/operator-console/components/consent-modal/consent-modal.component';
+import { SpatialBackgroundComponent } from '../../../shared/3d/spatial-background/spatial-background.component';
+import { CommandPaletteComponent } from '../../../shared/ui/command-palette/command-palette.component';
+import { OperatorStateService } from '../../../core/services/operator-state.service';
 
 @Component({
   selector: 'app-shell',
@@ -12,12 +15,16 @@ import { ConsentModalComponent } from '../../../features/operator-console/compon
   imports: [
     CommonModule,
     RouterModule,
-    AppHeaderComponent,
-    AppNavigationComponent,
+    FloatingSidebarComponent,
+    ContextualTopbarComponent,
     GlobalSafetyBarComponent,
-    ConsentModalComponent
+    ConsentModalComponent,
+    SpatialBackgroundComponent,
+    CommandPaletteComponent
   ],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.css'
 })
-export class AppShellComponent {}
+export class AppShellComponent {
+  readonly stateService = inject(OperatorStateService);
+}

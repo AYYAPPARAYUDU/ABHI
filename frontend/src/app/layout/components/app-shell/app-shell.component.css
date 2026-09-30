@@ -1,19 +1,45 @@
 :host {
   display: block;
   min-height: 100vh;
-  background-color: var(--abhi-bg-base);
-}
-
-.app-shell {
-  background-color: var(--abhi-bg-base);
-}
-
-.app-content {
-  max-width: 1920px;
-  margin: 0 auto;
   width: 100%;
+  color: #f1f5f9;
+  font-family: var(--abhi-font-sans, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif);
 }
 
-.app-footer {
-  background: var(--abhi-bg-surface-1);
+.abhi-app-shell {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+}
+
+.workspace-container {
+  flex: 1;
+  min-height: 100vh;
+  margin-left: 252px;
+  padding: 16px 24px 32px 12px;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.workspace-container.collapsed-sidebar {
+  margin-left: 100px;
+}
+
+.workspace-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+}
+
+@media (max-width: 768px) {
+  .workspace-container,
+  .workspace-container.collapsed-sidebar {
+    margin-left: 0 !important;
+    padding: 12px 12px 84px 12px;
+  }
 }

@@ -9,7 +9,7 @@ import { OperatorStateService } from './core/services/operator-state.service';
 import { TelemetryService } from './core/websocket/telemetry.service';
 import { TaskApiService } from './core/api/task-api.service';
 
-describe('Phase 6 Stage 6.2 — Application Shell, Routing & Design System Suite', () => {
+describe('Phase 9 Stage 1 — 3D Spatial Agentic Application Shell, Routing & Experience Suite', () => {
   let stateService: OperatorStateService;
   let telemetryService: TelemetryService;
   let router: Router;
@@ -41,37 +41,38 @@ describe('Phase 6 Stage 6.2 — Application Shell, Routing & Design System Suite
       expect(app).toBeTruthy();
     });
 
-    it('should render header, navigation, global safety bar, and router outlet', async () => {
+    it('should render 3D spatial background, floating sidebar dock, contextual topbar, and router outlet', async () => {
       const fixture = TestBed.createComponent(App);
       fixture.detectChanges();
       await fixture.whenStable();
 
       const compiled = fixture.nativeElement as HTMLElement;
       expect(compiled.querySelector('app-shell')).toBeTruthy();
-      expect(compiled.querySelector('app-header')).toBeTruthy();
-      expect(compiled.querySelector('app-navigation')).toBeTruthy();
+      expect(compiled.querySelector('app-spatial-background')).toBeTruthy();
+      expect(compiled.querySelector('app-floating-sidebar')).toBeTruthy();
+      expect(compiled.querySelector('app-contextual-topbar')).toBeTruthy();
       expect(compiled.querySelector('router-outlet')).toBeTruthy();
     });
 
-    it('should render brand identity in application header', async () => {
+    it('should render brand identity in floating sidebar dock', async () => {
       const fixture = TestBed.createComponent(App);
       fixture.detectChanges();
       await fixture.whenStable();
 
       const compiled = fixture.nativeElement as HTMLElement;
       expect(compiled.querySelector('.brand-title')?.textContent).toContain('ABHI');
-      expect(compiled.querySelector('.brand-sub')?.textContent).toContain('OPERATOR CONSOLE');
+      expect(compiled.querySelector('.brand-subtitle')?.textContent).toContain('AI OS');
     });
   });
 
   describe('Routing & Navigation', () => {
-    it('should redirect root path to /console', async () => {
+    it('should redirect root path to /home', async () => {
       const fixture = TestBed.createComponent(App);
       fixture.detectChanges();
       await router.navigate(['']);
       await fixture.whenStable();
 
-      expect(location.path()).toBe('/console');
+      expect(location.path()).toBe('/home');
     });
 
     it('should navigate to /tasks and load TasksPageComponent', async () => {
@@ -146,13 +147,13 @@ describe('Phase 6 Stage 6.2 — Application Shell, Routing & Design System Suite
       expect(location.path()).toBe('/system');
     });
 
-    it('should redirect unknown routes to /console', async () => {
+    it('should redirect unknown routes to /home', async () => {
       const fixture = TestBed.createComponent(App);
       fixture.detectChanges();
       await router.navigate(['/non-existent-route']);
       await fixture.whenStable();
 
-      expect(location.path()).toBe('/console');
+      expect(location.path()).toBe('/home');
     });
   });
 
@@ -196,7 +197,7 @@ describe('Phase 6 Stage 6.2 — Application Shell, Routing & Design System Suite
       await router.navigate(['/system']);
       expect(stateService.currentTask()?.taskId).toBe(testTaskId);
 
-      await router.navigate(['/console']);
+      await router.navigate(['/home']);
       expect(stateService.currentTask()?.taskId).toBe(testTaskId);
     });
   });

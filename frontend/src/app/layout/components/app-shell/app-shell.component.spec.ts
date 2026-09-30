@@ -28,13 +28,14 @@ describe('AppShellComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should contain header and router outlet', () => {
+  it('should contain 3d background, floating dock, contextual bar and router outlet', () => {
     const fixture = TestBed.createComponent(AppShellComponent);
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('app-header')).toBeTruthy();
-    expect(el.querySelector('app-navigation')).toBeTruthy();
+    expect(el.querySelector('app-spatial-background')).toBeTruthy();
+    expect(el.querySelector('app-floating-sidebar')).toBeTruthy();
+    expect(el.querySelector('app-contextual-topbar')).toBeTruthy();
     expect(el.querySelector('router-outlet')).toBeTruthy();
   });
 });

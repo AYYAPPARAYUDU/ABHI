@@ -1,24 +1,31 @@
-<div class="app-shell d-flex flex-column min-vh-100 text-light">
-  <!-- Top App Header -->
-  <app-header></app-header>
+<!-- 3D Immersive Spatial Canvas Layer -->
+<app-spatial-background></app-spatial-background>
 
-  <!-- Global Safety / Alert Banner (reactive) -->
-  <app-global-safety-bar></app-global-safety-bar>
+<!-- Main Shell Container -->
+<div class="abhi-app-shell">
+  <!-- Floating Sidebar Navigation Dock -->
+  <app-floating-sidebar></app-floating-sidebar>
 
-  <!-- Primary Feature Navigation Bar -->
-  <app-navigation></app-navigation>
+  <!-- Workspace Container (Offset from sidebar) -->
+  <div
+    class="workspace-container"
+    [class.collapsed-sidebar]="stateService.sidebarCollapsed()"
+  >
+    <!-- Reactive Global Safety / Alerts -->
+    <app-global-safety-bar></app-global-safety-bar>
 
-  <!-- Main Viewport / Routed Content Area -->
-  <main class="app-content flex-grow-1 p-3 container-fluid" role="main">
-    <router-outlet></router-outlet>
-  </main>
+    <!-- Contextual Top Utility Bar -->
+    <app-contextual-topbar></app-contextual-topbar>
 
-  <!-- App Footer -->
-  <footer class="app-footer p-2 text-center border-top border-secondary border-opacity-25 font-monospace text-secondary small" role="contentinfo">
-    <span>ABHI // LOCAL-FIRST PERSONAL AI COMPUTER AUTOMATION SYSTEM</span>
-    <span class="ms-3 text-muted">STAGE 6.2 PRODUCTION SHELL</span>
-  </footer>
+    <!-- Primary Routed Content -->
+    <main class="workspace-main" role="main">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
 
-  <!-- Modal Dialogs (Consent Gate) -->
+  <!-- Command Palette (Ctrl+K) -->
+  <app-command-palette></app-command-palette>
+
+  <!-- Consent Gate Modal -->
   <app-consent-modal></app-consent-modal>
 </div>

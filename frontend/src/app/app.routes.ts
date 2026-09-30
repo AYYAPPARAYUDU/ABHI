@@ -4,7 +4,14 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'console'
+    redirectTo: 'home'
+  },
+  {
+    path: 'home',
+    loadComponent: () =>
+      import('./features/home/pages/home-page/home-page.component').then(
+        (m) => m.HomePageComponent
+      )
   },
   {
     path: 'console',
@@ -119,8 +126,14 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'dev-ui',
+    loadComponent: () =>
+      import('./features/dev-ui/pages/dev-ui-page/dev-ui-page.component').then(
+        (m) => m.DevUiPageComponent
+      )
+  },
+  {
     path: '**',
-
-    redirectTo: 'console'
+    redirectTo: 'home'
   }
 ];

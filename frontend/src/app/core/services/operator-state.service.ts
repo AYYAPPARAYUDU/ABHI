@@ -66,12 +66,80 @@ export class OperatorStateService {
   // Execution Timeline Items (Bounded)
   readonly timeline = signal<TimelineItem[]>([]);
 
+  // Phase 9: 3D Spatial & Agentic UX State Projections
+  readonly userMode = signal<import('../models/agent-experience.model').UserExperienceMode>('USER');
+  readonly spatialMode = signal<import('../models/agent-experience.model').SpatialEnvironmentMode>('DEFAULT');
+  readonly commandPaletteOpen = signal<boolean>(false);
+  readonly sidebarCollapsed = signal<boolean>(false);
+  readonly agentExperience = signal<import('../models/agent-experience.model').AgentExperienceEvent | null>({
+    eventId: 'evt_init',
+    stage: 'IDLE',
+    status: 'COMPLETED',
+    userMessage: 'ABHI is ready for your instructions.',
+    timestamp: Date.now(),
+    userVisible: true
+  });
+  readonly recentActivities = signal<import('../models/agent-experience.model').RecentActivityItem[]>([
+    {
+      id: 'act_1',
+      type: 'APP',
+      title: 'Opened Calculator',
+      description: 'Calculated expressions via safe Win32 automation',
+      timestamp: Date.now() - 1000 * 60 * 15,
+      status: 'SUCCESS',
+      routeLink: '/applications'
+    },
+    {
+      id: 'act_2',
+      type: 'MEDIA',
+      title: 'Indexed Cyberpunk Metropolis Asset',
+      description: 'Extracted semantic vectors & scene OCR tokens',
+      timestamp: Date.now() - 1000 * 60 * 45,
+      status: 'SUCCESS',
+      routeLink: '/media-library'
+    },
+    {
+      id: 'act_3',
+      type: 'TASK',
+      title: 'Workflow Execution Verified',
+      description: 'Long-horizon workflow passed dual-state checks',
+      timestamp: Date.now() - 1000 * 60 * 120,
+      status: 'SUCCESS',
+      routeLink: '/tasks'
+    }
+  ]);
+
   // Computed Helpers
   readonly isBusy = computed(() => {
     const task = this.currentTask();
     if (!task) return false;
     return !['COMPLETED', 'FAILED', 'CANCELLED', 'EMERGENCY_STOPPED'].includes(task.state);
   });
+
+  setUserMode(mode: import('../models/agent-experience.model').UserExperienceMode): void {
+    this.userMode.set(mode);
+  }
+
+  setSpatialMode(mode: import('../models/agent-experience.model').SpatialEnvironmentMode): void {
+    this.spatialMode.set(mode);
+  }
+
+  toggleCommandPalette(force?: boolean): void {
+    this.commandPaletteOpen.set(force !== undefined ? force : !this.commandPaletteOpen());
+  }
+
+  toggleSidebar(): void {
+    this.sidebarCollapsed.set(!this.sidebarCollapsed());
+  }
+
+  addRecentActivity(activity: import('../models/agent-experience.model').RecentActivityItem): void {
+    this.recentActivities.update((list) => [activity, ...list.slice(0, 19)]);
+  }
+
+  setAgentExperience(event: import('../models/agent-experience.model').AgentExperienceEvent): void {
+    this.agentExperience.set(event);
+  }
+
 
   constructor(
     private readonly apiService: TaskApiService,

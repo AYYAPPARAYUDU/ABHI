@@ -31,6 +31,7 @@ database/media/
 database/backups/
 backend/database/
 /media/
+data/
 
 # System Logs & Observability
 
