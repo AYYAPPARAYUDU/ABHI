@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { OperatorStateService } from './operator-state.service';
-import { TaskApiService } from '../api/task-api.service';
+import { AgentApiService, BackendCommandResponse } from '../api/agent-api.service';
 import {
   AgentCommandRequest,
   AgentCommandResult,
@@ -16,7 +16,7 @@ import {
 })
 export class AgentCommandService {
   private readonly operatorState = inject(OperatorStateService);
-  private readonly apiService = inject(TaskApiService);
+  private readonly agentApi = inject(AgentApiService);
   private readonly router = inject(Router);
 
   // Command State Signals
@@ -36,7 +36,7 @@ export class AgentCommandService {
   });
 
   /**
-   * Submit natural language command to ABHI Agent Core.
+   * Submit natural language command to Authoritative Backend Agent Gateway.
    */
   async submitCommand(
     rawText: string,
@@ -52,11 +52,12 @@ export class AgentCommandService {
     }
 
     const commandId = `cmd_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const detectedLang = this.detectLanguage(text, language);
     const request: AgentCommandRequest = {
       commandId,
       text,
       inputMode,
-      language: this.detectLanguage(text, language),
+      language: detectedLang,
       context: { ...this.activeContext },
       submittedAt: Date.now()
     };
@@ -74,74 +75,42 @@ export class AgentCommandService {
     try {
       this.lifecycle.set('PLANNING');
 
-      // Check for inline instant math/calculation intent (e.g. "calculate 25 * 19" or "125 times 48")
-      const mathResult = this.tryEvaluateMathIntent(text, commandId);
-      if (mathResult) {
+      // Dispatch to Backend Authoritative Agent Gateway
+      const response: BackendCommandResponse = await this.agentApi.submitCommand({
+        command_id: commandId,
+        text,
+        input_mode: inputMode,
+        language_hint: detectedLang,
+        context: {
+          active_task_id: this.activeContext.taskId,
+          recent_command: this.activeContext.previousCommandId,
+          recent_result: this.activeContext.previousResultSummary ? { summary: this.activeContext.previousResultSummary } : undefined
+        },
+        origin: 'web'
+      });
+
+      // Map backend response into UI outcome model
+      const result = this.mapBackendResponseToResult(response, commandId, text);
+
+      if (response.status === 'COMPLETED') {
         this.lifecycle.set('COMPLETED');
-        this.activeResult.set(mathResult);
-        this.saveContextFromCommand(commandId, mathResult);
-        this.operatorState.addRecentActivity({
-          id: `act_${Date.now()}`,
-          type: 'APP',
-          title: mathResult.title,
-          description: mathResult.summary,
-          timestamp: Date.now(),
-          status: 'SUCCESS',
-          result: mathResult
-        });
-        return mathResult;
+      } else if (response.status === 'WAITING_FOR_APPROVAL') {
+        this.lifecycle.set('WAITING_FOR_APPROVAL');
+      } else {
+        this.lifecycle.set((response.status as CommandLifecycleState) || 'EXECUTING');
       }
 
-      // Check for media search intent (e.g. "find my cyberpunk images")
-      if (this.isMediaSearchIntent(text)) {
-        const searchResult = await this.handleMediaSearchIntent(text, commandId);
-        this.lifecycle.set('COMPLETED');
-        this.activeResult.set(searchResult);
-        this.saveContextFromCommand(commandId, searchResult);
-        this.operatorState.addRecentActivity({
-          id: `act_${Date.now()}`,
-          type: 'MEDIA',
-          title: searchResult.title,
-          description: searchResult.summary,
-          timestamp: Date.now(),
-          status: 'SUCCESS',
-          routeLink: '/media-library',
-          result: searchResult
-        });
-        return searchResult;
-      }
-
-      // Dispatch to Authoritative Central Supervisor via Task API
-      this.lifecycle.set('EXECUTING');
-      const taskResponse = await this.apiService.submitTask(text);
-      const taskId = taskResponse.task_id;
-
-      // Create Task Result representation
-      const result: AgentCommandResult = {
-        resultId: `res_${Date.now()}`,
-        commandId,
-        taskId,
-        type: this.inferResultType(text),
-        title: this.formatCommandTitle(text),
-        summary: `Action dispatched to ABHI Agent Core (Task ID: ${taskId})`,
-        timestamp: Date.now(),
-        actions: [
-          { label: 'View Tasks', actionType: 'NAVIGATE', payload: '/tasks' }
-        ]
-      };
-
-      this.lifecycle.set('COMPLETED');
       this.activeResult.set(result);
-      this.saveContextFromCommand(commandId, result, taskId);
+      this.saveContextFromCommand(commandId, result, response.task_id);
 
       this.operatorState.addRecentActivity({
         id: `act_${Date.now()}`,
-        type: 'TASK',
+        type: result.type === 'MEDIA_RESULT' ? 'MEDIA' : result.type === 'NUMBER_RESULT' ? 'APP' : 'TASK',
         title: result.title,
-        description: `Executed via Supervisor Cognitive Core`,
+        description: result.summary,
         timestamp: Date.now(),
-        status: 'RUNNING',
-        routeLink: '/tasks',
+        status: response.status === 'COMPLETED' ? 'SUCCESS' : 'RUNNING',
+        routeLink: result.taskId ? '/tasks' : undefined,
         result
       });
 
@@ -166,6 +135,34 @@ export class AgentCommandService {
     } finally {
       this.isProcessing.set(false);
     }
+  }
+
+  /**
+   * Map backend command response to typed frontend AgentCommandResult.
+   */
+  private mapBackendResponseToResult(
+    response: BackendCommandResponse,
+    commandId: string,
+    rawText: string
+  ): AgentCommandResult {
+    const backendResult = response.result || {};
+    const resType: ResultType = (backendResult.result_type as ResultType) || this.inferResultType(rawText);
+
+    return {
+      resultId: response.context_reference?.result_id || `res_${Date.now()}`,
+      commandId,
+      taskId: response.task_id,
+      type: resType,
+      title: backendResult.title || this.formatCommandTitle(rawText),
+      summary: backendResult.summary || response.message,
+      calculationExpression: backendResult.data?.expression,
+      numberValue: backendResult.data?.value,
+      searchResults: backendResult.data?.items,
+      timestamp: Date.now(),
+      actions: response.task_id
+        ? [{ label: 'View Tasks', actionType: 'NAVIGATE', payload: '/tasks' }]
+        : undefined
+    };
   }
 
   /**
@@ -199,105 +196,6 @@ export class AgentCommandService {
     // Tamil Unicode block: 0B80-0BFF
     if (/[\u0B80-\u0BFF]/.test(text)) return 'ta';
     return 'en';
-  }
-
-  /**
-   * Check for math/calculation intents and safely evaluate.
-   */
-  private tryEvaluateMathIntent(text: string, commandId: string): AgentCommandResult | null {
-    const lower = text.toLowerCase();
-    const isMathPattern = /calculate|what is|times|divided by|\+|\-|\*|\/|\×|\÷/i.test(lower);
-    if (!isMathPattern) return null;
-
-    let expr = lower
-      .replace(/calculate/g, '')
-      .replace(/what is/g, '')
-      .replace(/times/g, '*')
-      .replace(/multiplied by/g, '*')
-      .replace(/divided by/g, '/')
-      .replace(/plus/g, '+')
-      .replace(/minus/g, '-')
-      .replace(/×/g, '*')
-      .replace(/÷/g, '/')
-      .replace(/[^\d\+\-\*\/\.\(\)\s]/g, '')
-      .trim();
-
-    if (!expr || !/[\+\-\*\/]/.test(expr)) return null;
-
-    try {
-      // Safe math eval with strictly numeric/operator characters
-      const sanitized = expr.replace(/[^0-9\+\-\*\/\.\(\)]/g, '');
-      const fn = new Function(`return (${sanitized});`);
-      const val = fn();
-      if (typeof val === 'number' && !isNaN(val) && isFinite(val)) {
-        return {
-          resultId: `res_math_${Date.now()}`,
-          commandId,
-          type: 'NUMBER_RESULT',
-          title: 'Calculation Completed',
-          summary: `${expr} = ${val}`,
-          calculationExpression: expr,
-          numberValue: val,
-          timestamp: Date.now()
-        };
-      }
-    } catch {
-      return null;
-    }
-    return null;
-  }
-
-  /**
-   * Check if text represents a media library search.
-   */
-  private isMediaSearchIntent(text: string): boolean {
-    const lower = text.toLowerCase();
-    return (
-      lower.includes('find') ||
-      lower.includes('search') ||
-      lower.includes('show images') ||
-      lower.includes('show videos') ||
-      lower.includes('pictures') ||
-      lower.includes('cyberpunk')
-    ) && (lower.includes('image') || lower.includes('video') || lower.includes('media') || lower.includes('asset') || lower.includes('cyberpunk'));
-  }
-
-  /**
-   * Handle media search intent against local media repository.
-   */
-  private async handleMediaSearchIntent(text: string, commandId: string): Promise<AgentCommandResult> {
-    const query = text.replace(/find|search|my|show|images|videos|media/gi, '').trim() || 'media';
-    const items: SearchResultItem[] = [
-      {
-        id: 'art_cyberpunk_1',
-        title: 'Cyberpunk Metropolis Skyline',
-        subtitle: 'High-density generative city scene with neon highlights',
-        type: 'media',
-        previewUrl: '/assets/media-placeholder.webp',
-        routeLink: '/media-library'
-      },
-      {
-        id: 'art_cyberpunk_2',
-        title: 'Cyberpunk Night Rain Video',
-        subtitle: '4-second loop generated with local video workflow',
-        type: 'media',
-        previewUrl: '/assets/media-placeholder.webp',
-        routeLink: '/media-library'
-      }
-    ];
-
-    return {
-      resultId: `res_search_${Date.now()}`,
-      commandId,
-      type: 'SEARCH_RESULTS',
-      title: `Media Search: "${query}"`,
-      summary: `Found ${items.length} matching verified artifacts in local multimodal library.`,
-      searchResults: items,
-      timestamp: Date.now(),
-      actions: [
-        { label: 'Open Media Library', actionType: 'NAVIGATE', payload: '/media-library' }
-      ]
-    };
   }
 
   private inferResultType(text: string): ResultType {

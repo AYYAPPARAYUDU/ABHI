@@ -14,6 +14,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'ask',
+    loadComponent: () =>
+      import('./features/ask/pages/ask-workspace-page/ask-workspace-page.component').then(
+        (m) => m.AskWorkspacePageComponent
+      )
+  },
+  {
     path: 'console',
     loadComponent: () =>
       import('./features/operator-console/pages/operator-console-page/operator-console-page.component').then(

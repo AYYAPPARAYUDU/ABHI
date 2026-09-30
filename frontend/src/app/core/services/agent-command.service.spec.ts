@@ -4,11 +4,11 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import { AgentCommandService } from './agent-command.service';
 import { OperatorStateService } from './operator-state.service';
-import { TaskApiService } from '../api/task-api.service';
+import { AgentApiService } from '../api/agent-api.service';
 
 describe('AgentCommandService', () => {
   let service: AgentCommandService;
-  let apiService: TaskApiService;
+  let agentApi: AgentApiService;
   let operatorState: OperatorStateService;
 
   beforeEach(() => {
@@ -18,11 +18,11 @@ describe('AgentCommandService', () => {
         provideRouter([]),
         AgentCommandService,
         OperatorStateService,
-        TaskApiService
+        AgentApiService
       ]
     });
     service = TestBed.inject(AgentCommandService);
-    apiService = TestBed.inject(TaskApiService);
+    agentApi = TestBed.inject(AgentApiService);
     operatorState = TestBed.inject(OperatorStateService);
   });
 
@@ -30,42 +30,59 @@ describe('AgentCommandService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('should evaluate mathematical intent instantly', async () => {
-    const result = await service.submitCommand('calculate 125 times 48');
+  it('should map mathematical backend response correctly', async () => {
+    vi.spyOn(agentApi, 'submitCommand').mockResolvedValue({
+      command_id: 'cmd_math_1',
+      status: 'COMPLETED',
+      accepted: true,
+      message: 'Result: 6000',
+      result: {
+        result_type: 'NUMBER_RESULT',
+        title: 'Calculation Complete',
+        summary: '125 * 48 = 6000',
+        data: { expression: '125 * 48', value: 6000 }
+      },
+      created_at: Date.now()
+    });
+
+    const result = await service.submitCommand('calculate 125 * 48');
     expect(result).toBeTruthy();
     expect(result?.type).toBe('NUMBER_RESULT');
     expect(result?.numberValue).toBe(6000);
-    expect(result?.title).toBe('Calculation Completed');
+    expect(result?.title).toBe('Calculation Complete');
   });
 
-  it('should evaluate expression with plus and minus correctly', async () => {
-    const result = await service.submitCommand('what is 250 - 50 + 25');
-    expect(result).toBeTruthy();
-    expect(result?.type).toBe('NUMBER_RESULT');
-    expect(result?.numberValue).toBe(225);
-  });
-
-  it('should route media search intents to search result projection', async () => {
-    const result = await service.submitCommand('find my cyberpunk images');
-    expect(result).toBeTruthy();
-    expect(result?.type).toBe('SEARCH_RESULTS');
-    expect(result?.searchResults?.length).toBeGreaterThan(0);
-  });
-
-  it('should dispatch general goals to Authoritative Backend Supervisor', async () => {
-    vi.spyOn(apiService, 'submitTask').mockResolvedValue({
+  it('should dispatch general goals to Authoritative Backend Gateway', async () => {
+    vi.spyOn(agentApi, 'submitCommand').mockResolvedValue({
+      command_id: 'cmd_task_1',
       task_id: 'task_calc_123',
-      goal: 'Open Calculator',
-      state: 'PLANNING'
-    } as any);
+      status: 'PLANNING',
+      accepted: true,
+      message: 'Goal accepted: Open Calculator',
+      result: {
+        result_type: 'APPLICATION_RESULT',
+        title: 'Open Calculator',
+        summary: 'ABHI is planning and dispatching the task.',
+        data: { task_id: 'task_calc_123' }
+      },
+      created_at: Date.now()
+    });
 
     const result = await service.submitCommand('Open Calculator');
-    expect(apiService.submitTask).toHaveBeenCalledWith('Open Calculator');
+    expect(agentApi.submitCommand).toHaveBeenCalled();
     expect(result?.taskId).toBe('task_calc_123');
     expect(result?.type).toBe('APPLICATION_RESULT');
   });
 
   it('should filter out sensitive commands from history', async () => {
+    vi.spyOn(agentApi, 'submitCommand').mockResolvedValue({
+      command_id: 'cmd_sec_1',
+      status: 'COMPLETED',
+      accepted: true,
+      message: 'Done',
+      created_at: Date.now()
+    });
+
     await service.submitCommand('My secret password is 123456');
     const history = service.commandHistory();
     const hasSecret = history.some(h => h.text.includes('password'));
@@ -73,6 +90,20 @@ describe('AgentCommandService', () => {
   });
 
   it('should dismiss active result cleanly', async () => {
+    vi.spyOn(agentApi, 'submitCommand').mockResolvedValue({
+      command_id: 'cmd_1',
+      status: 'COMPLETED',
+      accepted: true,
+      message: 'Result: 30',
+      result: {
+        result_type: 'NUMBER_RESULT',
+        title: 'Calculation Complete',
+        summary: '10 + 20 = 30',
+        data: { expression: '10 + 20', value: 30 }
+      },
+      created_at: Date.now()
+    });
+
     await service.submitCommand('calculate 10 + 20');
     expect(service.activeResult()).toBeTruthy();
     service.dismissResult();
