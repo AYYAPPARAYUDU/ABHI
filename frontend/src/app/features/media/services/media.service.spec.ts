@@ -169,6 +169,7 @@ describe('MediaService', () => {
     httpMock.expectOne('/api/v1/media/workflows').flush([]);
     httpMock.expectOne('/api/v1/media/creative/templates').flush([]);
     httpMock.expectOne('/api/v1/media/creative/pipelines').flush([]);
+    httpMock.expectOne('/api/v1/media/provenance/attestations').flush([]);
 
     expect(service.activeVideoJob()?.job_id).toBe('job_vid_100');
   });
@@ -192,6 +193,7 @@ describe('MediaService', () => {
     httpMock.expectOne('/api/v1/media/workflows').flush([]);
     httpMock.expectOne('/api/v1/media/creative/templates').flush([]);
     httpMock.expectOne('/api/v1/media/creative/pipelines').flush([]);
+    httpMock.expectOne('/api/v1/media/provenance/attestations').flush([]);
   });
 
   it('should call delete endpoint on deleteVideoArtifact', () => {
@@ -271,6 +273,7 @@ describe('MediaService', () => {
     httpMock.expectOne('/api/v1/media/workflows').flush([]);
     httpMock.expectOne('/api/v1/media/creative/templates').flush([]);
     httpMock.expectOne('/api/v1/media/creative/pipelines').flush([]);
+    httpMock.expectOne('/api/v1/media/provenance/attestations').flush([]);
   });
 
   it('should fetch artifact lineage and masks', () => {
@@ -953,5 +956,173 @@ describe('MediaService', () => {
 
     expect(service.isCreativeLoading()).toBe(false);
     expect(service.creativeErrorMessage()).toBe('Scene scn_missing not found in pipeline');
+  });
+
+  // ==========================================
+  // Phase 8 Stage 8.6 Provenance & Replay Tests
+  // ==========================================
+
+  it('should fetch attestations and update attestations signal', () => {
+    const mockAttestations = [
+      {
+        attestation_id: 'att_01',
+        operation_id: 'op_01',
+        artifact_id: 'art_01',
+        operation_type: 'IMAGE_GENERATE',
+        model_id: 'sdxl-turbo-local',
+        model_digest: 'sha256:1234',
+        runtime_name: 'LocalImageDiffusionRuntime',
+        runtime_version: '1.0.0',
+        adapter_version: '1.0.0',
+        device: 'cuda:0',
+        compute_runtime: 'torch_cuda',
+        provenance_class: 'ACTUAL_MODEL_INFERENCE' as const,
+        parameters_hash: 'phash',
+        input_hashes: [],
+        output_hashes: ['ohash'],
+        attestation_hash: 'athash',
+        started_at: '2026-09-30T10:00:00Z',
+        completed_at: '2026-09-30T10:00:02Z',
+      },
+    ];
+
+    service.fetchAttestations().subscribe((res) => {
+      expect(res.length).toBe(1);
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/provenance/attestations');
+    expect(req.request.method).toBe('GET');
+    req.flush(mockAttestations);
+
+    expect(service.attestations().length).toBe(1);
+    expect(service.isProvenanceLoading()).toBe(false);
+  });
+
+  it('should fetch single attestation and artifact attestation', () => {
+    const mockAtt = {
+      attestation_id: 'att_single',
+      operation_id: 'op_01',
+      artifact_id: 'art_single',
+      operation_type: 'VIDEO_GENERATE',
+      model_id: 'svd-xt-local',
+      model_digest: 'sha256:5678',
+      runtime_name: 'LocalVideoDiffusionRuntime',
+      runtime_version: '1.0.0',
+      adapter_version: '1.0.0',
+      device: 'cuda:0',
+      compute_runtime: 'torch_cuda',
+      provenance_class: 'ACTUAL_MODEL_INFERENCE' as const,
+      parameters_hash: 'phash',
+      input_hashes: [],
+      output_hashes: ['ohash'],
+      attestation_hash: 'athash_single',
+      started_at: '2026-09-30T10:00:00Z',
+      completed_at: '2026-09-30T10:00:05Z',
+    };
+
+    service.getAttestation('att_single').subscribe((res) => {
+      expect(res.attestation_id).toBe('att_single');
+    });
+    const req1 = httpMock.expectOne('/api/v1/media/provenance/attestations/att_single');
+    expect(req1.request.method).toBe('GET');
+    req1.flush(mockAtt);
+    expect(service.activeAttestation()?.attestation_id).toBe('att_single');
+
+    service.getArtifactAttestation('art_single').subscribe((res) => {
+      expect(res.artifact_id).toBe('art_single');
+    });
+    const req2 = httpMock.expectOne('/api/v1/media/provenance/artifact/art_single');
+    expect(req2.request.method).toBe('GET');
+    req2.flush(mockAtt);
+    expect(service.activeAttestation()?.artifact_id).toBe('art_single');
+  });
+
+  it('should validate media artifact and update lastValidationResult signal', () => {
+    const mockValidation = {
+      artifact_id: 'art_video_01',
+      media_type: 'VIDEO',
+      status: 'PASS' as const,
+      measured_sha256: 'sha256:vidhash',
+      measured_dimensions: [1280, 720] as [number, number],
+      measured_duration_seconds: 4.0,
+      measured_fps: 24.0,
+      checks: [{ check_name: 'FPS_DURATION_MATH', passed: true, detail: 'Exact math match' }],
+      validated_at: '2026-09-30T10:00:10Z',
+    };
+
+    service.validateMediaArtifact({
+      artifact_id: 'art_video_01',
+      file_path: 'data/artifacts/video_01.mp4',
+      media_type: 'VIDEO',
+    }).subscribe((res) => {
+      expect(res.status).toBe('PASS');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/provenance/validate');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockValidation);
+
+    expect(service.lastValidationResult()?.status).toBe('PASS');
+    expect(service.isProvenanceLoading()).toBe(false);
+  });
+
+  it('should evaluate creative quality and store lastQualityEvidence signal', () => {
+    const mockQuality = {
+      evaluation_id: 'eval_01',
+      project_id: 'proj_01',
+      prompt_adherence_status: 'EVALUATED' as const,
+      audio_alignment_status: 'EVALUATED' as const,
+      visual_coherence_status: 'NOT_EVALUATED' as const,
+      temporal_coherence_status: 'NOT_EVALUATED' as const,
+      style_consistency_status: 'NOT_EVALUATED' as const,
+      prompt_keyword_coverage: 0.9,
+      alignment_delta_seconds: 0.15,
+      evaluated_at: '2026-09-30T10:00:15Z',
+    };
+
+    service.evaluateCreativeQuality({
+      project_id: 'proj_01',
+      artifact_ids: ['art_01'],
+      prompt: 'futuristic ai studio',
+    }).subscribe((res) => {
+      expect(res.prompt_adherence_status).toBe('EVALUATED');
+      expect(res.visual_coherence_status).toBe('NOT_EVALUATED');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/quality/evaluate');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockQuality);
+
+    expect(service.lastQualityEvidence()?.visual_coherence_status).toBe('NOT_EVALUATED');
+  });
+
+  it('should inspect and simulate replay using ReplayEngine endpoints', () => {
+    const mockManifest = { pipeline_id: 'pipe_replay' };
+    const mockReplay = {
+      pipeline_id: 'pipe_replay',
+      manifest_hash: 'manhash',
+      mode: 'INSPECT' as const,
+      can_replay: true,
+      reusable_artifact_count: 5,
+      regenerate_node_count: 0,
+      discrepancies: [],
+      inspected_at: '2026-09-30T10:00:20Z',
+    };
+
+    service.inspectReplay(mockManifest).subscribe((res) => {
+      expect(res.can_replay).toBe(true);
+    });
+    const req1 = httpMock.expectOne('/api/v1/media/replay/inspect');
+    expect(req1.request.method).toBe('POST');
+    req1.flush(mockReplay);
+    expect(service.lastReplayResult()?.mode).toBe('INSPECT');
+
+    service.simulateReplay(mockManifest).subscribe((res) => {
+      expect(res.mode).toBe('SIMULATE');
+    });
+    const req2 = httpMock.expectOne('/api/v1/media/replay/simulate');
+    expect(req2.request.method).toBe('POST');
+    req2.flush({ ...mockReplay, mode: 'SIMULATE' as const });
+    expect(service.lastReplayResult()?.mode).toBe('SIMULATE');
   });
 });

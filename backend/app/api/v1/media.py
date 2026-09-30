@@ -676,3 +676,178 @@ async def import_creative_project(project_data: Dict[str, Any]):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+# ============================================================================
+# Phase 8 Stage 8.6 — Media Provenance, Validation & Replay Endpoints
+# ============================================================================
+
+from backend.app.media.provenance_models import (
+    MediaRuntimeAttestation,
+    TechnicalValidationResult,
+    CreativeQualityEvidence,
+    ReplayInspectionResult,
+)
+from backend.app.media.provenance_attestor import media_provenance_attestor
+from backend.app.media.technical_validator import media_technical_validator
+from backend.app.media.quality_evaluator import creative_quality_evaluator
+from backend.app.media.replay_engine import media_replay_engine
+
+
+class AttestationCreateRequest(BaseModel):
+    operation_id: str
+    artifact_id: str
+    operation_type: str
+    runtime_name: str
+    model_id: Optional[str] = None
+    model_digest: Optional[str] = None
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+    input_hashes: List[str] = Field(default_factory=list)
+    output_hashes: List[str] = Field(default_factory=list)
+    seed: Optional[int] = None
+    claimed_provenance: Optional[str] = None
+    allow_candidate: bool = False
+
+
+class ValidationRequest(BaseModel):
+    media_type: str  # IMAGE, VIDEO, AUDIO, SUBTITLE
+    file_path: Optional[str] = None
+    expected_width: Optional[int] = None
+    expected_height: Optional[int] = None
+    expected_fps: Optional[float] = None
+    expected_duration_s: Optional[float] = None
+    expected_sha256: Optional[str] = None
+    segments: Optional[List[Dict[str, Any]]] = None
+
+
+class QualityEvaluationRequest(BaseModel):
+    prompt: str
+    script_text: Optional[str] = None
+    narration_segments: Optional[List[Dict[str, Any]]] = None
+    subtitle_segments: Optional[List[Dict[str, Any]]] = None
+    video_duration_s: Optional[float] = None
+    audio_duration_s: Optional[float] = None
+
+
+@router.post("/provenance/attestations", response_model=MediaRuntimeAttestation, status_code=status.HTTP_201_CREATED)
+async def create_runtime_attestation(request: AttestationCreateRequest):
+    """Register and sign a runtime provenance attestation."""
+    try:
+        from backend.app.media.provenance_models import ProvenanceClass
+        prov_enum = ProvenanceClass(request.claimed_provenance) if request.claimed_provenance else None
+        return media_provenance_attestor.create_attestation(
+            operation_id=request.operation_id,
+            artifact_id=request.artifact_id,
+            operation_type=request.operation_type,
+            runtime_name=request.runtime_name,
+            model_id=request.model_id,
+            model_digest=request.model_digest,
+            parameters=request.parameters,
+            input_hashes=request.input_hashes,
+            output_hashes=request.output_hashes,
+            seed=request.seed,
+            claimed_provenance=prov_enum,
+            allow_candidate=request.allow_candidate,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/provenance/attestations", response_model=List[MediaRuntimeAttestation])
+async def list_runtime_attestations(limit: int = 50):
+    """List recent cryptographic runtime attestations."""
+    return media_provenance_attestor.list_attestations(limit=limit)
+
+
+@router.get("/provenance/attestations/{attestation_id}", response_model=MediaRuntimeAttestation)
+async def get_runtime_attestation(attestation_id: str):
+    """Retrieve attestation by ID."""
+    att = media_provenance_attestor.get_attestation(attestation_id)
+    if not att:
+        raise HTTPException(status_code=404, detail=f"Attestation {attestation_id} not found")
+    return att
+
+
+@router.get("/provenance/artifact/{artifact_id}", response_model=MediaRuntimeAttestation)
+async def get_artifact_attestation(artifact_id: str):
+    """Retrieve attestation linked to a specific artifact."""
+    att = media_provenance_attestor.get_attestation_for_artifact(artifact_id)
+    if not att:
+        raise HTTPException(status_code=404, detail=f"No attestation found for artifact {artifact_id}")
+    return att
+
+
+@router.post("/provenance/validate", response_model=TechnicalValidationResult)
+async def validate_media_artifact(request: ValidationRequest):
+    """Perform centralized technical validation on a media file or subtitle track."""
+    m_type = request.media_type.upper()
+    if m_type == "IMAGE":
+        return media_technical_validator.validate_image_file(
+            file_path=request.file_path or "",
+            expected_width=request.expected_width,
+            expected_height=request.expected_height,
+            expected_sha256=request.expected_sha256,
+        )
+    elif m_type == "VIDEO":
+        return media_technical_validator.validate_video_file(
+            file_path=request.file_path or "",
+            expected_fps=request.expected_fps,
+            expected_duration_s=request.expected_duration_s,
+            expected_sha256=request.expected_sha256,
+        )
+    elif m_type == "AUDIO":
+        return media_technical_validator.validate_audio_file(
+            file_path=request.file_path or "",
+            expected_duration_s=request.expected_duration_s,
+            expected_sha256=request.expected_sha256,
+        )
+    elif m_type == "SUBTITLE":
+        return media_technical_validator.validate_subtitle_track(
+            segments=request.segments or [],
+            media_duration_s=request.expected_duration_s or 10.0,
+        )
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported media_type: {request.media_type}")
+
+
+@router.post("/quality/evaluate", response_model=CreativeQualityEvidence)
+async def evaluate_creative_quality(request: QualityEvaluationRequest):
+    """Evaluate creative quality along separated empirical dimensions."""
+    return creative_quality_evaluator.evaluate_quality(
+        prompt=request.prompt,
+        script_text=request.script_text,
+        narration_segments=request.narration_segments,
+        subtitle_segments=request.subtitle_segments,
+        video_duration_s=request.video_duration_s,
+        audio_duration_s=request.audio_duration_s,
+    )
+
+
+@router.post("/replay/inspect", response_model=ReplayInspectionResult)
+async def inspect_replay_project(project_data: Dict[str, Any]):
+    """Inspect replay safety, model digests, and parameters without execution."""
+    return media_replay_engine.inspect_replay(project_data)
+
+
+@router.post("/replay/simulate", response_model=ReplayInspectionResult)
+async def simulate_replay_project(project_data: Dict[str, Any]):
+    """Run replay simulation against current ResourceManager state."""
+    return media_replay_engine.simulate_replay(project_data)
+
+
+@router.post("/replay/execute", response_model=CreativePipeline)
+async def execute_replay_project(project_data: Dict[str, Any]):
+    """Safely execute replay after verification."""
+    inspection = media_replay_engine.simulate_replay(project_data)
+    if not inspection.is_safe_to_execute:
+        blockers = [d.description for d in inspection.discrepancies if d.severity in ("BLOCKER", "ERROR")]
+        raise HTTPException(
+            status_code=400,
+            detail=f"Replay safety check failed: {'; '.join(blockers) or 'Unsafe replay'}",
+        )
+    orch = get_creative_orchestrator()
+    try:
+        pipeline = orch.import_project(project_data)
+        return orch.execute_pipeline(pipeline.pipeline_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+

@@ -654,3 +654,169 @@ export interface CreativeRevisionRequest {
   reason?: string;
 }
 
+// ==========================================
+// Phase 8 Stage 8.6: Provenance & Reliability
+// ==========================================
+
+export type ProvenanceClass =
+  | 'ACTUAL_MODEL_INFERENCE'
+  | 'PROCEDURAL'
+  | 'SIMULATED'
+  | 'MOCKED'
+  | 'ESTIMATED'
+  | 'MEASURED';
+
+export type ResourceProvenance =
+  | 'ACTUAL'
+  | 'MEASURED'
+  | 'ESTIMATED'
+  | 'SIMULATED'
+  | 'MOCKED';
+
+export type EvaluationDimensionStatus =
+  | 'PASS'
+  | 'FAIL'
+  | 'NOT_EVALUATED'
+  | 'INCONCLUSIVE';
+
+export type ReplayMode = 'INSPECT' | 'SIMULATE' | 'REPLAY';
+
+export type TechnicalValidationStatus = 'VALID' | 'INVALID' | 'DEGRADED' | 'UNKNOWN' | 'PASS' | 'FAIL';
+
+export interface MediaRuntimeAttestation {
+  attestation_id: string;
+  operation_id: string;
+  artifact_id: string;
+  operation_type: string;
+  model_id?: string | null;
+  model_digest?: string | null;
+  runtime_name: string;
+  runtime_version: string;
+  adapter_version: string;
+  device: string;
+  driver_version?: string | null;
+  compute_runtime?: string | null;
+  provenance_class: ProvenanceClass;
+  precision?: string | null;
+  quantization?: string | null;
+  parameters_hash: string;
+  input_hashes: string[];
+  output_hashes: string[];
+  seed?: number | null;
+  started_at: number | string;
+  completed_at: number | string;
+  attestation_hash: string;
+}
+
+export interface ResourceMeasurementEvidence {
+  peak_vram_mb: number;
+  vram_provenance: ResourceProvenance;
+  peak_ram_mb: number;
+  ram_provenance: ResourceProvenance;
+  gpu_utilization_pct: number;
+  cpu_utilization_pct: number;
+  storage_peak_bytes: number;
+  resource_wait_time_ms: number;
+  model_load_time_ms: number;
+  model_switch_count: number;
+}
+
+export interface TechnicalValidationCheck {
+  check_name: string;
+  passed: boolean;
+  status?: TechnicalValidationStatus;
+  detail: string;
+  measured_value?: any;
+  expected_value?: any;
+}
+
+export interface TechnicalValidationResult {
+  artifact_id?: string;
+  media_type?: string;
+  is_valid?: boolean;
+  status: TechnicalValidationStatus;
+  checks: TechnicalValidationCheck[];
+  measured_sha256?: string;
+  measured_dimensions?: [number, number];
+  measured_duration_seconds?: number;
+  measured_fps?: number;
+  duration_s?: number | null;
+  resolution_actual?: [number, number] | null;
+  fps_actual?: number | null;
+  frame_count_actual?: number | null;
+  codec_actual?: string | null;
+  audio_channels_actual?: number | null;
+  sample_rate_actual?: number | null;
+  subtitle_segment_count?: number | null;
+  file_size_bytes?: number;
+  sha256_actual?: string;
+  lineage_verified?: boolean;
+  manifest_link_verified?: boolean;
+  validated_at?: string;
+  errors?: string[];
+  warnings?: string[];
+}
+
+export interface CreativeQualityEvidence {
+  evaluation_id?: string;
+  project_id?: string;
+  prompt_adherence: EvaluationDimensionStatus;
+  prompt_adherence_status?: EvaluationDimensionStatus;
+  prompt_adherence_score?: number | null;
+  prompt_keyword_coverage?: number | null;
+  visual_coherence: EvaluationDimensionStatus;
+  visual_coherence_status?: EvaluationDimensionStatus;
+  visual_coherence_score?: number | null;
+  temporal_coherence: EvaluationDimensionStatus;
+  temporal_coherence_status?: EvaluationDimensionStatus;
+  temporal_coherence_score?: number | null;
+  style_consistency: EvaluationDimensionStatus;
+  style_consistency_status?: EvaluationDimensionStatus;
+  style_consistency_score?: number | null;
+  narrative_alignment: EvaluationDimensionStatus;
+  narrative_alignment_score?: number | null;
+  audio_alignment: EvaluationDimensionStatus;
+  audio_alignment_status?: EvaluationDimensionStatus;
+  audio_alignment_score?: number | null;
+  alignment_delta_seconds?: number | null;
+  subtitle_correctness: EvaluationDimensionStatus;
+  subtitle_correctness_score?: number | null;
+  subtitle_coverage_ratio?: number | null;
+  evaluator_metadata?: Record<string, any>;
+  evaluated_at?: string;
+  notes?: string[];
+}
+
+export interface ReplayDiscrepancy {
+  field: string;
+  recorded_value: any;
+  current_value: any;
+  severity: 'WARNING' | 'ERROR' | 'BLOCKER';
+  description: string;
+  expected?: any;
+  actual?: any;
+  impact?: string;
+}
+
+export interface ReplayInspectionResult {
+  pipeline_id: string;
+  mode: ReplayMode;
+  is_safe_to_execute?: boolean;
+  can_replay?: boolean;
+  schema_valid?: boolean;
+  models_authenticated?: boolean;
+  capabilities_available?: boolean;
+  resource_feasible?: boolean;
+  policy_compliant?: boolean;
+  manifest_hash?: string;
+  discrepancies: ReplayDiscrepancy[];
+  node_inspections?: Array<Record<string, any>>;
+  reusable_artifact_count: number;
+  regenerate_node_count: number;
+  estimated_duration_s?: number;
+  estimated_peak_vram_mb?: number;
+  inspection_timestamp?: number;
+  inspected_at?: string;
+}
+
+

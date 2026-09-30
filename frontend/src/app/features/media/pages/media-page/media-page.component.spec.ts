@@ -31,8 +31,8 @@ describe('MediaPageComponent', () => {
     expect(mediaService.refreshAll).toHaveBeenCalled();
   });
 
-  it('should switch between creative, composer, edit, video and image studio tabs', () => {
-    expect(component.activeTab()).toBe('creative');
+  it('should switch between provenance, creative, composer, edit, video and image studio tabs', () => {
+    expect(component.activeTab()).toBe('provenance');
     component.activeTab.set('composer');
     expect(component.activeTab()).toBe('composer');
     component.activeTab.set('edit');
@@ -43,6 +43,8 @@ describe('MediaPageComponent', () => {
     expect(component.activeTab()).toBe('image');
     component.activeTab.set('creative');
     expect(component.activeTab()).toBe('creative');
+    component.activeTab.set('provenance');
+    expect(component.activeTab()).toBe('provenance');
   });
 
   it('should handle onTemplateSelected by delegating to workflowComposer if present', () => {
@@ -132,8 +134,8 @@ describe('MediaPageComponent', () => {
     expect(mediaService.editErrorMessage()).toBeNull();
   });
 
-  it('should initialize activeTab with creative default', () => {
-    expect(component.activeTab()).toBe('creative');
+  it('should initialize activeTab with provenance default', () => {
+    expect(component.activeTab()).toBe('provenance');
   });
 
   it('should handle video generation error state without crashing', () => {

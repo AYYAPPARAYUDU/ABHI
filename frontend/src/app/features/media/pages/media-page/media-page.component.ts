@@ -17,6 +17,7 @@ import { WorkflowTemplateCatalogComponent } from '../../components/workflow-temp
 import { WorkflowSimulationPanelComponent } from '../../components/workflow-simulation-panel/workflow-simulation-panel.component';
 import { WorkflowManifestViewerComponent } from '../../components/workflow-manifest-viewer/workflow-manifest-viewer.component';
 import { CreativePipelineStudioComponent } from '../../components/creative-pipeline-studio/creative-pipeline-studio.component';
+import { MediaProvenanceInspectorComponent } from '../../components/media-provenance-inspector/media-provenance-inspector.component';
 import {
   ImageGenerationRequestDTO,
   VideoGenerationRequestDTO,
@@ -46,6 +47,7 @@ import {
     WorkflowTemplateCatalogComponent,
     WorkflowSimulationPanelComponent,
     WorkflowManifestViewerComponent,
+    MediaProvenanceInspectorComponent,
   ],
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 p-6 space-y-6">
@@ -57,7 +59,7 @@ import {
               <span class="text-2xl">✨</span> Local Media, Inpainting & Video Studio
             </h1>
             <span class="text-xs px-2.5 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/30">
-              Phase 8.5 Active
+              Phase 8.6 Hardened
             </span>
           </div>
           <p class="text-xs text-slate-400 mt-1">
@@ -94,6 +96,14 @@ import {
 
       <!-- Studio Navigation Tabs -->
       <div class="flex items-center gap-2 border-b border-slate-800 pb-3 flex-wrap">
+        <button
+          type="button"
+          (click)="activeTab.set('provenance')"
+          [ngClass]="activeTab() === 'provenance' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold shadow-lg shadow-emerald-600/30' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
+          class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
+        >
+          <span>🛡️</span> Provenance & Replay (Phase 8.6)
+        </button>
         <button
           type="button"
           (click)="activeTab.set('creative')"
@@ -137,9 +147,14 @@ import {
       </div>
 
       <!-- Error Message Banner -->
-      <div *ngIf="mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage()" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 rounded-xl flex items-center justify-between">
-        <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() }}</span>
+      <div *ngIf="mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage()" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 rounded-xl flex items-center justify-between">
+        <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage() }}</span>
         <button (click)="clearErrors()" class="text-red-400 hover:text-white">✕</button>
+      </div>
+
+      <!-- PROVENANCE & REPLAY TAB CONTENT (Phase 8.6) -->
+      <div *ngIf="activeTab() === 'provenance'" class="space-y-6">
+        <app-media-provenance-inspector></app-media-provenance-inspector>
       </div>
 
       <!-- CREATIVE STUDIO TAB CONTENT (Phase 8.5) -->
@@ -283,7 +298,7 @@ export class MediaPageComponent implements OnInit {
   @ViewChild('workflowComposer') workflowComposer?: VisualWorkflowComposerComponent;
 
   mediaService = inject(MediaService);
-  activeTab = signal<'creative' | 'composer' | 'edit' | 'video' | 'image'>('creative');
+  activeTab = signal<'provenance' | 'creative' | 'composer' | 'edit' | 'video' | 'image'>('provenance');
 
   selectedSourceArtifact = signal<MediaArtifactDTO | null>(null);
   currentMaskBase64 = signal<string | null>(null);
@@ -378,6 +393,7 @@ export class MediaPageComponent implements OnInit {
     this.mediaService.editErrorMessage.set(null);
     this.mediaService.workflowErrorMessage.set(null);
     this.mediaService.creativeErrorMessage.set(null);
+    this.mediaService.provenanceErrorMessage.set(null);
   }
 }
 

@@ -24,6 +24,10 @@ import {
   CreativePipelineTemplate,
   CreativeProjectManifest,
   CreativeRevisionRequest,
+  MediaRuntimeAttestation,
+  TechnicalValidationResult,
+  CreativeQualityEvidence,
+  ReplayInspectionResult,
 } from '../models/media.model';
 
 @Injectable({
@@ -74,6 +78,15 @@ export class MediaService {
   activeCreativeManifest = signal<CreativeProjectManifest | null>(null);
   isCreativeLoading = signal<boolean>(false);
   creativeErrorMessage = signal<string | null>(null);
+
+  // Core Signals (Provenance, Validation & Replay - Phase 8 Stage 8.6)
+  attestations = signal<MediaRuntimeAttestation[]>([]);
+  activeAttestation = signal<MediaRuntimeAttestation | null>(null);
+  lastValidationResult = signal<TechnicalValidationResult | null>(null);
+  lastQualityEvidence = signal<CreativeQualityEvidence | null>(null);
+  lastReplayResult = signal<ReplayInspectionResult | null>(null);
+  isProvenanceLoading = signal<boolean>(false);
+  provenanceErrorMessage = signal<string | null>(null);
 
   // Computed Signals (Creative Studio)
   isCreativeExecuting = computed<boolean>(() => {
@@ -658,6 +671,155 @@ export class MediaService {
     );
   }
 
+  // ==========================================
+  // Provenance, Validation & Replay Methods (Phase 8 Stage 8.6)
+  // ==========================================
+
+  fetchAttestations(): Observable<MediaRuntimeAttestation[]> {
+    this.isProvenanceLoading.set(true);
+    return this.http.get<MediaRuntimeAttestation[]>(`${this.baseUrl}/provenance/attestations`).pipe(
+      tap({
+        next: (data) => {
+          this.attestations.set(data);
+          this.isProvenanceLoading.set(false);
+        },
+        error: (err) => {
+          this.isProvenanceLoading.set(false);
+          this.provenanceErrorMessage.set(err.message || 'Failed to fetch attestations');
+        },
+      })
+    );
+  }
+
+  getAttestation(attestationId: string): Observable<MediaRuntimeAttestation> {
+    return this.http.get<MediaRuntimeAttestation>(`${this.baseUrl}/provenance/attestations/${attestationId}`).pipe(
+      tap({
+        next: (att) => this.activeAttestation.set(att),
+      })
+    );
+  }
+
+  getArtifactAttestation(artifactId: string): Observable<MediaRuntimeAttestation> {
+    return this.http.get<MediaRuntimeAttestation>(`${this.baseUrl}/provenance/artifact/${artifactId}`).pipe(
+      tap({
+        next: (att) => this.activeAttestation.set(att),
+      })
+    );
+  }
+
+  createRuntimeAttestation(payload: any): Observable<MediaRuntimeAttestation> {
+    this.isProvenanceLoading.set(true);
+    return this.http.post<MediaRuntimeAttestation>(`${this.baseUrl}/provenance/attestations`, payload).pipe(
+      tap({
+        next: (att) => {
+          this.activeAttestation.set(att);
+          this.attestations.update((list) => [att, ...list]);
+          this.isProvenanceLoading.set(false);
+        },
+        error: (err) => {
+          this.isProvenanceLoading.set(false);
+          this.provenanceErrorMessage.set(err.error?.detail || err.message || 'Failed to record attestation');
+        },
+      })
+    );
+  }
+
+  validateMediaArtifact(payload: {
+    artifact_id: string;
+    file_path: string;
+    media_type: string;
+    expected_hash?: string;
+    expected_dimensions?: [number, number];
+    expected_fps?: number;
+    expected_duration?: number;
+  }): Observable<TechnicalValidationResult> {
+    this.isProvenanceLoading.set(true);
+    return this.http.post<TechnicalValidationResult>(`${this.baseUrl}/provenance/validate`, payload).pipe(
+      tap({
+        next: (res) => {
+          this.lastValidationResult.set(res);
+          this.isProvenanceLoading.set(false);
+        },
+        error: (err) => {
+          this.isProvenanceLoading.set(false);
+          this.provenanceErrorMessage.set(err.error?.detail || err.message || 'Technical validation failed');
+        },
+      })
+    );
+  }
+
+  evaluateCreativeQuality(payload: {
+    project_id: string;
+    artifact_ids: string[];
+    script_text?: string;
+    prompt?: string;
+    video_duration?: number;
+    audio_duration?: number;
+    subtitle_segments?: any[];
+  }): Observable<CreativeQualityEvidence> {
+    this.isProvenanceLoading.set(true);
+    return this.http.post<CreativeQualityEvidence>(`${this.baseUrl}/quality/evaluate`, payload).pipe(
+      tap({
+        next: (res) => {
+          this.lastQualityEvidence.set(res);
+          this.isProvenanceLoading.set(false);
+        },
+        error: (err) => {
+          this.isProvenanceLoading.set(false);
+          this.provenanceErrorMessage.set(err.error?.detail || err.message || 'Creative quality evaluation failed');
+        },
+      })
+    );
+  }
+
+  inspectReplay(manifest: any): Observable<ReplayInspectionResult> {
+    this.isProvenanceLoading.set(true);
+    return this.http.post<ReplayInspectionResult>(`${this.baseUrl}/replay/inspect`, manifest).pipe(
+      tap({
+        next: (res) => {
+          this.lastReplayResult.set(res);
+          this.isProvenanceLoading.set(false);
+        },
+        error: (err) => {
+          this.isProvenanceLoading.set(false);
+          this.provenanceErrorMessage.set(err.error?.detail || err.message || 'Replay inspection failed');
+        },
+      })
+    );
+  }
+
+  simulateReplay(manifest: any): Observable<ReplayInspectionResult> {
+    this.isProvenanceLoading.set(true);
+    return this.http.post<ReplayInspectionResult>(`${this.baseUrl}/replay/simulate`, manifest).pipe(
+      tap({
+        next: (res) => {
+          this.lastReplayResult.set(res);
+          this.isProvenanceLoading.set(false);
+        },
+        error: (err) => {
+          this.isProvenanceLoading.set(false);
+          this.provenanceErrorMessage.set(err.error?.detail || err.message || 'Replay simulation failed');
+        },
+      })
+    );
+  }
+
+  executeReplay(manifest: any): Observable<any> {
+    this.isProvenanceLoading.set(true);
+    return this.http.post<any>(`${this.baseUrl}/replay/execute`, manifest).pipe(
+      tap({
+        next: () => {
+          this.isProvenanceLoading.set(false);
+          this.refreshAll();
+        },
+        error: (err) => {
+          this.isProvenanceLoading.set(false);
+          this.provenanceErrorMessage.set(err.error?.detail || err.message || 'Replay execution failed');
+        },
+      })
+    );
+  }
+
   refreshAll(): void {
     this.fetchModels().subscribe();
     this.fetchEditModels().subscribe();
@@ -671,6 +833,7 @@ export class MediaService {
     this.fetchWorkflows().subscribe();
     this.fetchCreativeTemplates().subscribe();
     this.fetchCreativePipelines().subscribe();
+    this.fetchAttestations().subscribe();
   }
 }
 
