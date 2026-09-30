@@ -538,3 +538,141 @@ async def execute_media_composition(request: MediaCompositionRequest):
     return artifact
 
 
+# ============================================================================
+# Phase 8 Stage 8.5 — Creative Production Pipeline Endpoints
+# ============================================================================
+
+from backend.app.media.creative_models import (
+    CreativeBrief,
+    CreativePipeline,
+    CreativePipelineTemplate,
+    CreativeProjectManifest,
+)
+from backend.app.services.skills.builtin_creative_skills import get_creative_orchestrator
+
+
+class SceneRevisionRequest(BaseModel):
+    """Payload for revising an individual scene within a creative pipeline."""
+    scene_id: str
+    new_prompt: str
+
+
+@router.get("/creative/templates", response_model=List[CreativePipelineTemplate])
+async def list_creative_templates():
+    """List all built-in and registered creative pipeline templates."""
+    orch = get_creative_orchestrator()
+    return orch.list_templates()
+
+
+@router.get("/creative/templates/{template_id}", response_model=CreativePipelineTemplate)
+async def get_creative_template(template_id: str):
+    """Retrieve details for a specific creative pipeline template."""
+    orch = get_creative_orchestrator()
+    tmpl = orch.get_template(template_id)
+    if not tmpl:
+        raise HTTPException(status_code=404, detail=f"Creative template {template_id} not found")
+    return tmpl
+
+
+@router.post("/creative/pipelines", response_model=CreativePipeline, status_code=status.HTTP_201_CREATED)
+async def create_creative_pipeline(brief: CreativeBrief):
+    """Create a planned creative pipeline from a structured brief."""
+    orch = get_creative_orchestrator()
+    return orch.create_pipeline(brief)
+
+
+@router.get("/creative/pipelines", response_model=List[CreativePipeline])
+async def list_creative_pipelines():
+    """List all created and running creative pipelines."""
+    orch = get_creative_orchestrator()
+    return orch.list_pipelines()
+
+
+@router.get("/creative/pipelines/{pipeline_id}", response_model=CreativePipeline)
+async def get_creative_pipeline(pipeline_id: str):
+    """Retrieve details, scenes, script, storyboard, and status for a creative pipeline."""
+    orch = get_creative_orchestrator()
+    pipeline = orch.get_pipeline(pipeline_id)
+    if not pipeline:
+        raise HTTPException(status_code=404, detail=f"Creative pipeline {pipeline_id} not found")
+    return pipeline
+
+
+@router.post("/creative/pipelines/{pipeline_id}/simulate")
+async def simulate_creative_pipeline(pipeline_id: str):
+    """Run resource feasibility simulation for a creative pipeline."""
+    orch = get_creative_orchestrator()
+    try:
+        return orch.simulate_pipeline(pipeline_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Creative pipeline {pipeline_id} not found")
+
+
+@router.post("/creative/pipelines/{pipeline_id}/execute", response_model=CreativePipeline)
+async def execute_creative_pipeline(pipeline_id: str):
+    """Execute a creative pipeline through the underlying media workflow engine."""
+    orch = get_creative_orchestrator()
+    try:
+        return orch.execute_pipeline(pipeline_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Creative pipeline {pipeline_id} not found")
+
+
+@router.post("/creative/pipelines/{pipeline_id}/revise", response_model=CreativePipeline)
+async def revise_creative_pipeline(pipeline_id: str, request: SceneRevisionRequest):
+    """Revise a scene in the pipeline, invalidating only downstream nodes."""
+    orch = get_creative_orchestrator()
+    try:
+        pipeline, _ = orch.revise_pipeline_scene(
+            pipeline_id=pipeline_id,
+            scene_id=request.scene_id,
+            new_prompt=request.new_prompt,
+        )
+        return pipeline
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Creative pipeline {pipeline_id} not found")
+
+
+@router.post("/creative/pipelines/{pipeline_id}/cancel", response_model=CreativePipeline)
+async def cancel_creative_pipeline(pipeline_id: str):
+    """Cancel an active creative pipeline execution."""
+    orch = get_creative_orchestrator()
+    try:
+        return orch.cancel_pipeline(pipeline_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Creative pipeline {pipeline_id} not found")
+
+
+@router.get("/creative/pipelines/{pipeline_id}/manifest", response_model=CreativeProjectManifest)
+async def get_creative_pipeline_manifest(pipeline_id: str):
+    """Retrieve signed cryptographic manifest for a completed creative pipeline."""
+    orch = get_creative_orchestrator()
+    try:
+        return orch.get_pipeline_manifest(pipeline_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Creative pipeline {pipeline_id} not found")
+
+
+@router.post("/creative/pipelines/export")
+async def export_creative_project(payload: Dict[str, Any]):
+    """Export project manifest bundle."""
+    pipeline_id = payload.get("pipeline_id")
+    if not pipeline_id:
+        raise HTTPException(status_code=400, detail="pipeline_id is required")
+    orch = get_creative_orchestrator()
+    try:
+        return orch.export_project(pipeline_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Creative pipeline {pipeline_id} not found")
+
+
+@router.post("/creative/pipelines/import", response_model=CreativePipeline)
+async def import_creative_project(project_data: Dict[str, Any]):
+    """Validate and import an external creative project."""
+    orch = get_creative_orchestrator()
+    try:
+        return orch.import_project(project_data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+

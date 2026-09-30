@@ -22,6 +22,7 @@ from backend.app.services.skills.builtin_media_skills import register_media_skil
 from backend.app.services.skills.builtin_video_skills import register_video_skills
 from backend.app.services.skills.builtin_edit_skills import register_image_edit_skills
 from backend.app.services.skills.builtin_composer_skills import register_composer_skills
+from backend.app.services.skills.builtin_creative_skills import register_builtin_creative_skills
 from backend.app.services.skills.runtime import SkillExecutionRuntime, skill_runtime
 
 __all__ = [

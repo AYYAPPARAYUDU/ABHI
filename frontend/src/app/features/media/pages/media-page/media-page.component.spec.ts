@@ -31,7 +31,9 @@ describe('MediaPageComponent', () => {
     expect(mediaService.refreshAll).toHaveBeenCalled();
   });
 
-  it('should switch between composer, edit, video and image studio tabs', () => {
+  it('should switch between creative, composer, edit, video and image studio tabs', () => {
+    expect(component.activeTab()).toBe('creative');
+    component.activeTab.set('composer');
     expect(component.activeTab()).toBe('composer');
     component.activeTab.set('edit');
     expect(component.activeTab()).toBe('edit');
@@ -39,8 +41,8 @@ describe('MediaPageComponent', () => {
     expect(component.activeTab()).toBe('video');
     component.activeTab.set('image');
     expect(component.activeTab()).toBe('image');
-    component.activeTab.set('composer');
-    expect(component.activeTab()).toBe('composer');
+    component.activeTab.set('creative');
+    expect(component.activeTab()).toBe('creative');
   });
 
   it('should handle onTemplateSelected by delegating to workflowComposer if present', () => {
@@ -130,8 +132,8 @@ describe('MediaPageComponent', () => {
     expect(mediaService.editErrorMessage()).toBeNull();
   });
 
-  it('should initialize activeTab with composer default', () => {
-    expect(component.activeTab()).toBe('composer');
+  it('should initialize activeTab with creative default', () => {
+    expect(component.activeTab()).toBe('creative');
   });
 
   it('should handle video generation error state without crashing', () => {
@@ -165,5 +167,28 @@ describe('MediaPageComponent', () => {
   it('should compute vramFreeMB and activeJobsCount via service signals', () => {
     expect(mediaService.vramFreeMB()).toBeDefined();
     expect(mediaService.activeJobsCount()).toBe(0);
+  });
+
+  it('should clear creative error messages in clearErrors', () => {
+    mediaService.creativeErrorMessage.set('Creative pipeline failure');
+    component.clearErrors();
+    expect(mediaService.creativeErrorMessage()).toBeNull();
+  });
+
+  it('should reflect creativePipelines count in service signals', () => {
+    expect(mediaService.creativePipelines().length).toBe(0);
+  });
+
+  it('should reflect creativeTemplates count in service signals', () => {
+    expect(mediaService.creativeTemplates().length).toBe(0);
+  });
+
+  it('should switch between tabs multiple times smoothly', () => {
+    component.activeTab.set('image');
+    expect(component.activeTab()).toBe('image');
+    component.activeTab.set('video');
+    expect(component.activeTab()).toBe('video');
+    component.activeTab.set('creative');
+    expect(component.activeTab()).toBe('creative');
   });
 });

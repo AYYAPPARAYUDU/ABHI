@@ -16,6 +16,7 @@ import { VisualWorkflowComposerComponent } from '../../components/visual-workflo
 import { WorkflowTemplateCatalogComponent } from '../../components/workflow-template-catalog/workflow-template-catalog.component';
 import { WorkflowSimulationPanelComponent } from '../../components/workflow-simulation-panel/workflow-simulation-panel.component';
 import { WorkflowManifestViewerComponent } from '../../components/workflow-manifest-viewer/workflow-manifest-viewer.component';
+import { CreativePipelineStudioComponent } from '../../components/creative-pipeline-studio/creative-pipeline-studio.component';
 import {
   ImageGenerationRequestDTO,
   VideoGenerationRequestDTO,
@@ -29,6 +30,7 @@ import {
   standalone: true,
   imports: [
     CommonModule,
+    CreativePipelineStudioComponent,
     ImageGenerationFormComponent,
     MediaJobQueueComponent,
     MediaArtifactGalleryComponent,
@@ -54,12 +56,12 @@ import {
             <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
               <span class="text-2xl">✨</span> Local Media, Inpainting & Video Studio
             </h1>
-            <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
-              Phase 8.4 Active
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/30">
+              Phase 8.5 Active
             </span>
           </div>
           <p class="text-xs text-slate-400 mt-1">
-            Multimodal DAG workflows, non-destructive editing, inpainting, canvas outpainting, diffusion synthesis & lineage tracking
+            Multimodal creative pipelines, DAG workflows, non-destructive editing, inpainting, canvas outpainting, diffusion synthesis & lineage tracking
           </p>
         </div>
 
@@ -92,6 +94,14 @@ import {
 
       <!-- Studio Navigation Tabs -->
       <div class="flex items-center gap-2 border-b border-slate-800 pb-3 flex-wrap">
+        <button
+          type="button"
+          (click)="activeTab.set('creative')"
+          [ngClass]="activeTab() === 'creative' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold shadow-lg shadow-violet-600/30' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
+          class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
+        >
+          <span>🎬</span> Creative Studio (Phase 8.5)
+        </button>
         <button
           type="button"
           (click)="activeTab.set('composer')"
@@ -127,9 +137,14 @@ import {
       </div>
 
       <!-- Error Message Banner -->
-      <div *ngIf="mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage()" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 rounded-xl flex items-center justify-between">
-        <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() }}</span>
+      <div *ngIf="mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage()" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 rounded-xl flex items-center justify-between">
+        <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() }}</span>
         <button (click)="clearErrors()" class="text-red-400 hover:text-white">✕</button>
+      </div>
+
+      <!-- CREATIVE STUDIO TAB CONTENT (Phase 8.5) -->
+      <div *ngIf="activeTab() === 'creative'" class="space-y-6">
+        <app-creative-pipeline-studio></app-creative-pipeline-studio>
       </div>
 
       <!-- WORKFLOW COMPOSER TAB CONTENT (Phase 8.4) -->
@@ -268,7 +283,7 @@ export class MediaPageComponent implements OnInit {
   @ViewChild('workflowComposer') workflowComposer?: VisualWorkflowComposerComponent;
 
   mediaService = inject(MediaService);
-  activeTab = signal<'composer' | 'edit' | 'video' | 'image'>('composer');
+  activeTab = signal<'creative' | 'composer' | 'edit' | 'video' | 'image'>('creative');
 
   selectedSourceArtifact = signal<MediaArtifactDTO | null>(null);
   currentMaskBase64 = signal<string | null>(null);
@@ -361,6 +376,8 @@ export class MediaPageComponent implements OnInit {
     this.mediaService.errorMessage.set(null);
     this.mediaService.videoErrorMessage.set(null);
     this.mediaService.editErrorMessage.set(null);
+    this.mediaService.workflowErrorMessage.set(null);
+    this.mediaService.creativeErrorMessage.set(null);
   }
 }
 

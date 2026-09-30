@@ -424,3 +424,233 @@ export interface MediaCompositionRequestDTO {
   output_filename?: string | null;
 }
 
+// ==========================================
+// Phase 8 Stage 8.5 — Creative Production Models
+// ==========================================
+
+export type CreativePipelineType =
+  | 'SHORT_PROMOTIONAL_VIDEO'
+  | 'NARRATED_IMAGE_STORY'
+  | 'SOCIAL_MEDIA_CLIP'
+  | 'PRESENTATION_VISUAL'
+  | 'CINEMATIC_SCENE'
+  | 'PHOTO_TO_VIDEO'
+  | 'CUSTOM';
+
+export type CreativePipelineStatus =
+  | 'DRAFT'
+  | 'PLANNING'
+  | 'ASSET_GENERATION'
+  | 'SCENE_GENERATION'
+  | 'NARRATION'
+  | 'COMPOSITION'
+  | 'RENDERING'
+  | 'VALIDATING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED'
+  | 'REVISING';
+
+export type CreativeAssetType = 'IMAGE' | 'VIDEO' | 'AUDIO' | 'TEXT' | 'SUBTITLE';
+export type SubtitleFormat = 'SRT' | 'VTT';
+export type RenderProfile = 'MP4_H264_STANDARD' | 'MP4_H264_LOW_RESOURCE' | 'WEBM_STANDARD';
+export type PipelineRetentionPolicy = 'FINAL_ONLY' | 'FINAL_PLUS_SOURCES' | 'FULL_PROJECT';
+
+export interface CreativeBrief {
+  title: string;
+  description: string;
+  style?: string;
+  tone?: string;
+  language?: string;
+  duration?: number;
+  aspect_ratio?: string;
+  resolution?: [number, number];
+  target_format?: string;
+  audience?: string;
+  visual_requirements?: string[];
+  audio_requirements?: string[];
+  text_requirements?: string[];
+  constraints?: string[];
+}
+
+export interface NarrationSegment {
+  segment_id: string;
+  scene_id: string;
+  speaker: string;
+  text: string;
+  estimated_duration_s?: number;
+  actual_duration_s?: number;
+  audio_artifact_id?: string | null;
+}
+
+export interface CreativeScript {
+  script_id: string;
+  title: string;
+  language: string;
+  narration_segments: NarrationSegment[];
+  on_screen_text: string[];
+  total_estimated_duration_s: number;
+}
+
+export interface StoryboardScene {
+  scene_id: string;
+  sequence: number;
+  duration: number;
+  visual_prompt: string;
+  camera_motion?: string;
+  narration_text?: string;
+  on_screen_text?: string;
+  transition?: string;
+}
+
+export interface Storyboard {
+  storyboard_id: string;
+  scenes: StoryboardScene[];
+}
+
+export interface Scene {
+  scene_id: string;
+  order: number;
+  duration: number;
+  visual_prompt: string;
+  image_artifact_id?: string | null;
+  video_artifact_id?: string | null;
+  audio_artifact_id?: string | null;
+  transition: string;
+  status: string;
+}
+
+export interface CreativeAsset {
+  asset_id: string;
+  asset_type: CreativeAssetType;
+  artifact_id: string;
+  source: string;
+  model_id?: string | null;
+  model_digest?: string | null;
+  runtime?: string | null;
+  parent_assets?: string[];
+  created_at?: number;
+  sha256?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface SubtitleSegment {
+  index: number;
+  start_time_s: number;
+  end_time_s: number;
+  text: string;
+}
+
+export interface SubtitleTrack {
+  track_id: string;
+  language: string;
+  format: SubtitleFormat;
+  segments: SubtitleSegment[];
+  raw_content?: string;
+  artifact_id?: string | null;
+}
+
+export interface TimelineClip {
+  clip_id: string;
+  track_id: string;
+  start_time_s: number;
+  duration_s: number;
+  source_artifact_id: string;
+  media_type: CreativeAssetType;
+  transition?: string;
+  layer: number;
+}
+
+export interface TimelineTrack {
+  track_id: string;
+  name: string;
+  track_type: CreativeAssetType;
+  clips: TimelineClip[];
+}
+
+export interface MediaTimeline {
+  timeline_id: string;
+  total_duration_s: number;
+  tracks: TimelineTrack[];
+}
+
+export interface PipelineQualityScore {
+  technical_integrity: number;
+  resource_efficiency: number;
+  workflow_completion: number;
+  prompt_adherence: number;
+  temporal_consistency: number;
+  audio_video_alignment: number;
+  overall_passed: boolean;
+  notes?: string[];
+}
+
+export interface CreativePipeline {
+  pipeline_id: string;
+  task_id?: string;
+  execution_id?: string;
+  goal: string;
+  pipeline_type: CreativePipelineType;
+  version: string;
+  creative_brief: CreativeBrief;
+  script?: CreativeScript | null;
+  storyboard?: Storyboard | null;
+  scenes: Scene[];
+  assets: CreativeAsset[];
+  subtitle_tracks: SubtitleTrack[];
+  timeline?: MediaTimeline | null;
+  workflow_id?: string | null;
+  outputs: Array<Record<string, any>>;
+  status: CreativePipelineStatus;
+  quality_report?: PipelineQualityScore | null;
+  resource_budget: Record<string, any>;
+  storage_budget: Record<string, any>;
+  retention_policy: PipelineRetentionPolicy;
+  render_profile: RenderProfile;
+  pipeline_hash: string;
+  created_at: number;
+  started_at?: number | null;
+  completed_at?: number | null;
+  error_message?: string | null;
+}
+
+export interface CreativePipelineTemplate {
+  template_id: string;
+  title: string;
+  description: string;
+  pipeline_type: CreativePipelineType;
+  default_brief: Record<string, any>;
+  version: string;
+  is_builtin: boolean;
+}
+
+export interface CreativeProjectManifest {
+  manifest_id: string;
+  pipeline_id: string;
+  pipeline_hash: string;
+  title: string;
+  pipeline_type: string;
+  version: string;
+  creative_brief: CreativeBrief;
+  script?: CreativeScript | null;
+  storyboard?: Storyboard | null;
+  scenes: Scene[];
+  assets: CreativeAsset[];
+  models: string[];
+  artifacts: Array<Record<string, any>>;
+  timeline?: MediaTimeline | null;
+  subtitles: SubtitleTrack[];
+  quality_report?: PipelineQualityScore | null;
+  resource_summary: Record<string, any>;
+  verification_passed: boolean;
+  created_at: number;
+}
+
+export interface CreativeRevisionRequest {
+  scene_id: string;
+  new_visual_prompt?: string;
+  new_duration?: number;
+  new_narration_text?: string;
+  reason?: string;
+}
+

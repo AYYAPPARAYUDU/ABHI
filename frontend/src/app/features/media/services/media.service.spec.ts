@@ -167,6 +167,8 @@ describe('MediaService', () => {
     httpMock.expectOne('/api/v1/media/video/artifacts').flush([]);
     httpMock.expectOne('/api/v1/media/workflows/templates').flush([]);
     httpMock.expectOne('/api/v1/media/workflows').flush([]);
+    httpMock.expectOne('/api/v1/media/creative/templates').flush([]);
+    httpMock.expectOne('/api/v1/media/creative/pipelines').flush([]);
 
     expect(service.activeVideoJob()?.job_id).toBe('job_vid_100');
   });
@@ -188,6 +190,8 @@ describe('MediaService', () => {
     httpMock.expectOne('/api/v1/media/video/artifacts').flush([]);
     httpMock.expectOne('/api/v1/media/workflows/templates').flush([]);
     httpMock.expectOne('/api/v1/media/workflows').flush([]);
+    httpMock.expectOne('/api/v1/media/creative/templates').flush([]);
+    httpMock.expectOne('/api/v1/media/creative/pipelines').flush([]);
   });
 
   it('should call delete endpoint on deleteVideoArtifact', () => {
@@ -265,6 +269,8 @@ describe('MediaService', () => {
     httpMock.expectOne('/api/v1/media/video/artifacts').flush([]);
     httpMock.expectOne('/api/v1/media/workflows/templates').flush([]);
     httpMock.expectOne('/api/v1/media/workflows').flush([]);
+    httpMock.expectOne('/api/v1/media/creative/templates').flush([]);
+    httpMock.expectOne('/api/v1/media/creative/pipelines').flush([]);
   });
 
   it('should fetch artifact lineage and masks', () => {
@@ -548,5 +554,404 @@ describe('MediaService', () => {
     req.flush(mockWf);
 
     expect(service.activeWorkflow()?.workflow_id).toBe('wf_imp');
+  });
+
+  // ==========================================
+  // Phase 8 Stage 8.5 Creative Pipeline Tests
+  // ==========================================
+
+  it('should fetch creative templates and update creativeTemplates signal', () => {
+    const mockTemplates = [
+      {
+        template_id: 'template.short_promotional_video@1.0.0',
+        title: 'Short Promo',
+        description: 'Short promotional video',
+        pipeline_type: 'SHORT_PROMOTIONAL_VIDEO' as const,
+        version: '1.0.0',
+        is_builtin: true,
+      },
+    ];
+
+    service.fetchCreativeTemplates().subscribe((res) => {
+      expect(res.length).toBe(1);
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/templates');
+    expect(req.request.method).toBe('GET');
+    req.flush(mockTemplates);
+
+    expect(service.creativeTemplates().length).toBe(1);
+    expect(service.creativeTemplates()[0].template_id).toBe('template.short_promotional_video@1.0.0');
+  });
+
+  it('should fetch creative pipelines and update creativePipelines signal', () => {
+    const mockPipelines = [
+      {
+        pipeline_id: 'cpipe_1',
+        goal: 'Promo',
+        pipeline_type: 'SHORT_PROMOTIONAL_VIDEO' as const,
+        version: '1.0.0',
+        creative_brief: { title: 'Promo', description: 'Desc', style: 'Modern', tone: 'Excited', language: 'en', duration: 10 },
+        scenes: [],
+        assets: [],
+        subtitle_tracks: [],
+        outputs: [],
+        status: 'READY' as const,
+        resource_budget: {},
+        storage_budget: {},
+        retention_policy: 'FINAL_ONLY' as const,
+        render_profile: 'MP4_H264_STANDARD' as const,
+        pipeline_hash: 'hash1',
+        created_at: 1000,
+      },
+    ];
+
+    service.fetchCreativePipelines().subscribe((res) => {
+      expect(res.length).toBe(1);
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines');
+    expect(req.request.method).toBe('GET');
+    req.flush(mockPipelines);
+
+    expect(service.creativePipelines().length).toBe(1);
+    expect(service.isCreativeLoading()).toBe(false);
+  });
+
+  it('should create creative pipeline and update activeCreativePipeline signal', () => {
+    const brief = {
+      title: 'New Video',
+      description: 'Futuristic teaser',
+      style: 'Cyberpunk',
+      tone: 'Dynamic',
+      language: 'en',
+      duration: 15,
+    };
+
+    const mockCreated = {
+      pipeline_id: 'cpipe_new_1',
+      goal: 'New Video',
+      pipeline_type: 'SHORT_PROMOTIONAL_VIDEO' as const,
+      version: '1.0.0',
+      creative_brief: brief,
+      scenes: [],
+      assets: [],
+      subtitle_tracks: [],
+      outputs: [],
+      status: 'PLANNING' as const,
+      resource_budget: {},
+      storage_budget: {},
+      retention_policy: 'FINAL_ONLY' as const,
+      render_profile: 'MP4_H264_STANDARD' as const,
+      pipeline_hash: 'hash_new',
+      created_at: 2000,
+    };
+
+    service.createCreativePipeline(brief, 'template.short_promotional_video@1.0.0', 'FULL_PROJECT', 'MP4_H264_LOW_RESOURCE').subscribe((res) => {
+      expect(res.pipeline_id).toBe('cpipe_new_1');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.template_id).toBe('template.short_promotional_video@1.0.0');
+    expect(req.request.body.retention_policy).toBe('FULL_PROJECT');
+    expect(req.request.body.render_profile).toBe('MP4_H264_LOW_RESOURCE');
+    req.flush(mockCreated);
+
+    httpMock.expectOne('/api/v1/media/creative/pipelines').flush([mockCreated]);
+
+    expect(service.activeCreativePipeline()?.pipeline_id).toBe('cpipe_new_1');
+    expect(service.isCreativeLoading()).toBe(false);
+  });
+
+  it('should get single creative pipeline by id', () => {
+    const mockPipe = {
+      pipeline_id: 'cpipe_single',
+      goal: 'Single',
+      pipeline_type: 'CINEMATIC_SCENE' as const,
+      version: '1.0.0',
+      creative_brief: { title: 'Single', description: 'Desc', style: 'Cinematic', tone: 'Epic', language: 'en', duration: 12 },
+      scenes: [],
+      assets: [],
+      subtitle_tracks: [],
+      outputs: [],
+      status: 'READY' as const,
+      resource_budget: {},
+      storage_budget: {},
+      retention_policy: 'FINAL_ONLY' as const,
+      render_profile: 'MP4_H264_STANDARD' as const,
+      pipeline_hash: 'hash_single',
+      created_at: 1000,
+    };
+
+    service.getCreativePipeline('cpipe_single').subscribe((res) => {
+      expect(res.pipeline_id).toBe('cpipe_single');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines/cpipe_single');
+    expect(req.request.method).toBe('GET');
+    req.flush(mockPipe);
+
+    expect(service.activeCreativePipeline()?.pipeline_id).toBe('cpipe_single');
+  });
+
+  it('should simulate creative pipeline and store creativeSimulationResult signal', () => {
+    const mockSim = {
+      feasible: true,
+      peak_vram_mb: 4800.0,
+      peak_ram_mb: 3200.0,
+      estimated_duration_sec: 14.2,
+      node_simulation: {},
+      bottleneck_node_id: null,
+      recommendations: [],
+    };
+
+    service.simulateCreativePipeline('cpipe_100').subscribe((res) => {
+      expect(res.feasible).toBe(true);
+      expect(res.peak_vram_mb).toBe(4800.0);
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines/cpipe_100/simulate');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockSim);
+
+    expect(service.creativeSimulationResult()?.feasible).toBe(true);
+    expect(service.isCreativeLoading()).toBe(false);
+  });
+
+  it('should execute creative pipeline and update signals', () => {
+    const mockExecuted = {
+      pipeline_id: 'cpipe_100',
+      goal: 'Exec',
+      pipeline_type: 'SHORT_PROMOTIONAL_VIDEO' as const,
+      version: '1.0.0',
+      creative_brief: { title: 'Exec', description: 'Desc', style: 'Style', tone: 'Tone', language: 'en', duration: 10 },
+      scenes: [],
+      assets: [],
+      subtitle_tracks: [],
+      outputs: [],
+      status: 'COMPLETED' as const,
+      resource_budget: {},
+      storage_budget: {},
+      retention_policy: 'FINAL_ONLY' as const,
+      render_profile: 'MP4_H264_STANDARD' as const,
+      pipeline_hash: 'hash_exec',
+      created_at: 1000,
+    };
+
+    service.executeCreativePipeline('cpipe_100').subscribe((res) => {
+      expect(res.status).toBe('COMPLETED');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines/cpipe_100/execute');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockExecuted);
+
+    httpMock.expectOne('/api/v1/media/creative/pipelines').flush([mockExecuted]);
+
+    expect(service.activeCreativePipeline()?.status).toBe('COMPLETED');
+    expect(service.isCreativeLoading()).toBe(false);
+  });
+
+  it('should revise creative pipeline and update signals', () => {
+    const revisionReq = {
+      scene_id: 'scn_1',
+      new_visual_prompt: 'Updated scene prompt',
+      new_duration: 6,
+    };
+
+    const mockRevised = {
+      pipeline_id: 'cpipe_100',
+      goal: 'Revised',
+      pipeline_type: 'SHORT_PROMOTIONAL_VIDEO' as const,
+      version: '1.0.0',
+      creative_brief: { title: 'Rev', description: 'Desc', style: 'Style', tone: 'Tone', language: 'en', duration: 11 },
+      scenes: [],
+      assets: [],
+      subtitle_tracks: [],
+      outputs: [],
+      status: 'READY' as const,
+      resource_budget: {},
+      storage_budget: {},
+      retention_policy: 'FINAL_ONLY' as const,
+      render_profile: 'MP4_H264_STANDARD' as const,
+      pipeline_hash: 'hash_revised',
+      created_at: 1000,
+    };
+
+    service.reviseCreativePipeline('cpipe_100', revisionReq).subscribe((res) => {
+      expect(res.pipeline_id).toBe('cpipe_100');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines/cpipe_100/revise');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.new_visual_prompt).toBe('Updated scene prompt');
+    req.flush(mockRevised);
+
+    httpMock.expectOne('/api/v1/media/creative/pipelines').flush([mockRevised]);
+
+    expect(service.activeCreativePipeline()?.pipeline_hash).toBe('hash_revised');
+  });
+
+  it('should cancel creative pipeline and refresh pipeline list', () => {
+    const mockCancelled = {
+      pipeline_id: 'cpipe_100',
+      goal: 'Cancelled',
+      pipeline_type: 'SHORT_PROMOTIONAL_VIDEO' as const,
+      version: '1.0.0',
+      creative_brief: { title: 'Cancelled', description: 'Desc', style: 'Style', tone: 'Tone', language: 'en', duration: 10 },
+      scenes: [],
+      assets: [],
+      subtitle_tracks: [],
+      outputs: [],
+      status: 'CANCELLED' as const,
+      resource_budget: {},
+      storage_budget: {},
+      retention_policy: 'FINAL_ONLY' as const,
+      render_profile: 'MP4_H264_STANDARD' as const,
+      pipeline_hash: 'hash_cancelled',
+      created_at: 1000,
+    };
+
+    service.cancelCreativePipeline('cpipe_100').subscribe((res) => {
+      expect(res.status).toBe('CANCELLED');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines/cpipe_100/cancel');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockCancelled);
+
+    httpMock.expectOne('/api/v1/media/creative/pipelines').flush([mockCancelled]);
+
+    expect(service.activeCreativePipeline()?.status).toBe('CANCELLED');
+  });
+
+  it('should fetch creative manifest and update activeCreativeManifest signal', () => {
+    const mockManifest = {
+      manifest_id: 'man_100',
+      pipeline_id: 'cpipe_100',
+      pipeline_hash: 'hash_manifest',
+      title: 'Promo Video',
+      pipeline_type: 'SHORT_PROMOTIONAL_VIDEO',
+      version: '1.0.0',
+      creative_brief: { title: 'Promo', description: 'Desc' },
+      scenes: [],
+      assets: [],
+      models: ['sd-turbo-local'],
+      artifacts: [{ artifact_id: 'art_1' }],
+      subtitles: [],
+      quality_report: {
+        technical_integrity: 0.95,
+        resource_efficiency: 0.92,
+        workflow_completion: 1.0,
+        prompt_adherence: 0.94,
+        temporal_consistency: 0.9,
+        audio_video_alignment: 0.96,
+        overall_passed: true,
+      },
+      resource_summary: {},
+      verification_passed: true,
+      created_at: 1720000000,
+    };
+
+    service.fetchCreativeManifest('cpipe_100').subscribe((res) => {
+      expect(res.pipeline_id).toBe('cpipe_100');
+      expect(res.quality_report?.overall_passed).toBe(true);
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines/cpipe_100/manifest');
+    expect(req.request.method).toBe('GET');
+    req.flush(mockManifest);
+
+    expect(service.activeCreativeManifest()?.manifest_id).toBe('man_100');
+  });
+
+  it('should export creative project data via POST /creative/pipelines/export', () => {
+    const mockExport = { pipeline_id: 'cpipe_100', export_version: '1.0' };
+    service.exportCreativeProject('cpipe_100').subscribe((res) => {
+      expect(res.pipeline_id).toBe('cpipe_100');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines/export?pipeline_id=cpipe_100');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockExport);
+  });
+
+  it('should import creative project data via POST /creative/pipelines/import', () => {
+    const mockImport = {
+      pipeline_id: 'cpipe_imp_100',
+      goal: 'Imported',
+      pipeline_type: 'SHORT_PROMOTIONAL_VIDEO' as const,
+      version: '1.0.0',
+      creative_brief: { title: 'Imported', description: 'Desc', style: 'Style', tone: 'Tone', language: 'en', duration: 10 },
+      scenes: [],
+      assets: [],
+      subtitle_tracks: [],
+      outputs: [],
+      status: 'READY' as const,
+      resource_budget: {},
+      storage_budget: {},
+      retention_policy: 'FINAL_ONLY' as const,
+      render_profile: 'MP4_H264_STANDARD' as const,
+      pipeline_hash: 'hash_imp',
+      created_at: 1000,
+    };
+
+    service.importCreativeProject(mockImport).subscribe((res) => {
+      expect(res.pipeline_id).toBe('cpipe_imp_100');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines/import');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockImport);
+
+    httpMock.expectOne('/api/v1/media/creative/pipelines').flush([mockImport]);
+
+    expect(service.activeCreativePipeline()?.pipeline_id).toBe('cpipe_imp_100');
+  });
+
+  it('should handle creative creation errors gracefully and set creativeErrorMessage', () => {
+    const brief = {
+      title: 'Bad Video',
+      description: 'Invalid',
+      style: 'Cyberpunk',
+      tone: 'Dynamic',
+      language: 'en',
+      duration: 10,
+    };
+
+    service.createCreativePipeline(brief).subscribe({
+      error: () => {},
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines');
+    req.flush({ detail: 'Invalid parameters' }, { status: 400, statusText: 'Bad Request' });
+
+    expect(service.isCreativeLoading()).toBe(false);
+    expect(service.creativeErrorMessage()).toBe('Invalid parameters');
+  });
+
+  it('should handle simulation errors and set creativeErrorMessage', () => {
+    service.simulateCreativePipeline('cpipe_bad').subscribe({
+      error: () => {},
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines/cpipe_bad/simulate');
+    req.flush({ detail: 'Resource constraint exceeded' }, { status: 400, statusText: 'Bad Request' });
+
+    expect(service.isCreativeLoading()).toBe(false);
+    expect(service.creativeErrorMessage()).toBe('Resource constraint exceeded');
+  });
+
+  it('should handle revision errors and set creativeErrorMessage', () => {
+    service.reviseCreativePipeline('cpipe_100', { scene_id: 'scn_missing' }).subscribe({
+      error: () => {},
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/creative/pipelines/cpipe_100/revise');
+    req.flush({ detail: 'Scene scn_missing not found in pipeline' }, { status: 404, statusText: 'Not Found' });
+
+    expect(service.isCreativeLoading()).toBe(false);
+    expect(service.creativeErrorMessage()).toBe('Scene scn_missing not found in pipeline');
   });
 });

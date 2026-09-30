@@ -19,6 +19,11 @@ import {
   MediaWorkflowSimulationResult,
   MediaWorkflowManifest,
   MediaCompositionRequestDTO,
+  CreativeBrief,
+  CreativePipeline,
+  CreativePipelineTemplate,
+  CreativeProjectManifest,
+  CreativeRevisionRequest,
 } from '../models/media.model';
 
 @Injectable({
@@ -60,6 +65,21 @@ export class MediaService {
   artifactMasks = signal<MaskArtifactDTO[]>([]);
   isEditLoading = signal<boolean>(false);
   editErrorMessage = signal<string | null>(null);
+
+  // Core Signals (Creative Pipeline Studio - Phase 8 Stage 8.5)
+  creativeTemplates = signal<CreativePipelineTemplate[]>([]);
+  creativePipelines = signal<CreativePipeline[]>([]);
+  activeCreativePipeline = signal<CreativePipeline | null>(null);
+  creativeSimulationResult = signal<MediaWorkflowSimulationResult | null>(null);
+  activeCreativeManifest = signal<CreativeProjectManifest | null>(null);
+  isCreativeLoading = signal<boolean>(false);
+  creativeErrorMessage = signal<string | null>(null);
+
+  // Computed Signals (Creative Studio)
+  isCreativeExecuting = computed<boolean>(() => {
+    const status = this.activeCreativePipeline()?.status;
+    return this.isCreativeLoading() || (status !== undefined && ['PLANNING', 'ASSET_GENERATION', 'SCENE_GENERATION', 'NARRATION', 'COMPOSITION', 'RENDERING', 'VALIDATING'].includes(status));
+  });
 
   // Computed Signals (Workflow Composer)
   isWorkflowExecuting = computed<boolean>(() => {
@@ -483,6 +503,161 @@ export class MediaService {
     return this.http.post<VideoArtifactDTO>(`${this.baseUrl}/composition/execute`, request);
   }
 
+  // ==========================================
+  // Creative Pipeline Methods (Phase 8 Stage 8.5)
+  // ==========================================
+
+  fetchCreativeTemplates(): Observable<CreativePipelineTemplate[]> {
+    return this.http.get<CreativePipelineTemplate[]>(`${this.baseUrl}/creative/templates`).pipe(
+      tap({
+        next: (t) => this.creativeTemplates.set(t),
+        error: (err) => this.creativeErrorMessage.set(err.message || 'Failed to fetch creative templates'),
+      })
+    );
+  }
+
+  fetchCreativePipelines(): Observable<CreativePipeline[]> {
+    this.isCreativeLoading.set(true);
+    return this.http.get<CreativePipeline[]>(`${this.baseUrl}/creative/pipelines`).pipe(
+      tap({
+        next: (p) => {
+          this.creativePipelines.set(p);
+          this.isCreativeLoading.set(false);
+        },
+        error: (err) => {
+          this.isCreativeLoading.set(false);
+          this.creativeErrorMessage.set(err.message || 'Failed to fetch creative pipelines');
+        },
+      })
+    );
+  }
+
+  createCreativePipeline(
+    brief: CreativeBrief,
+    templateId?: string,
+    retentionPolicy = 'FINAL_ONLY',
+    renderProfile = 'MP4_H264_STANDARD'
+  ): Observable<CreativePipeline> {
+    this.isCreativeLoading.set(true);
+    this.creativeErrorMessage.set(null);
+    const payload = {
+      creative_brief: brief,
+      template_id: templateId,
+      retention_policy: retentionPolicy,
+      render_profile: renderProfile,
+    };
+    return this.http.post<CreativePipeline>(`${this.baseUrl}/creative/pipelines`, payload).pipe(
+      tap({
+        next: (p) => {
+          this.activeCreativePipeline.set(p);
+          this.isCreativeLoading.set(false);
+          this.fetchCreativePipelines().subscribe();
+        },
+        error: (err) => {
+          this.isCreativeLoading.set(false);
+          this.creativeErrorMessage.set(err.error?.detail || err.message || 'Failed to create creative pipeline');
+        },
+      })
+    );
+  }
+
+  getCreativePipeline(pipelineId: string): Observable<CreativePipeline> {
+    return this.http.get<CreativePipeline>(`${this.baseUrl}/creative/pipelines/${pipelineId}`).pipe(
+      tap({
+        next: (p) => this.activeCreativePipeline.set(p),
+        error: (err) => this.creativeErrorMessage.set(err.message || 'Failed to get pipeline'),
+      })
+    );
+  }
+
+  simulateCreativePipeline(pipelineId: string): Observable<MediaWorkflowSimulationResult> {
+    this.isCreativeLoading.set(true);
+    return this.http.post<MediaWorkflowSimulationResult>(`${this.baseUrl}/creative/pipelines/${pipelineId}/simulate`, {}).pipe(
+      tap({
+        next: (res) => {
+          this.creativeSimulationResult.set(res);
+          this.isCreativeLoading.set(false);
+        },
+        error: (err) => {
+          this.isCreativeLoading.set(false);
+          this.creativeErrorMessage.set(err.error?.detail || err.message || 'Simulation failed');
+        },
+      })
+    );
+  }
+
+  executeCreativePipeline(pipelineId: string): Observable<CreativePipeline> {
+    this.isCreativeLoading.set(true);
+    this.creativeErrorMessage.set(null);
+    return this.http.post<CreativePipeline>(`${this.baseUrl}/creative/pipelines/${pipelineId}/execute`, {}).pipe(
+      tap({
+        next: (p) => {
+          this.activeCreativePipeline.set(p);
+          this.isCreativeLoading.set(false);
+          this.fetchCreativePipelines().subscribe();
+        },
+        error: (err) => {
+          this.isCreativeLoading.set(false);
+          this.creativeErrorMessage.set(err.error?.detail || err.message || 'Pipeline execution failed');
+        },
+      })
+    );
+  }
+
+  reviseCreativePipeline(pipelineId: string, revision: CreativeRevisionRequest): Observable<CreativePipeline> {
+    this.isCreativeLoading.set(true);
+    this.creativeErrorMessage.set(null);
+    return this.http.post<CreativePipeline>(`${this.baseUrl}/creative/pipelines/${pipelineId}/revise`, revision).pipe(
+      tap({
+        next: (p) => {
+          this.activeCreativePipeline.set(p);
+          this.isCreativeLoading.set(false);
+          this.fetchCreativePipelines().subscribe();
+        },
+        error: (err) => {
+          this.isCreativeLoading.set(false);
+          this.creativeErrorMessage.set(err.error?.detail || err.message || 'Pipeline revision failed');
+        },
+      })
+    );
+  }
+
+  cancelCreativePipeline(pipelineId: string): Observable<CreativePipeline> {
+    return this.http.post<CreativePipeline>(`${this.baseUrl}/creative/pipelines/${pipelineId}/cancel`, {}).pipe(
+      tap({
+        next: (p) => {
+          this.activeCreativePipeline.set(p);
+          this.fetchCreativePipelines().subscribe();
+        },
+        error: (err) => this.creativeErrorMessage.set(err.message || 'Failed to cancel pipeline'),
+      })
+    );
+  }
+
+  fetchCreativeManifest(pipelineId: string): Observable<CreativeProjectManifest> {
+    return this.http.get<CreativeProjectManifest>(`${this.baseUrl}/creative/pipelines/${pipelineId}/manifest`).pipe(
+      tap({
+        next: (m) => this.activeCreativeManifest.set(m),
+        error: (err) => this.creativeErrorMessage.set(err.message || 'Failed to fetch creative manifest'),
+      })
+    );
+  }
+
+  exportCreativeProject(pipelineId: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/creative/pipelines/export`, null, { params: { pipeline_id: pipelineId } });
+  }
+
+  importCreativeProject(projectData: any): Observable<CreativePipeline> {
+    return this.http.post<CreativePipeline>(`${this.baseUrl}/creative/pipelines/import`, projectData).pipe(
+      tap({
+        next: (p) => {
+          this.activeCreativePipeline.set(p);
+          this.fetchCreativePipelines().subscribe();
+        },
+      })
+    );
+  }
+
   refreshAll(): void {
     this.fetchModels().subscribe();
     this.fetchEditModels().subscribe();
@@ -494,6 +669,8 @@ export class MediaService {
     this.fetchVideoArtifacts().subscribe();
     this.fetchTemplates().subscribe();
     this.fetchWorkflows().subscribe();
+    this.fetchCreativeTemplates().subscribe();
+    this.fetchCreativePipelines().subscribe();
   }
 }
 
