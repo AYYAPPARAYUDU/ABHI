@@ -181,11 +181,17 @@ class VideoStorageManager:
         # 6. SHA-256
         sha256_hash = self.compute_sha256(file_path)
         artifact_id = f"art_vid_{hashlib.sha256(f'{job_id}_{sha256_hash}'.encode()).hexdigest()[:16]}"
-        rel_path = str(file_path.relative_to(self.base_dir.parent)).replace("\\", "/")
+        try:
+            rel_path = str(file_path.relative_to(self.base_dir.parent)).replace("\\", "/")
+        except ValueError:
+            rel_path = str(file_path).replace("\\", "/")
         
         rel_poster_path = None
         if poster_path and poster_path.exists():
-            rel_poster_path = str(poster_path.relative_to(self.base_dir.parent)).replace("\\", "/")
+            try:
+                rel_poster_path = str(poster_path.relative_to(self.base_dir.parent)).replace("\\", "/")
+            except ValueError:
+                rel_poster_path = str(poster_path).replace("\\", "/")
 
         artifact = VideoArtifact(
             artifact_id=artifact_id,

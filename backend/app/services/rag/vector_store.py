@@ -4,8 +4,15 @@ import os
 import re
 import uuid
 from typing import Any, Dict, List, Optional
-import lancedb
-import pyarrow as pa
+try:
+    import lancedb
+    import pyarrow as pa
+    _HAS_LANCEDB = True
+except Exception as _e:
+    _HAS_LANCEDB = False
+    lancedb = None
+    pa = None
+
 from pydantic import BaseModel, Field
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
@@ -29,7 +36,7 @@ class SearchResult(BaseModel):
 
 
 class LocalVectorStore:
-    """Serverless hybrid vector store powered by LanceDB and Apache Arrow."""
+    """Serverless hybrid vector store powered by LanceDB and Apache Arrow with in-memory fallback."""
 
     VECTOR_DIM = 384
     TABLE_NAME = "knowledge_chunks"
@@ -37,11 +44,23 @@ class LocalVectorStore:
     def __init__(self, db_dir: Optional[str] = None):
         self.db_dir = db_dir or settings.LANCEDB_DIR
         os.makedirs(self.db_dir, exist_ok=True)
-        self.db = lancedb.connect(self.db_dir)
-        self.table = self._ensure_table()
+        self._in_memory_records: List[Dict[str, Any]] = []
+        if _HAS_LANCEDB:
+            try:
+                self.db = lancedb.connect(self.db_dir)
+                self.table = self._ensure_table()
+            except Exception as e:
+                logger.warning(f"LanceDB init failed, falling back to in-memory store: {e}")
+                self.db = None
+                self.table = None
+        else:
+            self.db = None
+            self.table = None
 
     def _ensure_table(self):
         """Create or connect to the LanceDB knowledge table."""
+        if not _HAS_LANCEDB or not self.db:
+            return None
         schema = pa.schema([
             pa.field("chunk_id", pa.string()),
             pa.field("source", pa.string()),
@@ -114,8 +133,14 @@ class LocalVectorStore:
             chunk_ids.append(cid)
 
         if chunks:
-            self.table.add(chunks)
-            logger.info(f"Ingested {len(chunks)} chunks from source '{source}' into LanceDB.")
+            if self.table:
+                try:
+                    self.table.add(chunks)
+                except Exception:
+                    self._in_memory_records.extend(chunks)
+            else:
+                self._in_memory_records.extend(chunks)
+            logger.info(f"Ingested {len(chunks)} chunks from source '{source}' into vector store.")
 
         return chunk_ids
 
@@ -126,21 +151,29 @@ class LocalVectorStore:
         source_filter: Optional[str] = None
     ) -> List[SearchResult]:
         """Perform hybrid vector semantic search and BM25 keyword matching."""
-        if not self.table:
-            return []
+        raw_results = []
+        if self.table:
+            query_vec = self._generate_embedding(query)
+            lance_query = self.table.search(query_vec).limit(top_k * 2)
 
-        query_vec = self._generate_embedding(query)
-        lance_query = self.table.search(query_vec).limit(top_k * 2)
+            if source_filter:
+                lance_query = lance_query.where(f"source = '{source_filter}'")
 
-        if source_filter:
-            lance_query = lance_query.where(f"source = '{source_filter}'")
+            try:
+                raw_results = lance_query.to_list()
+            except Exception as e:
+                logger.warning(f"Vector search error: {str(e)}")
+                raw_results = []
 
-        try:
-            # Native list conversion without pandas dependency
-            raw_results = lance_query.to_list()
-        except Exception as e:
-            logger.warning(f"Vector search error: {str(e)}")
-            return []
+        if not raw_results and self._in_memory_records:
+            # In-memory search fallback
+            query_vec = self._generate_embedding(query)
+            for r in self._in_memory_records:
+                if source_filter and r.get("source") != source_filter:
+                    continue
+                r_vec = r.get("vector", [])
+                dist = 1.0 - sum(a * b for a, b in zip(query_vec, r_vec)) if r_vec else 1.0
+                raw_results.append({**r, "_distance": max(0.0, dist)})
 
         if not raw_results:
             return []
@@ -178,54 +211,65 @@ class LocalVectorStore:
 
     def count_chunks(self) -> int:
         """Return total count of indexed vector chunks."""
-        try:
-            if hasattr(self.table, "count_rows"):
-                return self.table.count_rows()
-            return len(self.table)
-        except Exception:
+        if self.table:
             try:
-                return len(self.table.to_arrow())
+                if hasattr(self.table, "count_rows"):
+                    return self.table.count_rows()
+                return len(self.table)
             except Exception:
-                return 0
+                try:
+                    return len(self.table.to_arrow())
+                except Exception:
+                    pass
+        return len(self._in_memory_records)
 
     def list_sources(self) -> List[Dict[str, Any]]:
         """List distinct sources and chunk distributions."""
-        try:
-            arrow_tbl = self.table.to_arrow()
-            records = arrow_tbl.to_pylist()
-            source_counts: Dict[str, int] = {}
-            for r in records:
-                src = str(r.get("source", "unknown"))
-                source_counts[src] = source_counts.get(src, 0) + 1
+        records = []
+        if self.table:
+            try:
+                arrow_tbl = self.table.to_arrow()
+                records = arrow_tbl.to_pylist()
+            except Exception as e:
+                logger.warning(f"Error listing vector sources from table: {str(e)}")
+        if not records:
+            records = self._in_memory_records
 
-            return [
-                {"source": src, "chunk_count": count}
-                for src, count in sorted(source_counts.items(), key=lambda x: x[1], reverse=True)
-            ]
-        except Exception as e:
-            logger.warning(f"Error listing vector sources: {str(e)}")
-            return []
+        source_counts: Dict[str, int] = {}
+        for r in records:
+            src = str(r.get("source", "unknown"))
+            source_counts[src] = source_counts.get(src, 0) + 1
+
+        return [
+            {"source": src, "chunk_count": count}
+            for src, count in sorted(source_counts.items(), key=lambda x: x[1], reverse=True)
+        ]
 
     def get_all_chunks(self, limit: int = 100, offset: int = 0) -> List[Dict[str, Any]]:
         """Retrieve indexed chunks with pagination."""
-        try:
-            arrow_tbl = self.table.to_arrow()
-            records = arrow_tbl.to_pylist()
-            sliced = records[offset:offset + limit]
-            return [
-                {
-                    "chunk_id": str(r.get("chunk_id", "")),
-                    "source": str(r.get("source", "")),
-                    "text": str(r.get("text", "")),
-                    "tags": str(r.get("tags", "")).split(",") if r.get("tags") else [],
-                    "created_at_ts": r.get("created_at_ts", 0)
-                }
-                for r in sliced
-            ]
-        except Exception as e:
-            logger.warning(f"Error retrieving vector chunks: {str(e)}")
-            return []
+        records = []
+        if self.table:
+            try:
+                arrow_tbl = self.table.to_arrow()
+                records = arrow_tbl.to_pylist()
+            except Exception as e:
+                logger.warning(f"Error retrieving vector chunks from table: {str(e)}")
+        if not records:
+            records = self._in_memory_records
+
+        sliced = records[offset:offset + limit]
+        return [
+            {
+                "chunk_id": str(r.get("chunk_id", "")),
+                "source": str(r.get("source", "")),
+                "text": str(r.get("text", "")),
+                "tags": str(r.get("tags", "")).split(",") if r.get("tags") else [],
+                "created_at_ts": r.get("created_at_ts", 0)
+            }
+            for r in sliced
+        ]
 
 
 # Global vector store singleton
 vector_store = LocalVectorStore()
+

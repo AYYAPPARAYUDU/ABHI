@@ -31,14 +31,35 @@ describe('MediaPageComponent', () => {
     expect(mediaService.refreshAll).toHaveBeenCalled();
   });
 
-  it('should switch between edit, video and image studio tabs', () => {
+  it('should switch between composer, edit, video and image studio tabs', () => {
+    expect(component.activeTab()).toBe('composer');
+    component.activeTab.set('edit');
     expect(component.activeTab()).toBe('edit');
     component.activeTab.set('video');
     expect(component.activeTab()).toBe('video');
     component.activeTab.set('image');
     expect(component.activeTab()).toBe('image');
-    component.activeTab.set('edit');
-    expect(component.activeTab()).toBe('edit');
+    component.activeTab.set('composer');
+    expect(component.activeTab()).toBe('composer');
+  });
+
+  it('should handle onTemplateSelected by delegating to workflowComposer if present', () => {
+    const mockTmpl = {
+      template_id: 'creative.text_to_image@1.0.0',
+      title: 'Text to Image',
+      version: '1.0.0',
+      description: 'Generates image',
+      category: 'CREATIVE',
+      is_builtin: true,
+      nodes: [],
+      edges: [],
+      default_parameters: {},
+    };
+    component.workflowComposer = {
+      loadTemplate: vi.fn(),
+    } as any;
+    component.onTemplateSelected(mockTmpl as any);
+    expect(component.workflowComposer?.loadTemplate).toHaveBeenCalledWith(mockTmpl);
   });
 
   it('should delegate edit and inpainting calls to service', () => {
@@ -109,8 +130,8 @@ describe('MediaPageComponent', () => {
     expect(mediaService.editErrorMessage()).toBeNull();
   });
 
-  it('should initialize activeTab with edit default', () => {
-    expect(component.activeTab()).toBe('edit');
+  it('should initialize activeTab with composer default', () => {
+    expect(component.activeTab()).toBe('composer');
   });
 
   it('should handle video generation error state without crashing', () => {

@@ -165,6 +165,8 @@ describe('MediaService', () => {
     httpMock.expectOne('/api/v1/media/video/models').flush([]);
     httpMock.expectOne('/api/v1/media/video/jobs').flush([]);
     httpMock.expectOne('/api/v1/media/video/artifacts').flush([]);
+    httpMock.expectOne('/api/v1/media/workflows/templates').flush([]);
+    httpMock.expectOne('/api/v1/media/workflows').flush([]);
 
     expect(service.activeVideoJob()?.job_id).toBe('job_vid_100');
   });
@@ -184,6 +186,8 @@ describe('MediaService', () => {
     httpMock.expectOne('/api/v1/media/video/models').flush([]);
     httpMock.expectOne('/api/v1/media/video/jobs').flush([]);
     httpMock.expectOne('/api/v1/media/video/artifacts').flush([]);
+    httpMock.expectOne('/api/v1/media/workflows/templates').flush([]);
+    httpMock.expectOne('/api/v1/media/workflows').flush([]);
   });
 
   it('should call delete endpoint on deleteVideoArtifact', () => {
@@ -259,6 +263,8 @@ describe('MediaService', () => {
     httpMock.expectOne('/api/v1/media/video/models').flush([]);
     httpMock.expectOne('/api/v1/media/video/jobs').flush([]);
     httpMock.expectOne('/api/v1/media/video/artifacts').flush([]);
+    httpMock.expectOne('/api/v1/media/workflows/templates').flush([]);
+    httpMock.expectOne('/api/v1/media/workflows').flush([]);
   });
 
   it('should fetch artifact lineage and masks', () => {
@@ -360,5 +366,187 @@ describe('MediaService', () => {
 
     expect(service.isVideoLoading()).toBe(false);
     expect(service.videoErrorMessage()).toBe('OOM error');
+  });
+
+  it('should fetch workflow templates and populate templates signal', () => {
+    const mockTemplates = [
+      {
+        template_id: 'creative.text_to_image@1.0.0',
+        title: 'Text to Image',
+        version: '1.0.0',
+        description: 'Generates image',
+        category: 'CREATIVE',
+        is_builtin: true,
+        nodes: [],
+        edges: [],
+        default_parameters: {},
+      },
+    ];
+
+    service.fetchTemplates().subscribe((res) => {
+      expect(res.length).toBe(1);
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/workflows/templates');
+    expect(req.request.method).toBe('GET');
+    req.flush(mockTemplates);
+
+    expect(service.templates().length).toBe(1);
+    expect(service.templates()[0].template_id).toBe('creative.text_to_image@1.0.0');
+  });
+
+  it('should simulate workflow and store simulationResult signal', () => {
+    const mockWorkflow = {
+      workflow_id: 'wf_test',
+      title: 'Test Workflow',
+      goal: 'Test',
+      nodes: [],
+      edges: [],
+    };
+    const mockSim = {
+      feasible: true,
+      peak_vram_mb: 3200.0,
+      peak_ram_mb: 2048.0,
+      estimated_duration_sec: 4.5,
+      node_simulation: {},
+      bottleneck_node_id: null,
+      recommendations: [],
+    };
+
+    service.simulateWorkflow(mockWorkflow).subscribe((res) => {
+      expect(res.feasible).toBe(true);
+      expect(res.peak_vram_mb).toBe(3200.0);
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/workflows/simulate');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockSim);
+
+    expect(service.simulationResult()?.feasible).toBe(true);
+  });
+
+  it('should execute workflow and store activeWorkflow signal', () => {
+    const mockWorkflow = {
+      workflow_id: 'wf_test',
+      title: 'Test Workflow',
+      goal: 'Test',
+      nodes: [],
+      edges: [],
+    };
+    const mockExecuted = {
+      ...mockWorkflow,
+      status: 'COMPLETED' as const,
+      workflow_hash: 'sha256:abc',
+    };
+
+    service.executeWorkflow(mockWorkflow).subscribe((res) => {
+      expect(res.status).toBe('COMPLETED');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/workflows/execute');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockExecuted);
+
+    httpMock.expectOne('/api/v1/media/workflows').flush([]);
+    httpMock.expectOne('/api/v1/media/artifacts').flush([]);
+    httpMock.expectOne('/api/v1/media/video/artifacts').flush([]);
+
+    expect(service.activeWorkflow()?.status).toBe('COMPLETED');
+    expect(service.isWorkflowExecuting()).toBe(false);
+  });
+
+  it('should fetch manifest and store activeManifest signal', () => {
+    const mockManifest = {
+      workflow_id: 'wf_test',
+      workflow_hash: 'sha256:abc',
+      timestamp: 1720000000,
+      nodes_executed: ['node1'],
+      artifacts: [],
+      primary_artifact_id: 'art_123',
+    };
+
+    service.fetchManifest('wf_test').subscribe((res) => {
+      expect(res.workflow_id).toBe('wf_test');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/workflows/wf_test/manifest');
+    expect(req.request.method).toBe('GET');
+    req.flush(mockManifest);
+
+    expect(service.activeManifest()?.primary_artifact_id).toBe('art_123');
+  });
+
+  it('should compose media using composition profile endpoint', () => {
+    const mockReq = {
+      video_artifact_id: 'vid_1',
+      audio_artifact_id: 'aud_1',
+      profile: 'VIDEO_PLUS_AUDIO' as const,
+    };
+    const mockArtifact = {
+      artifact_id: 'vid_composed_1',
+      media_type: 'VIDEO' as const,
+      file_path: '/path/to/composed.mp4',
+      mime_type: 'video/mp4',
+      size_bytes: 1024,
+      sha256: 'sha256:def',
+      metadata: {},
+      created_at: 1720000000,
+    };
+
+    service.composeMedia(mockReq).subscribe((res) => {
+      expect(res.artifact_id).toBe('vid_composed_1');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/composition/execute');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockArtifact);
+  });
+
+  it('should call cancelWorkflow endpoint and refresh workflow details', () => {
+    service.cancelWorkflow('wf_123').subscribe();
+
+    const cancelReq = httpMock.expectOne('/api/v1/media/workflows/wf_123/cancel');
+    expect(cancelReq.request.method).toBe('POST');
+    cancelReq.flush({ status: 'CANCELLED' });
+
+    httpMock.expectOne('/api/v1/media/workflows/wf_123').flush({ workflow_id: 'wf_123', status: 'CANCELLED' });
+    httpMock.expectOne('/api/v1/media/workflows').flush([]);
+  });
+
+  it('should call resumeWorkflow endpoint and update activeWorkflow signal', () => {
+    service.resumeWorkflow('wf_123').subscribe((wf) => {
+      expect(wf.workflow_id).toBe('wf_123');
+    });
+
+    const resumeReq = httpMock.expectOne('/api/v1/media/workflows/wf_123/resume');
+    expect(resumeReq.request.method).toBe('POST');
+    resumeReq.flush({ workflow_id: 'wf_123', status: 'COMPLETED' });
+
+    httpMock.expectOne('/api/v1/media/workflows').flush([]);
+    expect(service.activeWorkflow()?.workflow_id).toBe('wf_123');
+  });
+
+  it('should call exportWorkflow and return JSON serializable workflow', () => {
+    const mockWf = { workflow_id: 'wf_exp', title: 'Exported', goal: 'Test', nodes: [], edges: [] };
+    service.exportWorkflow(mockWf).subscribe((res) => {
+      expect(res.workflow_id).toBe('wf_exp');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/workflows/export');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockWf);
+  });
+
+  it('should call importWorkflow and set activeWorkflow signal', () => {
+    const mockWf = { workflow_id: 'wf_imp', title: 'Imported', goal: 'Test', nodes: [], edges: [] };
+    service.importWorkflow(mockWf).subscribe((res) => {
+      expect(res.workflow_id).toBe('wf_imp');
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/workflows/import');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockWf);
+
+    expect(service.activeWorkflow()?.workflow_id).toBe('wf_imp');
   });
 });

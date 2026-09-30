@@ -280,3 +280,147 @@ export interface ImageEditModelDefinitionDTO {
   is_production: boolean;
   is_candidate: boolean;
 }
+
+// Phase 8 Stage 8.4 — Multimodal Media Workflow Composer Models
+
+export type WorkflowMediaPortType = 'TEXT' | 'IMAGE' | 'MASK' | 'VIDEO' | 'AUDIO' | 'SUBTITLES' | 'METADATA' | 'ANY';
+
+export type MediaWorkflowStatus = 'QUEUED' | 'ADMITTED' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'CANCELLED' | 'FAILED' | 'RECOVERED';
+
+export type WorkflowNodeStatus = 'PENDING' | 'WAITING_INPUTS' | 'ACQUIRING_RESOURCES' | 'EXECUTING' | 'COMPLETED' | 'FAILED' | 'SKIPPED' | 'CANCELLED';
+
+export type WorkflowRetentionPolicy = 'KEEP_ALL' | 'KEEP_FINAL_AND_SOURCES' | 'KEEP_FINAL_ONLY';
+
+export type MediaCompositionProfile =
+  | 'VIDEO_ONLY'
+  | 'VIDEO_PLUS_AUDIO'
+  | 'VIDEO_PLUS_AUDIO_SUBTITLES'
+  | 'IMAGE_SEQUENCE_TO_VIDEO';
+
+export interface MediaWorkflowEdge {
+  edge_id?: string;
+  source_node_id: string;
+  source_output_key: string;
+  target_node_id: string;
+  target_input_key: string;
+  port_type: WorkflowMediaPortType;
+}
+
+export interface MediaWorkflowNode {
+  node_id: string;
+  title: string;
+  skill_id: string;
+  skill_version?: string;
+  parameters: Record<string, any>;
+  input_bindings?: Record<string, string>;
+  output_bindings?: Record<string, string>;
+  dependencies?: string[];
+  status?: WorkflowNodeStatus;
+  job_id?: string | null;
+  output_artifact_id?: string | null;
+  output_path?: string | null;
+  output_sha256?: string | null;
+  result_data?: Record<string, any>;
+  error_message?: string | null;
+  started_at?: number | null;
+  completed_at?: number | null;
+  duration_ms?: number;
+  estimated_vram_mb?: number;
+  estimated_ram_mb?: number;
+}
+
+export interface MediaWorkflowSuccessContract {
+  required_output_keys?: string[];
+  required_media_types?: WorkflowMediaPortType[];
+  require_hash_verification?: boolean;
+  minimum_completed_nodes?: number;
+}
+
+export interface MediaWorkflow {
+  workflow_id: string;
+  task_id?: string | null;
+  execution_id?: string | null;
+  title: string;
+  goal: string;
+  version?: number;
+  nodes: Record<string, MediaWorkflowNode> | MediaWorkflowNode[];
+  edges: MediaWorkflowEdge[];
+  template_id?: string | null;
+  resource_budget?: Record<string, number>;
+  policy_profile?: Record<string, any>;
+  retention_policy?: WorkflowRetentionPolicy;
+  success_contract?: MediaWorkflowSuccessContract;
+  status?: MediaWorkflowStatus;
+  current_node_id?: string | null;
+  progress?: number;
+  created_at?: number;
+  started_at?: number | null;
+  completed_at?: number | null;
+  failure_reason?: string | null;
+  primary_artifact_id?: string | null;
+  intermediate_artifact_ids?: string[];
+  provenance?: string;
+}
+
+export interface MediaWorkflowSimulationResult {
+  workflow_id: string;
+  workflow_hash: string;
+  node_count: number;
+  estimated_duration_sec: number;
+  peak_vram_mb: number;
+  peak_ram_mb: number;
+  estimated_storage_mb: number;
+  required_skills: string[];
+  required_models: string[];
+  bottlenecks: string[];
+  feasible: boolean;
+  warnings: string[];
+  provenance: string;
+}
+
+export interface MediaWorkflowTemplate {
+  template_id: string;
+  title: string;
+  description: string;
+  version: string;
+  category: string;
+  tags?: string[];
+  nodes: Record<string, MediaWorkflowNode>;
+  edges: MediaWorkflowEdge[];
+  default_inputs?: Record<string, any>;
+  is_builtin: boolean;
+}
+
+export interface MediaWorkflowManifest {
+  manifest_id: string;
+  workflow_id: string;
+  workflow_hash: string;
+  title: string;
+  goal: string;
+  primary_artifact_id?: string | null;
+  artifacts: Array<{
+    node_id?: string;
+    artifact_id: string;
+    media_type: string;
+    filename: string;
+    sha256: string;
+    size_bytes: number;
+    model_id: string;
+  }>;
+  lineage_records?: Array<Record<string, any>>;
+  nodes_executed: string[];
+  resource_summary: Record<string, any>;
+  verification_passed: boolean;
+  created_at: number;
+  completed_at: number;
+}
+
+export interface MediaCompositionRequestDTO {
+  video_artifact_id: string;
+  audio_artifact_id?: string | null;
+  subtitle_text?: string | null;
+  profile: MediaCompositionProfile;
+  output_format?: VideoFormat;
+  output_filename?: string | null;
+}
+

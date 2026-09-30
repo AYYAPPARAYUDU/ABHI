@@ -40,6 +40,8 @@ class MediaStorageManager:
 
         self.images_dir = (self.base_dir / "images").resolve()
         self.images_dir.mkdir(parents=True, exist_ok=True)
+        self._artifacts: Dict[str, MediaArtifact] = {}
+
 
     def sanitize_filename_component(self, name: str) -> str:
         """Sanitize string component to prevent directory traversal or reserved Windows names."""
@@ -154,7 +156,54 @@ class MediaStorageManager:
             f"MediaStorageManager: Successfully validated and registered artifact {artifact_id} "
             f"({w}x{h}, {size_bytes} bytes, sha256={sha256_hash[:8]}...)"
         )
+        self.register_artifact(artifact)
         return True, artifact, "Artifact validated successfully"
+
+    def register_artifact(self, artifact: MediaArtifact) -> None:
+        """Register artifact in in-memory index."""
+        self._artifacts[artifact.artifact_id] = artifact
+
+    def get_artifact(self, artifact_id: str) -> Optional[Any]:
+        """Retrieve artifact by ID from in-memory cache, video coordinator, or database."""
+        if not artifact_id:
+            return None
+        if artifact_id in self._artifacts:
+            return self._artifacts[artifact_id]
+
+        try:
+            from backend.app.media.video_coordinator import video_coordinator
+            vid_art = video_coordinator.get_artifact(artifact_id)
+            if vid_art:
+                return vid_art
+        except Exception:
+            pass
+
+        try:
+            from backend.app.media.edit_coordinator import edit_coordinator
+            if hasattr(edit_coordinator, "get_artifact"):
+                edit_art = edit_coordinator.get_artifact(artifact_id)
+                if edit_art:
+                    return edit_art
+        except Exception:
+            pass
+
+        return None
+
+    def list_artifacts(self, limit: int = 50) -> List[MediaArtifact]:
+        """List recently registered media artifacts."""
+        return list(self._artifacts.values())[:limit]
+
+    def resolve_artifact_path(self, artifact: Any) -> Path:
+        """Resolve absolute file path for a media artifact."""
+        if isinstance(artifact, str):
+            path_str = artifact
+        else:
+            path_str = getattr(artifact, "path", "")
+        
+        target_path = Path(path_str)
+        if target_path.is_absolute():
+            return target_path.resolve()
+        return (self.base_dir.parent / target_path).resolve()
 
     def delete_artifact(self, relative_or_absolute_path: str) -> Tuple[bool, str]:
         """Safely delete artifact file if within media sandbox."""
@@ -178,3 +227,6 @@ class MediaStorageManager:
 
 # Global singleton
 media_storage_manager = MediaStorageManager()
+media_storage = media_storage_manager
+
+

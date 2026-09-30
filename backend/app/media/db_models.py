@@ -191,3 +191,58 @@ class ArtifactLineageRecord(Base):
     diff_evidence_json = Column(Text, nullable=True)
     created_at = Column(Float, nullable=False)
 
+
+class MediaWorkflowRecord(Base):
+    """Relational table tracking media workflow DAG lifecycle."""
+    __tablename__ = "media_workflows"
+
+    workflow_id = Column(String(64), primary_key=True, index=True)
+    task_id = Column(String(64), nullable=True, index=True)
+    execution_id = Column(String(64), nullable=True)
+    goal = Column(Text, nullable=False)
+    version = Column(String(16), default="1.0.0")
+    nodes_json = Column(Text, nullable=False)
+    edges_json = Column(Text, nullable=False)
+    inputs_json = Column(Text, default="{}")
+    outputs_json = Column(Text, default="{}")
+    resource_budget_json = Column(Text, default="{}")
+    policy_profile_json = Column(Text, default="{}")
+    status = Column(String(32), default="QUEUED", index=True, nullable=False)
+    created_at = Column(Float, nullable=False)
+    started_at = Column(Float, nullable=True)
+    completed_at = Column(Float, nullable=True)
+    error_message = Column(Text, nullable=True)
+    workflow_hash = Column(String(64), default="", index=True)
+
+    __table_args__ = (
+        Index("ix_media_workflows_status_created", "status", "created_at"),
+    )
+
+
+class MediaWorkflowCheckpointRecord(Base):
+    """Relational table tracking incremental media workflow checkpoints."""
+    __tablename__ = "media_workflow_checkpoints"
+
+    checkpoint_id = Column(String(64), primary_key=True, index=True)
+    workflow_id = Column(String(64), nullable=False, index=True)
+    node_id = Column(String(64), nullable=False)
+    status = Column(String(32), default="RUNNING")
+    artifacts_json = Column(Text, default="{}")
+    resource_state_json = Column(Text, default="{}")
+    workflow_version = Column(String(16), default="1.0.0")
+    timestamp = Column(Float, nullable=False)
+
+
+class MediaWorkflowTemplateRecord(Base):
+    """Relational table tracking versioned media workflow templates."""
+    __tablename__ = "media_workflow_templates"
+
+    template_id = Column(String(64), primary_key=True, index=True)
+    name = Column(String(128), nullable=False)
+    version = Column(String(16), default="1.0.0")
+    description = Column(Text, default="")
+    category = Column(String(32), default="creative")
+    workflow_json = Column(Text, nullable=False)
+    created_at = Column(Float, nullable=False)
+
+

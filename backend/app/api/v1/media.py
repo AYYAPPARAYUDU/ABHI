@@ -420,3 +420,121 @@ async def list_artifact_masks(artifact_id: str):
     """List all registered mask artifacts created for a source image."""
     return image_edit_coordinator.list_masks_for_artifact(artifact_id)
 
+
+# ==========================================
+# Workflow Composer Endpoints (Phase 8 Stage 8.4)
+# ==========================================
+
+from backend.app.media.workflow_models import (
+    MediaWorkflow,
+    MediaWorkflowSimulationResult,
+    MediaWorkflowManifest,
+    MediaWorkflowTemplate,
+    MediaCompositionRequest,
+)
+from backend.app.media.workflow_composer import media_workflow_composer
+from backend.app.media.composition_runtime import media_composition_runtime
+
+
+@router.post("/workflows/simulate", response_model=MediaWorkflowSimulationResult)
+async def simulate_media_workflow(workflow: MediaWorkflow):
+    """Simulate media DAG workflow, calculate sequential peak VRAM, and verify feasibility."""
+    return media_workflow_composer.simulate_workflow(workflow)
+
+
+@router.post("/workflows/execute", status_code=status.HTTP_201_CREATED)
+async def execute_media_workflow(workflow: MediaWorkflow):
+    """Execute complete DAG media workflow with admission, checkpoints, and verified outputs."""
+    ok, res_wf, err = media_workflow_composer.execute_workflow(workflow)
+    if not ok or not res_wf:
+        raise HTTPException(status_code=400, detail=err or "Workflow execution failed")
+    return res_wf
+
+
+@router.post("/workflows/compose", status_code=status.HTTP_201_CREATED)
+async def compose_media_workflow(workflow: MediaWorkflow):
+    """Alias for executing a composed media workflow."""
+    return await execute_media_workflow(workflow)
+
+
+@router.get("/workflows")
+async def list_media_workflows():
+    """List all tracked media workflows in memory and SQLite WAL."""
+    return media_workflow_composer.list_workflows()
+
+
+@router.get("/workflows/templates", response_model=List[MediaWorkflowTemplate])
+async def list_media_workflow_templates():
+    """List all immutable built-in and registered media workflow templates."""
+    return media_workflow_composer.list_templates()
+
+
+@router.get("/workflows/templates/{template_id}", response_model=MediaWorkflowTemplate)
+async def get_media_workflow_template(template_id: str):
+    """Retrieve details for a specific media workflow template."""
+    tmpl = media_workflow_composer.get_template(template_id)
+    if not tmpl:
+        raise HTTPException(status_code=404, detail=f"Template {template_id} not found")
+    return tmpl
+
+
+@router.get("/workflows/{workflow_id}")
+async def get_media_workflow(workflow_id: str):
+    """Retrieve detailed execution status, node states, and checkpoints for a workflow."""
+    wf = media_workflow_composer.get_workflow(workflow_id)
+    if not wf:
+        raise HTTPException(status_code=404, detail=f"Workflow {workflow_id} not found")
+    return wf
+
+
+@router.post("/workflows/{workflow_id}/cancel")
+async def cancel_media_workflow(workflow_id: str):
+    """Cancel an active media workflow and release allocated GPU/RAM leases."""
+    ok, msg = media_workflow_composer.cancel_workflow(workflow_id)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"status": "SUCCESS", "message": msg, "workflow_id": workflow_id}
+
+
+@router.post("/workflows/{workflow_id}/resume")
+async def resume_media_workflow(workflow_id: str):
+    """Resume a partially completed or failed workflow from its latest verified checkpoint."""
+    ok, res_wf, err = media_workflow_composer.recover_workflow(workflow_id)
+    if not ok or not res_wf:
+        raise HTTPException(status_code=400, detail=err or "Workflow recovery failed")
+    return res_wf
+
+
+@router.get("/workflows/{workflow_id}/manifest", response_model=MediaWorkflowManifest)
+async def get_media_workflow_manifest(workflow_id: str):
+    """Retrieve signed cryptographic artifact manifest and lineage for a completed workflow."""
+    manifest = media_workflow_composer.generate_manifest(workflow_id)
+    if not manifest:
+        raise HTTPException(status_code=404, detail=f"Manifest for workflow {workflow_id} not found or workflow not completed")
+    return manifest
+
+
+@router.post("/workflows/export")
+async def export_media_workflow(workflow: MediaWorkflow):
+    """Export a validated workflow definition JSON bundle."""
+    return media_workflow_composer.export_workflow(workflow)
+
+
+@router.post("/workflows/import", response_model=MediaWorkflow)
+async def import_media_workflow(workflow_data: Dict[str, Any]):
+    """Validate and import an external untrusted workflow definition."""
+    ok, wf, err = media_workflow_composer.import_workflow(workflow_data)
+    if not ok or not wf:
+        raise HTTPException(status_code=400, detail=err or "Invalid workflow definition")
+    return wf
+
+
+@router.post("/composition/execute", status_code=status.HTTP_201_CREATED)
+async def execute_media_composition(request: MediaCompositionRequest):
+    """Execute standalone video and audio multiplexing with allowlisted profiles."""
+    ok, artifact, err = media_composition_runtime.compose_media(request)
+    if not ok or not artifact:
+        raise HTTPException(status_code=400, detail=err or "Composition failed")
+    return artifact
+
+

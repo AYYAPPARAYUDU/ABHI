@@ -14,6 +14,11 @@ import {
   ImageEditRequestDTO,
   MaskArtifactDTO,
   ArtifactLineageRecordDTO,
+  MediaWorkflow,
+  MediaWorkflowTemplate,
+  MediaWorkflowSimulationResult,
+  MediaWorkflowManifest,
+  MediaCompositionRequestDTO,
 } from '../models/media.model';
 
 @Injectable({
@@ -22,6 +27,15 @@ import {
 export class MediaService {
   private http = inject(HttpClient);
   private baseUrl = '/api/v1/media';
+
+  // Core Signals (Workflow Composer Domain - Phase 8 Stage 8.4)
+  templates = signal<MediaWorkflowTemplate[]>([]);
+  workflows = signal<MediaWorkflow[]>([]);
+  activeWorkflow = signal<MediaWorkflow | null>(null);
+  simulationResult = signal<MediaWorkflowSimulationResult | null>(null);
+  activeManifest = signal<MediaWorkflowManifest | null>(null);
+  isWorkflowLoading = signal<boolean>(false);
+  workflowErrorMessage = signal<string | null>(null);
 
   // Core Signals (Image Domain)
   models = signal<ImageModelDefinitionDTO[]>([]);
@@ -46,6 +60,11 @@ export class MediaService {
   artifactMasks = signal<MaskArtifactDTO[]>([]);
   isEditLoading = signal<boolean>(false);
   editErrorMessage = signal<string | null>(null);
+
+  // Computed Signals (Workflow Composer)
+  isWorkflowExecuting = computed<boolean>(() => {
+    return this.isWorkflowLoading() || this.activeWorkflow()?.status === 'RUNNING';
+  });
 
   // Computed Signals (Editing)
   productionEditModels = computed<ImageEditModelDefinitionDTO[]>(() => {
@@ -344,6 +363,126 @@ export class MediaService {
     );
   }
 
+  // Workflow Composer API Methods (Phase 8 Stage 8.4)
+  fetchTemplates(): Observable<MediaWorkflowTemplate[]> {
+    return this.http.get<MediaWorkflowTemplate[]>(`${this.baseUrl}/workflows/templates`).pipe(
+      tap({
+        next: (data) => this.templates.set(data),
+        error: (err) => this.workflowErrorMessage.set(err.message || 'Failed to fetch workflow templates'),
+      })
+    );
+  }
+
+  fetchTemplate(templateId: string): Observable<MediaWorkflowTemplate> {
+    return this.http.get<MediaWorkflowTemplate>(`${this.baseUrl}/workflows/templates/${templateId}`);
+  }
+
+  simulateWorkflow(workflow: MediaWorkflow): Observable<MediaWorkflowSimulationResult> {
+    this.isWorkflowLoading.set(true);
+    this.workflowErrorMessage.set(null);
+    return this.http.post<MediaWorkflowSimulationResult>(`${this.baseUrl}/workflows/simulate`, workflow).pipe(
+      tap({
+        next: (res) => {
+          this.simulationResult.set(res);
+          this.isWorkflowLoading.set(false);
+        },
+        error: (err) => {
+          this.isWorkflowLoading.set(false);
+          this.workflowErrorMessage.set(err.error?.detail || err.message || 'Workflow simulation failed');
+        },
+      })
+    );
+  }
+
+  executeWorkflow(workflow: MediaWorkflow): Observable<MediaWorkflow> {
+    this.isWorkflowLoading.set(true);
+    this.workflowErrorMessage.set(null);
+    return this.http.post<MediaWorkflow>(`${this.baseUrl}/workflows/execute`, workflow).pipe(
+      tap({
+        next: (wf) => {
+          this.activeWorkflow.set(wf);
+          this.isWorkflowLoading.set(false);
+          this.fetchWorkflows().subscribe();
+          this.fetchArtifacts().subscribe();
+          this.fetchVideoArtifacts().subscribe();
+        },
+        error: (err) => {
+          this.isWorkflowLoading.set(false);
+          this.workflowErrorMessage.set(err.error?.detail || err.message || 'Workflow execution failed');
+        },
+      })
+    );
+  }
+
+  fetchWorkflows(): Observable<MediaWorkflow[]> {
+    return this.http.get<MediaWorkflow[]>(`${this.baseUrl}/workflows`).pipe(
+      tap({
+        next: (wfs) => this.workflows.set(wfs),
+        error: (err) => this.workflowErrorMessage.set(err.message || 'Failed to fetch workflows'),
+      })
+    );
+  }
+
+  fetchWorkflow(workflowId: string): Observable<MediaWorkflow> {
+    return this.http.get<MediaWorkflow>(`${this.baseUrl}/workflows/${workflowId}`).pipe(
+      tap({
+        next: (wf) => this.activeWorkflow.set(wf),
+        error: (err) => this.workflowErrorMessage.set(err.message || 'Failed to fetch workflow'),
+      })
+    );
+  }
+
+  cancelWorkflow(workflowId: string): Observable<any> {
+    return this.http.post(`${this.baseUrl}/workflows/${workflowId}/cancel`, {}).pipe(
+      tap(() => {
+        this.fetchWorkflow(workflowId).subscribe();
+        this.fetchWorkflows().subscribe();
+      })
+    );
+  }
+
+  resumeWorkflow(workflowId: string): Observable<MediaWorkflow> {
+    this.isWorkflowLoading.set(true);
+    return this.http.post<MediaWorkflow>(`${this.baseUrl}/workflows/${workflowId}/resume`, {}).pipe(
+      tap({
+        next: (wf) => {
+          this.activeWorkflow.set(wf);
+          this.isWorkflowLoading.set(false);
+          this.fetchWorkflows().subscribe();
+        },
+        error: (err) => {
+          this.isWorkflowLoading.set(false);
+          this.workflowErrorMessage.set(err.error?.detail || err.message || 'Workflow recovery failed');
+        },
+      })
+    );
+  }
+
+  fetchManifest(workflowId: string): Observable<MediaWorkflowManifest> {
+    return this.http.get<MediaWorkflowManifest>(`${this.baseUrl}/workflows/${workflowId}/manifest`).pipe(
+      tap({
+        next: (m) => this.activeManifest.set(m),
+        error: (err) => this.workflowErrorMessage.set(err.message || 'Failed to fetch manifest'),
+      })
+    );
+  }
+
+  exportWorkflow(workflow: MediaWorkflow): Observable<any> {
+    return this.http.post(`${this.baseUrl}/workflows/export`, workflow);
+  }
+
+  importWorkflow(workflowData: any): Observable<MediaWorkflow> {
+    return this.http.post<MediaWorkflow>(`${this.baseUrl}/workflows/import`, workflowData).pipe(
+      tap({
+        next: (wf) => this.activeWorkflow.set(wf),
+      })
+    );
+  }
+
+  composeMedia(request: MediaCompositionRequestDTO): Observable<VideoArtifactDTO> {
+    return this.http.post<VideoArtifactDTO>(`${this.baseUrl}/composition/execute`, request);
+  }
+
   refreshAll(): void {
     this.fetchModels().subscribe();
     this.fetchEditModels().subscribe();
@@ -353,6 +492,9 @@ export class MediaService {
     this.fetchVideoModels().subscribe();
     this.fetchVideoJobs().subscribe();
     this.fetchVideoArtifacts().subscribe();
+    this.fetchTemplates().subscribe();
+    this.fetchWorkflows().subscribe();
   }
 }
+
 

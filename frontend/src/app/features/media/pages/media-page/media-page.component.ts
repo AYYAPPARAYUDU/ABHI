@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MediaService } from '../../services/media.service';
 import { ImageGenerationFormComponent } from '../../components/image-generation-form/image-generation-form.component';
@@ -12,11 +12,16 @@ import { ImageEditFormComponent } from '../../components/image-edit-form/image-e
 import { MaskCanvasEditorComponent } from '../../components/mask-canvas-editor/mask-canvas-editor.component';
 import { ImageDiffViewerComponent } from '../../components/image-diff-viewer/image-diff-viewer.component';
 import { ArtifactLineageGraphComponent } from '../../components/artifact-lineage-graph/artifact-lineage-graph.component';
+import { VisualWorkflowComposerComponent } from '../../components/visual-workflow-composer/visual-workflow-composer.component';
+import { WorkflowTemplateCatalogComponent } from '../../components/workflow-template-catalog/workflow-template-catalog.component';
+import { WorkflowSimulationPanelComponent } from '../../components/workflow-simulation-panel/workflow-simulation-panel.component';
+import { WorkflowManifestViewerComponent } from '../../components/workflow-manifest-viewer/workflow-manifest-viewer.component';
 import {
   ImageGenerationRequestDTO,
   VideoGenerationRequestDTO,
   ImageEditRequestDTO,
   MediaArtifactDTO,
+  MediaWorkflowTemplate,
 } from '../../models/media.model';
 
 @Component({
@@ -35,6 +40,10 @@ import {
     MaskCanvasEditorComponent,
     ImageDiffViewerComponent,
     ArtifactLineageGraphComponent,
+    VisualWorkflowComposerComponent,
+    WorkflowTemplateCatalogComponent,
+    WorkflowSimulationPanelComponent,
+    WorkflowManifestViewerComponent,
   ],
   template: `
     <div class="min-h-screen bg-slate-950 text-slate-100 p-6 space-y-6">
@@ -45,12 +54,12 @@ import {
             <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
               <span class="text-2xl">✨</span> Local Media, Inpainting & Video Studio
             </h1>
-            <span class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-              Phase 8.3 Active
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+              Phase 8.4 Active
             </span>
           </div>
           <p class="text-xs text-slate-400 mt-1">
-            Non-destructive local image editing, inpainting, canvas outpainting, diffusion synthesis & lineage tracking
+            Multimodal DAG workflows, non-destructive editing, inpainting, canvas outpainting, diffusion synthesis & lineage tracking
           </p>
         </div>
 
@@ -85,6 +94,14 @@ import {
       <div class="flex items-center gap-2 border-b border-slate-800 pb-3 flex-wrap">
         <button
           type="button"
+          (click)="activeTab.set('composer')"
+          [ngClass]="activeTab() === 'composer' ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/30' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
+          class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
+        >
+          <span>⚡</span> Workflow Composer (Phase 8.4)
+        </button>
+        <button
+          type="button"
           (click)="activeTab.set('edit')"
           [ngClass]="activeTab() === 'edit' ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/30' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
           class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
@@ -113,6 +130,31 @@ import {
       <div *ngIf="mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage()" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 rounded-xl flex items-center justify-between">
         <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() }}</span>
         <button (click)="clearErrors()" class="text-red-400 hover:text-white">✕</button>
+      </div>
+
+      <!-- WORKFLOW COMPOSER TAB CONTENT (Phase 8.4) -->
+      <div *ngIf="activeTab() === 'composer'" class="space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Left / Main: Visual Workflow Composer (8 cols) -->
+          <div class="lg:col-span-8 space-y-6">
+            <app-visual-workflow-composer #workflowComposer></app-visual-workflow-composer>
+            <app-workflow-simulation-panel
+              [simulation]="mediaService.simulationResult()"
+            ></app-workflow-simulation-panel>
+          </div>
+
+          <!-- Right Sidebar: Templates Catalog & Manifest Viewer (4 cols) -->
+          <div class="lg:col-span-4 space-y-6">
+            <app-workflow-template-catalog
+              [templates]="mediaService.templates()"
+              (templateSelected)="onTemplateSelected($event)"
+            ></app-workflow-template-catalog>
+
+            <app-workflow-manifest-viewer
+              [manifest]="mediaService.activeManifest()"
+            ></app-workflow-manifest-viewer>
+          </div>
+        </div>
       </div>
 
       <!-- EDIT & INPAINTING STUDIO TAB CONTENT (Phase 8.3) -->
@@ -223,8 +265,10 @@ import {
   `,
 })
 export class MediaPageComponent implements OnInit {
+  @ViewChild('workflowComposer') workflowComposer?: VisualWorkflowComposerComponent;
+
   mediaService = inject(MediaService);
-  activeTab = signal<'edit' | 'video' | 'image'>('edit');
+  activeTab = signal<'composer' | 'edit' | 'video' | 'image'>('composer');
 
   selectedSourceArtifact = signal<MediaArtifactDTO | null>(null);
   currentMaskBase64 = signal<string | null>(null);
@@ -232,11 +276,19 @@ export class MediaPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.mediaService.refreshAll();
+    this.mediaService.fetchTemplates().subscribe();
+
     // Auto-select first artifact as default if available
     const arts = this.mediaService.artifacts();
     if (arts.length > 0) {
       this.selectedSourceArtifact.set(arts[0]);
       this.mediaService.fetchArtifactLineage(arts[0].artifact_id).subscribe();
+    }
+  }
+
+  onTemplateSelected(template: MediaWorkflowTemplate): void {
+    if (this.workflowComposer) {
+      this.workflowComposer.loadTemplate(template);
     }
   }
 
