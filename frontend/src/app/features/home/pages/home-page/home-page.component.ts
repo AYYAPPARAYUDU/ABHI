@@ -1,15 +1,15 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { OperatorStateService } from '../../../../core/services/operator-state.service';
-import { SpatialCardComponent } from '../../../../shared/ui/spatial-card/spatial-card.component';
+import { AgentCommandService } from '../../../../core/services/agent-command.service';
+import { AgentCommandCenterComponent } from '../../../../shared/ui/agent-command-center/agent-command-center.component';
 import { RecentActivityItem } from '../../../../core/models/agent-experience.model';
 
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, SpatialCardComponent],
+  imports: [CommonModule, RouterModule, AgentCommandCenterComponent],
   template: `
     <div class="home-workspace">
       <!-- Central Hero Experience -->
@@ -26,125 +26,16 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
           <div class="core-text">
             <h1 class="core-headline">
               <span class="greeting">Hello, Operator</span>
-              <span class="subtext">ABHI is active & ready in your local environment</span>
+              <span class="subtext">ABHI Agentic Automation Core is active in your local environment</span>
             </h1>
           </div>
         </div>
 
-        <!-- Central Command Bar -->
-        <div class="central-command-box">
-          <form class="command-form" (ngSubmit)="submitCommand()">
-            <div class="command-input-wrap">
-              <span class="command-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"/>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-              </span>
-              <input
-                type="text"
-                class="command-input"
-                [(ngModel)]="commandText"
-                name="commandInput"
-                placeholder="What should ABHI do? (e.g., 'Open Notepad and write today\\'s plan')"
-                autocomplete="off"
-                [disabled]="isSubmitting()"
-              />
-              <div class="command-actions">
-                <button
-                  type="button"
-                  class="voice-btn"
-                  [class.recording]="isListening()"
-                  (click)="toggleVoiceInput()"
-                  title="Voice Command"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                    <line x1="12" y1="19" x2="12" y2="22"/>
-                  </svg>
-                </button>
-                <button
-                  type="submit"
-                  class="submit-btn"
-                  [disabled]="!commandText.trim() || isSubmitting()"
-                  title="Execute Intent"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="22" y1="2" x2="11" y2="13"/>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </form>
-
-          <!-- Suggestion Chips -->
-          <div class="suggestion-chips">
-            <span class="chips-label">Try:</span>
-            @for (sug of suggestions; track sug) {
-              <button
-                type="button"
-                class="chip-btn"
-                (click)="applySuggestion(sug)"
-              >
-                {{ sug }}
-              </button>
-            }
-          </div>
+        <!-- Master Agent Command Center -->
+        <div class="command-center-slot">
+          <app-agent-command-center></app-agent-command-center>
         </div>
       </section>
-
-      <!-- Active Agent Outcome Card (When Busy or Recent Result) -->
-      @if (stateService.isBusy() || stateService.currentTask()) {
-        <section class="active-agent-section">
-          <app-spatial-card
-            [title]="stateService.isBusy() ? 'ABHI in Progress' : 'Task Status'"
-            [status]="stateService.currentTask()?.isSuccess ? 'COMPLETED' : (stateService.isBusy() ? 'WORKING' : 'INFO')"
-            [elevation]="2"
-            statusText="Agent Automation"
-          >
-            <div class="agent-outcome-content">
-              <div class="outcome-header">
-                <div class="outcome-icon-wrap" [class.spinning]="stateService.isBusy()">
-                  @if (stateService.isBusy()) {
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
-                    </svg>
-                  } @else {
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                      <polyline points="22 4 12 14.01 9 11.01"/>
-                    </svg>
-                  }
-                </div>
-                <div class="outcome-text">
-                  <div class="outcome-title">{{ stateService.currentTask()?.goal }}</div>
-                  <div class="outcome-step">{{ stateService.currentTask()?.currentStep || 'Executing actions…' }}</div>
-                </div>
-                <div class="outcome-controls">
-                  @if (stateService.isBusy()) {
-                    <button type="button" class="ctrl-btn danger" (click)="stateService.cancelActiveTask()">
-                      Cancel
-                    </button>
-                  }
-                  <a routerLink="/tasks" class="ctrl-btn secondary">
-                    View Tasks
-                  </a>
-                </div>
-              </div>
-
-              <!-- Progress Bar -->
-              <div class="progress-track">
-                <div
-                  class="progress-fill"
-                  [style.width.%]="stateService.currentTask()?.progressPercent || (stateService.isBusy() ? 45 : 100)"
-                ></div>
-              </div>
-            </div>
-          </app-spatial-card>
-        </section>
-      }
 
       <!-- Grid: Quick Workspaces & Recent Activities -->
       <section class="dashboard-grid">
@@ -174,7 +65,7 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
         <!-- Recent Activity Stream -->
         <div class="grid-column">
           <div class="section-header-flex">
-            <h2 class="section-heading">Recent Activity</h2>
+            <h2 class="section-heading">Recent Work & Outcomes</h2>
             <span class="activity-count">{{ stateService.recentActivities().length }} items</span>
           </div>
 
@@ -220,7 +111,7 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
       flex-direction: column;
       align-items: center;
       text-align: center;
-      padding: 30px 20px 20px 20px;
+      padding: 30px 20px 10px 20px;
       gap: 24px;
     }
 
@@ -291,242 +182,8 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
       font-weight: 400;
     }
 
-    /* Central Command Box */
-    .central-command-box {
+    .command-center-slot {
       width: 100%;
-      max-width: 680px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .command-input-wrap {
-      display: flex;
-      align-items: center;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 20px;
-      padding: 6px 10px 6px 18px;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
-      transition: all 0.25s ease;
-    }
-
-    .command-input-wrap:focus-within {
-      border-color: rgba(56, 189, 248, 0.6);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 24px rgba(6, 182, 212, 0.25);
-    }
-
-    .command-icon {
-      color: #64748b;
-      display: flex;
-      align-items: center;
-      margin-right: 12px;
-    }
-
-    .command-input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      color: #f1f5f9;
-      font-size: 15px;
-      outline: none;
-    }
-
-    .command-input::placeholder {
-      color: #64748b;
-    }
-
-    .command-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .voice-btn, .submit-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: none;
-    }
-
-    .voice-btn {
-      background: rgba(255, 255, 255, 0.06);
-      color: #94a3b8;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .voice-btn:hover {
-      background: rgba(255, 255, 255, 0.12);
-      color: #f1f5f9;
-    }
-
-    .voice-btn.recording {
-      background: rgba(239, 68, 68, 0.2);
-      border-color: #ef4444;
-      color: #ef4444;
-      animation: pulse-dot 1s infinite;
-    }
-
-    .submit-btn {
-      background: linear-gradient(135deg, #06b6d4, #3b82f6);
-      color: #ffffff;
-      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
-    }
-
-    .submit-btn:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.5);
-    }
-
-    .submit-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    /* Suggestion Chips */
-    .suggestion-chips {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .chips-label {
-      font-size: 11px;
-      color: #64748b;
-      font-weight: 500;
-    }
-
-    .chip-btn {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      color: #94a3b8;
-      font-size: 12px;
-      padding: 4px 10px;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .chip-btn:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: #38bdf8;
-      border-color: rgba(56, 189, 248, 0.3);
-      transform: translateY(-1px);
-    }
-
-    /* Active Agent Section */
-    .active-agent-section {
-      width: 100%;
-    }
-
-    .agent-outcome-content {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .outcome-header {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .outcome-icon-wrap {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      background: rgba(56, 189, 248, 0.15);
-      border: 1px solid rgba(56, 189, 248, 0.3);
-      color: #38bdf8;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .outcome-icon-wrap.spinning svg {
-      animation: spin 1.5s linear infinite;
-    }
-
-    @keyframes spin {
-      100% { transform: rotate(360deg); }
-    }
-
-    .outcome-text {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .outcome-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: #f1f5f9;
-    }
-
-    .outcome-step {
-      font-size: 12px;
-      color: #94a3b8;
-    }
-
-    .outcome-controls {
-      display: flex;
-      gap: 8px;
-    }
-
-    .ctrl-btn {
-      padding: 6px 14px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.15s;
-    }
-
-    .ctrl-btn.secondary {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #cbd5e1;
-    }
-
-    .ctrl-btn.secondary:hover {
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-    }
-
-    .ctrl-btn.danger {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #f87171;
-    }
-
-    .ctrl-btn.danger:hover {
-      background: rgba(239, 68, 68, 0.3);
-    }
-
-    .progress-track {
-      width: 100%;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.06);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #06b6d4, #38bdf8);
-      border-radius: 4px;
-      transition: width 0.3s ease;
     }
 
     /* Dashboard Grid */
@@ -719,19 +376,8 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
 })
 export class HomePageComponent {
   readonly stateService = inject(OperatorStateService);
+  readonly commandService = inject(AgentCommandService);
   private readonly router = inject(Router);
-
-  commandText = '';
-  isSubmitting = signal<boolean>(false);
-  isListening = signal<boolean>(false);
-
-  readonly suggestions: string[] = [
-    'Open Notepad and write today\'s plan',
-    'Create cinematic night city video',
-    'Open Calculator',
-    'Find cyberpunk images in media library',
-    'Inspect system resources'
-  ];
 
   readonly workspaces = [
     {
@@ -771,46 +417,6 @@ export class HomePageComponent {
       icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="M2 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="M12 22v-4"/><path d="m19.07 19.07-2.83-2.83"/><path d="M22 12h-4"/><path d="m19.07 4.93-2.83 2.83"/></svg>'
     }
   ];
-
-  applySuggestion(sug: string): void {
-    this.commandText = sug;
-    this.submitCommand();
-  }
-
-  async submitCommand(): Promise<void> {
-    const text = this.commandText.trim();
-    if (!text || this.isSubmitting()) return;
-
-    this.isSubmitting.set(true);
-    try {
-      await this.stateService.submitGoal(text);
-      this.stateService.addRecentActivity({
-        id: `act_${Date.now()}`,
-        type: 'TASK',
-        title: text.length > 30 ? text.substring(0, 30) + '…' : text,
-        description: 'Initiated personal AI automation workflow',
-        timestamp: Date.now(),
-        status: 'RUNNING',
-        routeLink: '/tasks'
-      });
-      this.commandText = '';
-    } finally {
-      this.isSubmitting.set(false);
-    }
-  }
-
-  toggleVoiceInput(): void {
-    this.isListening.set(!this.isListening());
-    if (this.isListening()) {
-      // If voice recognition is available or mock
-      setTimeout(() => {
-        if (this.isListening()) {
-          this.commandText = 'Open Notepad and write today\'s plan';
-          this.isListening.set(false);
-        }
-      }, 3000);
-    }
-  }
 
   navigateTo(route: string): void {
     this.router.navigateByUrl(route);

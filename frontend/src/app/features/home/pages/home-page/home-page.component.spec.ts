@@ -4,6 +4,8 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HomePageComponent } from './home-page.component';
 import { OperatorStateService } from '../../../../core/services/operator-state.service';
+import { AgentCommandService } from '../../../../core/services/agent-command.service';
+import { TaskApiService } from '../../../../core/api/task-api.service';
 
 describe('HomePageComponent', () => {
   let component: HomePageComponent;
@@ -15,7 +17,10 @@ describe('HomePageComponent', () => {
       imports: [HomePageComponent],
       providers: [
         provideRouter([]),
-        provideHttpClient()
+        provideHttpClient(),
+        OperatorStateService,
+        AgentCommandService,
+        TaskApiService
       ]
     }).compileComponents();
 
@@ -29,15 +34,17 @@ describe('HomePageComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render core identity greeting and command input', () => {
+  it('should render core identity greeting and agent command center', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Hello, Operator');
+    expect(compiled.querySelector('app-agent-command-center')).toBeTruthy();
     expect(compiled.querySelector('.command-input')).toBeTruthy();
   });
 
-  it('should apply suggestion chip to command input', () => {
-    const suggestion = 'Open Calculator';
-    component.applySuggestion(suggestion);
-    expect(component.commandText).toBe(suggestion);
+  it('should render quick workspace navigation cards', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.textContent).toContain('Agent Tasks');
+    expect(compiled.textContent).toContain('App Launcher');
+    expect(compiled.textContent).toContain('Media Creative Studio');
   });
 });
