@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { MediaService } from './media.service';
 import {
   ImageModelDefinitionDTO,
@@ -17,14 +18,19 @@ describe('MediaService', () => {
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
+    TestBed.resetTestingModule();
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [MediaService],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        MediaService,
+      ],
     });
 
     service = TestBed.inject(MediaService);
     httpMock = TestBed.inject(HttpTestingController);
   });
+
 
   afterEach(() => {
     httpMock.verify();
@@ -1125,4 +1131,62 @@ describe('MediaService', () => {
     req2.flush({ ...mockReplay, mode: 'SIMULATE' as const });
     expect(service.lastReplayResult()?.mode).toBe('SIMULATE');
   });
+
+  it('should search library and populate librarySearchResults signal (Stage 8.7)', () => {
+    const mockResults = [
+      {
+        artifact_id: 'art_100',
+        score: 0.98,
+        media_type: 'IMAGE',
+        filename: 'cyber.png',
+        file_path: 'data/artifacts/cyber.png',
+        language: 'en',
+        provenance: 'ACTUAL_MODEL_INFERENCE',
+        match_reason: 'Vector match',
+        technical_metadata: {},
+        tags: ['cyberpunk'],
+        scenes_count: 0,
+        created_at: 1000,
+      },
+    ];
+
+    service.searchLibrary({ query: 'cyberpunk', limit: 10 }).subscribe((res) => {
+      expect(res.length).toBe(1);
+    });
+
+    const req = httpMock.expectOne('/api/v1/media/library/search');
+    expect(req.request.method).toBe('POST');
+    req.flush(mockResults);
+
+    expect(service.librarySearchResults().length).toBe(1);
+    expect(service.librarySearchResults()[0].artifact_id).toBe('art_100');
+  });
+
+  it('should fetch collections and evaluate reuse candidates (Stage 8.7)', () => {
+    service.fetchCollections().subscribe((cols) => {
+      expect(cols.length).toBe(1);
+    });
+    const req1 = httpMock.expectOne('/api/v1/media/library/collections');
+    expect(req1.request.method).toBe('GET');
+    req1.flush([{ collection_id: 'col_1', title: 'SciFi', collection_type: 'PROJECT', artifact_ids: [], tags: [], created_at: 1, updated_at: 1 }]);
+    expect(service.collections().length).toBe(1);
+
+    service.evaluateReuseCandidate({ target_role: 'BG', desired_media_type: 'IMAGE', desired_concept: 'Neon city' }).subscribe();
+    const req2 = httpMock.expectOne('/api/v1/media/library/reuse-candidate');
+    expect(req2.request.method).toBe('POST');
+    req2.flush([{
+      candidate_artifact_id: 'art_100',
+      target_role: 'BG',
+      compatibility_status: 'COMPATIBLE',
+      match_score: 0.92,
+      compatibility_notes: [],
+      reusable_technical_summary: {},
+      derivation_type: 'ORIGINAL',
+      estimated_gpu_time_saved_s: 15.0,
+      generation_avoided: true,
+    }]);
+    expect(service.reuseRecommendations().length).toBe(1);
+    expect(service.reuseRecommendations()[0].estimated_gpu_time_saved_s).toBe(15.0);
+  });
 });
+

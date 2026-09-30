@@ -112,7 +112,15 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'media-library',
+    loadComponent: () =>
+      import('./features/media/pages/media-library-page/media-library-page.component').then(
+        (m) => m.MediaLibraryPageComponent
+      )
+  },
+  {
     path: '**',
+
     redirectTo: 'console'
   }
 ];

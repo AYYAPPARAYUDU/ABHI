@@ -28,7 +28,15 @@ import {
   TechnicalValidationResult,
   CreativeQualityEvidence,
   ReplayInspectionResult,
+  MediaUnderstandingRecordDTO,
+  MediaSearchRequestDTO,
+  MediaSearchResultDTO,
+  MediaReuseRequestDTO,
+  MediaReuseRecommendationDTO,
+  MediaCollectionDTO,
+  MediaAnalysisJobDTO,
 } from '../models/media.model';
+
 
 @Injectable({
   providedIn: 'root',
@@ -87,6 +95,18 @@ export class MediaService {
   lastReplayResult = signal<ReplayInspectionResult | null>(null);
   isProvenanceLoading = signal<boolean>(false);
   provenanceErrorMessage = signal<string | null>(null);
+
+  // Core Signals (Media Understanding & Retrieval - Phase 8 Stage 8.7)
+  librarySearchResults = signal<MediaSearchResultDTO[]>([]);
+  activeUnderstanding = signal<MediaUnderstandingRecordDTO | null>(null);
+  similarResults = signal<MediaSearchResultDTO[]>([]);
+  reuseRecommendations = signal<MediaReuseRecommendationDTO[]>([]);
+  collections = signal<MediaCollectionDTO[]>([]);
+  activeCollection = signal<MediaCollectionDTO | null>(null);
+  indexingJobs = signal<MediaAnalysisJobDTO[]>([]);
+  isLibraryLoading = signal<boolean>(false);
+  libraryErrorMessage = signal<string | null>(null);
+
 
   // Computed Signals (Creative Studio)
   isCreativeExecuting = computed<boolean>(() => {
@@ -820,6 +840,140 @@ export class MediaService {
     );
   }
 
+  // ==========================================
+  // PHASE 8 STAGE 8.7: MEDIA LIBRARY, SEARCH & REUSE
+  // ==========================================
+
+  searchLibrary(req: MediaSearchRequestDTO): Observable<MediaSearchResultDTO[]> {
+    this.isLibraryLoading.set(true);
+    return this.http.post<MediaSearchResultDTO[]>(`${this.baseUrl}/library/search`, req).pipe(
+      tap({
+        next: (res) => {
+          this.librarySearchResults.set(res);
+          this.isLibraryLoading.set(false);
+        },
+        error: (err) => {
+          this.isLibraryLoading.set(false);
+          this.libraryErrorMessage.set(err.error?.detail || err.message || 'Library search failed');
+        },
+      })
+    );
+  }
+
+  getMediaUnderstanding(artifactId: string): Observable<MediaUnderstandingRecordDTO> {
+    this.isLibraryLoading.set(true);
+    return this.http.get<MediaUnderstandingRecordDTO>(`${this.baseUrl}/library/artifacts/${artifactId}`).pipe(
+      tap({
+        next: (res) => {
+          this.activeUnderstanding.set(res);
+          this.isLibraryLoading.set(false);
+        },
+        error: (err) => {
+          this.isLibraryLoading.set(false);
+          this.libraryErrorMessage.set(err.error?.detail || err.message || 'Failed to fetch understanding');
+        },
+      })
+    );
+  }
+
+  triggerAnalysis(artifactId: string, payload: any = {}): Observable<MediaUnderstandingRecordDTO> {
+    this.isLibraryLoading.set(true);
+    return this.http.post<MediaUnderstandingRecordDTO>(`${this.baseUrl}/library/artifacts/${artifactId}/analyze`, payload).pipe(
+      tap({
+        next: (res) => {
+          this.activeUnderstanding.set(res);
+          this.isLibraryLoading.set(false);
+          this.searchLibrary({ limit: 50 }).subscribe();
+        },
+        error: (err) => {
+          this.isLibraryLoading.set(false);
+          this.libraryErrorMessage.set(err.error?.detail || err.message || 'Analysis failed');
+        },
+      })
+    );
+  }
+
+  findSimilarMedia(artifactId: string, limit: number = 5): Observable<MediaSearchResultDTO[]> {
+    return this.http.post<MediaSearchResultDTO[]>(`${this.baseUrl}/library/similar`, { artifact_id: artifactId, limit }).pipe(
+      tap({
+        next: (res) => {
+          this.similarResults.set(res);
+        },
+        error: (err) => {
+          this.libraryErrorMessage.set(err.error?.detail || err.message || 'Similarity search failed');
+        },
+      })
+    );
+  }
+
+  evaluateReuseCandidate(req: MediaReuseRequestDTO): Observable<MediaReuseRecommendationDTO[]> {
+    this.isLibraryLoading.set(true);
+    return this.http.post<MediaReuseRecommendationDTO[]>(`${this.baseUrl}/library/reuse-candidate`, req).pipe(
+      tap({
+        next: (res) => {
+          this.reuseRecommendations.set(res);
+          this.isLibraryLoading.set(false);
+        },
+        error: (err) => {
+          this.isLibraryLoading.set(false);
+          this.libraryErrorMessage.set(err.error?.detail || err.message || 'Reuse candidate evaluation failed');
+        },
+      })
+    );
+  }
+
+  fetchCollections(): Observable<MediaCollectionDTO[]> {
+    return this.http.get<MediaCollectionDTO[]>(`${this.baseUrl}/library/collections`).pipe(
+      tap({
+        next: (res) => {
+          this.collections.set(res);
+        },
+        error: (err) => {
+          this.libraryErrorMessage.set(err.error?.detail || err.message || 'Failed to fetch collections');
+        },
+      })
+    );
+  }
+
+  createCollection(col: Partial<MediaCollectionDTO>): Observable<MediaCollectionDTO> {
+    return this.http.post<MediaCollectionDTO>(`${this.baseUrl}/library/collections`, col).pipe(
+      tap({
+        next: () => {
+          this.fetchCollections().subscribe();
+        },
+        error: (err) => {
+          this.libraryErrorMessage.set(err.error?.detail || err.message || 'Failed to create collection');
+        },
+      })
+    );
+  }
+
+  addArtifactsToCollection(collectionId: string, artifactIds: string[]): Observable<MediaCollectionDTO> {
+    return this.http.post<MediaCollectionDTO>(`${this.baseUrl}/library/collections/${collectionId}/artifacts`, { artifact_ids: artifactIds }).pipe(
+      tap({
+        next: () => {
+          this.fetchCollections().subscribe();
+        },
+        error: (err) => {
+          this.libraryErrorMessage.set(err.error?.detail || err.message || 'Failed to add artifacts to collection');
+        },
+      })
+    );
+  }
+
+  fetchIndexingJobs(): Observable<MediaAnalysisJobDTO[]> {
+    return this.http.get<MediaAnalysisJobDTO[]>(`${this.baseUrl}/library/jobs`).pipe(
+      tap({
+        next: (res) => {
+          this.indexingJobs.set(res);
+        },
+        error: (err) => {
+          this.libraryErrorMessage.set(err.error?.detail || err.message || 'Failed to fetch indexing jobs');
+        },
+      })
+    );
+  }
+
   refreshAll(): void {
     this.fetchModels().subscribe();
     this.fetchEditModels().subscribe();
@@ -835,6 +989,13 @@ export class MediaService {
     this.fetchCreativePipelines().subscribe();
     this.fetchAttestations().subscribe();
   }
+
+  refreshLibrary(): void {
+    this.searchLibrary({ limit: 50 }).subscribe();
+    this.fetchCollections().subscribe();
+    this.fetchIndexingJobs().subscribe();
+  }
 }
+
 
 

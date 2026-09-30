@@ -30,9 +30,10 @@ database/vector/
 database/media/
 database/backups/
 backend/database/
-media/
+/media/
 
 # System Logs & Observability
+
 logs/
 *.log
 

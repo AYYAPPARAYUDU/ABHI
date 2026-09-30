@@ -36,6 +36,7 @@ describe('AppNavigationComponent', () => {
   it('should render all primary navigation links', () => {
     const el = fixture.nativeElement as HTMLElement;
     const links = el.querySelectorAll('a.nav-tab');
-    expect(links.length).toBe(13);
+    expect(links.length).toBe(14);
   });
 });
+

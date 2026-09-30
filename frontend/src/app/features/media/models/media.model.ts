@@ -819,4 +819,160 @@ export interface ReplayInspectionResult {
   inspected_at?: string;
 }
 
+// ==========================================
+// PHASE 8 STAGE 8.7 - MEDIA UNDERSTANDING & RETRIEVAL
+// ==========================================
+
+export type MediaUnderstandingStatus = 'DISCOVERED' | 'QUEUED' | 'ANALYZING' | 'INDEXING' | 'VALIDATING' | 'READY' | 'FAILED' | 'QUARANTINED';
+export type MediaSearchMode = 'TEXT' | 'SEMANTIC' | 'FILTERED' | 'SIMILARITY' | 'HYBRID';
+export type ReuseStatus = 'COMPATIBLE' | 'NEEDS_TRANSCODE' | 'NEEDS_RESCALE' | 'NEEDS_AUDIO_ADAPTATION' | 'INCOMPATIBLE';
+export type DerivationClass = 'ORIGINAL' | 'EXACT_DUPLICATE' | 'DERIVED' | 'EDITED' | 'INPAINTED' | 'OUTPAINTED' | 'TRANSCODED' | 'RECOMPOSED';
+
+export interface OCRBlockDTO {
+  text: string;
+  language: string;
+  confidence: number;
+  bounding_box?: number[] | null;
+}
+
+export interface VideoSceneRecordDTO {
+  scene_id: string;
+  video_artifact_id: string;
+  scene_index: number;
+  start_time: number;
+  end_time: number;
+  duration: number;
+  representative_frame_index: number;
+  labels: string[];
+  caption: string;
+  transcript_segment?: string | null;
+  tags: string[];
+  embedding_id?: string | null;
+}
+
+export interface AudioSegmentRecordDTO {
+  segment_id: string;
+  audio_artifact_id: string;
+  start_time: number;
+  end_time: number;
+  duration: number;
+  transcript: string;
+  language: string;
+  confidence: number;
+  speaker_tag?: string | null;
+}
+
+export interface MediaUnderstandingRecordDTO {
+  understanding_id: string;
+  artifact_id: string;
+  pipeline_id?: string | null;
+  media_type: string;
+  analysis_version: string;
+  technical_metadata: Record<string, any>;
+  caption: string;
+  environment: string;
+  visual_style: string;
+  dominant_colors: string[];
+  language: string;
+  entities: string[];
+  objects: string[];
+  scene_labels: string[];
+  visual_tags: string[];
+  ocr_blocks: OCRBlockDTO[];
+  ocr_text_full?: string | null;
+  audio_transcript_full?: string | null;
+  scenes: VideoSceneRecordDTO[];
+  audio_segments: AudioSegmentRecordDTO[];
+  embedding_references: string[];
+  is_quarantined: boolean;
+  quarantine_reason?: string | null;
+  provenance_class: string;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface MediaSearchRequestDTO {
+  query?: string | null;
+  media_types?: string[] | null;
+  languages?: string[] | null;
+  min_duration?: number | null;
+  max_duration?: number | null;
+  resolution_width?: number | null;
+  resolution_height?: number | null;
+  tags?: string[] | null;
+  pipeline_id?: string | null;
+  model_id?: string | null;
+  provenance_class?: string | null;
+  search_mode?: MediaSearchMode;
+  limit?: number;
+}
+
+export interface MediaSearchResultDTO {
+  artifact_id: string;
+  score: number;
+  media_type: string;
+  filename: string;
+  file_path: string;
+  thumbnail_url?: string | null;
+  caption?: string | null;
+  duration?: number | null;
+  resolution?: number[] | null;
+  language: string;
+  provenance: string;
+  pipeline_id?: string | null;
+  match_reason: string;
+  technical_metadata: Record<string, any>;
+  tags: string[];
+  scenes_count: number;
+  created_at: number;
+}
+
+export interface MediaReuseRequestDTO {
+  target_role: string;
+  desired_media_type: string;
+  desired_concept: string;
+  desired_duration?: number | null;
+  desired_resolution?: [number, number] | null;
+  desired_language?: string | null;
+  style_profile?: string | null;
+  preferred_model_id?: string | null;
+}
+
+export interface MediaReuseRecommendationDTO {
+  candidate_artifact_id: string;
+  target_role: string;
+  compatibility_status: ReuseStatus;
+  match_score: number;
+  compatibility_notes: string[];
+  reusable_technical_summary: Record<string, any>;
+  derivation_type: DerivationClass;
+  estimated_gpu_time_saved_s: number;
+  generation_avoided: boolean;
+}
+
+
+export interface MediaCollectionDTO {
+  collection_id: string;
+  title: string;
+  description?: string | null;
+  collection_type: string;
+  artifact_ids: string[];
+  tags: string[];
+  created_at: number;
+  updated_at: number;
+}
+
+export interface MediaAnalysisJobDTO {
+  job_id: string;
+  artifact_id: string;
+  media_type: string;
+  status: MediaUnderstandingStatus;
+  progress_pct: number;
+  current_phase: string;
+  analysis_version: string;
+  error_message?: string | null;
+  created_at: number;
+  completed_at?: number | null;
+}
+
 

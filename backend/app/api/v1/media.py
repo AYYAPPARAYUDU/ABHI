@@ -851,3 +851,153 @@ async def execute_replay_project(project_data: Dict[str, Any]):
         raise HTTPException(status_code=400, detail=str(e))
 
 
+# ============================================================================
+# Phase 8 Stage 8.7 — Multimodal Media Understanding, Indexing & Retrieval
+# ============================================================================
+
+from backend.app.media.understanding_models import (
+    MediaSearchRequest,
+    MediaSearchResult,
+    MediaUnderstandingRecord,
+    MediaReuseRequest,
+    MediaReuseRecommendation,
+    MediaCollection,
+    MediaAnalysisJob,
+    SearchMode,
+)
+from backend.app.media.indexing_queue import media_indexing_manager
+from backend.app.media.reuse_engine import media_reuse_engine
+
+
+class MediaAnalyzeRequest(BaseModel):
+    file_path: str
+    media_type: str
+    pipeline_id: Optional[str] = None
+    language: str = "en"
+    prompt_hint: Optional[str] = None
+    model_id: Optional[str] = None
+    model_digest: Optional[str] = None
+
+
+class CollectionCreateRequest(BaseModel):
+    title: str
+    description: Optional[str] = None
+    collection_type: str = "PROJECT"
+    tags: List[str] = Field(default_factory=list)
+
+
+class CollectionAddArtifactsRequest(BaseModel):
+    artifact_ids: List[str]
+
+
+@router.get("/library/search", response_model=List[MediaSearchResult])
+async def search_media_library_get(
+    query: Optional[str] = None,
+    media_type: Optional[str] = None,
+    language: Optional[str] = None,
+    min_duration: Optional[float] = None,
+    max_duration: Optional[float] = None,
+    limit: int = 20,
+    offset: int = 0,
+):
+    """Search media library via query parameters."""
+    req = MediaSearchRequest(
+        query=query,
+        media_types=[media_type] if media_type else None,
+        languages=[language] if language else None,
+        min_duration=min_duration,
+        max_duration=max_duration,
+        limit=limit,
+        offset=offset,
+    )
+    return await media_indexing_manager.search_library(req)
+
+
+@router.post("/library/search", response_model=List[MediaSearchResult])
+async def search_media_library_post(request: MediaSearchRequest):
+    """Execute hybrid semantic + technical filter media search."""
+    return await media_indexing_manager.search_library(request)
+
+
+@router.get("/library/artifacts/{artifact_id}", response_model=MediaUnderstandingRecord)
+async def get_media_understanding(artifact_id: str):
+    """Retrieve full multimodal understanding record for an artifact."""
+    rec = await media_indexing_manager.get_understanding(artifact_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail=f"Media understanding not found for {artifact_id}")
+    return rec
+
+
+@router.post("/library/artifacts/{artifact_id}/analyze", response_model=MediaAnalysisJob)
+async def trigger_media_analysis(artifact_id: str, payload: MediaAnalyzeRequest):
+    """Trigger background analysis and semantic indexing for an artifact."""
+    return await media_indexing_manager.submit_indexing_job(
+        artifact_id=artifact_id,
+        file_path=payload.file_path,
+        media_type=payload.media_type,
+        pipeline_id=payload.pipeline_id,
+        language=payload.language,
+        prompt_hint=payload.prompt_hint,
+        model_id=payload.model_id,
+        model_digest=payload.model_digest,
+        force_reanalysis=True,
+    )
+
+
+@router.post("/library/similar", response_model=List[MediaSearchResult])
+async def get_similar_media(reference_artifact_id: str, limit: int = 5):
+    """Retrieve semantically similar assets given a reference artifact."""
+    rec = await media_indexing_manager.get_understanding(reference_artifact_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail=f"Reference artifact {reference_artifact_id} not found in understanding library")
+    req = MediaSearchRequest(
+        query=f"{rec.caption} {rec.environment} {rec.visual_style}",
+        media_types=[rec.media_type],
+        limit=limit + 1,
+    )
+    results = await media_indexing_manager.search_library(req)
+    return [r for r in results if r.artifact_id != reference_artifact_id][:limit]
+
+
+@router.post("/library/reuse-candidate", response_model=MediaReuseRecommendation)
+async def evaluate_reuse_candidate(candidate_artifact_id: str, request: MediaReuseRequest):
+    """Evaluate candidate asset for creative node reuse compatibility."""
+    rec = await media_indexing_manager.get_understanding(candidate_artifact_id)
+    if not rec:
+        raise HTTPException(status_code=404, detail=f"Candidate artifact {candidate_artifact_id} not indexed")
+    return media_reuse_engine.evaluate_reuse_candidate(request=request, candidate_record=rec)
+
+
+@router.get("/library/collections", response_model=List[MediaCollection])
+async def list_media_collections():
+    """List all user and system media collections."""
+    return await media_indexing_manager.list_collections()
+
+
+@router.post("/library/collections", response_model=MediaCollection, status_code=status.HTTP_201_CREATED)
+async def create_media_collection(payload: CollectionCreateRequest):
+    """Create a new media collection."""
+    return await media_indexing_manager.create_collection(
+        title=payload.title,
+        description=payload.description,
+        collection_type=payload.collection_type,
+        tags=payload.tags,
+    )
+
+
+@router.post("/library/collections/{collection_id}/artifacts", response_model=MediaCollection)
+async def add_artifacts_to_collection(collection_id: str, payload: CollectionAddArtifactsRequest):
+    """Add artifact references to an existing collection."""
+    col = await media_indexing_manager.add_to_collection(collection_id, payload.artifact_ids)
+    if not col:
+        raise HTTPException(status_code=404, detail=f"Collection {collection_id} not found")
+    return col
+
+
+@router.get("/library/jobs", response_model=List[MediaAnalysisJob])
+async def list_media_indexing_jobs():
+    """List background media analysis jobs."""
+    return await media_indexing_manager.list_jobs()
+
+
+

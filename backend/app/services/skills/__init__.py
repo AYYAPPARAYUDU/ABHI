@@ -24,6 +24,7 @@ from backend.app.services.skills.builtin_edit_skills import register_image_edit_
 from backend.app.services.skills.builtin_composer_skills import register_composer_skills
 from backend.app.services.skills.builtin_creative_skills import register_builtin_creative_skills
 from backend.app.services.skills.builtin_provenance_skills import register_builtin_provenance_skills
+from backend.app.services.skills.builtin_media_library_skills import register_media_library_skills
 from backend.app.services.skills.runtime import SkillExecutionRuntime, skill_runtime
 
 __all__ = [
