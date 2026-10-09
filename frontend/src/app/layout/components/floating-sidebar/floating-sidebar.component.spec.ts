@@ -31,11 +31,10 @@ describe('FloatingSidebarComponent', () => {
 
   it('should render core navigation destinations', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Home');
-    expect(compiled.textContent).toContain('Ask / Agent');
-    expect(compiled.textContent).toContain('Tasks');
-    expect(compiled.textContent).toContain('Apps');
-    expect(compiled.textContent).toContain('Media Studio');
+    expect(compiled.textContent).toContain('Main Agent');
+    expect(compiled.textContent).toContain('Agent Network');
+    expect(compiled.textContent).toContain('Intelligence Lab');
+    expect(compiled.textContent).toContain('Business Sectors');
   });
 
   it('should toggle sidebar collapse state', () => {

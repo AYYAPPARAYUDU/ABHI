@@ -36,15 +36,16 @@ describe('HomePageComponent', () => {
 
   it('should render core identity greeting and agent command center', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Hello, Operator');
+    expect(compiled.textContent).toContain('ABHI — Central Intelligence');
     expect(compiled.querySelector('app-agent-command-center')).toBeTruthy();
     expect(compiled.querySelector('.command-input')).toBeTruthy();
   });
 
   it('should render quick workspace navigation cards', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Agent Tasks');
-    expect(compiled.textContent).toContain('App Launcher');
+    expect(compiled.textContent).toContain('Agent Network');
+    expect(compiled.textContent).toContain('Intelligence Lab');
+    expect(compiled.textContent).toContain('Business Sectors');
     expect(compiled.textContent).toContain('Media Creative Studio');
   });
 });

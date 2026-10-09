@@ -138,6 +138,33 @@ describe('Phase 9 Stage 1 — 3D Spatial Agentic Application Shell, Routing & Ex
       expect(location.path()).toBe('/interaction');
     });
 
+    it('should navigate to /network and load NetworkPageComponent', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      await router.navigate(['/network']);
+      await fixture.whenStable();
+
+      expect(location.path()).toBe('/network');
+    });
+
+    it('should navigate to /intelligence and load IntelligencePageComponent', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      await router.navigate(['/intelligence']);
+      await fixture.whenStable();
+
+      expect(location.path()).toBe('/intelligence');
+    });
+
+    it('should navigate to /business and load BusinessPageComponent', async () => {
+      const fixture = TestBed.createComponent(App);
+      fixture.detectChanges();
+      await router.navigate(['/business']);
+      await fixture.whenStable();
+
+      expect(location.path()).toBe('/business');
+    });
+
     it('should navigate to /system and load SystemPageComponent', async () => {
       const fixture = TestBed.createComponent(App);
       fixture.detectChanges();

@@ -10,10 +10,17 @@ from backend.app.cognitive.gateway.models import (
     AgentCommandResponse,
     AgentThread,
 )
+from backend.app.cognitive.gateway.network_service import NetworkGraphResponse, network_service
 from backend.app.perception.audio.stt import speech_to_text
 from backend.app.perception.audio.vad import VoiceActivityDetector
 
 router = APIRouter(prefix="/agent", tags=["Agent Gateway & Context"])
+
+
+@router.get("/network", response_model=NetworkGraphResponse)
+async def get_agent_network() -> NetworkGraphResponse:
+    """Retrieve full live multi-agent network graph and topology."""
+    return network_service.get_network_graph()
 
 
 @router.post("/command", response_model=AgentCommandResponse)

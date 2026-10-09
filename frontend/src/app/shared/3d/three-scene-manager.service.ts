@@ -1,3 +1,5 @@
+// ThreeSceneManagerService — Core 3D Spatial Engine for Voice-First AI Operating System (Phase 9 Stage 3).
+
 import { Injectable, NgZone } from '@angular/core';
 import * as THREE from 'three';
 import { SpatialEnvironmentMode } from '../../core/models/agent-experience.model';
@@ -15,7 +17,11 @@ export class ThreeSceneManagerService {
   private particleSystem: THREE.Points | null = null;
   private orbitalCore: THREE.Mesh | null = null;
   private outerRing: THREE.Mesh | null = null;
+  private secondaryRing: THREE.Mesh | null = null;
   private gridPlane: THREE.GridHelper | null = null;
+  private networkNodeGroup: THREE.Group | null = null;
+  private sectorGroup: THREE.Group | null = null;
+  private neuralSynapseLines: THREE.LineSegments | null = null;
 
   // State
   private isRunning = false;
@@ -32,7 +38,7 @@ export class ThreeSceneManagerService {
           this.isReducedMotion = e.matches;
         });
       } catch (e) {
-        // Fallback for mock environments
+        // Fallback
       }
     }
 
@@ -66,7 +72,7 @@ export class ThreeSceneManagerService {
 
       // 1. Scene & Camera
       this.scene = new THREE.Scene();
-      this.scene.fog = new THREE.FogExp2(0x060911, 0.025);
+      this.scene.fog = new THREE.FogExp2(0x030712, 0.022);
 
       this.camera = new THREE.PerspectiveCamera(55, width / height, 0.1, 1000);
       this.camera.position.set(0, 0, 18);
@@ -81,19 +87,23 @@ export class ThreeSceneManagerService {
       this.renderer.setSize(width, height);
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-      // 3. Ambient Particle Field
+      // 3. Create Layers
       this.createParticleField();
-
-      // 4. Subtle Orbital Core
       this.createOrbitalCore();
+      this.createNetworkGraphVisuals();
+      this.createBusinessSectorVisuals();
 
-      // 5. Lighting
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+      // 4. Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
       this.scene.add(ambientLight);
 
-      const pointLight = new THREE.PointLight(0x06b6d4, 1.5, 50);
-      pointLight.position.set(5, 5, 10);
-      this.scene.add(pointLight);
+      const pointLight1 = new THREE.PointLight(0x06b6d4, 1.8, 60);
+      pointLight1.position.set(6, 6, 12);
+      this.scene.add(pointLight1);
+
+      const pointLight2 = new THREE.PointLight(0x6366f1, 1.2, 50);
+      pointLight2.position.set(-6, -4, 10);
+      this.scene.add(pointLight2);
 
       this.isRunning = true;
       this.startAnimationLoop();
@@ -108,22 +118,22 @@ export class ThreeSceneManagerService {
   private createParticleField(): void {
     if (!this.scene) return;
 
-    const particleCount = this.isReducedMotion ? 150 : 600;
+    const particleCount = this.isReducedMotion ? 180 : 750;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(particleCount * 3);
     const colors = new Float32Array(particleCount * 3);
 
     const color1 = new THREE.Color(0x06b6d4); // Cyan
     const color2 = new THREE.Color(0x6366f1); // Indigo
-    const color3 = new THREE.Color(0x10b981); // Emerald
+    const color3 = new THREE.Color(0xf59e0b); // Amber
 
     for (let i = 0; i < particleCount; i++) {
       const idx = i * 3;
-      positions[idx] = (Math.random() - 0.5) * 35;
-      positions[idx + 1] = (Math.random() - 0.5) * 25;
-      positions[idx + 2] = (Math.random() - 0.5) * 20;
+      positions[idx] = (Math.random() - 0.5) * 45;
+      positions[idx + 1] = (Math.random() - 0.5) * 32;
+      positions[idx + 2] = (Math.random() - 0.5) * 25;
 
-      const mixedColor = Math.random() > 0.5 ? color1.clone().lerp(color2, Math.random()) : color2.clone().lerp(color3, Math.random());
+      const mixedColor = Math.random() > 0.6 ? color1.clone().lerp(color2, Math.random()) : color1.clone().lerp(color3, Math.random() * 0.4);
       colors[idx] = mixedColor.r;
       colors[idx + 1] = mixedColor.g;
       colors[idx + 2] = mixedColor.b;
@@ -133,10 +143,10 @@ export class ThreeSceneManagerService {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
     const material = new THREE.PointsMaterial({
-      size: 0.12,
+      size: 0.14,
       vertexColors: true,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.7,
       blending: THREE.AdditiveBlending,
     });
 
@@ -147,34 +157,119 @@ export class ThreeSceneManagerService {
   private createOrbitalCore(): void {
     if (!this.scene) return;
 
-    // Glowing Inner Icosahedron
-    const coreGeo = new THREE.IcosahedronGeometry(1.4, 1);
+    // Glowing Inner Core
+    const coreGeo = new THREE.IcosahedronGeometry(1.5, 1);
     const coreMat = new THREE.MeshBasicMaterial({
       color: 0x06b6d4,
       wireframe: true,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.4,
     });
     this.orbitalCore = new THREE.Mesh(coreGeo, coreMat);
     this.orbitalCore.position.set(0, 0, 0);
     this.scene.add(this.orbitalCore);
 
-    // Outer Torus Ring
-    const ringGeo = new THREE.TorusGeometry(3.5, 0.02, 16, 64);
+    // Primary Torus Ring
+    const ringGeo = new THREE.TorusGeometry(3.8, 0.025, 16, 64);
     const ringMat = new THREE.MeshBasicMaterial({
-      color: 0x6366f1,
+      color: 0x38bdf8,
       transparent: true,
-      opacity: 0.25,
+      opacity: 0.3,
     });
     this.outerRing = new THREE.Mesh(ringGeo, ringMat);
-    this.outerRing.rotation.x = Math.PI / 3;
+    this.outerRing.rotation.x = Math.PI / 3.2;
     this.scene.add(this.outerRing);
 
-    // Subtle System Grid Plane
-    this.gridPlane = new THREE.GridHelper(40, 20, 0x1e293b, 0x0f172a);
-    this.gridPlane.position.y = -6;
-    this.gridPlane.rotation.x = 0;
+    // Secondary Torus Ring
+    const secRingGeo = new THREE.TorusGeometry(4.5, 0.015, 16, 64);
+    const secRingMat = new THREE.MeshBasicMaterial({
+      color: 0x818cf8,
+      transparent: true,
+      opacity: 0.2,
+    });
+    this.secondaryRing = new THREE.Mesh(secRingGeo, secRingMat);
+    this.secondaryRing.rotation.y = Math.PI / 2.8;
+    this.scene.add(this.secondaryRing);
+
+    // Grid Plane
+    this.gridPlane = new THREE.GridHelper(50, 25, 0x1e293b, 0x090d16);
+    this.gridPlane.position.y = -7.5;
     this.scene.add(this.gridPlane);
+  }
+
+  private createNetworkGraphVisuals(): void {
+    if (!this.scene) return;
+
+    this.networkNodeGroup = new THREE.Group();
+    this.networkNodeGroup.visible = false;
+
+    // Create 8 orbital nodes representing specialized agents around the supervisor
+    const agentPositions = [
+      { pos: [-4.5, 2.5, 1.5], color: 0x06b6d4 },
+      { pos: [-4.0, -2.5, -1.5], color: 0x6366f1 },
+      { pos: [4.5, 2.5, -1.0], color: 0x10b981 },
+      { pos: [5.0, -1.5, 2.0], color: 0xf59e0b },
+      { pos: [2.5, -4.0, -2.0], color: 0x38bdf8 },
+      { pos: [-2.0, 4.5, -3.0], color: 0xa855f7 },
+      { pos: [0.0, -4.5, 3.0], color: 0xec4899 },
+      { pos: [2.0, 4.0, 3.0], color: 0x14b8a6 },
+    ];
+
+    const linePoints: THREE.Vector3[] = [];
+    const supervisorPos = new THREE.Vector3(0, 0, 0);
+
+    agentPositions.forEach(({ pos, color }) => {
+      const geo = new THREE.SphereGeometry(0.35, 16, 16);
+      const mat = new THREE.MeshBasicMaterial({ color, wireframe: true });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(pos[0], pos[1], pos[2]);
+      this.networkNodeGroup?.add(mesh);
+
+      linePoints.push(supervisorPos);
+      linePoints.push(new THREE.Vector3(pos[0], pos[1], pos[2]));
+    });
+
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(linePoints);
+    const lineMat = new THREE.LineBasicMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.35,
+    });
+    const lines = new THREE.LineSegments(lineGeo, lineMat);
+    this.networkNodeGroup.add(lines);
+
+    this.scene.add(this.networkNodeGroup);
+  }
+
+  private createBusinessSectorVisuals(): void {
+    if (!this.scene) return;
+
+    this.sectorGroup = new THREE.Group();
+    this.sectorGroup.visible = false;
+
+    const sectorPositions = [
+      { pos: [-8.0, 2.0, -4.0], color: 0x06b6d4 },
+      { pos: [-4.0, -1.5, 4.0], color: 0x3b82f6 },
+      { pos: [0.0, 4.0, -6.0], color: 0xa855f7 },
+      { pos: [4.0, -2.0, 3.0], color: 0x10b981 },
+      { pos: [7.0, 3.0, -3.0], color: 0xf59e0b },
+      { pos: [2.0, -4.0, 6.0], color: 0xec4899 },
+    ];
+
+    sectorPositions.forEach(({ pos, color }) => {
+      const geo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+      const mat = new THREE.MeshBasicMaterial({
+        color,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.45,
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(pos[0], pos[1], pos[2]);
+      this.sectorGroup?.add(mesh);
+    });
+
+    this.scene.add(this.sectorGroup);
   }
 
   setMode(mode: SpatialEnvironmentMode): void {
@@ -182,14 +277,32 @@ export class ThreeSceneManagerService {
     if (!this.orbitalCore || !this.particleSystem) return;
 
     const coreMat = this.orbitalCore.material as THREE.MeshBasicMaterial;
-    if (mode === 'ACTIVE_TASK') {
-      coreMat.color.setHex(0x10b981); // Emerald pulse
+
+    if (this.networkNodeGroup) {
+      this.networkNodeGroup.visible = mode === 'NETWORK';
+    }
+    if (this.sectorGroup) {
+      this.sectorGroup.visible = mode === 'BUSINESS';
+    }
+
+    if (mode === 'NETWORK') {
+      coreMat.color.setHex(0x38bdf8); // Cyan network core
+      if (this.camera) this.camera.position.set(0, 0, 19);
+    } else if (mode === 'INTELLIGENCE') {
+      coreMat.color.setHex(0x6366f1); // Indigo neural core
+      if (this.camera) this.camera.position.set(0, 0, 16);
+    } else if (mode === 'BUSINESS') {
+      coreMat.color.setHex(0x10b981); // Emerald business sector
+      if (this.camera) this.camera.position.set(0, 1.5, 21);
+    } else if (mode === 'ACTIVE_TASK') {
+      coreMat.color.setHex(0x10b981);
     } else if (mode === 'MEDIA') {
-      coreMat.color.setHex(0xa855f7); // Purple nebula
+      coreMat.color.setHex(0xa855f7);
     } else if (mode === 'SYSTEM') {
-      coreMat.color.setHex(0xf59e0b); // Amber grid
+      coreMat.color.setHex(0xf59e0b);
     } else {
-      coreMat.color.setHex(0x06b6d4); // Cyan default
+      coreMat.color.setHex(0x06b6d4); // Cyan default / MAIN_AGENT
+      if (this.camera) this.camera.position.set(0, 0, 18);
     }
   }
 
@@ -227,6 +340,19 @@ export class ThreeSceneManagerService {
             this.outerRing.rotation.z = elapsedTime * 0.08;
             this.outerRing.rotation.y = Math.cos(elapsedTime * 0.05) * 0.2;
           }
+
+          if (this.secondaryRing) {
+            this.secondaryRing.rotation.x = elapsedTime * 0.06;
+            this.secondaryRing.rotation.z = Math.sin(elapsedTime * 0.04) * 0.2;
+          }
+
+          if (this.networkNodeGroup && this.networkNodeGroup.visible) {
+            this.networkNodeGroup.rotation.y = elapsedTime * 0.04;
+          }
+
+          if (this.sectorGroup && this.sectorGroup.visible) {
+            this.sectorGroup.rotation.y = elapsedTime * 0.02;
+          }
         }
 
         if (this.renderer && this.scene && this.camera) {
@@ -259,7 +385,7 @@ export class ThreeSceneManagerService {
 
     if (this.scene) {
       this.scene.traverse((obj) => {
-        if (obj instanceof THREE.Mesh || obj instanceof THREE.Points) {
+        if (obj instanceof THREE.Mesh || obj instanceof THREE.Points || obj instanceof THREE.LineSegments) {
           obj.geometry?.dispose();
           if (Array.isArray(obj.material)) {
             obj.material.forEach((m) => m.dispose());
@@ -281,7 +407,10 @@ export class ThreeSceneManagerService {
     this.particleSystem = null;
     this.orbitalCore = null;
     this.outerRing = null;
+    this.secondaryRing = null;
     this.gridPlane = null;
+    this.networkNodeGroup = null;
+    this.sectorGroup = null;
     this.camera = null;
   }
 }

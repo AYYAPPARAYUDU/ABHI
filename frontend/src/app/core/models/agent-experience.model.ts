@@ -1,6 +1,15 @@
 export type UserExperienceMode = 'USER' | 'ADVANCED' | 'DEVELOPER';
 
-export type SpatialEnvironmentMode = 'DEFAULT' | 'FOCUS' | 'ACTIVE_TASK' | 'MEDIA' | 'SYSTEM';
+export type SpatialEnvironmentMode =
+  | 'DEFAULT'
+  | 'MAIN_AGENT'
+  | 'NETWORK'
+  | 'INTELLIGENCE'
+  | 'BUSINESS'
+  | 'FOCUS'
+  | 'ACTIVE_TASK'
+  | 'MEDIA'
+  | 'SYSTEM';
 
 export type CommandLifecycleState =
   | 'RECEIVED'

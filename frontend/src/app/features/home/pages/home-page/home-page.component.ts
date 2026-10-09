@@ -1,9 +1,10 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { OperatorStateService } from '../../../../core/services/operator-state.service';
 import { AgentCommandService } from '../../../../core/services/agent-command.service';
 import { AgentCommandCenterComponent } from '../../../../shared/ui/agent-command-center/agent-command-center.component';
+import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
 import { RecentActivityItem } from '../../../../core/models/agent-experience.model';
 
 @Component({
@@ -11,8 +12,33 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
   standalone: true,
   imports: [CommonModule, RouterModule, AgentCommandCenterComponent],
   template: `
-    <div class="home-workspace">
-      <!-- Central Hero Experience -->
+    <div class="main-agent-workspace">
+      <!-- Top Operational Metrics Bar (Reference 1: Dense, Controlled Telemetry) -->
+      <section class="observatory-metrics-bar" aria-label="Operational Telemetry">
+        <div class="metric-pill">
+          <span class="metric-dot live"></span>
+          <span class="metric-label">MAIN AGENT</span>
+          <span class="metric-value">ONLINE</span>
+        </div>
+        <div class="metric-pill">
+          <span class="metric-label">VOICE STACK</span>
+          <span class="metric-value highlight">ACTUAL_VOICE</span>
+        </div>
+        <div class="metric-pill">
+          <span class="metric-label">HARDWARE</span>
+          <span class="metric-value">CUDA / RTX</span>
+        </div>
+        <div class="metric-pill">
+          <span class="metric-label">ACTIVE TASKS</span>
+          <span class="metric-value">{{ stateService.currentTask() ? 1 : 0 }}</span>
+        </div>
+        <div class="metric-pill">
+          <span class="metric-label">SAFETY POLICY</span>
+          <span class="metric-value success">ENFORCED</span>
+        </div>
+      </section>
+
+      <!-- Central Hero Experience: 3D Core Aura + Voice-First Input -->
       <section class="hero-core-section">
         <!-- AI Core Identity & Ambient Aura -->
         <div class="core-identity">
@@ -25,75 +51,88 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
 
           <div class="core-text">
             <h1 class="core-headline">
-              <span class="greeting">Hello, Operator</span>
-              <span class="subtext">ABHI Agentic Automation Core is active in your local environment</span>
+              <span class="greeting">ABHI — Central Intelligence</span>
+              <span class="subtext">Speak or type your intent. Local agent network orchestrates execution safely.</span>
             </h1>
           </div>
         </div>
 
-        <!-- Master Agent Command Center -->
+        <!-- Master Agent Command Center Slot -->
         <div class="command-center-slot">
           <app-agent-command-center></app-agent-command-center>
         </div>
       </section>
 
-      <!-- Grid: Quick Workspaces & Recent Activities -->
-      <section class="dashboard-grid">
-        <!-- Quick Workspaces Cards -->
-        <div class="grid-column">
-          <h2 class="section-heading">Quick Workspaces</h2>
-
-          <div class="workspace-cards-grid">
-            @for (ws of workspaces; track ws.title) {
-              <div
-                class="workspace-app-card"
-                (click)="navigateTo(ws.route)"
-                [attr.tabindex]="0"
-                role="button"
-              >
-                <div class="ws-icon" [innerHTML]="ws.icon"></div>
-                <div class="ws-info">
-                  <span class="ws-title">{{ ws.title }}</span>
-                  <span class="ws-desc">{{ ws.desc }}</span>
-                </div>
-                <span class="ws-arrow">→</span>
-              </div>
-            }
-          </div>
+      <!-- 4 Primary Workspace Portals -->
+      <section class="workspace-portals-section">
+        <div class="section-header-flex">
+          <h2 class="section-heading">Connected Operating Workspaces</h2>
+          <span class="section-sublabel">Spatial AI Operating System · Local First</span>
         </div>
 
-        <!-- Recent Activity Stream -->
-        <div class="grid-column">
-          <div class="section-header-flex">
-            <h2 class="section-heading">Recent Work & Outcomes</h2>
-            <span class="activity-count">{{ stateService.recentActivities().length }} items</span>
-          </div>
-
-          <div class="activity-stream">
-            @for (act of stateService.recentActivities(); track act.id) {
-              <div class="activity-card" (click)="onActivityClick(act)">
-                <div class="act-type-indicator" [attr.data-type]="act.type">
-                  <span class="type-dot"></span>
-                </div>
-                <div class="act-details">
-                  <div class="act-top">
-                    <span class="act-title">{{ act.title }}</span>
-                    <span class="act-time">{{ formatTime(act.timestamp) }}</span>
-                  </div>
-                  <div class="act-desc">{{ act.description }}</div>
-                </div>
+        <div class="workspace-cards-grid">
+          @for (ws of primaryWorkspaces; track ws.route) {
+            <div
+              class="workspace-card"
+              (click)="navigateTo(ws.route)"
+              [attr.tabindex]="0"
+              role="button"
+            >
+              <div class="ws-header">
+                <div class="ws-icon" [innerHTML]="ws.icon"></div>
+                <span class="ws-badge">{{ ws.badge }}</span>
               </div>
-            }
-          </div>
+              <div class="ws-info">
+                <span class="ws-title">{{ ws.title }}</span>
+                <span class="ws-desc">{{ ws.desc }}</span>
+              </div>
+              <div class="ws-footer">
+                <span class="ws-action">Open Workspace</span>
+                <span class="ws-arrow">→</span>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- Recent Verified Results Stream -->
+      <section class="activity-section">
+        <div class="section-header-flex">
+          <h2 class="section-heading">Recent Verified Work & Outcomes</h2>
+          <span class="activity-count">{{ stateService.recentActivities().length }} verified items</span>
+        </div>
+
+        <div class="activity-stream">
+          @if (stateService.recentActivities().length === 0) {
+            <div class="empty-stream-card">
+              <span class="empty-icon">✓</span>
+              <span>All agent tasks verified and synced. Say a command or select a workspace above to begin.</span>
+            </div>
+          }
+          @for (act of stateService.recentActivities(); track act.id) {
+            <div class="activity-card" (click)="onActivityClick(act)">
+              <div class="act-type-indicator" [attr.data-type]="act.type">
+                <span class="type-dot"></span>
+              </div>
+              <div class="act-details">
+                <div class="act-top">
+                  <span class="act-title">{{ act.title }}</span>
+                  <span class="act-time">{{ formatTime(act.timestamp) }}</span>
+                </div>
+                <div class="act-desc">{{ act.description }}</div>
+              </div>
+              <span class="act-arrow">→</span>
+            </div>
+          }
         </div>
       </section>
     </div>
   `,
   styles: [`
-    .home-workspace {
+    .main-agent-workspace {
       display: flex;
       flex-direction: column;
-      gap: 32px;
+      gap: 28px;
       max-width: 1200px;
       margin: 0 auto;
       width: 100%;
@@ -105,52 +144,113 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
       to { opacity: 1; transform: translateY(0); }
     }
 
+    /* Reference 1: Dense Technical Observability Metrics Bar */
+    .observatory-metrics-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      padding: 6px 12px;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+    }
+
+    .metric-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      font-size: 11px;
+      font-family: monospace;
+      color: #94a3b8;
+    }
+
+    .metric-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981;
+    }
+
+    .metric-dot.live {
+      animation: pulse-dot 2s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.6; }
+    }
+
+    .metric-label {
+      color: #64748b;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .metric-value {
+      color: #f1f5f9;
+      font-weight: 600;
+    }
+
+    .metric-value.highlight {
+      color: #38bdf8;
+    }
+
+    .metric-value.success {
+      color: #10b981;
+    }
+
     /* Hero Core Section */
     .hero-core-section {
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-      padding: 30px 20px 10px 20px;
-      gap: 24px;
+      padding: 20px 20px 6px 20px;
+      gap: 20px;
     }
 
     .core-identity {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
     }
 
     .core-avatar-orb {
       position: relative;
-      width: 68px;
-      height: 68px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       background: radial-gradient(circle at 35% 35%, #06b6d4, #3b82f6 60%, #1e1b4b);
-      box-shadow: 0 0 35px rgba(6, 182, 212, 0.4);
+      box-shadow: 0 0 30px rgba(6, 182, 212, 0.45);
     }
 
     .orb-ring-outer {
       position: absolute;
-      inset: -6px;
+      inset: -5px;
       border-radius: 50%;
-      border: 1px dashed rgba(56, 189, 248, 0.4);
-      animation: rotate-ring 12s linear infinite;
+      border: 1px dashed rgba(56, 189, 248, 0.45);
+      animation: rotate-ring 14s linear infinite;
     }
 
     .orb-ring-inner {
       position: absolute;
       inset: -2px;
       border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.35);
     }
 
     .orb-icon {
-      font-size: 24px;
+      font-size: 22px;
       color: #ffffff;
       text-shadow: 0 0 12px #38bdf8;
     }
@@ -168,7 +268,7 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
     }
 
     .greeting {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 700;
       letter-spacing: -0.02em;
       background: linear-gradient(135deg, #ffffff 40%, #93c5fd 80%, #38bdf8);
@@ -177,29 +277,24 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
     }
 
     .subtext {
-      font-size: 14px;
+      font-size: 13px;
       color: #94a3b8;
       font-weight: 400;
+      max-width: 600px;
     }
 
     .command-center-slot {
       width: 100%;
     }
 
-    /* Dashboard Grid */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-    }
-
+    /* Section Headings */
     .section-heading {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       color: #94a3b8;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-      margin: 0 0 14px 0;
+      margin: 0;
     }
 
     .section-header-flex {
@@ -209,37 +304,43 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
       margin-bottom: 14px;
     }
 
-    .activity-count {
+    .section-sublabel, .activity-count {
       font-size: 11px;
       color: #64748b;
     }
 
-    /* Workspace App Cards */
+    /* 4 Primary Workspaces Grid */
     .workspace-cards-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
     }
 
-    .workspace-app-card {
+    .workspace-card {
       background: rgba(15, 23, 42, 0.6);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
       border-radius: 14px;
-      padding: 14px;
+      padding: 16px;
       display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 12px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.25s ease;
       position: relative;
     }
 
-    .workspace-app-card:hover {
+    .workspace-card:hover {
       background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(56, 189, 248, 0.3);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+      border-color: rgba(56, 189, 248, 0.35);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .ws-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .ws-icon {
@@ -251,32 +352,49 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
       align-items: center;
       justify-content: center;
       color: #38bdf8;
-      flex-shrink: 0;
+    }
+
+    .ws-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.25);
     }
 
     .ws-info {
-      flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      overflow: hidden;
+      gap: 4px;
     }
 
     .ws-title {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       color: #f1f5f9;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
     }
 
     .ws-desc {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    .ws-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .ws-action {
       font-size: 11px;
+      font-weight: 500;
       color: #64748b;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      overflow: hidden;
     }
 
     .ws-arrow {
@@ -285,9 +403,13 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
       transition: transform 0.2s;
     }
 
-    .workspace-app-card:hover .ws-arrow {
+    .workspace-card:hover .ws-arrow {
       color: #38bdf8;
       transform: translateX(3px);
+    }
+
+    .workspace-card:hover .ws-action {
+      color: #38bdf8;
     }
 
     /* Activity Stream */
@@ -295,6 +417,25 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
       display: flex;
       flex-direction: column;
       gap: 8px;
+    }
+
+    .empty-stream-card {
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      text-align: center;
+      font-size: 13px;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .empty-icon {
+      color: #10b981;
+      font-weight: bold;
     }
 
     .activity-card {
@@ -316,12 +457,6 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
       transform: translateX(3px);
     }
 
-    .act-type-indicator {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
     .type-dot {
       width: 8px;
       height: 8px;
@@ -329,10 +464,6 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
       background: #38bdf8;
       box-shadow: 0 0 6px #38bdf8;
     }
-
-    .act-type-indicator[data-type="APP"] .type-dot { background: #10b981; box-shadow: 0 0 6px #10b981; }
-    .act-type-indicator[data-type="MEDIA"] .type-dot { background: #8b5cf6; box-shadow: 0 0 6px #8b5cf6; }
-    .act-type-indicator[data-type="TASK"] .type-dot { background: #38bdf8; box-shadow: 0 0 6px #38bdf8; }
 
     .act-details {
       flex: 1;
@@ -363,60 +494,68 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
       color: #94a3b8;
     }
 
-    @media (max-width: 900px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-      }
+    .act-arrow {
+      color: #64748b;
+      font-size: 14px;
+    }
 
+    .activity-card:hover .act-arrow {
+      color: #38bdf8;
+    }
+
+    @media (max-width: 1024px) {
+      .workspace-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
       .workspace-cards-grid {
         grid-template-columns: 1fr;
       }
     }
   `]
 })
-export class HomePageComponent {
+export class HomePageComponent implements OnInit {
   readonly stateService = inject(OperatorStateService);
   readonly commandService = inject(AgentCommandService);
   private readonly router = inject(Router);
+  private readonly threeScene = inject(ThreeSceneManagerService);
 
-  readonly workspaces = [
+  readonly primaryWorkspaces = [
     {
-      title: 'Agent Tasks',
-      desc: 'Orchestrate & monitor multi-step automated workflows',
-      route: '/tasks',
-      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>'
+      title: 'Agent Network',
+      desc: 'Interactive 3D graph of registered specialist agents, dependencies & workflows.',
+      route: '/network',
+      badge: '9 Agents',
+      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="18" r="2"/><line x1="12" y1="9" x2="12" y2="3"/><line x1="12" y1="15" x2="12" y2="21"/><line x1="9.5" y1="10.5" x2="6.5" y2="7.5"/><line x1="14.5" y1="13.5" x2="17.5" y2="16.5"/></svg>'
     },
     {
-      title: 'App Launcher',
-      desc: 'Control local Windows desktop applications',
-      route: '/applications',
-      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>'
+      title: 'Intelligence Lab',
+      desc: 'Model observatory, category benchmarks, candidate experiments & telemetry.',
+      route: '/intelligence',
+      badge: 'Evaluation Ready',
+      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+    },
+    {
+      title: 'Business Sectors',
+      desc: 'Autonomous business opportunities, project milestones & honest financial tracking.',
+      route: '/business',
+      badge: '6 Sectors',
+      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>'
     },
     {
       title: 'Media Creative Studio',
-      desc: 'Generate, compose & edit generative images & videos',
+      desc: 'Local generative video reels, image editing & cryptographic provenance attestations.',
       route: '/media',
+      badge: 'Phase 8 Stack',
       icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>'
-    },
-    {
-      title: 'Multimodal Media Library',
-      desc: 'Semantic vector search & multimodal asset indexing',
-      route: '/media-library',
-      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 8 7 4-7 4V8Z"/></svg>'
-    },
-    {
-      title: 'AI Browser Workspace',
-      desc: 'Automated web exploration & extraction',
-      route: '/browser',
-      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>'
-    },
-    {
-      title: 'Personal Memory',
-      desc: 'Browse indexed procedural & episodic memories',
-      route: '/memory',
-      icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="M2 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="M12 22v-4"/><path d="m19.07 19.07-2.83-2.83"/><path d="M22 12h-4"/><path d="m19.07 4.93-2.83 2.83"/></svg>'
     }
   ];
+
+  ngOnInit(): void {
+    this.threeScene.setMode('MAIN_AGENT');
+  }
 
   navigateTo(route: string): void {
     this.router.navigateByUrl(route);

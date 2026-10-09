@@ -14,6 +14,27 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'network',
+    loadComponent: () =>
+      import('./features/network/pages/network-page/network-page.component').then(
+        (m) => m.NetworkPageComponent
+      )
+  },
+  {
+    path: 'intelligence',
+    loadComponent: () =>
+      import('./features/intelligence/pages/intelligence-page/intelligence-page.component').then(
+        (m) => m.IntelligencePageComponent
+      )
+  },
+  {
+    path: 'business',
+    loadComponent: () =>
+      import('./features/business/pages/business-page/business-page.component').then(
+        (m) => m.BusinessPageComponent
+      )
+  },
+  {
     path: 'ask',
     loadComponent: () =>
       import('./features/ask/pages/ask-workspace-page/ask-workspace-page.component').then(
@@ -106,10 +127,8 @@ export const routes: Routes = [
   },
   {
     path: 'llm-evaluation',
-    loadComponent: () =>
-      import('./features/llm-evaluation/pages/llm-evaluation-page/llm-evaluation-page.component').then(
-        (m) => m.LlmEvaluationPageComponent
-      )
+    redirectTo: 'intelligence',
+    pathMatch: 'full'
   },
   {
     path: 'resources',

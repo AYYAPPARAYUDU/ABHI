@@ -138,6 +138,18 @@ async def create_candidate_legacy(req: LegacyCandidateCreateRequest) -> Experime
     )
 
 
+@router.get("/training/capability")
+async def get_training_capability() -> Dict[str, Any]:
+    """Retrieve authoritative training capability status."""
+    return {
+        "status": "NOT_AVAILABLE",
+        "full_fine_tuning_supported": False,
+        "adapter_experimentation_supported": True,
+        "reason": "Local single-GPU / CPU runtime configured for adapter experimentation. Full distributed backprop neural fine-tuning is NOT_AVAILABLE locally.",
+        "supported_experiments": ["PROMPT_TUNING", "RAG_INDEX_REBUILD", "LORA_ADAPTER_SIMULATION"],
+    }
+
+
 @router.post("/candidates/train")
 async def start_candidate_training(req: StartTrainingRequest) -> Dict[str, Any]:
     """Start isolated parameter adaptation or prompt/RAG index preparation job."""

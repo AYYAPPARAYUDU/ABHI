@@ -5,7 +5,7 @@
 **Schedule:** `ScheduleType.QUICK_DAILY`  
 **Provenance:** `ProvenanceType.ACTUAL`  
 **Is Production Baseline:** `True`  
-**Timestamp:** `2026-09-30T09:21:48Z`  
+**Timestamp:** `2026-10-09T05:48:47Z`  
 **Status:** `EvaluationStatus.COMPLETED`  
 
 ---
@@ -58,7 +58,7 @@
 
 ## 5. Resource Profile & Inference Performance
 - **CPU:** `0.0%`
-- **RAM:** `66.8 MB`
+- **RAM:** `218.9 MB`
 - **GPU VRAM:** `1240.0 MB`
 - **Inference Speed:** `25.0 tokens/sec`
 - **Duration:** `0.61s`
