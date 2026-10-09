@@ -152,6 +152,32 @@ export class ThreeSceneManagerService {
 
     this.particleSystem = new THREE.Points(geometry, material);
     this.scene.add(this.particleSystem);
+
+    // Dynamic Neural Synapse Interconnects (Reference 1: Living Network of Connections)
+    const synapseLineCount = this.isReducedMotion ? 40 : 120;
+    const synapsePoints: THREE.Vector3[] = [];
+    for (let i = 0; i < synapseLineCount; i++) {
+      const p1 = new THREE.Vector3(
+        (Math.random() - 0.5) * 20,
+        (Math.random() - 0.5) * 14,
+        (Math.random() - 0.5) * 12
+      );
+      const p2 = new THREE.Vector3(
+        p1.x + (Math.random() - 0.5) * 4,
+        p1.y + (Math.random() - 0.5) * 4,
+        p1.z + (Math.random() - 0.5) * 4
+      );
+      synapsePoints.push(p1, p2);
+    }
+    const synapseGeo = new THREE.BufferGeometry().setFromPoints(synapsePoints);
+    const synapseMat = new THREE.LineBasicMaterial({
+      color: 0x06b6d4,
+      transparent: true,
+      opacity: 0.22,
+      blending: THREE.AdditiveBlending,
+    });
+    this.neuralSynapseLines = new THREE.LineSegments(synapseGeo, synapseMat);
+    this.scene.add(this.neuralSynapseLines);
   }
 
   private createOrbitalCore(): void {
@@ -339,6 +365,11 @@ export class ThreeSceneManagerService {
           if (this.outerRing) {
             this.outerRing.rotation.z = elapsedTime * 0.08;
             this.outerRing.rotation.y = Math.cos(elapsedTime * 0.05) * 0.2;
+          }
+
+          if (this.neuralSynapseLines) {
+            this.neuralSynapseLines.rotation.y = elapsedTime * 0.02;
+            this.neuralSynapseLines.rotation.z = Math.sin(elapsedTime * 0.01) * 0.03;
           }
 
           if (this.secondaryRing) {

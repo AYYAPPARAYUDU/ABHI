@@ -40,19 +40,12 @@ import { RecentActivityItem } from '../../../../core/models/agent-experience.mod
 
       <!-- Central Hero Experience: 3D Core Aura + Voice-First Input -->
       <section class="hero-core-section">
-        <!-- AI Core Identity & Ambient Aura -->
+        <!-- AI Core Identity: Clean Cinematic HUD Headline -->
         <div class="core-identity">
-          <div class="core-avatar-orb" [attr.data-status]="stateService.avatarState()">
-            <div class="orb-ring-outer"></div>
-            <div class="orb-ring-inner"></div>
-            <div class="orb-glow-core"></div>
-            <span class="orb-icon">✦</span>
-          </div>
-
           <div class="core-text">
             <h1 class="core-headline">
               <span class="greeting">ABHI — Central Intelligence</span>
-              <span class="subtext">Speak or type your intent. Local agent network orchestrates execution safely.</span>
+              <span class="subtext">Voice-First Spatial AI Operating System</span>
             </h1>
           </div>
         </div>
