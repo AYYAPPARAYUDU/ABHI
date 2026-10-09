@@ -75,6 +75,8 @@ app.add_middleware(
 )
 app.add_middleware(SecurityHeadersMiddleware)
 
+from backend.app.api.v1.self_healing import router as self_healing_router
+
 # Register API Routers
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(models_router, prefix="/api/v1")
@@ -93,6 +95,7 @@ app.include_router(resources_router, prefix="/api/v1")
 app.include_router(media_router, prefix="/api/v1")
 app.include_router(agent_router, prefix="/api/v1")
 app.include_router(business_router, prefix="/api/v1")
+app.include_router(self_healing_router, prefix="/api/v1")
 app.include_router(ws_router)
 
 

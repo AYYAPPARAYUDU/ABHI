@@ -392,12 +392,128 @@ class OSDesktopAgent(BaseAgent):
             )
 
 
+class EngineeringRepairAgent(BaseAgent):
+    """Specialized Agent for autonomous defect detection, diagnosis, and validated self-repair."""
+
+    def __init__(self):
+        super().__init__(
+            AgentMetadata(
+                agent_id="engineering_repair_agent",
+                name="Engineering & Self-Healing Agent",
+                capabilities=[
+                    "diagnose_defect",
+                    "propose_patch",
+                    "apply_repair",
+                    "rollback_repair",
+                    "list_active_defects"
+                ],
+                risk_tier="Tier 2",
+                description="Diagnoses code defects, creates scoped patches, and verifies fixes with automated tests."
+            )
+        )
+
+    async def execute(self, request: AgentTaskRequest) -> AgentTaskResult:
+        from backend.app.cognitive.self_healing import (
+            defect_detector, diagnosis_engine, self_healing_engine, CodePatch, DefectSource
+        )
+
+        action = request.action
+        params = request.params
+
+        if action == "list_active_defects":
+            defects = defect_detector.list_active_defects()
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"defects": [d.model_dump() for d in defects]},
+                observed_state={"active_defect_count": len(defects)}
+            )
+
+        elif action == "diagnose_defect":
+            defect_id = params.get("defect_id")
+            defect = defect_detector.get_defect(defect_id) if defect_id else None
+            if not defect:
+                # Create ad-hoc defect from params
+                defect = defect_detector.record_defect(
+                    source=DefectSource.TEST_FAILURE,
+                    error_type=params.get("error_type", "RuntimeError"),
+                    message=params.get("message", "Unknown error"),
+                    stack_trace=params.get("stack_trace"),
+                    component=params.get("component", "system")
+                )
+
+            record, diag = await self_healing_engine.initiate_repair_workflow(
+                defect=defect,
+                candidate_files=params.get("candidate_files")
+            )
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"repair_id": record.repair_id, "diagnosis": diag.model_dump()},
+                observed_state={"status": record.status.value, "risk_tier": diag.risk_tier.value}
+            )
+
+        elif action == "apply_repair":
+            repair_id = params.get("repair_id", "")
+            patch_dict = params.get("patch", {})
+            patch = CodePatch(**patch_dict)
+            test_cmd = params.get("test_command")
+            approved = params.get("is_approved", False)
+
+            rec = await self_healing_engine.execute_repair(
+                repair_id=repair_id,
+                patch=patch,
+                test_command=test_cmd,
+                is_approved=approved
+            )
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=rec.status.value == "VERIFIED_SUCCESS",
+                data=rec.model_dump(),
+                observed_state={"status": rec.status.value, "rollback_available": rec.rollback_available},
+                error_message=rec.error_message
+            )
+
+        elif action == "rollback_repair":
+            repair_id = params.get("repair_id", "")
+            ok = await self_healing_engine.rollback_repair(repair_id)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"repair_id": repair_id, "rolled_back": ok},
+                observed_state={"rolled_back": ok}
+            )
+
+        else:
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=False,
+                error_message=f"Unsupported self-healing action '{action}'"
+            )
+
+
 def register_builtin_agents():
     """Register all built-in specialized agents in the central registry."""
     agent_registry.register(RAGAgent())
     agent_registry.register(MemoryAgent())
     agent_registry.register(CodingAgent())
     agent_registry.register(OSDesktopAgent())
+    agent_registry.register(EngineeringRepairAgent())
 
 
 # Auto-register on module import
