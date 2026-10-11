@@ -18,44 +18,35 @@ import { WorkloadQueueTableComponent } from '../../components/workload-queue-tab
     WorkloadQueueTableComponent
   ],
   template: `
-    <div class="min-h-screen bg-slate-950 text-slate-100 p-6 space-y-6">
+    <div class="resources-page-container">
       <!-- Header -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <div class="page-header-row">
         <div>
-          <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+          <h1 class="page-title">
+            <span class="pulse-dot"></span>
             Resource & Model Lifecycle Manager
           </h1>
-          <p class="text-xs text-slate-400 mt-1">
+          <p class="page-subtitle">
             Local-First deterministic CPU, RAM, GPU, VRAM, and Model Cache orchestration for ABHI
           </p>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="header-actions">
           <button
             type="button"
             (click)="onRefresh()"
             [disabled]="resourceService.isLoading()"
-            class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-2 transition-all disabled:opacity-50"
+            class="abhi-btn abhi-btn-primary"
           >
-            <svg
-              class="w-3.5 h-3.5"
-              [class.animate-spin]="resourceService.isLoading()"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Refresh
+            🔄 Refresh
           </button>
         </div>
       </div>
 
       <!-- Error Alert -->
       @if (resourceService.errorMessage()) {
-        <div class="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 rounded-xl text-xs flex items-center justify-between">
-          <span>{{ resourceService.errorMessage() }}</span>
+        <div class="alert-error">
+          <span>⚠️ {{ resourceService.errorMessage() }}</span>
         </div>
       }
 
@@ -76,18 +67,18 @@ import { WorkloadQueueTableComponent } from '../../components/workload-queue-tab
       />
 
       <!-- Managed Models Section -->
-      <div>
-        <div class="flex items-center justify-between mb-3">
+      <div class="models-section">
+        <div class="section-header-row">
           <div>
-            <h2 class="text-sm font-semibold text-slate-100">Model Memory Lifecycle & Cache</h2>
-            <p class="text-xs text-slate-400">Production and candidate model instances with VRAM gating</p>
+            <h2 class="section-title">Model Memory Lifecycle & Cache</h2>
+            <p class="section-subtitle">Production and candidate model instances with VRAM gating</p>
           </div>
-          <span class="text-xs font-mono text-slate-400">
+          <span class="abhi-badge abhi-badge-cyan">
             Loaded: {{ resourceService.summary()?.loaded_models_count || 0 }} / {{ resourceService.models().length }}
           </span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="models-grid">
           @for (model of resourceService.models(); track model.model_id) {
             <app-model-lifecycle-card
               [model]="model"
@@ -103,7 +94,93 @@ import { WorkloadQueueTableComponent } from '../../components/workload-queue-tab
         [leases]="resourceService.activeLeases()"
       />
     </div>
-  `
+  `,
+  styles: [`
+    .resources-page-container {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      color: var(--abhi-text-primary, #eef5ff);
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .page-header-row {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+    }
+    @media (min-width: 768px) {
+      .page-header-row {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+    }
+    .page-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--abhi-cyan, #38d9ff);
+      box-shadow: 0 0 10px var(--abhi-cyan);
+    }
+    .page-subtitle {
+      font-size: 0.8rem;
+      color: var(--abhi-text-muted, #8193ac);
+      margin: 0.35rem 0 0 0;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .alert-error {
+      background: rgba(255, 91, 113, 0.12);
+      border: 1px solid rgba(255, 91, 113, 0.35);
+      color: #ff5b71;
+      padding: 0.85rem 1.2rem;
+      border-radius: var(--abhi-radius-md, 10px);
+      font-size: 0.82rem;
+    }
+    .models-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .section-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0;
+    }
+    .section-subtitle {
+      font-size: 0.76rem;
+      color: var(--abhi-text-muted, #8193ac);
+      margin: 0.2rem 0 0 0;
+    }
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+  `]
 })
 export class ResourcesPageComponent implements OnInit {
   resourceService = inject(ResourceService);
@@ -132,3 +209,4 @@ export class ResourcesPageComponent implements OnInit {
     this.resourceService.reconcileOrphans().subscribe();
   }
 }
+

@@ -1,6 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs/operators';
 import { FloatingSidebarComponent } from '../floating-sidebar/floating-sidebar.component';
 import { ContextualTopbarComponent } from '../contextual-topbar/contextual-topbar.component';
 import { GlobalSafetyBarComponent } from '../global-safety-bar/global-safety-bar.component';
@@ -15,7 +17,6 @@ import { OperatorStateService } from '../../../core/services/operator-state.serv
   imports: [
     CommonModule,
     RouterModule,
-    FloatingSidebarComponent,
     ContextualTopbarComponent,
     GlobalSafetyBarComponent,
     ConsentModalComponent,
@@ -27,4 +28,18 @@ import { OperatorStateService } from '../../../core/services/operator-state.serv
 })
 export class AppShellComponent {
   readonly stateService = inject(OperatorStateService);
+  private readonly router = inject(Router);
+
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map((e) => e.urlAfterRedirects)
+    ),
+    { initialValue: this.router.url }
+  );
+
+  readonly isMainAgent = computed(() => {
+    const url = this.currentUrl() || '';
+    return url === '' || url === '/' || url.startsWith('/home');
+  });
 }

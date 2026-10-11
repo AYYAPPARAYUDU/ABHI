@@ -1,9 +1,10 @@
 .browser-card {
   padding: 1.5rem;
-  border-radius: 12px;
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
+  border-radius: var(--abhi-radius-control, 18px);
+  background: var(--abhi-surface-raised, #0e1828);
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+  box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
+  backdrop-filter: blur(16px);
   margin-bottom: 1.5rem;
 }
 
@@ -28,7 +29,7 @@
   margin: 0 0 0.25rem 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: #f8fafc;
+  color: var(--abhi-text-primary, #eef5ff);
 }
 
 .badge {
@@ -40,15 +41,15 @@
 }
 
 .badge-success {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  background: rgba(72, 221, 162, 0.15);
+  color: var(--abhi-success, #48dda2);
+  border: 1px solid rgba(72, 221, 162, 0.35);
 }
 
 .badge-idle {
-  background: rgba(100, 116, 139, 0.2);
-  color: #94a3b8;
-  border: 1px solid rgba(100, 116, 139, 0.4);
+  background: var(--abhi-surface-inset, #080e18);
+  color: var(--abhi-text-muted, #8193ac);
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
 }
 
 .stats-grid {
@@ -59,16 +60,17 @@
 }
 
 .stat-item {
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--abhi-surface-inset, #080e18);
   padding: 0.75rem 1rem;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+  box-shadow: var(--abhi-inset-shadow, inset 4px 4px 10px rgba(0,0,0,0.4));
 }
 
 .stat-label {
   display: block;
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--abhi-text-muted, #8193ac);
   margin-bottom: 0.25rem;
 }
 
@@ -77,32 +79,32 @@
   font-weight: 700;
 }
 
-.text-accent { color: #38bdf8; }
-.text-cyan { color: #06b6d4; }
-.text-warning { color: #fbbf24; }
-.text-muted { color: #64748b; }
+.text-accent { color: var(--abhi-cyan, #38d9ff); }
+.text-cyan { color: var(--abhi-cyan, #38d9ff); }
+.text-warning { color: var(--abhi-amber, #ffca70); }
+.text-muted { color: var(--abhi-text-muted, #8193ac); }
 
 .active-url-box {
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--abhi-surface-inset, #080e18);
   padding: 0.6rem 0.9rem;
-  border-radius: 6px;
+  border-radius: 12px;
   margin-bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
 }
 
 .url-label {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #38bdf8;
+  color: var(--abhi-cyan, #38d9ff);
 }
 
 .url-code {
   font-family: monospace;
   font-size: 0.85rem;
-  color: #e2e8f0;
+  color: var(--abhi-text-primary, #eef5ff);
 }
 
 .sessions-list {
@@ -116,39 +118,39 @@
   justify-content: space-between;
   align-items: center;
   padding: 0.6rem 0.9rem;
-  background: rgba(30, 41, 59, 0.5);
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: var(--abhi-surface-inset, #080e18);
+  border-radius: 12px;
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
 }
 
 .sess-id {
   font-family: monospace;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--abhi-text-primary, #eef5ff);
   margin-right: 0.75rem;
 }
 
 .sess-origin {
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--abhi-text-muted, #8193ac);
 }
 
 .btn {
   padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-weight: 500;
+  border-radius: 12px;
+  font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: all 0.15s ease;
+  transition: all var(--abhi-transition-fast, 160ms);
 }
 
 .btn-primary {
-  background: #2563eb;
+  background: linear-gradient(135deg, var(--abhi-blue, #397bff) 0%, var(--abhi-cyan, #38d9ff) 100%);
   color: #ffffff;
 }
 
 .btn-primary:hover {
-  background: #1d4ed8;
+  box-shadow: 0 4px 14px rgba(56, 217, 255, 0.4);
 }
 
 .btn-sm {
@@ -157,11 +159,12 @@
 }
 
 .btn-danger {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(255, 91, 113, 0.15);
+  color: var(--abhi-danger, #ff5b71);
+  border: 1px solid rgba(255, 91, 113, 0.35);
 }
 
 .btn-danger:hover {
-  background: rgba(239, 68, 68, 0.3);
+  background: rgba(255, 91, 113, 0.25);
 }
+

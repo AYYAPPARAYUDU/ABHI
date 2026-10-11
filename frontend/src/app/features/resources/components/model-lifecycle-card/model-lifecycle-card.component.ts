@@ -7,76 +7,72 @@ import { ModelInstanceRecordDTO } from '../../models/resource.model';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex flex-col justify-between shadow-lg transition-all hover:border-slate-700">
+    <div class="model-card">
       <div>
-        <div class="flex items-start justify-between gap-2 mb-2">
+        <div class="card-header-row">
           <div>
-            <div class="flex items-center gap-2">
-              <span class="text-sm font-bold text-slate-100">{{ model().model_id }}</span>
+            <div class="model-title-row">
+              <span class="model-name">{{ model().model_id }}</span>
               @if (model().is_production) {
-                <span class="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                  Production
-                </span>
+                <span class="abhi-badge abhi-badge-cyan">Production</span>
               } @else if (model().is_candidate) {
-                <span class="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  Candidate
-                </span>
+                <span class="abhi-badge abhi-badge-warning">Candidate</span>
               }
             </div>
-            <div class="text-xs text-slate-400 font-mono mt-0.5">
+            <div class="model-specs">
               {{ model().format }} • {{ model().quantization }} • {{ model().parameter_count }}
             </div>
           </div>
 
           <!-- Health / State Badge -->
           <span
-            class="text-[11px] font-mono px-2 py-0.5 rounded-full border"
+            class="abhi-badge"
             [ngClass]="getStateBadgeClass()"
           >
             {{ model().state }}
           </span>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 my-3 text-xs bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/80">
-          <div>
-            <span class="text-slate-500 block">Device:</span>
-            <span class="font-semibold text-slate-300">{{ model().device }}</span>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <span class="metric-label">Device:</span>
+            <span class="metric-val">{{ model().device }}</span>
           </div>
-          <div>
-            <span class="text-slate-500 block">Context Tokens:</span>
-            <span class="font-semibold text-slate-300">{{ model().context_length | number }}</span>
+          <div class="metric-item">
+            <span class="metric-label">Context Tokens:</span>
+            <span class="metric-val">{{ model().context_length | number }}</span>
           </div>
-          <div>
-            <span class="text-slate-500 block">Memory Footprint:</span>
-            <span class="font-semibold text-emerald-400">
+          <div class="metric-item">
+            <span class="metric-label">Memory Footprint:</span>
+            <span class="metric-val text-success">
               {{ (model().actual_memory_mb || model().estimated_memory_mb) | number:'1.0-0' }} MB
             </span>
           </div>
-          <div>
-            <span class="text-slate-500 block">Est. KV-Cache:</span>
-            <span class="font-semibold text-slate-300">{{ model().estimated_kv_cache_mb | number:'1.0-1' }} MB</span>
+          <div class="metric-item">
+            <span class="metric-label">Est. KV-Cache:</span>
+            <span class="metric-val">{{ model().estimated_kv_cache_mb | number:'1.0-1' }} MB</span>
           </div>
         </div>
 
         @if (model().error_message) {
-          <div class="text-xs text-red-400 bg-red-950/40 border border-red-900/50 p-2 rounded mb-3">
+          <div class="error-box">
             {{ model().error_message }}
           </div>
         }
       </div>
 
       <!-- Action Footer -->
-      <div class="flex items-center justify-between pt-2 border-t border-slate-800 mt-2">
-        <div class="text-[11px] text-slate-400">
-          Uses: <span class="text-slate-300 font-mono">{{ model().use_count }}</span>
+      <div class="card-footer-row">
+        <div class="use-count">
+          Uses: <span class="use-num">{{ model().use_count }}</span>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="actions">
           @if (isLoaded()) {
             <button
               type="button"
               (click)="onUnload()"
-              class="px-2.5 py-1 text-xs font-medium rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 transition-all"
+              class="abhi-btn btn-danger-soft"
             >
               Unload
             </button>
@@ -84,7 +80,7 @@ import { ModelInstanceRecordDTO } from '../../models/resource.model';
             <button
               type="button"
               (click)="onLoad()"
-              class="px-2.5 py-1 text-xs font-medium rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 transition-all"
+              class="abhi-btn abhi-btn-primary"
             >
               Load
             </button>
@@ -92,7 +88,115 @@ import { ModelInstanceRecordDTO } from '../../models/resource.model';
         </div>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .model-card {
+      background: var(--abhi-surface-raised, #0e1828);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: var(--abhi-radius-control, 16px);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--abhi-raised-shadow);
+      transition: all var(--abhi-transition-normal);
+    }
+    .model-card:hover {
+      border-color: var(--abhi-border-active);
+    }
+    .card-header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .model-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .model-name {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .model-specs {
+      font-size: 0.75rem;
+      color: var(--abhi-text-muted, #8193ac);
+      font-family: ui-monospace, monospace;
+      margin-top: 0.2rem;
+    }
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      background: var(--abhi-surface-inset, #080e18);
+      border: 1px solid var(--abhi-border);
+      border-radius: var(--abhi-radius-md, 10px);
+      padding: 0.75rem;
+      margin: 0.75rem 0;
+      box-shadow: var(--abhi-inset-shadow);
+    }
+    .metric-item {
+      font-size: 0.75rem;
+    }
+    .metric-label {
+      color: var(--abhi-text-muted, #8193ac);
+      display: block;
+      margin-bottom: 0.1rem;
+    }
+    .metric-val {
+      font-weight: 700;
+      font-family: ui-monospace, monospace;
+      color: var(--abhi-text-primary, #eef5ff);
+    }
+    .text-success {
+      color: var(--abhi-success, #48dda2);
+    }
+    .error-box {
+      font-size: 0.75rem;
+      color: #ff5b71;
+      background: rgba(255, 91, 113, 0.1);
+      border: 1px solid rgba(255, 91, 113, 0.3);
+      padding: 0.5rem;
+      border-radius: var(--abhi-radius-sm);
+      margin-bottom: 0.75rem;
+    }
+    .card-footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--abhi-border);
+      padding-top: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .use-count {
+      font-size: 0.75rem;
+      color: var(--abhi-text-muted);
+    }
+    .use-num {
+      font-family: ui-monospace, monospace;
+      color: var(--abhi-text-primary);
+      font-weight: 600;
+    }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-danger-soft {
+      background: rgba(255, 91, 113, 0.15);
+      border-color: rgba(255, 91, 113, 0.35);
+      color: #ff5b71;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.78rem;
+    }
+    .btn-danger-soft:hover {
+      background: rgba(255, 91, 113, 0.3);
+      color: #ffffff;
+    }
+  `]
 })
 export class ModelLifecycleCardComponent {
   model = input.required<ModelInstanceRecordDTO>();
@@ -116,17 +220,17 @@ export class ModelLifecycleCardComponent {
   getStateBadgeClass(): string {
     switch (this.model().state) {
       case 'IN_USE':
-        return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 animate-pulse';
       case 'WARM':
       case 'LOADED':
-        return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40';
+        return 'abhi-badge-success';
       case 'IDLE':
-        return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40';
+        return 'abhi-badge-cyan';
       case 'QUARANTINED':
       case 'FAILED':
-        return 'bg-rose-500/20 text-rose-400 border-rose-500/40';
+        return 'abhi-badge-danger';
       default:
-        return 'bg-slate-800 text-slate-400 border-slate-700';
+        return '';
     }
   }
 }
+

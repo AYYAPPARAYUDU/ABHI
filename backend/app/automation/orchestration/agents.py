@@ -14,7 +14,7 @@ class GroundedDesktopAgent(BaseAgent):
     def __init__(self, orchestrator: SupervisorOrchestrator = supervisor_orchestrator):
         super().__init__(
             AgentMetadata(
-                agent_id="os_desktop_agent",
+                agent_id="grounded_desktop_agent",
                 name="Grounded OS & Desktop Automation Agent",
                 capabilities=["click_element", "type_text", "launch_application", "focus_window", "coordinate_click", "visual_action"],
                 risk_tier="Tier 2",

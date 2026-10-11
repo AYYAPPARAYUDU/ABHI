@@ -13,6 +13,7 @@ import { ExperimentBoardComponent } from '../../../llm-evaluation/components/exp
 import { ModelLineage3dComponent } from '../../../llm-evaluation/components/model-lineage-3d/model-lineage-3d.component';
 import { ExperimentTimelineComponent } from '../../../llm-evaluation/components/experiment-timeline/experiment-timeline.component';
 import { TrainingProgressComponent } from '../../../llm-evaluation/components/training-progress/training-progress.component';
+import { NeuralNetworkViewerComponent } from '../../../../shared/components/neural-network-viewer/neural-network-viewer.component';
 
 @Component({
   selector: 'app-intelligence-page',
@@ -29,7 +30,8 @@ import { TrainingProgressComponent } from '../../../llm-evaluation/components/tr
     ExperimentBoardComponent,
     ModelLineage3dComponent,
     ExperimentTimelineComponent,
-    TrainingProgressComponent
+    TrainingProgressComponent,
+    NeuralNetworkViewerComponent
   ],
   template: `
     <div class="intelligence-workspace">
@@ -107,6 +109,13 @@ import { TrainingProgressComponent } from '../../../llm-evaluation/components/tr
         </button>
         <button
           class="lab-tab"
+          [class.active]="evalService.activeTab() === 'NEURAL'"
+          (click)="evalService.setActiveTab('NEURAL')"
+        >
+          <span>🧠 Neural Network & Attention Core</span>
+        </button>
+        <button
+          class="lab-tab"
           [class.active]="evalService.activeTab() === 'MODELS'"
           (click)="evalService.setActiveTab('MODELS')"
         >
@@ -116,6 +125,12 @@ import { TrainingProgressComponent } from '../../../llm-evaluation/components/tr
 
       <!-- Active Tab Panels -->
       <main class="lab-content">
+        @if (evalService.activeTab() === 'NEURAL') {
+          <div class="neural-tab-layout">
+            <app-neural-network-viewer></app-neural-network-viewer>
+          </div>
+        }
+
         @if (evalService.activeTab() === 'DAILY') {
           <div class="daily-grid">
             <div class="daily-left">
@@ -162,7 +177,7 @@ import { TrainingProgressComponent } from '../../../llm-evaluation/components/tr
     .intelligence-workspace {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 24px;
       max-width: 1400px;
       margin: 0 auto;
       width: 100%;
@@ -178,11 +193,12 @@ import { TrainingProgressComponent } from '../../../llm-evaluation/components/tr
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      padding: 16px 20px;
-      background: rgba(15, 23, 42, 0.6);
+      padding: 18px 24px;
+      background: var(--abhi-surface-raised, #0e1828);
       backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: var(--abhi-radius-control, 18px);
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
     }
 
     .workspace-title-group {
@@ -197,21 +213,21 @@ import { TrainingProgressComponent } from '../../../llm-evaluation/components/tr
       letter-spacing: 0.08em;
       padding: 3px 8px;
       border-radius: 6px;
-      background: rgba(99, 102, 241, 0.15);
-      color: #818cf8;
-      border: 1px solid rgba(99, 102, 241, 0.3);
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.35);
     }
 
     .workspace-title {
       font-size: 20px;
-      font-weight: 700;
-      color: #f1f5f9;
+      font-weight: 800;
+      color: var(--abhi-text-primary, #eef5ff);
       margin: 0;
     }
 
     .workspace-subtitle {
       font-size: 13px;
-      color: #94a3b8;
+      color: var(--abhi-text-secondary, #a7b7cc);
       margin: 4px 0 0 0;
     }
 
@@ -226,41 +242,46 @@ import { TrainingProgressComponent } from '../../../llm-evaluation/components/tr
       flex-direction: column;
       align-items: flex-end;
       gap: 2px;
+      background: var(--abhi-surface-inset, #080e18);
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
     }
 
     .tag-label {
       font-size: 9px;
       font-weight: 700;
-      color: #64748b;
+      color: var(--abhi-text-muted, #8193ac);
       letter-spacing: 0.05em;
     }
 
     .tag-val {
       font-size: 11px;
       font-family: monospace;
-      color: #10b981;
-      font-weight: 600;
+      color: var(--abhi-success, #48dda2);
+      font-weight: 700;
     }
 
     .run-eval-btn {
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 8px 14px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #6366f1, #3b82f6);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #ffffff;
+      padding: 8px 16px;
+      border-radius: 12px;
+      background: var(--abhi-surface-raised, #0e1828);
+      border: 1px solid var(--abhi-border-active, rgba(56, 217, 255, 0.42));
+      color: var(--abhi-cyan, #38d9ff);
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
       transition: all 0.2s;
     }
 
     .run-eval-btn:hover:not(:disabled) {
+      background: var(--abhi-surface-inset, #080e18);
+      box-shadow: var(--abhi-raised-shadow), 0 0 16px rgba(56, 217, 255, 0.3);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
     }
 
     /* Honest Training Banner */
@@ -268,19 +289,20 @@ import { TrainingProgressComponent } from '../../../llm-evaluation/components/tr
       display: flex;
       align-items: flex-start;
       gap: 14px;
-      padding: 12px 16px;
-      background: rgba(15, 23, 42, 0.7);
+      padding: 14px 18px;
+      background: var(--abhi-surface-raised, #0e1828);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(245, 158, 11, 0.25);
-      border-radius: 12px;
+      border: 1px solid rgba(255, 202, 112, 0.35);
+      border-radius: var(--abhi-radius-control, 18px);
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
     }
 
     .banner-icon {
       width: 24px;
       height: 24px;
-      border-radius: 6px;
-      background: rgba(245, 158, 11, 0.15);
-      color: #f59e0b;
+      border-radius: 8px;
+      background: rgba(255, 202, 112, 0.15);
+      color: var(--abhi-amber, #ffca70);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -300,26 +322,26 @@ import { TrainingProgressComponent } from '../../../llm-evaluation/components/tr
       gap: 8px;
       font-size: 11px;
       font-weight: 700;
-      color: #94a3b8;
+      color: var(--abhi-text-secondary, #a7b7cc);
       letter-spacing: 0.05em;
     }
 
     .banner-status-tag {
       font-size: 10px;
       padding: 2px 6px;
-      border-radius: 4px;
-      background: rgba(16, 185, 129, 0.15);
-      color: #10b981;
+      border-radius: 6px;
+      background: rgba(72, 221, 162, 0.15);
+      color: var(--abhi-success, #48dda2);
     }
 
     .banner-status-tag.warning {
-      background: rgba(245, 158, 11, 0.15);
-      color: #f59e0b;
+      background: rgba(255, 202, 112, 0.15);
+      color: var(--abhi-amber, #ffca70);
     }
 
     .banner-desc {
       font-size: 12px;
-      color: #cbd5e1;
+      color: var(--abhi-text-secondary, #a7b7cc);
       margin: 0;
       line-height: 1.4;
     }
@@ -328,33 +350,34 @@ import { TrainingProgressComponent } from '../../../llm-evaluation/components/tr
     .lab-tabs {
       display: flex;
       gap: 8px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding-bottom: 8px;
+      border-bottom: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      padding-bottom: 10px;
       flex-wrap: wrap;
     }
 
     .lab-tab {
       padding: 8px 16px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      color: #94a3b8;
+      border-radius: 12px;
+      background: var(--abhi-surface-raised, #0e1828);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      color: var(--abhi-text-secondary, #a7b7cc);
       font-size: 13px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
       transition: all 0.2s;
     }
 
     .lab-tab:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: #f1f5f9;
+      border-color: var(--abhi-border-active, rgba(56, 217, 255, 0.42));
+      color: var(--abhi-cyan, #38d9ff);
     }
 
     .lab-tab.active {
-      background: rgba(99, 102, 241, 0.15);
-      border-color: rgba(99, 102, 241, 0.35);
-      color: #818cf8;
-      font-weight: 600;
+      background: var(--abhi-surface-inset, #080e18);
+      border-color: var(--abhi-border-active, rgba(56, 217, 255, 0.42));
+      color: var(--abhi-cyan, #38d9ff);
+      box-shadow: var(--abhi-inset-shadow, inset 4px 4px 10px rgba(0, 0, 0, 0.40));
     }
 
     /* Tab Layouts */
@@ -383,6 +406,21 @@ import { TrainingProgressComponent } from '../../../llm-evaluation/components/tr
     @media (max-width: 1024px) {
       .daily-grid, .candidates-layout, .experiments-layout, .models-layout {
         grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .workspace-header {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .lab-tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+      }
+      .lab-tab {
+        flex-shrink: 0;
       }
     }
   `]

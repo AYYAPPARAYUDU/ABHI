@@ -337,3 +337,5 @@ class CentralSupervisor:
 
 # Global Central Supervisor singleton
 central_supervisor = CentralSupervisor()
+supervisor = central_supervisor
+

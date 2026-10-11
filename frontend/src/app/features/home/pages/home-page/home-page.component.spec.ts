@@ -34,18 +34,35 @@ describe('HomePageComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render core identity greeting and agent command center', () => {
+  it('should render brand pill and top HUD header', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('ABHI — Central Intelligence');
-    expect(compiled.querySelector('app-agent-command-center')).toBeTruthy();
-    expect(compiled.querySelector('.command-input')).toBeTruthy();
+    expect(compiled.textContent).toContain('ABHI');
+    expect(compiled.textContent).toContain('CENTRAL INTELLIGENCE');
+    expect(compiled.querySelector('.e-stop-btn')).toBeTruthy();
   });
 
-  it('should render quick workspace navigation cards', () => {
+  it('should render floating neumorphic command dock and input field', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Agent Network');
-    expect(compiled.textContent).toContain('Intelligence Lab');
-    expect(compiled.textContent).toContain('Business Sectors');
-    expect(compiled.textContent).toContain('Media Creative Studio');
+    expect(compiled.querySelector('.neumorphic-dock-shell')).toBeTruthy();
+    expect(compiled.querySelector('.dock-input-field')).toBeTruthy();
+    expect(compiled.querySelector('.voice-btn')).toBeTruthy();
+    expect(compiled.querySelector('.submit-btn')).toBeTruthy();
+  });
+
+  it('should have 4 primary operating workspaces available in switcher', () => {
+    expect(component.workspaceRoutes.length).toBe(4);
+    const routes = component.workspaceRoutes.map(w => w.route);
+    expect(routes).toContain('/network');
+    expect(routes).toContain('/intelligence');
+    expect(routes).toContain('/business');
+    expect(routes).toContain('/media');
+  });
+
+  it('should toggle workspace menu on switcher button click', () => {
+    expect(component.showWorkspaceMenu()).toBe(false);
+    component.toggleWorkspaceMenu();
+    expect(component.showWorkspaceMenu()).toBe(true);
+    component.toggleWorkspaceMenu();
+    expect(component.showWorkspaceMenu()).toBe(false);
   });
 });

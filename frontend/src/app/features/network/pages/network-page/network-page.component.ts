@@ -203,11 +203,12 @@ import { AgentNode } from '../../models/network.model';
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      padding: 16px 20px;
-      background: rgba(15, 23, 42, 0.6);
+      padding: 18px 24px;
+      background: var(--abhi-surface-raised, #0e1828);
       backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: var(--abhi-radius-control, 18px);
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
     }
 
     .workspace-title-group {
@@ -222,21 +223,21 @@ import { AgentNode } from '../../models/network.model';
       letter-spacing: 0.08em;
       padding: 3px 8px;
       border-radius: 6px;
-      background: rgba(56, 189, 248, 0.15);
-      color: #38bdf8;
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: rgba(56, 217, 255, 0.15);
+      color: var(--abhi-cyan, #38d9ff);
+      border: 1px solid var(--abhi-border-active, rgba(56, 217, 255, 0.42));
     }
 
     .workspace-title {
       font-size: 20px;
-      font-weight: 700;
-      color: #f1f5f9;
+      font-weight: 800;
+      color: var(--abhi-text-primary, #eef5ff);
       margin: 0;
     }
 
     .workspace-subtitle {
       font-size: 13px;
-      color: #94a3b8;
+      color: var(--abhi-text-secondary, #a7b7cc);
       margin: 4px 0 0 0;
     }
 
@@ -253,37 +254,39 @@ import { AgentNode } from '../../models/network.model';
       font-size: 11px;
       font-family: monospace;
       padding: 6px 12px;
-      border-radius: 8px;
-      background: rgba(16, 185, 129, 0.1);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 12px;
+      background: var(--abhi-surface-inset, #080e18);
+      color: var(--abhi-success, #48dda2);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
     }
 
     .pulse-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: #10b981;
-      box-shadow: 0 0 8px #10b981;
+      background: var(--abhi-success, #48dda2);
+      box-shadow: 0 0 8px var(--abhi-success, #48dda2);
     }
 
     .refresh-btn {
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #94a3b8;
+      padding: 7px 14px;
+      border-radius: 12px;
+      background: var(--abhi-surface-raised, #0e1828);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      color: var(--abhi-text-secondary, #a7b7cc);
       font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
       transition: all 0.2s;
     }
 
     .refresh-btn:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.1);
-      color: #f1f5f9;
+      border-color: var(--abhi-border-active, rgba(56, 217, 255, 0.42));
+      color: var(--abhi-cyan, #38d9ff);
     }
 
     /* Toolbar */
@@ -299,22 +302,23 @@ import { AgentNode } from '../../models/network.model';
       display: flex;
       align-items: center;
       gap: 8px;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
-      padding: 6px 12px;
+      background: var(--abhi-surface-inset, #080e18);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: var(--abhi-radius-control, 18px);
+      box-shadow: var(--abhi-inset-shadow, inset 4px 4px 10px rgba(0, 0, 0, 0.40));
+      padding: 6px 14px;
       min-width: 280px;
     }
 
     .search-icon {
-      color: #64748b;
+      color: var(--abhi-text-muted, #8193ac);
     }
 
     .search-input {
       background: transparent;
       border: none;
       outline: none;
-      color: #f1f5f9;
+      color: var(--abhi-text-primary, #eef5ff);
       font-size: 13px;
       width: 100%;
     }
@@ -326,26 +330,29 @@ import { AgentNode } from '../../models/network.model';
     }
 
     .filter-chip {
-      padding: 5px 10px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      color: #94a3b8;
+      padding: 6px 12px;
+      border-radius: 10px;
+      background: var(--abhi-surface-raised, #0e1828);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      color: var(--abhi-text-secondary, #a7b7cc);
       font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
       transition: all 0.2s;
     }
 
     .filter-chip:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: #f1f5f9;
+      border-color: var(--abhi-border-active, rgba(56, 217, 255, 0.42));
+      color: var(--abhi-cyan, #38d9ff);
     }
 
     .filter-chip.active {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: rgba(56, 189, 248, 0.35);
-      color: #38bdf8;
-      font-weight: 600;
+      background: var(--abhi-surface-inset, #080e18);
+      border-color: var(--abhi-border-active, rgba(56, 217, 255, 0.42));
+      color: var(--abhi-cyan, #38d9ff);
+      font-weight: 700;
+      box-shadow: var(--abhi-inset-shadow, inset 4px 4px 10px rgba(0, 0, 0, 0.40));
     }
 
     /* Content Grid */
@@ -363,14 +370,15 @@ import { AgentNode } from '../../models/network.model';
     .nodes-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 14px;
+      gap: 16px;
     }
 
     .agent-node-card {
-      background: rgba(15, 23, 42, 0.65);
+      background: var(--abhi-surface-raised, #0e1828);
       backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      border-radius: 14px;
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: var(--abhi-radius-control, 18px);
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
       padding: 16px;
       display: flex;
       flex-direction: column;
@@ -380,20 +388,19 @@ import { AgentNode } from '../../models/network.model';
     }
 
     .agent-node-card:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(56, 189, 248, 0.3);
+      border-color: var(--abhi-border-active, rgba(56, 217, 255, 0.42));
+      box-shadow: var(--abhi-raised-shadow), 0 0 16px rgba(56, 217, 255, 0.2);
       transform: translateY(-2px);
     }
 
     .agent-node-card.selected {
-      border-color: #38bdf8;
-      box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
-      background: rgba(56, 189, 248, 0.05);
+      border-color: var(--abhi-cyan, #38d9ff);
+      box-shadow: var(--abhi-raised-shadow), 0 0 20px rgba(56, 217, 255, 0.35);
+      background: var(--abhi-surface-inset, #080e18);
     }
 
     .agent-node-card.supervisor {
-      border-color: rgba(245, 158, 11, 0.4);
-      background: rgba(245, 158, 11, 0.04);
+      border-color: rgba(255, 202, 112, 0.4);
     }
 
     .node-header {
@@ -405,12 +412,14 @@ import { AgentNode } from '../../models/network.model';
     .node-icon-wrapper {
       width: 32px;
       height: 32px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.04);
+      border-radius: 10px;
+      background: var(--abhi-surface-inset, #080e18);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 16px;
+      color: var(--abhi-cyan, #38d9ff);
     }
 
     .status-badge {
@@ -421,10 +430,10 @@ import { AgentNode } from '../../models/network.model';
       border-radius: 6px;
     }
 
-    .status-badge[data-status="READY"] { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-    .status-badge[data-status="ACTIVE"] { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
-    .status-badge[data-status="IDLE"] { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
-    .status-badge[data-status="FAILED"] { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+    .status-badge[data-status="READY"] { background: rgba(72, 221, 162, 0.15); color: var(--abhi-success, #48dda2); }
+    .status-badge[data-status="ACTIVE"] { background: rgba(56, 217, 255, 0.15); color: var(--abhi-cyan, #38d9ff); }
+    .status-badge[data-status="IDLE"] { background: rgba(148, 163, 184, 0.15); color: var(--abhi-text-muted, #8193ac); }
+    .status-badge[data-status="FAILED"] { background: rgba(255, 91, 113, 0.15); color: var(--abhi-danger, #ff5b71); }
 
     .node-body {
       display: flex;
@@ -434,20 +443,20 @@ import { AgentNode } from '../../models/network.model';
 
     .node-name {
       font-size: 14px;
-      font-weight: 600;
-      color: #f1f5f9;
+      font-weight: 700;
+      color: var(--abhi-text-primary, #eef5ff);
       margin: 0;
     }
 
     .node-category {
       font-size: 11px;
-      color: #64748b;
+      color: var(--abhi-text-muted, #8193ac);
       font-family: monospace;
     }
 
     .node-role {
       font-size: 12px;
-      color: #94a3b8;
+      color: var(--abhi-text-secondary, #a7b7cc);
       margin: 4px 0 0 0;
       line-height: 1.4;
     }
@@ -458,17 +467,17 @@ import { AgentNode } from '../../models/network.model';
       align-items: center;
       margin-top: auto;
       padding-top: 8px;
-      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      border-top: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
     }
 
     .capabilities-pill {
       font-size: 11px;
-      color: #64748b;
+      color: var(--abhi-text-muted, #8193ac);
     }
 
     .active-task-indicator {
       font-size: 10px;
-      color: #38bdf8;
+      color: var(--abhi-cyan, #38d9ff);
       animation: pulse 1.5s infinite;
     }
 
@@ -479,10 +488,11 @@ import { AgentNode } from '../../models/network.model';
     }
 
     .inspector-card {
-      background: rgba(15, 23, 42, 0.75);
+      background: var(--abhi-surface-raised, #0e1828);
       backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
+      border: 1px solid var(--abhi-border-active, rgba(56, 217, 255, 0.42));
+      border-radius: var(--abhi-radius-control, 18px);
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
       padding: 20px;
       display: flex;
       flex-direction: column;
@@ -500,14 +510,14 @@ import { AgentNode } from '../../models/network.model';
     .inspector-category {
       font-size: 11px;
       font-family: monospace;
-      color: #64748b;
+      color: var(--abhi-text-muted, #8193ac);
       text-transform: uppercase;
     }
 
     .inspector-title {
       font-size: 16px;
       font-weight: 700;
-      color: #f1f5f9;
+      color: var(--abhi-text-primary, #eef5ff);
       margin: 2px 0 0 0;
     }
 
@@ -526,13 +536,13 @@ import { AgentNode } from '../../models/network.model';
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 0.08em;
-      color: #64748b;
+      color: var(--abhi-text-muted, #8193ac);
       text-transform: uppercase;
     }
 
     .inspector-desc {
       font-size: 13px;
-      color: #cbd5e1;
+      color: var(--abhi-text-secondary, #a7b7cc);
       margin: 0;
       line-height: 1.4;
     }
@@ -546,11 +556,11 @@ import { AgentNode } from '../../models/network.model';
     .cap-tag {
       padding: 3px 8px;
       border-radius: 6px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--abhi-surface-inset, #080e18);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
       font-size: 11px;
       font-family: monospace;
-      color: #38bdf8;
+      color: var(--abhi-cyan, #38d9ff);
     }
 
     .resource-pill-row {
@@ -560,9 +570,9 @@ import { AgentNode } from '../../models/network.model';
     }
 
     .res-box {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
+      background: var(--abhi-surface-inset, #080e18);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: 10px;
       padding: 8px;
       display: flex;
       flex-direction: column;
@@ -572,13 +582,13 @@ import { AgentNode } from '../../models/network.model';
 
     .res-label {
       font-size: 9px;
-      color: #64748b;
+      color: var(--abhi-text-muted, #8193ac);
       font-weight: 600;
     }
 
     .res-val {
       font-size: 11px;
-      color: #f1f5f9;
+      color: var(--abhi-text-primary, #eef5ff);
       font-family: monospace;
       font-weight: 600;
     }
@@ -594,41 +604,60 @@ import { AgentNode } from '../../models/network.model';
       align-items: center;
       gap: 8px;
       font-size: 12px;
-      color: #cbd5e1;
+      color: var(--abhi-text-secondary, #a7b7cc);
     }
 
     .check-icon {
-      color: #10b981;
+      color: var(--abhi-success, #48dda2);
       font-weight: bold;
     }
 
     .error-section {
-      background: rgba(239, 68, 68, 0.08);
-      border: 1px solid rgba(239, 68, 68, 0.2);
-      border-radius: 8px;
+      background: rgba(255, 91, 113, 0.08);
+      border: 1px solid rgba(255, 91, 113, 0.25);
+      border-radius: 10px;
       padding: 10px;
     }
 
     .error-item {
       font-size: 12px;
-      color: #f87171;
+      color: var(--abhi-danger, #ff5b71);
     }
 
     .inspector-empty {
       padding: 40px 20px;
-      background: rgba(15, 23, 42, 0.4);
-      border: 1px dashed rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
+      background: var(--abhi-surface-raised, #0e1828);
+      border: 1px dashed var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: var(--abhi-radius-control, 18px);
       text-align: center;
       font-size: 13px;
-      color: #64748b;
+      color: var(--abhi-text-muted, #8193ac);
     }
 
     @media (max-width: 1024px) {
       .network-content-grid {
         grid-template-columns: 1fr;
       }
+      .node-inspector-drawer {
+        position: static;
+      }
     }
+
+    @media (max-width: 768px) {
+      .workspace-header {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .search-box {
+        width: 100%;
+        min-width: 100%;
+      }
+      .nodes-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+
   `]
 })
 export class NetworkPageComponent implements OnInit {

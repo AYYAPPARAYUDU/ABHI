@@ -1,35 +1,105 @@
-import { Component, ElementRef, OnInit, OnDestroy, ViewChild, inject, effect } from '@angular/core';
+import { Component, ElementRef, OnInit, AfterViewInit, OnDestroy, ViewChild, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ThreeSceneManagerService } from '../three-scene-manager.service';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
+import { ThemeService } from '../../../core/services/theme.service';
 
 @Component({
   selector: 'app-spatial-background',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="spatial-background-container fixed inset-0 pointer-events-none z-0 overflow-hidden">
-      <!-- Three.js Canvas Layer -->
-      <canvas #bgCanvas class="w-full h-full block opacity-70"></canvas>
+    <div class="spatial-background-container" role="presentation">
+      <!-- Ambient Cosmic Glow (Behind canvas) -->
+      <div class="spatial-ambient-glow"></div>
 
-      <!-- Ambient Glow & Radial Vignette Overlay -->
-      <div class="absolute inset-0 bg-radial-vignette"></div>
-      
+      <!-- Three.js Real WebGL Canvas Layer -->
+      <canvas #bgCanvas class="spatial-webgl-canvas"></canvas>
+
+      <!-- Soft Rim Vignette (Edges only, transparent center) -->
+      <div class="spatial-rim-vignette"></div>
+
       <!-- Fallback Gradient when WebGL is inactive -->
-      <div *ngIf="!is3DActive" class="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40"></div>
+      @if (!is3DActive) {
+        <div class="spatial-fallback-gradient"></div>
+      }
     </div>
   `,
   styles: [`
-    .bg-radial-vignette {
-      background: radial-gradient(circle at 50% 40%, rgba(6, 182, 212, 0.04) 0%, rgba(15, 23, 42, 0.6) 60%, rgba(2, 6, 23, 0.95) 100%);
+    :host {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .spatial-background-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: var(--abhi-bg, #f5f7fb);
+      transition: background-color 0.3s ease;
+      overflow: hidden;
+    }
+
+    .spatial-ambient-glow {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--abhi-glow-bg, radial-gradient(circle at 50% 50%, rgba(0, 153, 204, 0.12) 0%, rgba(245, 247, 251, 0.65) 65%, #f5f7fb 100%));
+      transition: background 0.3s ease;
+      z-index: 1;
+    }
+
+    .spatial-webgl-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+      opacity: 1 !important;
+      z-index: 2;
+    }
+
+    .spatial-rim-vignette {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: var(--abhi-rim-vignette, radial-gradient(circle at 50% 50%, transparent 60%, rgba(220, 228, 240, 0.45) 85%, rgba(210, 220, 235, 0.7) 100%));
+      transition: background 0.3s ease;
+      z-index: 3;
+    }
+
+    .spatial-fallback-gradient {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--abhi-bg, #f5f7fb) 0%, var(--abhi-surface-raised, #ffffff) 50%, var(--abhi-surface-inset, #eaf0f8) 100%);
+      z-index: 4;
     }
   `]
 })
-export class SpatialBackgroundComponent implements OnInit, OnDestroy {
+export class SpatialBackgroundComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('bgCanvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private threeManager = inject(ThreeSceneManagerService);
   private stateService = inject(OperatorStateService);
+  private themeService = inject(ThemeService);
 
   is3DActive = true;
   private resizeObserver: ResizeObserver | null = null;
@@ -39,6 +109,12 @@ export class SpatialBackgroundComponent implements OnInit, OnDestroy {
     effect(() => {
       const mode = this.stateService.spatialMode();
       this.threeManager.setMode(mode);
+    });
+
+    // React to theme color changes and update Three.js scene materials & lighting
+    effect(() => {
+      const theme = this.themeService.activeTheme();
+      this.threeManager.updateThemeColors(theme.colors);
     });
   }
 
@@ -51,11 +127,21 @@ export class SpatialBackgroundComponent implements OnInit, OnDestroy {
         this.resizeObserver = new ResizeObserver((entries) => {
           for (let entry of entries) {
             const { width, height } = entry.contentRect;
-            this.threeManager.onResize(width, height);
+            if (width > 0 && height > 0) {
+              this.threeManager.onResize(width, height);
+            }
           }
         });
         this.resizeObserver.observe(this.canvasRef.nativeElement);
       }
+    }
+  }
+
+  ngAfterViewInit(): void {
+    if (typeof window !== 'undefined') {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      this.threeManager.onResize(w, h);
     }
   }
 
@@ -67,3 +153,4 @@ export class SpatialBackgroundComponent implements OnInit, OnDestroy {
     this.threeManager.cleanup();
   }
 }
+

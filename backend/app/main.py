@@ -52,6 +52,18 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Resource manager startup error: {e}")
 
+    # 4. Initialize & Register Cognitive Agents and Desktop Adapters
+    try:
+        from backend.app.cognitive.registry.builtin_agents import register_builtin_agents
+        register_builtin_agents()
+        from backend.app.automation.orchestration.agents import register_grounded_agents
+        register_grounded_agents()
+        from backend.app.cognitive.registry.registry import agent_registry
+        agents = agent_registry.list_agents()
+        logger.info(f"Cognitive Agent Registry active with {len(agents)} agents: {[a.agent_id for a in agents]}")
+    except Exception as e:
+        logger.error(f"Agent registration error during startup: {e}")
+
     logger.info("Backend Gateway & Cognitive Core startup complete.")
     yield
     logger.info("Shutting down Backend Gateway...")

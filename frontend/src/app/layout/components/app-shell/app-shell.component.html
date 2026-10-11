@@ -2,23 +2,20 @@
 <app-spatial-background></app-spatial-background>
 
 <!-- Main Shell Container -->
-<div class="abhi-app-shell">
-  <!-- Floating Sidebar Navigation Dock -->
-  <app-floating-sidebar></app-floating-sidebar>
-
-  <!-- Workspace Container (Offset from sidebar) -->
+<div class="abhi-app-shell" [class.main-agent-shell]="isMainAgent()">
+  <!-- Workspace Container (Spans full viewport with zero sidebar) -->
   <div
     class="workspace-container"
-    [class.collapsed-sidebar]="stateService.sidebarCollapsed()"
+    [class.main-agent-view]="isMainAgent()"
   >
-    <!-- Reactive Global Safety / Alerts -->
-    <app-global-safety-bar></app-global-safety-bar>
-
-    <!-- Contextual Top Utility Bar -->
-    <app-contextual-topbar></app-contextual-topbar>
+    <!-- Reactive Global Safety / Alerts (Only outside Main Agent, which has integrated HUD) -->
+    @if (!isMainAgent()) {
+      <app-global-safety-bar></app-global-safety-bar>
+      <app-contextual-topbar></app-contextual-topbar>
+    }
 
     <!-- Primary Routed Content -->
-    <main class="workspace-main" role="main">
+    <main class="workspace-main" [class.main-agent-main]="isMainAgent()" role="main">
       <router-outlet></router-outlet>
     </main>
   </div>

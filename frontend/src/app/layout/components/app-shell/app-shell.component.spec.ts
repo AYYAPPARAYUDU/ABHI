@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { AppShellComponent } from './app-shell.component';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
 import { TelemetryService } from '../../../core/websocket/telemetry.service';
@@ -14,7 +14,10 @@ describe('AppShellComponent', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        provideRouter([]),
+        provideRouter([
+          { path: 'home', component: AppShellComponent },
+          { path: 'network', component: AppShellComponent }
+        ]),
         TaskApiService,
         TelemetryService,
         OperatorStateService
@@ -28,14 +31,20 @@ describe('AppShellComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should contain 3d background, floating dock, contextual bar and router outlet', () => {
+  it('should render 3d background and router outlet on main agent without permanent sidebar', () => {
     const fixture = TestBed.createComponent(AppShellComponent);
     fixture.detectChanges();
 
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('app-spatial-background')).toBeTruthy();
-    expect(el.querySelector('app-floating-sidebar')).toBeTruthy();
-    expect(el.querySelector('app-contextual-topbar')).toBeTruthy();
     expect(el.querySelector('router-outlet')).toBeTruthy();
+    // Verify permanent sidebar is eliminated on default main agent view
+    expect(el.querySelector('app-floating-sidebar')).toBeFalsy();
+  });
+
+  it('should identify main agent route correctly', () => {
+    const fixture = TestBed.createComponent(AppShellComponent);
+    const component = fixture.componentInstance;
+    expect(component.isMainAgent()).toBe(true);
   });
 });

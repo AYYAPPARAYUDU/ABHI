@@ -1,5 +1,5 @@
 .browser-page-container {
-  padding: 2rem;
+  padding: 1.5rem 0.5rem 3rem 0.5rem;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -7,37 +7,51 @@
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 2rem;
   gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 1.25rem 1.5rem;
+  background: var(--abhi-surface-raised, #0e1828);
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+  border-radius: var(--abhi-radius-control, 18px);
+  box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
+}
+
+.title-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .page-title {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: #f8fafc;
-  margin: 0 0 0.5rem 0;
+  color: var(--abhi-text-primary, #eef5ff);
+  margin: 0;
   letter-spacing: -0.025em;
 }
 
 .page-subtitle {
-  font-size: 0.875rem;
-  color: #94a3b8;
+  font-size: 0.85rem;
+  color: var(--abhi-text-muted, #8193ac);
   margin: 0;
 }
 
 .search-input {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  background: var(--abhi-surface-inset, #080e18);
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+  border-radius: 14px;
   padding: 0.6rem 1rem;
-  color: #f8fafc;
+  color: var(--abhi-text-primary, #eef5ff);
   font-size: 0.875rem;
   width: 300px;
   outline: none;
-  transition: border-color 0.2s;
+  box-shadow: var(--abhi-inset-shadow, inset 4px 4px 10px rgba(0,0,0,0.4));
+  transition: border-color var(--abhi-transition-fast, 160ms);
 }
 
 .search-input:focus {
-  border-color: #38bdf8;
+  border-color: var(--abhi-cyan, #38d9ff);
 }
+

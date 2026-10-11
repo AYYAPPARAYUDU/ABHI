@@ -7,26 +7,26 @@ import { OperatingMode, DegradedMode, ResourcePressureLevel } from '../../models
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg">
-      <div class="flex items-center gap-3">
-        <div class="w-3 h-3 rounded-full animate-pulse" [ngClass]="getPressureDotClass()"></div>
+    <div class="mode-selector-card">
+      <div class="state-indicator">
+        <div class="status-dot" [ngClass]="getPressureDotClass()"></div>
         <div>
-          <div class="text-sm font-semibold text-slate-200">
-            System Resource State: <span class="font-bold">{{ pressureLevel() }}</span>
+          <div class="state-title">
+            System Resource State: <span class="state-val">{{ pressureLevel() }}</span>
           </div>
-          <div class="text-xs text-slate-400">
-            Runtime Mode: <span class="text-cyan-400">{{ degradedMode() }}</span>
+          <div class="state-subtitle">
+            Runtime Mode: <span class="text-cyan">{{ degradedMode() }}</span>
           </div>
         </div>
       </div>
 
       <!-- Mode Selector Buttons -->
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="button-group">
         <button
           type="button"
           (click)="onSelectMode('BALANCED')"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border"
-          [ngClass]="currentMode() === 'BALANCED' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-sm' : 'bg-slate-800/60 text-slate-400 border-slate-700 hover:bg-slate-800'"
+          class="abhi-btn mode-btn"
+          [class.active-cyan]="currentMode() === 'BALANCED'"
         >
           Balanced
         </button>
@@ -34,8 +34,8 @@ import { OperatingMode, DegradedMode, ResourcePressureLevel } from '../../models
         <button
           type="button"
           (click)="onSelectMode('PERFORMANCE')"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border"
-          [ngClass]="currentMode() === 'PERFORMANCE' ? 'bg-purple-500/20 text-purple-300 border-purple-500/50 shadow-sm' : 'bg-slate-800/60 text-slate-400 border-slate-700 hover:bg-slate-800'"
+          class="abhi-btn mode-btn"
+          [class.active-purple]="currentMode() === 'PERFORMANCE'"
         >
           Performance
         </button>
@@ -43,8 +43,8 @@ import { OperatingMode, DegradedMode, ResourcePressureLevel } from '../../models
         <button
           type="button"
           (click)="onSelectMode('CONSERVATIVE')"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border"
-          [ngClass]="currentMode() === 'CONSERVATIVE' ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-sm' : 'bg-slate-800/60 text-slate-400 border-slate-700 hover:bg-slate-800'"
+          class="abhi-btn mode-btn"
+          [class.active-amber]="currentMode() === 'CONSERVATIVE'"
         >
           Conservative
         </button>
@@ -52,8 +52,8 @@ import { OperatingMode, DegradedMode, ResourcePressureLevel } from '../../models
         <button
           type="button"
           (click)="onSelectMode('RESOURCE_SAVER')"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border"
-          [ngClass]="currentMode() === 'RESOURCE_SAVER' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-sm' : 'bg-slate-800/60 text-slate-400 border-slate-700 hover:bg-slate-800'"
+          class="abhi-btn mode-btn"
+          [class.active-green]="currentMode() === 'RESOURCE_SAVER'"
         >
           Saver
         </button>
@@ -61,17 +61,100 @@ import { OperatingMode, DegradedMode, ResourcePressureLevel } from '../../models
         <button
           type="button"
           (click)="reconcile.emit()"
-          class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 flex items-center gap-1.5 transition-all"
+          class="abhi-btn reconcile-btn"
           title="Scan and reconcile orphaned worker processes"
         >
-          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          Reconcile
+          🔄 Reconcile
         </button>
       </div>
     </div>
-  `
+  `,
+  styles: [`
+    .mode-selector-card {
+      background: var(--abhi-surface-raised, #0e1828);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: var(--abhi-radius-control, 16px);
+      padding: 1.2rem 1.4rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      box-shadow: var(--abhi-raised-shadow);
+    }
+    .state-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      box-shadow: 0 0 10px currentColor;
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+    .dot-normal { background-color: var(--abhi-success, #48dda2); color: #48dda2; }
+    .dot-elevated { background-color: #facc15; color: #facc15; }
+    .dot-high { background-color: var(--abhi-amber, #ffca70); color: #ffca70; }
+    .dot-critical { background-color: var(--abhi-danger, #ff5b71); color: #ff5b71; }
+    .state-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--abhi-text-primary, #eef5ff);
+    }
+    .state-val {
+      font-family: ui-monospace, monospace;
+      color: #ffffff;
+    }
+    .state-subtitle {
+      font-size: 0.76rem;
+      color: var(--abhi-text-secondary, #a7b7cc);
+      margin-top: 0.15rem;
+    }
+    .text-cyan {
+      color: var(--abhi-cyan, #38d9ff);
+      font-weight: 600;
+    }
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .mode-btn {
+      padding: 0.4rem 0.85rem;
+      font-size: 0.78rem;
+    }
+    .active-cyan {
+      border-color: var(--abhi-cyan) !important;
+      background: rgba(56, 217, 255, 0.18) !important;
+      color: #38d9ff !important;
+      box-shadow: 0 0 12px rgba(56, 217, 255, 0.3) !important;
+    }
+    .active-purple {
+      border-color: #c084fc !important;
+      background: rgba(192, 132, 252, 0.18) !important;
+      color: #e9d5ff !important;
+      box-shadow: 0 0 12px rgba(192, 132, 252, 0.3) !important;
+    }
+    .active-amber {
+      border-color: var(--abhi-amber) !important;
+      background: rgba(255, 202, 112, 0.18) !important;
+      color: #ffca70 !important;
+      box-shadow: 0 0 12px rgba(255, 202, 112, 0.3) !important;
+    }
+    .active-green {
+      border-color: var(--abhi-success) !important;
+      background: rgba(72, 221, 162, 0.18) !important;
+      color: #48dda2 !important;
+      box-shadow: 0 0 12px rgba(72, 221, 162, 0.3) !important;
+    }
+    .reconcile-btn {
+      padding: 0.4rem 0.85rem;
+      font-size: 0.78rem;
+    }
+  `]
 })
 export class OperatingModeSelectorComponent {
   currentMode = input<OperatingMode>('BALANCED');
@@ -88,13 +171,14 @@ export class OperatingModeSelectorComponent {
   getPressureDotClass(): string {
     switch (this.pressureLevel()) {
       case 'CRITICAL':
-        return 'bg-red-500 shadow-red-500/50 shadow-sm';
+        return 'dot-critical';
       case 'HIGH':
-        return 'bg-amber-500 shadow-amber-500/50 shadow-sm';
+        return 'dot-high';
       case 'ELEVATED':
-        return 'bg-yellow-400 shadow-yellow-400/50 shadow-sm';
+        return 'dot-elevated';
       default:
-        return 'bg-emerald-400 shadow-emerald-400/50 shadow-sm';
+        return 'dot-normal dot-emerald';
     }
   }
 }
+

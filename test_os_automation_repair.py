@@ -1,9 +1,11 @@
 import asyncio
 import hashlib
 import os
+import pytest
 from backend.app.cognitive.registry.builtin_agents import OSDesktopAgent
 from backend.app.cognitive.registry.models import AgentTaskRequest
 
+@pytest.mark.asyncio
 async def test_live_os_automation():
     print("=== TESTING REPAIRED OS DESKTOP AUTOMATION ===")
     agent = OSDesktopAgent()

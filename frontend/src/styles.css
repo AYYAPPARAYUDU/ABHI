@@ -5,12 +5,36 @@
    ========================================================================== */
 
 :root {
-  /* Color Palette — Core */
-  --abhi-bg-base: #060911;
-  --abhi-bg-surface-1: #0d1322;
-  --abhi-bg-surface-2: #141c30;
-  --abhi-bg-surface-glass: rgba(17, 26, 46, 0.75);
-  --abhi-bg-surface-card: rgba(18, 24, 38, 0.85);
+  color-scheme: dark;
+  --abhi-bg: #050811;
+  --abhi-bg-secondary: #080e19;
+  --abhi-surface: #0b1220;
+  --abhi-surface-raised: #0e1828;
+  --abhi-surface-inset: #080e18;
+  --abhi-text-primary: #eef5ff;
+  --abhi-text-secondary: #a7b7cc;
+  --abhi-text-muted: #8193ac;
+  --abhi-cyan: #38d9ff;
+  --abhi-blue: #397bff;
+  --abhi-amber: #ffca70;
+  --abhi-success: #48dda2;
+  --abhi-danger: #ff5b71;
+  --abhi-border: rgba(151, 185, 230, 0.13);
+  --abhi-border-active: rgba(56, 217, 255, 0.42);
+  --abhi-raised-shadow: 9px 9px 22px rgba(0, 0, 0, 0.43), -6px -6px 18px rgba(44, 69, 105, 0.11);
+  --abhi-inset-shadow: inset 4px 4px 10px rgba(0, 0, 0, 0.40), inset -3px -3px 8px rgba(44, 74, 118, 0.10);
+  --abhi-focus-ring: 0 0 0 2px rgba(56, 217, 255, 0.24);
+  --abhi-radius-control: 18px;
+  --abhi-radius-dock: 24px;
+  --abhi-transition-fast: 160ms;
+  --abhi-transition-normal: 280ms;
+
+  /* Color Palette — Core Legacy Bridge */
+  --abhi-bg-base: #050811;
+  --abhi-bg-surface-1: #0b1220;
+  --abhi-bg-surface-2: #0e1828;
+  --abhi-bg-surface-glass: rgba(11, 18, 32, 0.75);
+  --abhi-bg-surface-card: rgba(14, 24, 40, 0.85);
 
   /* Color Palette — Borders */
   --abhi-border-subtle: rgba(255, 255, 255, 0.08);
@@ -158,3 +182,204 @@ body {
   50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
   100% { box-shadow: 0 0 5px rgba(239, 68, 68, 0.4); }
 }
+
+/* ==========================================================================
+   NEUMORPHIC UTILITIES & SHARED SURFACES
+   ========================================================================== */
+
+.abhi-card {
+  background: var(--abhi-surface-raised);
+  border: 1px solid var(--abhi-border);
+  border-radius: var(--abhi-radius-control);
+  box-shadow: var(--abhi-raised-shadow);
+  color: var(--abhi-text-primary);
+  transition: all var(--abhi-transition-normal);
+}
+
+.abhi-card:hover {
+  border-color: var(--abhi-border-active);
+}
+
+.abhi-card-inset, .abhi-well {
+  background: var(--abhi-surface-inset);
+  border: 1px solid var(--abhi-border);
+  border-radius: var(--abhi-radius-md);
+  box-shadow: var(--abhi-inset-shadow);
+  color: var(--abhi-text-primary);
+}
+
+.abhi-input, .abhi-select {
+  background: var(--abhi-surface-inset);
+  border: 1px solid var(--abhi-border);
+  border-radius: var(--abhi-radius-sm);
+  box-shadow: var(--abhi-inset-shadow);
+  color: var(--abhi-text-primary);
+  padding: 0.5rem 0.85rem;
+  font-size: 0.85rem;
+  outline: none;
+  transition: all var(--abhi-transition-fast);
+}
+
+.abhi-input:focus, .abhi-select:focus {
+  border-color: var(--abhi-cyan);
+  box-shadow: 0 0 0 2px rgba(56, 217, 255, 0.25), var(--abhi-inset-shadow);
+  color: #ffffff;
+}
+
+.abhi-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--abhi-radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--abhi-border);
+  background: var(--abhi-surface-raised);
+  color: var(--abhi-text-primary);
+  box-shadow: var(--abhi-raised-shadow);
+  transition: all var(--abhi-transition-fast);
+  text-decoration: none;
+}
+
+.abhi-btn:hover:not(:disabled) {
+  border-color: var(--abhi-border-active);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.abhi-btn:active:not(:disabled) {
+  box-shadow: var(--abhi-inset-shadow);
+  transform: translateY(0);
+}
+
+.abhi-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.abhi-btn-primary {
+  background: linear-gradient(135deg, rgba(56, 217, 255, 0.2) 0%, rgba(57, 123, 255, 0.25) 100%);
+  border-color: var(--abhi-cyan);
+  color: #38d9ff;
+  box-shadow: 0 0 14px rgba(56, 217, 255, 0.2), var(--abhi-raised-shadow);
+}
+
+.abhi-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(56, 217, 255, 0.35) 0%, rgba(57, 123, 255, 0.4) 100%);
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(56, 217, 255, 0.4);
+}
+
+.abhi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--abhi-radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--abhi-surface-inset);
+  border: 1px solid var(--abhi-border);
+  color: var(--abhi-text-secondary);
+}
+
+.abhi-badge-cyan {
+  background: rgba(56, 217, 255, 0.12);
+  border-color: rgba(56, 217, 255, 0.35);
+  color: #38d9ff;
+}
+
+.abhi-badge-success {
+  background: rgba(72, 221, 162, 0.12);
+  border-color: rgba(72, 221, 162, 0.35);
+  color: #48dda2;
+}
+
+.abhi-badge-warning {
+  background: rgba(255, 202, 112, 0.12);
+  border-color: rgba(255, 202, 112, 0.35);
+  color: #ffca70;
+}
+
+.abhi-badge-danger {
+  background: rgba(255, 91, 113, 0.12);
+  border-color: rgba(255, 91, 113, 0.35);
+  color: #ff5b71;
+}
+
+/* ==========================================================================
+   COMMON UTILITY SHIMS (For smooth layout & backward compatibility)
+   ========================================================================== */
+
+.space-y-2 > * + * { margin-top: 0.5rem; }
+.space-y-3 > * + * { margin-top: 0.75rem; }
+.space-y-4 > * + * { margin-top: 1rem; }
+.space-y-6 > * + * { margin-top: 1.5rem; }
+
+.space-x-2 > * + * { margin-left: 0.5rem; }
+.space-x-3 > * + * { margin-left: 0.75rem; }
+.space-x-4 > * + * { margin-left: 1rem; }
+
+.grid { display: grid; }
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (min-width: 768px) {
+  .md\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .md\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .md\\:flex-row { flex-direction: row !important; }
+}
+
+@media (min-width: 1024px) {
+  .lg\\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lg\\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.rounded-xl { border-radius: 12px; }
+.rounded-2xl { border-radius: 16px; }
+.rounded-3xl { border-radius: 24px; }
+
+/* ==========================================================================
+   UNIVERSAL RESPONSIVE RESET & SLEEK SCROLLBARS
+   ========================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Sleek Glass Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--abhi-border, rgba(151, 185, 230, 0.25));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--abhi-cyan, #0099cc);
+}
+
+

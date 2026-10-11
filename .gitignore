@@ -32,6 +32,9 @@ database/backups/
 backend/database/
 /media/
 data/
+project_data/repair_backups/
+project_data/sandbox_test/
+*.db
 
 # System Logs & Observability
 

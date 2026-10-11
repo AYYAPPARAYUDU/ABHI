@@ -16,16 +16,20 @@
 .workspace-container {
   flex: 1;
   min-height: 100vh;
-  margin-left: 252px;
-  padding: 16px 24px 32px 12px;
+  margin-left: 0;
+  width: 100%;
+  padding: 16px 28px 36px 28px;
   display: flex;
   flex-direction: column;
-  transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
 }
 
-.workspace-container.collapsed-sidebar {
-  margin-left: 100px;
+.workspace-container.main-agent-view {
+  margin-left: 0 !important;
+  padding: 0 !important;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .workspace-main {
@@ -36,10 +40,18 @@
   z-index: 10;
 }
 
+.workspace-main.main-agent-main {
+  width: 100%;
+  height: 100%;
+}
+
 @media (max-width: 768px) {
   .workspace-container,
   .workspace-container.collapsed-sidebar {
     margin-left: 0 !important;
     padding: 12px 12px 84px 12px;
+  }
+  .workspace-container.main-agent-view {
+    padding: 0 !important;
   }
 }

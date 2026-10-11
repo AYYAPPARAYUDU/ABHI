@@ -39,7 +39,7 @@ export class EvaluationService {
   readonly activeTrainingJob = signal<TrainingJobStatus | null>(null);
   
   // Tab navigation state
-  readonly activeTab = signal<'DAILY' | 'CANDIDATES' | 'EXPERIMENTS' | 'MODELS' | 'LINEAGE' | 'RESEARCH' | 'ROLLBACK'>('DAILY');
+  readonly activeTab = signal<'DAILY' | 'CANDIDATES' | 'EXPERIMENTS' | 'MODELS' | 'LINEAGE' | 'RESEARCH' | 'ROLLBACK' | 'NEURAL'>('DAILY');
 
   readonly isLoading = signal<boolean>(false);
   readonly isRunningEvaluation = signal<boolean>(false);
@@ -114,7 +114,7 @@ export class EvaluationService {
     }
   }
 
-  setActiveTab(tab: 'DAILY' | 'CANDIDATES' | 'EXPERIMENTS' | 'MODELS' | 'LINEAGE' | 'RESEARCH' | 'ROLLBACK'): void {
+  setActiveTab(tab: 'DAILY' | 'CANDIDATES' | 'EXPERIMENTS' | 'MODELS' | 'LINEAGE' | 'RESEARCH' | 'ROLLBACK' | 'NEURAL'): void {
     this.activeTab.set(tab);
     this.errorMessage.set(null);
     this.successMessage.set(null);

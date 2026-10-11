@@ -50,35 +50,35 @@ import {
     MediaProvenanceInspectorComponent,
   ],
   template: `
-    <div class="min-h-screen bg-slate-950 text-slate-100 p-6 space-y-6">
+    <div class="abhi-media-workspace" role="region" aria-label="Media & Vision Studio">
       <!-- Header Banner -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 backdrop-blur-md">
-        <div>
-          <div class="flex items-center gap-3">
-            <h1 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-              <span class="text-2xl">✨</span> Local Media, Inpainting & Video Studio
+      <header class="media-header-card">
+        <div class="media-title-group">
+          <div class="media-title-row">
+            <h1 class="media-title">
+              <span class="title-sparkle">✨</span> Local Media, Inpainting & Video Studio
             </h1>
-            <span class="text-xs px-2.5 py-0.5 rounded-full bg-violet-500/10 text-violet-400 border border-violet-500/30">
+            <span class="media-stage-badge">
               Phase 8.6 Hardened
             </span>
           </div>
-          <p class="text-xs text-slate-400 mt-1">
+          <p class="media-subtitle">
             Multimodal creative pipelines, DAG workflows, non-destructive editing, inpainting, canvas outpainting, diffusion synthesis & lineage tracking
           </p>
         </div>
 
         <!-- Telemetry & Status Badges -->
-        <div class="flex items-center gap-2.5 flex-wrap">
-          <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2 text-right">
-            <span class="block text-[10px] text-slate-500 uppercase tracking-wider">VRAM Headroom</span>
-            <span class="text-xs font-mono font-semibold text-cyan-400">
+        <div class="media-telemetry-row">
+          <div class="media-metric-well">
+            <span class="metric-label">VRAM HEADROOM</span>
+            <span class="metric-value cyan-val">
               {{ mediaService.vramFreeMB() }} MB Free
             </span>
           </div>
 
-          <div class="bg-slate-950/80 border border-slate-800 rounded-xl px-3.5 py-2 text-right">
-            <span class="block text-[10px] text-slate-500 uppercase tracking-wider">Active Jobs</span>
-            <span class="text-xs font-mono font-semibold text-indigo-400">
+          <div class="media-metric-well">
+            <span class="metric-label">ACTIVE JOBS</span>
+            <span class="metric-value blue-val">
               {{ mediaService.activeJobsCount() }} Active
             </span>
           </div>
@@ -86,95 +86,105 @@ import {
           <button
             type="button"
             (click)="mediaService.refreshAll()"
-            class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700/50"
+            class="media-refresh-btn"
             title="Refresh Media State"
           >
             🔄
           </button>
         </div>
-      </div>
+      </header>
 
-      <!-- Studio Navigation Tabs -->
-      <div class="flex items-center gap-2 border-b border-slate-800 pb-3 flex-wrap">
+      <!-- Studio Navigation Tabs (Neumorphic Ribbon) -->
+      <nav class="media-tabs-ribbon" role="tablist" aria-label="Media Studio Sub-routes">
         <button
           type="button"
+          role="tab"
           (click)="activeTab.set('provenance')"
-          [ngClass]="activeTab() === 'provenance' ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold shadow-lg shadow-emerald-600/30' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
-          class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
+          [class.active]="activeTab() === 'provenance'"
+          class="media-tab-btn"
         >
-          <span>🛡️</span> Provenance & Replay (Phase 8.6)
+          <span>🛡️</span> Provenance & Replay
         </button>
         <button
           type="button"
+          role="tab"
           (click)="activeTab.set('creative')"
-          [ngClass]="activeTab() === 'creative' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold shadow-lg shadow-violet-600/30' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
-          class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
+          [class.active]="activeTab() === 'creative'"
+          class="media-tab-btn"
         >
-          <span>🎬</span> Creative Studio (Phase 8.5)
+          <span>🎬</span> Creative Studio
         </button>
         <button
           type="button"
+          role="tab"
           (click)="activeTab.set('composer')"
-          [ngClass]="activeTab() === 'composer' ? 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/30' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
-          class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
+          [class.active]="activeTab() === 'composer'"
+          class="media-tab-btn"
         >
-          <span>⚡</span> Workflow Composer (Phase 8.4)
+          <span>⚡</span> Workflow Composer
         </button>
         <button
           type="button"
+          role="tab"
           (click)="activeTab.set('edit')"
-          [ngClass]="activeTab() === 'edit' ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-600/30' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
-          class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
+          [class.active]="activeTab() === 'edit'"
+          class="media-tab-btn"
         >
-          <span>🎨</span> Edit & Inpainting Studio (Phase 8.3)
+          <span>🎨</span> Edit & Inpainting
         </button>
         <button
           type="button"
+          role="tab"
           (click)="activeTab.set('video')"
-          [ngClass]="activeTab() === 'video' ? 'bg-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
-          class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
+          [class.active]="activeTab() === 'video'"
+          class="media-tab-btn"
         >
-          <span>🎥</span> Video Studio (Phase 8.2)
+          <span>🎥</span> Video Studio
         </button>
         <button
           type="button"
+          role="tab"
           (click)="activeTab.set('image')"
-          [ngClass]="activeTab() === 'image' ? 'bg-cyan-500 text-slate-950 font-bold shadow-lg shadow-cyan-500/20' : 'bg-slate-900 text-slate-300 hover:bg-slate-800'"
-          class="px-4 py-2 rounded-xl text-sm transition-all flex items-center gap-2"
+          [class.active]="activeTab() === 'image'"
+          class="media-tab-btn"
         >
-          <span>🖼️</span> Image Synthesis (Phase 8.1)
+          <span>🖼️</span> Image Synthesis
         </button>
-      </div>
+      </nav>
 
       <!-- Error Message Banner -->
-      <div *ngIf="mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage()" class="bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-4 py-3 rounded-xl flex items-center justify-between">
-        <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage() }}</span>
-        <button (click)="clearErrors()" class="text-red-400 hover:text-white">✕</button>
-      </div>
+      @if (mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage()) {
+        <div class="media-error-alert" role="alert">
+          <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage() }}</span>
+          <button type="button" (click)="clearErrors()" class="error-dismiss-btn">✕</button>
+        </div>
+      }
 
       <!-- PROVENANCE & REPLAY TAB CONTENT (Phase 8.6) -->
-      <div *ngIf="activeTab() === 'provenance'" class="space-y-6">
-        <app-media-provenance-inspector></app-media-provenance-inspector>
-      </div>
+      @if (activeTab() === 'provenance') {
+        <div class="tab-pane-container">
+          <app-media-provenance-inspector></app-media-provenance-inspector>
+        </div>
+      }
 
       <!-- CREATIVE STUDIO TAB CONTENT (Phase 8.5) -->
-      <div *ngIf="activeTab() === 'creative'" class="space-y-6">
-        <app-creative-pipeline-studio></app-creative-pipeline-studio>
-      </div>
+      @if (activeTab() === 'creative') {
+        <div class="tab-pane-container">
+          <app-creative-pipeline-studio></app-creative-pipeline-studio>
+        </div>
+      }
 
       <!-- WORKFLOW COMPOSER TAB CONTENT (Phase 8.4) -->
-      <div *ngIf="activeTab() === 'composer'" class="space-y-6">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <!-- Left / Main: Visual Workflow Composer (8 cols) -->
-          <div class="lg:col-span-8 space-y-6">
+      @if (activeTab() === 'composer') {
+        <div class="tab-pane-container composer-grid">
+          <div class="composer-main-col">
             <app-visual-workflow-composer #workflowComposer></app-visual-workflow-composer>
             <app-workflow-simulation-panel
               [simulation]="mediaService.simulationResult()"
             ></app-workflow-simulation-panel>
           </div>
 
-          <!-- Right Sidebar: Templates Catalog & Manifest Viewer (4 cols) -->
-          <div class="lg:col-span-4 space-y-6">
+          <div class="composer-side-col">
             <app-workflow-template-catalog
               [templates]="mediaService.templates()"
               (templateSelected)="onTemplateSelected($event)"
@@ -185,14 +195,12 @@ import {
             ></app-workflow-manifest-viewer>
           </div>
         </div>
-      </div>
+      }
 
       <!-- EDIT & INPAINTING STUDIO TAB CONTENT (Phase 8.3) -->
-      <div *ngIf="activeTab() === 'edit'" class="space-y-6">
-        <!-- Top Section: Form (Left) & Mask Studio (Right) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <!-- Left: Edit Form (5 cols) -->
-          <div class="lg:col-span-5 space-y-6">
+      @if (activeTab() === 'edit') {
+        <div class="tab-pane-container edit-grid">
+          <div class="edit-form-col">
             <app-image-edit-form
               [sourceArtifact]="selectedSourceArtifact()"
               [editModels]="mediaService.editModels()"
@@ -207,8 +215,7 @@ import {
             ></app-artifact-lineage-graph>
           </div>
 
-          <!-- Right: Interactive Mask Studio & Diff Viewer (7 cols) -->
-          <div class="lg:col-span-7 space-y-6">
+          <div class="edit-canvas-col">
             <app-mask-canvas-editor
               [sourceArtifact]="selectedSourceArtifact()"
               (maskApplied)="onMaskApplied($event)"
@@ -222,77 +229,350 @@ import {
               ></app-image-diff-viewer>
             }
           </div>
-        </div>
 
-        <!-- Bottom: Artifact Gallery to Select Source Image -->
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-slate-200">
-              Source Image Artifacts (Click image to load into Edit Studio)
-            </h3>
-            <span class="text-xs text-slate-400">
-              {{ mediaService.artifacts().length }} Registered Local Artifacts
-            </span>
+          <div class="edit-gallery-row">
+            <div class="gallery-title-bar">
+              <h3 class="gallery-heading">
+                Source Image Artifacts (Click image to load into Edit Studio)
+              </h3>
+              <span class="gallery-count">
+                {{ mediaService.artifacts().length }} Registered Local Artifacts
+              </span>
+            </div>
+            <app-media-artifact-gallery
+              [artifacts]="mediaService.artifacts()"
+              (delete)="onDeleteImageArtifact($event)"
+            ></app-media-artifact-gallery>
           </div>
-          <app-media-artifact-gallery
-            [artifacts]="mediaService.artifacts()"
-            (delete)="onDeleteImageArtifact($event)"
-          ></app-media-artifact-gallery>
         </div>
-      </div>
+      }
 
       <!-- VIDEO STUDIO TAB CONTENT (Phase 8.2) -->
-      <div *ngIf="activeTab() === 'video'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div class="lg:col-span-7 space-y-6">
-          <app-video-generation-form
-            [models]="mediaService.videoModels()"
-            [isGenerating]="mediaService.isVideoLoading()"
-            (generate)="onGenerateVideo($event)"
-          ></app-video-generation-form>
+      @if (activeTab() === 'video') {
+        <div class="tab-pane-container studio-split-grid">
+          <div class="studio-main-col">
+            <app-video-generation-form
+              [models]="mediaService.videoModels()"
+              [isGenerating]="mediaService.isVideoLoading()"
+              (generate)="onGenerateVideo($event)"
+            ></app-video-generation-form>
 
-          <app-video-artifact-gallery
-            [artifacts]="mediaService.videoArtifacts()"
-            (delete)="onDeleteVideoArtifact($event)"
-          ></app-video-artifact-gallery>
-        </div>
+            <app-video-artifact-gallery
+              [artifacts]="mediaService.videoArtifacts()"
+              (delete)="onDeleteVideoArtifact($event)"
+            ></app-video-artifact-gallery>
+          </div>
 
-        <div class="lg:col-span-5 space-y-6">
-          <app-video-job-queue
-            [jobs]="mediaService.videoJobs()"
-            [activeJob]="mediaService.activeVideoJob()"
-            (cancel)="onCancelVideoJob($event)"
-          ></app-video-job-queue>
+          <div class="studio-side-col">
+            <app-video-job-queue
+              [jobs]="mediaService.videoJobs()"
+              [activeJob]="mediaService.activeVideoJob()"
+              (cancel)="onCancelVideoJob($event)"
+            ></app-video-job-queue>
+          </div>
         </div>
-      </div>
+      }
 
       <!-- IMAGE STUDIO TAB CONTENT (Phase 8.1) -->
-      <div *ngIf="activeTab() === 'image'" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div class="lg:col-span-7 space-y-6">
-          <app-image-generation-form
-            [models]="mediaService.models()"
-            [isLoading]="mediaService.isLoading()"
-            (generate)="onGenerateImage($event)"
-          ></app-image-generation-form>
+      @if (activeTab() === 'image') {
+        <div class="tab-pane-container studio-split-grid">
+          <div class="studio-main-col">
+            <app-image-generation-form
+              [models]="mediaService.models()"
+              [isLoading]="mediaService.isLoading()"
+              (generate)="onGenerateImage($event)"
+            ></app-image-generation-form>
 
-          <app-media-artifact-gallery
-            [artifacts]="mediaService.artifacts()"
-            (delete)="onDeleteImageArtifact($event)"
-          ></app-media-artifact-gallery>
+            <app-media-artifact-gallery
+              [artifacts]="mediaService.artifacts()"
+              (delete)="onDeleteImageArtifact($event)"
+            ></app-media-artifact-gallery>
+          </div>
+
+          <div class="studio-side-col">
+            <app-media-job-queue
+              [jobs]="mediaService.jobs()"
+              (cancel)="onCancelImageJob($event)"
+            ></app-media-job-queue>
+
+            <app-media-model-catalog
+              [models]="mediaService.models()"
+            ></app-media-model-catalog>
+          </div>
         </div>
-
-        <div class="lg:col-span-5 space-y-6">
-          <app-media-job-queue
-            [jobs]="mediaService.jobs()"
-            (cancel)="onCancelImageJob($event)"
-          ></app-media-job-queue>
-
-          <app-media-model-catalog
-            [models]="mediaService.models()"
-          ></app-media-model-catalog>
-        </div>
-      </div>
+      }
     </div>
   `,
+  styles: [`
+    :host {
+      display: block;
+      width: 100%;
+      min-height: 100%;
+    }
+
+    .abhi-media-workspace {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      padding: 8px 4px 40px 4px;
+    }
+
+    /* Header Card */
+    .media-header-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 20px 24px;
+      background: var(--abhi-surface-raised, #0e1828);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: var(--abhi-radius-control, 18px);
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
+      backdrop-filter: blur(16px);
+    }
+
+    .media-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .media-title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .media-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--abhi-text-primary, #eef5ff);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .title-sparkle {
+      font-size: 20px;
+    }
+
+    .media-stage-badge {
+      font-size: 10px;
+      font-family: monospace;
+      padding: 3px 8px;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      color: var(--abhi-accent-violet, #c084fc);
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .media-subtitle {
+      font-size: 12px;
+      color: var(--abhi-text-muted, #8193ac);
+      margin: 0;
+    }
+
+    .media-telemetry-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .media-metric-well {
+      display: flex;
+      flex-direction: column;
+      padding: 6px 14px;
+      background: var(--abhi-surface-inset, #080e18);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: 14px;
+      box-shadow: var(--abhi-inset-shadow, inset 4px 4px 10px rgba(0,0,0,0.4));
+      text-align: right;
+    }
+
+    .metric-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--abhi-text-muted, #8193ac);
+    }
+
+    .metric-value {
+      font-size: 13px;
+      font-family: monospace;
+      font-weight: 700;
+    }
+
+    .cyan-val { color: var(--abhi-cyan, #38d9ff); }
+    .blue-val { color: var(--abhi-blue, #397bff); }
+
+    .media-refresh-btn {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--abhi-surface-raised, #0e1828);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: 12px;
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0,0,0,0.43));
+      color: var(--abhi-text-primary, #eef5ff);
+      cursor: pointer;
+      transition: all var(--abhi-transition-fast, 160ms);
+    }
+
+    .media-refresh-btn:hover {
+      border-color: var(--abhi-cyan, #38d9ff);
+      color: var(--abhi-cyan, #38d9ff);
+    }
+
+    /* Tabs Ribbon */
+    .media-tabs-ribbon {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-bottom: 4px;
+    }
+
+    .media-tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: var(--abhi-surface-raised, #0e1828);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: var(--abhi-radius-control, 18px);
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0,0,0,0.43));
+      color: var(--abhi-text-secondary, #a7b7cc);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--abhi-transition-fast, 160ms);
+    }
+
+    .media-tab-btn:hover {
+      border-color: var(--abhi-border-active, rgba(56, 217, 255, 0.42));
+      color: var(--abhi-text-primary, #eef5ff);
+    }
+
+    .media-tab-btn.active {
+      background: var(--abhi-surface-inset, #080e18);
+      border-color: var(--abhi-cyan, #38d9ff);
+      color: var(--abhi-cyan, #38d9ff);
+      box-shadow: var(--abhi-inset-shadow, inset 4px 4px 10px rgba(0,0,0,0.4)), 0 0 12px rgba(56, 217, 255, 0.2);
+    }
+
+    /* Error Alert */
+    .media-error-alert {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(255, 91, 113, 0.12);
+      border: 1px solid rgba(255, 91, 113, 0.35);
+      border-radius: 14px;
+      color: var(--abhi-danger, #ff5b71);
+      font-size: 12px;
+    }
+
+    .error-dismiss-btn {
+      background: none;
+      border: none;
+      color: var(--abhi-danger, #ff5b71);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* Tab Panes */
+    .tab-pane-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .composer-grid, .edit-grid, .studio-split-grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .composer-grid {
+      grid-template-columns: 2fr 1fr;
+    }
+
+    .composer-main-col, .composer-side-col, .studio-main-col, .studio-side-col, .edit-form-col, .edit-canvas-col {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .edit-grid {
+      grid-template-columns: 1fr 1.3fr;
+    }
+
+    .edit-gallery-row {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--abhi-surface-raised, #0e1828);
+      border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+      border-radius: var(--abhi-radius-control, 18px);
+      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0,0,0,0.43));
+      padding: 18px;
+    }
+
+    .gallery-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .gallery-heading {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--abhi-text-primary, #eef5ff);
+      margin: 0;
+    }
+
+    .gallery-count {
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--abhi-text-muted, #8193ac);
+    }
+
+    .studio-split-grid {
+      grid-template-columns: 1.4fr 1fr;
+    }
+
+    @media (max-width: 1024px) {
+      .composer-grid, .edit-grid, .studio-split-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .media-header-card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .media-telemetry-row {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .media-tabs-ribbon {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+      }
+      .media-tab-btn {
+        flex-shrink: 0;
+      }
+    }
+  `]
 })
 export class MediaPageComponent implements OnInit {
   @ViewChild('workflowComposer') workflowComposer?: VisualWorkflowComposerComponent;
