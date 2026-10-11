@@ -65,4 +65,22 @@ describe('HomePageComponent', () => {
     component.toggleWorkspaceMenu();
     expect(component.showWorkspaceMenu()).toBe(false);
   });
+
+  it('should render voice audio toggle button and toggle mute', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.voice-audio-btn')).toBeTruthy();
+    expect(component.speechVoice.isMuted()).toBe(false);
+    component.toggleVoiceAudio();
+    expect(component.speechVoice.isMuted()).toBe(true);
+  });
+
+  it('should render auto-cycle button and toggle auto cycle loop', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.auto-cycle-btn')).toBeTruthy();
+    expect(component.isAutoCycleRunning()).toBe(false);
+    component.toggleAutoCycle();
+    expect(component.isAutoCycleRunning()).toBe(true);
+    component.toggleAutoCycle();
+    expect(component.isAutoCycleRunning()).toBe(false);
+  });
 });

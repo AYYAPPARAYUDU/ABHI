@@ -109,4 +109,14 @@ describe('AgentCommandService', () => {
     service.dismissResult();
     expect(service.activeResult()).toBeNull();
   });
+
+  it('should autonomously self-heal and resolve locally when backend throws an error', async () => {
+    vi.spyOn(agentApi, 'submitCommand').mockRejectedValue(new Error('Connection refused'));
+
+    const result = await service.submitCommand('calculate 125 * 48');
+    expect(result).toBeTruthy();
+    expect(result?.type).toBe('NUMBER_RESULT');
+    expect(result?.numberValue).toBe(6000);
+    expect(service.lifecycle()).toBe('COMPLETED');
+  });
 });

@@ -36,17 +36,13 @@ export const routes: Routes = [
   },
   {
     path: 'ask',
-    loadComponent: () =>
-      import('./features/ask/pages/ask-workspace-page/ask-workspace-page.component').then(
-        (m) => m.AskWorkspacePageComponent
-      )
+    redirectTo: 'home',
+    pathMatch: 'full'
   },
   {
     path: 'console',
-    loadComponent: () =>
-      import('./features/operator-console/pages/operator-console-page/operator-console-page.component').then(
-        (m) => m.OperatorConsolePageComponent
-      )
+    redirectTo: 'tasks',
+    pathMatch: 'full'
   },
   {
     path: 'tasks',
@@ -153,10 +149,8 @@ export const routes: Routes = [
   },
   {
     path: 'dev-ui',
-    loadComponent: () =>
-      import('./features/dev-ui/pages/dev-ui-page/dev-ui-page.component').then(
-        (m) => m.DevUiPageComponent
-      )
+    redirectTo: 'system',
+    pathMatch: 'full'
   },
   {
     path: '**',

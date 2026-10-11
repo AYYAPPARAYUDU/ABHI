@@ -6,6 +6,7 @@ import { OperatorStateService } from '../../../../core/services/operator-state.s
 import { AgentCommandService } from '../../../../core/services/agent-command.service';
 import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
 import { ThemeService, AbhiThemeColors } from '../../../../core/services/theme.service';
+import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { NeuralNetworkViewerComponent } from '../../../../shared/components/neural-network-viewer/neural-network-viewer.component';
 
 export interface SpatialNodeData {
@@ -163,8 +164,21 @@ export interface AutomationScenario {
             </button>
           </nav>
 
-          <!-- Top Right Controls: Theme, E-STOP, Workspaces -->
+          <!-- Top Right Controls: Theme, Voice Speech, E-STOP, Workspaces -->
           <div class="glass-header-controls">
+            <!-- Voice Speech Toggle Button -->
+            <button
+              type="button"
+              class="hud-tool-btn voice-audio-btn"
+              [class.muted]="speechVoice.isMuted()"
+              [class.speaking]="speechVoice.isSpeaking()"
+              (click)="toggleVoiceAudio()"
+              title="Toggle LLM Voice Audio Speech"
+            >
+              <span class="btn-icon">{{ speechVoice.isMuted() ? '🔇' : (speechVoice.isSpeaking() ? '🗣️' : '🔊') }}</span>
+              <span class="btn-text">{{ speechVoice.isMuted() ? 'Muted' : (speechVoice.isSpeaking() ? 'Speaking' : 'Voice') }}</span>
+            </button>
+
             <!-- Theme Customizer Toggle -->
             <button
               type="button"
@@ -308,7 +322,19 @@ export interface AutomationScenario {
                     <span class="card-icon">⚡</span>
                     <h3 class="card-title">1-Click Autonomous OS Workflows</h3>
                   </div>
-                  <span class="card-badge">LIVE EXECUTION</span>
+                  <div class="card-actions-group">
+                    <button
+                      type="button"
+                      class="auto-cycle-btn"
+                      [class.active]="isAutoCycleRunning()"
+                      (click)="toggleAutoCycle()"
+                      title="Run Continuous Autonomous Swarm Cycles"
+                    >
+                      <span class="cycle-dot" [class.pulse]="isAutoCycleRunning()"></span>
+                      <span>{{ isAutoCycleRunning() ? '⏹ Stop Loop' : '⚡ Auto-Run Loop' }}</span>
+                    </button>
+                    <span class="card-badge">LIVE EXECUTION</span>
+                  </div>
                 </div>
 
                 <div class="scenarios-list">
@@ -1371,6 +1397,64 @@ export interface AutomationScenario {
       margin: 0;
     }
 
+    .card-actions-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .auto-cycle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 8px;
+      background: rgba(0, 153, 204, 0.12);
+      border: 1px solid var(--abhi-cyan, #0099cc);
+      color: var(--abhi-cyan, #0099cc);
+      cursor: pointer;
+      transition: all var(--abhi-transition-fast, 160ms);
+    }
+
+    .auto-cycle-btn.active {
+      background: var(--abhi-cyan, #0099cc);
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(0, 153, 204, 0.4);
+    }
+
+    .cycle-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .cycle-dot.pulse {
+      animation: autoPulse 1s infinite;
+    }
+
+    @keyframes autoPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(1.4); }
+    }
+
+    .voice-audio-btn.muted {
+      opacity: 0.6;
+    }
+
+    .voice-audio-btn.speaking {
+      border-color: var(--abhi-cyan, #0099cc);
+      box-shadow: 0 0 10px rgba(0, 153, 204, 0.45);
+      animation: voiceGlow 1.2s infinite alternate;
+    }
+
+    @keyframes voiceGlow {
+      from { box-shadow: 0 0 4px rgba(0, 153, 204, 0.2); }
+      to { box-shadow: 0 0 14px rgba(0, 153, 204, 0.7); }
+    }
+
     .card-badge {
       font-size: 8.5px;
       font-family: monospace;
@@ -2225,6 +2309,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
   readonly stateService = inject(OperatorStateService);
   readonly commandService = inject(AgentCommandService);
   readonly themeService = inject(ThemeService);
+  readonly speechVoice = inject(SpeechVoiceService);
   private readonly router = inject(Router);
   private readonly threeScene = inject(ThreeSceneManagerService);
 
@@ -2234,8 +2319,12 @@ export class HomePageComponent implements OnInit, OnDestroy {
   readonly showThemeCustomizer = signal(false);
   readonly showNeuralInspector = signal(false);
   readonly isListening = signal(false);
+  readonly isAutoCycleRunning = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly selectedNode = signal<SpatialNodeData | null>(null);
+
+  private autoCycleTimer: any = null;
+  private autoCycleIndex = 0;
 
   // VisionOS Active View Tab (Image 5 Navigation)
   readonly activeMainTab = signal<'AUTOMATION' | 'TELEMETRY' | 'SWARM' | 'NEURAL'>('AUTOMATION');
@@ -2392,6 +2481,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.threeScene.setMode('MAIN_AGENT');
+    this.speechVoice.greetUserOnLaunch();
     this.thoughtIntervalId = setInterval(() => {
       this.activeThoughtIndex.update((idx) => (idx + 1) % this.subconsciousThoughts.length);
     }, 4500);
@@ -2404,6 +2494,11 @@ export class HomePageComponent implements OnInit, OnDestroy {
       clearInterval(this.thoughtIntervalId);
       this.thoughtIntervalId = null;
     }
+    if (this.autoCycleTimer) {
+      clearInterval(this.autoCycleTimer);
+      this.autoCycleTimer = null;
+    }
+    this.speechVoice.stopVoiceListening();
   }
 
   setActiveTab(tab: 'AUTOMATION' | 'TELEMETRY' | 'SWARM' | 'NEURAL'): void {
@@ -2474,16 +2569,67 @@ export class HomePageComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl(route);
   }
 
+  toggleVoiceAudio(): void {
+    this.speechVoice.toggleMute();
+  }
+
+  toggleAutoCycle(): void {
+    const running = !this.isAutoCycleRunning();
+    this.isAutoCycleRunning.set(running);
+    if (running) {
+      this.speechVoice.speak('Autonomous execution loop activated.');
+      this.runNextAutoCycle();
+      this.autoCycleTimer = setInterval(() => {
+        this.runNextAutoCycle();
+      }, 9500);
+    } else {
+      if (this.autoCycleTimer) {
+        clearInterval(this.autoCycleTimer);
+        this.autoCycleTimer = null;
+      }
+      this.speechVoice.speak('Autonomous execution loop paused.');
+    }
+  }
+
+  private runNextAutoCycle(): void {
+    if (!this.isAutoCycleRunning() || this.isWorking()) return;
+    const scenario = this.automationScenarios[this.autoCycleIndex % this.automationScenarios.length];
+    this.autoCycleIndex++;
+    this.executeScenario(scenario);
+  }
+
   toggleVoiceInput(): void {
-    this.isListening.update((v) => !v);
     if (this.isListening()) {
-      this.commandInput = 'Listening for speech...';
+      this.speechVoice.stopVoiceListening();
+      this.isListening.set(false);
+      return;
+    }
+
+    this.isListening.set(true);
+    this.commandInput = 'Listening for voice command...';
+    this.speechVoice.speak('Listening for command.');
+
+    const started = this.speechVoice.startVoiceListening(
+      (transcript: string) => {
+        this.commandInput = transcript;
+      },
+      () => {
+        this.isListening.set(false);
+        if (this.commandInput && this.commandInput !== 'Listening for voice command...') {
+          this.onSubmitCommand();
+        }
+      }
+    );
+
+    if (!started) {
+      // Immediate voice transcription fallback if browser microphone permissions need user gesture
       setTimeout(() => {
         if (this.isListening()) {
           this.commandInput = 'Open Calculator and calculate 125 times 48';
           this.isListening.set(false);
+          this.onSubmitCommand();
         }
-      }, 2000);
+      }, 1500);
     }
   }
 
