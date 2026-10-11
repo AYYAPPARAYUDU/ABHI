@@ -1,4 +1,6 @@
-// ThreeSceneManagerService — Next-Level Quantum AI 3D Core Engine.
+// ThreeSceneManagerService — Cybernetic Holographic Arc Reactor & HUD Compass 3D Core.
+// Inspired by Iron Man Arc Reactor / Advanced Military Cyberpunk HUD Dial Telemetry.
+// Zero sphere/globe models — Pure concentric mechanical dials, tactical azimuth ticks, radar sweep & laser optics.
 
 import { Injectable, NgZone, inject, effect } from '@angular/core';
 import * as THREE from 'three';
@@ -27,34 +29,50 @@ export class ThreeSceneManagerService {
   private camera: THREE.PerspectiveCamera | null = null;
   private animationFrameId: number | null = null;
 
-  // 3D Visual Objects
-  private particleSystem: THREE.Points | null = null;
-  private orbitalCore: THREE.Mesh | null = null;
-  private innerOctahedron: THREE.Mesh | null = null;
+  // 3D Visual Objects: Arc Reactor & Cybernetic HUD Dial
+  private hudDialGroup: THREE.Group | null = null;
+  private hudCenterIris: THREE.Mesh | null = null;
+  private hudIrisCore: THREE.Mesh | null = null;
+  private hudCrosshairLines: THREE.LineSegments | null = null;
+  private hudSegmentedRing1: THREE.Group | null = null;
+  private hudSegmentedRing2: THREE.Group | null = null;
+  private hudSegmentedRing3: THREE.Group | null = null;
+  private hudAzimuthTicks: THREE.LineSegments | null = null;
+  private hudRadarSweeper: THREE.Line | null = null;
+  private hudOuterRing: THREE.Mesh | null = null;
+  private hudBracketGroup: THREE.Group | null = null;
+
+  // Backward-compatible handles for public references & theme updates
+  orbitalCore: THREE.Mesh | THREE.Group | null = null;
   private innerNucleus: THREE.Mesh | null = null;
+  private innerOctahedron: THREE.Mesh | null = null;
   private coreAura: THREE.Mesh | null = null;
   private outerRing: THREE.Mesh | null = null;
   private secondaryRing: THREE.Mesh | null = null;
   private equatorialRing: THREE.Mesh | null = null;
   private horizonRing: THREE.Mesh | null = null;
-  private shockwaveMeshes: { mesh: THREE.Mesh; phase: number; speed: number }[] = [];
-  private ringSatellites: THREE.Mesh[] = [];
-  private agentNodes: AgentSatelliteNode[] = [];
-  private gridPlane: THREE.GridHelper | null = null;
-  private networkNodeGroup: THREE.Group | null = null;
-  private sectorGroup: THREE.Group | null = null;
-  private neuralSynapseLines: THREE.LineSegments | null = null;
-  private ambientLight: THREE.AmbientLight | null = null;
-  private pointLight1: THREE.PointLight | null = null;
-  private pointLight2: THREE.PointLight | null = null;
-  private particleTexture: THREE.Texture | null = null;
 
-  // Swirling Particle Vortex Coordinates
+  // Swirling Particle Accretion Vortex
+  private particleSystem: THREE.Points | null = null;
   private particleCount = 1400;
   private particleAngles: Float32Array | null = null;
   private particleRadii: Float32Array | null = null;
   private particleSpeeds: Float32Array | null = null;
   private particleHeights: Float32Array | null = null;
+  private particleTexture: THREE.Texture | null = null;
+
+  // Expanding Shockwaves & Satellites
+  private shockwaveMeshes: { mesh: THREE.Mesh; phase: number; speed: number }[] = [];
+  private agentNodes: AgentSatelliteNode[] = [];
+  private gridPlane: THREE.GridHelper | null = null;
+  private networkNodeGroup: THREE.Group | null = null;
+  private sectorGroup: THREE.Group | null = null;
+  private neuralSynapseLines: THREE.LineSegments | null = null;
+
+  // Lighting
+  private ambientLight: THREE.AmbientLight | null = null;
+  private pointLight1: THREE.PointLight | null = null;
+  private pointLight2: THREE.PointLight | null = null;
 
   // State
   private isRunning = false;
@@ -66,6 +84,8 @@ export class ThreeSceneManagerService {
   // Parallax pointer tracking
   private targetCameraX = 0;
   private targetCameraY = 0;
+  private currentCameraX = 0;
+  private currentCameraY = 0;
 
   constructor(private ngZone: NgZone) {
     if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
@@ -84,8 +104,8 @@ export class ThreeSceneManagerService {
       window.addEventListener('mousemove', (e) => {
         const x = (e.clientX / window.innerWidth) * 2 - 1;
         const y = -(e.clientY / window.innerHeight) * 2 + 1;
-        this.targetCameraX = x * 1.8;
-        this.targetCameraY = y * 1.2;
+        this.targetCameraX = x * 1.6;
+        this.targetCameraY = y * 1.0;
       });
 
       window.addEventListener('resize', () => {
@@ -146,7 +166,7 @@ export class ThreeSceneManagerService {
   }
 
   /**
-   * Initialize Three.js scene onto a target canvas element.
+   * Initialize Three.js scene onto target canvas element.
    */
   init(canvas: HTMLCanvasElement): boolean {
     try {
@@ -156,11 +176,10 @@ export class ThreeSceneManagerService {
       const width = canvas.clientWidth || (typeof window !== 'undefined' ? window.innerWidth : 1280);
       const height = canvas.clientHeight || (typeof window !== 'undefined' ? window.innerHeight : 800);
 
-      // 1. Scene & Camera
+      // 1. Scene & Camera (Positioned for crisp holographic HUD perspective)
       this.scene = new THREE.Scene();
-
-      this.camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 1000);
-      this.camera.position.set(0, 0, 13.0);
+      this.camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 1000);
+      this.camera.position.set(0, 0, 12.0);
 
       // 2. High-Performance WebGL Renderer
       if (this.renderer) {
@@ -178,23 +197,23 @@ export class ThreeSceneManagerService {
       // 3. Create Particle Texture
       this.particleTexture = this.createParticleTexture();
 
-      // 4. Create Spatial Visual Layers
+      // 4. Create Cybernetic Arc Reactor & HUD Elements
       this.createParticleField();
-      this.createOrbitalCore();
+      this.createArcReactorCore();
       this.createAgentSatelliteNodes();
       this.createNetworkGraphVisuals();
       this.createBusinessSectorVisuals();
 
       // 5. Atmospheric Lighting
-      this.ambientLight = new THREE.AmbientLight(0xffffff, 1.6);
+      this.ambientLight = new THREE.AmbientLight(0xffffff, 1.8);
       this.scene.add(this.ambientLight);
 
-      this.pointLight1 = new THREE.PointLight(0x00f0ff, 6.0, 120);
-      this.pointLight1.position.set(6, 6, 12);
+      this.pointLight1 = new THREE.PointLight(0x00f0ff, 6.5, 140);
+      this.pointLight1.position.set(4, 4, 10);
       this.scene.add(this.pointLight1);
 
-      this.pointLight2 = new THREE.PointLight(0x3b82f6, 5.0, 100);
-      this.pointLight2.position.set(-7, -5, 9);
+      this.pointLight2 = new THREE.PointLight(0xffaa00, 5.0, 120);
+      this.pointLight2.position.set(-5, -4, 8);
       this.scene.add(this.pointLight2);
 
       // Apply initial theme colors immediately
@@ -232,17 +251,16 @@ export class ThreeSceneManagerService {
     this.particleHeights = new Float32Array(count);
 
     const cCyan = new THREE.Color(0x00f0ff);
+    const cAmber = new THREE.Color(0xffaa00);
     const cBlue = new THREE.Color(0x3b82f6);
-    const cAmethyst = new THREE.Color(0xc084fc);
     const cWhite = new THREE.Color(0xffffff);
 
     for (let i = 0; i < count; i++) {
       const idx = i * 3;
-      // Exponential distribution towards core with outer celestial halo
-      const r = 2.2 + Math.pow(Math.random(), 1.6) * 26.0;
+      const r = 2.4 + Math.pow(Math.random(), 1.7) * 24.0;
       const angle = Math.random() * Math.PI * 2;
-      const height = (Math.random() - 0.5) * (14.0 * (r / 20.0) + 3.0);
-      const speed = (0.02 + Math.random() * 0.06) * (15.0 / (r + 4.0));
+      const height = (Math.random() - 0.5) * (10.0 * (r / 20.0) + 2.5);
+      const speed = (0.015 + Math.random() * 0.05) * (14.0 / (r + 4.0));
 
       this.particleRadii[i] = r;
       this.particleAngles[i] = angle;
@@ -256,11 +274,11 @@ export class ThreeSceneManagerService {
       const rand = Math.random();
       let mixedColor = cCyan.clone();
       if (rand < 0.35) {
-        mixedColor = cCyan.clone().lerp(cWhite, Math.random() * 0.7);
-      } else if (rand < 0.75) {
-        mixedColor = cCyan.clone().lerp(cBlue, Math.random());
+        mixedColor = cCyan.clone().lerp(cWhite, Math.random() * 0.8);
+      } else if (rand < 0.70) {
+        mixedColor = cCyan.clone().lerp(cAmber, Math.random() * 0.9);
       } else {
-        mixedColor = cBlue.clone().lerp(cAmethyst, Math.random());
+        mixedColor = cBlue.clone().lerp(cCyan, Math.random());
       }
 
       colors[idx] = mixedColor.r;
@@ -272,10 +290,10 @@ export class ThreeSceneManagerService {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
     const materialConfig: THREE.PointsMaterialParameters = {
-      size: 0.46,
+      size: 0.44,
       vertexColors: true,
       transparent: true,
-      opacity: 0.95,
+      opacity: 0.92,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
     };
@@ -288,19 +306,19 @@ export class ThreeSceneManagerService {
     this.particleSystem = new THREE.Points(geometry, material);
     this.scene.add(this.particleSystem);
 
-    // Neural Synapse Interconnects in deep background
-    const synapseLineCount = this.isReducedMotion ? 60 : 200;
+    // Neural Synapse Background Interconnect Lines
+    const synapseLineCount = this.isReducedMotion ? 50 : 160;
     const synapsePoints: THREE.Vector3[] = [];
     for (let i = 0; i < synapseLineCount; i++) {
       const p1 = new THREE.Vector3(
-        (Math.random() - 0.5) * 26,
-        (Math.random() - 0.5) * 18,
-        (Math.random() - 0.5) * 16
+        (Math.random() - 0.5) * 24,
+        (Math.random() - 0.5) * 16,
+        (Math.random() - 0.5) * 14
       );
       const p2 = new THREE.Vector3(
-        p1.x + (Math.random() - 0.5) * 6.5,
-        p1.y + (Math.random() - 0.5) * 6.5,
-        p1.z + (Math.random() - 0.5) * 6.5
+        p1.x + (Math.random() - 0.5) * 5.5,
+        p1.y + (Math.random() - 0.5) * 5.5,
+        p1.z + (Math.random() - 0.5) * 5.5
       );
       synapsePoints.push(p1, p2);
     }
@@ -308,7 +326,7 @@ export class ThreeSceneManagerService {
     const synapseMat = new THREE.LineBasicMaterial({
       color: 0x00f0ff,
       transparent: true,
-      opacity: 0.4,
+      opacity: 0.35,
       blending: THREE.AdditiveBlending,
     });
     this.neuralSynapseLines = new THREE.LineSegments(synapseGeo, synapseMat);
@@ -316,65 +334,219 @@ export class ThreeSceneManagerService {
   }
 
   /**
-   * 2. Hyper-Dimensional Quantum Core with Dyson Gimbal Rings & Shockwaves
+   * 2. Holographic Arc Reactor & Cybernetic HUD Dial Core (Zero Spheres/Globes!)
+   * Matches Reference Images 1 & 2: Concentric mechanical calibration dials, azimuth ticks,
+   * tactical reticle crosshairs & 360° radar sweep beam.
    */
-  private createOrbitalCore(): void {
+  private createArcReactorCore(): void {
     if (!this.scene) return;
 
-    // A. Singularity Pulsar Nucleus Sphere (High energy glow)
-    const nucGeo = new THREE.SphereGeometry(1.25, 32, 32);
-    const nucMat = new THREE.MeshBasicMaterial({
+    this.hudDialGroup = new THREE.Group();
+    // Slight forward angle tilt for high-end cinematic 3D perspective
+    this.hudDialGroup.rotation.x = 0.22;
+    this.hudDialGroup.position.set(0, 0, 0);
+
+    // A. Center Quantum Iris Plasma Lens (Planar Glowing Disc)
+    const irisGeo = new THREE.RingGeometry(0.08, 0.72, 64);
+    const irisMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    this.hudCenterIris = new THREE.Mesh(irisGeo, irisMat);
+    this.hudDialGroup.add(this.hudCenterIris);
+
+    // Center Singularity White Hot Dot
+    const dotGeo = new THREE.CircleGeometry(0.18, 32);
+    const dotMat = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.98,
+      opacity: 1.0,
+      blending: THREE.AdditiveBlending,
     });
-    this.innerNucleus = new THREE.Mesh(nucGeo, nucMat);
-    this.innerNucleus.position.set(0, 0, 0);
-    this.scene.add(this.innerNucleus);
+    this.hudIrisCore = new THREE.Mesh(dotGeo, dotMat);
+    this.hudIrisCore.position.z = 0.02;
+    this.hudDialGroup.add(this.hudIrisCore);
 
-    // B. Inner Resonant Octahedron Core (Counter-rotating wireframe)
-    const octaGeo = new THREE.OctahedronGeometry(1.9, 0);
-    const octaMat = new THREE.MeshBasicMaterial({
+    // B. Tactical Reticle Crosshairs with Ticks
+    const chPoints: THREE.Vector3[] = [];
+    // Horizontal crosshair with gap at center
+    chPoints.push(new THREE.Vector3(-4.8, 0, 0.03), new THREE.Vector3(-0.9, 0, 0.03));
+    chPoints.push(new THREE.Vector3(0.9, 0, 0.03), new THREE.Vector3(4.8, 0, 0.03));
+    // Vertical crosshair with gap at center
+    chPoints.push(new THREE.Vector3(0, -4.8, 0.03), new THREE.Vector3(0, -0.9, 0.03));
+    chPoints.push(new THREE.Vector3(0, 0.9, 0.03), new THREE.Vector3(0, 4.8, 0.03));
+
+    // Cardinal tick markers along crosshairs
+    const tickOffsets = [1.5, 2.2, 3.0, 3.8, 4.4];
+    tickOffsets.forEach((off) => {
+      chPoints.push(new THREE.Vector3(off, -0.15, 0.03), new THREE.Vector3(off, 0.15, 0.03));
+      chPoints.push(new THREE.Vector3(-off, -0.15, 0.03), new THREE.Vector3(-off, 0.15, 0.03));
+      chPoints.push(new THREE.Vector3(-0.15, off, 0.03), new THREE.Vector3(0.15, off, 0.03));
+      chPoints.push(new THREE.Vector3(-0.15, -off, 0.03), new THREE.Vector3(0.15, -off, 0.03));
+    });
+
+    const chGeo = new THREE.BufferGeometry().setFromPoints(chPoints);
+    const chMat = new THREE.LineBasicMaterial({
       color: 0x00f0ff,
-      wireframe: true,
+      transparent: true,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending,
+    });
+    this.hudCrosshairLines = new THREE.LineSegments(chGeo, chMat);
+    this.hudDialGroup.add(this.hudCrosshairLines);
+
+    // C. Segmented Dial Ring 1: Inner Mechanical Gear Arcs (Radius 1.35 to 1.65)
+    this.hudSegmentedRing1 = new THREE.Group();
+    const seg1Mat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
       transparent: true,
       opacity: 0.85,
-    });
-    this.innerOctahedron = new THREE.Mesh(octaGeo, octaMat);
-    this.scene.add(this.innerOctahedron);
-
-    // C. Glowing Core Aura (Soft volumetric halo)
-    const auraGeo = new THREE.SphereGeometry(2.05, 32, 32);
-    const auraMat = new THREE.MeshBasicMaterial({
-      color: 0x0099cc,
-      transparent: true,
-      opacity: 0.45,
       blending: THREE.AdditiveBlending,
-      side: THREE.BackSide,
+      side: THREE.DoubleSide,
     });
-    this.coreAura = new THREE.Mesh(auraGeo, auraMat);
-    this.scene.add(this.coreAura);
+    const numArcs1 = 3;
+    const arcLen1 = (Math.PI * 2 * 0.26);
+    for (let i = 0; i < numArcs1; i++) {
+      const startAngle = i * ((Math.PI * 2) / numArcs1);
+      const arcGeo = new THREE.RingGeometry(1.35, 1.58, 48, 1, startAngle, arcLen1);
+      const arcMesh = new THREE.Mesh(arcGeo, seg1Mat);
+      arcMesh.position.z = 0.04;
+      this.hudSegmentedRing1.add(arcMesh);
+    }
+    this.hudDialGroup.add(this.hudSegmentedRing1);
 
-    // D. Outer Geodesic Icosahedron Cyber-Shell
-    const coreGeo = new THREE.IcosahedronGeometry(2.8, 1);
-    const coreMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0ff,
-      wireframe: true,
+    // D. Segmented Dial Ring 2: Counter-Rotating Amber/Gold Gear Arcs (Radius 2.15 to 2.45)
+    this.hudSegmentedRing2 = new THREE.Group();
+    const seg2Mat = new THREE.MeshBasicMaterial({
+      color: 0xffaa00,
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.9,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
     });
-    this.orbitalCore = new THREE.Mesh(coreGeo, coreMat);
-    this.orbitalCore.position.set(0, 0, 0);
-    this.scene.add(this.orbitalCore);
+    const numArcs2 = 4;
+    const arcLen2 = (Math.PI * 2 * 0.18);
+    for (let i = 0; i < numArcs2; i++) {
+      const startAngle = i * ((Math.PI * 2) / numArcs2) + 0.15;
+      const arcGeo = new THREE.RingGeometry(2.15, 2.42, 48, 1, startAngle, arcLen2);
+      const arcMesh = new THREE.Mesh(arcGeo, seg2Mat);
+      arcMesh.position.z = 0.06;
+      this.hudSegmentedRing2.add(arcMesh);
+    }
+    this.hudDialGroup.add(this.hudSegmentedRing2);
 
-    // E. Volumetric Expanding Shockwave Rings (Rippling energy waves)
+    // E. 360° Azimuth Compass Radial Tick Marks (Radius 2.75 to 3.05)
+    const tickPoints: THREE.Vector3[] = [];
+    const totalTicks = 72;
+    for (let i = 0; i < totalTicks; i++) {
+      const angle = (i / totalTicks) * Math.PI * 2;
+      const isMajor = i % 6 === 0;
+      const rInner = 2.75;
+      const rOuter = isMajor ? 3.08 : 2.92;
+      tickPoints.push(
+        new THREE.Vector3(Math.cos(angle) * rInner, Math.sin(angle) * rInner, 0.05),
+        new THREE.Vector3(Math.cos(angle) * rOuter, Math.sin(angle) * rOuter, 0.05)
+      );
+    }
+    const ticksGeo = new THREE.BufferGeometry().setFromPoints(tickPoints);
+    const ticksMat = new THREE.LineBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending,
+    });
+    this.hudAzimuthTicks = new THREE.LineSegments(ticksGeo, ticksMat);
+    this.hudDialGroup.add(this.hudAzimuthTicks);
+
+    // F. Segmented Dial Ring 3: Outer Precision Calibrated Arcs (Radius 3.35 to 3.65)
+    this.hudSegmentedRing3 = new THREE.Group();
+    const seg3Mat = new THREE.MeshBasicMaterial({
+      color: 0x3b82f6,
+      transparent: true,
+      opacity: 0.82,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    const numArcs3 = 6;
+    const arcLen3 = (Math.PI * 2 * 0.12);
+    for (let i = 0; i < numArcs3; i++) {
+      const startAngle = i * ((Math.PI * 2) / numArcs3);
+      const arcGeo = new THREE.RingGeometry(3.35, 3.62, 48, 1, startAngle, arcLen3);
+      const arcMesh = new THREE.Mesh(arcGeo, seg3Mat);
+      arcMesh.position.z = 0.08;
+      this.hudSegmentedRing3.add(arcMesh);
+    }
+    this.hudDialGroup.add(this.hudSegmentedRing3);
+
+    // G. Outer Continuous Telemetry Boundary Ring (Radius 4.35 to 4.50)
+    const outerGeo = new THREE.RingGeometry(4.35, 4.48, 96);
+    const outerMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+    });
+    this.hudOuterRing = new THREE.Mesh(outerGeo, outerMat);
+    this.hudOuterRing.position.z = 0.05;
+    this.hudDialGroup.add(this.hudOuterRing);
+
+    // H. Tactical Corner Alignment Brackets (At Radius 4.9)
+    this.hudBracketGroup = new THREE.Group();
+    const bracketMat = new THREE.LineBasicMaterial({
+      color: 0xffaa00,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+    });
+    const bracketAngles = [Math.PI / 4, (3 * Math.PI) / 4, (5 * Math.PI) / 4, (7 * Math.PI) / 4];
+    bracketAngles.forEach((bAngle) => {
+      const bx = Math.cos(bAngle) * 4.9;
+      const by = Math.sin(bAngle) * 4.9;
+      const bPoints = [
+        new THREE.Vector3(bx - 0.35, by, 0.1),
+        new THREE.Vector3(bx, by, 0.1),
+        new THREE.Vector3(bx, by, 0.1),
+        new THREE.Vector3(bx, by - 0.35, 0.1),
+      ];
+      const bGeo = new THREE.BufferGeometry().setFromPoints(bPoints);
+      const bMesh = new THREE.LineSegments(bGeo, bracketMat);
+      this.hudBracketGroup?.add(bMesh);
+    });
+    this.hudDialGroup.add(this.hudBracketGroup);
+
+    // I. Rotating 360° Radar Scanner Beam
+    const radarPoints = [
+      new THREE.Vector3(0, 0, 0.12),
+      new THREE.Vector3(4.5, 0, 0.12),
+    ];
+    const radarGeo = new THREE.BufferGeometry().setFromPoints(radarPoints);
+    const radarMat = new THREE.LineBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+    });
+    this.hudRadarSweeper = new THREE.Line(radarGeo, radarMat);
+    this.hudDialGroup.add(this.hudRadarSweeper);
+
+    // Add Main Arc Reactor Dial Group to Scene
+    this.scene.add(this.hudDialGroup);
+
+    // Assign to orbitalCore for compatibility with external references
+    this.orbitalCore = this.hudDialGroup;
+
+    // J. Expanding Shockwave Energy Rings
     this.shockwaveMeshes = [];
     for (let i = 0; i < 3; i++) {
-      const sGeo = new THREE.RingGeometry(1.7, 1.95, 64);
+      const sGeo = new THREE.RingGeometry(1.6, 1.85, 64);
       const sMat = new THREE.MeshBasicMaterial({
         color: 0x00f0ff,
         transparent: true,
-        opacity: 0.7,
+        opacity: 0.65,
         blending: THREE.AdditiveBlending,
         side: THREE.DoubleSide,
       });
@@ -384,103 +556,56 @@ export class ThreeSceneManagerService {
       this.shockwaveMeshes.push({
         mesh: sMesh,
         phase: i * (1.0 / 3.0),
-        speed: 0.5,
+        speed: 0.45,
       });
     }
 
-    // F. Primary Dyson Gimbal Ring (Diagonal Orbital)
-    const ringGeo = new THREE.TorusGeometry(4.5, 0.08, 16, 120);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0ff,
-      transparent: true,
-      opacity: 0.88,
-      blending: THREE.AdditiveBlending,
-    });
-    this.outerRing = new THREE.Mesh(ringGeo, ringMat);
-    this.outerRing.rotation.x = Math.PI / 3.2;
-    this.scene.add(this.outerRing);
-
-    // G. Secondary Dyson Gimbal Ring (Vertical Orbital)
-    const secRingGeo = new THREE.TorusGeometry(5.7, 0.07, 16, 120);
-    const secRingMat = new THREE.MeshBasicMaterial({
-      color: 0x3b82f6,
-      transparent: true,
-      opacity: 0.85,
-      blending: THREE.AdditiveBlending,
-    });
-    this.secondaryRing = new THREE.Mesh(secRingGeo, secRingMat);
-    this.secondaryRing.rotation.y = Math.PI / 2.4;
-    this.scene.add(this.secondaryRing);
-
-    // H. Equatorial Calibrated Ring
-    const eqRingGeo = new THREE.TorusGeometry(3.5, 0.06, 16, 90);
-    const eqRingMat = new THREE.MeshBasicMaterial({
-      color: 0xffca70,
-      transparent: true,
-      opacity: 0.75,
-      blending: THREE.AdditiveBlending,
-    });
-    this.equatorialRing = new THREE.Mesh(eqRingGeo, eqRingMat);
-    this.equatorialRing.rotation.x = Math.PI / 2;
-    this.scene.add(this.equatorialRing);
-
-    // I. Horizon Celestial Perimeter Ring
-    const horizGeo = new THREE.TorusGeometry(7.2, 0.05, 16, 140);
-    const horizMat = new THREE.MeshBasicMaterial({
-      color: 0xc084fc,
-      transparent: true,
-      opacity: 0.6,
-      blending: THREE.AdditiveBlending,
-    });
-    this.horizonRing = new THREE.Mesh(horizGeo, horizMat);
-    this.horizonRing.rotation.x = Math.PI / 2.2;
-    this.scene.add(this.horizonRing);
-
-    // J. Atmospheric Grid Plane
+    // K. Atmospheric Ground Grid Plane
     this.gridPlane = new THREE.GridHelper(52, 26, 0x1a2e50, 0x091222);
-    this.gridPlane.position.y = -6.2;
+    this.gridPlane.position.y = -5.8;
     this.scene.add(this.gridPlane);
   }
 
   /**
-   * 3. Specialist Agent 3D Satellite Constellation with Laser Conduits & Sparks
+   * 3. Specialist Agent 3D Satellite Nodes Orbiting the Arc Reactor Core
    */
   private createAgentSatelliteNodes(): void {
     if (!this.scene) return;
 
-    this.agentNodes = [];
     const agentConfigs = [
-      { name: 'CentralSupervisor', colorHex: 0x00f0ff, radius: 4.8, height: 2.2, speed: 0.35, angle: 0 },
-      { name: 'VisionPerception', colorHex: 0xa855f7, radius: 5.3, height: -1.8, speed: 0.28, angle: Math.PI * 0.25 },
-      { name: 'CodeSynthesis', colorHex: 0x2563eb, radius: 5.0, height: 1.5, speed: 0.32, angle: Math.PI * 0.5 },
-      { name: 'WindowsAutomation', colorHex: 0x10b981, radius: 5.6, height: -2.4, speed: 0.26, angle: Math.PI * 0.75 },
-      { name: 'MemoryLanceDB', colorHex: 0xf59e0b, radius: 4.6, height: 2.8, speed: 0.38, angle: Math.PI * 1.0 },
-      { name: 'BrowserNavigator', colorHex: 0x06b6d4, radius: 5.4, height: -1.2, speed: 0.29, angle: Math.PI * 1.25 },
-      { name: 'MultimodalMedia', colorHex: 0xec4899, radius: 5.1, height: 2.0, speed: 0.33, angle: Math.PI * 1.5 },
-      { name: 'DualStateVerifier', colorHex: 0x14b8a6, radius: 4.9, height: -2.6, speed: 0.31, angle: Math.PI * 1.75 },
+      { name: 'Supervisor', angle: 0, speed: 0.28, radius: 5.6, height: 1.2, colorHex: 0x00f0ff },
+      { name: 'Vision', angle: Math.PI / 4, speed: 0.22, radius: 6.2, height: -1.4, colorHex: 0x3b82f6 },
+      { name: 'Desktop', angle: Math.PI / 2, speed: 0.26, radius: 5.4, height: 2.1, colorHex: 0x10b981 },
+      { name: 'Browser', angle: (3 * Math.PI) / 4, speed: 0.24, radius: 6.6, height: -0.8, colorHex: 0xffaa00 },
+      { name: 'Coder', angle: Math.PI, speed: 0.30, radius: 5.8, height: 1.6, colorHex: 0xa855f7 },
+      { name: 'Terminal', angle: (5 * Math.PI) / 4, speed: 0.25, radius: 6.4, height: -1.9, colorHex: 0xec4899 },
+      { name: 'Memory', angle: (6 * Math.PI) / 4, speed: 0.27, radius: 5.5, height: 0.5, colorHex: 0x14b8a6 },
+      { name: 'Safety', angle: (7 * Math.PI) / 4, speed: 0.23, radius: 6.8, height: -1.1, colorHex: 0xff5b71 },
     ];
+
+    this.agentNodes = [];
 
     agentConfigs.forEach((cfg) => {
       const group = new THREE.Group();
 
-      // Satellite Core Orb
+      // Mini Orbiting Satellite Orb
       const orbGeo = new THREE.SphereGeometry(0.24, 16, 16);
       const orbMat = new THREE.MeshBasicMaterial({ color: cfg.colorHex, blending: THREE.AdditiveBlending });
       const orbMesh = new THREE.Mesh(orbGeo, orbMat);
       group.add(orbMesh);
 
-      // Satellite Orbital Gyro Cage
-      const cageGeo = new THREE.IcosahedronGeometry(0.38, 0);
-      const cageMat = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, opacity: 0.75, transparent: true });
+      // Surrounding Octahedron Tactical Wireframe Cage
+      const cageGeo = new THREE.OctahedronGeometry(0.42, 0);
+      const cageMat = new THREE.MeshBasicMaterial({ color: cfg.colorHex, wireframe: true, transparent: true, opacity: 0.75 });
       const cageMesh = new THREE.Mesh(cageGeo, cageMat);
       group.add(cageMesh);
 
       this.scene?.add(group);
 
-      // Laser Conduit Line connecting from origin to satellite
+      // Laser Conduit Line connecting to core origin
       const lineGeo = new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(cfg.radius, cfg.height, 0)
+        new THREE.Vector3(cfg.radius, cfg.height, 0),
       ]);
       const lineMat = new THREE.LineBasicMaterial({
         color: cfg.colorHex,
@@ -521,7 +646,7 @@ export class ThreeSceneManagerService {
       { pos: [-4.5, 2.5, 1.5], color: 0x00f0ff },
       { pos: [-4.0, -2.5, -1.5], color: 0x3b82f6 },
       { pos: [4.5, 2.5, -1.0], color: 0x10b981 },
-      { pos: [5.0, -1.5, 2.0], color: 0xffca70 },
+      { pos: [5.0, -1.5, 2.0], color: 0xffaa00 },
       { pos: [2.5, -4.0, -2.0], color: 0x00f0ff },
       { pos: [-2.0, 4.5, -3.0], color: 0xa855f7 },
       { pos: [0.0, -4.5, 3.0], color: 0xec4899 },
@@ -566,7 +691,7 @@ export class ThreeSceneManagerService {
       { pos: [-4.0, -1.5, 4.0], color: 0x3b82f6 },
       { pos: [0.0, 4.0, -6.0], color: 0xa855f7 },
       { pos: [4.0, -2.5, 3.0], color: 0x10b981 },
-      { pos: [7.5, 1.5, -4.0], color: 0xffca70 },
+      { pos: [7.5, 1.5, -4.0], color: 0xffaa00 },
     ];
 
     sectorPositions.forEach(({ pos, color }) => {
@@ -587,10 +712,6 @@ export class ThreeSceneManagerService {
 
   setMode(mode: SpatialEnvironmentMode): void {
     this.currentMode = mode;
-    if (!this.orbitalCore || !this.particleSystem) return;
-
-    const coreMat = this.orbitalCore.material as THREE.MeshBasicMaterial;
-
     if (this.networkNodeGroup) {
       this.networkNodeGroup.visible = mode === 'NETWORK';
     }
@@ -598,24 +719,16 @@ export class ThreeSceneManagerService {
       this.sectorGroup.visible = mode === 'BUSINESS';
     }
 
-    if (mode === 'NETWORK') {
-      coreMat.color.setHex(0x00f0ff);
-      if (this.camera) this.camera.position.set(0, 0, 15);
-    } else if (mode === 'INTELLIGENCE') {
-      coreMat.color.setHex(0xa855f7);
-      if (this.camera) this.camera.position.set(0, 0, 13);
-    } else if (mode === 'BUSINESS') {
-      coreMat.color.setHex(0x10b981);
-      if (this.camera) this.camera.position.set(0, 1.2, 17);
-    } else if (mode === 'ACTIVE_TASK') {
-      coreMat.color.setHex(0x10b981);
-    } else if (mode === 'MEDIA') {
-      coreMat.color.setHex(0xa855f7);
-    } else if (mode === 'SYSTEM') {
-      coreMat.color.setHex(0xffca70);
-    } else {
-      coreMat.color.setHex(0x00f0ff);
-      if (this.camera) this.camera.position.set(0, 0, 13.0);
+    if (this.camera) {
+      if (mode === 'NETWORK') {
+        this.camera.position.set(0, 0, 15);
+      } else if (mode === 'INTELLIGENCE') {
+        this.camera.position.set(0, 0, 13);
+      } else if (mode === 'BUSINESS') {
+        this.camera.position.set(0, 1.2, 17);
+      } else {
+        this.camera.position.set(0, 0, 12.0);
+      }
     }
   }
 
@@ -632,7 +745,7 @@ export class ThreeSceneManagerService {
   }
 
   /**
-   * Dynamically synchronizes Three.js spatial core and lighting with active theme.
+   * Synchronize colors of Arc Reactor & HUD Dial with the active theme.
    */
   updateThemeColors(colors: AbhiThemeColors): void {
     if (!this.scene) return;
@@ -640,54 +753,32 @@ export class ThreeSceneManagerService {
       const isLight = colors.background.startsWith('#f') || colors.background.startsWith('#e') || colors.background === '#ffffff';
 
       if (this.ambientLight) {
-        this.ambientLight.intensity = isLight ? 2.9 : 1.6;
+        this.ambientLight.intensity = isLight ? 2.8 : 1.8;
         this.ambientLight.color.set(isLight ? 0xffffff : 0xe2e8f0);
       }
 
       if (this.pointLight1) {
         this.pointLight1.color.set(colors.accentPrimary);
-        this.pointLight1.intensity = isLight ? 6.5 : 5.5;
       }
 
       if (this.pointLight2) {
         this.pointLight2.color.set(colors.accentSecondary);
-        this.pointLight2.intensity = isLight ? 5.5 : 4.5;
       }
 
-      if (this.orbitalCore && this.orbitalCore.material instanceof THREE.MeshBasicMaterial) {
-        this.orbitalCore.material.color.set(colors.coreGlow);
+      if (this.hudCenterIris && this.hudCenterIris.material instanceof THREE.MeshBasicMaterial) {
+        this.hudCenterIris.material.color.set(colors.accentPrimary);
       }
 
-      if (this.innerOctahedron && this.innerOctahedron.material instanceof THREE.MeshBasicMaterial) {
-        this.innerOctahedron.material.color.set(colors.accentPrimary);
+      if (this.hudCrosshairLines && this.hudCrosshairLines.material instanceof THREE.LineBasicMaterial) {
+        this.hudCrosshairLines.material.color.set(colors.accentPrimary);
       }
 
-      if (this.innerNucleus && this.innerNucleus.material instanceof THREE.MeshBasicMaterial) {
-        this.innerNucleus.material.color.set(isLight ? 0x0099cc : 0xffffff);
+      if (this.hudAzimuthTicks && this.hudAzimuthTicks.material instanceof THREE.LineBasicMaterial) {
+        this.hudAzimuthTicks.material.color.set(colors.accentPrimary);
       }
 
-      if (this.coreAura && this.coreAura.material instanceof THREE.MeshBasicMaterial) {
-        this.coreAura.material.color.set(colors.accentSecondary);
-      }
-
-      if (this.outerRing && this.outerRing.material instanceof THREE.MeshBasicMaterial) {
-        this.outerRing.material.color.set(colors.accentPrimary);
-      }
-
-      if (this.secondaryRing && this.secondaryRing.material instanceof THREE.MeshBasicMaterial) {
-        this.secondaryRing.material.color.set(colors.accentSecondary);
-      }
-
-      if (this.equatorialRing && this.equatorialRing.material instanceof THREE.MeshBasicMaterial) {
-        this.equatorialRing.material.color.set(colors.coreGlow);
-      }
-
-      if (this.horizonRing && this.horizonRing.material instanceof THREE.MeshBasicMaterial) {
-        this.horizonRing.material.color.set(colors.accentSecondary);
-      }
-
-      if (this.neuralSynapseLines && this.neuralSynapseLines.material instanceof THREE.LineBasicMaterial) {
-        this.neuralSynapseLines.material.color.set(colors.accentPrimary);
+      if (this.hudOuterRing && this.hudOuterRing.material instanceof THREE.MeshBasicMaterial) {
+        this.hudOuterRing.material.color.set(colors.coreGlow);
       }
 
       this.shockwaveMeshes.forEach(({ mesh }) => {
@@ -721,21 +812,64 @@ export class ThreeSceneManagerService {
         const delta = clock.getDelta();
         const elapsedTime = clock.getElapsedTime();
 
-        // Energy speed multiplier: higher during execution or listening
+        // Energy speed multiplier
         let energyMultiplier = 1.0;
-        if (this.energyState === 'LISTENING') energyMultiplier = 1.8;
-        if (this.energyState === 'EXECUTING') energyMultiplier = 2.6;
+        if (this.energyState === 'LISTENING') energyMultiplier = 1.7;
+        if (this.energyState === 'EXECUTING') energyMultiplier = 2.5;
         if (this.energyState === 'VERIFIED') energyMultiplier = 1.3;
 
         if (!this.isReducedMotion) {
           // Camera parallax smoothing
           if (this.camera) {
-            this.camera.position.x += (this.targetCameraX - this.camera.position.x) * 0.05;
-            this.camera.position.y += (this.targetCameraY - this.camera.position.y) * 0.05;
+            this.currentCameraX += (this.targetCameraX - this.currentCameraX) * 0.05;
+            this.currentCameraY += (this.targetCameraY - this.currentCameraY) * 0.05;
+            this.camera.position.x = this.currentCameraX;
+            this.camera.position.y = this.currentCameraY;
             this.camera.lookAt(0, 0, 0);
           }
 
-          // Dynamic Celestial Swirl Particle Vortex
+          // 1. Arc Reactor Iris & Core Pulse
+          if (this.hudCenterIris) {
+            const irisScale = 1.0 + Math.sin(elapsedTime * (3.0 * energyMultiplier)) * 0.08;
+            this.hudCenterIris.scale.set(irisScale, irisScale, 1.0);
+          }
+
+          if (this.hudIrisCore) {
+            const coreScale = 1.0 + Math.cos(elapsedTime * (4.2 * energyMultiplier)) * 0.15;
+            this.hudIrisCore.scale.set(coreScale, coreScale, 1.0);
+          }
+
+          // 2. Concentric Mechanical Gear Arcs Rotation
+          if (this.hudSegmentedRing1) {
+            this.hudSegmentedRing1.rotation.z = elapsedTime * (0.35 * energyMultiplier);
+          }
+
+          if (this.hudSegmentedRing2) {
+            // Counter-rotating gear arc
+            this.hudSegmentedRing2.rotation.z = -elapsedTime * (0.48 * energyMultiplier);
+          }
+
+          if (this.hudSegmentedRing3) {
+            this.hudSegmentedRing3.rotation.z = elapsedTime * (0.22 * energyMultiplier);
+          }
+
+          // 3. Azimuth Compass Ticks & Subtle 3D Gyro Wobble
+          if (this.hudAzimuthTicks) {
+            this.hudAzimuthTicks.rotation.z = -elapsedTime * (0.12 * energyMultiplier);
+          }
+
+          if (this.hudDialGroup) {
+            // Subtle tactical gyroscopic pitch & yaw drift
+            this.hudDialGroup.rotation.y = Math.sin(elapsedTime * 0.4) * 0.12;
+            this.hudDialGroup.rotation.x = 0.22 + Math.cos(elapsedTime * 0.3) * 0.08;
+          }
+
+          // 4. Rotating 360° Radar Scanner Beam
+          if (this.hudRadarSweeper) {
+            this.hudRadarSweeper.rotation.z = -elapsedTime * (1.2 * energyMultiplier);
+          }
+
+          // 5. Dynamic Accretion Vortex Particles
           if (this.particleSystem && this.particleAngles && this.particleRadii && this.particleHeights && this.particleSpeeds) {
             const posAttr = this.particleSystem.geometry.getAttribute('position') as THREE.BufferAttribute;
             const positions = posAttr.array as Float32Array;
@@ -747,110 +881,41 @@ export class ThreeSceneManagerService {
               const r = this.particleRadii[i];
 
               positions[idx] = Math.cos(angle) * r;
-              positions[idx + 1] = this.particleHeights[i] + Math.sin(angle * 2.5 + elapsedTime * 1.5) * 0.45;
+              positions[idx + 1] = this.particleHeights[i] + Math.sin(angle * 2.2 + elapsedTime * 1.5) * 0.35;
               positions[idx + 2] = Math.sin(angle) * r;
             }
             posAttr.needsUpdate = true;
           }
 
-          // Quantum Core 1: Outer Icosahedron
-          if (this.orbitalCore) {
-            this.orbitalCore.rotation.x = elapsedTime * (0.3 * energyMultiplier);
-            this.orbitalCore.rotation.y = elapsedTime * (0.42 * energyMultiplier);
-            const scale = 1.0 + Math.sin(elapsedTime * (2.4 * energyMultiplier)) * 0.08;
-            this.orbitalCore.scale.set(scale, scale, scale);
-          }
-
-          // Quantum Core 2: Inner Octahedron (Counter-rotating)
-          if (this.innerOctahedron) {
-            this.innerOctahedron.rotation.x = -elapsedTime * (0.48 * energyMultiplier);
-            this.innerOctahedron.rotation.z = elapsedTime * (0.55 * energyMultiplier);
-            const octaScale = 1.0 + Math.cos(elapsedTime * (3.0 * energyMultiplier)) * 0.1;
-            this.innerOctahedron.scale.set(octaScale, octaScale, octaScale);
-          }
-
-          // Quantum Core 3: Singularity Nucleus Pulse
-          if (this.innerNucleus) {
-            const nucScale = 1.0 + Math.sin(elapsedTime * (3.5 * energyMultiplier)) * 0.12;
-            this.innerNucleus.scale.set(nucScale, nucScale, nucScale);
-          }
-
-          // Quantum Core 4: Aura Breathing
-          if (this.coreAura) {
-            const auraScale = 1.0 + Math.sin(elapsedTime * (2.2 * energyMultiplier) + 0.5) * 0.16;
-            this.coreAura.scale.set(auraScale, auraScale, auraScale);
-          }
-
-          // Dyson Gimbal Rings Rotation
-          if (this.outerRing) {
-            this.outerRing.rotation.z = elapsedTime * (0.18 * energyMultiplier);
-            this.outerRing.rotation.y = Math.cos(elapsedTime * 0.12) * 0.4;
-          }
-
-          if (this.secondaryRing) {
-            this.secondaryRing.rotation.x = elapsedTime * (0.15 * energyMultiplier);
-            this.secondaryRing.rotation.z = Math.sin(elapsedTime * 0.1) * 0.4;
-          }
-
-          if (this.equatorialRing) {
-            this.equatorialRing.rotation.z = -elapsedTime * (0.24 * energyMultiplier);
-          }
-
-          if (this.horizonRing) {
-            this.horizonRing.rotation.z = elapsedTime * (0.08 * energyMultiplier);
-            this.horizonRing.rotation.y = Math.sin(elapsedTime * 0.06) * 0.25;
-          }
-
-          // Expanding Volumetric Shockwave Rings
+          // 6. Expanding Shockwave Ripple Waves
           this.shockwaveMeshes.forEach((item) => {
-            item.phase += delta * (item.speed * energyMultiplier);
-            if (item.phase > 1.0) item.phase -= 1.0;
-
-            const currentScale = 1.0 + item.phase * 5.5;
-            item.mesh.scale.set(currentScale, currentScale, currentScale);
-
-            const opacity = (1.0 - item.phase) * (this.energyState === 'EXECUTING' ? 0.9 : 0.6);
-            if (item.mesh.material instanceof THREE.MeshBasicMaterial) {
-              item.mesh.material.opacity = Math.max(0, opacity);
-            }
+            item.phase = (item.phase + delta * item.speed * energyMultiplier) % 1.0;
+            const radius = 1.6 + item.phase * 9.5;
+            item.mesh.scale.set(radius, radius, radius);
+            const mat = item.mesh.material as THREE.MeshBasicMaterial;
+            mat.opacity = Math.max(0, (1.0 - item.phase) * 0.65);
           });
 
-          // 8 Specialist Agent Orbiting Satellites with Laser Conduits & Sparks
-          this.agentNodes.forEach((node, idx) => {
+          // 7. Specialist Agent Satellite Nodes Orbiting in 3D
+          this.agentNodes.forEach((node, i) => {
             const currentAngle = node.baseAngle + elapsedTime * (node.speed * energyMultiplier);
             const x = Math.cos(currentAngle) * node.radius;
             const z = Math.sin(currentAngle) * node.radius;
-            const y = node.height + Math.sin(elapsedTime * 1.8 + idx) * 0.45;
+            const y = node.height + Math.sin(elapsedTime * 1.6 + i) * 0.4;
 
             node.group.position.set(x, y, z);
-            node.group.rotation.y = elapsedTime * 1.5;
-            node.group.rotation.x = elapsedTime * 1.0;
+            node.group.rotation.y = elapsedTime * 0.8;
+            node.group.rotation.x = elapsedTime * 0.5;
 
-            // Update Laser Conduit Line Geometry
+            // Update Laser Conduit Line Points
             const lineAttr = node.conduit.geometry.getAttribute('position') as THREE.BufferAttribute;
-            const positions = lineAttr.array as Float32Array;
-            positions[0] = 0; positions[1] = 0; positions[2] = 0;
-            positions[3] = x; positions[4] = y; positions[5] = z;
+            lineAttr.setXYZ(1, x, y, z);
             lineAttr.needsUpdate = true;
 
-            // Slide Action Potential Spark along Conduit
-            const sparkPhase = (elapsedTime * 0.8 + idx * 0.25) % 1.0;
+            // Traveling Action Potential Spark Position
+            const sparkPhase = (elapsedTime * (0.8 + i * 0.1) * energyMultiplier) % 1.0;
             node.spark.position.set(x * sparkPhase, y * sparkPhase, z * sparkPhase);
-            node.spark.scale.setScalar(0.8 + Math.sin(sparkPhase * Math.PI) * 0.5);
           });
-
-          if (this.neuralSynapseLines) {
-            this.neuralSynapseLines.rotation.y = elapsedTime * 0.04;
-            this.neuralSynapseLines.rotation.z = Math.sin(elapsedTime * 0.02) * 0.06;
-          }
-
-          if (this.networkNodeGroup && this.networkNodeGroup.visible) {
-            this.networkNodeGroup.rotation.y = elapsedTime * 0.07;
-          }
-
-          if (this.sectorGroup && this.sectorGroup.visible) {
-            this.sectorGroup.rotation.y = elapsedTime * 0.05;
-          }
         }
 
         if (this.renderer && this.scene && this.camera) {
@@ -872,7 +937,7 @@ export class ThreeSceneManagerService {
   }
 
   resume(): void {
-    if (this.isRunning && this.animationFrameId === null) {
+    if (!this.animationFrameId && this.isRunning) {
       this.startAnimationLoop();
     }
   }
@@ -881,13 +946,18 @@ export class ThreeSceneManagerService {
     this.pause();
     this.isRunning = false;
 
+    if (this.renderer) {
+      this.renderer.dispose();
+      this.renderer = null;
+    }
+
     if (this.scene) {
       this.scene.traverse((obj) => {
-        if (obj instanceof THREE.Mesh || obj instanceof THREE.Points || obj instanceof THREE.LineSegments || obj instanceof THREE.Line) {
-          obj.geometry?.dispose();
+        if (obj instanceof THREE.Mesh || obj instanceof THREE.Line || obj instanceof THREE.Points) {
+          obj.geometry.dispose();
           if (Array.isArray(obj.material)) {
             obj.material.forEach((m) => m.dispose());
-          } else if (obj.material) {
+          } else {
             obj.material.dispose();
           }
         }
@@ -896,34 +966,14 @@ export class ThreeSceneManagerService {
       this.scene = null;
     }
 
-    if (this.renderer) {
-      this.renderer.dispose();
-      this.renderer = null;
-    }
-
     if (this.particleTexture) {
       this.particleTexture.dispose();
       this.particleTexture = null;
     }
 
-    this.particleSystem = null;
-    this.orbitalCore = null;
-    this.innerOctahedron = null;
-    this.innerNucleus = null;
-    this.coreAura = null;
-    this.outerRing = null;
-    this.secondaryRing = null;
-    this.equatorialRing = null;
-    this.horizonRing = null;
-    this.shockwaveMeshes = [];
     this.agentNodes = [];
-    this.ringSatellites = [];
-    this.gridPlane = null;
-    this.networkNodeGroup = null;
-    this.sectorGroup = null;
-    this.ambientLight = null;
-    this.pointLight1 = null;
-    this.pointLight2 = null;
-    this.camera = null;
+    this.shockwaveMeshes = [];
+    this.hudDialGroup = null;
+    this.orbitalCore = null;
   }
 }

@@ -17,20 +17,29 @@ export interface SpatialNodeData {
   riskTier: string;
 }
 
+export interface AutomationScenario {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  command: string;
+  category: 'DESKTOP' | 'VISION' | 'SYSTEM' | 'BROWSER' | 'HEALTH';
+}
+
 @Component({
   selector: 'app-home-page',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, NeuralNetworkViewerComponent],
   template: `
     <div class="main-agent-spatial-container" role="region" aria-label="Main Agent Workspace">
-      <!-- 0. Tactical Sci-Fi Corner Calibration Brackets -->
+      <!-- 0. Tactical Corner Calibration Brackets -->
       <div class="hud-corner-bracket top-left" aria-hidden="true">
         <div class="corner-crosshair"></div>
-        <div class="corner-readout">SYS.CALIB: 0.9998 // QUANTUM CORE</div>
+        <div class="corner-readout">SYS.CALIB: 0.9998 // ARC REACTOR</div>
       </div>
       <div class="hud-corner-bracket top-right" aria-hidden="true">
         <div class="corner-crosshair"></div>
-        <div class="corner-readout">SAFETY.GATE: ACTIVE // STRICT</div>
+        <div class="corner-readout">SAFETY.GATE: ACTIVE // DUAL-STATE</div>
       </div>
       <div class="hud-corner-bracket bottom-left" aria-hidden="true">
         <div class="corner-crosshair"></div>
@@ -38,271 +47,531 @@ export interface SpatialNodeData {
       </div>
       <div class="hud-corner-bracket bottom-right" aria-hidden="true">
         <div class="corner-crosshair"></div>
-        <div class="corner-readout">SPATIAL.FPS: 60 // 18ms</div>
+        <div class="corner-readout">RADAR.FPS: 60 // 18ms</div>
       </div>
 
-      <!-- 1. Top Identity & Utilities Header (Dark Neumorphic HUD) -->
-      <header class="main-agent-hud-header" role="banner" aria-label="System Identity and Status">
-        <!-- Brand & Identity Pill -->
-        <div class="hud-brand-pill">
-          <div class="brand-orb-icon">
-            <span class="orb-core-dot"></span>
-          </div>
-          <div class="brand-text-block">
-            <span class="brand-title">ABHI</span>
-            <span class="brand-sub">CENTRAL INTELLIGENCE</span>
-          </div>
-          <div class="status-indicator-tag" [class.working]="isWorking()">
-            <span class="pulse-dot"></span>
-            <span class="status-label">{{ systemStatusLabel() }}</span>
-          </div>
-        </div>
-
-        <!-- Center System Readiness Badges -->
-        <div class="hud-center-telemetry">
-          <div class="telemetry-badge" title="Dual-State Physical Verification Engine">
-            <span class="badge-icon">🛡️</span>
-            <span class="badge-text">DUAL-STATE VERIFIED</span>
-          </div>
-          <div class="telemetry-badge" title="Active Theme Palette">
-            <span class="badge-icon">🎨</span>
-            <span class="badge-text">{{ themeService.activeTheme().label }}</span>
-          </div>
-        </div>
-
-        <!-- Right Utilities: Neural Inspector, Theme Customizer, Emergency Stop & Workspace Switcher -->
-        <div class="hud-utilities-block">
-          <!-- Neural Network Core Inspector Toggle Button -->
-          <button
-            type="button"
-            class="hud-tool-btn neural-btn"
-            (click)="toggleNeuralInspector()"
-            [attr.aria-expanded]="showNeuralInspector()"
-            title="Inspect Live Neural Network Attention & Activations"
-          >
-            <span class="btn-icon">🧠</span>
-            <span class="btn-text">Neural Core</span>
-          </button>
-
-          <!-- Theme Customizer Toggle Button -->
-          <button
-            type="button"
-            class="hud-tool-btn theme-btn"
-            (click)="toggleThemeCustomizer()"
-            [attr.aria-expanded]="showThemeCustomizer()"
-            title="Switch Themes & Customize Colors"
-          >
-            <span class="btn-icon">🎨</span>
-            <span class="btn-text">Theme</span>
-          </button>
-
-          <!-- Emergency Stop Button -->
-          <button
-            type="button"
-            class="e-stop-btn"
-            [class.active-stop]="stateService.safety().emergencyStopped"
-            (click)="triggerEmergencyStop()"
-            title="Emergency Stop All Automation & Inference"
-          >
-            <span class="stop-icon">🛑</span>
-            <span class="stop-text">E-STOP</span>
-          </button>
-
-          <!-- Contextual Workspace Switcher Dropdown Button -->
-          <div class="workspace-switcher-wrap">
-            <button
-              type="button"
-              class="switcher-toggle-btn"
-              (click)="toggleWorkspaceMenu()"
-              [attr.aria-expanded]="showWorkspaceMenu()"
-              title="Navigate Workspaces"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect width="7" height="7" x="3" y="3" rx="1"/>
-                <rect width="7" height="7" x="14" y="3" rx="1"/>
-                <rect width="7" height="7" x="14" y="14" rx="1"/>
-                <rect width="7" height="7" x="3" y="14" rx="1"/>
-              </svg>
-              <span class="switcher-text">Workspaces</span>
-              <span class="caret" [class.open]="showWorkspaceMenu()">▾</span>
-            </button>
-
-            @if (showWorkspaceMenu()) {
-              <div class="workspace-dropdown-menu" (mouseleave)="showWorkspaceMenu.set(false)">
-                <div class="dropdown-header">OPERATING WORKSPACES</div>
-                @for (ws of workspaceRoutes; track ws.route) {
-                  <button
-                    type="button"
-                    class="ws-menu-item"
-                    (click)="navigateTo(ws.route)"
-                  >
-                    <span class="ws-item-icon">
-                      @if (ws.id === 'network') {
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/></svg>
-                      } @else if (ws.id === 'intelligence') {
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                      } @else if (ws.id === 'business') {
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                      } @else if (ws.id === 'media') {
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>
-                      } @else {
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
-                      }
-                    </span>
-                    <div class="ws-item-text">
-                      <span class="ws-item-title">{{ ws.title }}</span>
-                      <span class="ws-item-desc">{{ ws.desc }}</span>
-                    </div>
-                    <span class="ws-item-badge">{{ ws.badge }}</span>
-                  </button>
-                }
-              </div>
-            }
-          </div>
-        </div>
-      </header>
-
-      <!-- 2. Subconscious Cognitive Stream Bar (Live AI Thought Ticker) -->
-      <section class="subconscious-thought-bar" aria-label="Subconscious Cognitive Stream">
-        <div class="thought-pulse-indicator">
-          <span class="beacon-ring"></span>
-          <span class="beacon-core"></span>
-        </div>
-        <div class="thought-content-wrapper">
-          <span class="thought-prefix">COGNITIVE STREAM //</span>
-          <span class="thought-stream-text">{{ activeSubconsciousThought() }}</span>
-        </div>
-        <div class="thought-quantum-tag">
-          <span class="quantum-label">OLLAMA LOCAL · WAL SYNCED</span>
-        </div>
-      </section>
-
-      <!-- 3. Left Flank: Holographic Telemetry HUD (With Minimize/Expand Controls) -->
-      @if (showTelemetry()) {
-        <aside class="holographic-telemetry-panel" aria-label="Neural Telemetry">
-          <div class="flank-panel-header">
-            <span class="flank-panel-icon">⚡</span>
-            <span class="flank-panel-title">NPU TELEMETRY</span>
-            <button
-              type="button"
-              class="flank-toggle-btn"
-              (click)="showTelemetry.set(false)"
-              title="Minimize Telemetry Panel"
-            >
-              ◂
-            </button>
-          </div>
-          <div class="flank-metrics-list">
-            <div class="metric-row">
-              <div class="metric-info">
-                <span class="metric-label">Core Compute</span>
-                <span class="metric-value">78%</span>
-              </div>
-              <div class="metric-sparkline-wrap">
-                <svg viewBox="0 0 100 24" class="sparkline-svg">
-                  <path d="M 0 18 Q 15 6 30 14 T 60 8 T 85 16 L 100 6" fill="none" stroke="currentColor" stroke-width="2" class="sparkline-path" />
-                </svg>
-              </div>
-            </div>
-
-            <div class="metric-row">
-              <div class="metric-info">
-                <span class="metric-label">VRAM Allocation</span>
-                <span class="metric-value">4.2 / 16.0 GB</span>
-              </div>
-              <div class="metric-progress-track">
-                <div class="metric-progress-bar" style="width: 26.2%;"></div>
-              </div>
-            </div>
-
-            <div class="metric-row-inline">
-              <div class="inline-badge">
-                <span class="badge-dot green"></span>
-                <span class="inline-label">Latency:</span>
-                <span class="inline-val">18 ms</span>
-              </div>
-              <div class="inline-badge">
-                <span class="badge-dot cyan"></span>
-                <span class="inline-label">Verify:</span>
-                <span class="inline-val">99.8%</span>
-              </div>
-            </div>
-          </div>
-        </aside>
-      } @else {
-        <!-- Minimized Floating Telemetry Trigger Badge -->
+      <!-- 1. Left Floating Icon Dock Capsule (VisionOS Island Styled like Reference Image 5) -->
+      <aside class="vision-dock-island" role="toolbar" aria-label="VisionOS Navigation Island">
         <button
           type="button"
-          class="flank-min-trigger left"
-          (click)="showTelemetry.set(true)"
-          title="Expand Neural Telemetry Monitor"
+          class="island-btn"
+          [class.active]="activeMainTab() === 'AUTOMATION'"
+          (click)="setActiveTab('AUTOMATION')"
+          title="Autonomous OS Execution & Commands"
         >
-          <span class="trigger-icon">⚡</span>
-          <span class="trigger-label">Telemetry</span>
+          <span class="island-icon">⚡</span>
         </button>
-      }
 
-      <!-- 4. Right Flank: Specialist Agent Swarm Beacons (With Minimize/Expand Controls) -->
-      @if (showSwarm()) {
-        <aside class="holographic-swarm-panel" aria-label="Specialist Swarm Nodes">
-          <div class="flank-panel-header">
-            <span class="flank-panel-icon">🌐</span>
-            <span class="flank-panel-title">SWARM SATELLITES</span>
-            <span class="swarm-count-badge">8 NODES</span>
+        <button
+          type="button"
+          class="island-btn"
+          [class.active]="activeMainTab() === 'TELEMETRY'"
+          (click)="setActiveTab('TELEMETRY')"
+          title="Cybernetic Telemetry & Vitals HUD"
+        >
+          <span class="island-icon">📊</span>
+        </button>
+
+        <button
+          type="button"
+          class="island-btn"
+          [class.active]="activeMainTab() === 'SWARM'"
+          (click)="setActiveTab('SWARM')"
+          title="8 Specialist Agent Swarm Satellites"
+        >
+          <span class="island-icon">🌐</span>
+        </button>
+
+        <button
+          type="button"
+          class="island-btn"
+          [class.active]="activeMainTab() === 'NEURAL'"
+          (click)="setActiveTab('NEURAL')"
+          title="Neural Network Attention & Activations"
+        >
+          <span class="island-icon">🧠</span>
+        </button>
+
+        <div class="island-divider"></div>
+
+        <button
+          type="button"
+          class="island-btn"
+          (click)="toggleWorkspaceMenu()"
+          title="Navigate Workspaces"
+        >
+          <span class="island-icon">◰</span>
+        </button>
+      </aside>
+
+      <!-- 2. Main VisionOS Spatial Frosted Glass Control Center (Styled like Reference Image 5) -->
+      <main class="vision-glass-panel" role="main" aria-label="Spatial AI Dashboard">
+        <!-- Glass Topbar Header -->
+        <header class="glass-topbar-header" role="banner">
+          <!-- Brand & Identity Pill -->
+          <div class="hud-brand-pill">
+            <div class="brand-orb-icon">
+              <span class="orb-core-dot"></span>
+            </div>
+            <div class="brand-text-block">
+              <span class="brand-title">ABHI</span>
+              <span class="brand-sub">CENTRAL INTELLIGENCE</span>
+            </div>
+            <div class="status-indicator-tag" [class.working]="isWorking()">
+              <span class="pulse-dot"></span>
+              <span class="status-label">{{ systemStatusLabel() }}</span>
+            </div>
+          </div>
+
+          <!-- Glass Pill Navigation Tabs (Like Reference Image 5 Top Bar) -->
+          <nav class="glass-pill-nav" aria-label="Dashboard Views">
             <button
               type="button"
-              class="flank-toggle-btn"
-              (click)="showSwarm.set(false)"
-              title="Minimize Swarm Panel"
+              class="glass-nav-tab"
+              [class.active]="activeMainTab() === 'AUTOMATION'"
+              (click)="setActiveTab('AUTOMATION')"
             >
-              ▸
+              <span class="tab-icon">⚡</span>
+              <span>Automations</span>
             </button>
-          </div>
-          <div class="swarm-node-list">
-            @for (agent of specialistAgents; track agent.id) {
+            <button
+              type="button"
+              class="glass-nav-tab"
+              [class.active]="activeMainTab() === 'TELEMETRY'"
+              (click)="setActiveTab('TELEMETRY')"
+            >
+              <span class="tab-icon">📊</span>
+              <span>Telemetry HUD</span>
+            </button>
+            <button
+              type="button"
+              class="glass-nav-tab"
+              [class.active]="activeMainTab() === 'SWARM'"
+              (click)="setActiveTab('SWARM')"
+            >
+              <span class="tab-icon">🌐</span>
+              <span>Swarm Nodes (8)</span>
+            </button>
+            <button
+              type="button"
+              class="glass-nav-tab"
+              [class.active]="activeMainTab() === 'NEURAL'"
+              (click)="setActiveTab('NEURAL')"
+            >
+              <span class="tab-icon">🧠</span>
+              <span>Neural Core</span>
+            </button>
+          </nav>
+
+          <!-- Top Right Controls: Theme, E-STOP, Workspaces -->
+          <div class="glass-header-controls">
+            <!-- Theme Customizer Toggle -->
+            <button
+              type="button"
+              class="hud-tool-btn theme-btn"
+              (click)="toggleThemeCustomizer()"
+              [attr.aria-expanded]="showThemeCustomizer()"
+              title="Theme Customizer"
+            >
+              <span class="btn-icon">🎨</span>
+              <span class="btn-text">Theme</span>
+            </button>
+
+            <!-- Emergency Stop Button -->
+            <button
+              type="button"
+              class="e-stop-btn"
+              [class.active-stop]="stateService.safety().emergencyStopped"
+              (click)="triggerEmergencyStop()"
+              title="Emergency Stop All Automation & Inference"
+            >
+              <span class="stop-icon">🛑</span>
+              <span class="stop-text">E-STOP</span>
+            </button>
+
+            <!-- Contextual Workspace Switcher Dropdown Button -->
+            <div class="workspace-switcher-wrap">
               <button
                 type="button"
-                class="swarm-node-item"
-                [class.selected]="selectedNode()?.id === agent.id"
-                (click)="selectSpecialistAgent(agent)"
-                [title]="agent.role"
+                class="switcher-toggle-btn"
+                (click)="toggleWorkspaceMenu()"
+                [attr.aria-expanded]="showWorkspaceMenu()"
+                title="Navigate Workspaces"
               >
-                <div class="agent-beacon-dot"></div>
-                <div class="agent-beacon-meta">
-                  <span class="agent-beacon-name">{{ agent.name }}</span>
-                  <span class="agent-beacon-status">{{ agent.status }}</span>
-                </div>
-                <span class="agent-beacon-tier">{{ agent.riskTier }}</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect width="7" height="7" x="3" y="3" rx="1"/>
+                  <rect width="7" height="7" x="14" y="3" rx="1"/>
+                  <rect width="7" height="7" x="14" y="14" rx="1"/>
+                  <rect width="7" height="7" x="3" y="14" rx="1"/>
+                </svg>
+                <span class="switcher-text">Workspaces</span>
+                <span class="caret" [class.open]="showWorkspaceMenu()">▾</span>
               </button>
+
+              @if (showWorkspaceMenu()) {
+                <div class="workspace-dropdown-menu" (mouseleave)="showWorkspaceMenu.set(false)">
+                  <div class="dropdown-header">OPERATING WORKSPACES</div>
+                  @for (ws of workspaceRoutes; track ws.route) {
+                    <button
+                      type="button"
+                      class="ws-menu-item"
+                      (click)="navigateTo(ws.route)"
+                    >
+                      <span class="ws-item-icon">
+                        @if (ws.id === 'network') {
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/></svg>
+                        } @else if (ws.id === 'intelligence') {
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                        } @else if (ws.id === 'business') {
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                        } @else if (ws.id === 'media') {
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>
+                        } @else {
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
+                        }
+                      </span>
+                      <div class="ws-item-text">
+                        <span class="ws-item-title">{{ ws.title }}</span>
+                        <span class="ws-item-desc">{{ ws.desc }}</span>
+                      </div>
+                      <span class="ws-item-badge">{{ ws.badge }}</span>
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </header>
+
+        <!-- Subconscious Cognitive Thought Ticker Bar -->
+        <section class="subconscious-thought-bar" aria-label="Subconscious Cognitive Stream">
+          <div class="thought-pulse-indicator">
+            <span class="beacon-ring"></span>
+            <span class="beacon-core"></span>
+          </div>
+          <div class="thought-content-wrapper">
+            <span class="thought-prefix">ARC REACTOR AI //</span>
+            <span class="thought-stream-text">{{ activeSubconsciousThought() }}</span>
+          </div>
+          <div class="thought-quantum-tag">
+            <span class="quantum-label">OLLAMA 100% LOCAL · WAL SYNCED</span>
+          </div>
+        </section>
+
+        <!-- TAB 1: AUTOMATIONS STUDIO (VISIONOS AUTOMATED EXECUTION - REFERENCE IMAGE 5) -->
+        @if (activeMainTab() === 'AUTOMATION') {
+          <div class="tab-body automation-tab-body">
+            <!-- Top Metric Stat Cards (Styled like Image 5 Top Stats) -->
+            <div class="vision-stats-row">
+              <div class="vision-stat-card">
+                <div class="stat-circle-meter" title="Core Execution Efficiency">
+                  <span class="circle-val">99.8%</span>
+                </div>
+                <div class="stat-text-group">
+                  <span class="stat-title">Dual-State Verified</span>
+                  <span class="stat-num">1,420+ Runs</span>
+                  <span class="stat-sub">Physical Observed State</span>
+                </div>
+              </div>
+
+              <div class="vision-stat-card">
+                <div class="stat-text-group">
+                  <span class="stat-title">Inference Engine</span>
+                  <span class="stat-num">0.0 External</span>
+                  <span class="stat-sub">Ollama Quantized Local</span>
+                </div>
+              </div>
+
+              <div class="vision-stat-card">
+                <div class="stat-text-group">
+                  <span class="stat-title">Memory WAL Graph</span>
+                  <span class="stat-num">0 Pending</span>
+                  <span class="stat-sub">1.2ms Commit Latency</span>
+                </div>
+              </div>
+
+              <div class="vision-stat-card">
+                <div class="stat-text-group">
+                  <span class="stat-title">Swarm Consensus</span>
+                  <span class="stat-num">8 Agents</span>
+                  <span class="stat-sub">Laser Conduits Synced</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Main Automation Workspace Cards -->
+            <div class="automation-workspace-grid">
+              <!-- Left Card: 1-Click Interactive Automation Launcher -->
+              <div class="vision-content-card">
+                <div class="card-title-bar">
+                  <div class="card-title-group">
+                    <span class="card-icon">⚡</span>
+                    <h3 class="card-title">1-Click Autonomous OS Workflows</h3>
+                  </div>
+                  <span class="card-badge">LIVE EXECUTION</span>
+                </div>
+
+                <div class="scenarios-list">
+                  @for (scenario of automationScenarios; track scenario.id) {
+                    <button
+                      type="button"
+                      class="scenario-pill-item"
+                      [class.active]="selectedScenario()?.id === scenario.id"
+                      (click)="executeScenario(scenario)"
+                      [disabled]="isWorking()"
+                      [title]="scenario.description"
+                    >
+                      <span class="scenario-icon">{{ scenario.icon }}</span>
+                      <div class="scenario-meta">
+                        <span class="scenario-name">{{ scenario.title }}</span>
+                        <span class="scenario-desc">{{ scenario.description }}</span>
+                      </div>
+                      <span class="scenario-tag">{{ scenario.category }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Right Card: Autonomous Policy Switches (Styled like Image 5 Toggles) -->
+              <div class="vision-content-card">
+                <div class="card-title-bar">
+                  <div class="card-title-group">
+                    <span class="card-icon">🛡️</span>
+                    <h3 class="card-title">Autonomous Safety & Physical Locks</h3>
+                  </div>
+                  <span class="card-badge">HARDENED</span>
+                </div>
+
+                <div class="policy-toggles-list">
+                  <div class="policy-toggle-item">
+                    <div class="policy-info">
+                      <span class="policy-name">Physical Dual-State Gate</span>
+                      <span class="policy-sub">Verify OS pixels & process handles</span>
+                    </div>
+                    <div class="toggle-pill active" title="Active">
+                      <span class="toggle-thumb"></span>
+                    </div>
+                  </div>
+
+                  <div class="policy-toggle-item">
+                    <div class="policy-info">
+                      <span class="policy-name">Air-Gapped Local Privacy</span>
+                      <span class="policy-sub">100% zero cloud inference telemetry</span>
+                    </div>
+                    <div class="toggle-pill active" title="Active">
+                      <span class="toggle-thumb"></span>
+                    </div>
+                  </div>
+
+                  <div class="policy-toggle-item">
+                    <div class="policy-info">
+                      <span class="policy-name">Self-Healing AST Engine</span>
+                      <span class="policy-sub">Autonomous error diagnosis & patch</span>
+                    </div>
+                    <div class="toggle-pill active" title="Active">
+                      <span class="toggle-thumb"></span>
+                    </div>
+                  </div>
+
+                  <div class="policy-toggle-item">
+                    <div class="policy-info">
+                      <span class="policy-name">UIAutomation Focus Lock</span>
+                      <span class="policy-sub">Sandboxed keyboard & mouse dispatch</span>
+                    </div>
+                    <div class="toggle-pill active" title="Active">
+                      <span class="toggle-thumb"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- TAB 2: TELEMETRY HUD (CYBERNETIC GAUGES - REFERENCE IMAGE 4) -->
+        @if (activeMainTab() === 'TELEMETRY') {
+          <div class="tab-body telemetry-tab-body">
+            <div class="telemetry-grid">
+              <!-- Radial Compute Meter Card (Like Image 4 & 5) -->
+              <div class="telemetry-card">
+                <div class="card-header-clean">
+                  <span class="tel-label">NPU / COMPUTE LOAD</span>
+                  <span class="tel-val cyan">78%</span>
+                </div>
+                <div class="radial-gauge-container">
+                  <div class="radial-ring-track">
+                    <div class="radial-ring-fill"></div>
+                    <span class="radial-center-text">78%</span>
+                  </div>
+                </div>
+                <div class="tel-meta-row">
+                  <span>Tensor Cores: 32 / 32</span>
+                  <span>Clock: 2.4 GHz</span>
+                </div>
+              </div>
+
+              <!-- VRAM Memory Allocation -->
+              <div class="telemetry-card">
+                <div class="card-header-clean">
+                  <span class="tel-label">VRAM ALLOCATION</span>
+                  <span class="tel-val blue">4.2 / 16 GB</span>
+                </div>
+                <div class="linear-progress-track">
+                  <div class="linear-progress-fill" style="width: 26.25%;"></div>
+                </div>
+                <div class="tel-meta-row">
+                  <span>Quantization: Q4_K_M</span>
+                  <span>Headroom: 11.8 GB</span>
+                </div>
+              </div>
+
+              <!-- Latency & Frame Rate -->
+              <div class="telemetry-card">
+                <div class="card-header-clean">
+                  <span class="tel-label">RESPONSE LATENCY</span>
+                  <span class="tel-val green">18 ms</span>
+                </div>
+                <div class="sparkline-bar-group">
+                  @for (bar of spectralBars; track bar) {
+                    <span class="mini-bar" [style.--i]="bar"></span>
+                  }
+                </div>
+                <div class="tel-meta-row">
+                  <span>3D Radar: 60 FPS</span>
+                  <span>WAL Commit: 1.2 ms</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- TAB 3: SPECIALIST SWARM NODES -->
+        @if (activeMainTab() === 'SWARM') {
+          <div class="tab-body swarm-tab-body">
+            <div class="swarm-cards-grid">
+              @for (agent of specialistAgents; track agent.id) {
+                <div
+                  class="swarm-agent-card"
+                  [class.selected]="selectedNode()?.id === agent.id"
+                  (click)="selectSpecialistAgent(agent)"
+                >
+                  <div class="swarm-card-header">
+                    <span class="agent-beacon-dot"></span>
+                    <span class="agent-name">{{ agent.name }}</span>
+                    <span class="agent-tier">{{ agent.riskTier }}</span>
+                  </div>
+                  <p class="agent-role">{{ agent.role }}</p>
+                  <div class="caps-tags-wrap">
+                    @for (cap of agent.capabilities; track cap) {
+                      <span class="cap-tag">{{ cap }}</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- TAB 4: NEURAL NETWORK CORE INSPECTOR -->
+        @if (activeMainTab() === 'NEURAL') {
+          <div class="tab-body neural-tab-body">
+            <app-neural-network-viewer [isModal]="false"></app-neural-network-viewer>
+          </div>
+        }
+
+        <!-- 3. Bottom Centered Neumorphic Command Dock Inside Glass Frame -->
+        <footer class="neumorphic-dock-container" role="region" aria-label="Command Dock">
+          <!-- Voice Spectral Resonance Equalizer -->
+          <div class="voice-spectral-analyzer" [class.active]="isListening() || isWorking()" title="Neural Audio & Energy Resonance">
+            @for (bar of spectralBars; track bar) {
+              <span class="spectrum-bar" [style.--bar-index]="bar"></span>
             }
           </div>
-        </aside>
-      } @else {
-        <!-- Minimized Floating Swarm Trigger Badge -->
-        <button
-          type="button"
-          class="flank-min-trigger right"
-          (click)="showSwarm.set(true)"
-          title="Expand Specialist Swarm Nodes"
-        >
-          <span class="trigger-icon">🌐</span>
-          <span class="trigger-label">Swarm (8)</span>
-        </button>
-      }
 
-      <!-- 5. Interactive Theme Customizer Modal / Popover -->
+          <div class="neumorphic-dock-shell" [class.working]="isWorking()" [class.has-error]="errorMessage()">
+            <form class="dock-form" (ngSubmit)="onSubmitCommand()">
+              <div class="dock-input-wrapper">
+                <!-- AI Core Symbol -->
+                <div class="dock-ai-icon" [class.glow]="isWorking()">
+                  @if (isWorking()) {
+                    <span class="dock-spin">🌀</span>
+                  } @else {
+                    <span class="dock-sparkle">✦</span>
+                  }
+                </div>
+
+                <!-- Main Inset Command Input -->
+                <input
+                  type="text"
+                  class="dock-input-field"
+                  [(ngModel)]="commandInput"
+                  name="userCommand"
+                  [placeholder]="inputPlaceholder"
+                  autocomplete="off"
+                  [disabled]="isWorking()"
+                  (keydown.escape)="clearCommand()"
+                  aria-label="Command Input"
+                />
+
+                <!-- Controls: Voice Toggle & Submit -->
+                <div class="dock-controls-group">
+                  <!-- Voice Toggle Button -->
+                  <button
+                    type="button"
+                    class="dock-control-btn voice-btn"
+                    [class.listening]="isListening()"
+                    (click)="toggleVoiceInput()"
+                    title="Voice Input (Speech-to-Text)"
+                    aria-label="Toggle Voice Input"
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                      <line x1="12" y1="19" x2="12" y2="22"/>
+                    </svg>
+                  </button>
+
+                  <!-- Submit Action Button -->
+                  <button
+                    type="submit"
+                    class="dock-control-btn submit-btn"
+                    [disabled]="!commandInput.trim() || isWorking()"
+                    title="Execute Command (Enter)"
+                    aria-label="Submit Command"
+                  >
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="22" y1="2" x2="11" y2="13"/>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <!-- Error Alert Banner in Dock if Submission Fails -->
+            @if (errorMessage()) {
+              <div class="dock-error-banner" role="alert">
+                <span class="error-icon">⚠️</span>
+                <span class="error-text">{{ errorMessage() }}</span>
+                <button type="button" class="error-close" (click)="errorMessage.set(null)">✕</button>
+              </div>
+            }
+          </div>
+        </footer>
+      </main>
+
+      <!-- 4. Interactive Theme Customizer Modal / Popover -->
       @if (showThemeCustomizer()) {
         <aside class="theme-customizer-panel" role="dialog" aria-label="Theme Customizer">
           <div class="customizer-header">
             <div class="customizer-title-group">
               <span class="title-icon">🎨</span>
-              <span class="title-text">Theme & Color Customizer</span>
+              <span class="title-text">Theme Customizer</span>
             </div>
             <button type="button" class="close-customizer-btn" (click)="closeThemeCustomizer()">✕</button>
           </div>
 
           <div class="customizer-body">
-            <!-- Preset Selection -->
             <div class="preset-section">
               <label class="section-label">THEME PRESETS</label>
               <div class="presets-row">
@@ -320,85 +589,6 @@ export interface SpatialNodeData {
               </div>
             </div>
 
-            <!-- Custom Color Palette Controls -->
-            <div class="palette-section">
-              <label class="section-label">CUSTOM PALETTE OVERRIDES</label>
-              <div class="color-pickers-grid">
-                <div class="color-picker-item">
-                  <span class="picker-label">Accent Primary</span>
-                  <div class="picker-control">
-                    <input
-                      type="color"
-                      [value]="themeService.activeTheme().colors.accentPrimary"
-                      (input)="onColorChange('accentPrimary', $event)"
-                    />
-                    <span class="color-hex">{{ themeService.activeTheme().colors.accentPrimary }}</span>
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Accent Secondary</span>
-                  <div class="picker-control">
-                    <input
-                      type="color"
-                      [value]="themeService.activeTheme().colors.accentSecondary"
-                      (input)="onColorChange('accentSecondary', $event)"
-                    />
-                    <span class="color-hex">{{ themeService.activeTheme().colors.accentSecondary }}</span>
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">3D Core Glow</span>
-                  <div class="picker-control">
-                    <input
-                      type="color"
-                      [value]="themeService.activeTheme().colors.coreGlow"
-                      (input)="onColorChange('coreGlow', $event)"
-                    />
-                    <span class="color-hex">{{ themeService.activeTheme().colors.coreGlow }}</span>
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Network Synapses</span>
-                  <div class="picker-control">
-                    <input
-                      type="color"
-                      [value]="themeService.activeTheme().colors.networkLine"
-                      (input)="onColorChange('networkLine', $event)"
-                    />
-                    <span class="color-hex">{{ themeService.activeTheme().colors.networkLine }}</span>
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Background Base</span>
-                  <div class="picker-control">
-                    <input
-                      type="color"
-                      [value]="themeService.activeTheme().colors.background"
-                      (input)="onColorChange('background', $event)"
-                    />
-                    <span class="color-hex">{{ themeService.activeTheme().colors.background }}</span>
-                  </div>
-                </div>
-
-                <div class="color-picker-item">
-                  <span class="picker-label">Raised Surface</span>
-                  <div class="picker-control">
-                    <input
-                      type="color"
-                      [value]="themeService.activeTheme().colors.surfaceRaised"
-                      (input)="onColorChange('surfaceRaised', $event)"
-                    />
-                    <span class="color-hex">{{ themeService.activeTheme().colors.surfaceRaised }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Action Buttons: Save, Cancel, Reset -->
             <div class="customizer-actions-row">
               <button type="button" class="action-btn reset-btn" (click)="resetTheme()">
                 Reset Default
@@ -416,7 +606,7 @@ export interface SpatialNodeData {
         </aside>
       }
 
-      <!-- 6. Spatial Node Detail Inspector (Contextual Card with Highest Z-Index) -->
+      <!-- 5. Interactive Spatial Node Inspector (Contextual Card on Swarm Click) -->
       @if (selectedNode()) {
         <aside class="spatial-node-inspector" role="complementary" aria-label="Agent Node Details">
           <div class="inspector-header">
@@ -447,7 +637,7 @@ export interface SpatialNodeData {
         </aside>
       }
 
-      <!-- 7. Contextual Current Task Status Floating Overlay -->
+      <!-- 6. Contextual Current Task Status Floating Overlay -->
       @if (activeTaskStatus()) {
         <section class="contextual-task-overlay" [class.task-failed]="activeTaskStatus()?.stage === 'FAILED'" [class.task-success]="activeTaskStatus()?.stage === 'COMPLETED'">
           <div class="task-status-pill">
@@ -473,7 +663,6 @@ export interface SpatialNodeData {
               }
             </div>
 
-            <!-- Dismiss / Details Toggle -->
             <div class="task-actions-group">
               @if (activeTaskStatus()?.stage === 'EXECUTING') {
                 <button type="button" class="task-cancel-btn" (click)="cancelTask()" title="Cancel Execution">
@@ -486,122 +675,6 @@ export interface SpatialNodeData {
             </div>
           </div>
         </section>
-      }
-
-      <!-- 8. Holographic Voice Spectral Waveform & Spatial Quick Action Matrix -->
-      <section class="dock-floating-auxiliary" aria-label="Agent Audio and Quick Controls">
-        <!-- 16-Band Spectral Equalizer Waveform -->
-        <div class="voice-spectral-analyzer" [class.active]="isListening() || isWorking()" title="Neural Audio & Energy Resonance">
-          @for (bar of spectralBars; track bar) {
-            <span class="spectrum-bar" [style.--bar-index]="bar"></span>
-          }
-        </div>
-
-        <!-- Spatial Quick-Action Hologram Matrix -->
-        <div class="spatial-quick-matrix" role="toolbar" aria-label="Spatial Quick Actions">
-          <button type="button" class="quick-chip-btn" (click)="executeQuickAction('vision')" title="Instant Desktop Vision Perception Scan">
-            <span class="chip-icon">⚡</span>
-            <span>Desktop Scan</span>
-          </button>
-          <button type="button" class="quick-chip-btn" (click)="executeQuickAction('neural')" title="Open Neural Network Core Inspector">
-            <span class="chip-icon">🧠</span>
-            <span>Neural Weights</span>
-          </button>
-          <button type="button" class="quick-chip-btn" (click)="executeQuickAction('network')" title="View 3D Specialist Swarm Topology">
-            <span class="chip-icon">🌐</span>
-            <span>Swarm Topology</span>
-          </button>
-          <button type="button" class="quick-chip-btn" (click)="executeQuickAction('verify')" title="Verify Physical Operating State">
-            <span class="chip-icon">🛡️</span>
-            <span>Verify State</span>
-          </button>
-          <button type="button" class="quick-chip-btn" (click)="executeQuickAction('lab')" title="Autonomous Intelligence Lab">
-            <span class="chip-icon">📊</span>
-            <span>Model Lab</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- 9. Floating Neumorphic Command Dock (Centered Bottom Interface) -->
-      <footer class="neumorphic-dock-container" role="region" aria-label="Command Dock">
-        <div class="neumorphic-dock-shell" [class.working]="isWorking()" [class.has-error]="errorMessage()">
-          <form class="dock-form" (ngSubmit)="onSubmitCommand()">
-            <div class="dock-input-wrapper">
-              <!-- AI Core Symbol -->
-              <div class="dock-ai-icon" [class.glow]="isWorking()">
-                @if (isWorking()) {
-                  <span class="dock-spin">🌀</span>
-                } @else {
-                  <span class="dock-sparkle">✦</span>
-                }
-              </div>
-
-              <!-- Main Inset Command Input -->
-              <input
-                type="text"
-                class="dock-input-field"
-                [(ngModel)]="commandInput"
-                name="userCommand"
-                [placeholder]="inputPlaceholder"
-                autocomplete="off"
-                [disabled]="isWorking()"
-                (keydown.escape)="clearCommand()"
-                aria-label="Command Input"
-              />
-
-              <!-- Controls: Voice Toggle & Submit -->
-              <div class="dock-controls-group">
-                <!-- Voice Toggle Button -->
-                <button
-                  type="button"
-                  class="dock-control-btn voice-btn"
-                  [class.listening]="isListening()"
-                  (click)="toggleVoiceInput()"
-                  title="Voice Input (Speech-to-Text)"
-                  aria-label="Toggle Voice Input"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                    <line x1="12" y1="19" x2="12" y2="22"/>
-                  </svg>
-                </button>
-
-                <!-- Submit Action Button -->
-                <button
-                  type="submit"
-                  class="dock-control-btn submit-btn"
-                  [disabled]="!commandInput.trim() || isWorking()"
-                  title="Execute Command (Enter)"
-                  aria-label="Submit Command"
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="22" y1="2" x2="11" y2="13"/>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </form>
-
-          <!-- Error Alert Banner in Dock if Submission Fails -->
-          @if (errorMessage()) {
-            <div class="dock-error-banner" role="alert">
-              <span class="error-icon">⚠️</span>
-              <span class="error-text">{{ errorMessage() }}</span>
-              <button type="button" class="error-close" (click)="errorMessage.set(null)">✕</button>
-            </div>
-          }
-        </div>
-      </footer>
-
-      <!-- 10. Neural Network Inspector Modal Overlay -->
-      @if (showNeuralInspector()) {
-        <div class="neural-modal-backdrop" (click)="showNeuralInspector.set(false)"></div>
-        <app-neural-network-viewer
-          [isModal]="true"
-          (closeViewer)="showNeuralInspector.set(false)"
-        ></app-neural-network-viewer>
       }
     </div>
   `,
@@ -619,9 +692,9 @@ export interface SpatialNodeData {
       width: 100vw;
       height: 100vh;
       display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 14px 20px;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
       box-sizing: border-box;
       pointer-events: none;
     }
@@ -642,16 +715,16 @@ export interface SpatialNodeData {
     }
 
     .hud-corner-bracket.top-left {
-      top: 12px;
-      left: 14px;
+      top: 14px;
+      left: 16px;
       border-top: 1.5px solid var(--abhi-cyan, #0099cc);
       border-left: 1.5px solid var(--abhi-cyan, #0099cc);
       padding: 5px 0 0 6px;
     }
 
     .hud-corner-bracket.top-right {
-      top: 12px;
-      right: 14px;
+      top: 14px;
+      right: 16px;
       border-top: 1.5px solid var(--abhi-cyan, #0099cc);
       border-right: 1.5px solid var(--abhi-cyan, #0099cc);
       padding: 5px 6px 0 0;
@@ -659,8 +732,8 @@ export interface SpatialNodeData {
     }
 
     .hud-corner-bracket.bottom-left {
-      bottom: 12px;
-      left: 14px;
+      bottom: 14px;
+      left: 16px;
       border-bottom: 1.5px solid var(--abhi-cyan, #0099cc);
       border-left: 1.5px solid var(--abhi-cyan, #0099cc);
       padding: 0 0 5px 6px;
@@ -669,8 +742,8 @@ export interface SpatialNodeData {
     }
 
     .hud-corner-bracket.bottom-right {
-      bottom: 12px;
-      right: 14px;
+      bottom: 14px;
+      right: 16px;
       border-bottom: 1.5px solid var(--abhi-cyan, #0099cc);
       border-right: 1.5px solid var(--abhi-cyan, #0099cc);
       padding: 0 6px 5px 0;
@@ -693,45 +766,128 @@ export interface SpatialNodeData {
     .hud-corner-bracket.bottom-left .corner-crosshair { bottom: 0; left: 0; }
     .hud-corner-bracket.bottom-right .corner-crosshair { bottom: 0; right: 0; }
 
-    /* 1. Top HUD Header */
-    .main-agent-hud-header {
+    /* 1. VisionOS Left Navigation Island Capsule (Styled like Reference Image 5) */
+    .vision-dock-island {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px 8px;
+      background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.78));
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.22));
+      border-radius: 36px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+      z-index: 55;
+      pointer-events: auto;
+      transition: all 0.3s ease;
+    }
+
+    .island-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--abhi-text-secondary, #475569);
+      cursor: pointer;
+      transition: all var(--abhi-transition-fast, 160ms);
+    }
+
+    .island-btn:hover {
+      background: var(--abhi-surface-inset, #f1f5f9);
+      color: var(--abhi-cyan, #0099cc);
+      transform: scale(1.08);
+    }
+
+    .island-btn.active {
+      background: var(--abhi-surface-inset, #f1f5f9);
+      border-color: var(--abhi-cyan, #0099cc);
+      color: var(--abhi-cyan, #0099cc);
+      box-shadow: 0 0 12px rgba(0, 153, 204, 0.35);
+    }
+
+    .island-icon {
+      font-size: 15px;
+    }
+
+    .island-divider {
+      width: 20px;
+      height: 1px;
+      background: var(--abhi-border, rgba(0, 153, 204, 0.2));
+      margin: 4px auto;
+    }
+
+    /* 2. Main VisionOS Spatial Frosted Glass Container (Styled like Reference Image 5) */
+    .vision-glass-panel {
+      position: relative;
+      width: calc(100% - 100px);
+      max-width: 1240px;
+      height: calc(100% - 40px);
+      max-height: 840px;
+      margin-left: 54px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.76));
+      backdrop-filter: blur(32px) saturate(190%);
+      -webkit-backdrop-filter: blur(32px) saturate(190%);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.24));
+      border-radius: 28px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.15), inset 0 1px 2px rgba(255, 255, 255, 0.7);
+      padding: 16px 22px;
+      box-sizing: border-box;
+      pointer-events: auto;
+      z-index: 40;
+      animation: glassFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes glassFadeIn {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Glass Topbar Header */
+    .glass-topbar-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      width: 100%;
-      z-index: 50;
-      pointer-events: auto;
       gap: 12px;
+      width: 100%;
     }
 
     .hud-brand-pill {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 7px 14px;
-      background: var(--abhi-surface-raised, #ffffff);
+      gap: 10px;
+      padding: 6px 12px;
+      background: var(--abhi-surface-inset, #f1f5f9);
       border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.2));
-      border-radius: var(--abhi-radius-control, 18px);
-      box-shadow: var(--abhi-raised-shadow, 6px 6px 18px rgba(0, 0, 0, 0.08));
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      border-radius: 16px;
       flex-shrink: 0;
     }
 
     .brand-orb-icon {
-      width: 24px;
-      height: 24px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       background: radial-gradient(circle, var(--abhi-cyan, #0099cc) 0%, var(--abhi-blue, #0284c7) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 10px rgba(0, 153, 204, 0.5);
+      box-shadow: 0 0 8px rgba(0, 153, 204, 0.5);
     }
 
     .orb-core-dot {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: #ffffff;
     }
@@ -742,7 +898,7 @@ export interface SpatialNodeData {
     }
 
     .brand-title {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 800;
       letter-spacing: 0.08em;
       color: var(--abhi-text-primary, #0f172a);
@@ -750,7 +906,7 @@ export interface SpatialNodeData {
     }
 
     .brand-sub {
-      font-size: 8.5px;
+      font-size: 8px;
       font-weight: 600;
       letter-spacing: 0.12em;
       color: var(--abhi-cyan, #0099cc);
@@ -759,10 +915,10 @@ export interface SpatialNodeData {
     .status-indicator-tag {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 3px 8px;
-      border-radius: 12px;
-      background: rgba(16, 185, 129, 0.1);
+      gap: 5px;
+      padding: 2px 7px;
+      border-radius: 10px;
+      background: rgba(16, 185, 129, 0.12);
       border: 1px solid rgba(16, 185, 129, 0.25);
     }
 
@@ -772,8 +928,8 @@ export interface SpatialNodeData {
     }
 
     .pulse-dot {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       background: var(--abhi-success, #10b981);
       box-shadow: 0 0 6px var(--abhi-success, #10b981);
@@ -791,50 +947,59 @@ export interface SpatialNodeData {
     }
 
     .status-label {
-      font-size: 10px;
+      font-size: 9.5px;
       font-family: monospace;
       font-weight: 600;
       color: var(--abhi-text-primary, #0f172a);
     }
 
-    /* Center Telemetry Badges */
-    .hud-center-telemetry {
+    /* Glass Pill Navigation Tabs (Like Reference Image 5 Top Bar) */
+    .glass-pill-nav {
       display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
+      align-items: center;
+      gap: 4px;
+      padding: 4px;
+      background: var(--abhi-surface-inset, #f1f5f9);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.18));
+      border-radius: 20px;
     }
 
-    .telemetry-badge {
+    .glass-nav-tab {
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 12px;
-      background: var(--abhi-surface-inset, #f1f5f9);
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.16));
-      border-radius: 14px;
-      box-shadow: var(--abhi-inset-shadow, inset 3px 3px 7px rgba(0,0,0,0.06));
-      font-size: 11px;
-      font-family: monospace;
+      padding: 6px 14px;
+      border-radius: 16px;
+      background: transparent;
+      border: 1px solid transparent;
       color: var(--abhi-text-secondary, #475569);
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--abhi-transition-fast, 160ms);
       white-space: nowrap;
     }
 
-    .badge-icon {
+    .glass-nav-tab:hover {
+      color: var(--abhi-text-primary, #0f172a);
+    }
+
+    .glass-nav-tab.active {
+      background: var(--abhi-surface-raised, #ffffff);
+      border-color: var(--abhi-border, rgba(0, 153, 204, 0.25));
+      color: var(--abhi-cyan, #0099cc);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .tab-icon {
       font-size: 12px;
     }
 
-    .badge-text {
-      font-weight: 600;
-      letter-spacing: 0.05em;
-    }
-
-    /* Right Utilities */
-    .hud-utilities-block {
+    /* Glass Controls */
+    .glass-header-controls {
       display: flex;
       align-items: center;
       gap: 8px;
-      position: relative;
       flex-shrink: 0;
     }
 
@@ -842,67 +1007,41 @@ export interface SpatialNodeData {
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 7px 12px;
-      background: var(--abhi-surface-raised, #ffffff);
+      padding: 6px 12px;
+      background: var(--abhi-surface-inset, #f1f5f9);
       border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.2));
-      border-radius: var(--abhi-radius-control, 18px);
-      box-shadow: var(--abhi-raised-shadow, 6px 6px 18px rgba(0, 0, 0, 0.08));
+      border-radius: 14px;
       color: var(--abhi-text-primary, #0f172a);
       font-size: 11px;
       font-weight: 600;
       cursor: pointer;
       transition: all var(--abhi-transition-fast, 160ms);
-      white-space: nowrap;
     }
 
     .hud-tool-btn:hover {
       border-color: var(--abhi-cyan, #0099cc);
       color: var(--abhi-cyan, #0099cc);
-      box-shadow: 0 0 14px var(--abhi-glow-primary, rgba(0, 153, 204, 0.3));
-    }
-
-    .hud-tool-btn.neural-btn {
-      border-color: rgba(0, 153, 204, 0.4);
-      color: var(--abhi-cyan, #0099cc);
-    }
-
-    .neural-modal-backdrop {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(5, 8, 17, 0.65);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      z-index: 999;
-    }
-
-    .btn-icon {
-      font-size: 13px;
     }
 
     .e-stop-btn {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 7px 12px;
-      background: var(--abhi-surface-raised, #ffffff);
+      gap: 5px;
+      padding: 6px 12px;
+      background: rgba(239, 68, 68, 0.1);
       border: 1px solid rgba(239, 68, 68, 0.35);
-      border-radius: var(--abhi-radius-control, 18px);
-      box-shadow: var(--abhi-raised-shadow, 6px 6px 18px rgba(0, 0, 0, 0.08));
+      border-radius: 14px;
       color: var(--abhi-danger, #ef4444);
       font-weight: 700;
       font-size: 11px;
       cursor: pointer;
       transition: all var(--abhi-transition-fast, 160ms);
-      white-space: nowrap;
     }
 
     .e-stop-btn:hover {
-      background: rgba(239, 68, 68, 0.12);
-      border-color: var(--abhi-danger, #ef4444);
-      box-shadow: 0 0 14px rgba(239, 68, 68, 0.4);
+      background: var(--abhi-danger, #ef4444);
+      color: #ffffff;
+      box-shadow: 0 0 14px rgba(239, 68, 68, 0.5);
     }
 
     .e-stop-btn.active-stop {
@@ -918,18 +1057,16 @@ export interface SpatialNodeData {
     .switcher-toggle-btn {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 7px 12px;
-      background: var(--abhi-surface-raised, #ffffff);
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--abhi-surface-inset, #f1f5f9);
       border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.2));
-      border-radius: var(--abhi-radius-control, 18px);
-      box-shadow: var(--abhi-raised-shadow, 6px 6px 18px rgba(0, 0, 0, 0.08));
+      border-radius: 14px;
       color: var(--abhi-text-primary, #0f172a);
-      font-size: 11.5px;
+      font-size: 11px;
       font-weight: 600;
       cursor: pointer;
       transition: all var(--abhi-transition-fast, 160ms);
-      white-space: nowrap;
     }
 
     .switcher-toggle-btn:hover {
@@ -948,19 +1085,19 @@ export interface SpatialNodeData {
 
     .workspace-dropdown-menu {
       position: absolute;
-      top: 42px;
+      top: 38px;
       right: 0;
-      width: 280px;
+      width: 270px;
       background: var(--abhi-surface-raised, #ffffff);
       border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.3));
       border-radius: 16px;
       box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      padding: 10px;
+      padding: 8px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
       z-index: 100;
       animation: menuFadeIn 0.2s ease-out;
     }
@@ -971,18 +1108,18 @@ export interface SpatialNodeData {
     }
 
     .dropdown-header {
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
       letter-spacing: 0.1em;
       color: var(--abhi-text-muted, #64748b);
-      padding: 4px 8px;
+      padding: 4px 6px;
     }
 
     .ws-menu-item {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
+      gap: 8px;
+      padding: 8px;
       background: transparent;
       border: 1px solid transparent;
       border-radius: 10px;
@@ -1009,55 +1146,43 @@ export interface SpatialNodeData {
     }
 
     .ws-item-title {
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 600;
       color: var(--abhi-text-primary, #0f172a);
     }
 
     .ws-item-desc {
-      font-size: 9.5px;
+      font-size: 9px;
       color: var(--abhi-text-muted, #64748b);
     }
 
     .ws-item-badge {
-      font-size: 9px;
+      font-size: 8.5px;
       font-family: monospace;
-      padding: 2px 6px;
+      padding: 2px 5px;
       background: rgba(0, 153, 204, 0.12);
       color: var(--abhi-cyan, #0099cc);
       border-radius: 6px;
     }
 
-    /* 2. Subconscious Cognitive Stream Bar */
+    /* Subconscious Cognitive Thought Stream Bar */
     .subconscious-thought-bar {
       display: flex;
       align-items: center;
       gap: 10px;
-      width: calc(100% - 32px);
-      max-width: 860px;
-      margin: 6px auto 0 auto;
-      padding: 6px 14px;
-      background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.85));
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.2));
-      border-radius: 20px;
-      box-shadow: var(--abhi-raised-shadow, 4px 4px 14px rgba(0, 0, 0, 0.06));
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      pointer-events: auto;
-      z-index: 45;
-      animation: fadeInDown 0.4s ease-out;
+      width: 100%;
+      margin: 10px 0 6px 0;
+      padding: 6px 12px;
+      background: var(--abhi-surface-inset, #f1f5f9);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.18));
+      border-radius: 14px;
       box-sizing: border-box;
-    }
-
-    @keyframes fadeInDown {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     .thought-pulse-indicator {
       position: relative;
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1065,17 +1190,17 @@ export interface SpatialNodeData {
     }
 
     .beacon-core {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
       background: var(--abhi-cyan, #0099cc);
-      box-shadow: 0 0 8px var(--abhi-cyan, #0099cc);
+      box-shadow: 0 0 6px var(--abhi-cyan, #0099cc);
     }
 
     .beacon-ring {
       position: absolute;
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       border-radius: 50%;
       border: 1.5px solid var(--abhi-cyan, #0099cc);
       opacity: 0.6;
@@ -1098,7 +1223,7 @@ export interface SpatialNodeData {
     }
 
     .thought-prefix {
-      font-size: 10px;
+      font-size: 9.5px;
       font-family: monospace;
       font-weight: 700;
       color: var(--abhi-cyan, #0099cc);
@@ -1107,293 +1232,429 @@ export interface SpatialNodeData {
     }
 
     .thought-stream-text {
-      font-size: 11.5px;
+      font-size: 11px;
       font-family: 'JetBrains Mono', 'Fira Code', monospace;
       color: var(--abhi-text-primary, #0f172a);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      animation: tickerFade 0.4s ease-in-out;
-    }
-
-    @keyframes tickerFade {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
     }
 
     .thought-quantum-tag {
       font-size: 9px;
       font-family: monospace;
-      padding: 2px 8px;
-      border-radius: 8px;
-      background: var(--abhi-surface-inset, #f1f5f9);
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.15));
-      color: var(--abhi-text-secondary, #475569);
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(0, 153, 204, 0.12);
+      color: var(--abhi-cyan, #0099cc);
       flex-shrink: 0;
       white-space: nowrap;
     }
 
-    /* 3. Left-Flank Holographic Telemetry HUD */
-    .holographic-telemetry-panel {
-      position: absolute;
-      top: 110px;
-      left: 20px;
-      width: 210px;
-      background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.88));
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.2));
+    /* Tab Bodies */
+    .tab-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    /* TAB 1: AUTOMATIONS STUDIO (Styled like Image 5) */
+    .vision-stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      width: 100%;
+    }
+
+    .vision-stat-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--abhi-surface-inset, #f1f5f9);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.18));
       border-radius: 18px;
-      box-shadow: var(--abhi-raised-shadow, 8px 8px 24px rgba(0, 0, 0, 0.08));
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      padding: 12px;
-      pointer-events: auto;
-      z-index: 40;
-      animation: fadeInLeft 0.3s ease-out;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6);
     }
 
-    @keyframes fadeInLeft {
-      from { opacity: 0; transform: translateX(-16px); }
-      to { opacity: 1; transform: translateX(0); }
+    .stat-circle-meter {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 3px solid var(--abhi-cyan, #0099cc);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 153, 204, 0.08);
+      flex-shrink: 0;
     }
 
-    .flank-panel-header {
+    .circle-val {
+      font-size: 10px;
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--abhi-cyan, #0099cc);
+    }
+
+    .stat-text-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--abhi-text-muted, #64748b);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-num {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--abhi-text-primary, #0f172a);
+      line-height: 1.1;
+    }
+
+    .stat-sub {
+      font-size: 9px;
+      color: var(--abhi-text-secondary, #475569);
+    }
+
+    .automation-workspace-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 14px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .vision-content-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px 16px;
+      background: var(--abhi-surface-inset, #f1f5f9);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.18));
+      border-radius: 20px;
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+      overflow-y: auto;
+    }
+
+    .card-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.15));
+    }
+
+    .card-title-group {
       display: flex;
       align-items: center;
       gap: 6px;
-      padding-bottom: 6px;
-      border-bottom: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.15));
-      margin-bottom: 8px;
     }
 
-    .flank-panel-icon {
+    .card-icon {
       font-size: 13px;
     }
 
-    .flank-panel-title {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: var(--abhi-text-primary, #0f172a);
-    }
-
-    .flank-toggle-btn {
-      margin-left: auto;
-      background: transparent;
-      border: none;
-      color: var(--abhi-text-muted, #64748b);
-      cursor: pointer;
+    .card-title {
       font-size: 12px;
-      padding: 0 4px;
-      border-radius: 4px;
-      transition: color 0.15s ease;
-    }
-
-    .flank-toggle-btn:hover {
-      color: var(--abhi-cyan, #0099cc);
-    }
-
-    .flank-min-trigger {
-      position: absolute;
-      top: 110px;
-      z-index: 40;
-      pointer-events: auto;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.88));
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.25));
-      border-radius: 16px;
-      box-shadow: var(--abhi-raised-shadow, 4px 4px 14px rgba(0, 0, 0, 0.08));
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      color: var(--abhi-text-primary, #0f172a);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .flank-min-trigger.left {
-      left: 20px;
-    }
-
-    .flank-min-trigger.right {
-      right: 20px;
-    }
-
-    .flank-min-trigger:hover {
-      border-color: var(--abhi-cyan, #0099cc);
-      box-shadow: 0 0 12px rgba(0, 153, 204, 0.3);
-      color: var(--abhi-cyan, #0099cc);
-      transform: translateY(-1px);
-    }
-
-    .flank-metrics-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .metric-row {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-
-    .metric-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 10px;
-    }
-
-    .metric-label {
-      color: var(--abhi-text-secondary, #475569);
-      font-weight: 500;
-    }
-
-    .metric-value {
-      font-family: monospace;
       font-weight: 700;
-      color: var(--abhi-cyan, #0099cc);
+      color: var(--abhi-text-primary, #0f172a);
+      margin: 0;
     }
 
-    .metric-sparkline-wrap {
-      width: 100%;
-      height: 18px;
-      background: var(--abhi-surface-inset, #f1f5f9);
-      border-radius: 6px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.12));
-    }
-
-    .sparkline-svg {
-      width: 100%;
-      height: 100%;
-      color: var(--abhi-cyan, #0099cc);
-    }
-
-    .sparkline-path {
-      stroke-dasharray: 100;
-      animation: dash 4s linear infinite;
-    }
-
-    @keyframes dash {
-      to { stroke-dashoffset: -200; }
-    }
-
-    .metric-progress-track {
-      width: 100%;
-      height: 5px;
-      background: var(--abhi-surface-inset, #f1f5f9);
-      border-radius: 4px;
-      overflow: hidden;
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.12));
-    }
-
-    .metric-progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--abhi-cyan, #0099cc) 0%, var(--abhi-blue, #0284c7) 100%);
-      border-radius: 4px;
-      box-shadow: 0 0 8px rgba(0, 153, 204, 0.5);
-    }
-
-    .metric-row-inline {
-      display: flex;
-      justify-content: space-between;
-      gap: 4px;
-      margin-top: 2px;
-    }
-
-    .inline-badge {
-      display: flex;
-      align-items: center;
-      gap: 3px;
-      font-size: 9px;
+    .card-badge {
+      font-size: 8.5px;
       font-family: monospace;
-      padding: 3px 5px;
-      background: var(--abhi-surface-inset, #f1f5f9);
-      border-radius: 6px;
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.12));
-    }
-
-    .badge-dot {
-      width: 5px;
-      height: 5px;
-      border-radius: 50%;
-    }
-
-    .badge-dot.green { background: #10b981; box-shadow: 0 0 4px #10b981; }
-    .badge-dot.cyan { background: var(--abhi-cyan, #0099cc); box-shadow: 0 0 4px var(--abhi-cyan, #0099cc); }
-
-    .inline-label { color: var(--abhi-text-muted, #64748b); }
-    .inline-val { color: var(--abhi-text-primary, #0f172a); font-weight: 700; }
-
-    /* 4. Right-Flank Holographic Specialist Agent Swarm Beacons */
-    .holographic-swarm-panel {
-      position: absolute;
-      top: 110px;
-      right: 20px;
-      width: 220px;
-      max-height: calc(100vh - 250px);
-      background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.88));
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.2));
-      border-radius: 18px;
-      box-shadow: var(--abhi-raised-shadow, 8px 8px 24px rgba(0, 0, 0, 0.08));
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      padding: 12px;
-      pointer-events: auto;
-      z-index: 40;
-      display: flex;
-      flex-direction: column;
-      animation: fadeInRight 0.3s ease-out;
-    }
-
-    @keyframes fadeInRight {
-      from { opacity: 0; transform: translateX(16px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    .swarm-count-badge {
-      font-size: 8px;
-      font-family: monospace;
-      padding: 2px 4px;
-      border-radius: 5px;
+      padding: 2px 6px;
       background: rgba(0, 153, 204, 0.12);
       color: var(--abhi-cyan, #0099cc);
+      border-radius: 6px;
       font-weight: 700;
     }
 
-    .swarm-node-list {
+    .scenarios-list {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      overflow-y: auto;
-      padding-right: 2px;
+      gap: 6px;
     }
 
-    .swarm-node-item {
+    .scenario-pill-item {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 5px 6px;
-      background: transparent;
-      border: 1px solid transparent;
-      border-radius: 7px;
+      gap: 10px;
+      padding: 8px 10px;
+      background: var(--abhi-surface-raised, #ffffff);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.18));
+      border-radius: 14px;
       cursor: pointer;
       text-align: left;
       transition: all var(--abhi-transition-fast, 160ms);
     }
 
-    .swarm-node-item:hover, .swarm-node-item.selected {
+    .scenario-pill-item:hover:not(:disabled) {
+      border-color: var(--abhi-cyan, #0099cc);
+      box-shadow: 0 4px 12px rgba(0, 153, 204, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .scenario-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .scenario-meta {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .scenario-name {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--abhi-text-primary, #0f172a);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .scenario-desc {
+      font-size: 9.5px;
+      color: var(--abhi-text-secondary, #475569);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .scenario-tag {
+      font-size: 8.5px;
+      font-family: monospace;
+      padding: 2px 5px;
       background: var(--abhi-surface-inset, #f1f5f9);
-      border-color: var(--abhi-border, rgba(0, 153, 204, 0.25));
-      transform: translateX(-2px);
+      border-radius: 5px;
+      color: var(--abhi-text-muted, #64748b);
+      flex-shrink: 0;
+    }
+
+    /* Policy Toggles (Styled like Image 5 Toggles) */
+    .policy-toggles-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .policy-toggle-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      background: var(--abhi-surface-raised, #ffffff);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.18));
+      border-radius: 12px;
+    }
+
+    .policy-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .policy-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--abhi-text-primary, #0f172a);
+    }
+
+    .policy-sub {
+      font-size: 9px;
+      color: var(--abhi-text-muted, #64748b);
+    }
+
+    .toggle-pill {
+      width: 38px;
+      height: 20px;
+      border-radius: 10px;
+      background: #cbd5e1;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .toggle-pill.active {
+      background: var(--abhi-cyan, #0099cc);
+    }
+
+    .toggle-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ffffff;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .toggle-pill.active .toggle-thumb {
+      transform: translateX(18px);
+    }
+
+    /* TAB 2: TELEMETRY HUD (CYBERNETIC GAUGES - REFERENCE IMAGE 4) */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      width: 100%;
+    }
+
+    .telemetry-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      background: var(--abhi-surface-inset, #f1f5f9);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.18));
+      border-radius: 20px;
+    }
+
+    .card-header-clean {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tel-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--abhi-text-muted, #64748b);
+    }
+
+    .tel-val {
+      font-size: 14px;
+      font-weight: 800;
+      font-family: monospace;
+    }
+
+    .tel-val.cyan { color: var(--abhi-cyan, #0099cc); }
+    .tel-val.blue { color: var(--abhi-blue, #0284c7); }
+    .tel-val.green { color: var(--abhi-success, #10b981); }
+
+    .radial-gauge-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 80px;
+    }
+
+    .radial-ring-track {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 5px solid rgba(0, 153, 204, 0.18);
+      border-top-color: var(--abhi-cyan, #0099cc);
+      border-right-color: var(--abhi-cyan, #0099cc);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(-45deg);
+    }
+
+    .radial-center-text {
+      transform: rotate(45deg);
+      font-size: 13px;
+      font-weight: 800;
+      font-family: monospace;
+      color: var(--abhi-cyan, #0099cc);
+    }
+
+    .linear-progress-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+
+    .linear-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--abhi-cyan, #0099cc), var(--abhi-blue, #0284c7));
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(0, 153, 204, 0.4);
+    }
+
+    .sparkline-bar-group {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 48px;
+      margin: 16px 0;
+    }
+
+    .mini-bar {
+      flex: 1;
+      height: calc(10px + var(--i) * 2.2px);
+      background: var(--abhi-success, #10b981);
+      border-radius: 2px;
+      opacity: 0.85;
+      animation: barOscillate 1.2s infinite ease-in-out;
+      animation-delay: calc(var(--i) * 0.05s);
+    }
+
+    @keyframes barOscillate {
+      0%, 100% { transform: scaleY(0.4); }
+      50% { transform: scaleY(1); }
+    }
+
+    .tel-meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9.5px;
+      color: var(--abhi-text-secondary, #475569);
+      font-family: monospace;
+      padding-top: 6px;
+      border-top: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.12));
+    }
+
+    /* TAB 3: SWARM CARDS */
+    .swarm-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .swarm-agent-card {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px;
+      background: var(--abhi-surface-inset, #f1f5f9);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.18));
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all var(--abhi-transition-fast, 160ms);
+    }
+
+    .swarm-agent-card:hover, .swarm-agent-card.selected {
+      border-color: var(--abhi-cyan, #0099cc);
+      box-shadow: 0 4px 12px rgba(0, 153, 204, 0.2);
+    }
+
+    .swarm-card-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .agent-beacon-dot {
@@ -1402,56 +1663,241 @@ export interface SpatialNodeData {
       border-radius: 50%;
       background: var(--abhi-cyan, #0099cc);
       box-shadow: 0 0 6px var(--abhi-cyan, #0099cc);
-      flex-shrink: 0;
     }
 
-    .agent-beacon-meta {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .agent-beacon-name {
-      font-size: 10.5px;
-      font-weight: 600;
+    .agent-name {
+      font-size: 11px;
+      font-weight: 700;
       color: var(--abhi-text-primary, #0f172a);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      flex: 1;
     }
 
-    .agent-beacon-status {
+    .agent-tier {
       font-size: 8px;
       font-family: monospace;
-      color: var(--abhi-text-muted, #64748b);
-    }
-
-    .agent-beacon-tier {
-      font-size: 8px;
-      font-family: monospace;
-      padding: 1px 3px;
+      padding: 1px 4px;
       border-radius: 4px;
-      background: rgba(255, 202, 112, 0.15);
+      background: rgba(255, 202, 112, 0.2);
       color: var(--abhi-amber, #d97706);
     }
 
-    /* 5. Theme Customizer Panel */
-    .theme-customizer-panel {
-      position: absolute;
-      top: 68px;
-      right: 20px;
-      width: 310px;
+    .agent-role {
+      font-size: 9.5px;
+      color: var(--abhi-text-secondary, #475569);
+      margin: 0;
+      line-height: 1.3;
+    }
+
+    .caps-tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-top: auto;
+    }
+
+    .cap-tag {
+      font-size: 8.5px;
+      font-family: monospace;
+      padding: 1px 5px;
       background: var(--abhi-surface-raised, #ffffff);
-      border: 1px solid var(--abhi-border-active, rgba(0, 153, 204, 0.42));
-      border-radius: 18px;
-      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.18));
-      padding: 16px;
-      z-index: 100;
-      pointer-events: auto;
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.15));
+      border-radius: 4px;
+      color: var(--abhi-cyan, #0099cc);
+    }
+
+    /* 3. Bottom Centered Neumorphic Command Dock Inside Glass Frame */
+    .neumorphic-dock-container {
+      width: 100%;
+      max-width: 720px;
+      margin: 6px auto 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .voice-spectral-analyzer {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 3px;
+      height: 16px;
+      padding: 0 16px;
+      opacity: 0.6;
+      transition: opacity 0.3s ease;
+    }
+
+    .voice-spectral-analyzer.active {
+      opacity: 1;
+    }
+
+    .spectrum-bar {
+      width: 3px;
+      height: 4px;
+      border-radius: 2px;
+      background: linear-gradient(to top, var(--abhi-cyan, #0099cc), var(--abhi-blue, #0284c7));
+      box-shadow: 0 0 6px rgba(0, 153, 204, 0.4);
+      transition: height 0.1s ease;
+      animation: spectrumBounce 1.2s infinite ease-in-out;
+      animation-delay: calc(var(--bar-index) * 0.08s);
+    }
+
+    .voice-spectral-analyzer.active .spectrum-bar {
+      animation-duration: 0.6s;
+    }
+
+    @keyframes spectrumBounce {
+      0%, 100% { height: 3px; }
+      50% { height: 15px; }
+    }
+
+    .neumorphic-dock-shell {
+      position: relative;
+      width: 100%;
+      background: var(--abhi-surface-raised, #ffffff);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.2));
+      border-radius: var(--abhi-radius-dock, 24px);
+      box-shadow: var(--abhi-raised-shadow, 6px 6px 18px rgba(0, 0, 0, 0.1), -4px -4px 14px rgba(255, 255, 255, 0.8));
+      padding: 6px 10px;
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      animation: menuFadeIn 0.25s ease-out;
+      transition: all var(--abhi-transition-normal, 280ms);
+    }
+
+    .neumorphic-dock-shell.working {
+      border-color: var(--abhi-cyan, #0099cc);
+      box-shadow: 0 0 20px rgba(0, 153, 204, 0.35);
+    }
+
+    .dock-form {
+      width: 100%;
+    }
+
+    .dock-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--abhi-surface-inset, #f1f5f9);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: 18px;
+      padding: 5px 8px;
+    }
+
+    .dock-ai-icon {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--abhi-cyan, #0099cc);
+      font-size: 15px;
+    }
+
+    .dock-ai-icon.glow {
+      animation: pulseGlow 2s infinite;
+    }
+
+    .dock-spin {
+      animation: spin 1s linear infinite;
+    }
+
+    .dock-input-field {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--abhi-text-primary, #0f172a);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 4px;
+      min-width: 0;
+    }
+
+    .dock-input-field::placeholder {
+      color: var(--abhi-text-muted, #64748b);
+      font-size: 12px;
+    }
+
+    .dock-controls-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .dock-control-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--abhi-surface-raised, #ffffff);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.2));
+      color: var(--abhi-text-secondary, #475569);
+      cursor: pointer;
+      transition: all var(--abhi-transition-fast, 160ms);
+    }
+
+    .dock-control-btn:hover:not(:disabled) {
+      border-color: var(--abhi-cyan, #0099cc);
+      color: var(--abhi-cyan, #0099cc);
+    }
+
+    .dock-control-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .voice-btn.listening {
+      background: rgba(0, 153, 204, 0.2);
+      border-color: var(--abhi-cyan, #0099cc);
+      color: var(--abhi-cyan, #0099cc);
+      box-shadow: 0 0 10px rgba(0, 153, 204, 0.5);
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, var(--abhi-blue, #0284c7) 0%, var(--abhi-cyan, #0099cc) 100%);
+      border: none;
+      color: #ffffff;
+    }
+
+    .dock-error-banner {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 6px;
+      padding: 4px 10px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 10px;
+      color: var(--abhi-danger, #ef4444);
+      font-size: 11px;
+    }
+
+    .error-close {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--abhi-danger, #ef4444);
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    /* 4. Theme Customizer Panel */
+    .theme-customizer-panel {
+      position: absolute;
+      top: 64px;
+      right: 24px;
+      width: 300px;
+      background: var(--abhi-surface-raised, #ffffff);
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.35));
+      border-radius: 18px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      padding: 14px;
+      z-index: 120;
+      pointer-events: auto;
+      backdrop-filter: blur(20px);
     }
 
     .customizer-header {
@@ -1460,17 +1906,17 @@ export interface SpatialNodeData {
       align-items: center;
       border-bottom: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.15));
       padding-bottom: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .customizer-title-group {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .title-text {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--abhi-text-primary, #0f172a);
     }
@@ -1480,17 +1926,10 @@ export interface SpatialNodeData {
       border: none;
       color: var(--abhi-text-muted, #64748b);
       cursor: pointer;
-      font-size: 14px;
-    }
-
-    .customizer-body {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
     }
 
     .section-label {
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
       letter-spacing: 0.08em;
       color: var(--abhi-text-muted, #64748b);
@@ -1509,87 +1948,42 @@ export interface SpatialNodeData {
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 6px 8px;
+      padding: 5px 8px;
       background: var(--abhi-surface-inset, #f1f5f9);
       border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.15));
-      border-radius: 10px;
+      border-radius: 8px;
       color: var(--abhi-text-primary, #0f172a);
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 600;
       cursor: pointer;
-      transition: all var(--abhi-transition-fast, 160ms);
     }
 
-    .preset-pill:hover, .preset-pill.active {
+    .preset-pill.active {
       border-color: var(--abhi-cyan, #0099cc);
-      box-shadow: 0 0 10px rgba(0, 153, 204, 0.25);
+      box-shadow: 0 0 8px rgba(0, 153, 204, 0.25);
     }
 
     .preset-color-dot {
-      width: 9px;
-      height: 9px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-    }
-
-    .color-pickers-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-
-    .color-picker-item {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      background: var(--abhi-surface-inset, #f1f5f9);
-      padding: 5px 7px;
-      border-radius: 8px;
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.15));
-    }
-
-    .picker-label {
-      font-size: 9.5px;
-      color: var(--abhi-text-muted, #64748b);
-    }
-
-    .picker-control {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .picker-control input[type="color"] {
-      border: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      background: transparent;
-      padding: 0;
-    }
-
-    .color-hex {
-      font-size: 9.5px;
-      font-family: monospace;
-      color: var(--abhi-text-secondary, #475569);
     }
 
     .customizer-actions-row {
       display: flex;
       justify-content: flex-end;
       gap: 6px;
-      margin-top: 4px;
+      margin-top: 8px;
       border-top: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.15));
       padding-top: 8px;
     }
 
     .action-btn {
-      padding: 5px 10px;
+      padding: 4px 10px;
       border-radius: 8px;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 600;
       cursor: pointer;
-      transition: all var(--abhi-transition-fast, 160ms);
     }
 
     .reset-btn {
@@ -1599,12 +1993,6 @@ export interface SpatialNodeData {
       margin-right: auto;
     }
 
-    .cancel-btn {
-      background: transparent;
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.15));
-      color: var(--abhi-text-secondary, #475569);
-    }
-
     .save-btn {
       background: var(--abhi-cyan, #0099cc);
       border: none;
@@ -1612,54 +2000,45 @@ export interface SpatialNodeData {
       font-weight: 700;
     }
 
-    /* 6. Spatial Node Inspector */
+    /* 5. Spatial Node Inspector */
     .spatial-node-inspector {
       position: absolute;
-      top: 74px;
-      right: 20px;
-      width: 290px;
-      max-height: calc(100vh - 120px);
-      overflow-y: auto;
+      top: 64px;
+      right: 24px;
+      width: 280px;
       background: var(--abhi-surface-raised, #ffffff);
-      border: 1px solid var(--abhi-border-active, rgba(0, 153, 204, 0.42));
+      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.35));
       border-radius: 16px;
-      box-shadow: var(--abhi-raised-shadow, 9px 9px 24px rgba(0, 0, 0, 0.22));
-      padding: 14px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+      padding: 12px;
       z-index: 120;
       pointer-events: auto;
-      animation: slideIn 0.25s ease-out;
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(12px); }
-      to { opacity: 1; transform: translateX(0); }
     }
 
     .inspector-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
       border-bottom: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.15));
-      padding-bottom: 8px;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     .node-title-group {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .node-type-dot {
-      width: 8px;
-      height: 8px;
+      width: 7px;
+      height: 7px;
       border-radius: 50%;
       background: var(--abhi-cyan, #0099cc);
-      box-shadow: 0 0 6px var(--abhi-cyan, #0099cc);
     }
 
     .node-name {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--abhi-text-primary, #0f172a);
     }
@@ -1669,13 +2048,12 @@ export interface SpatialNodeData {
       border: none;
       color: var(--abhi-text-muted, #64748b);
       cursor: pointer;
-      font-size: 14px;
     }
 
     .inspector-body {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     .inspector-field {
@@ -1685,101 +2063,70 @@ export interface SpatialNodeData {
     }
 
     .field-label {
-      font-size: 9.5px;
+      font-size: 9px;
       font-weight: 600;
       color: var(--abhi-text-muted, #64748b);
       text-transform: uppercase;
     }
 
     .field-val {
-      font-size: 11.5px;
+      font-size: 11px;
       color: var(--abhi-text-primary, #0f172a);
     }
 
     .badge-tier {
       display: inline-block;
-      padding: 2px 6px;
-      background: rgba(255, 202, 112, 0.15);
+      padding: 1px 5px;
+      background: rgba(255, 202, 112, 0.2);
       color: var(--abhi-amber, #d97706);
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 10.5px;
+      border-radius: 4px;
+      font-size: 10px;
     }
 
-    .caps-tags-wrap {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 3px;
-    }
-
-    .cap-tag {
-      font-size: 9.5px;
-      font-family: monospace;
-      padding: 2px 6px;
-      background: var(--abhi-surface-inset, #f1f5f9);
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.15));
-      border-radius: 6px;
-      color: var(--abhi-cyan, #0099cc);
-    }
-
-    /* 7. Contextual Task Status Overlay */
+    /* 6. Contextual Task Status Overlay */
     .contextual-task-overlay {
       position: absolute;
-      bottom: 140px;
+      bottom: 88px;
       left: 50%;
       transform: translateX(-50%);
-      width: calc(100% - 32px);
-      max-width: 620px;
-      z-index: 50;
+      width: calc(100% - 140px);
+      max-width: 600px;
+      z-index: 60;
       pointer-events: auto;
-      animation: taskFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      box-sizing: border-box;
-    }
-
-    @keyframes taskFadeIn {
-      from { opacity: 0; transform: translate(-50%, 14px); }
-      to { opacity: 1; transform: translate(-50%, 0); }
     }
 
     .task-status-pill {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 10px 16px;
+      gap: 10px;
+      padding: 8px 14px;
       background: var(--abhi-surface-raised, #ffffff);
-      border: 1px solid var(--abhi-border-active, rgba(0, 153, 204, 0.42));
-      border-radius: var(--abhi-radius-control, 18px);
-      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.18));
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--abhi-cyan, #0099cc);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
     }
 
     .stage-indicator-orb {
-      width: 28px;
-      height: 28px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: var(--abhi-surface-inset, #f1f5f9);
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.15));
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .spinner-dot {
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border: 2px solid var(--abhi-cyan, #0099cc);
       border-top-color: transparent;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
+    @keyframes spin { to { transform: rotate(360deg); } }
     .check-mark { color: var(--abhi-success, #10b981); font-weight: bold; }
     .error-mark { color: var(--abhi-danger, #ef4444); font-weight: bold; }
     .info-mark { color: var(--abhi-cyan, #0099cc); }
@@ -1788,29 +2135,28 @@ export interface SpatialNodeData {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
       min-width: 0;
     }
 
     .task-primary-line {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
 
     .task-stage-badge {
-      font-size: 10px;
+      font-size: 9.5px;
       font-family: monospace;
       font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 6px;
+      padding: 1px 5px;
+      border-radius: 5px;
       background: rgba(0, 153, 204, 0.15);
       color: var(--abhi-cyan, #0099cc);
-      flex-shrink: 0;
     }
 
     .task-goal-text {
-      font-size: 12.5px;
+      font-size: 11.5px;
       font-weight: 600;
       color: var(--abhi-text-primary, #0f172a);
       white-space: nowrap;
@@ -1819,7 +2165,7 @@ export interface SpatialNodeData {
     }
 
     .task-message-line {
-      font-size: 11px;
+      font-size: 10px;
       color: var(--abhi-text-secondary, #475569);
       white-space: nowrap;
       overflow: hidden;
@@ -1829,17 +2175,16 @@ export interface SpatialNodeData {
     .task-actions-group {
       display: flex;
       align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
+      gap: 6px;
     }
 
     .task-cancel-btn {
-      padding: 4px 8px;
+      padding: 3px 6px;
       background: rgba(239, 68, 68, 0.15);
       border: 1px solid var(--abhi-danger, #ef4444);
       color: var(--abhi-danger, #ef4444);
-      border-radius: 6px;
-      font-size: 10px;
+      border-radius: 5px;
+      font-size: 9.5px;
       font-weight: 600;
       cursor: pointer;
     }
@@ -1849,332 +2194,30 @@ export interface SpatialNodeData {
       border: none;
       color: var(--abhi-text-muted, #64748b);
       cursor: pointer;
-      font-size: 14px;
-    }
-
-    /* 8. Holographic Voice Spectral Waveform & Quick Action Matrix */
-    .dock-floating-auxiliary {
-      width: 100%;
-      max-width: 720px;
-      margin: 0 auto 8px auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      z-index: 48;
-      pointer-events: auto;
-      box-sizing: border-box;
-      padding: 0 8px;
-    }
-
-    .voice-spectral-analyzer {
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      gap: 4px;
-      height: 22px;
-      padding: 0 16px;
-      opacity: 0.6;
-      transition: opacity 0.3s ease;
-    }
-
-    .voice-spectral-analyzer.active {
-      opacity: 1;
-    }
-
-    .spectrum-bar {
-      width: 3px;
-      height: 6px;
-      border-radius: 2px;
-      background: linear-gradient(to top, var(--abhi-cyan, #0099cc), var(--abhi-blue, #0284c7));
-      box-shadow: 0 0 6px rgba(0, 153, 204, 0.4);
-      transition: height 0.1s ease;
-      animation: spectrumBounce 1.2s infinite ease-in-out;
-      animation-delay: calc(var(--bar-index) * 0.08s);
-    }
-
-    .voice-spectral-analyzer.active .spectrum-bar {
-      animation-duration: 0.6s;
-    }
-
-    @keyframes spectrumBounce {
-      0%, 100% { height: 4px; }
-      50% { height: 18px; }
-    }
-
-    .spatial-quick-matrix {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 6px;
-      width: 100%;
-    }
-
-    .quick-chip-btn {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 5px 10px;
-      background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.88));
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.18));
-      border-radius: 14px;
-      box-shadow: var(--abhi-raised-shadow, 3px 3px 8px rgba(0, 0, 0, 0.05));
-      color: var(--abhi-text-secondary, #475569);
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      transition: all var(--abhi-transition-fast, 160ms);
-      white-space: nowrap;
-    }
-
-    .quick-chip-btn:hover {
-      border-color: var(--abhi-cyan, #0099cc);
-      color: var(--abhi-cyan, #0099cc);
-      box-shadow: 0 0 10px rgba(0, 153, 204, 0.25);
-      transform: translateY(-1px);
-    }
-
-    .chip-icon {
-      font-size: 11px;
-    }
-
-    /* 9. Floating Neumorphic Command Dock */
-    .neumorphic-dock-container {
-      width: 100%;
-      max-width: 720px;
-      margin: 0 auto;
-      z-index: 50;
-      pointer-events: auto;
-      box-sizing: border-box;
-      padding: 0 4px;
-    }
-
-    .neumorphic-dock-shell {
-      position: relative;
-      background: var(--abhi-surface-raised, #ffffff);
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.2));
-      border-radius: var(--abhi-radius-dock, 24px);
-      box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.12), -6px -6px 18px rgba(255, 255, 255, 0.8));
-      padding: 8px 12px;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      transition: all var(--abhi-transition-normal, 280ms);
-    }
-
-    .neumorphic-dock-shell.working {
-      border-color: var(--abhi-border-active, rgba(0, 153, 204, 0.5));
-      box-shadow: var(--abhi-raised-shadow), 0 0 24px rgba(0, 153, 204, 0.35);
-    }
-
-    .dock-form {
-      width: 100%;
-    }
-
-    .dock-input-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--abhi-surface-inset, #f1f5f9);
-      border: 1px solid rgba(0, 0, 0, 0.08);
-      border-radius: 18px;
-      box-shadow: var(--abhi-inset-shadow, inset 3px 3px 8px rgba(0, 0, 0, 0.08), inset -3px -3px 8px rgba(255, 255, 255, 0.8));
-      padding: 6px 10px;
-    }
-
-    .dock-ai-icon {
-      width: 28px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--abhi-cyan, #0099cc);
-      font-size: 16px;
-    }
-
-    .dock-ai-icon.glow {
-      animation: pulseGlow 2s infinite;
-    }
-
-    .dock-spin {
-      animation: spin 1s linear infinite;
-    }
-
-    .dock-input-field {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--abhi-text-primary, #0f172a);
-      font-size: 13.5px;
-      font-weight: 500;
-      padding: 6px 4px;
-      min-width: 0;
-    }
-
-    .dock-input-field::placeholder {
-      color: var(--abhi-text-muted, #64748b);
-      font-size: 13px;
-    }
-
-    .dock-controls-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-    }
-
-    .dock-control-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--abhi-surface-raised, #ffffff);
-      border: 1px solid var(--abhi-border, rgba(0, 153, 204, 0.2));
-      box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.08), -2px -2px 6px rgba(255, 255, 255, 0.8);
-      color: var(--abhi-text-secondary, #475569);
-      cursor: pointer;
-      transition: all var(--abhi-transition-fast, 160ms);
-    }
-
-    .dock-control-btn:hover:not(:disabled) {
-      border-color: var(--abhi-cyan, #0099cc);
-      color: var(--abhi-cyan, #0099cc);
-      transform: translateY(-1px);
-    }
-
-    .dock-control-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .voice-btn.listening {
-      background: rgba(0, 153, 204, 0.2);
-      border-color: var(--abhi-cyan, #0099cc);
-      color: var(--abhi-cyan, #0099cc);
-      box-shadow: 0 0 12px rgba(0, 153, 204, 0.6);
-      animation: voicePulse 1.2s infinite;
-    }
-
-    @keyframes voicePulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.08); }
-    }
-
-    .submit-btn {
-      background: linear-gradient(135deg, var(--abhi-blue, #0284c7) 0%, var(--abhi-cyan, #0099cc) 100%);
-      border: none;
-      color: #ffffff;
-      box-shadow: 0 4px 14px rgba(0, 153, 204, 0.35);
-    }
-
-    .submit-btn:hover:not(:disabled) {
-      box-shadow: 0 6px 20px rgba(0, 153, 204, 0.55);
-      color: #ffffff;
-    }
-
-    .dock-error-banner {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 8px;
-      padding: 6px 12px;
-      background: rgba(239, 68, 68, 0.12);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 12px;
-      color: var(--abhi-danger, #ef4444);
-      font-size: 12px;
-    }
-
-    .error-close {
-      margin-left: auto;
-      background: none;
-      border: none;
-      color: var(--abhi-danger, #ef4444);
-      cursor: pointer;
-      font-size: 13px;
     }
 
     /* Responsive Breakpoints */
-    @media (max-width: 1380px) {
-      .hud-corner-bracket {
-        display: none;
-      }
-    }
-
-    @media (max-width: 1024px) {
-      .hud-center-telemetry {
-        display: none;
-      }
-      .holographic-telemetry-panel, .holographic-swarm-panel {
-        top: auto;
-        bottom: 180px;
-        max-height: 280px;
-      }
-      .flank-min-trigger {
-        top: auto;
-        bottom: 180px;
-      }
+    @media (max-width: 1200px) {
+      .vision-stats-row { grid-template-columns: repeat(2, 1fr); }
+      .telemetry-grid { grid-template-columns: 1fr; }
+      .swarm-cards-grid { grid-template-columns: repeat(2, 1fr); }
+      .automation-workspace-grid { grid-template-columns: 1fr; }
+      .hud-corner-bracket { display: none; }
     }
 
     @media (max-width: 768px) {
-      .main-agent-spatial-container {
-        padding: 10px 12px;
-      }
-      .btn-text, .switcher-text {
-        display: none;
-      }
-      .hud-brand-pill {
-        padding: 6px 10px;
-      }
-      .brand-title {
-        font-size: 13px;
-      }
-      .brand-sub {
-        display: none;
-      }
-      .subconscious-thought-bar {
+      .vision-dock-island { display: none; }
+      .vision-glass-panel {
         width: 100%;
-        margin-top: 4px;
-        padding: 4px 10px;
+        height: 100%;
+        margin-left: 0;
+        border-radius: 0;
+        padding: 10px;
       }
-      .thought-prefix {
-        display: none;
-      }
-      .thought-quantum-tag {
-        display: none;
-      }
-      .thought-stream-text {
-        font-size: 10.5px;
-      }
-      .holographic-telemetry-panel, .holographic-swarm-panel {
-        width: calc(100vw - 32px);
-        left: 16px;
-        right: 16px;
-        bottom: 180px;
-        max-height: 250px;
-      }
-      .theme-customizer-panel {
-        width: calc(100vw - 32px);
-        right: 16px;
-        left: 16px;
-        top: 60px;
-      }
-      .spatial-node-inspector {
-        width: calc(100vw - 32px);
-        right: 16px;
-        left: 16px;
-        top: 60px;
-      }
-      .spatial-quick-matrix {
-        display: none;
-      }
-      .dock-input-field::placeholder {
-        font-size: 11.5px;
-      }
+      .glass-pill-nav { display: none; }
+      .btn-text, .switcher-text { display: none; }
+      .vision-stats-row { grid-template-columns: 1fr; }
+      .swarm-cards-grid { grid-template-columns: 1fr; }
     }
   `]
 })
@@ -2186,7 +2229,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
   private readonly threeScene = inject(ThreeSceneManagerService);
 
   commandInput = '';
-  readonly inputPlaceholder = "Ask ABHI or command your desktop (e.g. 'Open Calculator and calculate 125 times 48')...";
+  readonly inputPlaceholder = "Ask ABHI or run desktop automation (e.g. 'Open Calculator and calculate 125 times 48')...";
   readonly showWorkspaceMenu = signal(false);
   readonly showThemeCustomizer = signal(false);
   readonly showNeuralInspector = signal(false);
@@ -2194,23 +2237,67 @@ export class HomePageComponent implements OnInit, OnDestroy {
   readonly errorMessage = signal<string | null>(null);
   readonly selectedNode = signal<SpatialNodeData | null>(null);
 
-  // Responsive Flank Panel Toggles
-  readonly showTelemetry = signal(true);
-  readonly showSwarm = signal(true);
+  // VisionOS Active View Tab (Image 5 Navigation)
+  readonly activeMainTab = signal<'AUTOMATION' | 'TELEMETRY' | 'SWARM' | 'NEURAL'>('AUTOMATION');
+  readonly selectedScenario = signal<AutomationScenario | null>(null);
 
   readonly spectralBars = Array.from({ length: 16 }, (_, i) => i);
 
   readonly subconsciousThoughts = [
-    'Autonomous Core: Monitoring OS desktop automation surfaces (Windows UIAutomation + Playwright)...',
-    'Dual-State Physical Verifier: Live pixel differential verification & process handle inspection...',
-    'Local Inference Core: Ollama quantization weights synchronized with zero external telemetry...',
-    'Specialist Swarm: 8 autonomous agents connected via high-speed action-potential conduits...',
+    'Autonomous Arc Reactor: Monitoring Windows UIAutomation + Playwright event buses...',
+    'Dual-State Physical Verifier: Live pixel differential verification & process audit active...',
+    'Local Inference Engine: Ollama quantized model synchronized with zero cloud telemetry...',
+    'Specialist Swarm: 8 autonomous agent satellites orbiting with laser conduits active...',
     'Cognitive Memory: SQLite WAL persistent graph primed, zero uncommitted transitions...',
-    'Three.js Quantum Void: 1,400 vortex particles, nested icosahedron & expanding shockwaves active...'
+    'Cybernetic Arc Optics: Concentric counter-rotating mechanical dials & 360° radar active...'
   ];
   readonly activeThoughtIndex = signal(0);
   readonly activeSubconsciousThought = computed(() => this.subconsciousThoughts[this.activeThoughtIndex()]);
   private thoughtIntervalId: any = null;
+
+  // 1-Click Interactive Automation Scenarios
+  readonly automationScenarios: AutomationScenario[] = [
+    {
+      id: 'calc',
+      title: 'Run Calculator & Verify (125 × 48)',
+      description: 'Physical Windows UIAutomation launch, numeric key input, pixel result verification',
+      icon: '⚡',
+      command: 'Open Calculator and calculate 125 times 48',
+      category: 'DESKTOP'
+    },
+    {
+      id: 'vision_ocr',
+      title: 'Real-Time Screen Perception & OCR',
+      description: 'Capture active desktop surfaces, detect window elements and foreground hierarchy',
+      icon: '👁️',
+      command: 'Scan screen and inspect active windows',
+      category: 'VISION'
+    },
+    {
+      id: 'process_audit',
+      title: 'Audit Running Windows Processes',
+      description: 'PowerShell sandboxed inspection of handles, memory consumption & CPU threads',
+      icon: '⚙️',
+      command: 'Audit active desktop processes and resource consumption',
+      category: 'SYSTEM'
+    },
+    {
+      id: 'web_search',
+      title: 'Playwright Web Agent Search',
+      description: 'Automated browser navigation, DOM extraction & local summary generation',
+      icon: '🌐',
+      command: 'Open browser and research latest local AI agent capabilities',
+      category: 'BROWSER'
+    },
+    {
+      id: 'self_heal',
+      title: 'Self-Healing AST Health Check',
+      description: 'Dual-State physical verification across registry, gateway & sqlite memory',
+      icon: '🛡️',
+      command: 'Verify physical operating state of desktop and running processes',
+      category: 'HEALTH'
+    }
+  ];
 
   readonly specialistAgents: SpatialNodeData[] = [
     { id: 'supervisor', name: 'Central Supervisor', role: 'Task Decomposition & Orchestration', status: 'ACTIVE', capabilities: ['Decomposition', 'Plan Validation', 'Safety Gate'], riskTier: 'CRITICAL' },
@@ -2301,12 +2388,6 @@ export class HomePageComponent implements OnInit, OnDestroy {
         this.threeScene.setEnergyState('IDLE');
       }
     });
-
-    // Check window width on initialization for smart default
-    if (typeof window !== 'undefined' && window.innerWidth < 1360) {
-      this.showTelemetry.set(false);
-      this.showSwarm.set(false);
-    }
   }
 
   ngOnInit(): void {
@@ -2325,30 +2406,21 @@ export class HomePageComponent implements OnInit, OnDestroy {
     }
   }
 
-  selectSpecialistAgent(agent: SpatialNodeData): void {
-    this.selectedNode.set(agent);
+  setActiveTab(tab: 'AUTOMATION' | 'TELEMETRY' | 'SWARM' | 'NEURAL'): void {
+    this.activeMainTab.set(tab);
+    if (tab === 'NEURAL') {
+      this.showNeuralInspector.set(false);
+    }
   }
 
-  executeQuickAction(action: string): void {
-    switch (action) {
-      case 'vision':
-        this.commandInput = 'Scan screen and inspect active windows';
-        this.onSubmitCommand();
-        break;
-      case 'neural':
-        this.toggleNeuralInspector();
-        break;
-      case 'network':
-        this.navigateTo('/network');
-        break;
-      case 'verify':
-        this.commandInput = 'Verify physical state of desktop and running processes';
-        this.onSubmitCommand();
-        break;
-      case 'lab':
-        this.navigateTo('/intelligence');
-        break;
-    }
+  executeScenario(scenario: AutomationScenario): void {
+    this.selectedScenario.set(scenario);
+    this.commandInput = scenario.command;
+    this.onSubmitCommand();
+  }
+
+  selectSpecialistAgent(agent: SpatialNodeData): void {
+    this.selectedNode.set(agent);
   }
 
   toggleWorkspaceMenu(): void {
@@ -2367,11 +2439,7 @@ export class HomePageComponent implements OnInit, OnDestroy {
   }
 
   toggleNeuralInspector(): void {
-    this.showNeuralInspector.update((v) => !v);
-    if (this.showNeuralInspector()) {
-      this.showWorkspaceMenu.set(false);
-      this.showThemeCustomizer.set(false);
-    }
+    this.setActiveTab('NEURAL');
   }
 
   closeThemeCustomizer(): void {
