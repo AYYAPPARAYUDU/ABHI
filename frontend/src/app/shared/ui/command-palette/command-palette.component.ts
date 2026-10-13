@@ -1,23 +1,42 @@
-import { Component, HostListener, inject, computed } from '@angular/core';
+import { Component, HostListener, inject, computed, ElementRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
 import { CommandPaletteAction } from '../../../core/models/agent-experience.model';
+import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
+import { AnimeInteractiveDirective } from '../../directives/anime-interactive.directive';
 
 @Component({
   selector: 'app-command-palette',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AnimeInteractiveDirective],
   templateUrl: './command-palette.component.html',
   styleUrl: './command-palette.component.css'
 })
 export class CommandPaletteComponent {
   private router = inject(Router);
   private stateService = inject(OperatorStateService);
+  private animService = inject(AnimeAnimationService);
+  private hostEl = inject(ElementRef);
 
   searchQuery = '';
   isOpen = this.stateService.commandPaletteOpen;
+
+  constructor() {
+    effect(() => {
+      if (this.isOpen()) {
+        setTimeout(() => {
+          const root = this.hostEl.nativeElement;
+          const backdrop = root.querySelector('.command-palette-backdrop');
+          const modal = root.querySelector('.command-palette-modal');
+          if (modal && backdrop) {
+            this.animService.popInModal(modal, backdrop);
+          }
+        }, 20);
+      }
+    });
+  }
 
   private allActions: CommandPaletteAction[] = [
     {

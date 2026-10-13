@@ -25,6 +25,8 @@ import {
   MediaArtifactDTO,
   MediaWorkflowTemplate,
 } from '../../models/media.model';
+import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
+import { AnimeCounterDirective } from '../../../../shared/directives/anime-counter.directive';
 
 @Component({
   selector: 'app-media-page',
@@ -48,6 +50,8 @@ import {
     WorkflowSimulationPanelComponent,
     WorkflowManifestViewerComponent,
     MediaProvenanceInspectorComponent,
+    AnimeInteractiveDirective,
+    AnimeCounterDirective,
   ],
   templateUrl: './media-page.component.html',
   styleUrl: './media-page.component.css'

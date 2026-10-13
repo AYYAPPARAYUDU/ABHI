@@ -5,7 +5,7 @@
       <span class="panel-icon">📡</span>
       <h2 class="panel-title m-0">LIVE TELEMETRY STREAM</h2>
       <span class="badge bg-dark border border-secondary text-secondary font-monospace ms-2">
-        {{ filteredEvents().length }} / {{ rawEvents().length }}
+        <span [appAnimeCounter]="filteredEvents().length">{{ filteredEvents().length }}</span> / <span [appAnimeCounter]="rawEvents().length">{{ rawEvents().length }}</span>
       </span>
     </div>
 
@@ -36,6 +36,7 @@
 
       <!-- Clear buffer button -->
       <button
+        appAnimeInteractive
         class="btn btn-outline-secondary btn-sm font-monospace text-nowrap"
         (click)="clearBuffer()"
         title="Clear live memory buffer"

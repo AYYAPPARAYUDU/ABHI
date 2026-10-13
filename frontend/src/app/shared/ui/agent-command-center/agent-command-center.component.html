@@ -54,6 +54,8 @@
           <button
             type="button"
             class="voice-toggle-btn"
+            appAnimeInteractive
+            [appAnimeType]="'button'"
             [class.listening]="isListening()"
             (click)="toggleVoice()"
             title="Voice Input (English, Telugu, Hindi, Tamil)"
@@ -69,6 +71,8 @@
           <button
             type="submit"
             class="submit-action-btn"
+            appAnimeInteractive
+            [appAnimeType]="'button'"
             [disabled]="!inputText.trim() || commandService.isProcessing()"
             title="Execute Command"
           >
@@ -90,6 +94,8 @@
         <button
           type="button"
           class="sug-pill"
+          appAnimeInteractive
+          [appAnimeType]="'subtle'"
           (click)="applySuggestion(sug.text, sug.lang)"
         >
           @if (sug.lang !== 'en') {

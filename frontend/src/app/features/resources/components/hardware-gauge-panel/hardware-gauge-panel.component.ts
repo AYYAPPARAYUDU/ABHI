@@ -1,15 +1,16 @@
 import { Component, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HardwareInventoryDTO } from '../../models/resource.model';
+import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
 
 @Component({
   selector: 'app-hardware-gauge-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AnimeInteractiveDirective],
   template: `
     <div class="gauges-grid">
       <!-- CPU Gauge -->
-      <div class="gauge-card">
+      <div class="gauge-card" appAnimeInteractive>
         <div class="gauge-header">
           <span class="gauge-label">Processor (CPU)</span>
           <span class="abhi-badge abhi-badge-cyan">
@@ -33,7 +34,7 @@ import { HardwareInventoryDTO } from '../../models/resource.model';
       </div>
 
       <!-- System RAM Gauge -->
-      <div class="gauge-card">
+      <div class="gauge-card" appAnimeInteractive>
         <div class="gauge-header">
           <span class="gauge-label">System Memory (RAM)</span>
           <span class="abhi-badge abhi-badge-cyan">
@@ -57,7 +58,7 @@ import { HardwareInventoryDTO } from '../../models/resource.model';
       </div>
 
       <!-- GPU & VRAM Gauge -->
-      <div class="gauge-card">
+      <div class="gauge-card" appAnimeInteractive>
         <div class="gauge-header">
           <span class="gauge-label">Discrete GPU & VRAM</span>
           <span class="abhi-badge abhi-badge-success">
@@ -81,7 +82,7 @@ import { HardwareInventoryDTO } from '../../models/resource.model';
       </div>
 
       <!-- NPU & Storage Status -->
-      <div class="gauge-card">
+      <div class="gauge-card" appAnimeInteractive>
         <div class="gauge-header">
           <span class="gauge-label">NPU & Storage</span>
           <span

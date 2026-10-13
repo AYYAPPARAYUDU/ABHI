@@ -1,12 +1,14 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, AfterViewInit, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AgentCommandResult } from '../../../core/models/agent-experience.model';
+import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
+import { AnimeInteractiveDirective } from '../../directives/anime-interactive.directive';
 
 @Component({
   selector: 'app-result-sheet',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AnimeInteractiveDirective],
   template: `
     @if (result) {
       <div class="result-sheet-container" [attr.data-type]="result.type">
@@ -37,7 +39,9 @@ import { AgentCommandResult } from '../../../core/models/agent-experience.model'
           <button
             type="button"
             class="close-btn"
-            (click)="onDismiss.emit()"
+            appAnimeInteractive
+            [appAnimeType]="'button'"
+            (click)="dismiss($event)"
             title="Dismiss Result"
           >
             ✕
@@ -100,15 +104,17 @@ import { AgentCommandResult } from '../../../core/models/agent-experience.model'
         @if (result.actions && result.actions.length > 0) {
           <div class="sheet-footer">
             @for (action of result.actions; track action.label) {
-              <button
-                type="button"
-                class="action-btn"
-                [class.primary]="action.actionType === 'NAVIGATE' || action.actionType === 'APPROVE'"
-                [class.secondary]="action.actionType === 'RETRY'"
-                (click)="handleAction(action)"
-              >
-                {{ action.label }}
-              </button>
+                <button
+                  type="button"
+                  class="action-btn"
+                  appAnimeInteractive
+                  [appAnimeType]="'button'"
+                  [class.primary]="action.actionType === 'NAVIGATE' || action.actionType === 'APPROVE'"
+                  [class.secondary]="action.actionType === 'RETRY'"
+                  (click)="handleAction(action, $event)"
+                >
+                  {{ action.label }}
+                </button>
             }
           </div>
         }
@@ -364,12 +370,29 @@ import { AgentCommandResult } from '../../../core/models/agent-experience.model'
     }
   `]
 })
-export class UniversalResultSheetComponent {
+export class UniversalResultSheetComponent implements AfterViewInit {
   @Input() result: AgentCommandResult | null = null;
   @Output() onDismiss = new EventEmitter<void>();
   @Output() onAction = new EventEmitter<any>();
 
   private readonly router = inject(Router);
+  private readonly animService = inject(AnimeAnimationService);
+  private readonly hostEl = inject(ElementRef);
+
+  ngAfterViewInit(): void {
+    const container = this.hostEl.nativeElement.querySelector('.result-sheet-container');
+    if (container) {
+      this.animService.popInModal(container);
+    }
+  }
+
+  dismiss(event?: MouseEvent): void {
+    const container = this.hostEl.nativeElement?.querySelector('.result-sheet-container');
+    if (container) {
+      this.animService.popOutModal(container);
+    }
+    this.onDismiss.emit();
+  }
 
   navigateItem(routeLink?: string): void {
     if (routeLink) {
@@ -377,7 +400,10 @@ export class UniversalResultSheetComponent {
     }
   }
 
-  handleAction(action: any): void {
+  handleAction(action: any, event?: MouseEvent): void {
+    if (event?.currentTarget) {
+      this.animService.tactileClick(event.currentTarget as HTMLElement);
+    }
     if (action.actionType === 'NAVIGATE' && action.payload) {
       this.router.navigateByUrl(action.payload);
     } else {

@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, AfterViewInit, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -6,18 +6,22 @@ import { filter, map } from 'rxjs/operators';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
 import { UserExperienceMode } from '../../../core/models/agent-experience.model';
 import { ThemeService } from '../../../core/services/theme.service';
+import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
+import { AnimeInteractiveDirective } from '../../../shared/directives/anime-interactive.directive';
 
 @Component({
   selector: 'app-contextual-topbar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, AnimeInteractiveDirective],
   templateUrl: './contextual-topbar.component.html',
   styleUrl: './contextual-topbar.component.css'
 })
-export class ContextualTopbarComponent {
+export class ContextualTopbarComponent implements AfterViewInit {
   readonly stateService = inject(OperatorStateService);
   readonly themeService = inject(ThemeService);
+  readonly animService = inject(AnimeAnimationService);
   private readonly router = inject(Router);
+  private readonly hostEl = inject(ElementRef);
 
   // Reactive URL signal updated on every NavigationEnd
   readonly currentUrl = toSignal(
@@ -58,10 +62,6 @@ export class ContextualTopbarComponent {
     if (url.startsWith('/resources')) return 'Resource Governance';
     if (url.startsWith('/system')) return 'System Diagnostics';
     if (url.startsWith('/knowledge')) return 'Knowledge & Ontology';
-    if (url.startsWith('/interaction')) return 'Interaction Console';
-    if (url.startsWith('/perception')) return 'Vision & Perception';
-    if (url.startsWith('/avatar')) return 'Spatial 3D Avatar';
-    if (url.startsWith('/runtime')) return 'Runtime Adapters';
     return 'ABHI AI';
   });
 
@@ -71,12 +71,31 @@ export class ContextualTopbarComponent {
     return this.stateService.health().overall;
   });
 
+  ngAfterViewInit(): void {
+    const root = this.hostEl.nativeElement;
+    if (!root) return;
+    const ribbonButtons = root.querySelectorAll('.bar-nav-ribbon .ribbon-btn');
+    if (ribbonButtons.length > 0) {
+      this.animService.staggerEnter({
+        targets: ribbonButtons,
+        translateY: [-8, 0],
+        opacity: [0, 1],
+        scale: [0.95, 1],
+        duration: 500,
+        delay: 30
+      });
+    }
+  }
+
   isActive(route: string): boolean {
     const url = this.currentUrl() || this.router.url;
     return url.startsWith(route);
   }
 
-  navigateTo(route: string): void {
+  navigateTo(route: string, event?: MouseEvent): void {
+    if (event?.currentTarget) {
+      this.animService.tactileClick(event.currentTarget as HTMLElement);
+    }
     this.router.navigateByUrl(route);
   }
 
@@ -85,7 +104,10 @@ export class ContextualTopbarComponent {
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"><rect width="100%" height="100%" fill="%2300f0ff"/><text x="50%" y="55%" fill="%23000" font-size="12" font-family="sans-serif" font-weight="bold" dominant-baseline="middle" text-anchor="middle">AR</text></svg>';
   }
 
-  cycleTheme(): void {
+  cycleTheme(event?: MouseEvent): void {
+    if (event?.currentTarget) {
+      this.animService.tactileClick(event.currentTarget as HTMLElement);
+    }
     const presets = this.themeService.availablePresets;
     const currentId = this.themeService.activeTheme().id;
     const idx = presets.findIndex((p) => p.id === currentId);

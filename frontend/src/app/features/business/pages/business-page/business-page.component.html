@@ -57,29 +57,29 @@
         <div class="fin-metrics-row">
           <div class="fin-metric-box">
             <span class="fin-label">ACTUAL RECEIVED</span>
-            <span class="fin-val highlight">$ {{ (businessService.financials()?.actual_revenue_received_usd || 0).toFixed(2) }}</span>
+            <span class="fin-val highlight" [appAnimeCounter]="businessService.financials()?.actual_revenue_received_usd || 0" [counterPrefix]="'$ '" [counterDecimals]="2">$ {{ (businessService.financials()?.actual_revenue_received_usd || 0).toFixed(2) }}</span>
             <span class="fin-sub">Confirmed in bank</span>
           </div>
           <div class="fin-metric-box">
             <span class="fin-label">OPERATING EXPENSES</span>
-            <span class="fin-val exp">$ {{ (businessService.financials()?.operating_expenses_usd || 0).toFixed(2) }}</span>
+            <span class="fin-val exp" [appAnimeCounter]="businessService.financials()?.operating_expenses_usd || 0" [counterPrefix]="'$ '" [counterDecimals]="2">$ {{ (businessService.financials()?.operating_expenses_usd || 0).toFixed(2) }}</span>
             <span class="fin-sub">Compute & local lease</span>
           </div>
           <div class="fin-metric-box">
             <span class="fin-label">NET RESULT</span>
-            <span class="fin-val" [class.negative]="(businessService.financials()?.net_result_usd || 0) < 0">
+            <span class="fin-val" [class.negative]="(businessService.financials()?.net_result_usd || 0) < 0" [appAnimeCounter]="businessService.financials()?.net_result_usd || 0" [counterPrefix]="'$ '" [counterDecimals]="2">
               $ {{ (businessService.financials()?.net_result_usd || 0).toFixed(2) }}
             </span>
             <span class="fin-sub">Actual - Expenses</span>
           </div>
           <div class="fin-metric-box">
             <span class="fin-label">PENDING PAYMENTS</span>
-            <span class="fin-val">$ {{ (businessService.financials()?.pending_payments_usd || 0).toFixed(2) }}</span>
+            <span class="fin-val" [appAnimeCounter]="businessService.financials()?.pending_payments_usd || 0" [counterPrefix]="'$ '" [counterDecimals]="2">$ {{ (businessService.financials()?.pending_payments_usd || 0).toFixed(2) }}</span>
             <span class="fin-sub">Invoiced / unverified</span>
           </div>
           <div class="fin-metric-box">
             <span class="fin-label">FORECAST REVENUE</span>
-            <span class="fin-val forecast">$ {{ (businessService.financials()?.forecast_revenue_usd || 0).toFixed(2) }}</span>
+            <span class="fin-val forecast" [appAnimeCounter]="businessService.financials()?.forecast_revenue_usd || 0" [counterPrefix]="'$ '" [counterDecimals]="2">$ {{ (businessService.financials()?.forecast_revenue_usd || 0).toFixed(2) }}</span>
             <span class="fin-sub">Estimated projection</span>
           </div>
         </div>
@@ -90,8 +90,10 @@
         @for (sec of businessService.sectors(); track sec.id) {
           <div
             class="sector-tab"
+            appAnimeInteractive
+            [appAnimeType]="'button'"
             [class.active]="selectedSectorId() === sec.id"
-            (click)="selectSector(sec.id)"
+            (click)="selectSector(sec.id, $event)"
             [attr.tabindex]="0"
             role="button"
           >

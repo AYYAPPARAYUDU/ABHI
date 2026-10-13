@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TaskSummary } from '../../models/task.model';
+import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
 
 @Component({
   selector: 'app-task-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AnimeInteractiveDirective],
   templateUrl: './task-card.component.html',
   styleUrl: './task-card.component.css'
 })

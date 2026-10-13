@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, computed, effect } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, AfterViewInit, signal, computed, effect, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -7,6 +7,9 @@ import { AgentCommandService } from '../../../../core/services/agent-command.ser
 import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
 import { ThemeService, AbhiThemeColors } from '../../../../core/services/theme.service';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
+import { AnimeAnimationService } from '../../../../core/services/anime-animation.service';
+import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
+import { AnimeCounterDirective } from '../../../../shared/directives/anime-counter.directive';
 import { NeuralNetworkViewerComponent } from '../../../../shared/components/neural-network-viewer/neural-network-viewer.component';
 import { UniversalResultSheetComponent } from '../../../../shared/ui/result-sheet/result-sheet.component';
 
@@ -31,17 +34,30 @@ export interface AutomationScenario {
 @Component({
   selector: 'app-home-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, NeuralNetworkViewerComponent, UniversalResultSheetComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    NeuralNetworkViewerComponent,
+    UniversalResultSheetComponent,
+    AnimeInteractiveDirective,
+    AnimeCounterDirective
+  ],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.css'
 })
-export class HomePageComponent implements OnInit, OnDestroy {
+export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly stateService = inject(OperatorStateService);
   readonly commandService = inject(AgentCommandService);
   readonly themeService = inject(ThemeService);
   readonly speechVoice = inject(SpeechVoiceService);
+  readonly animService = inject(AnimeAnimationService);
   private readonly router = inject(Router);
   private readonly threeScene = inject(ThreeSceneManagerService);
+  private readonly hostEl = inject(ElementRef);
+
+  @ViewChild('cmdInputRef') cmdInputRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('dockFormRef') dockFormRef?: ElementRef<HTMLFormElement>;
 
   commandInput = '';
   readonly inputPlaceholder = "Ask ABHI or run desktop automation (e.g. 'Open Calculator and calculate 125 times 48')...";
@@ -241,6 +257,12 @@ export class HomePageComponent implements OnInit, OnDestroy {
         this.threeScene.setEnergyState('EXECUTING');
       } else if (this.activeTaskStatus()?.stage === 'COMPLETED') {
         this.threeScene.setEnergyState('VERIFIED');
+        setTimeout(() => {
+          const overlay = this.hostEl.nativeElement?.querySelector('.contextual-task-overlay');
+          if (overlay) {
+            this.animService.celebrateSuccess(overlay);
+          }
+        }, 50);
       } else {
         this.threeScene.setEnergyState('IDLE');
       }
@@ -253,6 +275,47 @@ export class HomePageComponent implements OnInit, OnDestroy {
     this.thoughtIntervalId = setInterval(() => {
       this.activeThoughtIndex.update((idx) => (idx + 1) % this.subconsciousThoughts.length);
     }, 4500);
+  }
+
+  ngAfterViewInit(): void {
+    const root = this.hostEl.nativeElement;
+    if (!root) return;
+
+    // Animate HUD pill, tabs, and controls with staggered entrance
+    const hudPills = root.querySelectorAll('.hud-brand-pill, .glass-nav-tab, .hud-tool-btn, .subconscious-thought-bar');
+    if (hudPills.length > 0) {
+      this.animService.staggerEnter({
+        targets: hudPills,
+        translateY: [-12, 0],
+        opacity: [0, 1],
+        scale: [0.97, 1],
+        duration: 550,
+        delay: 40
+      });
+    }
+
+    const statCards = root.querySelectorAll('.vision-stat-card, .scenario-pill-item');
+    if (statCards.length > 0) {
+      this.animService.staggerEnter({
+        targets: statCards,
+        translateY: [18, 0],
+        opacity: [0, 1],
+        duration: 600,
+        delay: 80
+      });
+    }
+
+    const dock = root.querySelector('.neumorphic-dock-shell');
+    if (dock) {
+      this.animService.staggerEnter({
+        targets: dock,
+        translateY: [25, 0],
+        opacity: [0, 1],
+        scale: [0.96, 1],
+        duration: 700,
+        delay: 150
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -274,6 +337,17 @@ export class HomePageComponent implements OnInit, OnDestroy {
     if (tab === 'NEURAL') {
       this.showNeuralInspector.set(false);
     }
+    setTimeout(() => {
+      const activeCards = this.hostEl.nativeElement?.querySelectorAll('.tab-body .vision-stat-card, .tab-body .vision-content-card, .tab-body .swarm-node-card');
+      if (activeCards && activeCards.length > 0) {
+        this.animService.staggerEnter({
+          targets: activeCards,
+          translateY: [15, 0],
+          opacity: [0, 1],
+          duration: 480
+        });
+      }
+    }, 40);
   }
 
   executeScenario(scenario: AutomationScenario): void {
@@ -403,7 +477,17 @@ export class HomePageComponent implements OnInit, OnDestroy {
 
   async onSubmitCommand(): Promise<void> {
     const text = this.commandInput.trim();
-    if (!text || this.isWorking()) return;
+    if (!text) {
+      if (this.dockFormRef?.nativeElement) {
+        this.animService.shakeError(this.dockFormRef.nativeElement);
+      }
+      return;
+    }
+    if (this.isWorking()) return;
+
+    if (this.dockFormRef?.nativeElement) {
+      this.animService.tactileClick(this.dockFormRef.nativeElement);
+    }
 
     this.errorMessage.set(null);
     try {

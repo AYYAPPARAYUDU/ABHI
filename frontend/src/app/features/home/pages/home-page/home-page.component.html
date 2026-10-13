@@ -195,18 +195,18 @@
           <div class="tab-body automation-tab-body">
             <!-- Top Metric Stat Cards (Styled like Image 5 Top Stats) -->
             <div class="vision-stats-row">
-              <div class="vision-stat-card">
+              <div class="vision-stat-card" appAnimeInteractive [appAnimeType]="'card'">
                 <div class="stat-circle-meter" title="Core Execution Efficiency">
-                  <span class="circle-val">99.8%</span>
+                  <span class="circle-val" [appAnimeCounter]="99.8" [counterDecimals]="1" [counterSuffix]="'%'">99.8%</span>
                 </div>
                 <div class="stat-text-group">
                   <span class="stat-title">Dual-State Verified</span>
-                  <span class="stat-num">1,420+ Runs</span>
+                  <span class="stat-num" [appAnimeCounter]="1420" [counterSuffix]="'+ Runs'">1,420+ Runs</span>
                   <span class="stat-sub">Physical Observed State</span>
                 </div>
               </div>
 
-              <div class="vision-stat-card">
+              <div class="vision-stat-card" appAnimeInteractive [appAnimeType]="'card'">
                 <div class="stat-text-group">
                   <span class="stat-title">Inference Engine</span>
                   <span class="stat-num">ABHI Native</span>
@@ -214,7 +214,7 @@
                 </div>
               </div>
 
-              <div class="vision-stat-card">
+              <div class="vision-stat-card" appAnimeInteractive [appAnimeType]="'card'">
                 <div class="stat-text-group">
                   <span class="stat-title">Memory WAL Graph</span>
                   <span class="stat-num">0 Pending</span>
@@ -222,7 +222,7 @@
                 </div>
               </div>
 
-              <div class="vision-stat-card">
+              <div class="vision-stat-card" appAnimeInteractive [appAnimeType]="'card'">
                 <div class="stat-text-group">
                   <span class="stat-title">Swarm Consensus</span>
                   <span class="stat-num">8 Agents</span>
@@ -260,6 +260,8 @@
                     <button
                       type="button"
                       class="scenario-pill-item"
+                      appAnimeInteractive
+                      [appAnimeType]="'button'"
                       [class.active]="selectedScenario()?.id === scenario.id"
                       (click)="executeScenario(scenario)"
                       [disabled]="isWorking()"
@@ -433,7 +435,7 @@
           </div>
 
           <div class="neumorphic-dock-shell" [class.working]="isWorking()" [class.has-error]="errorMessage()">
-            <form class="dock-form" (ngSubmit)="onSubmitCommand()">
+            <form #dockFormRef class="dock-form" (ngSubmit)="onSubmitCommand()">
               <div class="dock-input-wrapper">
                 <!-- AI Core Symbol -->
                 <div class="dock-ai-icon" [class.glow]="isWorking()">
@@ -446,6 +448,7 @@
 
                 <!-- Main Inset Command Input -->
                 <input
+                  #cmdInputRef
                   type="text"
                   class="dock-input-field"
                   [(ngModel)]="commandInput"

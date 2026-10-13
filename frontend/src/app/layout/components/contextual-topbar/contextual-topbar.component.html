@@ -20,8 +20,10 @@
       <button
         type="button"
         class="ribbon-btn"
+        appAnimeInteractive
+        [appAnimeType]="'button'"
         [class.active]="isActive(item.route)"
-        (click)="navigateTo(item.route)"
+        (click)="navigateTo(item.route, $event)"
         [title]="item.label"
       >
         <span class="ribbon-icon">{{ item.icon }}</span>
@@ -70,7 +72,9 @@
     <button
       type="button"
       class="theme-quick-btn"
-      (click)="cycleTheme()"
+      appAnimeInteractive
+      [appAnimeType]="'button'"
+      (click)="cycleTheme($event)"
       [title]="'Active Theme: ' + themeService.activeTheme().label + ' (Click to Switch)'"
     >
       <span class="theme-icon">🎨</span>

@@ -1,9 +1,12 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, AfterViewInit, signal, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { BusinessService } from '../../services/business.service';
 import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
+import { AnimeAnimationService } from '../../../../core/services/anime-animation.service';
+import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
+import { AnimeCounterDirective } from '../../../../shared/directives/anime-counter.directive';
 import {
   BusinessApproval,
   BusinessOpportunity,
@@ -14,13 +17,15 @@ import {
 @Component({
   selector: 'app-business-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, AnimeInteractiveDirective, AnimeCounterDirective],
   templateUrl: './business-page.component.html',
   styleUrl: './business-page.component.css'
 })
-export class BusinessPageComponent implements OnInit {
+export class BusinessPageComponent implements OnInit, AfterViewInit {
   readonly businessService = inject(BusinessService);
+  readonly animService = inject(AnimeAnimationService);
   private readonly threeScene = inject(ThreeSceneManagerService);
+  private readonly hostEl = inject(ElementRef);
 
   readonly selectedSectorId = signal<string | null>(null);
   readonly isExecuting = signal<boolean>(false);
@@ -42,19 +47,53 @@ export class BusinessPageComponent implements OnInit {
 
   ngOnInit(): void {
     this.threeScene.setMode('BUSINESS');
-    this.businessService.fetchSectors().subscribe();
-    this.businessService.fetchProjects().subscribe();
+    this.businessService.fetchSectors().subscribe(() => this.animateCards());
+    this.businessService.fetchProjects().subscribe(() => this.animateCards());
     this.businessService.fetchOpportunities().subscribe();
     this.businessService.fetchFinancials().subscribe();
   }
 
-  selectSector(sectorId: string): void {
+  ngAfterViewInit(): void {
+    this.animateCards();
+  }
+
+  private animateCards(): void {
+    const root = this.hostEl.nativeElement;
+    if (!root) return;
+
+    const metrics = root.querySelectorAll('.fin-metric-box, .sector-tab');
+    if (metrics.length > 0) {
+      this.animService.staggerEnter({
+        targets: metrics,
+        translateY: [15, 0],
+        opacity: [0, 1],
+        duration: 550,
+        delay: 40
+      });
+    }
+
+    const cards = root.querySelectorAll('.project-card, .opp-card');
+    if (cards.length > 0) {
+      this.animService.staggerEnter({
+        targets: cards,
+        translateY: [20, 0],
+        opacity: [0, 1],
+        duration: 600,
+        delay: 60
+      });
+    }
+  }
+
+  selectSector(sectorId: string, event?: MouseEvent): void {
+    if (event?.currentTarget) {
+      this.animService.tactileClick(event.currentTarget as HTMLElement);
+    }
     if (this.selectedSectorId() === sectorId) {
       this.selectedSectorId.set(null);
-      this.businessService.fetchProjects().subscribe();
+      this.businessService.fetchProjects().subscribe(() => this.animateCards());
     } else {
       this.selectedSectorId.set(sectorId);
-      this.businessService.fetchProjects(sectorId).subscribe();
+      this.businessService.fetchProjects(sectorId).subscribe(() => this.animateCards());
     }
   }
 

@@ -20,19 +20,20 @@
       <div class="media-metric-well">
         <span class="metric-label">VRAM HEADROOM</span>
         <span class="metric-value cyan-val">
-          {{ mediaService.vramFreeMB() }} MB Free
+          <span [appAnimeCounter]="mediaService.vramFreeMB()">{{ mediaService.vramFreeMB() }}</span> MB Free
         </span>
       </div>
 
       <div class="media-metric-well">
         <span class="metric-label">ACTIVE JOBS</span>
         <span class="metric-value blue-val">
-          {{ mediaService.activeJobsCount() }} Active
+          <span [appAnimeCounter]="mediaService.activeJobsCount()">{{ mediaService.activeJobsCount() }}</span> Active
         </span>
       </div>
 
       <button
         type="button"
+        appAnimeInteractive
         (click)="mediaService.refreshAll()"
         class="media-refresh-btn"
         title="Refresh Media State"
@@ -46,6 +47,7 @@
   <nav class="media-tabs-ribbon" role="tablist" aria-label="Media Studio Sub-routes">
     <button
       type="button"
+      appAnimeInteractive
       role="tab"
       (click)="activeTab.set('provenance')"
       [class.active]="activeTab() === 'provenance'"
@@ -55,6 +57,7 @@
     </button>
     <button
       type="button"
+      appAnimeInteractive
       role="tab"
       (click)="activeTab.set('creative')"
       [class.active]="activeTab() === 'creative'"
@@ -64,6 +67,7 @@
     </button>
     <button
       type="button"
+      appAnimeInteractive
       role="tab"
       (click)="activeTab.set('composer')"
       [class.active]="activeTab() === 'composer'"
@@ -73,6 +77,7 @@
     </button>
     <button
       type="button"
+      appAnimeInteractive
       role="tab"
       (click)="activeTab.set('edit')"
       [class.active]="activeTab() === 'edit'"
@@ -82,6 +87,7 @@
     </button>
     <button
       type="button"
+      appAnimeInteractive
       role="tab"
       (click)="activeTab.set('video')"
       [class.active]="activeTab() === 'video'"
@@ -91,6 +97,7 @@
     </button>
     <button
       type="button"
+      appAnimeInteractive
       role="tab"
       (click)="activeTab.set('image')"
       [class.active]="activeTab() === 'image'"

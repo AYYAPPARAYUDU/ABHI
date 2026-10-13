@@ -1,10 +1,12 @@
-import { Component, inject, signal, Input } from '@angular/core';
+import { Component, inject, signal, Input, AfterViewInit, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgentCommandService } from '../../../core/services/agent-command.service';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
 import { UniversalResultSheetComponent } from '../result-sheet/result-sheet.component';
 import { AgentTaskCardComponent } from '../agent-task-card/agent-task-card.component';
+import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
+import { AnimeInteractiveDirective } from '../../directives/anime-interactive.directive';
 
 @Component({
   selector: 'app-agent-command-center',
@@ -13,16 +15,19 @@ import { AgentTaskCardComponent } from '../agent-task-card/agent-task-card.compo
     CommonModule,
     FormsModule,
     UniversalResultSheetComponent,
-    AgentTaskCardComponent
+    AgentTaskCardComponent,
+    AnimeInteractiveDirective
   ],
   templateUrl: './agent-command-center.component.html',
   styleUrl: './agent-command-center.component.css'
 })
-export class AgentCommandCenterComponent {
+export class AgentCommandCenterComponent implements AfterViewInit {
   @Input() compact = false;
 
   readonly commandService = inject(AgentCommandService);
   readonly operatorState = inject(OperatorStateService);
+  readonly animService = inject(AnimeAnimationService);
+  private hostEl = inject(ElementRef);
 
   inputText = '';
   isFocused = false;
@@ -54,6 +59,21 @@ export class AgentCommandCenterComponent {
     if (l === 'hi') return 'हिंदी';
     if (l === 'ta') return 'தமிழ்';
     return 'EN';
+  }
+
+  ngAfterViewInit(): void {
+    const root = this.hostEl.nativeElement;
+    if (!root) return;
+    const chips = root.querySelectorAll('.suggestion-chip, .action-btn');
+    if (chips.length > 0) {
+      this.animService.staggerEnter({
+        targets: chips,
+        translateY: [10, 0],
+        opacity: [0, 1],
+        duration: 450,
+        delay: 30
+      });
+    }
   }
 
   toggleLangMenu(): void {

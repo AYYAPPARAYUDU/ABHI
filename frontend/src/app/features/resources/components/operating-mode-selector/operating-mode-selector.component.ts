@@ -1,11 +1,12 @@
 import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { OperatingMode, DegradedMode, ResourcePressureLevel } from '../../models/resource.model';
+import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
 
 @Component({
   selector: 'app-operating-mode-selector',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AnimeInteractiveDirective],
   template: `
     <div class="mode-selector-card">
       <div class="state-indicator">
@@ -24,6 +25,7 @@ import { OperatingMode, DegradedMode, ResourcePressureLevel } from '../../models
       <div class="button-group">
         <button
           type="button"
+          appAnimeInteractive
           (click)="onSelectMode('BALANCED')"
           class="abhi-btn mode-btn"
           [class.active-cyan]="currentMode() === 'BALANCED'"
@@ -33,6 +35,7 @@ import { OperatingMode, DegradedMode, ResourcePressureLevel } from '../../models
 
         <button
           type="button"
+          appAnimeInteractive
           (click)="onSelectMode('PERFORMANCE')"
           class="abhi-btn mode-btn"
           [class.active-purple]="currentMode() === 'PERFORMANCE'"
@@ -42,6 +45,7 @@ import { OperatingMode, DegradedMode, ResourcePressureLevel } from '../../models
 
         <button
           type="button"
+          appAnimeInteractive
           (click)="onSelectMode('CONSERVATIVE')"
           class="abhi-btn mode-btn"
           [class.active-amber]="currentMode() === 'CONSERVATIVE'"
@@ -51,6 +55,7 @@ import { OperatingMode, DegradedMode, ResourcePressureLevel } from '../../models
 
         <button
           type="button"
+          appAnimeInteractive
           (click)="onSelectMode('RESOURCE_SAVER')"
           class="abhi-btn mode-btn"
           [class.active-green]="currentMode() === 'RESOURCE_SAVER'"
@@ -60,6 +65,7 @@ import { OperatingMode, DegradedMode, ResourcePressureLevel } from '../../models
 
         <button
           type="button"
+          appAnimeInteractive
           (click)="reconcile.emit()"
           class="abhi-btn reconcile-btn"
           title="Scan and reconcile orphaned worker processes"

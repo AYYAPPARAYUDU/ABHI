@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TelemetryService } from '../../../../core/websocket/telemetry.service';
 import { TelemetryEvent } from '../../../../core/models/telemetry.model';
+import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
+import { AnimeCounterDirective } from '../../../../shared/directives/anime-counter.directive';
 
 @Component({
   selector: 'app-telemetry-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AnimeInteractiveDirective, AnimeCounterDirective],
   templateUrl: './telemetry-panel.component.html',
   styleUrl: './telemetry-panel.component.css'
 })

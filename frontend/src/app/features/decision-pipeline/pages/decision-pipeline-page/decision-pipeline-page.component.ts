@@ -1,7 +1,10 @@
-import { Component, OnInit, OnDestroy, signal, computed, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, ElementRef, ViewChild, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { AnimeAnimationService } from '../../../../core/services/anime-animation.service';
+import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
+import { AnimeCounterDirective } from '../../../../shared/directives/anime-counter.directive';
 
 export interface DecisionNode {
   id: string;
@@ -41,12 +44,14 @@ export interface UseCase {
 @Component({
   selector: 'app-decision-pipeline-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, AnimeInteractiveDirective, AnimeCounterDirective],
   templateUrl: './decision-pipeline-page.component.html',
   styleUrl: './decision-pipeline-page.component.css'
 })
 export class DecisionPipelinePageComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('oscilloscopeCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
+  private readonly animService = inject(AnimeAnimationService);
+  private readonly hostEl = inject(ElementRef);
 
   // Dynamic Sim Signals
   readonly currentDecisions = signal<number>(7708);
@@ -135,6 +140,20 @@ export class DecisionPipelinePageComponent implements OnInit, OnDestroy, AfterVi
 
   ngAfterViewInit(): void {
     this.startOscilloscope();
+    const root = this.hostEl.nativeElement;
+    if (!root) return;
+
+    // Stagger animate use case cards
+    const cards = root.querySelectorAll('.use-case-btn, .metric-pill');
+    if (cards.length > 0) {
+      this.animService.staggerEnter({
+        targets: cards,
+        translateY: [12, 0],
+        opacity: [0, 1],
+        duration: 500,
+        delay: 25
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -142,7 +161,10 @@ export class DecisionPipelinePageComponent implements OnInit, OnDestroy, AfterVi
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
   }
 
-  selectUseCase(uc: UseCase): void {
+  selectUseCase(uc: UseCase, event?: MouseEvent): void {
+    if (event?.currentTarget) {
+      this.animService.tactileClick(event.currentTarget as HTMLElement);
+    }
     this.useCases.update((list) =>
       list.map((item) => ({ ...item, active: item.id === uc.id }))
     );

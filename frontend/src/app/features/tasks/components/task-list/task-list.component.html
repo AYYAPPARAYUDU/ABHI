@@ -3,7 +3,7 @@
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
     <div>
       <h5 class="text-light mb-0 fw-bold">📋 Task History & Execution Records</h5>
-      <small class="text-muted font-monospace">Total: {{ taskHistory.totalTasks() }} persistent records</small>
+      <small class="text-muted font-monospace">Total: <span [appAnimeCounter]="taskHistory.totalTasks()">{{ taskHistory.totalTasks() }}</span> persistent records</small>
     </div>
 
     <!-- Search Box -->
@@ -19,6 +19,7 @@
       />
       <button
         *ngIf="searchQuery"
+        appAnimeInteractive
         class="btn btn-outline-secondary border-opacity-50 text-muted"
         (click)="clearSearch()"
       >
@@ -30,6 +31,7 @@
   <!-- Filter Status Tabs -->
   <div class="d-flex flex-wrap gap-2 mb-3 filter-pills">
     <button
+      appAnimeInteractive
       class="btn btn-sm font-monospace"
       [class.btn-primary]="taskHistory.filters().state === 'ALL'"
       [class.btn-outline-secondary]="taskHistory.filters().state !== 'ALL'"
@@ -38,6 +40,7 @@
       ALL ({{ taskHistory.totalTasks() }})
     </button>
     <button
+      appAnimeInteractive
       class="btn btn-sm font-monospace"
       [class.btn-success]="taskHistory.filters().state === 'COMPLETED'"
       [class.btn-outline-secondary]="taskHistory.filters().state !== 'COMPLETED'"
@@ -46,6 +49,7 @@
       COMPLETED
     </button>
     <button
+      appAnimeInteractive
       class="btn btn-sm font-monospace"
       [class.btn-info]="taskHistory.filters().state === 'EXECUTING'"
       [class.btn-outline-secondary]="taskHistory.filters().state !== 'EXECUTING'"
@@ -54,6 +58,7 @@
       EXECUTING
     </button>
     <button
+      appAnimeInteractive
       class="btn btn-sm font-monospace"
       [class.btn-danger]="taskHistory.filters().state === 'FAILED'"
       [class.btn-outline-secondary]="taskHistory.filters().state !== 'FAILED'"
@@ -62,6 +67,7 @@
       FAILED
     </button>
     <button
+      appAnimeInteractive
       class="btn btn-sm font-monospace"
       [class.btn-secondary]="taskHistory.filters().state === 'CANCELLED'"
       [class.btn-outline-secondary]="taskHistory.filters().state !== 'CANCELLED'"

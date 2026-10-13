@@ -44,8 +44,10 @@
           @for (cat of categories; track cat) {
             <button
               class="filter-chip"
+              appAnimeInteractive
+              [appAnimeType]="'button'"
               [class.active]="networkService.filterCategory() === cat"
-              (click)="networkService.setFilterCategory(cat)"
+              (click)="onCategorySelect(cat, $event)"
             >
               {{ cat }}
             </button>
@@ -61,9 +63,11 @@
             @for (node of filteredNodes(); track node.id) {
               <div
                 class="agent-node-card"
+                appAnimeInteractive
+                [appAnimeType]="'card'"
                 [class.selected]="networkService.selectedNode()?.id === node.id"
                 [class.supervisor]="node.is_supervisor"
-                (click)="networkService.selectNode(node)"
+                (click)="onNodeSelect(node, $event)"
                 [attr.tabindex]="0"
                 role="button"
               >

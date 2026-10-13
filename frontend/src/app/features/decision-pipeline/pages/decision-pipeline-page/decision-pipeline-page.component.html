@@ -17,7 +17,7 @@
               <span class="metric-sub-tag">LIVE SIM</span>
             </div>
             <div class="metric-value-row">
-              <span class="metric-hero-number">{{ currentDecisions() | number:'1.0-0' }}</span>
+              <span class="metric-hero-number" [appAnimeCounter]="currentDecisions()">{{ currentDecisions() | number:'1.0-0' }}</span>
             </div>
             <div class="metric-progress-track">
               <div class="metric-progress-fill magenta" [style.width.%]="(currentDecisions() % 10000) / 100"></div>
@@ -32,7 +32,7 @@
               <span class="metric-sub-tag">MS</span>
             </div>
             <div class="metric-value-row">
-              <span class="metric-hero-number cyan">~{{ currentLatency() }} <small>MS</small></span>
+              <span class="metric-hero-number cyan" [appAnimeCounter]="currentLatency()" [counterPrefix]="'~'" [counterSuffix]="' MS'">~{{ currentLatency() }} <small>MS</small></span>
               <svg class="mini-sparkline" viewBox="0 0 80 24" preserveAspectRatio="none">
                 <path d="M0,12 Q10,4 20,16 T40,6 T60,18 T80,10" fill="none" stroke="#f43f5e" stroke-width="2"/>
                 <path d="M0,16 Q15,8 30,18 T55,10 T80,14" fill="none" stroke="#00e5ff" stroke-width="1.5" opacity="0.6"/>
@@ -91,11 +91,11 @@
         </div>
 
         <div class="case-action-pills">
-          <button class="pill-btn" [class.active]="selectedTab() === 'STATE'" (click)="selectedTab.set('STATE')">STATE</button>
-          <button class="pill-btn" [class.active]="selectedTab() === 'ASK'" (click)="selectedTab.set('ASK')">ASK</button>
-          <button class="pill-btn" [class.active]="selectedTab() === 'JEV'" (click)="selectedTab.set('JEV')">JEV</button>
-          <button class="pill-btn" [class.active]="selectedTab() === 'GATE'" (click)="selectedTab.set('GATE')">GATE</button>
-          <button class="pill-btn magenta" [class.active]="selectedTab() === 'CODE'" (click)="selectedTab.set('CODE')">CODE</button>
+          <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'STATE'" (click)="selectedTab.set('STATE')">STATE</button>
+          <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'ASK'" (click)="selectedTab.set('ASK')">ASK</button>
+          <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'JEV'" (click)="selectedTab.set('JEV')">JEV</button>
+          <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'GATE'" (click)="selectedTab.set('GATE')">GATE</button>
+          <button class="pill-btn magenta" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'CODE'" (click)="selectedTab.set('CODE')">CODE</button>
         </div>
       </section>
 
