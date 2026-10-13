@@ -1,61 +1,283 @@
-<div
-  *ngIf="isOpen()"
-  class="command-palette-backdrop fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-start justify-center pt-24 p-4 animate-fade-in"
-  (click)="closeOnBackdrop($event)"
->
-  <div
-    class="command-palette-modal bg-slate-900/95 border border-slate-700/80 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden backdrop-blur-xl animate-scale-up"
-    (click)="$event.stopPropagation()"
-  >
-    <!-- Search Bar Header -->
-    <div class="relative border-b border-slate-800 p-4 flex items-center gap-3">
-      <span class="text-xl text-cyan-400">⚡</span>
-      <input
-        #commandInput
-        type="text"
-        [(ngModel)]="searchQuery"
-        placeholder="Type a command or search ABHI (e.g., 'Open Calculator', 'Find cyberpunk video', 'System health')..."
-        class="w-full bg-transparent text-white text-sm placeholder-slate-500 focus:outline-none"
-        autofocus
-      />
-      <kbd class="px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-mono rounded border border-slate-700">ESC</kbd>
-    </div>
+<!-- Unified Master Command Center: Dual-Mode (Global Spotlight Overlay OR Embedded In-Page Dock) -->
+<ng-container *ngIf="embedded; else modalSpotlight">
+  <!-- 1. EMBEDDED IN-PAGE MODE (e.g. Home Workspace or Feature Panels) -->
+  <div class="command-center-embedded-shell" [class.compact]="compact">
+    <div class="command-box-wrap" [class.focused]="isFocused" [class.working]="commandService.isWorking()">
+      <form class="command-form" (ngSubmit)="onSubmit()">
+        <div class="command-input-row">
+          <!-- Left Quantum Brand Symbol -->
+          <span class="command-brand-icon" [class.pulse]="commandService.isWorking()">
+            @if (commandService.isWorking()) {
+              <span class="working-spinner">🌀</span>
+            } @else {
+              <span class="ai-symbol">✦</span>
+            }
+          </span>
 
-    <!-- Action Categories & Search Results -->
-    <div class="max-h-80 overflow-y-auto p-2 space-y-1">
-      <div *ngIf="filteredActions().length === 0" class="p-6 text-center text-slate-500 text-xs">
-        No matching commands or actions found. Try asking ABHI on Home.
-      </div>
+          <!-- Main Multimodal Natural Language Input -->
+          <input
+            type="text"
+            class="command-master-input"
+            [(ngModel)]="inputText"
+            name="masterCommandInput"
+            [placeholder]="placeholderText()"
+            autocomplete="off"
+            (focus)="isFocused = true"
+            (blur)="isFocused = false"
+            [disabled]="commandService.isProcessing()"
+          />
 
-      <div
-        *ngFor="let act of filteredActions(); let i = index"
-        (click)="executeAction(act)"
-        appAnimeInteractive
-        [appAnimeType]="'subtle'"
-        class="p-3 rounded-xl hover:bg-slate-800/80 cursor-pointer flex items-center justify-between transition-all duration-150 group"
-      >
-        <div class="flex items-center gap-3 min-w-0">
-          <span class="text-base p-1.5 bg-slate-800 rounded-lg group-hover:bg-cyan-500/10 group-hover:text-cyan-400 transition-all">{{ act.icon }}</span>
-          <div class="min-w-0">
-            <div class="text-sm font-semibold text-white truncate group-hover:text-cyan-300">{{ act.title }}</div>
-            <div class="text-xs text-slate-400 truncate">{{ act.subtitle }}</div>
+          <!-- Action Controls: Language Pill, Microphone & Submit -->
+          <div class="command-actions-wrap">
+            <!-- Language Selector Dropdown -->
+            <div class="lang-selector-wrap">
+              <button
+                type="button"
+                class="lang-pill-btn"
+                (click)="toggleLangMenu()"
+                title="Command Language"
+              >
+                {{ currentLangLabel() }}
+                <span class="caret">▾</span>
+              </button>
+
+              @if (showLangMenu()) {
+                <div class="lang-dropdown">
+                  <button type="button" class="lang-opt" (click)="setLang('auto')">Auto Detect</button>
+                  <button type="button" class="lang-opt" (click)="setLang('en')">English (EN)</button>
+                  <button type="button" class="lang-opt" (click)="setLang('te')">తెలుగు (Telugu)</button>
+                  <button type="button" class="lang-opt" (click)="setLang('hi')">हिंदी (Hindi)</button>
+                  <button type="button" class="lang-opt" (click)="setLang('ta')">தமிழ் (Tamil)</button>
+                </div>
+              }
+            </div>
+
+            <!-- Voice Input Button -->
+            <button
+              type="button"
+              class="voice-toggle-btn"
+              appAnimeInteractive
+              [appAnimeType]="'button'"
+              [class.listening]="isListening()"
+              (click)="toggleVoice()"
+              title="Voice Input (Speech-to-Text)"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="22"/>
+              </svg>
+            </button>
+
+            <!-- Submit Execution Button -->
+            <button
+              type="submit"
+              class="submit-action-btn"
+              appAnimeInteractive
+              [appAnimeType]="'button'"
+              [disabled]="!inputText.trim() || commandService.isProcessing()"
+              title="Execute Command"
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
           </div>
         </div>
+      </form>
+    </div>
 
+    <!-- Quick Suggestion / Multilingual Pills -->
+    @if (!compact && !commandService.activeResult() && !operatorState.isBusy()) {
+      <div class="suggestions-row">
+        <span class="sug-label">Try:</span>
+        @for (sug of activeSuggestions(); track sug.text) {
+          <button
+            type="button"
+            class="sug-pill"
+            appAnimeInteractive
+            [appAnimeType]="'subtle'"
+            (click)="applySuggestion(sug.text, sug.lang)"
+          >
+            @if (sug.lang !== 'en') {
+              <span class="sug-lang-badge">{{ sug.lang.toUpperCase() }}</span>
+            }
+            {{ sug.text }}
+          </button>
+        }
+      </div>
+    }
+
+    <!-- Embedded Active Task Card (When Working or Running) -->
+    @if (operatorState.currentTask() && operatorState.isBusy() && !commandService.activeResult()) {
+      <div class="active-task-container">
+        <app-agent-task-card
+          [task]="operatorState.currentTask()"
+          (onCancel)="operatorState.cancelActiveTask()"
+        ></app-agent-task-card>
+      </div>
+    }
+
+    <!-- Embedded Universal Result Sheet (When Result is Active) -->
+    @if (commandService.activeResult()) {
+      <div class="active-result-container">
+        <app-result-sheet
+          [result]="commandService.activeResult()"
+          (onDismiss)="commandService.dismissResult()"
+          (onAction)="handleResultAction($event)"
+        ></app-result-sheet>
+      </div>
+    }
+  </div>
+</ng-container>
+
+<!-- 2. GLOBAL SPOTLIGHT MODAL OVERLAY (Ctrl+K / ⌘K) -->
+<ng-template #modalSpotlight>
+  <div
+    *ngIf="isOpen()"
+    class="command-palette-backdrop fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-start justify-center pt-20 p-4"
+    (click)="closeOnBackdrop($event)"
+  >
+    <div
+      class="command-palette-modal bg-slate-900/95 border border-slate-700/80 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden backdrop-blur-xl"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Search & Command Header -->
+      <form (ngSubmit)="onSubmit()" class="relative border-b border-slate-800 p-3.5 flex items-center gap-3">
+        <span class="text-xl text-cyan-400">✦</span>
+        <input
+          #commandInput
+          type="text"
+          [(ngModel)]="inputText"
+          name="spotlightCommandInput"
+          [placeholder]="placeholderText()"
+          class="command-master-input w-full bg-transparent text-white text-sm placeholder-slate-500 focus:outline-none"
+          autofocus
+        />
+
+        <!-- Controls: Language Selector & Voice -->
         <div class="flex items-center gap-2 flex-shrink-0">
-          <span class="px-1.5 py-0.5 bg-slate-800 text-slate-400 text-[9px] font-bold uppercase rounded border border-slate-700/60">{{ act.category }}</span>
-          <span *ngIf="act.shortcut" class="text-xs text-slate-500 font-mono">{{ act.shortcut }}</span>
+          <div class="lang-selector-wrap">
+            <button
+              type="button"
+              class="lang-pill-btn"
+              (click)="toggleLangMenu()"
+              title="Command Language"
+            >
+              {{ currentLangLabel() }}
+              <span class="caret">▾</span>
+            </button>
+            @if (showLangMenu()) {
+              <div class="lang-dropdown">
+                <button type="button" class="lang-opt" (click)="setLang('auto')">Auto</button>
+                <button type="button" class="lang-opt" (click)="setLang('en')">EN</button>
+                <button type="button" class="lang-opt" (click)="setLang('te')">తెలుగు</button>
+                <button type="button" class="lang-opt" (click)="setLang('hi')">हिंदी</button>
+                <button type="button" class="lang-opt" (click)="setLang('ta')">தமிழ்</button>
+              </div>
+            }
+          </div>
+
+          <button
+            type="button"
+            class="voice-toggle-btn"
+            appAnimeInteractive
+            [appAnimeType]="'button'"
+            [class.listening]="isListening()"
+            (click)="toggleVoice()"
+            title="Voice Speech-to-Text"
+          >
+            🎤
+          </button>
+
+          <button
+            type="submit"
+            class="submit-action-btn"
+            appAnimeInteractive
+            [appAnimeType]="'button'"
+            [disabled]="!inputText.trim() || commandService.isProcessing()"
+            title="Execute (Enter)"
+          >
+            ↵
+          </button>
+
+          <kbd class="px-2 py-0.5 bg-slate-800 text-slate-400 text-[10px] font-mono rounded border border-slate-700">ESC</kbd>
+        </div>
+      </form>
+
+      <!-- Active Task Card Inside Spotlight (if running) -->
+      @if (operatorState.currentTask() && operatorState.isBusy() && !commandService.activeResult()) {
+        <div class="p-3 border-b border-slate-800 bg-slate-950/40">
+          <app-agent-task-card
+            [task]="operatorState.currentTask()"
+            (onCancel)="operatorState.cancelActiveTask()"
+          ></app-agent-task-card>
+        </div>
+      }
+
+      <!-- Result Sheet Inside Spotlight (if active result) -->
+      @if (commandService.activeResult()) {
+        <div class="p-3 border-b border-slate-800 bg-slate-950/60 max-h-96 overflow-y-auto">
+          <app-result-sheet
+            [result]="commandService.activeResult()"
+            (onDismiss)="commandService.dismissResult()"
+            (onAction)="handleResultAction($event)"
+          ></app-result-sheet>
+        </div>
+      }
+
+      <!-- Action Categories & Quick Nav Results -->
+      <div class="max-h-80 overflow-y-auto p-2 space-y-1">
+        <div *ngIf="filteredActions().length === 0" class="p-6 text-center text-slate-500 text-xs font-mono">
+          Press ↵ to dispatch natural language query to ABHI autonomous intelligence.
+        </div>
+
+        <div
+          *ngFor="let act of filteredActions(); let i = index"
+          (click)="executeAction(act)"
+          appAnimeInteractive
+          [appAnimeType]="'subtle'"
+          class="p-3 rounded-xl hover:bg-slate-800/80 cursor-pointer flex items-center justify-between transition-all duration-150 group"
+        >
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="text-base p-1.5 bg-slate-800 rounded-lg group-hover:bg-cyan-500/10 group-hover:text-cyan-400 transition-all">{{ act.icon }}</span>
+            <div class="min-w-0">
+              <div class="text-sm font-semibold text-white truncate group-hover:text-cyan-300">{{ act.title }}</div>
+              <div class="text-xs text-slate-400 truncate">{{ act.subtitle }}</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="px-1.5 py-0.5 bg-slate-800 text-slate-400 text-[9px] font-bold uppercase rounded border border-slate-700/60">{{ act.category }}</span>
+            <span *ngIf="act.shortcut" class="text-xs text-slate-500 font-mono">{{ act.shortcut }}</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Footer Shortcuts -->
-    <div class="p-3 bg-slate-950/60 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500">
-      <div class="flex items-center gap-2">
-        <span>Navigate <kbd class="px-1 bg-slate-800 rounded text-[10px]">↑</kbd> <kbd class="px-1 bg-slate-800 rounded text-[10px]">↓</kbd></span>
-        <span>Select <kbd class="px-1 bg-slate-800 rounded text-[10px]">↵</kbd></span>
+      <!-- Quick Suggestion Pills -->
+      <div class="p-2.5 bg-slate-950/40 border-t border-slate-800/60 flex items-center gap-1.5 overflow-x-auto">
+        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider flex-shrink-0">Quick:</span>
+        @for (sug of activeSuggestions(); track sug.text) {
+          <button
+            type="button"
+            class="px-2 py-0.5 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-[11px] rounded-full whitespace-nowrap border border-slate-700/50"
+            (click)="applySuggestion(sug.text, sug.lang)"
+          >
+            {{ sug.text }}
+          </button>
+        }
       </div>
-      <span class="text-cyan-400/80 font-mono">ABHI COMMAND CENTER</span>
+
+      <!-- Footer Shortcuts -->
+      <div class="p-3 bg-slate-950/80 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500">
+        <div class="flex items-center gap-2 font-mono">
+          <span>Navigate <kbd class="px-1 bg-slate-800 rounded text-[10px]">↑</kbd> <kbd class="px-1 bg-slate-800 rounded text-[10px]">↓</kbd></span>
+          <span>Execute <kbd class="px-1 bg-slate-800 rounded text-[10px]">↵</kbd></span>
+          <span>Dismiss <kbd class="px-1 bg-slate-800 rounded text-[10px]">ESC</kbd></span>
+        </div>
+        <span class="text-cyan-400/90 font-mono font-bold tracking-wider">ABHI UNIFIED COMMAND CENTER</span>
+      </div>
     </div>
   </div>
-</div>
+</ng-template>

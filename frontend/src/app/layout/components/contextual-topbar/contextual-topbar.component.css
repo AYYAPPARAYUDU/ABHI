@@ -9,17 +9,164 @@
 
 .contextual-bar {
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--abhi-surface-raised, rgba(13, 20, 36, 0.88));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--abhi-border, rgba(56, 217, 255, 0.18));
+  border-radius: var(--abhi-radius-control, 18px);
+  box-shadow: var(--abhi-raised-shadow, 0 12px 32px rgba(0, 0, 0, 0.45));
+}
+
+.topbar-safety-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  animation: pulseAlert 2s infinite ease-in-out;
+}
+
+.alert-estop {
+  background: rgba(255, 42, 85, 0.2);
+  border: 1px solid var(--abhi-danger, #ff2a55);
+  color: #ff5b71;
+}
+
+.alert-consent {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid var(--abhi-warning, #f59e0b);
+  color: #fbbf24;
+}
+
+.alert-paused {
+  background: rgba(56, 217, 255, 0.2);
+  border: 1px solid var(--abhi-cyan, #00f0ff);
+  color: #38d9ff;
+}
+
+.safety-alert-msg {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.safety-review-btn {
+  background: #f59e0b;
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.safety-review-btn:hover {
+  opacity: 0.9;
+}
+
+.bar-main-row {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: nowrap;
   gap: 12px;
-  padding: 8px 16px;
-  background: var(--abhi-surface-raised, rgba(13, 20, 36, 0.88));
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--abhi-border, rgba(56, 217, 255, 0.15));
-  border-radius: var(--abhi-radius-control, 16px);
-  box-shadow: var(--abhi-raised-shadow, 8px 8px 24px rgba(0, 0, 0, 0.45));
+  width: 100%;
+}
+
+/* Brand Pill */
+.hud-brand-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: var(--abhi-surface-inset, rgba(7, 12, 22, 0.7));
+  border: 1px solid var(--abhi-border, rgba(0, 240, 255, 0.2));
+  border-radius: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.hud-brand-pill:hover {
+  border-color: var(--abhi-cyan, #00f0ff);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.brand-orb-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--abhi-cyan, #00f0ff) 0%, #0284c7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px var(--abhi-cyan, #00f0ff);
+}
+
+.orb-core-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.brand-text-block {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.brand-title {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: var(--abhi-cyan, #00f0ff);
+}
+
+.brand-sub {
+  font-size: 7.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--abhi-text-muted, #94a3b8);
+}
+
+.status-indicator-tag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  border-radius: 12px;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--abhi-success, #00ff88);
+  letter-spacing: 0.08em;
+}
+
+.status-indicator-tag.working {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--abhi-cyan, #00f0ff);
+  color: var(--abhi-cyan, #00f0ff);
+}
+
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+  animation: pulse-dot 1.5s infinite;
 }
 
 /* Left Section */
@@ -142,6 +289,38 @@
   flex-wrap: nowrap;
   gap: 8px;
   flex-shrink: 0;
+}
+
+.topbar-tool-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--abhi-surface-inset, rgba(7, 12, 22, 0.8));
+  border: 1px solid var(--abhi-border, rgba(56, 217, 255, 0.2));
+  color: var(--abhi-text-primary, #ffffff);
+  border-radius: 14px;
+  padding: 4px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.voice-audio-btn.speaking {
+  border-color: var(--abhi-cyan, #00f0ff);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.35);
+  animation: pulseAudio 1.2s infinite;
+}
+
+.voice-audio-btn.muted {
+  opacity: 0.6;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes pulseAudio {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
 }
 
 /* Operator Badge */

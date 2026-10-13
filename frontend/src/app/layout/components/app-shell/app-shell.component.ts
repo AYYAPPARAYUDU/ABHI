@@ -4,7 +4,6 @@ import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs/operators';
 import { ContextualTopbarComponent } from '../contextual-topbar/contextual-topbar.component';
-import { GlobalSafetyBarComponent } from '../global-safety-bar/global-safety-bar.component';
 import { ConsentModalComponent } from '../../../features/operator-console/components/consent-modal/consent-modal.component';
 import { SpatialBackgroundComponent } from '../../../shared/3d/spatial-background/spatial-background.component';
 import { CommandPaletteComponent } from '../../../shared/ui/command-palette/command-palette.component';
@@ -17,7 +16,6 @@ import { OperatorStateService } from '../../../core/services/operator-state.serv
     CommonModule,
     RouterModule,
     ContextualTopbarComponent,
-    GlobalSafetyBarComponent,
     ConsentModalComponent,
     SpatialBackgroundComponent,
     CommandPaletteComponent

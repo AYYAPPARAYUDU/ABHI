@@ -6,6 +6,7 @@ import { filter, map } from 'rxjs/operators';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
 import { UserExperienceMode } from '../../../core/models/agent-experience.model';
 import { ThemeService } from '../../../core/services/theme.service';
+import { SpeechVoiceService } from '../../../core/services/speech-voice.service';
 import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
 import { AnimeInteractiveDirective } from '../../../shared/directives/anime-interactive.directive';
 
@@ -19,9 +20,18 @@ import { AnimeInteractiveDirective } from '../../../shared/directives/anime-inte
 export class ContextualTopbarComponent implements AfterViewInit {
   readonly stateService = inject(OperatorStateService);
   readonly themeService = inject(ThemeService);
+  readonly speechVoice = inject(SpeechVoiceService);
   readonly animService = inject(AnimeAnimationService);
   private readonly router = inject(Router);
   private readonly hostEl = inject(ElementRef);
+
+  readonly safety = this.stateService.safety;
+  readonly isWorking = computed(() => this.stateService.isBusy() || this.safety().emergencyStopped);
+  readonly systemStatusLabel = computed(() => {
+    if (this.safety().emergencyStopped) return 'HALTED';
+    if (this.stateService.isBusy()) return 'WORKING';
+    return 'PRIMED';
+  });
 
   // Reactive URL signal updated on every NavigationEnd
   readonly currentUrl = toSignal(
@@ -117,5 +127,13 @@ export class ContextualTopbarComponent implements AfterViewInit {
 
   setMode(mode: UserExperienceMode): void {
     this.stateService.setUserMode(mode);
+  }
+
+  toggleVoiceAudio(): void {
+    this.speechVoice.toggleMute();
+  }
+
+  openConsentModal(): void {
+    // Reactive modal automatically bound to safety().consentPending
   }
 }

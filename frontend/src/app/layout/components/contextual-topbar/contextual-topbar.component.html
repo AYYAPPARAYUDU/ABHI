@@ -1,142 +1,212 @@
-<header class="contextual-bar" role="banner">
-  <!-- Left: Context Title & Active Status -->
-  <div class="bar-left">
-    <div class="page-title-wrap">
-      <span class="page-symbol">◈</span>
-      <h1 class="page-title">{{ currentRouteTitle() }}</h1>
+<header class="contextual-bar" role="banner" [class.main-agent-active]="isActive('/home')">
+  <!-- Integrated Global Safety / Authorization Alert Stripe -->
+  @if (safety().emergencyStopped || safety().consentPending || safety().isPaused) {
+    <div
+      class="topbar-safety-alert"
+      [ngClass]="safety().emergencyStopped ? 'alert-estop' : safety().consentPending ? 'alert-consent' : 'alert-paused'"
+      role="alert"
+    >
+      <div class="safety-alert-msg">
+        <span class="safety-icon">{{ safety().emergencyStopped ? '🛑' : safety().consentPending ? '⚠️' : '⏸️' }}</span>
+        <span class="safety-text font-monospace">
+          {{
+            safety().emergencyStopped
+              ? 'EMERGENCY STOP ENGAGED — AUTOMATION LEASE REVOKED.'
+              : safety().consentPending
+              ? 'TIER 3 AUTHORIZATION PENDING — OPERATOR APPROVAL REQUIRED.'
+              : 'EXECUTION PAUSED / CONTENTION DETECTED.'
+          }}
+        </span>
+      </div>
+      @if (safety().consentPending) {
+        <button
+          type="button"
+          class="safety-review-btn font-monospace"
+          (click)="openConsentModal()"
+        >
+          REVIEW AUTHORIZATION
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Main Topbar Row -->
+  <div class="bar-main-row">
+    <!-- Left: Brand Identity, Quantum Orb & Breadcrumb -->
+    <div class="bar-left">
+      <!-- High-Tech Brand Pill (VisionOS Spatial Design) -->
+      <a routerLink="/home" class="hud-brand-pill" title="Return to Central AI Workspace">
+        <div class="brand-orb-icon">
+          <span class="orb-core-dot"></span>
+        </div>
+        <div class="brand-text-block">
+          <span class="brand-title">ABHI</span>
+          <span class="brand-sub">CENTRAL INTELLIGENCE</span>
+        </div>
+      </a>
+
+      <!-- Status Indicator Tag -->
+      <div class="status-indicator-tag" [class.working]="isWorking()" [title]="'System Status: ' + systemStatusLabel()">
+        <span class="pulse-dot"></span>
+        <span class="status-label">{{ systemStatusLabel() }}</span>
+      </div>
+
+      <!-- Current Route Breadcrumb -->
+      <div class="page-title-wrap">
+        <span class="page-symbol">◈</span>
+        <h1 class="page-title">{{ currentRouteTitle() }}</h1>
+      </div>
+
+      <!-- Active Task Indicator (When busy) -->
+      @if (stateService.isBusy()) {
+        <div class="active-task-pill" title="Active background agent operation">
+          <span class="pulse-indicator"></span>
+          <span class="pill-text">{{ stateService.currentTask()?.currentStep || 'Working…' }}</span>
+        </div>
+      }
     </div>
 
-    @if (stateService.isBusy()) {
-      <div class="active-task-pill" title="Active background agent operation">
-        <span class="pulse-indicator"></span>
-        <span class="pill-text">{{ stateService.currentTask()?.currentStep || 'Working…' }}</span>
-      </div>
-    }
-  </div>
+    <!-- Center: Futuristic Floating Navigation Ribbon (All 10 Workspaces) -->
+    <nav class="bar-nav-ribbon" aria-label="Workspace Navigation">
+      @for (item of navItems; track item.route) {
+        <button
+          type="button"
+          class="ribbon-btn"
+          appAnimeInteractive
+          [appAnimeType]="'button'"
+          [class.active]="isActive(item.route)"
+          (click)="navigateTo(item.route, $event)"
+          [title]="item.label"
+        >
+          <span class="ribbon-icon">{{ item.icon }}</span>
+          <span class="ribbon-label">{{ item.label }}</span>
+        </button>
+      }
+    </nav>
 
-  <!-- Center: Futuristic Floating Navigation Ribbon (Zero Sidebar) -->
-  <nav class="bar-nav-ribbon" aria-label="Workspace Navigation">
-    @for (item of navItems; track item.route) {
+    <!-- Right: Voice Audio, Operator Profile, Command Palette, Theme, Mode, Health, E-STOP -->
+    <div class="bar-right">
+      <!-- Voice Audio Speech Synthesis Toggle -->
       <button
         type="button"
-        class="ribbon-btn"
+        class="topbar-tool-btn voice-audio-btn"
         appAnimeInteractive
         [appAnimeType]="'button'"
-        [class.active]="isActive(item.route)"
-        (click)="navigateTo(item.route, $event)"
-        [title]="item.label"
+        [class.muted]="speechVoice.isMuted()"
+        [class.speaking]="speechVoice.isSpeaking()"
+        (click)="toggleVoiceAudio()"
+        [title]="speechVoice.isMuted() ? 'Voice Audio Muted (Click to Unmute)' : 'Voice Audio Active (Click to Mute)'"
       >
-        <span class="ribbon-icon">{{ item.icon }}</span>
-        <span class="ribbon-label">{{ item.label }}</span>
+        <span class="btn-icon">{{ speechVoice.isMuted() ? '🔇' : (speechVoice.isSpeaking() ? '🗣️' : '🔊') }}</span>
+        <span class="btn-text">{{ speechVoice.isMuted() ? 'Muted' : (speechVoice.isSpeaking() ? 'Speaking' : 'Voice') }}</span>
       </button>
-    }
-  </nav>
 
-  <!-- Right: Personal Operator Profile, Search/Command, Theme, Health, E-STOP -->
-  <div class="bar-right">
-    <!-- Personal Operator Badge (Ayyappa Rayudu) -->
-    <a
-      class="operator-profile-pill"
-      routerLink="/business"
-      [title]="stateService.personalProfile().name + ' (' + stateService.personalProfile().handle + ')'"
-    >
-      <img
-        [src]="stateService.personalProfile().avatarUrl"
-        alt="Ayyappa Rayudu"
-        class="operator-avatar-img"
-        (error)="handleAvatarFallback($event)"
-      />
-      <div class="operator-meta-group">
-        <span class="operator-title-text">{{ stateService.personalProfile().name }}</span>
-        <span class="operator-handle-sub">{{ stateService.personalProfile().handle }}</span>
+      <!-- Personal Operator Profile Badge (Ayyappa Rayudu) -->
+      <a
+        class="operator-profile-pill"
+        routerLink="/business"
+        [title]="stateService.personalProfile().name + ' (' + stateService.personalProfile().handle + ')'"
+      >
+        <img
+          [src]="stateService.personalProfile().avatarUrl"
+          alt="Ayyappa Rayudu"
+          class="operator-avatar-img"
+          (error)="handleAvatarFallback($event)"
+        />
+        <div class="operator-meta-group">
+          <span class="operator-title-text">{{ stateService.personalProfile().name }}</span>
+          <span class="operator-handle-sub">{{ stateService.personalProfile().handle }}</span>
+        </div>
+        <span class="verified-indicator" title="Personalized Local AI Verified">✓</span>
+      </a>
+
+      <!-- Master Command Palette / Center Trigger -->
+      <button
+        type="button"
+        class="command-trigger-btn"
+        appAnimeInteractive
+        [appAnimeType]="'button'"
+        (click)="stateService.toggleCommandPalette(true)"
+        title="Open Master Command Center (Ctrl+K or ⌘K)"
+      >
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <span class="trigger-label">Cmd</span>
+        <kbd class="shortcut-badge">⌘K</kbd>
+      </button>
+
+      <!-- Theme Quick Cycler -->
+      <button
+        type="button"
+        class="theme-quick-btn"
+        appAnimeInteractive
+        [appAnimeType]="'button'"
+        (click)="cycleTheme($event)"
+        [title]="'Active Theme: ' + themeService.activeTheme().label + ' (Click to Switch)'"
+      >
+        <span class="theme-icon">🎨</span>
+        <span class="theme-name">{{ themeService.activeTheme().label }}</span>
+      </button>
+
+      <!-- Experience Mode Switcher -->
+      <div class="mode-switcher" role="radiogroup" aria-label="Experience Mode">
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="stateService.userMode() === 'USER'"
+          (click)="setMode('USER')"
+          title="User Mode"
+        >
+          User
+        </button>
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="stateService.userMode() === 'ADVANCED'"
+          (click)="setMode('ADVANCED')"
+          title="Advanced Mode"
+        >
+          Adv
+        </button>
+        <button
+          type="button"
+          class="mode-btn"
+          [class.active]="stateService.userMode() === 'DEVELOPER'"
+          (click)="setMode('DEVELOPER')"
+          title="Developer Mode"
+        >
+          Dev
+        </button>
       </div>
-      <span class="verified-indicator" title="Personalized Local AI Verified">✓</span>
-    </a>
 
-    <!-- Command Palette Trigger -->
-    <button
-      type="button"
-      class="command-trigger-btn"
-      (click)="stateService.toggleCommandPalette(true)"
-      title="Open Command Palette (Ctrl+K or ⌘K)"
-    >
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <span class="trigger-label">Cmd</span>
-      <kbd class="shortcut-badge">⌘K</kbd>
-    </button>
+      <!-- Health Indicator -->
+      <div class="health-pill" [attr.data-health]="healthStatus()" [title]="'System Status: ' + healthStatus()">
+        <span class="health-dot"></span>
+        <span class="health-label">{{ healthStatus() }}</span>
+      </div>
 
-    <!-- Theme Quick Cycler -->
-    <button
-      type="button"
-      class="theme-quick-btn"
-      appAnimeInteractive
-      [appAnimeType]="'button'"
-      (click)="cycleTheme($event)"
-      [title]="'Active Theme: ' + themeService.activeTheme().label + ' (Click to Switch)'"
-    >
-      <span class="theme-icon">🎨</span>
-      <span class="theme-name">{{ themeService.activeTheme().label }}</span>
-    </button>
-
-    <!-- User Mode Switcher -->
-    <div class="mode-switcher" role="radiogroup" aria-label="Experience Mode">
-      <button
-        type="button"
-        class="mode-btn"
-        [class.active]="stateService.userMode() === 'USER'"
-        (click)="setMode('USER')"
-        title="User Mode"
-      >
-        User
-      </button>
-      <button
-        type="button"
-        class="mode-btn"
-        [class.active]="stateService.userMode() === 'ADVANCED'"
-        (click)="setMode('ADVANCED')"
-        title="Advanced Mode"
-      >
-        Adv
-      </button>
-      <button
-        type="button"
-        class="mode-btn"
-        [class.active]="stateService.userMode() === 'DEVELOPER'"
-        (click)="setMode('DEVELOPER')"
-        title="Developer Mode"
-      >
-        Dev
-      </button>
+      <!-- Immediate Emergency Stop Trigger -->
+      @if (stateService.safety().emergencyStopped) {
+        <button
+          type="button"
+          class="estop-btn e-stop-btn active"
+          disabled
+          title="System Emergency Stopped"
+        >
+          STOPPED
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="estop-btn e-stop-btn"
+          (click)="stateService.triggerEmergencyStop()"
+          title="Immediate Emergency Stop"
+        >
+          E-STOP
+        </button>
+      }
     </div>
-
-    <!-- Health Indicator -->
-    <div class="health-pill" [attr.data-health]="healthStatus()" [title]="'System Status: ' + healthStatus()">
-      <span class="health-dot"></span>
-      <span class="health-label">{{ healthStatus() }}</span>
-    </div>
-
-    <!-- Emergency Stop Quick Trigger -->
-    @if (stateService.safety().emergencyStopped) {
-      <button
-        type="button"
-        class="estop-btn active"
-        disabled
-        title="System Emergency Stopped"
-      >
-        STOPPED
-      </button>
-    } @else {
-      <button
-        type="button"
-        class="estop-btn"
-        (click)="stateService.triggerEmergencyStop()"
-        title="Immediate Emergency Stop"
-      >
-        E-STOP
-      </button>
-    }
   </div>
 </header>

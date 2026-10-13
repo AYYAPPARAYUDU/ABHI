@@ -34,11 +34,11 @@ describe('HomePageComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render brand pill and top HUD header', () => {
+  it('should render brand identity in thought stream and calibration HUD', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('ABHI');
     expect(compiled.textContent).toContain('CENTRAL INTELLIGENCE');
-    expect(compiled.querySelector('.e-stop-btn')).toBeTruthy();
+    expect(compiled.querySelector('.subconscious-thought-bar')).toBeTruthy();
   });
 
   it('should render floating neumorphic command dock and input field', () => {
@@ -49,7 +49,19 @@ describe('HomePageComponent', () => {
     expect(compiled.querySelector('.submit-btn')).toBeTruthy();
   });
 
-  it('should have primary operating workspaces available in switcher', () => {
+  it('should render in-panel view segment tabs and switch active tab', () => {
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.vision-view-segment-bar')).toBeTruthy();
+    expect(component.activeMainTab()).toBe('AUTOMATION');
+    component.setActiveTab('TELEMETRY');
+    expect(component.activeMainTab()).toBe('TELEMETRY');
+    component.setActiveTab('SWARM');
+    expect(component.activeMainTab()).toBe('SWARM');
+    component.setActiveTab('NEURAL');
+    expect(component.activeMainTab()).toBe('NEURAL');
+  });
+
+  it('should have primary operating workspaces available in routing table', () => {
     expect(component.workspaceRoutes.length).toBe(10);
     const routes = component.workspaceRoutes.map(w => w.route);
     expect(routes).toContain('/network');
@@ -64,14 +76,6 @@ describe('HomePageComponent', () => {
     expect(component.showWorkspaceMenu()).toBe(true);
     component.toggleWorkspaceMenu();
     expect(component.showWorkspaceMenu()).toBe(false);
-  });
-
-  it('should render voice audio toggle button and toggle mute', () => {
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.voice-audio-btn')).toBeTruthy();
-    expect(component.speechVoice.isMuted()).toBe(false);
-    component.toggleVoiceAudio();
-    expect(component.speechVoice.isMuted()).toBe(true);
   });
 
   it('should render auto-cycle button and toggle auto cycle loop', () => {

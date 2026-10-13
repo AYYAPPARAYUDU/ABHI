@@ -8,11 +8,8 @@
     class="workspace-container"
     [class.main-agent-view]="isMainAgent()"
   >
-    <!-- Reactive Global Safety / Alerts (Only outside Main Agent, which has integrated HUD) -->
-    @if (!isMainAgent()) {
-      <app-global-safety-bar></app-global-safety-bar>
-      <app-contextual-topbar></app-contextual-topbar>
-    }
+    <!-- Unified Master Spatial Topbar (Universally rendered across all views with integrated safety alerts) -->
+    <app-contextual-topbar></app-contextual-topbar>
 
     <!-- Primary Routed Content -->
     <main class="workspace-main" [class.main-agent-main]="isMainAgent()" role="main">

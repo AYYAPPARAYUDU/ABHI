@@ -21,24 +21,9 @@
 
       <!-- 2. Main VisionOS Spatial Frosted Glass Control Center (Styled like Reference Image 5) -->
       <main class="vision-glass-panel" role="main" aria-label="Spatial AI Dashboard">
-        <!-- Glass Topbar Header -->
-        <header class="glass-topbar-header" role="banner">
-          <!-- Brand & Identity Pill -->
-          <div class="hud-brand-pill">
-            <div class="brand-orb-icon">
-              <span class="orb-core-dot"></span>
-            </div>
-            <div class="brand-text-block">
-              <span class="brand-title">ABHI</span>
-              <span class="brand-sub">CENTRAL INTELLIGENCE</span>
-            </div>
-            <div class="status-indicator-tag" [class.working]="isWorking()">
-              <span class="pulse-dot"></span>
-              <span class="status-label">{{ systemStatusLabel() }}</span>
-            </div>
-          </div>
-
-          <!-- Glass Pill Navigation Tabs (Like Reference Image 5 Top Bar) -->
+        <!-- VisionOS In-Card View Segment Strip -->
+        <div class="vision-view-segment-bar">
+          <!-- Glass Pill View Tabs -->
           <nav class="glass-pill-nav" aria-label="Dashboard Views">
             <button
               type="button"
@@ -78,22 +63,19 @@
             </button>
           </nav>
 
-          <!-- Top Right Controls: Theme, Voice Speech, E-STOP, Workspaces -->
-          <div class="glass-header-controls">
-            <!-- Voice Speech Toggle Button -->
+          <!-- In-Panel Quick Actions -->
+          <div class="panel-quick-actions">
             <button
               type="button"
-              class="hud-tool-btn voice-audio-btn"
-              [class.muted]="speechVoice.isMuted()"
-              [class.speaking]="speechVoice.isSpeaking()"
-              (click)="toggleVoiceAudio()"
-              title="Toggle LLM Voice Audio Speech"
+              class="auto-cycle-btn"
+              [class.active]="isAutoCycleRunning()"
+              (click)="toggleAutoCycle()"
+              title="Run Continuous Autonomous Swarm Cycles"
             >
-              <span class="btn-icon">{{ speechVoice.isMuted() ? '🔇' : (speechVoice.isSpeaking() ? '🗣️' : '🔊') }}</span>
-              <span class="btn-text">{{ speechVoice.isMuted() ? 'Muted' : (speechVoice.isSpeaking() ? 'Speaking' : 'Voice') }}</span>
+              <span class="cycle-dot" [class.pulse]="isAutoCycleRunning()"></span>
+              <span>{{ isAutoCycleRunning() ? '⏹ Stop Loop' : '⚡ Auto-Run Loop' }}</span>
             </button>
 
-            <!-- Theme Customizer Toggle -->
             <button
               type="button"
               class="hud-tool-btn theme-btn"
@@ -104,76 +86,8 @@
               <span class="btn-icon">🎨</span>
               <span class="btn-text">Theme</span>
             </button>
-
-            <!-- Emergency Stop Button -->
-            <button
-              type="button"
-              class="e-stop-btn"
-              [class.active-stop]="stateService.safety().emergencyStopped"
-              (click)="triggerEmergencyStop()"
-              title="Emergency Stop All Automation & Inference"
-            >
-              <span class="stop-icon">🛑</span>
-              <span class="stop-text">E-STOP</span>
-            </button>
-
-            <!-- Contextual Workspace Switcher Dropdown Button -->
-            <div class="workspace-switcher-wrap">
-              <button
-                type="button"
-                class="switcher-toggle-btn"
-                (click)="toggleWorkspaceMenu()"
-                [attr.aria-expanded]="showWorkspaceMenu()"
-                title="Navigate Workspaces"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect width="7" height="7" x="3" y="3" rx="1"/>
-                  <rect width="7" height="7" x="14" y="3" rx="1"/>
-                  <rect width="7" height="7" x="14" y="14" rx="1"/>
-                  <rect width="7" height="7" x="3" y="14" rx="1"/>
-                </svg>
-                <span class="switcher-text">Workspaces</span>
-                <span class="caret" [class.open]="showWorkspaceMenu()">▾</span>
-              </button>
-
-              @if (showWorkspaceMenu()) {
-                <div class="workspace-dropdown-menu" (mouseleave)="showWorkspaceMenu.set(false)">
-                  <div class="dropdown-header">OPERATING WORKSPACES</div>
-                  @for (ws of workspaceRoutes; track ws.route) {
-                    <button
-                      type="button"
-                      class="ws-menu-item"
-                      (click)="navigateTo(ws.route)"
-                    >
-                      <span class="ws-item-icon">
-                        @if (ws.id === 'network') {
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="6" r="2"/><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/></svg>
-                        } @else if (ws.id === 'intelligence') {
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                        } @else if (ws.id === 'business') {
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                        } @else if (ws.id === 'media') {
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"/><rect width="14" height="12" x="2" y="6" rx="2"/></svg>
-                        } @else if (ws.id === 'browser') {
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                        } @else if (ws.id === 'memory') {
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 19v-3M10 19v-3M14 19v-3M18 19v-3M6 5v3M10 5v3M14 5v3M18 5v3"/><rect width="16" height="10" x="4" y="7" rx="2"/></svg>
-                        } @else {
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m10 15 5-3-5-3v6Z"/></svg>
-                        }
-                      </span>
-                      <div class="ws-item-text">
-                        <span class="ws-item-title">{{ ws.title }}</span>
-                        <span class="ws-item-desc">{{ ws.desc }}</span>
-                      </div>
-                      <span class="ws-item-badge">{{ ws.badge }}</span>
-                    </button>
-                  }
-                </div>
-              }
-            </div>
           </div>
-        </header>
+        </div>
 
         <!-- Subconscious Cognitive Thought Ticker Bar -->
         <section class="subconscious-thought-bar" aria-label="Subconscious Cognitive Stream">
@@ -186,7 +100,7 @@
             <span class="thought-stream-text">{{ activeSubconsciousThought() }}</span>
           </div>
           <div class="thought-quantum-tag">
-            <span class="quantum-label">ABHI NATIVE LLM · WAL SYNCED</span>
+            <span class="quantum-label">ABHI CENTRAL INTELLIGENCE · WAL SYNCED</span>
           </div>
         </section>
 
