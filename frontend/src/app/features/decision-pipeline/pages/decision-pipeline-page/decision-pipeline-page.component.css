@@ -693,29 +693,30 @@
 
 .pipeline-svg-canvas {
   width: 100%;
-  height: 100%;
-  min-height: 390px;
+  height: 380px;
   display: block;
 }
 
 /* Conduits */
 .dim-conduit {
-  stroke: var(--abhi-border, rgba(151, 185, 230, 0.15));
-  stroke-width: 1.4;
-  opacity: 0.45;
+  stroke: var(--abhi-border, rgba(151, 185, 230, 0.25)) !important;
+  stroke-width: 1.6px !important;
+  stroke-dasharray: 4 4;
+  opacity: 0.65;
   transition: all 0.25s ease;
 }
 
 .active-conduit {
-  stroke: url(#conduitThemeGrad);
-  stroke-width: 2.8;
-  filter: drop-shadow(0 0 8px rgba(56, 217, 255, 0.5));
+  stroke: var(--abhi-cyan, #38d9ff) !important;
+  stroke-width: 3.5px !important;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 8px var(--abhi-cyan, #38d9ff));
   transition: all 0.25s ease;
 }
 
 .conduit-particle {
   fill: #ffffff;
-  filter: drop-shadow(0 0 6px var(--abhi-cyan, #38d9ff));
+  filter: drop-shadow(0 0 8px var(--abhi-cyan, #38d9ff));
 }
 
 /* SVG Nodes */

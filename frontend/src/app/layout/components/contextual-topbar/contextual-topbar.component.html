@@ -30,7 +30,7 @@
     </div>
   }
 
-  <!-- Main Topbar Row -->
+  <!-- Main System & Tools Row -->
   <div class="bar-main-row">
     <!-- Left: Brand Identity, Quantum Orb & Breadcrumb -->
     <div class="bar-left">
@@ -65,24 +65,6 @@
         </div>
       }
     </div>
-
-    <!-- Center: Futuristic Floating Navigation Ribbon (All 10 Workspaces) -->
-    <nav class="bar-nav-ribbon" aria-label="Workspace Navigation">
-      @for (item of navItems; track item.route) {
-        <button
-          type="button"
-          class="ribbon-btn"
-          appAnimeInteractive
-          [appAnimeType]="'button'"
-          [class.active]="isActive(item.route)"
-          (click)="navigateTo(item.route, $event)"
-          [title]="item.label"
-        >
-          <span class="ribbon-icon">{{ item.icon }}</span>
-          <span class="ribbon-label">{{ item.label }}</span>
-        </button>
-      }
-    </nav>
 
     <!-- Right: Voice Audio, Operator Profile, Command Palette, Theme, Mode, Health, E-STOP -->
     <div class="bar-right">
@@ -209,4 +191,22 @@
       }
     </div>
   </div>
+
+  <!-- Dedicated Universal Workspace Navigation Ribbon (All 11 Workspaces 100% Always Visible!) -->
+  <nav class="bar-nav-ribbon" aria-label="Workspace Navigation">
+    @for (item of navItems; track item.route) {
+      <button
+        type="button"
+        class="ribbon-btn"
+        appAnimeInteractive
+        [appAnimeType]="'button'"
+        [class.active]="isActive(item.route)"
+        (click)="navigateTo(item.route, $event)"
+        [title]="item.label"
+      >
+        <span class="ribbon-icon">{{ item.icon }}</span>
+        <span class="ribbon-label">{{ item.label }}</span>
+      </button>
+    }
+  </nav>
 </header>

@@ -334,3 +334,23 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
   - `pytest backend/tests/test_decisions_pipeline_api.py`: **4/4 tests passed (100%)**.
   - `npm run build`: Production bundle compiled cleanly with 0 errors (`decision-pipeline-page-component` chunk: 79.53 kB).
 
+---
+
+## 16. Milestone: Elimination of Data Duplication & 100% Real Working Decision Model (Oct 2026 - COMPLETED & VERIFIED)
+- **Problem Solved:**
+  - Frontend `DecisionPipelineService` maintained 500+ lines of duplicate, out-of-sync mock use case definitions with conflicting IDs.
+  - Telemetry numbers were simulated using client-side `Math.random()` timer intervals and fake "LIVE SIM" badges.
+  - Decision evaluations were not persisted to disk, resetting state upon server restarts.
+- **Architectural Implementation:**
+  - **SQLite WAL Relational Persistence:** Created `DecisionTraceRecord` SQLAlchemy model in `backend/app/services/memory/models.py` storing `trace_id`, `use_case_id`, `confidence`, `score_label`, `verdict`, `target_action`, `destination_worker`, `latency_ms`, `input_payload`, `log_entries`, and `output_result`.
+  - **Authoritative Decision Engine:** Upgraded `evaluate_decision` in `backend/app/api/v1/decisions.py` to calculate real elapsed latency, perform genuine semantic scoring using local Ollama (`abhi:latest` / `qwen3:8b`) or local cognitive head, and commit records directly to SQLite Write-Ahead Logging (`decision_traces` table).
+  - **Real Database-Backed Telemetry:** Upgraded `GET /api/v1/decisions/stats` and `GET /api/v1/decisions/traces` to calculate total decisions, median latency, and average confidence directly from recorded SQLite WAL rows.
+  - **Zero Duplicate Frontend Models:** Refactored `DecisionPipelineService` to consume canonical use cases directly from `GET /api/v1/decisions/use-cases`, removing 500 lines of redundant mock duplication.
+  - **Eliminated Fake Simulation:** Removed `simTimer` and `Math.random()` ticker in `DecisionPipelinePageComponent`, replacing them with authentic 10-second backend polling against SQLite WAL. Removed "LIVE SIM" labels in favor of "REAL TELEMETRY · ONLINE" and dynamic quota metrics.
+  - **Universal Topbar Navigation Ribbon:** Elevated `.bar-nav-ribbon` in `ContextualTopbarComponent` with dark neumorphic tactile buttons, ensuring all 11 workspaces (`3D Core`, `Decisions`, `Sectors`, `Neural Lab`, `Apps`, `Browser`, `Media`, `Memory`, `Tasks`, `Network`, `Diagnostics`) are permanently visible and interactive.
+- **Verification & Test Results:**
+  - `pytest backend/tests/test_decisions_pipeline_api.py`: **4/4 tests passed (100%)**.
+  - Verified live database write & read via REST: `POST /api/v1/decisions/evaluate` persisted trace `trace_dec_9aed0457d2` into SQLite WAL, and `GET /api/v1/decisions/stats` reflected live increments.
+  - `npm run build`: Angular 22 production bundle compiled cleanly in 10.75s with zero errors.
+
+

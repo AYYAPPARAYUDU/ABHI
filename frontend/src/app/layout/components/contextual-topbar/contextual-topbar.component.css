@@ -227,20 +227,22 @@
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
-/* Center Ribbon Navigation */
+/* Universal Workspace Ribbon Navigation */
 .bar-nav-ribbon {
   display: flex;
   align-items: center;
-  gap: 3px;
+  justify-content: center;
+  gap: 4px;
   background: var(--abhi-surface-inset, rgba(7, 12, 22, 0.7));
   border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.08));
-  border-radius: 12px;
-  padding: 3px 4px;
+  border-radius: 10px;
+  padding: 3px 6px;
   box-shadow: var(--abhi-inset-shadow, inset 2px 2px 6px rgba(0,0,0,0.5));
   overflow-x: auto;
   white-space: nowrap;
   scrollbar-width: none;
-  flex-shrink: 1;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .bar-nav-ribbon::-webkit-scrollbar {
@@ -253,10 +255,10 @@
   gap: 5px;
   background: transparent;
   border: 1px solid transparent;
-  padding: 5px 10px;
-  border-radius: 8px;
+  padding: 5px 12px;
+  border-radius: 7px;
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--abhi-text-secondary, #94a3b8);
   cursor: pointer;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
@@ -271,11 +273,11 @@
 }
 
 .ribbon-btn.active {
-  background: var(--abhi-surface-raised, rgba(0, 240, 255, 0.12));
+  background: rgba(56, 217, 255, 0.15);
   color: var(--abhi-cyan, #00f0ff);
   border-color: var(--abhi-border-active, rgba(0, 240, 255, 0.5));
-  box-shadow: 0 0 10px var(--abhi-glow-primary, rgba(0, 240, 255, 0.25));
-  font-weight: 700;
+  box-shadow: 0 0 10px rgba(56, 217, 255, 0.25);
+  font-weight: 800;
 }
 
 .ribbon-icon {
@@ -508,6 +510,7 @@
 
 .health-pill[data-health="HEALTHY"] .health-dot { background: var(--abhi-success, #00ff88); box-shadow: 0 0 6px var(--abhi-success, #00ff88); }
 .health-pill[data-health="BUSY"] .health-dot { background: var(--abhi-cyan, #00f0ff); box-shadow: 0 0 6px var(--abhi-cyan, #00f0ff); }
+.health-pill[data-health="LOCAL"] .health-dot { background: var(--abhi-cyan, #00f0ff); box-shadow: 0 0 6px var(--abhi-cyan, #00f0ff); }
 .health-pill[data-health="DEGRADED"] .health-dot { background: var(--abhi-warning, #f59e0b); box-shadow: 0 0 6px var(--abhi-warning, #f59e0b); }
 .health-pill[data-health="UNAVAILABLE"] .health-dot { background: var(--abhi-danger, #ff2a55); box-shadow: 0 0 6px var(--abhi-danger, #ff2a55); }
 
@@ -546,4 +549,61 @@
   .trigger-label {
     display: none;
   }
+}
+
+/* ==========================================================================
+   UNIVERSAL WORKSPACE NAVIGATION RIBBON (Dedicated Full-Width Row)
+   ========================================================================== */
+.bar-nav-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid var(--abhi-border, rgba(56, 217, 255, 0.12));
+}
+
+.ribbon-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: var(--abhi-surface-inset, rgba(7, 12, 22, 0.7));
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.16));
+  border-radius: var(--abhi-radius-sm, 8px);
+  color: var(--abhi-text-secondary, #94a3b8);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ribbon-btn:hover {
+  background: var(--abhi-surface-raised, rgba(14, 24, 40, 0.95));
+  border-color: var(--abhi-cyan, #00f0ff);
+  color: var(--abhi-text-primary, #ffffff);
+  box-shadow: 0 0 10px rgba(56, 217, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.ribbon-btn.active {
+  background: rgba(56, 217, 255, 0.16);
+  border-color: var(--abhi-cyan, #00f0ff);
+  color: var(--abhi-cyan, #00f0ff);
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(56, 217, 255, 0.35);
+}
+
+.ribbon-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.ribbon-label {
+  letter-spacing: 0.03em;
 }

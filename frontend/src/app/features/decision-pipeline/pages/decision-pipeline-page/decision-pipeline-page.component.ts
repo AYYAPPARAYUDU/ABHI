@@ -51,26 +51,23 @@ export class DecisionPipelinePageComponent implements OnInit, OnDestroy, AfterVi
       return trace.log_entries;
     }
     return [
-      { timestamp: '12:45:01', channel: 'encoder', text: 'Latent AST packed 2048-dim vector from input payload' },
-      { timestamp: '12:45:02', channel: 'ask', text: 'Parallel questions evaluated: viral_fit=0.92, lead_quality=0.88' },
-      { timestamp: '12:45:03', channel: 'jev', text: 'JEV decision matrix confirmed route: draft_short*' },
-      { timestamp: '12:45:04', channel: 'gate', text: 'Physical guardrail check: human signoff mandated' },
-      { timestamp: '12:45:05', channel: 'exec', text: 'Payload staged in review folder (awaiting operator trigger)' }
+      { timestamp: '10:00:00', channel: 'encoder', text: 'Authoritative Decision DAG initialized with 6 forward stages' },
+      { timestamp: '10:00:01', channel: 'engine', text: 'Local FastAPI Gateway active at http://127.0.0.1:8000' },
+      { timestamp: '10:00:02', channel: 'memory', text: 'SQLite WAL persistent trace storage ready for real execution' }
     ];
   });
 
   readonly isCopied = signal<boolean>(false);
-  private simTimer: any;
+  private refreshTimer: any;
   private animFrame: any;
 
   ngOnInit(): void {
-    // Subtle background simulation ticker for decisions and latency
-    this.simTimer = setInterval(() => {
+    // Periodically sync live stats from authoritative SQLite WAL backend
+    this.refreshTimer = setInterval(() => {
       if (!this.isEvaluating()) {
-        this.currentDecisions.update((d) => d + Math.floor(Math.random() * 2) + 1);
-        this.currentLatency.set(248 + Math.floor(Math.random() * 12));
+        this.decisionService.refreshStats();
       }
-    }, 3200);
+    }, 10000);
   }
 
   ngAfterViewInit(): void {
@@ -92,7 +89,7 @@ export class DecisionPipelinePageComponent implements OnInit, OnDestroy, AfterVi
   }
 
   ngOnDestroy(): void {
-    if (this.simTimer) clearInterval(this.simTimer);
+    if (this.refreshTimer) clearInterval(this.refreshTimer);
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
   }
 
@@ -107,7 +104,7 @@ export class DecisionPipelinePageComponent implements OnInit, OnDestroy, AfterVi
     if (event?.currentTarget) {
       this.animService.tactileClick(event.currentTarget as HTMLElement);
     }
-    this.selectedTab.set(this.selectedTab() === tab ? 'JEV' : tab);
+    this.selectedTab.set(this.selectedTab() === tab ? null : tab);
   }
 
   onNodeClick(node: DecisionNode): void {

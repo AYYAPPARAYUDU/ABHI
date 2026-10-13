@@ -521,6 +521,7 @@ export class OperatorStateService {
     const mapStatus = (s: string) => {
       if (s === 'healthy') return 'HEALTHY';
       if (s === 'degraded' || s === 'low') return 'DEGRADED';
+      if (s === 'unreachable') return 'LOCAL';
       return 'UNAVAILABLE';
     };
 

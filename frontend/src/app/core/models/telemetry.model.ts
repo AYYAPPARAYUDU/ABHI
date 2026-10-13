@@ -18,7 +18,7 @@ export type AvatarState =
   | 'ERROR'
   | 'EMERGENCY_STOP';
 
-export type SubsystemHealthState = 'HEALTHY' | 'DEGRADED' | 'UNAVAILABLE' | 'UNKNOWN';
+export type SubsystemHealthState = 'HEALTHY' | 'DEGRADED' | 'UNAVAILABLE' | 'UNKNOWN' | 'LOCAL';
 
 export interface SubsystemStatus {
   name: string;
