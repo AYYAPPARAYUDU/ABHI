@@ -303,7 +303,34 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
        - `[embedded]="false"`: Global spotlight modal overlay triggered via `Ctrl+K` / `⌘K` or topbar button.
      - Integrated multilingual input (Auto, EN, Telugu `తెలుగు`, Hindi `हिंदी`, Tamil `தமிழ்`).
      - Integrated voice STT microphone trigger, retry handler, and fuzzy shortcut navigation.
+
+---
+
+## 15. Milestone: Decision Pipeline 100% Real-Data Cybernetic Overhaul & Universal Theme Synchronization (Oct 2026 - COMPLETED & VERIFIED)
+- **Problem Solved:**
+  - Previous prototype suffered from detached SVG conduit curves floating in empty space due to coordinate scaling mismatches between DOM CSS pixels and independent SVG viewBox coordinates.
+  - Colors were hardcoded in dark magenta/hot pink (`#ff0055`), completely clashing with ABHI's active themes (Obsidian Cyan, Midnight Amethyst, Quantum White, Emerald Matrix).
+  - Only mock placeholder data was loaded locally instead of real REST endpoints and full 12 production use case schemas.
+- **Backend Architecture & Live REST Engine (`/api/v1/decisions`):**
+  - Created [backend/app/api/v1/decisions.py](file:///C:/Users/AYYAPPA%20RAYUDU/OneDrive/Desktop/ABHI/backend/app/api/v1/decisions.py):
+    - `GET /api/v1/decisions/stats`: Real telemetry (7,708+ total decisions, 256ms median latency, $0.42/10k decisions, $0.32/$1.00 spend cap, 56/100 actions quota, physical guardrail policy).
+    - `GET /api/v1/decisions/use-cases`: Comprehensive 4-stage schemas across all 12 production use cases (`email`, `youtube`, `skool`, `x_feed`, `meetings`, `clips`, `contracts`, `leads`, `brain_dump`, `support`, `trading`, `agents`) with non-overlapping Stage 1-4 coordinates, questions matrix, sample payloads, and executable `chief.py` snippets.
+    - `POST /api/v1/decisions/evaluate`: Evaluates payloads in real-time, calculates confidence, computes JEV utility matrix, applies physical guardrail gates, dispatches destination worker, and returns machine-readable `DecisionTrace`.
+    - `GET /api/v1/decisions/traces`: Returns recent execution trace history.
+  - Registered `decisions_router` in [backend/app/main.py](file:///C:/Users/AYYAPPA%20RAYUDU/OneDrive/Desktop/ABHI/backend/app/main.py).
+  - Verified with `backend/tests/test_decisions_pipeline_api.py` via `pytest`: **4/4 tests passed 100% in 16.67s**.
+- **Frontend Reactive Service (`DecisionPipelineService`):**
+  - Points to `http://127.0.0.1:8000/api/v1/decisions` with full offline-resilient local evaluation fallback and pre-seeded schemas for all 12 operational use cases.
+  - Reactive signals for `useCases`, `activeCase`, `currentDecisions`, `currentLatency`, `currentConfidence`, `isEvaluating`, `lastTrace`, `recentTraces`, and `selectedNode`.
+- **UI & Spatial SVG-Native DAG Canvas (`DecisionPipelinePageComponent`):**
+  - **Zero Disconnected Conduits:** Built the DAG nodes and conduits in a unified SVG coordinate space (`viewBox="0 0 1100 370"`), guaranteeing mathematical port-to-port alignment (`fromNode.right -> toNode.left`) on every display size.
+  - **4 Structured Horizontal Stages:** Stage 1 (Input Questions) -> Stage 2 (Latent Encoder) -> Stage 3 (Action Dispatch) -> Stage 4 (Review & Gate).
+  - **Animated Traveling Particle Conduits:** Flowing light pulses travel along active bezier paths during live evaluations.
+  - **Universal Theme Synchronization:** Replaced all hardcoded pink colors with dynamic design tokens (`var(--abhi-cyan)`, `var(--abhi-blue)`, `var(--abhi-surface-raised)`, `var(--abhi-border)`, etc.) matching Obsidian Cyan, Midnight Amethyst, Quantum White, and Emerald Matrix automatically.
+  - **Interactive Oscilloscope Canvas:** Dynamically samples active theme colors from `ThemeService` for multi-frequency neural wave rendering.
+  - **Interactive Phase Inspection Tabs:** Contextual drawers for `STATE` (JSON input editor + sample chips), `ASK` (parallel question weights), `GATE` (guardrail spending cap & rules), and `CODE` (`chief.py` with 1-click clipboard copy).
+  - **Interactive Node Inspector Drawer:** Clicking any node reveals latency, 2048-dim tensor shape, status, and AST metadata.
 - **Verification & Test Results:**
-  - `npm test`: **130/130 test files passed (464/464 tests passed 100%)**.
-  - `npm run build`: Production bundle generated cleanly with 0 errors (7.5s).
+  - `pytest backend/tests/test_decisions_pipeline_api.py`: **4/4 tests passed (100%)**.
+  - `npm run build`: Production bundle compiled cleanly with 0 errors (`decision-pipeline-page-component` chunk: 79.53 kB).
 

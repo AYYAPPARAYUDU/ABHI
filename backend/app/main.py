@@ -20,6 +20,7 @@ from backend.app.api.v1.resources import router as resources_router
 from backend.app.api.v1.media import router as media_router
 from backend.app.api.v1.agent import router as agent_router
 from backend.app.api.v1.business import router as business_router
+from backend.app.api.v1.decisions import router as decisions_router
 from backend.app.api.websockets.telemetry import router as ws_router
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
@@ -107,6 +108,7 @@ app.include_router(resources_router, prefix="/api/v1")
 app.include_router(media_router, prefix="/api/v1")
 app.include_router(agent_router, prefix="/api/v1")
 app.include_router(business_router, prefix="/api/v1")
+app.include_router(decisions_router, prefix="/api/v1")
 app.include_router(self_healing_router, prefix="/api/v1")
 app.include_router(ws_router)
 

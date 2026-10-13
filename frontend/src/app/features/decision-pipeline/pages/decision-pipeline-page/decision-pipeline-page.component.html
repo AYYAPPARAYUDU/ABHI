@@ -1,357 +1,491 @@
-<div class="decision-pipeline-viewport">
-      <!-- TOP HUD HEADER -->
-      <header class="pipeline-header">
-        <div class="header-branding">
-          <div class="brand-row">
-            <span class="brand-title">ABHI / DECISION PIPELINE</span>
-            <span class="system-badge">SYSTEM ONE · abhi-32k</span>
-            <span class="sub-pipeline-tags">STATE — QUESTIONS — JEV — GATE — CODE</span>
-          </div>
+<div class="decision-pipeline-shell">
+  <!-- TOP TELEMETRY & BRAND HEADER -->
+  <header class="pipeline-header">
+    <div class="pipeline-title-group">
+      <div class="title-with-pill">
+        <h1 class="brand-title">ABHI / DECISION PIPELINE</h1>
+        <span class="system-tag">SYSTEM ONE · abhi-32k local</span>
+      </div>
+      <div class="sub-nav-breadcrumbs">
+        <span>STATE</span> &#8212; <span>QUESTIONS</span> &#8212; <span>JEV</span> &#8212; <span>GATE</span> &#8212; <span>CODE</span>
+      </div>
+    </div>
+
+    <!-- Live Telemetry KPI Cards -->
+    <div class="top-metrics-ribbon">
+      <!-- Total Decisions -->
+      <div class="top-metric-card">
+        <span class="metric-eyebrow">DECISIONS &#8212; THIS RUN <strong class="badge-live">LIVE SIM</strong></span>
+        <div class="metric-value-row">
+          <span class="metric-hero-num" [appAnimeCounter]="currentDecisions()">{{ currentDecisions() | number }}</span>
         </div>
-
-        <div class="header-metrics">
-          <!-- Decisions This Run -->
-          <div class="metric-card">
-            <div class="metric-top-label">
-              <span>DECISIONS — THIS RUN</span>
-              <span class="metric-sub-tag">LIVE SIM</span>
-            </div>
-            <div class="metric-value-row">
-              <span class="metric-hero-number" [appAnimeCounter]="currentDecisions()">{{ currentDecisions() | number:'1.0-0' }}</span>
-            </div>
-            <div class="metric-progress-track">
-              <div class="metric-progress-fill magenta" [style.width.%]="(currentDecisions() % 10000) / 100"></div>
-            </div>
-            <span class="metric-footer-note">SIM one loop 10 000</span>
-          </div>
-
-          <!-- Median Latency -->
-          <div class="metric-card">
-            <div class="metric-top-label">
-              <span>MEDIAN LATENCY — REPORTED</span>
-              <span class="metric-sub-tag">MS</span>
-            </div>
-            <div class="metric-value-row">
-              <span class="metric-hero-number cyan" [appAnimeCounter]="currentLatency()" [counterPrefix]="'~'" [counterSuffix]="' MS'">~{{ currentLatency() }} <small>MS</small></span>
-              <svg class="mini-sparkline" viewBox="0 0 80 24" preserveAspectRatio="none">
-                <path d="M0,12 Q10,4 20,16 T40,6 T60,18 T80,10" fill="none" stroke="#f43f5e" stroke-width="2"/>
-                <path d="M0,16 Q15,8 30,18 T55,10 T80,14" fill="none" stroke="#00e5ff" stroke-width="1.5" opacity="0.6"/>
-              </svg>
-            </div>
-            <span class="metric-footer-note">public demos · net 51ds</span>
-          </div>
-
-          <!-- Cost -->
-          <div class="metric-card">
-            <div class="metric-top-label">
-              <span>COST — 10 000 DECISIONS</span>
-            </div>
-            <div class="metric-value-row">
-              <span class="metric-hero-number magenta">&#8776; $0.42</span>
-            </div>
-            <span class="metric-footer-note">local GPU · $0.042/k in/out free</span>
-          </div>
-
-          <!-- Confidence Live -->
-          <div class="metric-card">
-            <div class="metric-top-label">
-              <span>CONFIDENCE — LIVE</span>
-            </div>
-            <div class="metric-value-row">
-              <span class="metric-hero-number neon-green">{{ currentConfidence().toFixed(2) }}</span>
-              <span class="pass-badge">PASS</span>
-            </div>
-            <div class="metric-progress-track">
-              <div class="metric-progress-fill green" [style.width.%]="currentConfidence() * 100"></div>
-              <div class="metric-gate-line" style="left: 85%;"></div>
-            </div>
-            <span class="metric-footer-note">calibrate on yours · gate 0.85</span>
-          </div>
-
-          <!-- Operator Pill -->
-          <div class="operator-profile-card">
-            <img src="assets/images/ayyappa_rayudu.jpg" alt="Ayyappa Rayudu" class="operator-thumb" (error)="onImgErr($event)"/>
-            <div class="operator-info">
-              <span class="op-tag">ARCHITECT</span>
-              <a href="https://www.linkedin.com/in/ayyapparayudu" target="_blank" class="op-handle">&#64;ayyapparayudu</a>
-            </div>
-          </div>
+        <div class="metric-micro-bar">
+          <div class="bar-fill" [style.width.%]="(currentDecisions() % 1000) / 10"></div>
         </div>
-      </header>
+        <span class="metric-footer-note">SIM one loop 10 000</span>
+      </div>
 
-      <!-- ACTIVE CASE BANNER -->
-      <section class="active-case-bar">
-        <div class="case-meta">
-          <span class="case-badge">CASE {{ activeCase().num }} / 12</span>
-          <h2 class="case-title">{{ activeCase().name }}</h2>
-          <span class="case-breadcrumbs">
-            Score · <strong class="hl-magenta">{{ activeCase().score }}</strong> — high {{ currentConfidence().toFixed(2) }} —
-            <strong class="hl-magenta">{{ activeCase().target }}</strong> &#8594; review folder &#8594; you hit Post
+      <!-- Median Latency with Oscilloscope -->
+      <div class="top-metric-card">
+        <span class="metric-eyebrow">MEDIAN LATENCY &#8212; REPORTED MS</span>
+        <div class="metric-value-row">
+          <span class="metric-hero-num" [appAnimeCounter]="currentLatency()">~{{ currentLatency() }} MS</span>
+          <canvas #oscilloscopeCanvas width="110" height="48" class="scope-canvas" title="Real-time Neural Frequency Oscilloscope"></canvas>
+        </div>
+        <span class="metric-footer-note">public demos · net 51ds</span>
+      </div>
+
+      <!-- Cost per 10k Decisions -->
+      <div class="top-metric-card">
+        <span class="metric-eyebrow">COST &#8212; 10 000 DECISIONS</span>
+        <div class="metric-value-row">
+          <span class="metric-hero-num accent-cost">&#8776; $0.42</span>
+        </div>
+        <span class="metric-footer-note">local GPU · $0.042/k in/out free</span>
+      </div>
+
+      <!-- Confidence Gauge -->
+      <div class="top-metric-card">
+        <span class="metric-eyebrow">CONFIDENCE &#8212; LIVE</span>
+        <div class="metric-value-row">
+          <span class="metric-hero-num accent-conf">{{ currentConfidence().toFixed(2) }}</span>
+          <span class="pass-badge" [class.pass]="currentConfidence() >= 0.85" [class.warn]="currentConfidence() < 0.85">
+            {{ currentConfidence() >= 0.85 ? 'PASS' : 'GATE' }}
           </span>
         </div>
-
-        <div class="case-action-pills">
-          <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'STATE'" (click)="selectedTab.set('STATE')">STATE</button>
-          <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'ASK'" (click)="selectedTab.set('ASK')">ASK</button>
-          <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'JEV'" (click)="selectedTab.set('JEV')">JEV</button>
-          <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'GATE'" (click)="selectedTab.set('GATE')">GATE</button>
-          <button class="pill-btn magenta" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'CODE'" (click)="selectedTab.set('CODE')">CODE</button>
+        <div class="metric-micro-bar">
+          <div class="bar-fill-confidence" [style.width.%]="currentConfidence() * 100"></div>
+          <div class="metric-gate-line" [style.left.%]="85" title="Gate Threshold: 0.85"></div>
         </div>
-      </section>
+        <span class="metric-footer-note">calibrate on yours · gate 0.85</span>
+      </div>
 
-      <!-- CENTRAL SPATIAL NEURAL / DECISION GRAPH CANVAS -->
-      <main class="pipeline-graph-canvas" #canvasContainer>
-        <svg class="pipeline-svg-conduits" [attr.viewBox]="'0 0 1440 620'">
-          <defs>
-            <linearGradient id="gradConduitMagenta" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#ff007f" stop-opacity="0.8"/>
-              <stop offset="50%" stop-color="#f43f5e" stop-opacity="1"/>
-              <stop offset="100%" stop-color="#ff007f" stop-opacity="0.9"/>
-            </linearGradient>
-            <linearGradient id="gradConduitCyan" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.7"/>
-              <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.3"/>
-            </linearGradient>
-            <filter id="neonGlowPink" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="4" result="blur"/>
-              <feMerge>
-                <feMergeNode in="blur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
+      <!-- Architect Operator Pill -->
+      <div class="operator-profile-card">
+        <img src="assets/images/ayyappa_rayudu.jpg" alt="Ayyappa Rayudu" class="operator-thumb" (error)="onImgErr($event)" />
+        <div class="operator-info">
+          <span class="op-tag">ARCHITECT</span>
+          <a href="https://www.linkedin.com/in/ayyapparayudu" target="_blank" class="op-handle">&#64;ayyapparayudu</a>
+        </div>
+      </div>
+    </div>
+  </header>
 
-          <!-- SVG Bezier Conduits -->
-          @for (conn of connections(); track conn.from + '-' + conn.to) {
-            <path
-              [attr.d]="getConnectionPath(conn)"
-              [class.active-conduit]="conn.highlighted"
-              [class.dim-conduit]="!conn.highlighted"
-              [attr.stroke]="conn.highlighted ? 'url(#gradConduitMagenta)' : '#26293d'"
-              [attr.stroke-width]="conn.highlighted ? 3 : 1.2"
-              fill="none"
-              [style.filter]="conn.highlighted ? 'url(#neonGlowPink)' : 'none'"
-            />
-            <!-- Animated flowing light pulse -->
-            @if (conn.highlighted) {
-              <circle r="3.5" fill="#ffffff" filter="url(#neonGlowPink)">
-                <animateMotion
-                  [attr.path]="getConnectionPath(conn)"
-                  dur="2.4s"
-                  repeatCount="indefinite"
-                />
-              </circle>
+  <!-- 12 PRODUCTION USE CASES HORIZONTAL SELECTOR CHIPS -->
+  <nav class="use-cases-chips-strip" aria-label="Operational Use Cases">
+    <div class="chips-label">12 CASES:</div>
+    <div class="chips-scroll-container">
+      @for (uc of useCases(); track uc.id) {
+        <button
+          type="button"
+          class="uc-chip-btn"
+          [class.active]="activeCase()?.id === uc.id"
+          appAnimeInteractive
+          [appAnimeType]="'subtle'"
+          (click)="selectUseCase(uc, $event)"
+          [title]="uc.description"
+        >
+          <span class="chip-num">{{ uc.num }}</span>
+          <span class="chip-name">{{ uc.name }}</span>
+        </button>
+      }
+    </div>
+  </nav>
+
+  <!-- ACTIVE CASE & LIVE EXECUTION CONTROLS BANNER -->
+  @if (activeCase(); as ac) {
+    <section class="active-case-bar">
+      <div class="case-meta">
+        <span class="case-badge">CASE {{ ac.num }} / 12</span>
+        <h2 class="case-title">{{ ac.name }}</h2>
+        <span class="case-breadcrumbs">
+          Score · <strong class="hl-accent">{{ ac.score }}</strong> &#8212; high {{ currentConfidence().toFixed(2) }} &#8212;
+          <strong class="hl-accent">{{ ac.target }}</strong> &#8594; review folder &#8594; you hit Post
+        </span>
+      </div>
+
+      <!-- Interactive Execution Action Cluster -->
+      <div class="case-execution-cluster">
+        <button
+          type="button"
+          class="eval-live-btn"
+          appAnimeInteractive
+          [appAnimeType]="'button'"
+          [disabled]="isEvaluating()"
+          (click)="runLiveEvaluation(false, $event)"
+          title="Run Live Real-Time Evaluation Against Active Use Case"
+        >
+          <span class="eval-icon">{{ isEvaluating() ? '🌀' : '⚡' }}</span>
+          <span>{{ isEvaluating() ? 'Evaluating DAG...' : 'Evaluate Decision' }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="override-btn"
+          appAnimeInteractive
+          [appAnimeType]="'subtle'"
+          [disabled]="isEvaluating()"
+          (click)="runLiveEvaluation(true, $event)"
+          title="Force Operator 100% Consent Approval"
+        >
+          <span>✓ Force Consent</span>
+        </button>
+      </div>
+
+      <!-- Pipeline Phase Tabs -->
+      <div class="case-action-pills">
+        <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'STATE'" (click)="setTab('STATE', $event)">STATE</button>
+        <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'ASK'" (click)="setTab('ASK', $event)">ASK</button>
+        <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'JEV'" (click)="setTab('JEV', $event)">JEV</button>
+        <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'GATE'" (click)="setTab('GATE', $event)">GATE</button>
+        <button class="pill-btn" appAnimeInteractive [appAnimeType]="'button'" [class.active]="selectedTab() === 'CODE'" (click)="setTab('CODE', $event)">CODE</button>
+      </div>
+    </section>
+
+    <!-- CONTEXTUAL PHASE DETAILS DRAWER -->
+    @if (selectedTab() === 'STATE') {
+      <div class="phase-detail-strip state-strip">
+        <div class="strip-header">
+          <span class="strip-title">◈ STATE ENCODING & INPUT PAYLOAD</span>
+          <div class="sample-pills-wrap">
+            <span class="sample-label">Sample Payloads:</span>
+            @for (sample of ac.sample_inputs; track $index) {
+              <button class="sample-pill-btn" (click)="selectSampleInput($index)">Sample #{{ $index + 1 }}</button>
             }
-          }
-        </svg>
+          </div>
+        </div>
+        <div class="json-editor-shell">
+          <textarea class="json-textarea" [value]="customInputJson()" (input)="onJsonInput($event)" placeholder="Enter JSON payload..."></textarea>
+          <div class="json-info-bar">
+            <span>AST Tensor: <strong>2048-dim</strong> packed embedding</span>
+            <span>Local Perceptor: <strong>Online</strong></span>
+          </div>
+        </div>
+      </div>
+    }
 
-        <!-- DOM Dynamic Node Cards Placed in Spatial Field -->
-        <div class="nodes-container">
-          @for (node of nodes(); track node.id) {
-            <div
-              class="pipeline-node-card"
-              [id]="'node-' + node.id"
-              [class.highlighted-node]="node.highlighted"
-              [class.active-path]="node.activePath"
-              [class.circular-node]="node.id === 'review_folder'"
-              [style.left.px]="node.x"
-              [style.top.px]="node.y"
-              [style.width.px]="node.width"
-              (click)="onNodeClick(node)"
-            >
-              <div class="node-header">
-                <span class="node-bullet">&#9632;</span>
-                <span class="node-title">{{ node.label }}</span>
-                @if (node.highlighted) {
-                  <span class="active-pulse-orb"></span>
+    @if (selectedTab() === 'ASK') {
+      <div class="phase-detail-strip ask-strip">
+        <div class="strip-header">
+          <span class="strip-title">◈ PARALLEL QUESTION MATRIX (LLM EVALUATION)</span>
+          <span class="strip-sub">Concurrent scoring heads evaluated in 3ms</span>
+        </div>
+        <div class="questions-grid">
+          @for (q of ac.questions; track q.q) {
+            <div class="question-card">
+              <div class="q-header">
+                <span class="q-name">{{ q.q }}</span>
+                <span class="q-type-badge">{{ q.type }}</span>
+              </div>
+              <div class="q-metric-row">
+                <span>Weight: <strong>{{ (q.weight * 100).toFixed(0) }}%</strong></span>
+                @if (q.floor) {
+                  <span>Floor: <strong>{{ q.floor }}</strong></span>
+                }
+                @if (q.gate) {
+                  <span>Gate: <strong>{{ q.gate }}</strong></span>
                 }
               </div>
-
-              @if (node.subtitle) {
-                <div class="node-subtitle">{{ node.subtitle }}</div>
-              }
-
-              @if (node.extraDetails) {
-                <div class="node-details-grid">
-                  @for (item of node.extraDetails | keyvalue; track item.key) {
-                    <div class="detail-pair">
-                      <span class="detail-k">{{ item.key }}</span>
-                      <span class="detail-v">{{ item.value }}</span>
-                    </div>
-                  }
-                </div>
-              }
-
-              @if (node.score !== undefined) {
-                <div class="node-score-strip">
-                  <span class="score-label">SCORE</span>
-                  <span class="score-val">{{ node.score.toFixed(2) }}</span>
-                </div>
-              }
             </div>
           }
         </div>
-      </main>
+      </div>
+    }
 
-      <!-- BOTTOM CONTROL DECK -->
-      <footer class="pipeline-bottom-deck">
-        <!-- 1. Parallel Questions -->
-        <div class="deck-panel parallel-questions-panel">
-          <div class="panel-header">
-            <span class="panel-title">&#9632; PARALLEL QUESTIONS</span>
-            <span class="panel-sub">one state</span>
+    @if (selectedTab() === 'GATE') {
+      <div class="phase-detail-strip gate-strip">
+        <div class="strip-header">
+          <span class="strip-title">◈ PHYSICAL SAFETY GUARDRAILS & RESOURCE LIMITS</span>
+        </div>
+        <div class="guardrail-cards-wrap">
+          <div class="guardrail-card">
+            <span class="gr-label">ACTIVE SPEND CAP</span>
+            <div class="gr-val">${{ ac.guardrail.spend.toFixed(2) }} / $1.00</div>
+            <div class="gr-bar"><div class="gr-bar-fill" [style.width.%]="ac.guardrail.spend * 100"></div></div>
           </div>
-          <div class="parallel-bars-content">
-            <div class="bar-group">
-              <span class="group-label">Choice A</span>
-              <div class="neon-bar-track">
-                <div class="neon-bar-fill pink" style="width: 82%;"></div>
-              </div>
-            </div>
-            <div class="bar-group">
-              <span class="group-label">Choice B</span>
-              <div class="neon-bar-track">
-                <div class="neon-bar-fill cyan" style="width: 44%;"></div>
-              </div>
-            </div>
-            <div class="bar-group">
-              <span class="group-label">Score A</span>
-              <div class="neon-bar-track">
-                <div class="neon-bar-fill cyan" style="width: 92%;"></div>
-              </div>
-            </div>
-            <div class="bar-group">
-              <span class="group-label">Score B</span>
-              <div class="neon-bar-track">
-                <div class="neon-bar-fill green" style="width: 68%;"></div>
-              </div>
-            </div>
-            <span class="cheap-desc">three answers &#8594; one cheap decision</span>
+          <div class="guardrail-card">
+            <span class="gr-label">ACTION QUOTA</span>
+            <div class="gr-val">{{ ac.guardrail.actions }}</div>
+            <span class="gr-note">Reset on hourly cycle</span>
+          </div>
+          <div class="guardrail-card highlight">
+            <span class="gr-label">PHYSICAL SAFETY RULE</span>
+            <div class="gr-rule-text">"{{ ac.guardrail.rule }}"</div>
           </div>
         </div>
+      </div>
+    }
 
-        <!-- 2. Confidence Stream Oscilloscope -->
-        <div class="deck-panel confidence-stream-panel">
-          <div class="panel-header">
-            <span class="panel-title">&#9632; CONFIDENCE STREAM</span>
-            <span class="panel-sub">10m</span>
-          </div>
-          <div class="oscilloscope-container">
-            <canvas #oscilloscopeCanvas class="oscilloscope-canvas" width="280" height="75"></canvas>
-            <div class="scope-legend">
-              <span class="leg-tag choice">Choice</span>
-              <span class="leg-tag score">Score</span>
-              <span class="leg-tag noul">Noul</span>
-              <span class="leg-tag under">&#8804; human</span>
-            </div>
-          </div>
+    @if (selectedTab() === 'CODE') {
+      <div class="phase-detail-strip code-strip">
+        <div class="strip-header">
+          <span class="strip-title">◈ EXECUTABLE chief.py LOGIC (ACTIVE USE CASE)</span>
+          <button class="copy-code-btn" (click)="copyCode(ac.codeSnippet)">
+            {{ isCopied() ? '✓ Copied' : '📋 Copy chief.py' }}
+          </button>
         </div>
+        <pre class="code-block"><code>{{ ac.codeSnippet }}</code></pre>
+      </div>
+    }
+  }
 
-        <!-- 3. 12 Use Cases Selector -->
-        <div class="deck-panel use-cases-panel">
-          <div class="panel-header">
-            <span class="panel-title">&#9632; 12 USE CASES</span>
-            <span class="panel-sub">case {{ activeCase().num }}</span>
-          </div>
-          <div class="use-cases-grid">
-            @for (uc of useCases(); track uc.id) {
-              <div
-                class="use-case-chip"
-                [class.active]="uc.active"
-                (click)="selectUseCase(uc)"
-              >
-                <span class="uc-num">{{ uc.num }}</span>
-                <span class="uc-name">{{ uc.name }}</span>
-              </div>
-            }
-          </div>
-        </div>
+  <!-- UNIFIED SPATIAL DECISION DAG CANVAS (SVG NATIVE) -->
+  <main class="pipeline-graph-canvas" #canvasContainer>
+    <!-- Background Neural Grid -->
+    <div class="canvas-grid-underlay"></div>
 
-        <!-- 4. Python chief.py Code Inspector -->
-        <div class="deck-panel code-inspector-panel">
-          <div class="panel-header">
-            <div class="code-title-row">
-              <span class="panel-title">&#9632; chief.py</span>
-              <span class="code-speed">54.1 b/s</span>
-            </div>
-            <span class="code-sub">&#123; "state": "x_feed" &#125;</span>
-          </div>
-          <div class="code-snippet-box">
-            <pre><code><span class="c-kw">answer</span> = result.choices[<span class="c-str">"next_worker"</span>]
-<span class="c-kw">destination</span> = <span class="c-str">"review"</span>
-<span class="c-ctrl">if</span> answer.confidence &gt;= <span class="c-num">0.85</span>:
-    destination = answer.choice
-    job = folder / f<span class="c-str">"&#123;post_id&#125;.json"</span>
-    job.write_text(json.dumps(payload))
-<span class="c-comment"># LLM writes · JEV decides · Code acts</span></code></pre>
-          </div>
-        </div>
-
-        <!-- 5. Run Log -->
-        <div class="deck-panel run-log-panel">
-          <div class="panel-header">
-            <span class="panel-title">&#9632; RUN LOG</span>
-            <span class="panel-sub">0.71 &#8594; 0.92 HIGH</span>
-          </div>
-          <div class="log-stream">
-            <div class="log-line"><span class="k">human:</span> review requested</div>
-            <div class="log-line"><span class="k">save:</span> progress after call</div>
-            <div class="log-line"><span class="k">limit:</span> actions 7/10 spend ok</div>
-            <div class="log-line"><span class="k">ask:</span> Choice next_worker</div>
-            <div class="log-line hl"><span class="k">jev:</span> &#8594; write 0.93 3ms</div>
-          </div>
-        </div>
-
-        <!-- 6. The Split -->
-        <div class="deck-panel the-split-panel">
-          <div class="panel-header">
-            <span class="panel-title">&#9632; THE SPLIT</span>
-            <span class="panel-sub">who does what</span>
-          </div>
-          <div class="split-rows">
-            <div class="split-item">
-              <span class="split-label">LLM writes</span>
-              <div class="split-dots cyan">
-                <span></span><span></span><span></span><span></span><span></span><span></span>
-              </div>
-            </div>
-            <div class="split-item">
-              <span class="split-label">Jev decides</span>
-              <div class="split-dots magenta">
-                <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-              </div>
-            </div>
-            <div class="split-item">
-              <span class="split-label">Code acts</span>
-              <div class="split-dots blue">
-                <span></span><span></span><span></span><span></span><span></span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 7. Guardrails -->
-        <div class="deck-panel guardrails-panel">
-          <div class="panel-header">
-            <span class="panel-title">&#9632; GUARDRAILS</span>
-          </div>
-          <div class="guardrails-content">
-            <div class="gr-row">
-              <span class="gr-label">spend cap</span>
-              <div class="gr-bar-track">
-                <div class="gr-bar-fill green" style="width: 32%;"></div>
-              </div>
-              <span class="gr-val">$0.32 / 1.00</span>
-            </div>
-            <div class="gr-row">
-              <span class="gr-label">actions</span>
-              <span class="gr-badge">56 / 10</span>
-            </div>
-            <div class="safety-banner">
-              <span class="lock-icon">&#128274;</span>
-              <span>never auto-post to X — progress saved</span>
-            </div>
-          </div>
-        </div>
-      </footer>
+    <!-- Stage Headers Ribbon -->
+    <div class="dag-stage-headers">
+      <div class="stage-col-header" style="left: 4.5%;">STAGE 1: INPUT QUESTIONS</div>
+      <div class="stage-col-header" style="left: 29%;">STAGE 2: LATENT ENCODER</div>
+      <div class="stage-col-header" style="left: 53.5%;">STAGE 3: ACTION DISPATCH</div>
+      <div class="stage-col-header" style="left: 78%;">STAGE 4: REVIEW & GATE</div>
     </div>
+
+    <svg class="pipeline-svg-canvas" viewBox="0 0 1100 370" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <!-- Dynamic Gradient for Conduits matching theme -->
+        <linearGradient id="conduitThemeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="var(--abhi-cyan, #38d9ff)" stop-opacity="0.9" />
+          <stop offset="50%" stop-color="var(--abhi-blue, #397bff)" stop-opacity="1" />
+          <stop offset="100%" stop-color="var(--abhi-cyan, #38d9ff)" stop-opacity="0.85" />
+        </linearGradient>
+
+        <!-- Neon Glow Filter -->
+        <filter id="themeGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="3.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- SVG Bezier Conduits -->
+      @for (conn of activeConnections(); track conn.from + '-' + conn.to) {
+        <path
+          [attr.d]="getConnectionPath(conn)"
+          [class.active-conduit]="conn.highlighted"
+          [class.dim-conduit]="!conn.highlighted"
+          fill="none"
+        />
+        <!-- Animated traveling light pulse along active paths -->
+        @if (conn.highlighted) {
+          <circle r="4" class="conduit-particle" filter="url(#themeGlow)">
+            <animateMotion
+              [attr.path]="getConnectionPath(conn)"
+              [attr.dur]="isEvaluating() ? '0.9s' : '2.1s'"
+              repeatCount="indefinite"
+            />
+          </circle>
+        }
+      }
+
+      <!-- SVG Native Node Cards (Guaranteed 100% Alignment with Conduits) -->
+      @for (node of activeNodes(); track node.id) {
+        <g
+          class="dag-node-group"
+          [class.highlighted]="node.highlighted"
+          [class.active-path]="node.activePath"
+          [class.selected]="selectedNode()?.id === node.id"
+          (click)="onNodeClick(node)"
+        >
+          <!-- Node Card Background -->
+          <rect
+            class="node-card-bg"
+            [attr.x]="node.x"
+            [attr.y]="node.y"
+            [attr.width]="node.width"
+            [attr.height]="node.height"
+            rx="10"
+          />
+
+          <!-- Category Chip -->
+          <rect
+            class="node-cat-chip"
+            [attr.x]="node.x + 12"
+            [attr.y]="node.y + 12"
+            width="58"
+            height="18"
+            rx="4"
+          />
+          <text
+            class="node-cat-text"
+            [attr.x]="node.x + 41"
+            [attr.y]="node.y + 24.5"
+          >
+            {{ node.category.toUpperCase() }}
+          </text>
+
+          <!-- Active Pulse Orb (when on active path) -->
+          @if (node.highlighted) {
+            <circle
+              class="node-pulse-orb"
+              [attr.cx]="node.x + node.width - 18"
+              [attr.cy]="node.y + 20"
+              r="4.5"
+            />
+          }
+
+          <!-- Node Title -->
+          <text
+            class="node-title-text"
+            [attr.x]="node.x + 12"
+            [attr.y]="node.y + 44"
+          >
+            {{ node.label }}
+          </text>
+
+          <!-- Node Subtitle or Metric -->
+          <text
+            class="node-sub-text"
+            [attr.x]="node.x + 12"
+            [attr.y]="node.y + 59"
+          >
+            {{ node.subtitle || (node.score ? 'Score: ' + node.score : 'Latency: ~3.8ms') }}
+          </text>
+
+          <!-- Input Port (Left Anchor) -->
+          <circle
+            class="node-port in-port"
+            [attr.cx]="node.x"
+            [attr.cy]="node.y + node.height / 2"
+            r="5"
+          />
+
+          <!-- Output Port (Right Anchor) -->
+          <circle
+            class="node-port out-port"
+            [attr.cx]="node.x + node.width"
+            [attr.cy]="node.y + node.height / 2"
+            r="5"
+          />
+        </g>
+      }
+    </svg>
+
+    <!-- Node Inspector Drawer (Contextual on Node Click) -->
+    @if (selectedNode(); as sel) {
+      <aside class="node-inspector-drawer">
+        <div class="drawer-header">
+          <div class="drawer-title-row">
+            <span class="inspector-tag">NODE INSPECTOR</span>
+            <button type="button" class="close-drawer-btn" (click)="closeNodeInspector()">✕</button>
+          </div>
+          <h3 class="inspector-node-title">{{ sel.label }}</h3>
+          <span class="inspector-node-id">ID: {{ sel.id }} · {{ sel.category }}</span>
+        </div>
+
+        <div class="inspector-body">
+          <div class="inspector-metric-grid">
+            <div class="ins-card">
+              <span class="ins-k">STATUS</span>
+              <span class="ins-v" [class.active]="sel.highlighted">
+                {{ sel.highlighted ? 'ACTIVE ON PATH' : 'STANDBY' }}
+              </span>
+            </div>
+            <div class="ins-card">
+              <span class="ins-k">LATENCY</span>
+              <span class="ins-v">~3.8 ms</span>
+            </div>
+            <div class="ins-card">
+              <span class="ins-k">TENSOR DIMS</span>
+              <span class="ins-v">2048-dim Latent</span>
+            </div>
+            <div class="ins-card">
+              <span class="ins-k">JEV UTILITY</span>
+              <span class="ins-v">0.941 OPTIMAL</span>
+            </div>
+          </div>
+
+          @if (sel.extraDetails) {
+            <div class="inspector-section">
+              <span class="ins-sec-title">METADATA & ATTRIBUTES</span>
+              <table class="ins-table">
+                @for (entry of sel.extraDetails | keyvalue; track entry.key) {
+                  <tr>
+                    <td class="ins-td-k">{{ entry.key }}</td>
+                    <td class="ins-td-v">{{ entry.value }}</td>
+                  </tr>
+                }
+              </table>
+            </div>
+          }
+
+          <div class="inspector-footer-note">
+            <span>Runtime: <strong>DualStateVerifier WAL</strong> verified</span>
+          </div>
+        </div>
+      </aside>
+    }
+  </main>
+
+  <!-- BOTTOM TELEMETRY DECK & LIVE RUN LOGS -->
+  <footer class="pipeline-bottom-deck">
+    <!-- Recent Execution Verdict -->
+    <div class="deck-panel">
+      <span class="panel-eyebrow">LAST TRACE VERDICT</span>
+      @if (lastTrace(); as tr) {
+        <div class="trace-verdict-row">
+          <span class="verdict-tag" [class.approved]="tr.decision_verdict === 'APPROVED'" [class.consent]="tr.decision_verdict !== 'APPROVED'">
+            {{ tr.decision_verdict }}
+          </span>
+          <span class="trace-conf">{{ (tr.confidence * 100).toFixed(0) }}% conf</span>
+        </div>
+        <div class="trace-meta-sub">
+          <span>Worker: <strong>{{ tr.destination_worker }}</strong></span>
+          <span>Latency: <strong>{{ tr.latency_ms }}ms</strong></span>
+        </div>
+      } @else {
+        <div class="trace-verdict-row">
+          <span class="verdict-tag approved">APPROVED</span>
+          <span class="trace-conf">92% conf</span>
+        </div>
+        <div class="trace-meta-sub">
+          <span>Worker: <strong>review_folder</strong></span>
+          <span>Latency: <strong>256ms</strong></span>
+        </div>
+      }
+    </div>
+
+    <!-- Live Execution Run Logs -->
+    <div class="deck-panel logs-panel">
+      <span class="panel-eyebrow">LIVE RUN LOG STREAM</span>
+      <div class="log-stream-wrap">
+        @for (log of runLogs(); track $index) {
+          <div class="log-row">
+            <span class="log-time">{{ log.timestamp }}</span>
+            <span class="log-chan" [class]="log.channel">{{ log.channel }}</span>
+            <span class="log-msg">{{ log.text }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Spending & Quota Monitor -->
+    <div class="deck-panel">
+      <span class="panel-eyebrow">GUARDRAILS & SPEND</span>
+      <div class="spend-stats-row">
+        <span>Spend: <strong>$0.32 / $1.00</strong></span>
+        <span class="quota-pct">32%</span>
+      </div>
+      <div class="quota-bar">
+        <div class="quota-fill" style="width: 32%;"></div>
+      </div>
+      <div class="spend-stats-row mt-1">
+        <span>Actions: <strong>56 / 100</strong></span>
+        <span>WITHIN LIMIT</span>
+      </div>
+    </div>
+
+    <!-- Hardware & Kernel Engine -->
+    <div class="deck-panel">
+      <span class="panel-eyebrow">LOCAL ENGINE STATUS</span>
+      <div class="engine-status-row">
+        <span class="status-dot healthy"></span>
+        <span class="engine-name">RTX GPU & Ollama 32k</span>
+      </div>
+      <div class="engine-meta-note">Zero cloud egress · SQLite WAL verified</div>
+    </div>
+  </footer>
+</div>
