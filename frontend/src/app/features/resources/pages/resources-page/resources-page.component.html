@@ -1,0 +1,76 @@
+<div class="resources-page-container">
+  <!-- Header -->
+  <div class="page-header-row">
+    <div>
+      <h1 class="page-title">
+        <span class="pulse-dot"></span>
+        Resource & Model Lifecycle Manager
+      </h1>
+      <p class="page-subtitle">
+        Local-First deterministic CPU, RAM, GPU, VRAM, and Model Cache orchestration for ABHI
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button
+        type="button"
+        (click)="onRefresh()"
+        [disabled]="resourceService.isLoading()"
+        class="abhi-btn abhi-btn-primary"
+      >
+        🔄 Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  @if (resourceService.errorMessage()) {
+    <div class="alert-error">
+      <span>⚠️ {{ resourceService.errorMessage() }}</span>
+    </div>
+  }
+
+  <!-- Operating Mode & State Bar -->
+  <app-operating-mode-selector
+    [currentMode]="resourceService.operatingMode()"
+    [pressureLevel]="resourceService.pressureLevel()"
+    [degradedMode]="resourceService.summary()?.degraded_mode || 'FULL_CAPABILITY'"
+    (modeChange)="onModeChange($event)"
+    (reconcile)="onReconcile()"
+  />
+
+  <!-- Hardware Gauges -->
+  <app-hardware-gauge-panel
+    [inventory]="resourceService.summary()?.hardware || null"
+    [ramUsagePercent]="resourceService.ramUsagePercent()"
+    [vramUsagePercent]="resourceService.vramUsagePercent()"
+  />
+
+  <!-- Managed Models Section -->
+  <div class="models-section">
+    <div class="section-header-row">
+      <div>
+        <h2 class="section-title">Model Memory Lifecycle & Cache</h2>
+        <p class="section-subtitle">Production and candidate model instances with VRAM gating</p>
+      </div>
+      <span class="abhi-badge abhi-badge-cyan">
+        Loaded: {{ resourceService.summary()?.loaded_models_count || 0 }} / {{ resourceService.models().length }}
+      </span>
+    </div>
+
+    <div class="models-grid">
+      @for (model of resourceService.models(); track model.model_id) {
+        <app-model-lifecycle-card
+          [model]="model"
+          (load)="onLoadModel($event)"
+          (unload)="onUnloadModel($event)"
+        />
+      }
+    </div>
+  </div>
+
+  <!-- Active Leases Queue -->
+  <app-workload-queue-table
+    [leases]="resourceService.activeLeases()"
+  />
+</div>

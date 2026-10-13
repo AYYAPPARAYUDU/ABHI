@@ -101,13 +101,13 @@ describe('Phase 9 Stage 1 — 3D Spatial Agentic Application Shell, Routing & Ex
       expect(location.path()).toBe('/browser');
     });
 
-    it('should navigate to /workflows and load WorkflowPageComponent', async () => {
+    it('should navigate to /decision-pipeline and load DecisionPipelinePageComponent', async () => {
       const fixture = TestBed.createComponent(App);
       fixture.detectChanges();
-      await router.navigate(['/workflows']);
+      await router.navigate(['/decision-pipeline']);
       await fixture.whenStable();
 
-      expect(location.path()).toBe('/workflows');
+      expect(location.path()).toBe('/decision-pipeline');
     });
 
     it('should navigate to /perception and load PerceptionPageComponent', async () => {

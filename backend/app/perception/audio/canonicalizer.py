@@ -26,28 +26,28 @@ class LanguageCanonicalizer:
 
     # Heuristic fast mappings for common patterns
     INTENT_KEYWORDS = {
-        "ABHI_WAKE": [
-            "wake up", "wake", "activate", "uth jao", "uth", "उठ जाओ", "उठो", "जागो", "లే", "మేల్కొను", "எழுந்திரு", "active"
-        ],
-        "ABHI_REST": [
-            "sleep", "rest", "go to sleep", "take rest", "so jao", "aaram karo", "పడుకో", "విశ్రాంతి", "தூங்கு", "ஓய்வெடு"
-        ],
-        "ABHI_LOCK": [
-            "lock", "lock abhi", "band karo", "లాక్", "பூட்டு"
-        ],
         "OPEN_APPLICATION": [
             "open", "launch", "kholo", "start", "chalu karo", "ouvrir", "abrir",
             "ఓపెన్ చేయి", "ఓపెన్", "తెరవండి", "திறக்கவும்", "திற", "खोलो"
-        ],
-        "SEARCH_KNOWLEDGE": [
-            "search", "find", "lookup", "kripya dhoondo", "khojo", "chercher", "buscar",
-            "veduku", "telusuko", "jaankari", "pata karo", "వెతుకు"
         ],
         "READ_FILE": [
             "read", "padho", "view", "dikhao", "display", "choodu", "చూడు", "చదువు", "lire", "leer"
         ],
         "SYSTEM_STATUS": [
             "status", "health", "system", "kaise ho", "diagnostics", "halat", "stithi", "స్థితి", "நிலை"
+        ],
+        "ABHI_LOCK": [
+            "lock", "lock abhi", "band karo", "లాక్", "பூட்டு"
+        ],
+        "ABHI_REST": [
+            "sleep", "rest", "go to sleep", "take rest", "so jao", "aaram karo", "పడుకో", "విశ్రాంతి", "தூங்கு", "ஓய்வெடு"
+        ],
+        "SEARCH_KNOWLEDGE": [
+            "search", "find", "lookup", "kripya dhoondo", "khojo", "chercher", "buscar",
+            "veduku", "telusuko", "jaankari", "pata karo", "వెతుకు"
+        ],
+        "ABHI_WAKE": [
+            "wake up", "wake", "activate", "uth jao", "uth", "उठ जाओ", "उठो", "जागो", "లే", "మేల్కొను", "எழுந்திரு", "active"
         ]
     }
 
@@ -78,11 +78,18 @@ class LanguageCanonicalizer:
                 raw_input=raw_utterance
             )
 
-        # Match against fast heuristic dictionary
+        # Match against fast heuristic dictionary with boundary checks
         for intent, patterns in self.INTENT_KEYWORDS.items():
             for p in patterns:
-                if p.lower() in text_clean:
-                    extracted_slot = text_clean.replace(p.lower(), "").strip()
+                p_lower = p.lower()
+                # For single-character or short non-latin tokens, require space/boundary separation
+                if len(p_lower) <= 2:
+                    matched = bool(re.search(r"(?:^|\s)" + re.escape(p_lower) + r"(?:$|\s)", text_clean))
+                else:
+                    matched = p_lower in text_clean
+
+                if matched:
+                    extracted_slot = text_clean.replace(p_lower, "").strip()
                     intent_label = intent.replace("_", " ").lower()
                     return CanonicalCommand(
                         canonical_intent=f"{intent_label}: {extracted_slot or 'target'}",

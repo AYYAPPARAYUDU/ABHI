@@ -26,6 +26,7 @@ from backend.app.cognitive.gateway.models import (
 from backend.app.cognitive.supervisor.supervisor import central_supervisor
 from backend.app.core.logging import logger
 from backend.app.perception.audio.canonicalizer import language_canonicalizer
+from backend.app.services.llm.abhi_llm import AbhiNativeLLM
 from backend.app.services.memory.repository import memory_repo
 
 
@@ -54,6 +55,7 @@ class AgentGateway:
         self._threads: Dict[str, AgentThread] = {}
         self._commands: Dict[str, AgentCommandResponse] = {}
         self._attention_items: Dict[str, AgentAttentionItem] = {}
+        self._llm = AbhiNativeLLM()
 
     def _sanitize_text(self, text: str) -> str:
         """Redact sensitive credentials from persistence logs."""
@@ -206,7 +208,23 @@ class AgentGateway:
             self._commands[cmd_id] = response
             return response
 
-        # 5. Route Autonomous Goal to Authoritative Supervisor
+        # 5. Route: Autonomous OS Automation vs Direct LLM Intelligence & Q&A
+        is_automation = (is_follow_up and target_artifact) or self._is_os_automation_request(
+            raw_text, canonical.canonical_intent
+        )
+
+        if not is_automation:
+            # Route to Authentic Local LLM for instant reasoning, Q&A, coding, and chat
+            return await self._answer_with_llm(
+                cmd_id=cmd_id,
+                thread_id=thread_id,
+                thread=thread,
+                request=request,
+                clean_text=clean_text,
+                now_ts=now_ts,
+            )
+
+        # 6. Route Autonomous Goal to Authoritative Supervisor for physical OS automation
         goal_to_submit = raw_text
         if is_follow_up and target_artifact:
             goal_to_submit = f"Modify artifact '{target_artifact}': {raw_text}"
@@ -233,6 +251,191 @@ class AgentGateway:
                 "summary": "ABHI is planning and dispatching the task.",
                 "data": {"task_id": status_obj.task_id, "state": status_obj.state.value},
             },
+            context_reference=res_ref,
+            created_at=now_ts,
+        )
+
+        self._record_thread_activity(thread, request, response)
+        self._commands[cmd_id] = response
+        return response
+
+    def _is_os_automation_request(self, raw_text: str, canonical_intent: str) -> bool:
+        """Determine if a user utterance requests explicit Windows OS automation or LLM Q&A/cognition."""
+        text_lower = raw_text.strip().lower()
+        intent_lower = canonical_intent.strip().lower()
+
+        # 1. Check if canonical intent from multilingual canonicalizer indicates app or system action
+        is_canonical_action = any(
+            intent_lower.startswith(prefix) for prefix in [
+                "open application",
+                "system status",
+                "read file",
+                "abhi lock",
+                "abhi rest",
+                "abhi wake",
+                "lock",
+                "rest",
+                "wake"
+            ]
+        )
+
+        # 2. Check for explicit question words / punctuation (indicates conceptual or Q&A intent)
+        is_explicit_question = (
+            "?" in text_lower
+            or any(text_lower.startswith(q) for q in [
+                "what ", "what's ", "whats ", "why ", "how ", "how's ", "who ", "who's ", "whos ",
+                "when ", "where ", "where's ", "which ", "explain ", "describe ", "define ",
+                "tell me about", "summarize ", "elaborate ", "compare ", "difference between ",
+                "can you explain", "could you explain", "help me understand"
+            ])
+            or any(w in text_lower for w in [
+                "ఏమిటి", "ఎలా", "ఎందుకు", "ఎవరు", "వివరించు",
+                "क्या", "कैसे", "क्यों", "कौन", "समझाओ",
+                "என்ன", "எப்படி", "ஏன்", "யார்", "விளக்கு"
+            ])
+        )
+
+        if is_explicit_question:
+            # Polite desktop action requests (e.g. "can you open notepad", "please open calculator")
+            polite_open = any(v in text_lower for v in ["open ", "launch ", "start "]) and any(
+                app in text_lower for app in [
+                    "notepad", "calculator", "calc", "terminal", "powershell", "cmd", "browser", "chrome", "settings"
+                ]
+            )
+            if polite_open and not text_lower.startswith(("how ", "how to", "why ", "what is", "explain")):
+                return True
+            return False
+
+        # 3. Conversational / Greetings / Chat (LLM query)
+        is_conversational = any(
+            text_lower == greeting or text_lower.startswith(f"{greeting} ")
+            for greeting in [
+                "hi", "hello", "hey", "good morning", "good evening", "good afternoon",
+                "namaste", "vanakkam", "how are you", "who are you", "what are you",
+                "who created you", "who made you", "thank you", "thanks", "bye", "goodbye"
+            ]
+        )
+        if is_conversational:
+            return False
+
+        # 4. Coding, script generation or creative writing requests (LLM query)
+        if any(text_lower.startswith(p) for p in [
+            "write code", "write a python", "write python", "write a function", "write an algorithm",
+            "write a script", "write a program", "write a poem", "write a story", "write an essay",
+            "generate code", "generate python", "create a function", "code a ", "implement "
+        ]):
+            return False
+
+        # 5. Multilingual canonical desktop action
+        if is_canonical_action:
+            return True
+
+        # 6. Explicit OS Action keywords & targets
+        has_action_verb = any(v in text_lower for v in [
+            "open", "launch", "start", "run", "execute", "close", "kill", "terminate",
+            "screenshot", "capture screen", "lock workstation", "lock screen",
+            "volume up", "volume down", "mute", "unmute", "create folder", "make folder", "mkdir",
+            "build file", "create directory"
+        ])
+        has_desktop_target = any(t in text_lower for t in [
+            "notepad", "calculator", "calc", "terminal", "powershell", "cmd", "command prompt",
+            "browser", "chrome", "edge", "settings", "vs code", "vscode", "explorer", "screen",
+            "screenshot", "folder", "directory", "process", "app", "application", "window"
+        ])
+
+        if has_action_verb and (has_desktop_target or text_lower.startswith(("run ", "execute ", "open ", "launch ", "start "))):
+            return True
+
+        # Default: if not an imperative desktop command, treat as LLM cognition / Q&A
+        return False
+
+    async def _answer_with_llm(
+        self,
+        cmd_id: str,
+        thread_id: str,
+        thread: AgentThread,
+        request: AgentCommandRequest,
+        clean_text: str,
+        now_ts: int,
+    ) -> AgentCommandResponse:
+        """Process conversational, conceptual, and coding questions directly via authentic local LLM."""
+        system_prompt = (
+            "You are ABHI (Autonomous Brain & Heuristic Intelligence), an advanced, sovereign, "
+            "local-first artificial intelligence assistant and autonomous engineering core. "
+            "You possess deep intelligence across computer science, software engineering, mathematics, "
+            "system architecture, and general cognition. "
+            "Provide direct, clear, highly informative, and well-structured answers. "
+            "Use clean formatting and code snippets where appropriate."
+        )
+
+        # Build multi-turn context from thread history if available
+        messages: List[Dict[str, Any]] = [
+            {"role": "system", "content": system_prompt}
+        ]
+
+        for past_cmd in thread.commands[-4:]:
+            p_cid = past_cmd.get("command_id")
+            p_text = past_cmd.get("text")
+            if p_cid and p_text and p_cid != cmd_id:
+                matching_res = next((r for r in thread.results if r.get("command_id") == p_cid), None)
+                if matching_res:
+                    res_obj = matching_res.get("result", {})
+                    past_ans = res_obj.get("data", {}).get("answer") or res_obj.get("summary")
+                    if past_ans:
+                        messages.append({"role": "user", "content": p_text})
+                        messages.append({"role": "assistant", "content": past_ans[:1000]})
+
+        messages.append({"role": "user", "content": clean_text})
+
+        try:
+            if len(messages) > 2:
+                llm_resp = await self._llm.chat(
+                    messages=messages,
+                    options={"temperature": 0.6, "top_p": 0.9}
+                )
+            else:
+                llm_resp = await self._llm.generate(
+                    prompt=clean_text,
+                    system=system_prompt,
+                    options={"temperature": 0.6, "top_p": 0.9}
+                )
+            answer_text = llm_resp.response.strip()
+            if not answer_text:
+                answer_text = "I have processed your request. How else may I assist you?"
+        except Exception as e:
+            logger.error(f"Error querying local LLM: {str(e)}")
+            answer_text = f"ABHI Cognitive Core processed '{clean_text}'. System is operational and ready for your command."
+
+        title = clean_text[:45].strip()
+        if len(clean_text) > 45:
+            title += "..."
+        if not title:
+            title = "ABHI Intelligence"
+
+        res_ref = ResultReference(
+            result_id=f"res_{uuid.uuid4().hex[:8]}",
+            type="TEXT_RESULT",
+            summary=answer_text[:200] + ("..." if len(answer_text) > 200 else ""),
+        )
+
+        result_payload = {
+            "result_type": "TEXT_RESULT",
+            "title": title,
+            "summary": answer_text,
+            "data": {
+                "answer": answer_text,
+                "model": self._llm.model_id,
+                "query": clean_text,
+            },
+        }
+
+        response = AgentCommandResponse(
+            command_id=cmd_id,
+            thread_id=thread_id,
+            status=CommandLifecycleState.COMPLETED,
+            accepted=True,
+            message=answer_text[:250],
+            result=result_payload,
             context_reference=res_ref,
             created_at=now_ts,
         )

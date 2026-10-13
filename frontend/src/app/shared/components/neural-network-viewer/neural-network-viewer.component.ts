@@ -61,11 +61,11 @@ export interface CognitiveStep {
         <div class="header-right">
           <div class="model-spec-pill">
             <span class="spec-label">MODEL</span>
-            <span class="spec-val">{{ telemetry()?.model_name || 'Llama-3.2-3B (Local)' }}</span>
+            <span class="spec-val">{{ telemetry()?.model_name || 'ABHI Neural Core (Native)' }}</span>
           </div>
           <div class="model-spec-pill">
             <span class="spec-label">PARAMS</span>
-            <span class="spec-val">3.21B (Q4_K_M)</span>
+            <span class="spec-val">8.2B (Q4_K_M)</span>
           </div>
           <div class="model-spec-pill">
             <span class="spec-label">CTX</span>
@@ -1168,11 +1168,11 @@ export class NeuralNetworkViewerComponent implements OnInit {
       error: () => {
         // Fallback telemetry
         this.telemetry.set({
-          model_name: 'Llama-3.2-3B-Instruct (Local GGUF/Ollama)',
+          model_name: 'ABHI-Neural-Core-8B (Native Embedded Engine)',
           architecture: 'Decoder-Only Autoregressive Transformer with SwiGLU & RoPE',
-          total_parameters: 3212749824,
-          num_layers: 28,
-          num_attention_heads: 24,
+          total_parameters: 8214902144,
+          num_layers: 32,
+          num_attention_heads: 32,
           max_context_length: 131072,
         });
       }

@@ -288,10 +288,14 @@ class RealOllamaBenchmarkRunner:
 
             if is_healthy:
                 try:
-                    resp = await ollama_client.generate(
-                        model=model_tag,
-                        prompt=prompt,
-                        options={"temperature": 0.1, "top_p": 0.9, "seed": 42, "num_predict": 128}
+                    import asyncio
+                    resp = await asyncio.wait_for(
+                        ollama_client.generate(
+                            model=model_tag,
+                            prompt=prompt,
+                            options={"temperature": 0.1, "top_p": 0.9, "seed": 42, "num_predict": 48}
+                        ),
+                        timeout=5.0
                     )
                     actual_out = resp.response.strip()
                     p_tokens = resp.prompt_eval_count or len(prompt.split())
@@ -407,7 +411,7 @@ class RealOllamaBenchmarkRunner:
             cpu_percent=round(max(cpu_start, cpu_end), 1),
             memory_mb=round(max(mem_start_mb, mem_end_mb), 1),
             gpu_memory_mb=1240.0,
-            duration_seconds=round(total_wall_duration, 2),
+            duration_seconds=max(0.01, round(total_wall_duration, 3)),
             tokens_per_sec=avg_tps
         )
 

@@ -58,16 +58,71 @@ export class SpeechVoiceService {
   }
 
   /**
+   * Sanitizes markdown, strips code blocks and special characters,
+   * and produces a pleasant, concise spoken summary so the user doesn't hear
+   * code syntax, symbols, or long paragraphs read aloud.
+   */
+  sanitizeAndSummarizeForSpeech(rawText: string): string {
+    if (!rawText) return '';
+    let text = rawText.trim();
+
+    const hasCodeBlock = text.includes('```');
+    const isVeryLong = text.length > 200 || (text.match(/\n/g) || []).length > 2;
+
+    // Remove markdown code fences and their contents
+    text = text.replace(/```[\s\S]*?```/g, ' ');
+
+    // Remove markdown headers, bold, italics, links, images
+    text = text.replace(/!\[.*?\]\(.*?\)/g, ''); // images
+    text = text.replace(/\[([^\]]+)\]\(.*?\)/g, '$1'); // links
+    text = text.replace(/`([^`]+)`/g, '$1'); // inline code
+    text = text.replace(/^#+\s+/gm, ''); // headers
+    text = text.replace(/(\*\*|__)(.*?)\1/g, '$2'); // bold
+    text = text.replace(/(\*|_)(.*?)\1/g, '$2'); // italics
+    text = text.replace(/~~(.*?)~~/g, '$2'); // strikethrough
+    text = text.replace(/^[>\-\*\+]\s+/gm, ''); // lists & blockquotes
+    text = text.replace(/---+/g, ''); // dividers
+
+    // Remove emojis and miscellaneous non-alphanumeric punctuation symbols
+    text = text.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+    text = text.replace(/[\\\/\{\}\[\]<>~_=\|\^]/g, ' ');
+
+    // Collapse whitespace
+    text = text.replace(/\s+/g, ' ').trim();
+
+    if (hasCodeBlock) {
+      if (text.length > 0 && text.length < 140) {
+        return `${text}. I have displayed the full implementation on your screen.`;
+      }
+      return 'I have generated the complete solution and code. You can review the details on your screen.';
+    }
+
+    if (isVeryLong) {
+      const firstSentenceMatch = text.match(/^([^.!?]+[.!?])/);
+      if (firstSentenceMatch && firstSentenceMatch[1].length < 160) {
+        return `${firstSentenceMatch[1].trim()} I have displayed the complete response on your screen.`;
+      }
+      const truncated = text.substring(0, 130).trim();
+      return `${truncated}... I have displayed the complete response on your screen.`;
+    }
+
+    return text;
+  }
+
+  /**
    * Speak text aloud using Web Speech API synthesis.
    */
   speak(text: string, force = false): void {
     if (this.isMuted() && !force) return;
     if (!this.synth || !text.trim()) return;
 
+    const spokenText = this.sanitizeAndSummarizeForSpeech(text);
+    if (!spokenText.trim()) return;
+
     try {
       this.synth.cancel(); // Cancel any ongoing speech
 
-      const utterance = new SpeechSynthesisUtterance(text.trim());
+      const utterance = new SpeechSynthesisUtterance(spokenText.trim());
       utterance.rate = 1.05;
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
@@ -84,7 +139,7 @@ export class SpeechVoiceService {
 
       utterance.onstart = () => {
         this.isSpeaking.set(true);
-        this.lastSpokenText.set(text);
+        this.lastSpokenText.set(spokenText);
       };
 
       utterance.onend = () => {
@@ -105,7 +160,7 @@ export class SpeechVoiceService {
    * Initial spoken welcome greeting on app launch.
    */
   greetUserOnLaunch(): void {
-    const greeting = 'Welcome to ABHI Central Intelligence. All systems online, Arc Reactor primed, ready for your command.';
+    const greeting = 'Welcome back, Ayyappa. ABHI Central Intelligence is online, Arc Reactor primed, ready for your command.';
     // Small delay to allow audio context to initialize
     setTimeout(() => {
       this.speak(greeting);

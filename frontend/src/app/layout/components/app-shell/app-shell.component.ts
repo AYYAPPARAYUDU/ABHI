@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs/operators';
-import { FloatingSidebarComponent } from '../floating-sidebar/floating-sidebar.component';
 import { ContextualTopbarComponent } from '../contextual-topbar/contextual-topbar.component';
 import { GlobalSafetyBarComponent } from '../global-safety-bar/global-safety-bar.component';
 import { ConsentModalComponent } from '../../../features/operator-console/components/consent-modal/consent-modal.component';

@@ -1,5 +1,66 @@
-.memory-type-filter .btn {
-  font-size: 0.8rem;
-  padding: 0.35rem 0.75rem;
+:host {
+  display: block;
+}
+
+.memory-type-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.group-label {
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--abhi-text-secondary, #94a3b8);
+  padding-right: 2px;
+}
+
+.chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.cyber-chip {
+  background: var(--abhi-surface-inset, rgba(7, 12, 22, 0.6));
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.08));
+  color: var(--abhi-text-secondary, #94a3b8);
+  font-family: monospace;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
   border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.cyber-chip:hover {
+  background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.08));
+  color: var(--abhi-text-primary, #ffffff);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.cyber-chip.active {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--abhi-cyan, #00f0ff);
+  color: var(--abhi-cyan, #00f0ff);
+  font-weight: 700;
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.2);
 }

@@ -9,7 +9,7 @@ def test_default_settings():
     assert settings.APP_HOST == "127.0.0.1"
     assert settings.APP_PORT == 8000
     assert settings.OLLAMA_BASE_URL == "http://localhost:11434"
-    assert settings.OLLAMA_DEFAULT_MODEL == "qwen3:8b"
+    assert settings.OLLAMA_DEFAULT_MODEL == "abhi:latest"
     assert "http://localhost:4200" in settings.CORS_ORIGINS
 
 

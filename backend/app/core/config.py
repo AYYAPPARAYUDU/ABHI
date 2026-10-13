@@ -24,11 +24,13 @@ class Settings(BaseSettings):
         description="Allowed CORS origins for the frontend"
     )
 
-    # Ollama Local LLM Settings
+    # LLM Settings (ABHI Native Core)
     OLLAMA_BASE_URL: str = Field(default="http://localhost:11434", description="Ollama API base URL")
-    OLLAMA_DEFAULT_MODEL: str = Field(default="qwen3:8b", description="Default local LLM model name")
+    OLLAMA_DEFAULT_MODEL: str = Field(default="abhi:latest", description="Default local LLM model name")
+    NATIVE_LLM_MODEL: str = Field(default="abhi:latest", description="Primary native embedded LLM model")
     OLLAMA_TIMEOUT_SECONDS: int = Field(default=60, description="Timeout for LLM inference in seconds")
     OLLAMA_KEEP_ALIVE: str = Field(default="5m", description="Ollama model keep-alive duration")
+    OLLAMA_NUM_CTX: int = Field(default=32768, description="Default context window size in tokens")
 
     # Storage Paths
     DATABASE_DIR: str = Field(default="./database", description="Base persistent database root")

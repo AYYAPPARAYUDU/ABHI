@@ -122,3 +122,34 @@ async def test_agent_api_endpoints():
         voice_res = await ac.get("/api/v1/agent/voice/status")
         assert voice_res.status_code == 200
         assert voice_res.json()["voice_mode"] == "ACTUAL_VOICE"
+
+
+@pytest.mark.asyncio
+async def test_agent_gateway_llm_qa_and_reasoning():
+    """Verify that general questions and conceptual queries route directly to LLM cognition."""
+    # 1. Identity & Capability Query
+    req_who = AgentCommandRequest(text="Who are you?")
+    res_who = await agent_gateway.process_command(req_who)
+    assert res_who.status == CommandLifecycleState.COMPLETED
+    assert res_who.accepted is True
+    assert res_who.task_id is None
+    assert res_who.result["result_type"] == "TEXT_RESULT"
+    assert len(res_who.result["summary"]) > 10
+    assert "ABHI" in res_who.result["summary"]
+
+    # 2. General Knowledge / OS Concept Question
+    req_os = AgentCommandRequest(text="What is an operating system?")
+    res_os = await agent_gateway.process_command(req_os)
+    assert res_os.status == CommandLifecycleState.COMPLETED
+    assert res_os.task_id is None
+    assert res_os.result["result_type"] == "TEXT_RESULT"
+    assert len(res_os.result["data"]["answer"]) > 20
+
+    # 3. Code Generation Query
+    req_code = AgentCommandRequest(text="Write a python function to compute fibonacci")
+    res_code = await agent_gateway.process_command(req_code)
+    assert res_code.status == CommandLifecycleState.COMPLETED
+    assert res_code.task_id is None
+    assert res_code.result["result_type"] == "TEXT_RESULT"
+    assert "def " in res_code.result["data"]["answer"] or "fib" in res_code.result["data"]["answer"].lower()
+

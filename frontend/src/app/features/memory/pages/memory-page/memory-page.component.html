@@ -1,34 +1,40 @@
 <div class="memory-page container-fluid px-0">
-  <!-- Top Navigation Tabs -->
-  <div class="d-flex justify-content-between align-items-center mb-3 border-bottom border-secondary border-opacity-25 pb-2">
-    <div class="d-flex gap-2">
+  <!-- Top Navigation Tabs (Unified Cybernetic Pills) -->
+  <div class="memory-nav-bar mb-3">
+    <div class="nav-pills-group">
       <button
-        class="btn btn-sm font-monospace text-uppercase"
-        [class.btn-primary]="memoryService.activeTab() === 'memories'"
-        [class.btn-outline-secondary]="memoryService.activeTab() !== 'memories'"
+        type="button"
+        class="memory-tab-pill"
+        [class.active]="memoryService.activeTab() === 'memories'"
         (click)="onTabChange('memories')"
       >
-        🧠 Personal Memory Store ({{ memoryService.totalMemories() }})
+        <span class="pill-icon">🧠</span>
+        <span class="pill-title">Personal Memory Store</span>
+        <span class="pill-count">({{ memoryService.totalMemories() }})</span>
       </button>
       <button
-        class="btn btn-sm font-monospace text-uppercase"
-        [class.btn-primary]="memoryService.activeTab() === 'procedures'"
-        [class.btn-outline-secondary]="memoryService.activeTab() !== 'procedures'"
+        type="button"
+        class="memory-tab-pill"
+        [class.active]="memoryService.activeTab() === 'procedures'"
         (click)="onTabChange('procedures')"
       >
-        📦 Procedural Library ({{ memoryService.procedures().length }})
+        <span class="pill-icon">📦</span>
+        <span class="pill-title">Procedural Library</span>
+        <span class="pill-count">({{ memoryService.procedures().length }})</span>
       </button>
       <button
-        class="btn btn-sm font-monospace text-uppercase"
-        [class.btn-warning]="memoryService.activeTab() === 'conflicts'"
-        [class.btn-outline-secondary]="memoryService.activeTab() !== 'conflicts'"
+        type="button"
+        class="memory-tab-pill"
+        [class.active]="memoryService.activeTab() === 'conflicts'"
         (click)="onTabChange('conflicts')"
       >
-        ⚠️ Conflicts ({{ memoryService.conflicts().length }})
+        <span class="pill-icon">⚠️</span>
+        <span class="pill-title">Conflicts</span>
+        <span class="pill-count">({{ memoryService.conflicts().length }})</span>
       </button>
     </div>
 
-    <div *ngIf="memoryService.successMessage()" class="badge bg-success bg-opacity-25 text-success border border-success font-monospace px-3 py-2">
+    <div *ngIf="memoryService.successMessage()" class="memory-success-badge font-monospace">
       ✓ {{ memoryService.successMessage() }}
     </div>
   </div>
@@ -58,7 +64,12 @@
                 <span class="text-info fw-bold">🔑 {{ prof.key }}</span>
                 <span class="text-muted small">{{ prof.updated_at ? (prof.updated_at | date:'shortTime') : '-' }}</span>
               </div>
-              <pre class="text-light small mb-0 bg-dark p-1 rounded" style="font-size: 0.75rem;">{{ prof.value | json }}</pre>
+              <div class="d-flex flex-column gap-1 bg-dark bg-opacity-50 p-2 rounded border border-secondary border-opacity-10">
+                <div *ngFor="let entry of getProfileEntries(prof.value)" class="d-flex justify-content-between align-items-center gap-2">
+                  <span class="text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">{{ entry.key }}</span>
+                  <span class="text-light fw-bold text-end text-break" style="font-size: 0.75rem;">{{ entry.value }}</span>
+                </div>
+              </div>
             </div>
           </div>
           <div *ngIf="memoryService.userProfiles().length === 0" class="text-muted small font-monospace p-2 border border-secondary border-opacity-25 rounded bg-black bg-opacity-25">

@@ -18,12 +18,12 @@ class TaskPlanner:
         dag_id = f"dag_{uuid.uuid4().hex[:12]}"
         now_ts = int(time.time() * 1000)
 
-        # Attempt structured LLM decomposition first with strict timeout
+        # Attempt structured LLM decomposition first with sufficient local model timeout
         try:
             import asyncio
-            dag = await asyncio.wait_for(self._plan_with_llm(dag_id, task_id, goal, now_ts), timeout=3.0)
+            dag = await asyncio.wait_for(self._plan_with_llm(dag_id, task_id, goal, now_ts), timeout=20.0)
             if dag and dag.nodes:
-                logger.info(f"Generated LLM DAG plan with {len(dag.nodes)} steps for task '{task_id}'")
+                logger.info(f"Generated dynamic LLM DAG plan with {len(dag.nodes)} steps for task '{task_id}' using abhi:latest")
                 return dag
         except Exception as e:
             logger.warning(f"LLM planner bypassed or timed out: {str(e)}; falling back to heuristic planner.")
@@ -32,52 +32,59 @@ class TaskPlanner:
         return self._plan_with_heuristics(dag_id, task_id, goal, now_ts)
 
     async def _plan_with_llm(self, dag_id: str, task_id: str, goal: str, created_at: int) -> Optional[TaskDAG]:
-        """Query local Ollama LLM to generate structured plan."""
+        """Query local Ollama LLM (`abhi:latest`) to generate structured plan."""
+        from backend.app.services.llm.ollama_client import clean_json_markdown
+
         available_agents = agent_registry.list_agents()
-        agents_prompt = "\n".join([f"- {a.agent_id}: {a.name} ({a.description})" for a in available_agents])
+        agents_prompt = "\n".join([f"- {a.agent_id}: {a.name} ({a.description}) - Capabilities: {', '.join(a.capabilities)}" for a in available_agents])
 
         system_prompt = (
-            "You are the master planning engine for a local personal AI system.\n"
-            "Decompose the user's goal into 1-4 discrete, ordered execution steps.\n"
+            "You are the master autonomous planning engine of ABHI on Windows.\n"
+            "Decompose the user's goal into 1-4 discrete, ordered execution steps matching available agent capabilities.\n"
+            "Available Agents & Capabilities:\n"
+            f"{agents_prompt}\n\n"
             "Respond ONLY with a valid JSON object matching this schema:\n"
             "{\n"
             '  "steps": [\n'
             '    {\n'
             '      "node_id": "step_1",\n'
-            '      "title": "Short title",\n'
-            '      "agent_id": "rag_agent | memory_agent | coding_agent | os_desktop_agent",\n'
+            '      "title": "Short descriptive title",\n'
+            '      "agent_id": "os_desktop_agent | coding_agent | rag_agent | memory_agent",\n'
             '      "action": "action_name",\n'
-            '      "params": {}, \n'
+            '      "params": {},\n'
             '      "dependencies": [],\n'
             '      "risk_tier": "Tier 1 | Tier 2 | Tier 3"\n'
             "    }\n"
             "  ]\n"
             "}\n"
-            f"Available Specialized Agents:\n{agents_prompt}"
         )
 
         response = await ollama_client.generate(
             prompt=f"User Goal: {goal}",
             system=system_prompt,
-            format_schema={"type": "object"}
+            format_schema={"type": "object"},
+            options={"temperature": 0.1, "top_p": 0.9}
         )
 
         if not response.response:
             return None
 
-        # Parse JSON output
-        parsed = json.loads(response.response)
+        # Clean markdown code fences and extract JSON
+        cleaned_json = clean_json_markdown(response.response)
+        parsed = json.loads(cleaned_json)
         raw_steps = parsed.get("steps", [])
-        if not raw_steps:
+        if not raw_steps or not isinstance(raw_steps, list):
             return None
 
         nodes: Dict[str, DAGNode] = {}
-        for step in raw_steps:
-            nid = step.get("node_id", f"step_{len(nodes) + 1}")
-            agent_id = step.get("agent_id", "coding_agent")
-            action = step.get("action", "read_file")
+        for idx, step in enumerate(raw_steps, start=1):
+            nid = str(step.get("node_id", f"step_{idx}"))
+            agent_id = step.get("agent_id", "os_desktop_agent")
+            action = step.get("action", "run_allowlisted_command")
             params = step.get("params", {})
-            deps = step.get("dependencies", [])
+            if not isinstance(params, dict):
+                params = {}
+            deps = [str(d) for d in step.get("dependencies", []) if str(d) != nid]
             tier = step.get("risk_tier", "Tier 1")
 
             nodes[nid] = DAGNode(
@@ -146,9 +153,17 @@ class TaskPlanner:
                 status=NodeStatus.PENDING
             )
 
-        elif "notepad" in goal_lower or ("note" in goal_lower and "open" in goal_lower):
-            # Extract text to type if present
-            sample_text = "ABHI Automation Rescue: Verified native Windows text dispatch and postcondition."
+        elif "notepad" in goal_lower or ("note" in goal_lower and ("open" in goal_lower or "type" in goal_lower or "write" in goal_lower)):
+            # Dynamically extract text to type from user goal
+            text_to_type = ""
+            for pat in [r"(?:type|write|text|saying)[:\s]+['\"]?([^'\"]+)['\"]?", r"type\s+(.*)", r"write\s+(.*)"]:
+                m = re.search(pat, goal, re.IGNORECASE)
+                if m:
+                    text_to_type = m.group(1).strip()
+                    break
+            if not text_to_type:
+                text_to_type = f"ABHI Execution Output: {goal}"
+
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
                 title="Launch Notepad Editor",
@@ -163,16 +178,143 @@ class TaskPlanner:
                 title="Type Text into Notepad Buffer",
                 agent_id="os_desktop_agent",
                 action="type_text",
-                params={"app_name": "notepad", "text": sample_text},
+                params={"app_name": "notepad", "text": text_to_type},
                 dependencies=["step_1"],
                 risk_tier="Tier 2",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["terminal", "powershell", "cmd", "whoami", "ipconfig", "hostname", "systeminfo"]):
+            cmd_to_run = "hostname"
+            for c in ["whoami", "ipconfig", "hostname", "systeminfo", "git status", "ver", "date", "dir"]:
+                if c in goal_lower:
+                    cmd_to_run = c
+                    break
+
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title="Launch Constrained Windows Terminal",
+                agent_id="os_desktop_agent",
+                action="launch_application",
+                params={"app_name": "terminal"},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+            nodes["step_2"] = DAGNode(
+                node_id="step_2",
+                title=f"Execute Allowlisted Command: {cmd_to_run}",
+                agent_id="os_desktop_agent",
+                action="run_allowlisted_command",
+                params={"command_id": cmd_to_run},
+                dependencies=["step_1"],
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["explorer", "files", "folder", "directory"]) and any(k in goal_lower for k in ["list", "browse", "show", "items", "scan", "create"]):
+            is_create = "create" in goal_lower or "make" in goal_lower
+            if is_create:
+                folder_m = re.search(r"(?:folder|directory)[:\s]+['\"]?([\w\-\_]+)['\"]?", goal, re.IGNORECASE)
+                folder_name = folder_m.group(1) if folder_m else "abhi_workspace"
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Launch File Explorer",
+                    agent_id="os_desktop_agent",
+                    action="launch_application",
+                    params={"app_name": "explorer"},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+                nodes["step_2"] = DAGNode(
+                    node_id="step_2",
+                    title=f"Create Directory: {folder_name}",
+                    agent_id="os_desktop_agent",
+                    action="create_folder",
+                    params={"folder_name": folder_name},
+                    dependencies=["step_1"],
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            else:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Launch File Explorer",
+                    agent_id="os_desktop_agent",
+                    action="launch_application",
+                    params={"app_name": "explorer"},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+                nodes["step_2"] = DAGNode(
+                    node_id="step_2",
+                    title="List Directory Contents",
+                    agent_id="os_desktop_agent",
+                    action="list_items",
+                    params={},
+                    dependencies=["step_1"],
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+
+        elif "setting" in goal_lower or "display" in goal_lower or "storage" in goal_lower:
+            setting_id = "display"
+            for s in ["display", "sound", "power", "bluetooth", "network", "storage", "about"]:
+                if s in goal_lower:
+                    setting_id = s
+                    break
+
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Launch Windows Settings ({setting_id.title()})",
+                agent_id="os_desktop_agent",
+                action="launch_application",
+                params={"app_name": "settings", "page": setting_id.title()},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+            nodes["step_2"] = DAGNode(
+                node_id="step_2",
+                title=f"Inspect System Setting: {setting_id.title()}",
+                agent_id="os_desktop_agent",
+                action="read_setting",
+                params={"setting_id": setting_id},
+                dependencies=["step_1"],
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif "screenshot" in goal_lower or "capture screen" in goal_lower:
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title="Capture Physical Desktop Screenshot",
+                agent_id="os_desktop_agent",
+                action="take_screenshot",
+                params={},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif "close" in goal_lower and any(a in goal_lower for a in ["notepad", "calc", "calculator", "terminal", "explorer", "settings", "window"]):
+            clean_app = "notepad"
+            for a in ["notepad", "calculator", "terminal", "explorer", "settings"]:
+                if a in goal_lower:
+                    clean_app = a
+                    break
+
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Close Application: {clean_app.title()}",
+                agent_id="os_desktop_agent",
+                action="close_application",
+                params={"app_name": clean_app},
+                risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )
 
         elif "search" in goal_lower or "find" in goal_lower or "lookup" in goal_lower:
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
-                title="Search Knowledge Base",
+                title=f"Search Knowledge Base: {goal[:30]}",
                 agent_id="rag_agent",
                 action="hybrid_search",
                 params={"query": goal, "top_k": 5},
@@ -184,27 +326,31 @@ class TaskPlanner:
                 title="Record Solution in Memory",
                 agent_id="memory_agent",
                 action="save_memory",
-                params={"context_summary": goal, "solution_summary": "Retrieved relevant local knowledge."},
+                params={"context_summary": goal, "solution_summary": f"Retrieved knowledge for: '{goal}'"},
                 dependencies=["step_1"],
                 risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )
         elif "open" in goal_lower or "launch" in goal_lower or "app" in goal_lower:
-            clean_app = goal.replace("open", "").replace("launch", "").replace("the", "").replace("app", "").strip()
+            clean_app = goal
+            for p in ["open", "launch", "start", "the", "app", "application"]:
+                clean_app = re.sub(rf"\b{p}\b", "", clean_app, flags=re.IGNORECASE).strip()
+            clean_app = clean_app or "notepad"
+
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
-                title=f"Launch Application: {clean_app or goal}",
+                title=f"Launch Application: {clean_app}",
                 agent_id="os_desktop_agent",
                 action="launch_application",
-                params={"app_name": clean_app or goal},
+                params={"app_name": clean_app},
                 risk_tier="Tier 2",
                 status=NodeStatus.PENDING
             )
         else:
-            # Default generic knowledge lookup
+            # Dynamic memory analysis for general goals
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
-                title="Analyze and Retrieve Memory",
+                title=f"Analyze Goal: {goal[:30]}",
                 agent_id="memory_agent",
                 action="recall_recent",
                 params={"limit": 3},

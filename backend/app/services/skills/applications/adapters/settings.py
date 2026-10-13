@@ -107,6 +107,19 @@ class SettingsAdapter(BaseApplicationAdapter):
                 preconditions=["SETTINGS_OPEN"],
                 postconditions=["SETTING_EXTRACTED"],
                 verification_policy="SETTING_VALUE_PRESENT"
+            ),
+            ApplicationCapability(
+                capability_name="close",
+                skill_id="app.settings.close",
+                version="1.0.0",
+                description="Close the Windows Settings window.",
+                risk_level=SkillRiskLevel.LOW,
+                permissions=["DESKTOP_CONTROL"],
+                input_schema={"type": "object", "properties": {}},
+                output_schema={"type": "object", "properties": {"closed": {"type": "boolean"}}},
+                preconditions=["SETTINGS_OPEN"],
+                postconditions=["WINDOW_CLOSED"],
+                verification_policy="WINDOW_CLOSED"
             )
         ]
 
@@ -249,7 +262,40 @@ class SettingsAdapter(BaseApplicationAdapter):
                     error_message=f"Setting ID not found: {setting_id}",
                     duration_ms=0
                 )
-            info = self._available_settings[setting_id]
+            info = dict(self._available_settings[setting_id])
+            if not self._mock_mode and not arguments.get("mock"):
+                if setting_id == "display":
+                    try:
+                        import ctypes
+                        w = ctypes.windll.user32.GetSystemMetrics(0)
+                        h = ctypes.windll.user32.GetSystemMetrics(1)
+                        if w and h:
+                            info["current_value"] = f"{w}x{h} Resolution (Standard Scale)"
+                    except Exception:
+                        pass
+                elif setting_id == "storage":
+                    try:
+                        import shutil
+                        usage = shutil.disk_usage("C:\\")
+                        free_gb = round(usage.free / (1024**3), 1)
+                        total_gb = round(usage.total / (1024**3), 1)
+                        info["current_value"] = f"Local Disk (C:) {free_gb} GB free of {total_gb} GB"
+                    except Exception:
+                        pass
+                elif setting_id == "about":
+                    try:
+                        import platform
+                        proc = platform.processor() or "AMD / Intel x64"
+                        info["current_value"] = f"{platform.system()} {platform.release()} ({proc})"
+                    except Exception:
+                        pass
+                elif setting_id == "network":
+                    try:
+                        import socket
+                        info["current_value"] = f"Connected ({socket.gethostname()})"
+                    except Exception:
+                        pass
+
             dur = int((time.perf_counter() - start_ts) * 1000)
             return SkillResult(
                 is_success=True,
@@ -258,6 +304,20 @@ class SettingsAdapter(BaseApplicationAdapter):
                 action_id=action_id,
                 output_data={"setting_info": info},
                 observed_state=info,
+                verification_passed=True,
+                duration_ms=dur
+            )
+
+        if capability_name == "close":
+            session.state = ApplicationState.STOPPED
+            dur = int((time.perf_counter() - start_ts) * 1000)
+            return SkillResult(
+                is_success=True,
+                skill_id="app.settings.close",
+                skill_version="1.0.0",
+                action_id=action_id,
+                output_data={"closed": True},
+                observed_state={"state": ApplicationState.STOPPED.value},
                 verification_passed=True,
                 duration_ms=dur
             )

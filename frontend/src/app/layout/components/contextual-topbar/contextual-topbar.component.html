@@ -1,0 +1,138 @@
+<header class="contextual-bar" role="banner">
+  <!-- Left: Context Title & Active Status -->
+  <div class="bar-left">
+    <div class="page-title-wrap">
+      <span class="page-symbol">◈</span>
+      <h1 class="page-title">{{ currentRouteTitle() }}</h1>
+    </div>
+
+    @if (stateService.isBusy()) {
+      <div class="active-task-pill" title="Active background agent operation">
+        <span class="pulse-indicator"></span>
+        <span class="pill-text">{{ stateService.currentTask()?.currentStep || 'Working…' }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- Center: Futuristic Floating Navigation Ribbon (Zero Sidebar) -->
+  <nav class="bar-nav-ribbon" aria-label="Workspace Navigation">
+    @for (item of navItems; track item.route) {
+      <button
+        type="button"
+        class="ribbon-btn"
+        [class.active]="isActive(item.route)"
+        (click)="navigateTo(item.route)"
+        [title]="item.label"
+      >
+        <span class="ribbon-icon">{{ item.icon }}</span>
+        <span class="ribbon-label">{{ item.label }}</span>
+      </button>
+    }
+  </nav>
+
+  <!-- Right: Personal Operator Profile, Search/Command, Theme, Health, E-STOP -->
+  <div class="bar-right">
+    <!-- Personal Operator Badge (Ayyappa Rayudu) -->
+    <a
+      class="operator-profile-pill"
+      routerLink="/business"
+      [title]="stateService.personalProfile().name + ' (' + stateService.personalProfile().handle + ')'"
+    >
+      <img
+        [src]="stateService.personalProfile().avatarUrl"
+        alt="Ayyappa Rayudu"
+        class="operator-avatar-img"
+        (error)="handleAvatarFallback($event)"
+      />
+      <div class="operator-meta-group">
+        <span class="operator-title-text">{{ stateService.personalProfile().name }}</span>
+        <span class="operator-handle-sub">{{ stateService.personalProfile().handle }}</span>
+      </div>
+      <span class="verified-indicator" title="Personalized Local AI Verified">✓</span>
+    </a>
+
+    <!-- Command Palette Trigger -->
+    <button
+      type="button"
+      class="command-trigger-btn"
+      (click)="stateService.toggleCommandPalette(true)"
+      title="Open Command Palette (Ctrl+K or ⌘K)"
+    >
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <span class="trigger-label">Cmd</span>
+      <kbd class="shortcut-badge">⌘K</kbd>
+    </button>
+
+    <!-- Theme Quick Cycler -->
+    <button
+      type="button"
+      class="theme-quick-btn"
+      (click)="cycleTheme()"
+      [title]="'Active Theme: ' + themeService.activeTheme().label + ' (Click to Switch)'"
+    >
+      <span class="theme-icon">🎨</span>
+      <span class="theme-name">{{ themeService.activeTheme().label }}</span>
+    </button>
+
+    <!-- User Mode Switcher -->
+    <div class="mode-switcher" role="radiogroup" aria-label="Experience Mode">
+      <button
+        type="button"
+        class="mode-btn"
+        [class.active]="stateService.userMode() === 'USER'"
+        (click)="setMode('USER')"
+        title="User Mode"
+      >
+        User
+      </button>
+      <button
+        type="button"
+        class="mode-btn"
+        [class.active]="stateService.userMode() === 'ADVANCED'"
+        (click)="setMode('ADVANCED')"
+        title="Advanced Mode"
+      >
+        Adv
+      </button>
+      <button
+        type="button"
+        class="mode-btn"
+        [class.active]="stateService.userMode() === 'DEVELOPER'"
+        (click)="setMode('DEVELOPER')"
+        title="Developer Mode"
+      >
+        Dev
+      </button>
+    </div>
+
+    <!-- Health Indicator -->
+    <div class="health-pill" [attr.data-health]="healthStatus()" [title]="'System Status: ' + healthStatus()">
+      <span class="health-dot"></span>
+      <span class="health-label">{{ healthStatus() }}</span>
+    </div>
+
+    <!-- Emergency Stop Quick Trigger -->
+    @if (stateService.safety().emergencyStopped) {
+      <button
+        type="button"
+        class="estop-btn active"
+        disabled
+        title="System Emergency Stopped"
+      >
+        STOPPED
+      </button>
+    } @else {
+      <button
+        type="button"
+        class="estop-btn"
+        (click)="stateService.triggerEmergencyStop()"
+        title="Immediate Emergency Stop"
+      >
+        E-STOP
+      </button>
+    }
+  </div>
+</header>

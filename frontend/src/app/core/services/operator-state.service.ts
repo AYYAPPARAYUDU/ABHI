@@ -83,7 +83,7 @@ export class OperatorStateService {
     {
       id: 'act_1',
       type: 'APP',
-      title: 'Opened Calculator',
+      title: 'Opened Calculator & Verified AST',
       description: 'Calculated expressions via safe Win32 automation',
       timestamp: Date.now() - 1000 * 60 * 15,
       status: 'SUCCESS',
@@ -92,22 +92,34 @@ export class OperatorStateService {
     {
       id: 'act_2',
       type: 'MEDIA',
-      title: 'Indexed Cyberpunk Metropolis Asset',
-      description: 'Extracted semantic vectors & scene OCR tokens',
+      title: 'Rendered YouTube Reel Asset',
+      description: 'Automated 9:16 vertical crop, Whisper STT subtitles & ffmpeg composition',
       timestamp: Date.now() - 1000 * 60 * 45,
       status: 'SUCCESS',
-      routeLink: '/media-library'
+      routeLink: '/media'
     },
     {
       id: 'act_3',
       type: 'TASK',
-      title: 'Workflow Execution Verified',
-      description: 'Long-horizon workflow passed dual-state checks',
-      timestamp: Date.now() - 1000 * 60 * 120,
+      title: 'Decision Pipeline Executed',
+      description: 'Evaluated case 04 x_feed via confidence gate (0.92 PASS)',
+      timestamp: Date.now() - 1000 * 60 * 5,
       status: 'SUCCESS',
-      routeLink: '/tasks'
+      routeLink: '/decision-pipeline'
     }
   ]);
+
+  // Operator Personal Identity (Ayyappa Rayudu)
+  readonly personalProfile = signal({
+    name: 'Ayyappa Rayudu Ravuvari',
+    handle: '@ayyapparayudu',
+    linkedIn: 'https://www.linkedin.com/in/ayyapparayudu',
+    avatarUrl: 'assets/images/ayyappa_rayudu.jpg',
+    role: 'Lead Systems Architect & Frontend Engineer',
+    bio: 'Specializing in Angular 22, TypeScript, RxJS, metadata-driven architectures, local LLM orchestration, and Windows OS physical automation.',
+    verified: true,
+    workstation: 'Windows 11 · RTX GPU (100% VRAM) · 32,768 Context'
+  });
 
   // Computed Helpers
   readonly isBusy = computed(() => {
@@ -517,7 +529,7 @@ export class OperatorStateService {
       environment: raw.environment || 'production',
       gateway: mapStatus(subs.api_gateway || 'healthy'),
       database: mapStatus(subs.database_sqlite || 'healthy'),
-      ollama: mapStatus(subs.ollama_service || 'healthy'),
+      ollama: mapStatus(subs.abhi_llm_core || subs.ollama_service || 'healthy'),
       perception: 'HEALTHY',
       windowsWorker: 'HEALTHY',
       browserWorker: 'HEALTHY',

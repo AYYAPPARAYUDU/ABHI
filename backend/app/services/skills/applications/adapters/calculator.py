@@ -89,6 +89,19 @@ class CalculatorAdapter(BaseApplicationAdapter):
                 preconditions=["CALCULATOR_RUNNING"],
                 postconditions=["DISPLAY_CLEARED"],
                 verification_policy="DISPLAY_IS_ZERO"
+            ),
+            ApplicationCapability(
+                capability_name="close",
+                skill_id="app.calculator.close",
+                version="1.0.0",
+                description="Close the Calculator application.",
+                risk_level=SkillRiskLevel.LOW,
+                permissions=["DESKTOP_CONTROL"],
+                input_schema={"type": "object", "properties": {}},
+                output_schema={"type": "object", "properties": {"closed": {"type": "boolean"}}},
+                preconditions=["CALCULATOR_RUNNING"],
+                postconditions=["WINDOW_CLOSED"],
+                verification_policy="WINDOW_CLOSED"
             )
         ]
 
@@ -234,6 +247,20 @@ class CalculatorAdapter(BaseApplicationAdapter):
                 action_id=action_id,
                 output_data={"cleared": True, "display_value": "0"},
                 observed_state={"display_value": "0"},
+                verification_passed=True,
+                duration_ms=dur
+            )
+
+        if capability_name == "close":
+            session.state = ApplicationState.STOPPED
+            dur = int((time.perf_counter() - start_ts) * 1000)
+            return SkillResult(
+                is_success=True,
+                skill_id="app.calculator.close",
+                skill_version="1.0.0",
+                action_id=action_id,
+                output_data={"closed": True},
+                observed_state={"state": ApplicationState.STOPPED.value},
                 verification_passed=True,
                 duration_ms=dur
             )

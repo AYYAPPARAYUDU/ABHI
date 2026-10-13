@@ -1,51 +1,60 @@
-<div class="memory-type-filter d-flex flex-column gap-2">
-  <!-- Memory Type Row -->
-  <div class="d-flex flex-wrap align-items-center gap-2">
-    <span class="text-muted small font-monospace me-1">TYPE:</span>
-    <button
-      *ngFor="let t of memoryService.memoryTypes()"
-      class="btn btn-sm font-monospace text-uppercase px-2 py-1"
-      [class.btn-primary]="currentType === t"
-      [class.btn-outline-secondary]="currentType !== t"
-      (click)="setType(t)"
-    >
-      {{ t }}
-    </button>
+<div class="memory-type-filter">
+  <!-- Combined Filter Bar -->
+  <div class="filter-row">
+    <div class="filter-group">
+      <span class="group-label">TYPE</span>
+      <div class="chips-wrap">
+        <button
+          *ngFor="let t of memoryService.memoryTypes()"
+          type="button"
+          class="cyber-chip"
+          [class.active]="currentType === t"
+          (click)="setType(t)"
+        >
+          {{ t }}
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-group">
+      <span class="group-label">PRIVACY</span>
+      <div class="chips-wrap">
+        <button
+          *ngFor="let p of memoryService.privacyClasses()"
+          type="button"
+          class="cyber-chip"
+          [class.active]="currentPrivacy === p"
+          (click)="setPrivacy(p)"
+        >
+          {{ p }}
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- Privacy Classification Row -->
-  <div class="d-flex flex-wrap align-items-center gap-2">
-    <span class="text-muted small font-monospace me-1">PRIVACY:</span>
-    <button
-      *ngFor="let p of memoryService.privacyClasses()"
-      class="btn btn-sm font-monospace text-uppercase px-2 py-1"
-      [class.btn-warning]="currentPrivacy === p"
-      [class.btn-outline-secondary]="currentPrivacy !== p"
-      (click)="setPrivacy(p)"
-    >
-      🔒 {{ p }}
-    </button>
-  </div>
-
-  <!-- Category Filter Row -->
-  <div class="d-flex flex-wrap align-items-center gap-2">
-    <span class="text-muted small font-monospace me-1">DOMAIN:</span>
-    <button
-      class="btn btn-sm font-monospace text-uppercase px-2 py-1"
-      [class.btn-info]="currentCategory === 'all'"
-      [class.btn-outline-secondary]="currentCategory !== 'all'"
-      (click)="setCategory('all')"
-    >
-      🌐 ALL ({{ memoryService.totalMemories() }})
-    </button>
-    <button
-      *ngFor="let cat of memoryService.categories()"
-      class="btn btn-sm font-monospace text-uppercase px-2 py-1"
-      [class.btn-info]="currentCategory === cat"
-      [class.btn-outline-secondary]="currentCategory !== cat"
-      (click)="setCategory(cat)"
-    >
-      📁 {{ cat }}
-    </button>
+  <!-- Domain Category Row -->
+  <div class="filter-row domain-row">
+    <div class="filter-group">
+      <span class="group-label">DOMAIN</span>
+      <div class="chips-wrap">
+        <button
+          type="button"
+          class="cyber-chip"
+          [class.active]="currentCategory === 'all'"
+          (click)="setCategory('all')"
+        >
+          ALL ({{ memoryService.totalMemories() }})
+        </button>
+        <button
+          *ngFor="let cat of memoryService.categories()"
+          type="button"
+          class="cyber-chip"
+          [class.active]="currentCategory === cat"
+          (click)="setCategory(cat)"
+        >
+          {{ cat }}
+        </button>
+      </div>
+    </div>
   </div>
 </div>

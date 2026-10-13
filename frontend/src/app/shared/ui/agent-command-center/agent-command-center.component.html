@@ -1,0 +1,124 @@
+<div class="agent-command-center" [class.compact]="compact">
+  <!-- Central Ambient Aura & Focus Ring -->
+  <div class="command-box-wrap" [class.focused]="isFocused" [class.working]="commandService.isWorking()">
+    <form class="command-form" (ngSubmit)="onSubmit()">
+      <div class="command-input-row">
+        <!-- Left Command / AI Icon -->
+        <span class="command-brand-icon" [class.pulse]="commandService.isWorking()">
+          @if (commandService.isWorking()) {
+            <span class="working-spinner">🌀</span>
+          } @else {
+            <span class="ai-symbol">✦</span>
+          }
+        </span>
+
+        <!-- Main Input Field -->
+        <input
+          type="text"
+          class="command-input"
+          [(ngModel)]="inputText"
+          name="commandInput"
+          [placeholder]="placeholderText()"
+          autocomplete="off"
+          (focus)="isFocused = true"
+          (blur)="isFocused = false"
+          [disabled]="commandService.isProcessing()"
+        />
+
+        <!-- Actions: Language Selector, Voice, Submit -->
+        <div class="command-actions-wrap">
+          <!-- Selected Language Badge -->
+          <div class="lang-selector-wrap">
+            <button
+              type="button"
+              class="lang-pill-btn"
+              (click)="toggleLangMenu()"
+              title="Command Language"
+            >
+              {{ currentLangLabel() }}
+              <span class="caret">▾</span>
+            </button>
+
+            @if (showLangMenu()) {
+              <div class="lang-dropdown">
+                <button type="button" class="lang-opt" (click)="setLang('auto')">Auto Detect</button>
+                <button type="button" class="lang-opt" (click)="setLang('en')">English (EN)</button>
+                <button type="button" class="lang-opt" (click)="setLang('te')">తెలుగు (Telugu)</button>
+                <button type="button" class="lang-opt" (click)="setLang('hi')">हिंदी (Hindi)</button>
+                <button type="button" class="lang-opt" (click)="setLang('ta')">தமிழ் (Tamil)</button>
+              </div>
+            }
+          </div>
+
+          <!-- Voice Input Button -->
+          <button
+            type="button"
+            class="voice-toggle-btn"
+            [class.listening]="isListening()"
+            (click)="toggleVoice()"
+            title="Voice Input (English, Telugu, Hindi, Tamil)"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+          </button>
+
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            class="submit-action-btn"
+            [disabled]="!inputText.trim() || commandService.isProcessing()"
+            title="Execute Command"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Quick Suggestion / Multilingual Pills -->
+  @if (!compact && !commandService.activeResult() && !operatorState.isBusy()) {
+    <div class="suggestions-row">
+      <span class="sug-label">Try:</span>
+      @for (sug of activeSuggestions(); track sug.text) {
+        <button
+          type="button"
+          class="sug-pill"
+          (click)="applySuggestion(sug.text, sug.lang)"
+        >
+          @if (sug.lang !== 'en') {
+            <span class="sug-lang-badge">{{ sug.lang.toUpperCase() }}</span>
+          }
+          {{ sug.text }}
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Embedded Active Task Card (When Working or Running) -->
+  @if (operatorState.currentTask() && operatorState.isBusy() && !commandService.activeResult()) {
+    <div class="active-task-container">
+      <app-agent-task-card
+        [task]="operatorState.currentTask()"
+        (onCancel)="operatorState.cancelActiveTask()"
+      ></app-agent-task-card>
+    </div>
+  }
+
+  <!-- Embedded Universal Result Sheet (When Result is Active) -->
+  @if (commandService.activeResult()) {
+    <div class="active-result-container">
+      <app-result-sheet
+        [result]="commandService.activeResult()"
+        (onDismiss)="commandService.dismissResult()"
+        (onAction)="handleResultAction($event)"
+      ></app-result-sheet>
+    </div>
+  }
+</div>

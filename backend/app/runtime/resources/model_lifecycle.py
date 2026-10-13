@@ -45,16 +45,36 @@ class ModelLifecycleManager:
 
     def _init_default_registered_models(self) -> None:
         """Register baseline system models into known inventory."""
-        # 1. Primary Production LLM: Qwen 3 8B
+        # 1. Primary Production LLM: ABHI Native Core
+        self.register_model(
+            model_id="abhi:latest",
+            model_tag="abhi:latest",
+            model_digest="sha256:500a1f067a9f43a992fb2b87",
+            format="NATIVE",
+            quantization="Q4_K_M",
+            parameter_count="8.2B",
+            context_length=131072,
+            runtime="ABHI-Native-Core",
+            resource_profile=ResourceProfile(
+                ram_mb=1024.0,
+                vram_mb=5200.0,
+                gpu_compute_percent=70.0,
+                context_tokens=8192,
+                provenance=DataProvenance.MEASURED
+            ),
+            is_production=True
+        )
+
+        # Legacy backward-compatibility alias
         self.register_model(
             model_id="qwen3:8b",
             model_tag="abhi:latest",
             model_digest="sha256:500a1f067a9f43a992fb2b87",
-            format="GGUF",
+            format="NATIVE",
             quantization="Q4_K_M",
-            parameter_count="8B",
-            context_length=8192,
-            runtime="Ollama-Local",
+            parameter_count="8.2B",
+            context_length=131072,
+            runtime="ABHI-Native-Core",
             resource_profile=ResourceProfile(
                 ram_mb=1024.0,
                 vram_mb=5200.0,

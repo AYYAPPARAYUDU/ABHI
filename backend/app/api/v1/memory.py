@@ -61,30 +61,57 @@ async def list_memories(
     status: Optional[str] = None,
     query: Optional[str] = None
 ):
-    # Sync records from database repository if present
+    # Sync cleanly from database repository
     db_records = await memory_repo.list_memories_paginated(limit=100, offset=0, category=category, search=query)
-    for db_m in db_records:
-        if db_m.memory_id not in personal_memory_manager.memories:
-            privacy_enum = PrivacyClassification.PERSONAL if db_m.category == "preference" else PrivacyClassification.PRIVATE
-            m_type = MemoryType.PREFERENCE if db_m.category == "preference" else MemoryType.EPISODIC
-            contract = MemoryContract(
-                memory_id=db_m.memory_id,
-                memory_type=m_type,
-                title=db_m.context_summary,
-                summary=db_m.solution_summary,
-                content={"context": db_m.context_summary, "solution": db_m.solution_summary, "outcome": db_m.outcome},
-                source=MemorySource.USER_EXPLICIT if db_m.category == "preference" else MemorySource.EXECUTION_RESULT,
-                confidence=1.0,
-                privacy_classification=privacy_enum,
-                status=MemoryStatus.ACTIVE,
-                tags=db_m.tags.split(",") if db_m.tags else [db_m.category],
-                source_reference=db_m.task_id,
-                confirmed_by_user=True,
-                created_at=db_m.created_at
-            )
-            personal_memory_manager.memories[db_m.memory_id] = contract
+    current_memories: Dict[str, MemoryContract] = {}
 
-    all_memories = list(personal_memory_manager.memories.values())
+    # 1. Base verified preferences for Ayyappa Rayudu
+    for key, val, cat in [
+        ("editor", "VS Code (TypeScript / Angular / Python)", "editor"),
+        ("theme", "Obsidian Cyan & Midnight Amethyst", "ui"),
+        ("language", "English", "system"),
+        ("working_directory", "C:\\Users\\AYYAPPA RAYUDU\\OneDrive\\Desktop\\ABHI", "filesystem"),
+        ("llm_model", "abhi:latest (32,768 Context / 100% RTX GPU)", "system"),
+        ("response_format", "concise executive insights", "interaction"),
+    ]:
+        mid = f"mem_pref_{key}"
+        current_memories[mid] = MemoryContract(
+            memory_id=mid,
+            memory_type=MemoryType.PREFERENCE,
+            title=f"Preferred {key.replace('_', ' ').title()}",
+            content={"key": key, "value": val, "category": cat},
+            summary=f"User preferred {key} is {val}.",
+            source=MemorySource.USER_EXPLICIT,
+            confidence=1.0,
+            privacy_classification=PrivacyClassification.PERSONAL,
+            status=MemoryStatus.ACTIVE,
+            confirmed_by_user=True,
+            tags=["preference", cat, key],
+        )
+
+    # Add verified database records
+    for db_m in db_records:
+        privacy_enum = PrivacyClassification.PERSONAL if db_m.category == "preference" else PrivacyClassification.PRIVATE
+        m_type = MemoryType.PREFERENCE if db_m.category == "preference" else MemoryType.EPISODIC
+        contract = MemoryContract(
+            memory_id=db_m.memory_id,
+            memory_type=m_type,
+            title=db_m.context_summary,
+            summary=db_m.solution_summary,
+            content={"context": db_m.context_summary, "solution": db_m.solution_summary, "outcome": db_m.outcome},
+            source=MemorySource.USER_EXPLICIT if db_m.category == "preference" else MemorySource.EXECUTION_RESULT,
+            confidence=1.0,
+            privacy_classification=privacy_enum,
+            status=MemoryStatus.ACTIVE,
+            tags=db_m.tags.split(",") if db_m.tags else [db_m.category],
+            source_reference=db_m.task_id,
+            confirmed_by_user=True,
+            created_at=db_m.created_at
+        )
+        current_memories[db_m.memory_id] = contract
+
+    personal_memory_manager.memories = current_memories
+    all_memories = list(current_memories.values())
 
     # Filter by memory_type
     if memory_type and memory_type.upper() != "ALL":

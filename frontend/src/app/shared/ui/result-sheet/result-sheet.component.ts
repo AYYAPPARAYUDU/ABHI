@@ -24,6 +24,7 @@ import { AgentCommandResult } from '../../../core/models/agent-experience.model'
                 @case ('SEARCH_RESULTS') { 🔍 }
                 @case ('ERROR_RESULT') { ⚠️ }
                 @case ('APPROVAL_REQUEST') { 🛡️ }
+                @case ('TEXT_RESULT') { 🧠 }
                 @default { ✓ }
               }
             </span>
@@ -249,10 +250,15 @@ import { AgentCommandResult } from '../../../core/models/agent-experience.model'
     }
 
     .result-summary-text {
-      font-size: 13px;
+      font-size: 13.5px;
       color: #cbd5e1;
       margin: 0;
-      line-height: 1.5;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 480px;
+      overflow-y: auto;
+      padding-right: 4px;
     }
 
     .search-results-list {

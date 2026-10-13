@@ -49,8 +49,8 @@ describe('HomePageComponent', () => {
     expect(compiled.querySelector('.submit-btn')).toBeTruthy();
   });
 
-  it('should have 4 primary operating workspaces available in switcher', () => {
-    expect(component.workspaceRoutes.length).toBe(4);
+  it('should have primary operating workspaces available in switcher', () => {
+    expect(component.workspaceRoutes.length).toBe(10);
     const routes = component.workspaceRoutes.map(w => w.route);
     expect(routes).toContain('/network');
     expect(routes).toContain('/intelligence');

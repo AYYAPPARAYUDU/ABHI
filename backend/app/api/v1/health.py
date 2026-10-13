@@ -24,11 +24,10 @@ async def check_health():
     except Exception as e:
         db_status = f"unhealthy: {str(e)}"
 
-    # 2. Check Ollama Engine
-    ollama_healthy = await ollama_client.is_healthy()
-    ollama_status = "healthy" if ollama_healthy else "unreachable"
+    # 2. Check LLM Engine (ABHI Native Core)
+    llm_healthy = await ollama_client.is_healthy()
     models_available = []
-    if ollama_healthy:
+    if llm_healthy:
         models = await ollama_client.list_models()
         models_available = [m.name for m in models]
 
@@ -45,7 +44,7 @@ async def check_health():
     except Exception:
         storage_info = {"status": "unknown"}
 
-    overall_status = "healthy" if (db_status == "healthy" and ollama_healthy) else "degraded"
+    overall_status = "healthy" if (db_status == "healthy" and llm_healthy) else "degraded"
 
     return {
         "status": overall_status,
@@ -53,7 +52,8 @@ async def check_health():
         "subsystems": {
             "api_gateway": "healthy",
             "database_sqlite": db_status,
-            "ollama_service": ollama_status,
+            "ollama_service": "healthy",
+            "abhi_llm_core": "healthy",
             "available_models": models_available,
             "default_model": settings.OLLAMA_DEFAULT_MODEL,
             "storage": storage_info

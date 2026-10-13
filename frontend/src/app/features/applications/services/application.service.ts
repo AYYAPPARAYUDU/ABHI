@@ -200,6 +200,36 @@ export class ApplicationService {
     }
   }
 
+  async closeApplication(appId: string): Promise<void> {
+    try {
+      await firstValueFrom(this.http.post(`${this.baseUrl}/${appId}/close`, {}));
+      this.applications.update((apps) =>
+        apps.map((a) => (a.application_id === appId ? { ...a, state: 'NOT_RUNNING' } : a))
+      );
+      if (this.selectedApp()?.application_id === appId) {
+        this.selectedApp.update((s) => (s ? { ...s, state: 'NOT_RUNNING' } : null));
+      }
+    } catch (err: any) {
+      this.applications.update((apps) =>
+        apps.map((a) => (a.application_id === appId ? { ...a, state: 'NOT_RUNNING' } : a))
+      );
+    }
+  }
+
+  async executeCapability(appId: string, capabilityName: string, args: Record<string, any> = {}): Promise<any> {
+    try {
+      const res = await firstValueFrom(
+        this.http.post<any>(`${this.baseUrl}/${appId}/execute`, {
+          capability_name: capabilityName,
+          arguments: args
+        })
+      );
+      return res;
+    } catch (err: any) {
+      return { success: false, error_message: err.message };
+    }
+  }
+
   setSearchQuery(q: string): void {
     this.searchQuery.set(q);
   }

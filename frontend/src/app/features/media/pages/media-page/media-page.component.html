@@ -1,0 +1,252 @@
+<div class="abhi-media-workspace" role="region" aria-label="Media & Vision Studio">
+  <!-- Header Banner -->
+  <header class="media-header-card">
+    <div class="media-title-group">
+      <div class="media-title-row">
+        <h1 class="media-title">
+          <span class="title-sparkle">✨</span> Local Media, Inpainting & Video Studio
+        </h1>
+        <span class="media-stage-badge">
+          Phase 8.6 Hardened
+        </span>
+      </div>
+      <p class="media-subtitle">
+        Multimodal creative pipelines, DAG workflows, non-destructive editing, inpainting, canvas outpainting, diffusion synthesis & lineage tracking
+      </p>
+    </div>
+
+    <!-- Telemetry & Status Badges -->
+    <div class="media-telemetry-row">
+      <div class="media-metric-well">
+        <span class="metric-label">VRAM HEADROOM</span>
+        <span class="metric-value cyan-val">
+          {{ mediaService.vramFreeMB() }} MB Free
+        </span>
+      </div>
+
+      <div class="media-metric-well">
+        <span class="metric-label">ACTIVE JOBS</span>
+        <span class="metric-value blue-val">
+          {{ mediaService.activeJobsCount() }} Active
+        </span>
+      </div>
+
+      <button
+        type="button"
+        (click)="mediaService.refreshAll()"
+        class="media-refresh-btn"
+        title="Refresh Media State"
+      >
+        🔄
+      </button>
+    </div>
+  </header>
+
+  <!-- Studio Navigation Tabs (Neumorphic Ribbon) -->
+  <nav class="media-tabs-ribbon" role="tablist" aria-label="Media Studio Sub-routes">
+    <button
+      type="button"
+      role="tab"
+      (click)="activeTab.set('provenance')"
+      [class.active]="activeTab() === 'provenance'"
+      class="media-tab-btn"
+    >
+      <span>🛡️</span> Provenance & Replay
+    </button>
+    <button
+      type="button"
+      role="tab"
+      (click)="activeTab.set('creative')"
+      [class.active]="activeTab() === 'creative'"
+      class="media-tab-btn"
+    >
+      <span>🎬</span> Creative Studio
+    </button>
+    <button
+      type="button"
+      role="tab"
+      (click)="activeTab.set('composer')"
+      [class.active]="activeTab() === 'composer'"
+      class="media-tab-btn"
+    >
+      <span>⚡</span> Workflow Composer
+    </button>
+    <button
+      type="button"
+      role="tab"
+      (click)="activeTab.set('edit')"
+      [class.active]="activeTab() === 'edit'"
+      class="media-tab-btn"
+    >
+      <span>🎨</span> Edit & Inpainting
+    </button>
+    <button
+      type="button"
+      role="tab"
+      (click)="activeTab.set('video')"
+      [class.active]="activeTab() === 'video'"
+      class="media-tab-btn"
+    >
+      <span>🎥</span> Video Studio
+    </button>
+    <button
+      type="button"
+      role="tab"
+      (click)="activeTab.set('image')"
+      [class.active]="activeTab() === 'image'"
+      class="media-tab-btn"
+    >
+      <span>🖼️</span> Image Synthesis
+    </button>
+  </nav>
+
+  <!-- Error Message Banner -->
+  @if (mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage()) {
+    <div class="media-error-alert" role="alert">
+      <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage() }}</span>
+      <button type="button" (click)="clearErrors()" class="error-dismiss-btn">✕</button>
+    </div>
+  }
+
+  <!-- PROVENANCE & REPLAY TAB CONTENT (Phase 8.6) -->
+  @if (activeTab() === 'provenance') {
+    <div class="tab-pane-container">
+      <app-media-provenance-inspector></app-media-provenance-inspector>
+    </div>
+  }
+
+  <!-- CREATIVE STUDIO TAB CONTENT (Phase 8.5) -->
+  @if (activeTab() === 'creative') {
+    <div class="tab-pane-container">
+      <app-creative-pipeline-studio></app-creative-pipeline-studio>
+    </div>
+  }
+
+  <!-- WORKFLOW COMPOSER TAB CONTENT (Phase 8.4) -->
+  @if (activeTab() === 'composer') {
+    <div class="tab-pane-container composer-grid">
+      <div class="composer-main-col">
+        <app-visual-workflow-composer #workflowComposer></app-visual-workflow-composer>
+        <app-workflow-simulation-panel
+          [simulation]="mediaService.simulationResult()"
+        ></app-workflow-simulation-panel>
+      </div>
+
+      <div class="composer-side-col">
+        <app-workflow-template-catalog
+          [templates]="mediaService.templates()"
+          (templateSelected)="onTemplateSelected($event)"
+        ></app-workflow-template-catalog>
+
+        <app-workflow-manifest-viewer
+          [manifest]="mediaService.activeManifest()"
+        ></app-workflow-manifest-viewer>
+      </div>
+    </div>
+  }
+
+  <!-- EDIT & INPAINTING STUDIO TAB CONTENT (Phase 8.3) -->
+  @if (activeTab() === 'edit') {
+    <div class="tab-pane-container edit-grid">
+      <div class="edit-form-col">
+        <app-image-edit-form
+          [sourceArtifact]="selectedSourceArtifact()"
+          [editModels]="mediaService.editModels()"
+          [maskBase64]="currentMaskBase64()"
+          [isLoading]="mediaService.isEditLoading()"
+          (editSubmitted)="onEditSubmitted($event)"
+        ></app-image-edit-form>
+
+        <app-artifact-lineage-graph
+          [selectedArtifact]="selectedSourceArtifact()"
+          [lineageRecord]="mediaService.activeLineage()"
+        ></app-artifact-lineage-graph>
+      </div>
+
+      <div class="edit-canvas-col">
+        <app-mask-canvas-editor
+          [sourceArtifact]="selectedSourceArtifact()"
+          (maskApplied)="onMaskApplied($event)"
+        ></app-mask-canvas-editor>
+
+        @if (selectedSourceArtifact() && latestEditedArtifact()) {
+          <app-image-diff-viewer
+            [originalArtifact]="selectedSourceArtifact()"
+            [editedArtifact]="latestEditedArtifact()"
+            [lineageRecord]="mediaService.activeLineage()"
+          ></app-image-diff-viewer>
+        }
+      </div>
+
+      <div class="edit-gallery-row">
+        <div class="gallery-title-bar">
+          <h3 class="gallery-heading">
+            Source Image Artifacts (Click image to load into Edit Studio)
+          </h3>
+          <span class="gallery-count">
+            {{ mediaService.artifacts().length }} Registered Local Artifacts
+          </span>
+        </div>
+        <app-media-artifact-gallery
+          [artifacts]="mediaService.artifacts()"
+          (delete)="onDeleteImageArtifact($event)"
+        ></app-media-artifact-gallery>
+      </div>
+    </div>
+  }
+
+  <!-- VIDEO STUDIO TAB CONTENT (Phase 8.2) -->
+  @if (activeTab() === 'video') {
+    <div class="tab-pane-container studio-split-grid">
+      <div class="studio-main-col">
+        <app-video-generation-form
+          [models]="mediaService.videoModels()"
+          [isGenerating]="mediaService.isVideoLoading()"
+          (generate)="onGenerateVideo($event)"
+        ></app-video-generation-form>
+
+        <app-video-artifact-gallery
+          [artifacts]="mediaService.videoArtifacts()"
+          (delete)="onDeleteVideoArtifact($event)"
+        ></app-video-artifact-gallery>
+      </div>
+
+      <div class="studio-side-col">
+        <app-video-job-queue
+          [jobs]="mediaService.videoJobs()"
+          [activeJob]="mediaService.activeVideoJob()"
+          (cancel)="onCancelVideoJob($event)"
+        ></app-video-job-queue>
+      </div>
+    </div>
+  }
+
+  <!-- IMAGE STUDIO TAB CONTENT (Phase 8.1) -->
+  @if (activeTab() === 'image') {
+    <div class="tab-pane-container studio-split-grid">
+      <div class="studio-main-col">
+        <app-image-generation-form
+          [models]="mediaService.models()"
+          [isLoading]="mediaService.isLoading()"
+          (generate)="onGenerateImage($event)"
+        ></app-image-generation-form>
+
+        <app-media-artifact-gallery
+          [artifacts]="mediaService.artifacts()"
+          (delete)="onDeleteImageArtifact($event)"
+        ></app-media-artifact-gallery>
+      </div>
+
+      <div class="studio-side-col">
+        <app-media-job-queue
+          [jobs]="mediaService.jobs()"
+          (cancel)="onCancelImageJob($event)"
+        ></app-media-job-queue>
+
+        <app-media-model-catalog
+          [models]="mediaService.models()"
+        ></app-media-model-catalog>
+      </div>
+    </div>
+  }
+</div>

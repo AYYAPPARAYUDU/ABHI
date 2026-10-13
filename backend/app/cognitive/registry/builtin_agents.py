@@ -1,5 +1,6 @@
 """Built-in Specialized Agent Implementations for Core Subsystems."""
 
+import asyncio
 import os
 from typing import Any, Dict
 from backend.app.cognitive.registry.base_agent import BaseAgent
@@ -144,13 +145,24 @@ class CodingAgent(BaseAgent):
             AgentMetadata(
                 agent_id="coding_agent",
                 name="Coding & File Agent",
-                capabilities=["read_file", "write_file", "list_directory"],
+                capabilities=[
+                    "read_file",
+                    "write_file",
+                    "generate_code",
+                    "build_file",
+                    "execute_code",
+                    "list_directory",
+                ],
                 risk_tier="Tier 2",
-                description="Performs sandboxed file reads and writes with safety validations."
+                description="Performs sandboxed file operations, neural code synthesis, and verification."
             )
         )
 
     async def execute(self, request: AgentTaskRequest) -> AgentTaskResult:
+        import sys
+        import subprocess
+        from backend.app.services.llm.abhi_llm import abhi_llm
+
         action = request.action
         params = request.params
 
@@ -176,21 +188,150 @@ class CodingAgent(BaseAgent):
                 data={"content": content, "size_bytes": len(content)},
                 observed_state={"exists": True, "size_bytes": len(content)}
             )
+
         elif action == "write_file":
             filepath = params.get("path", "")
             content = params.get("content", "")
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            parent_dir = os.path.dirname(filepath)
+            if parent_dir:
+                os.makedirs(parent_dir, exist_ok=True)
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(content)
+            actual_size = os.path.getsize(filepath)
             return AgentTaskResult(
                 task_id=request.task_id,
                 node_id=request.node_id,
                 agent_id=self.agent_id,
                 action=action,
                 success=True,
-                data={"path": filepath, "bytes_written": len(content)},
-                observed_state={"exists": True, "size_bytes": len(content)}
+                data={"path": filepath, "bytes_written": actual_size},
+                observed_state={"exists": True, "size_bytes": actual_size}
             )
+
+        elif action == "generate_code":
+            instruction = params.get("instruction") or params.get("prompt") or "Write a python utility"
+            language = params.get("language", "python")
+            context = params.get("context")
+            file_path = params.get("path")
+            code = await abhi_llm.synthesize_code(
+                instruction=instruction,
+                language=language,
+                file_path=file_path,
+                context=context
+            )
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"code": code, "language": language, "length": len(code)},
+                observed_state={"synthesized": True, "length": len(code)}
+            )
+
+        elif action == "build_file":
+            filepath = params.get("path") or "output.py"
+            instruction = params.get("instruction") or params.get("specification") or f"Build {filepath}"
+            language = params.get("language")
+            if not language:
+                ext = os.path.splitext(filepath)[1].lower()
+                lang_map = {".py": "python", ".js": "javascript", ".ts": "typescript", ".html": "html", ".css": "css", ".sh": "bash", ".ps1": "powershell", ".json": "json"}
+                language = lang_map.get(ext, "python")
+            
+            code = await abhi_llm.synthesize_code(instruction=instruction, language=language, file_path=filepath)
+            parent_dir = os.path.dirname(filepath)
+            if parent_dir:
+                os.makedirs(parent_dir, exist_ok=True)
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(code)
+            actual_size = os.path.getsize(filepath)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"path": filepath, "bytes_written": actual_size, "code": code[:200]},
+                observed_state={"exists": True, "size_bytes": actual_size}
+            )
+
+        elif action == "execute_code":
+            code = params.get("code")
+            filepath = params.get("path")
+            timeout_sec = float(params.get("timeout", 15.0))
+
+            if filepath and os.path.exists(filepath):
+                proc = await asyncio.create_subprocess_exec(
+                    sys.executable,
+                    filepath,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+            elif code:
+                proc = await asyncio.create_subprocess_exec(
+                    sys.executable,
+                    "-c",
+                    code,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+            else:
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=False,
+                    error_message="Neither 'code' nor existing 'path' provided for execution."
+                )
+
+            try:
+                stdout_b, stderr_b = await asyncio.wait_for(proc.communicate(), timeout=timeout_sec)
+                stdout_str = stdout_b.decode("utf-8", errors="replace")
+                stderr_str = stderr_b.decode("utf-8", errors="replace")
+                success = proc.returncode == 0
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=success,
+                    data={"stdout": stdout_str, "stderr": stderr_str, "returncode": proc.returncode},
+                    observed_state={"returncode": proc.returncode, "stdout_len": len(stdout_str)}
+                )
+            except asyncio.TimeoutError:
+                proc.kill()
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=False,
+                    error_message=f"Code execution timed out after {timeout_sec}s"
+                )
+
+        elif action == "list_directory":
+            target_dir = params.get("path", ".")
+            if not os.path.exists(target_dir):
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=False,
+                    error_message=f"Directory does not exist: {target_dir}"
+                )
+            entries = os.listdir(target_dir)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"directory": target_dir, "items": entries, "count": len(entries)},
+                observed_state={"exists": True, "count": len(entries)}
+            )
+
         else:
             return AgentTaskResult(
                 task_id=request.task_id,
@@ -219,7 +360,20 @@ class OSDesktopAgent(BaseAgent):
                     "read_text",
                     "calculate",
                     "create_folder",
-                    "list_items"
+                    "list_items",
+                    "run_command",
+                    "run_allowlisted_command",
+                    "search_settings",
+                    "read_setting",
+                    "navigate",
+                    "open_item",
+                    "copy_item",
+                    "move_item",
+                    "clear",
+                    "close_application",
+                    "close",
+                    "take_screenshot",
+                    "key_combination"
                 ],
                 risk_tier="Tier 2",
                 execution_boundary="subprocess_worker",
@@ -232,13 +386,13 @@ class OSDesktopAgent(BaseAgent):
         n = raw_name.lower().strip()
         if any(k in n for k in ["calc", "math", "calculator"]):
             return "calculator"
-        if any(k in n for k in ["note", "text", "edit", "doc"]):
+        if any(k in n for k in ["note", "text", "edit", "doc", "txt"]):
             return "notepad"
         if any(k in n for k in ["explore", "folder", "directory", "file"]):
             return "explorer"
-        if any(k in n for k in ["term", "cmd", "powershell", "console", "shell"]):
+        if any(k in n for k in ["term", "cmd", "powershell", "console", "shell", "wt"]):
             return "terminal"
-        if any(k in n for k in ["setting", "config", "control"]):
+        if any(k in n for k in ["setting", "config", "control", "pref"]):
             return "settings"
         return n
 
@@ -261,13 +415,48 @@ class OSDesktopAgent(BaseAgent):
                 observed_state={"window_title": title, "is_foreground": True}
             )
 
+        if action in ["take_screenshot", "capture_screen"]:
+            ok, path_or_err = windows_uia_driver.take_screenshot(params.get("output_path"))
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"screenshot_path": path_or_err if ok else None},
+                observed_state={"captured": ok, "file_path": path_or_err if ok else None},
+                error_message=None if ok else path_or_err
+            )
+
+        if action in ["key_combination", "send_keys", "press_key"]:
+            combo = str(params.get("key_combination") or params.get("keys") or params.get("key") or "ENTER")
+            ok, err = windows_uia_driver.send_approved_keystroke(combo)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"key_combination": combo, "dispatched": ok},
+                observed_state={"key_combination": combo},
+                error_message=err
+            )
+
         # Resolve target application
         raw_app = params.get("app_name") or params.get("application") or params.get("title") or "notepad"
+        if action in ["run_command", "run_allowlisted_command"]:
+            raw_app = "terminal"
+        elif action in ["search_settings", "read_setting"]:
+            raw_app = "settings"
+        elif action in ["calculate", "enter_expression"]:
+            raw_app = "calculator"
+        elif action in ["list_items", "create_folder", "navigate", "open_item", "copy_item", "move_item"]:
+            raw_app = "explorer"
+
         app_id = self._resolve_app_name(str(raw_app))
         adapter = application_registry.get_adapter(app_id)
 
         if not adapter:
-            # Fallback to notepad if unknown
             adapter = application_registry.get_adapter("notepad")
 
         if not adapter:
@@ -363,7 +552,7 @@ class OSDesktopAgent(BaseAgent):
                 error_message=res.error_message
             )
 
-        elif action in ["create_folder", "list_items"]:
+        elif action in ["create_folder", "list_items", "navigate", "open_item", "copy_item", "move_item"]:
             exp_adapter = application_registry.get_adapter("explorer") or adapter
             res = await exp_adapter.execute_capability(session, action, params, request.node_id)
             return AgentTaskResult(
@@ -375,6 +564,73 @@ class OSDesktopAgent(BaseAgent):
                 data=res.output_data,
                 observed_state=res.observed_state,
                 error_message=res.error_message
+            )
+
+        elif action in ["run_command", "run_allowlisted_command"]:
+            term_adapter = application_registry.get_adapter("terminal") or adapter
+            res = await term_adapter.execute_capability(session, "run_allowlisted_command", params, request.node_id)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=res.is_success,
+                data=res.output_data,
+                observed_state=res.observed_state,
+                error_message=res.error_message
+            )
+
+        elif action in ["search_settings", "search"]:
+            set_adapter = application_registry.get_adapter("settings") or adapter
+            res = await set_adapter.execute_capability(session, "search", params, request.node_id)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=res.is_success,
+                data=res.output_data,
+                observed_state=res.observed_state,
+                error_message=res.error_message
+            )
+
+        elif action in ["read_setting"]:
+            set_adapter = application_registry.get_adapter("settings") or adapter
+            res = await set_adapter.execute_capability(session, "read_setting", params, request.node_id)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=res.is_success,
+                data=res.output_data,
+                observed_state=res.observed_state,
+                error_message=res.error_message
+            )
+
+        elif action in ["close_application", "close"]:
+            caps = [c.capability_name for c in adapter.get_capabilities()]
+            if "close" in caps:
+                res = await adapter.execute_capability(session, "close", params, request.node_id)
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=res.is_success,
+                    data=res.output_data,
+                    observed_state=res.observed_state,
+                    error_message=res.error_message
+                )
+            session.state = ApplicationState.STOPPED
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"closed": True},
+                observed_state={"state": ApplicationState.STOPPED.value}
             )
 
         else:

@@ -1,0 +1,382 @@
+<div class="business-workspace">
+      <!-- Ayyappa Rayudu Personal AI Architect Banner -->
+      <section class="personal-architect-card">
+        <div class="architect-profile-left">
+          <div class="avatar-ring">
+            <img src="assets/images/ayyappa_rayudu.jpg" alt="Ayyappa Rayudu" class="architect-photo" (error)="onAvatarErr($event)"/>
+            <span class="online-status-dot"></span>
+          </div>
+          <div class="architect-details">
+            <div class="name-badge-row">
+              <h2 class="architect-name">Ayyappa Rayudu Ravuvari</h2>
+              <span class="architect-role-pill">PRINCIPAL ARCHITECT</span>
+              <a href="https://www.linkedin.com/in/ayyapparayudu" target="_blank" class="linkedin-pill">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                &#64;ayyapparayudu
+              </a>
+            </div>
+            <p class="architect-bio">
+              Angular 22 & RxJS lead building metadata-driven architectures, YouTube multi-agent automation systems, and ABHI personal offline neural workspace.
+            </p>
+            <div class="workstation-specs-row">
+              <span class="spec-tag"><strong class="spec-k">VRAM:</strong> 100% RTX GPU</span>
+              <span class="spec-tag"><strong class="spec-k">LLM Context:</strong> 32,768 Tokens (abhi:latest)</span>
+              <span class="spec-tag"><strong class="spec-k">Safety:</strong> Dual-State Physical Verifier</span>
+              <span class="spec-tag"><strong class="spec-k">Data Privacy:</strong> 100% Local · Zero Leakage</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="architect-quick-actions">
+          <button class="action-btn secondary" (click)="showNewOppModal.set(true)">
+            <span>+ Score Opportunity</span>
+          </button>
+          <button class="action-btn primary" (click)="showNewProjModal.set(true)">
+            <span>+ New Project</span>
+          </button>
+          <a routerLink="/decision-pipeline" class="action-btn-neon">
+            <span>⚡ Decision Pipeline</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- Honest Financial Integrity Banner (Reference 4 & Requirement 15) -->
+      <section class="financial-observatory-card">
+        <div class="fin-header">
+          <div class="fin-title-group">
+            <span class="fin-title">REVENUE & LEDGER OBSERVATORY</span>
+            <span class="fin-provenance-tag">
+              PROVENANCE: {{ businessService.financials()?.revenue_provenance || 'ESTIMATED / NOT_CONNECTED' }}
+            </span>
+          </div>
+          <span class="fin-disclaimer-text">
+            {{ businessService.financials()?.disclaimer || 'Forecast only — not actual earnings. No verified external banking connected.' }}
+          </span>
+        </div>
+
+        <div class="fin-metrics-row">
+          <div class="fin-metric-box">
+            <span class="fin-label">ACTUAL RECEIVED</span>
+            <span class="fin-val highlight">$ {{ (businessService.financials()?.actual_revenue_received_usd || 0).toFixed(2) }}</span>
+            <span class="fin-sub">Confirmed in bank</span>
+          </div>
+          <div class="fin-metric-box">
+            <span class="fin-label">OPERATING EXPENSES</span>
+            <span class="fin-val exp">$ {{ (businessService.financials()?.operating_expenses_usd || 0).toFixed(2) }}</span>
+            <span class="fin-sub">Compute & local lease</span>
+          </div>
+          <div class="fin-metric-box">
+            <span class="fin-label">NET RESULT</span>
+            <span class="fin-val" [class.negative]="(businessService.financials()?.net_result_usd || 0) < 0">
+              $ {{ (businessService.financials()?.net_result_usd || 0).toFixed(2) }}
+            </span>
+            <span class="fin-sub">Actual - Expenses</span>
+          </div>
+          <div class="fin-metric-box">
+            <span class="fin-label">PENDING PAYMENTS</span>
+            <span class="fin-val">$ {{ (businessService.financials()?.pending_payments_usd || 0).toFixed(2) }}</span>
+            <span class="fin-sub">Invoiced / unverified</span>
+          </div>
+          <div class="fin-metric-box">
+            <span class="fin-label">FORECAST REVENUE</span>
+            <span class="fin-val forecast">$ {{ (businessService.financials()?.forecast_revenue_usd || 0).toFixed(2) }}</span>
+            <span class="fin-sub">Estimated projection</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6 Spatial Sectors Selector Bar -->
+      <section class="sectors-ribbon">
+        @for (sec of businessService.sectors(); track sec.id) {
+          <div
+            class="sector-tab"
+            [class.active]="selectedSectorId() === sec.id"
+            (click)="selectSector(sec.id)"
+            [attr.tabindex]="0"
+            role="button"
+          >
+            <div class="sector-color-dot" [style.background-color]="sec.color"></div>
+            <div class="sector-tab-info">
+              <span class="sector-tab-name">{{ sec.name }}</span>
+              <span class="sector-tab-count">{{ sec.active_projects_count }} active projects</span>
+            </div>
+          </div>
+        }
+      </section>
+
+      <!-- Main Business Operations Grid -->
+      <div class="business-grid">
+        <!-- Projects Column -->
+        <div class="projects-column">
+          <div class="column-header">
+            <h2 class="column-title">Persisted Projects</h2>
+            <span class="column-badge">{{ filteredProjects().length }} projects</span>
+          </div>
+
+          <div class="projects-list">
+            @for (proj of filteredProjects(); track proj.id) {
+              <div
+                class="project-card"
+                [class.selected]="businessService.selectedProject()?.id === proj.id"
+                (click)="businessService.selectedProject.set(proj)"
+                [attr.tabindex]="0"
+                role="button"
+              >
+                <div class="proj-top">
+                  <span class="proj-sector-badge">{{ proj.sector_id }}</span>
+                  <span class="status-pill" [attr.data-status]="proj.status">{{ proj.status }}</span>
+                </div>
+                <h3 class="proj-name">{{ proj.name }}</h3>
+                <p class="proj-objective">{{ proj.objective }}</p>
+
+                <div class="proj-meta-row">
+                  <span class="autonomy-tag">LEVEL {{ proj.autonomy_level }}</span>
+                  <span class="budget-tag">Spent: \${{ proj.spent_usd.toFixed(2) }} / \${{ proj.budget_limit_usd.toFixed(2) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Project Detail & Autonomy Execution Inspector -->
+        <div class="detail-column">
+          @if (businessService.selectedProject(); as proj) {
+            <div class="detail-panel">
+              <div class="detail-header">
+                <div>
+                  <span class="detail-sec">{{ proj.sector_id }}</span>
+                  <h2 class="detail-title">{{ proj.name }}</h2>
+                </div>
+                <div class="detail-controls">
+                  <span class="status-pill large" [attr.data-status]="proj.status">{{ proj.status }}</span>
+                  <button
+                    class="execute-step-btn"
+                    (click)="executeNextStep(proj.id)"
+                    [disabled]="isExecuting()"
+                  >
+                    @if (isExecuting()) {
+                      <span>Executing...</span>
+                    } @else {
+                      <span>▶ Execute Next Step</span>
+                    }
+                  </button>
+                </div>
+              </div>
+
+              <!-- Autonomy & Governance Settings -->
+              <div class="governance-card">
+                <div class="gov-col">
+                  <span class="gov-label">AUTONOMY LEVEL</span>
+                  <span class="gov-val">LEVEL {{ proj.autonomy_level }}</span>
+                  <span class="gov-desc">
+                    {{ getAutonomyDescription(proj.autonomy_level) }}
+                  </span>
+                </div>
+                <div class="gov-col">
+                  <span class="gov-label">AUTOPILOT PROFILE</span>
+                  <span class="gov-val highlight">{{ proj.autopilot_mode }}</span>
+                  <span class="gov-desc">Strict stop-conditions on budget and missing capabilities</span>
+                </div>
+                <div class="gov-col">
+                  <span class="gov-label">BUDGET BOUNDARY</span>
+                  <span class="gov-val">$ {{ proj.spent_usd.toFixed(2) }} / $ {{ proj.budget_limit_usd.toFixed(2) }}</span>
+                  <div class="budget-bar">
+                    <div class="budget-fill" [style.width.%]="(proj.spent_usd / proj.budget_limit_usd) * 100"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pending Approvals (Level 5 Policy Gates) -->
+              @if (proj.approvals && proj.approvals.length > 0) {
+                <div class="approvals-section">
+                  <label class="section-label">POLICY APPROVAL REQUESTS</label>
+                  @for (app of proj.approvals; track app.id) {
+                    <div class="approval-card" [class.pending]="app.status === 'PENDING'">
+                      <div class="app-info">
+                        <span class="app-desc">{{ app.action_description }}</span>
+                        <span class="app-tier">{{ app.risk_tier }} · {{ app.required_permission }}</span>
+                      </div>
+                      @if (app.status === 'PENDING') {
+                        <div class="app-actions">
+                          <button class="app-btn approve" (click)="resolveApproval(proj.id, app.id, true)">Authorize</button>
+                          <button class="app-btn reject" (click)="resolveApproval(proj.id, app.id, false)">Reject</button>
+                        </div>
+                      } @else {
+                        <span class="app-resolved-badge" [attr.data-status]="app.status">{{ app.status }}</span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Milestones & Deliverables -->
+              <div class="milestones-section">
+                <label class="section-label">MILESTONES & VERIFIED DELIVERABLES</label>
+                <div class="milestones-list">
+                  @for (m of proj.milestones; track m.id) {
+                    <div class="milestone-item" [class.done]="m.status === 'COMPLETED'">
+                      <div class="ms-marker">
+                        @if (m.status === 'COMPLETED') {
+                          <span>✓</span>
+                        } @else if (m.status === 'IN_PROGRESS') {
+                          <span>▶</span>
+                        } @else {
+                          <span>○</span>
+                        }
+                      </div>
+                      <div class="ms-body">
+                        <div class="ms-top">
+                          <span class="ms-title">{{ m.title }}</span>
+                          <span class="ms-status-badge" [attr.data-status]="m.status">{{ m.status }}</span>
+                        </div>
+                        <p class="ms-desc">{{ m.description }}</p>
+                        @if (m.deliverable_ref) {
+                          <div class="ms-deliverable">
+                            <span class="deliv-label">Deliverable:</span>
+                            <span class="deliv-ref">{{ m.deliverable_ref }}</span>
+                            @if (m.verified) {
+                              <span class="verified-tag">VERIFIED</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Evidence Ledger -->
+              <div class="evidences-section">
+                <label class="section-label">EVIDENCE LEDGER</label>
+                <div class="evidences-list">
+                  @for (ev of proj.evidences; track ev.id) {
+                    <div class="evidence-item">
+                      <span class="ev-tag" [attr.data-prov]="ev.provenance_type">{{ ev.provenance_type }}</span>
+                      <span class="ev-claim">{{ ev.claim }}</span>
+                      <span class="ev-source">Source: {{ ev.source }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="detail-empty">
+              <span>Select a project from the left to inspect milestones, autonomy, and ledger.</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Opportunities Gallery & Scored Concepts -->
+      <section class="opportunities-section">
+        <div class="section-header-flex">
+          <h2 class="section-heading">Researched Opportunities & Scored Concepts</h2>
+          <span class="section-sublabel">Multi-Dimensional Evaluation & Grounded Formula</span>
+        </div>
+
+        <div class="opps-grid">
+          @for (opp of businessService.opportunities(); track opp.id) {
+            <div class="opp-card">
+              <div class="opp-header">
+                <div>
+                  <span class="opp-sector">{{ opp.sector_id }}</span>
+                  <h3 class="opp-title">{{ opp.title }}</h3>
+                </div>
+                <div class="score-circle">
+                  <span class="score-num">{{ opp.total_score }}</span>
+                  <span class="score-sub">/100</span>
+                </div>
+              </div>
+
+              <p class="opp-summary">{{ opp.summary }}</p>
+
+              <div class="dimensions-list">
+                @for (dim of opp.dimensions; track dim.dimension) {
+                  <div class="dim-row">
+                    <span class="dim-name">{{ dim.dimension }}</span>
+                    <span class="dim-prov-badge">{{ dim.provenance }}</span>
+                    <span class="dim-score">{{ dim.score.toFixed(0) }}%</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <!-- New Project Modal -->
+      @if (showNewProjModal()) {
+        <div class="modal-backdrop">
+          <div class="modal-card">
+            <h2 class="modal-title">Initiate New Business Project</h2>
+            <div class="form-group">
+              <label>Sector</label>
+              <select [(ngModel)]="newProjSector" class="form-select">
+                @for (sec of businessService.sectors(); track sec.id) {
+                  <option [value]="sec.id">{{ sec.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Project Name</label>
+              <input type="text" [(ngModel)]="newProjName" placeholder="e.g. Local Code Review CLI" class="form-input"/>
+            </div>
+            <div class="form-group">
+              <label>Objective</label>
+              <textarea [(ngModel)]="newProjObjective" rows="3" placeholder="Define the business goal and deliverable..." class="form-textarea"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Autonomy Level</label>
+              <select [(ngModel)]="newProjAutonomy" class="form-select">
+                <option [value]="1">Level 1 — Research Only</option>
+                <option [value]="2">Level 2 — Plan Only</option>
+                <option [value]="3">Level 3 — Build & Test Locally</option>
+                <option [value]="4">Level 4 — Execute Approved Internal Work</option>
+                <option [value]="5">Level 5 — External Action (Requires Approval)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Budget Limit (USD)</label>
+              <input type="number" [(ngModel)]="newProjBudget" class="form-input"/>
+            </div>
+            <div class="modal-actions">
+              <button class="action-btn secondary" (click)="showNewProjModal.set(false)">Cancel</button>
+              <button class="action-btn primary" (click)="createProject()">Create Project</button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- New Opportunity Scoring Modal -->
+      @if (showNewOppModal()) {
+        <div class="modal-backdrop">
+          <div class="modal-card">
+            <h2 class="modal-title">Score New Business Opportunity</h2>
+            <div class="form-group">
+              <label>Sector</label>
+              <select [(ngModel)]="newOppSector" class="form-select">
+                @for (sec of businessService.sectors(); track sec.id) {
+                  <option [value]="sec.id">{{ sec.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Concept Title</label>
+              <input type="text" [(ngModel)]="newOppTitle" placeholder="e.g. Local Social Video Dubber" class="form-input"/>
+            </div>
+            <div class="form-group">
+              <label>Description & Value Proposition</label>
+              <textarea [(ngModel)]="newOppDesc" rows="3" placeholder="Describe the market need and capability required..." class="form-textarea"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Target Pricing (USD)</label>
+              <input type="number" [(ngModel)]="newOppPrice" class="form-input"/>
+            </div>
+            <div class="modal-actions">
+              <button class="action-btn secondary" (click)="showNewOppModal.set(false)">Cancel</button>
+              <button class="action-btn primary" (click)="scoreOpportunity()">Evaluate & Score</button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>

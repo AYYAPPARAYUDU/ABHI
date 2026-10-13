@@ -175,7 +175,6 @@ async def focus_application(application_id: str):
 
 @router.post("/{application_id}/toggle", summary="Enable or disable application adapter")
 async def toggle_application(application_id: str, request: ToggleApplicationRequest):
-    """Enable or disable an application adapter from task execution."""
     if request.enabled:
         ok = application_registry.enable_adapter(application_id)
     else:
@@ -187,3 +186,87 @@ async def toggle_application(application_id: str, request: ToggleApplicationRequ
             detail=f"Application adapter '{application_id}' not found."
         )
     return {"application_id": application_id, "enabled": request.enabled}
+
+
+class ExecuteCapabilityRequest(BaseModel):
+    capability_name: str
+    arguments: Dict[str, Any] = Field(default_factory=dict)
+    task_id: Optional[str] = "manual_api"
+
+
+@router.post("/{application_id}/execute", summary="Execute application capability directly")
+async def execute_application_capability(application_id: str, request: ExecuteCapabilityRequest):
+    """Execute a verified capability directly on the target application adapter."""
+    adapter = application_registry.get_adapter(application_id)
+    if not adapter:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Application adapter '{application_id}' not found."
+        )
+    if not adapter.enabled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Application adapter '{application_id}' is disabled."
+        )
+
+    session = None
+    for s in adapter._sessions.values():
+        if s.state in [ApplicationState.RUNNING, ApplicationState.FOCUSED, ApplicationState.EXECUTING]:
+            session = s
+            break
+    if not session:
+        session = adapter.create_session(task_id=request.task_id or "exec_api")
+        session.state = ApplicationState.RUNNING
+
+    import uuid
+    action_id = f"act_api_{uuid.uuid4().hex[:8]}"
+    res = await adapter.execute_capability(session, request.capability_name, request.arguments, action_id)
+
+    return {
+        "success": res.is_success,
+        "application_id": application_id,
+        "capability_name": request.capability_name,
+        "action_id": action_id,
+        "output_data": res.output_data,
+        "observed_state": res.observed_state,
+        "error_message": res.error_message,
+        "duration_ms": res.duration_ms
+    }
+
+
+@router.post("/{application_id}/close", summary="Close application session and process")
+async def close_application(application_id: str):
+    """Gracefully terminate or close active application session."""
+    adapter = application_registry.get_adapter(application_id)
+    if not adapter:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Application adapter '{application_id}' not found."
+        )
+
+    session = None
+    for s in adapter._sessions.values():
+        if s.state in [ApplicationState.RUNNING, ApplicationState.FOCUSED, ApplicationState.EXECUTING]:
+            session = s
+            break
+    if not session:
+        session = adapter.create_session(task_id="close_api")
+
+    # If adapter has a close capability, invoke it
+    caps = [c.capability_name for c in adapter.get_capabilities()]
+    if "close" in caps:
+        import uuid
+        res = await adapter.execute_capability(session, "close", {}, f"act_close_{uuid.uuid4().hex[:6]}")
+        session.state = ApplicationState.STOPPED
+        return {"success": res.is_success, "application_id": application_id, "state": session.state.value}
+
+    session.state = ApplicationState.STOPPED
+    return {"success": True, "application_id": application_id, "state": session.state.value}
+
+
+@router.get("/active/window", summary="Inspect active Windows foreground window title")
+async def get_active_window():
+    """Read the current foreground window title via native Win32."""
+    from backend.app.automation.desktop.windows_uia_driver import windows_uia_driver
+    title = windows_uia_driver.get_foreground_window_title()
+    return {"active_window": title, "is_windows": windows_uia_driver.is_windows}

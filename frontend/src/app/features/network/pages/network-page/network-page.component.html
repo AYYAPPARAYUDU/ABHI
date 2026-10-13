@@ -1,0 +1,172 @@
+<div class="network-workspace">
+      <!-- Workspace Header -->
+      <header class="workspace-header">
+        <div class="header-left">
+          <div class="workspace-title-group">
+            <span class="workspace-pill">SPECIALIST SWARM</span>
+            <h1 class="workspace-title">Multi-Agent Spatial Network</h1>
+          </div>
+          <p class="workspace-subtitle">
+            Authoritative topology of registered specialist capabilities, active workflows & dependencies.
+          </p>
+        </div>
+
+        <div class="header-actions">
+          <div class="system-health-pill">
+            <span class="pulse-dot"></span>
+            <span>NETWORK: {{ networkService.networkData()?.system_status || 'OPERATIONAL' }}</span>
+          </div>
+          <button class="refresh-btn" (click)="refreshNetwork()" [disabled]="networkService.isLoading()" title="Refresh Network Topology">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+            <span>Refresh</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Network Filter & Search Bar -->
+      <section class="network-toolbar">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input
+            type="text"
+            placeholder="Search agents or capabilities..."
+            [value]="networkService.searchQuery()"
+            (input)="onSearchInput($event)"
+            class="search-input"
+          />
+        </div>
+
+        <div class="category-filters">
+          @for (cat of categories; track cat) {
+            <button
+              class="filter-chip"
+              [class.active]="networkService.filterCategory() === cat"
+              (click)="networkService.setFilterCategory(cat)"
+            >
+              {{ cat }}
+            </button>
+          }
+        </div>
+      </section>
+
+      <!-- Main Layout: Spatial Node Grid + Inspector Panel -->
+      <div class="network-content-grid">
+        <!-- 3D / Spatial Agent Nodes Matrix -->
+        <div class="spatial-nodes-canvas">
+          <div class="nodes-grid">
+            @for (node of filteredNodes(); track node.id) {
+              <div
+                class="agent-node-card"
+                [class.selected]="networkService.selectedNode()?.id === node.id"
+                [class.supervisor]="node.is_supervisor"
+                (click)="networkService.selectNode(node)"
+                [attr.tabindex]="0"
+                role="button"
+              >
+                <div class="node-header">
+                  <div class="node-icon-wrapper" [attr.data-cat]="node.category">
+                    @if (node.is_supervisor) {
+                      <span>👑</span>
+                    } @else {
+                      <span>✦</span>
+                    }
+                  </div>
+                  <span class="status-badge" [attr.data-status]="node.status">{{ node.status }}</span>
+                </div>
+
+                <div class="node-body">
+                  <h3 class="node-name">{{ node.name }}</h3>
+                  <span class="node-category">{{ node.category }} · {{ node.risk_tier }}</span>
+                  <p class="node-role">{{ node.role }}</p>
+                </div>
+
+                <div class="node-footer">
+                  <div class="capabilities-pill">
+                    <span>{{ node.capabilities.length }} capabilities</span>
+                  </div>
+                  @if (node.active_task_id) {
+                    <span class="active-task-indicator">Working on Task</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Selected Agent Inspector Drawer -->
+        <aside class="node-inspector-drawer">
+          @if (networkService.selectedNode(); as sel) {
+            <div class="inspector-card">
+              <div class="inspector-header">
+                <div>
+                  <span class="inspector-category">{{ sel.category }}</span>
+                  <h2 class="inspector-title">{{ sel.name }}</h2>
+                </div>
+                <span class="status-badge large" [attr.data-status]="sel.status">{{ sel.status }}</span>
+              </div>
+
+              <div class="inspector-section">
+                <label class="section-label">RESPONSIBILITY & ROLE</label>
+                <p class="inspector-desc">{{ sel.role }}</p>
+              </div>
+
+              <div class="inspector-section">
+                <label class="section-label">REGISTERED CAPABILITIES</label>
+                <div class="capabilities-list">
+                  @for (cap of sel.capabilities; track cap) {
+                    <span class="cap-tag">{{ cap }}</span>
+                  }
+                </div>
+              </div>
+
+              <div class="inspector-section">
+                <label class="section-label">RESOURCE NEEDS & SAFETY</label>
+                <div class="resource-pill-row">
+                  <div class="res-box">
+                    <span class="res-label">RISK TIER</span>
+                    <span class="res-val">{{ sel.risk_tier }}</span>
+                  </div>
+                  <div class="res-box">
+                    <span class="res-label">RAM ALLOC</span>
+                    <span class="res-val">{{ sel.resource_needs?.ram_mb || 150 }} MB</span>
+                  </div>
+                  <div class="res-box">
+                    <span class="res-label">VRAM LEASE</span>
+                    <span class="res-val">{{ sel.resource_needs?.vram_mb || 0 }} MB</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="inspector-section">
+                <label class="section-label">RECENT VERIFIED OUTCOMES</label>
+                <div class="outcomes-list">
+                  @for (outcome of sel.recent_outcomes; track outcome) {
+                    <div class="outcome-item">
+                      <span class="check-icon">✓</span>
+                      <span>{{ outcome }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              @if (sel.errors_requiring_attention && sel.errors_requiring_attention.length > 0) {
+                <div class="inspector-section error-section">
+                  <label class="section-label">ERRORS REQUIRING ATTENTION</label>
+                  @for (err of sel.errors_requiring_attention; track err) {
+                    <div class="error-item">⚠ {{ err }}</div>
+                  }
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="inspector-empty">
+              <span>Select an agent node to inspect its runtime state.</span>
+            </div>
+          }
+        </aside>
+      </div>
+    </div>

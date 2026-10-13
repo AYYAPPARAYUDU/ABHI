@@ -115,11 +115,16 @@ export const routes: Routes = [
       )
   },
   {
-    path: 'workflows',
+    path: 'decision-pipeline',
     loadComponent: () =>
-      import('./features/workflows/pages/workflow-page/workflow-page.component').then(
-        (m) => m.WorkflowPageComponent
+      import('./features/decision-pipeline/pages/decision-pipeline-page/decision-pipeline-page.component').then(
+        (m) => m.DecisionPipelinePageComponent
       )
+  },
+  {
+    path: 'workflows',
+    redirectTo: 'decision-pipeline',
+    pathMatch: 'full'
   },
   {
     path: 'llm-evaluation',

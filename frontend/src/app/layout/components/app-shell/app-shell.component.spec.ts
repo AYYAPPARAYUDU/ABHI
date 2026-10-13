@@ -38,8 +38,9 @@ describe('AppShellComponent', () => {
     const el = fixture.nativeElement as HTMLElement;
     expect(el.querySelector('app-spatial-background')).toBeTruthy();
     expect(el.querySelector('router-outlet')).toBeTruthy();
-    // Verify permanent sidebar is eliminated on default main agent view
-    expect(el.querySelector('app-floating-sidebar')).toBeFalsy();
+    // Verify zero permanent sidebar on default main agent view
+    expect(el.querySelector('.sidebar')).toBeFalsy();
+    expect(el.querySelector('aside')).toBeFalsy();
   });
 
   it('should identify main agent route correctly', () => {

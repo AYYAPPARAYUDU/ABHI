@@ -39,4 +39,15 @@ export class MemoryPageComponent {
   onResolveConflict(event: { conflictId: string; candidate: 'A' | 'B'; notes?: string }): void {
     this.memoryService.resolveConflict(event.conflictId, event.candidate, event.notes || '');
   }
+
+  getProfileEntries(value: unknown): Array<{ key: string; value: string }> {
+    if (value === null || value === undefined) return [];
+    if (typeof value === 'object') {
+      return Object.entries(value as Record<string, unknown>).map(([k, v]) => ({
+        key: k.replace(/_/g, ' '),
+        value: typeof v === 'object' ? JSON.stringify(v) : String(v)
+      }));
+    }
+    return [{ key: 'value', value: String(value) }];
+  }
 }

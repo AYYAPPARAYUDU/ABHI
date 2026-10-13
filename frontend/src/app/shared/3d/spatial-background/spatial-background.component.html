@@ -1,0 +1,15 @@
+<div class="spatial-background-container" role="presentation">
+  <!-- Ambient Cosmic Glow (Behind canvas) -->
+  <div class="spatial-ambient-glow"></div>
+
+  <!-- Three.js Real WebGL Canvas Layer -->
+  <canvas #bgCanvas class="spatial-webgl-canvas"></canvas>
+
+  <!-- Soft Rim Vignette (Edges only, transparent center) -->
+  <div class="spatial-rim-vignette"></div>
+
+  <!-- Fallback Gradient when WebGL is inactive -->
+  @if (!is3DActive) {
+    <div class="spatial-fallback-gradient"></div>
+  }
+</div>

@@ -39,17 +39,33 @@ class DualStateVerifier:
         action = node.action
         observed = result.observed_state
 
-        if agent_id == "coding_agent" and action == "write_file":
-            # Verify file exists on disk and non-empty
-            target_path = node.params.get("path")
-            if target_path and not observed.get("exists", False):
-                return VerificationResult(
-                    is_valid=False,
-                    confidence_score=0.0,
-                    difference_detected=f"Claimed file '{target_path}' was written, but physical file is missing on disk.",
-                    suggested_correction={"ensure_directory": True},
-                    retryable=True
-                )
+        if agent_id == "coding_agent":
+            if action in ["write_file", "build_file"]:
+                target_path = node.params.get("path")
+                if target_path and not observed.get("exists", False):
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=f"Claimed file '{target_path}' was written, but physical file is missing on disk.",
+                        suggested_correction={"ensure_directory": True},
+                        retryable=True
+                    )
+            elif action == "generate_code":
+                if not result.data.get("code"):
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected="Code synthesis returned empty output.",
+                        retryable=True
+                    )
+            elif action == "execute_code":
+                if "returncode" not in result.data:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected="Code execution missing returncode.",
+                        retryable=True
+                    )
 
         elif agent_id == "rag_agent" and action == "hybrid_search":
             # Verify search results format
@@ -60,6 +76,43 @@ class DualStateVerifier:
                     difference_detected="Search completed but result payload missing 'results' key.",
                     retryable=False
                 )
+
+        elif agent_id == "os_desktop_agent":
+            import os
+            if action in ["save_file", "save"]:
+                fp = node.params.get("file_path") or result.data.get("file_path")
+                if fp and not os.path.exists(fp):
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=f"Claimed file '{fp}' was saved, but file not found on physical disk.",
+                        retryable=True
+                    )
+            elif action == "create_folder":
+                folder_p = result.data.get("created_path")
+                if folder_p and not os.path.exists(folder_p):
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=f"Claimed folder '{folder_p}' was created, but folder not found on physical disk.",
+                        retryable=True
+                    )
+            elif action in ["calculate", "enter_expression"]:
+                if "result" not in result.data:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected="Calculation completed but missing computed result payload.",
+                        retryable=True
+                    )
+            elif action in ["run_command", "run_allowlisted_command"]:
+                if "output" not in result.data:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected="Terminal command executed but missing output payload.",
+                        retryable=True
+                    )
 
         # Step successfully verified
         logger.info(f"Verification PASSED for node '{node.node_id}' ({node.action})")
