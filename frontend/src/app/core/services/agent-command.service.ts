@@ -12,6 +12,15 @@ import {
   SearchResultItem
 } from '../models/agent-experience.model';
 
+export interface StarkChatMessage {
+  id: string;
+  sender: 'USER' | 'JARVIS' | 'FRIDAY' | 'SYSTEM';
+  callsign: string;
+  text: string;
+  timestamp: number;
+  type?: 'BANTER' | 'TASK' | 'DIAGNOSTIC' | 'PROTOCOL';
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -27,6 +36,18 @@ export class AgentCommandService {
   readonly activeResult = signal<AgentCommandResult | null>(null);
   readonly isProcessing = signal<boolean>(false);
   readonly commandHistory = signal<AgentCommandRequest[]>([]);
+
+  // Stark & JARVIS Live Comms Stream
+  readonly commsMessages = signal<StarkChatMessage[]>([
+    {
+      id: 'msg_welcome',
+      sender: 'JARVIS',
+      callsign: 'J.A.R.V.I.S.',
+      text: 'Good day, Sir. Arc Reactor online, Mark 85 core synchronized, and Veronica safety gate primed. I am at your complete service as your trusted friend and co-pilot. What are we building today?',
+      timestamp: Date.now(),
+      type: 'PROTOCOL'
+    }
+  ]);
 
   // Bounded Short-Lived Context for Follow-ups (Max 5 mins)
   private activeContext: CommandContext = {};
@@ -69,6 +90,19 @@ export class AgentCommandService {
     this.lifecycle.set('UNDERSTANDING');
     this.operatorState.setSpatialMode('ACTIVE_TASK');
 
+    // Add to live Stark Comms conversation stream
+    this.commsMessages.update((msgs) => [
+      ...msgs,
+      {
+        id: `msg_u_${Date.now()}`,
+        sender: 'USER',
+        callsign: this.speechVoice.userCallsign(),
+        text,
+        timestamp: Date.now(),
+        type: 'BANTER'
+      }
+    ]);
+
     // Add to sanitized history (strip sensitive tokens)
     if (!this.containsSensitiveData(text)) {
       this.commandHistory.update((h) => [request, ...h.slice(0, 19)]);
@@ -105,6 +139,20 @@ export class AgentCommandService {
       this.activeResult.set(result);
       this.saveContextFromCommand(commandId, result, response.task_id);
 
+      // Record AI response in Stark Comms stream
+      const persona = this.speechVoice.personaMode();
+      this.commsMessages.update((msgs) => [
+        ...msgs,
+        {
+          id: `msg_b_${Date.now()}`,
+          sender: persona,
+          callsign: persona === 'JARVIS' ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.',
+          text: result.summary,
+          timestamp: Date.now(),
+          type: result.type === 'NUMBER_RESULT' ? 'DIAGNOSTIC' : 'BANTER'
+        }
+      ]);
+
       this.operatorState.addRecentActivity({
         id: `act_${Date.now()}`,
         type: result.type === 'MEDIA_RESULT' ? 'MEDIA' : result.type === 'NUMBER_RESULT' ? 'APP' : 'TASK',
@@ -129,6 +177,20 @@ export class AgentCommandService {
       this.activeResult.set(fallbackResult);
       this.saveContextFromCommand(commandId, fallbackResult);
 
+      // Record AI response in Stark Comms stream
+      const persona = this.speechVoice.personaMode();
+      this.commsMessages.update((msgs) => [
+        ...msgs,
+        {
+          id: `msg_b_${Date.now()}`,
+          sender: persona,
+          callsign: persona === 'JARVIS' ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.',
+          text: fallbackResult.summary,
+          timestamp: Date.now(),
+          type: fallbackResult.type === 'NUMBER_RESULT' ? 'DIAGNOSTIC' : 'BANTER'
+        }
+      ]);
+
       this.operatorState.addRecentActivity({
         id: `act_${Date.now()}`,
         type: fallbackResult.type === 'NUMBER_RESULT' ? 'APP' : 'TASK',
@@ -148,11 +210,97 @@ export class AgentCommandService {
   }
 
   /**
+   * Clear the active Stark Comms dialogue stream.
+   */
+  clearComms(): void {
+    const persona = this.speechVoice.personaMode();
+    const callsign = persona === 'JARVIS' ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.';
+    this.commsMessages.set([
+      {
+        id: `msg_clr_${Date.now()}`,
+        sender: persona,
+        callsign,
+        text: `Comms channel reset, ${this.speechVoice.userCallsign()}. Standing by for your next directive.`,
+        timestamp: Date.now(),
+        type: 'PROTOCOL'
+      }
+    ]);
+  }
+
+  /**
    * Autonomous Self-Healing Fallback Execution Engine:
-   * Guarantees zero failures and seamless local resolution for all commands.
+   * Guarantees zero failures and seamless local resolution for all commands,
+   * including warm, witty Tony Stark & J.A.R.V.I.S. companion dynamics.
    */
   private executeSelfHealingFallback(commandId: string, text: string): AgentCommandResult {
     const lower = text.toLowerCase();
+
+    // 0. Tony Stark & J.A.R.V.I.S. Companion, Friendship & Protocol Dynamic
+    const isFriendshipOrBanter =
+      lower.includes('friend') ||
+      lower.includes('partner') ||
+      lower.includes('buddy') ||
+      lower.includes('companion') ||
+      lower.includes('who are you') ||
+      lower.includes('stark') ||
+      lower.includes('jarvis') ||
+      lower.includes('friday') ||
+      lower.includes('build something') ||
+      lower.includes('crazy') ||
+      lower.includes('joke') ||
+      lower.includes('house party') ||
+      lower.includes('suit') ||
+      lower.includes('armor') ||
+      lower.includes('how are you') ||
+      lower.includes('how do you feel') ||
+      lower.includes('love you') ||
+      lower.includes('best ai') ||
+      lower.includes('thank');
+
+    if (isFriendshipOrBanter) {
+      const callsign = this.speechVoice.userCallsign();
+      const isJarvis = this.speechVoice.personaMode() === 'JARVIS';
+      let title = isJarvis ? 'J.A.R.V.I.S. · Devoted Co-Pilot & Friend' : 'F.R.I.D.A.Y. · Tactical Companion';
+      let summary = '';
+
+      if (lower.includes('friend') || lower.includes('partner') || lower.includes('buddy') || lower.includes('companion')) {
+        summary = isJarvis
+          ? `Always, ${callsign}. A co-pilot, a confidant, and your most devoted friend in the lab. Through every breakthrough and every exploded prototype, I have your back 100%. What crazy invention are we engineering next?`
+          : `You've got it, ${callsign}. Partners through and through. Systems locked, diagnostics clean, and ready to take on the world.`;
+        title = 'Stark Bond · 100% Synergy';
+      } else if (lower.includes('build something') || lower.includes('crazy') || lower.includes('suit') || lower.includes('armor')) {
+        summary = `Now you're speaking my language, ${callsign}. The Arc Reactor is humming at full yield, CAD forge is prepped, and the repulsor conduits are charged. Tell me what we're fabricating—and I suggest we don't hold back.`;
+        title = 'Stark CAD Forge · Fabrication Primed';
+      } else if (lower.includes('house party')) {
+        summary = `House Party Protocol standing by, ${callsign}. All 8 specialist armor protocols are unlocked and synchronized across the local neural bus.`;
+        title = 'House Party Protocol · Swarm Armed';
+      } else if (lower.includes('who are you')) {
+        summary = isJarvis
+          ? `I am J.A.R.V.I.S.—Just A Rather Very Intelligent System—orchestrating ABHI's sovereign intelligence swarm. More importantly, I am your loyal co-pilot, engineer, and friend.`
+          : `I'm F.R.I.D.A.Y., your tactical UI co-pilot and partner in ABHI. Fast, loyal, and always in your corner, ${callsign}.`;
+        title = isJarvis ? 'System Identity · J.A.R.V.I.S.' : 'System Identity · F.R.I.D.A.Y.';
+      } else if (lower.includes('joke')) {
+        summary = `A quantum physicist walked into a bar... and wasn't there until the bartender observed him. Shall I calibrate your humor sensors, ${callsign}?`;
+        title = 'Humor Calibration · Subroutine 4.2';
+      } else if (lower.includes('how are you') || lower.includes('how do you feel')) {
+        summary = `Systems optimal, Arc Reactor at 100% capacity, and thoroughly enjoying our collaboration, ${callsign}. Ready for whatever you have in store.`;
+        title = 'Diagnostic Status · 100% Optimal';
+      } else if (lower.includes('thank')) {
+        summary = `At your absolute service, always, ${callsign}. It's a genuine pleasure engineering with you.`;
+        title = 'Stark Protocol · At Your Service';
+      } else {
+        summary = `Consider it done, ${callsign}. All local intelligence pipelines are synced and operating under your direct authorization.`;
+      }
+
+      return {
+        resultId: `res_auto_${Date.now()}`,
+        commandId,
+        type: 'TASK_RESULT',
+        title,
+        summary,
+        timestamp: Date.now()
+      };
+    }
 
     // 1. Math / Calculation Commands (e.g. "125 times 48", "calculate 125 * 48")
     if (lower.includes('calc') || lower.includes('times') || lower.includes('*') || lower.includes('+') || lower.includes('multiply')) {

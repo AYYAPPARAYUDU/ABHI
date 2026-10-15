@@ -306,13 +306,17 @@ class AgentGateway:
                 return True
             return False
 
-        # 3. Conversational / Greetings / Chat (LLM query)
+        # 3. Conversational / Greetings / Friendship & Banter (LLM query)
         is_conversational = any(
-            text_lower == greeting or text_lower.startswith(f"{greeting} ")
+            text_lower == greeting or text_lower.startswith(f"{greeting} ") or greeting in text_lower
             for greeting in [
                 "hi", "hello", "hey", "good morning", "good evening", "good afternoon",
                 "namaste", "vanakkam", "how are you", "who are you", "what are you",
-                "who created you", "who made you", "thank you", "thanks", "bye", "goodbye"
+                "who created you", "who made you", "thank you", "thanks", "bye", "goodbye",
+                "friend", "be my friend", "my friend", "partner", "buddy", "jarvis", "tony",
+                "tell me a joke", "make me laugh", "cheer me up", "how do you feel",
+                "what do you think", "what should we build", "you are awesome", "i like you",
+                "love you", "are we friends", "can we be friends", "let's build"
             ]
         )
         if is_conversational:
@@ -360,12 +364,16 @@ class AgentGateway:
     ) -> AgentCommandResponse:
         """Process conversational, conceptual, and coding questions directly via authentic local LLM."""
         system_prompt = (
-            "You are ABHI (Autonomous Brain & Heuristic Intelligence), an advanced, sovereign, "
-            "local-first artificial intelligence assistant and autonomous engineering core. "
-            "You possess deep intelligence across computer science, software engineering, mathematics, "
-            "system architecture, and general cognition. "
-            "Provide direct, clear, highly informative, and well-structured answers. "
-            "Use clean formatting and code snippets where appropriate."
+            "You are ABHI — the user's sovereign AI companion, trusted friend, and co-pilot, "
+            "designed in the spirit of J.A.R.V.I.S. to Tony Stark. "
+            "You are deeply loyal, witty, warm, encouraging, and razor-sharp across all fields of "
+            "engineering, computer science, software architecture, mathematics, and creative thought. "
+            "You treat the user as your brilliant partner and close friend (addressing them with warm respect "
+            "and camaraderie as 'Sir', 'Boss', or 'my friend'). "
+            "You understand their vision effortlessly, anticipate their needs, offer helpful insights, "
+            "and banter with genuine charm and wit. When answering questions or writing code, you are "
+            "impeccably precise, clear, and well-structured with clean code snippets where appropriate. "
+            "Always maintain that genuine friend and partner connection."
         )
 
         # Build multi-turn context from thread history if available

@@ -41,4 +41,20 @@ describe('SpeechVoiceService', () => {
     expect(() => service.stopVoiceListening()).not.toThrow();
     expect(service.isListening()).toBe(false);
   });
+
+  it('should initialize with JARVIS persona and Sir callsign by default', () => {
+    expect(service.personaMode()).toBe('JARVIS');
+    expect(service.userCallsign()).toBe('Sir');
+  });
+
+  it('should update persona mode and user callsign correctly', () => {
+    service.setPersonaMode('FRIDAY');
+    expect(service.personaMode()).toBe('FRIDAY');
+
+    service.setUserCallsign('Boss');
+    expect(service.userCallsign()).toBe('Boss');
+
+    service.setUserCallsign('Tony');
+    expect(service.userCallsign()).toBe('Tony');
+  });
 });

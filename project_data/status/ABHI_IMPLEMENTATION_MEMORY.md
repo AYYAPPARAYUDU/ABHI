@@ -353,4 +353,34 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
   - Verified live database write & read via REST: `POST /api/v1/decisions/evaluate` persisted trace `trace_dec_9aed0457d2` into SQLite WAL, and `GET /api/v1/decisions/stats` reflected live increments.
   - `npm run build`: Angular 22 production bundle compiled cleanly in 10.75s with zero errors.
 
+---
+
+## 17. Milestone: Tony Stark & J.A.R.V.I.S. Companion Dynamic, Swarm Protocols, and VisionOS Comms UI (Oct 2026 - COMPLETED & VERIFIED)
+- **User Intent & Vision:**
+  - "here thing is llm have to understand me i want to be its friend make it perfect like tony stark and its all agents i want a perfect ui and all things perfects"
+- **Architectural Implementation:**
+  - **Cognitive Companion Dynamic & Natural Language Gateway:**
+    - Upgraded `_is_os_automation_request` in `backend/app/cognitive/gateway/agent_gateway.py` to recognize conversational friendship, partner banter, and companion queries (`friend`, `be my friend`, `partner`, `buddy`, `jarvis`, `let's build`, `tell me a joke`, etc.) and route them to local LLM Q&A instead of cold OS automation.
+    - Upgraded `system_prompt` to J.A.R.V.I.S. & Tony Stark companion persona (loyal, witty, warm, addressing the user as "Sir", "Boss", or "my friend").
+  - **Speech & Voice Persona Engine (`SpeechVoiceService`):**
+    - Added `personaMode` signal (`'JARVIS' | 'FRIDAY'`) and `userCallsign` signal (`'Sir' | 'Boss' | 'Tony' | 'Partner'`) with persistent `localStorage` synchronization.
+    - Persona-tailored Web Speech API voice selection and speech synthesis pitch/rate tuning (JARVIS British English / FRIDAY Irish-Neural female tone).
+    - Dynamic welcome greetings addressing the user by their chosen callsign upon launch.
+  - **Autonomous Self-Healing Companion Fallback & Comms Stream (`AgentCommandService`):**
+    - Built first-class companion friendship fallback handling for queries like "I want to be your friend", "let's build something crazy", "who are you", "activate house party protocol", "tell me a joke", "how are you today", guaranteeing warm, witty Stark/JARVIS dialogue even when offline.
+    - Exported `StarkChatMessage` interface and added live `commsMessages` stream recording back-and-forth conversational history.
+  - **Stark Armor Swarm Protocols & VisionOS Frosted Glass Comms Panel (`HomePageComponent`):**
+    - Integrated 5th navigation tab: **💬 JARVIS Comms (Friend & Partner)** in the VisionOS frosted glass control center.
+    - Built interactive conversation feed with user vs JARVIS/FRIDAY message bubbles, sender avatars, timestamps, and 1-click voice replay (`🔊 Speak`).
+    - Added companion persona toggle (`J.A.R.V.I.S.` vs `F.R.I.D.A.Y.`), callsign selector chips (`Sir`, `Boss`, `Tony`, `Partner`), and synergy indicator (`100% · Trusted Co-Pilot`).
+    - Added quick banter prompt chips (`Let's build something crazy`, `I want to be your friend`, `House Party Protocol`, `All Suit Diagnostics`, `How are you feeling?`, `Tell me a joke`).
+    - Elevated all 8 Specialist Swarm agents with Stark Armor Protocol codenames (`Mark 85 Central Core`, `Mark VII Vision HUD`, `Kinetic Servos (Win32)`, `Orbital Recon (Playwright)`, `CAD Forge (Self-Healing)`, `Repulsor Terminal`, `Holo-Vault Memory`, `Veronica Safety Gate`).
+  - **Resolved Decision Pipeline Regressions (`DecisionPipelineService`):**
+    - Initialized `useCases` synchronously with canonical fallbacks and set default `selectedTab = 'JEV'` to ensure test resilience.
+- **Verification & Test Results:**
+  - `npm test`: **131/131 test files passed (480/480 unit tests passed 100%)**.
+  - `npm run build`: Angular 22 production bundle compiled cleanly in `dist/frontend`.
+  - Backend syntax compiled cleanly with Python 3.14 `py_compile`.
+
+
 

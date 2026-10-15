@@ -119,4 +119,25 @@ describe('AgentCommandService', () => {
     expect(result?.numberValue).toBe(6000);
     expect(service.lifecycle()).toBe('COMPLETED');
   });
+
+  it('should respond with warm Tony Stark & JARVIS friendship dynamic on companion inquiries', async () => {
+    vi.spyOn(agentApi, 'submitCommand').mockRejectedValue(new Error('Gateway offline'));
+
+    const result = await service.submitCommand('I want to be your friend');
+    expect(result).toBeTruthy();
+    expect(result?.summary).toContain('Always');
+    expect(result?.summary).toContain('friend');
+    expect(result?.title).toContain('Stark');
+
+    const comms = service.commsMessages();
+    expect(comms.length).toBeGreaterThanOrEqual(2);
+    expect(comms[comms.length - 1].text).toContain('friend');
+  });
+
+  it('should reset Stark comms stream cleanly via clearComms', () => {
+    service.clearComms();
+    const comms = service.commsMessages();
+    expect(comms.length).toBe(1);
+    expect(comms[0].text).toContain('Comms channel reset');
+  });
 });

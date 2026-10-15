@@ -10,11 +10,27 @@ export class SpeechVoiceService {
   readonly lastSpokenText = signal<string>('');
   readonly hasUserInteracted = signal<boolean>(false);
 
+  // Tony Stark & J.A.R.V.I.S. Persona & Dynamic Call-signs
+  readonly personaMode = signal<'JARVIS' | 'FRIDAY'>('JARVIS');
+  readonly userCallsign = signal<'Sir' | 'Boss' | 'Tony' | 'Partner'>('Sir');
+
   private synth: SpeechSynthesis | null = null;
   private recognition: any = null;
   private voices: SpeechSynthesisVoice[] = [];
 
   constructor() {
+    // Restore persistent persona preferences
+    if (typeof localStorage !== 'undefined') {
+      const savedPersona = localStorage.getItem('abhi_persona_mode');
+      if (savedPersona === 'JARVIS' || savedPersona === 'FRIDAY') {
+        this.personaMode.set(savedPersona);
+      }
+      const savedCallsign = localStorage.getItem('abhi_user_callsign');
+      if (savedCallsign && ['Sir', 'Boss', 'Tony', 'Partner'].includes(savedCallsign)) {
+        this.userCallsign.set(savedCallsign as any);
+      }
+    }
+
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       this.synth = window.speechSynthesis;
       this.loadVoices();
@@ -35,6 +51,23 @@ export class SpeechVoiceService {
     }
 
     this.initSpeechRecognition();
+  }
+
+  setPersonaMode(mode: 'JARVIS' | 'FRIDAY'): void {
+    this.personaMode.set(mode);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('abhi_persona_mode', mode);
+    }
+    const name = mode === 'JARVIS' ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.';
+    this.speak(`${name} online. At your service, ${this.userCallsign()}.`, true);
+  }
+
+  setUserCallsign(callsign: 'Sir' | 'Boss' | 'Tony' | 'Partner'): void {
+    this.userCallsign.set(callsign);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('abhi_user_callsign', callsign);
+    }
+    this.speak(`Callsign acknowledged, ${callsign}.`, true);
   }
 
   private loadVoices(): void {
@@ -123,15 +156,30 @@ export class SpeechVoiceService {
       this.synth.cancel(); // Cancel any ongoing speech
 
       const utterance = new SpeechSynthesisUtterance(spokenText.trim());
-      utterance.rate = 1.05;
-      utterance.pitch = 1.0;
+      const isJarvis = this.personaMode() === 'JARVIS';
+      utterance.rate = isJarvis ? 1.02 : 1.06;
+      utterance.pitch = isJarvis ? 0.98 : 1.06;
       utterance.volume = 1.0;
 
-      // Prefer high quality English voice if available
+      // Select voice tuned to persona
       if (this.voices.length > 0) {
-        const preferred = this.voices.find(
-          (v) => (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Google') || v.name.includes('Microsoft')) && v.lang.startsWith('en')
-        ) || this.voices.find((v) => v.lang.startsWith('en'));
+        let preferred: SpeechSynthesisVoice | undefined;
+        if (isJarvis) {
+          // J.A.R.V.I.S. British English / crisp tone
+          preferred = this.voices.find(
+            (v) => (v.lang === 'en-GB' || v.name.includes('UK') || v.name.includes('George') || v.name.includes('Ryan'))
+          ) || this.voices.find(
+            (v) => (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Male')) && v.lang.startsWith('en')
+          ) || this.voices.find((v) => v.lang.startsWith('en'));
+        } else {
+          // F.R.I.D.A.Y. Irish / Neural female tone
+          preferred = this.voices.find(
+            (v) => (v.lang === 'en-IE' || v.name.includes('Ireland') || v.name.includes('Hazel') || v.name.includes('Sonia') || v.name.includes('Zira') || v.name.includes('Female'))
+          ) || this.voices.find(
+            (v) => (v.name.includes('Natural') || v.name.includes('Neural')) && v.lang.startsWith('en')
+          ) || this.voices.find((v) => v.lang.startsWith('en'));
+        }
+
         if (preferred) {
           utterance.voice = preferred;
         }
@@ -151,16 +199,21 @@ export class SpeechVoiceService {
       };
 
       this.synth.speak(utterance);
-    } catch (err) {
+    } catch {
       this.isSpeaking.set(false);
     }
   }
 
   /**
-   * Initial spoken welcome greeting on app launch.
+   * Initial spoken welcome greeting on app launch tailored to Stark & JARVIS.
    */
   greetUserOnLaunch(): void {
-    const greeting = 'Welcome back, Ayyappa. ABHI Central Intelligence is online, Arc Reactor primed, ready for your command.';
+    const callsign = this.userCallsign();
+    const isJarvis = this.personaMode() === 'JARVIS';
+    const greeting = isJarvis
+      ? `Good day, ${callsign}. J.A.R.V.I.S. protocol is active. All arc reactors online, telemetry locked, and at your complete service. What are we engineering today, ${callsign}?`
+      : `${callsign}, F.R.I.D.A.Y. is online and synced. Diagnostics clean, cognitive pipelines ready. Standing by for your directive.`;
+
     // Small delay to allow audio context to initialize
     setTimeout(() => {
       this.speak(greeting);

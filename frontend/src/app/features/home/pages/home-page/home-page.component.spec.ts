@@ -59,6 +59,8 @@ describe('HomePageComponent', () => {
     expect(component.activeMainTab()).toBe('SWARM');
     component.setActiveTab('NEURAL');
     expect(component.activeMainTab()).toBe('NEURAL');
+    component.setActiveTab('COMMS');
+    expect(component.activeMainTab()).toBe('COMMS');
   });
 
   it('should have primary operating workspaces available in routing table', () => {
@@ -86,5 +88,29 @@ describe('HomePageComponent', () => {
     expect(component.isAutoCycleRunning()).toBe(true);
     component.toggleAutoCycle();
     expect(component.isAutoCycleRunning()).toBe(false);
+  });
+
+  it('should support Tony Stark & JARVIS persona switching and callsign updates', () => {
+    component.setPersona('FRIDAY');
+    expect(component.speechVoice.personaMode()).toBe('FRIDAY');
+    component.setPersona('JARVIS');
+    expect(component.speechVoice.personaMode()).toBe('JARVIS');
+
+    component.setCallsign('Boss');
+    expect(component.speechVoice.userCallsign()).toBe('Boss');
+    component.setCallsign('Tony');
+    expect(component.speechVoice.userCallsign()).toBe('Tony');
+  });
+
+  it('should contain 8 specialist agents configured with Stark armor protocols', () => {
+    expect(component.specialistAgents.length).toBe(8);
+    const protocols = component.specialistAgents.map(a => a.protocolCode);
+    expect(protocols).toContain('PROTOCOL-01 // COMMAND');
+    expect(protocols).toContain('PROTOCOL-08 // VERONICA');
+  });
+
+  it('should provide quick companion banter prompts', () => {
+    expect(component.companionBanterPrompts.length).toBe(6);
+    expect(component.companionBanterPrompts[0].prompt).toContain('build something');
   });
 });

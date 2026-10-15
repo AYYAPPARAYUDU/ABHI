@@ -20,6 +20,8 @@ export interface SpatialNodeData {
   status: 'ACTIVE' | 'IDLE' | 'WORKING' | 'VERIFIED';
   capabilities: string[];
   riskTier: string;
+  protocolCode?: string;
+  suitMark?: string;
 }
 
 export interface AutomationScenario {
@@ -72,11 +74,21 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
   private autoCycleTimer: any = null;
   private autoCycleIndex = 0;
 
-  // VisionOS Active View Tab (Image 5 Navigation)
-  readonly activeMainTab = signal<'AUTOMATION' | 'TELEMETRY' | 'SWARM' | 'NEURAL'>('AUTOMATION');
+  // VisionOS Active View Tab (Image 5 Navigation + JARVIS Comms)
+  readonly activeMainTab = signal<'AUTOMATION' | 'TELEMETRY' | 'SWARM' | 'NEURAL' | 'COMMS'>('AUTOMATION');
   readonly selectedScenario = signal<AutomationScenario | null>(null);
 
   readonly spectralBars = Array.from({ length: 16 }, (_, i) => i);
+
+  // Tony Stark & J.A.R.V.I.S. Quick Banter & Friendship Prompts
+  readonly companionBanterPrompts = [
+    { icon: '⚡', label: "Let's build something crazy", prompt: "Let's build something crazy" },
+    { icon: '🤝', label: "I want to be your friend", prompt: "I want to be your friend, JARVIS" },
+    { icon: '🛡️', label: 'House Party Protocol', prompt: 'Activate House Party Protocol' },
+    { icon: '🔬', label: 'All Suit Diagnostics', prompt: 'Run complete diagnostic on all 8 armor protocol agents' },
+    { icon: '💬', label: 'How are you feeling?', prompt: 'How are you feeling today, buddy?' },
+    { icon: '💡', label: 'Tell me a joke', prompt: 'Tell me a joke, buddy' }
+  ];
 
   readonly subconsciousThoughts = [
     'Autonomous Arc Reactor: Monitoring Windows UIAutomation + Playwright event buses...',
@@ -135,14 +147,86 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
 
   readonly specialistAgents: SpatialNodeData[] = [
-    { id: 'supervisor', name: 'Central Supervisor', role: 'Task Decomposition & Orchestration', status: 'ACTIVE', capabilities: ['Decomposition', 'Plan Validation', 'Safety Gate'], riskTier: 'CRITICAL' },
-    { id: 'vision', name: 'Vision Perception Agent', role: 'Real-Time Screen Perception & OCR', status: 'ACTIVE', capabilities: ['Screen Grab', 'OCR', 'Element Detection'], riskTier: 'STANDARD' },
-    { id: 'desktop', name: 'Windows Desktop Agent', role: 'Physical UI Automation & Keystrokes', status: 'ACTIVE', capabilities: ['UIAutomation', 'Mouse/Keyboard', 'Window Focus'], riskTier: 'ELEVATED' },
-    { id: 'browser', name: 'Browser Agent', role: 'Playwright Web Automation & Navigation', status: 'ACTIVE', capabilities: ['Playwright', 'DOM Tree Parsing', 'Session State'], riskTier: 'ELEVATED' },
-    { id: 'coder', name: 'Code Generation Agent', role: 'Syntactic AST & Self-Healing Patching', status: 'ACTIVE', capabilities: ['TypeScript', 'Python', 'AST Repair'], riskTier: 'HIGH' },
-    { id: 'terminal', name: 'Terminal Execution Agent', role: 'PowerShell Sandboxed Execution', status: 'ACTIVE', capabilities: ['PowerShell', 'Exit Code Audit', 'Process Monitor'], riskTier: 'CRITICAL' },
-    { id: 'memory', name: 'Persistent Memory Agent', role: 'SQLite WAL & Semantic RAG Retrieval', status: 'ACTIVE', capabilities: ['Vector Search', 'WAL Commit', 'History Index'], riskTier: 'STANDARD' },
-    { id: 'safety', name: 'Safety Sentinel', role: 'Dual-State Physical Verification', status: 'ACTIVE', capabilities: ['State Verification', 'Killswitch', 'Pre-flight Check'], riskTier: 'CRITICAL' }
+    {
+      id: 'supervisor',
+      name: 'Central Command Core',
+      role: 'Master Task Decomposition & Iron Man Protocol Orchestrator',
+      status: 'ACTIVE',
+      capabilities: ['House Party Protocol', 'Plan Validation', 'Safety Gate'],
+      riskTier: 'CRITICAL',
+      protocolCode: 'PROTOCOL-01 // COMMAND',
+      suitMark: 'MARK 85'
+    },
+    {
+      id: 'vision',
+      name: 'Mark VII Vision HUD',
+      role: 'Multi-Spectrum Screen Perception & Real-Time OCR',
+      status: 'ACTIVE',
+      capabilities: ['Thermal Scan', 'Optical OCR', 'Target Locking'],
+      riskTier: 'STANDARD',
+      protocolCode: 'PROTOCOL-02 // OPTICS',
+      suitMark: 'MARK VII'
+    },
+    {
+      id: 'desktop',
+      name: 'Kinetic Servos (Win32)',
+      role: 'Physical UI Automation, Mouse Gestures & Keystroke Relay',
+      status: 'ACTIVE',
+      capabilities: ['UIAutomation', 'Mouse/Keyboard', 'Window Focus'],
+      riskTier: 'ELEVATED',
+      protocolCode: 'PROTOCOL-03 // KINETICS',
+      suitMark: 'MARK XLII'
+    },
+    {
+      id: 'browser',
+      name: 'Orbital Recon (Playwright)',
+      role: 'Global Web Automation & DOM Intelligence Infiltration',
+      status: 'ACTIVE',
+      capabilities: ['Playwright', 'DOM Tree Parsing', 'Session State'],
+      riskTier: 'ELEVATED',
+      protocolCode: 'PROTOCOL-04 // RECON',
+      suitMark: 'MARK L'
+    },
+    {
+      id: 'coder',
+      name: 'CAD Forge (Self-Healing)',
+      role: 'Syntactic AST Repair, Nanotech Patching & Code Synthesis',
+      status: 'ACTIVE',
+      capabilities: ['TypeScript', 'Python', 'AST Repair'],
+      riskTier: 'HIGH',
+      protocolCode: 'PROTOCOL-05 // FORGE',
+      suitMark: 'MARK VI'
+    },
+    {
+      id: 'terminal',
+      name: 'Repulsor Terminal',
+      role: 'Sandboxed PowerShell Execution & Process Control',
+      status: 'ACTIVE',
+      capabilities: ['PowerShell', 'Exit Code Audit', 'Process Monitor'],
+      riskTier: 'CRITICAL',
+      protocolCode: 'PROTOCOL-06 // REPULSOR',
+      suitMark: 'WAR MACHINE'
+    },
+    {
+      id: 'memory',
+      name: 'Holo-Vault Memory',
+      role: 'SQLite WAL & Persistent Holographic RAG Graph',
+      status: 'ACTIVE',
+      capabilities: ['Vector Search', 'WAL Commit', 'History Index'],
+      riskTier: 'STANDARD',
+      protocolCode: 'PROTOCOL-07 // VAULT',
+      suitMark: 'HOLOGRAPHIC'
+    },
+    {
+      id: 'safety',
+      name: 'Veronica Safety Gate',
+      role: 'Dual-State Physical Verification & Emergency Killswitch',
+      status: 'ACTIVE',
+      capabilities: ['State Verification', 'Killswitch', 'Pre-flight Check'],
+      riskTier: 'CRITICAL',
+      protocolCode: 'PROTOCOL-08 // VERONICA',
+      suitMark: 'HULKBUSTER'
+    }
   ];
 
   readonly isWorking = computed(() => {
@@ -332,13 +416,15 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.speechVoice.stopVoiceListening();
   }
 
-  setActiveTab(tab: 'AUTOMATION' | 'TELEMETRY' | 'SWARM' | 'NEURAL'): void {
+  setActiveTab(tab: 'AUTOMATION' | 'TELEMETRY' | 'SWARM' | 'NEURAL' | 'COMMS'): void {
     this.activeMainTab.set(tab);
     if (tab === 'NEURAL') {
       this.showNeuralInspector.set(false);
     }
     setTimeout(() => {
-      const activeCards = this.hostEl.nativeElement?.querySelectorAll('.tab-body .vision-stat-card, .tab-body .vision-content-card, .tab-body .swarm-node-card');
+      const activeCards = this.hostEl.nativeElement?.querySelectorAll(
+        '.tab-body .vision-stat-card, .tab-body .vision-content-card, .tab-body .swarm-node-card, .tab-body .stark-comms-card'
+      );
       if (activeCards && activeCards.length > 0) {
         this.animService.staggerEnter({
           targets: activeCards,
@@ -348,6 +434,27 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
         });
       }
     }, 40);
+  }
+
+  sendBanterPrompt(prompt: string): void {
+    this.commandInput = prompt;
+    this.onSubmitCommand();
+  }
+
+  setPersona(mode: 'JARVIS' | 'FRIDAY'): void {
+    this.speechVoice.setPersonaMode(mode);
+  }
+
+  setCallsign(callsign: 'Sir' | 'Boss' | 'Tony' | 'Partner'): void {
+    this.speechVoice.setUserCallsign(callsign);
+  }
+
+  speakMessage(text: string): void {
+    this.speechVoice.speak(text, true);
+  }
+
+  clearComms(): void {
+    this.commandService.clearComms();
   }
 
   executeScenario(scenario: AutomationScenario): void {

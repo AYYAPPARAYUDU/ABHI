@@ -61,6 +61,15 @@
               <span class="tab-icon">🧠</span>
               <span>Neural Core</span>
             </button>
+            <button
+              type="button"
+              class="glass-nav-tab stark-comms-tab"
+              [class.active]="activeMainTab() === 'COMMS'"
+              (click)="setActiveTab('COMMS')"
+            >
+              <span class="tab-icon">💬</span>
+              <span>JARVIS Comms</span>
+            </button>
           </nav>
 
           <!-- In-Panel Quick Actions -->
@@ -305,7 +314,7 @@
           </div>
         }
 
-        <!-- TAB 3: SPECIALIST SWARM NODES -->
+        <!-- TAB 3: SPECIALIST SWARM NODES (STARK ARMOR PROTOCOLS) -->
         @if (activeMainTab() === 'SWARM') {
           <div class="tab-body swarm-tab-body">
             <div class="swarm-cards-grid">
@@ -317,7 +326,15 @@
                 >
                   <div class="swarm-card-header">
                     <span class="agent-beacon-dot"></span>
-                    <span class="agent-name">{{ agent.name }}</span>
+                    <div class="agent-title-col">
+                      <span class="agent-name">{{ agent.name }}</span>
+                      @if (agent.protocolCode) {
+                        <span class="agent-protocol-code">{{ agent.protocolCode }}</span>
+                      }
+                    </div>
+                    @if (agent.suitMark) {
+                      <span class="agent-suit-mark">{{ agent.suitMark }}</span>
+                    }
                     <span class="agent-tier">{{ agent.riskTier }}</span>
                   </div>
                   <p class="agent-role">{{ agent.role }}</p>
@@ -336,6 +353,166 @@
         @if (activeMainTab() === 'NEURAL') {
           <div class="tab-body neural-tab-body">
             <app-neural-network-viewer [isModal]="false"></app-neural-network-viewer>
+          </div>
+        }
+
+        <!-- TAB 5: TONY STARK & J.A.R.V.I.S. COMMS & CO-PILOT CHAT -->
+        @if (activeMainTab() === 'COMMS') {
+          <div class="tab-body comms-tab-body">
+            <div class="stark-comms-card">
+              <!-- Comms Header Bar -->
+              <div class="comms-header-bar">
+                <div class="comms-companion-identity">
+                  <div class="arc-reactor-avatar" [class.pulsing]="isWorking() || speechVoice.isSpeaking()">
+                    <span class="reactor-core"></span>
+                    <span class="reactor-ring"></span>
+                  </div>
+                  <div class="companion-meta">
+                    <div class="companion-title-row">
+                      <h3 class="companion-name">
+                        {{ speechVoice.personaMode() === 'JARVIS' ? 'J.A.R.V.I.S. MARK 85' : 'F.R.I.D.A.Y. TACTICAL' }}
+                      </h3>
+                      <span class="synergy-badge">⚡ 100% Synergy · Trusted Co-Pilot</span>
+                    </div>
+                    <span class="companion-subtitle">
+                      {{ speechVoice.personaMode() === 'JARVIS' ? 'Autonomous AI Companion & Engineering Confidant' : 'Tactical UI Co-Pilot & Mission Control' }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Persona & Callsign Customizer Controls -->
+                <div class="comms-config-controls">
+                  <!-- Persona Switcher -->
+                  <div class="persona-switch-group" title="Select Companion Persona">
+                    <button
+                      type="button"
+                      class="persona-toggle-pill"
+                      [class.active]="speechVoice.personaMode() === 'JARVIS'"
+                      (click)="setPersona('JARVIS')"
+                    >
+                      <span class="pill-dot jarvis-dot"></span>
+                      <span>JARVIS</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="persona-toggle-pill"
+                      [class.active]="speechVoice.personaMode() === 'FRIDAY'"
+                      (click)="setPersona('FRIDAY')"
+                    >
+                      <span class="pill-dot friday-dot"></span>
+                      <span>FRIDAY</span>
+                    </button>
+                  </div>
+
+                  <!-- Callsign Picker -->
+                  <div class="callsign-picker-group" title="Select How Your AI Addresses You">
+                    <span class="callsign-label">Callsign:</span>
+                    @for (callsign of ['Sir', 'Boss', 'Tony', 'Partner']; track callsign) {
+                      <button
+                        type="button"
+                        class="callsign-chip"
+                        [class.active]="speechVoice.userCallsign() === callsign"
+                        (click)="setCallsign($any(callsign))"
+                      >
+                        {{ callsign }}
+                      </button>
+                    }
+                  </div>
+
+                  <!-- Audio & Reset Controls -->
+                  <div class="comms-action-buttons">
+                    <button
+                      type="button"
+                      class="comms-tool-btn"
+                      [class.active]="!speechVoice.isMuted()"
+                      (click)="toggleVoiceAudio()"
+                      title="Toggle Speech Audio Feedback"
+                    >
+                      <span>{{ speechVoice.isMuted() ? '🔇 Unmute' : '🔊 Voice' }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="comms-tool-btn clear-btn"
+                      (click)="clearComms()"
+                      title="Clear Comms Stream"
+                    >
+                      <span>🗑 Clear</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Banter Prompt Chips -->
+              <div class="quick-banter-strip" aria-label="Quick Conversation Starters">
+                <span class="banter-strip-label">STARK PROTOCOLS:</span>
+                <div class="banter-chips-scroll">
+                  @for (item of companionBanterPrompts; track item.label) {
+                    <button
+                      type="button"
+                      class="banter-prompt-chip"
+                      (click)="sendBanterPrompt(item.prompt)"
+                      [disabled]="isWorking()"
+                    >
+                      <span class="chip-icon">{{ item.icon }}</span>
+                      <span class="chip-text">{{ item.label }}</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Live Comms Conversation Feed -->
+              <div class="comms-feed-container" role="log" aria-live="polite">
+                @for (msg of commandService.commsMessages(); track msg.id) {
+                  <div
+                    class="comms-bubble-row"
+                    [class.user-row]="msg.sender === 'USER'"
+                    [class.bot-row]="msg.sender !== 'USER'"
+                  >
+                    <!-- Avatar Orb -->
+                    <div class="bubble-avatar-orb">
+                      @if (msg.sender === 'USER') {
+                        <span class="user-avatar-initial">{{ msg.callsign.charAt(0) }}</span>
+                      } @else {
+                        <span class="bot-avatar-reactor">✦</span>
+                      }
+                    </div>
+
+                    <!-- Bubble Content -->
+                    <div class="bubble-body">
+                      <div class="bubble-header-line">
+                        <span class="bubble-sender-name">
+                          {{ msg.sender === 'USER' ? msg.callsign : (msg.sender === 'JARVIS' ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.') }}
+                        </span>
+                        <span class="bubble-timestamp">{{ msg.timestamp | date:'shortTime' }}</span>
+                        @if (msg.type) {
+                          <span class="bubble-type-tag">{{ msg.type }}</span>
+                        }
+                      </div>
+
+                      <div class="bubble-text">{{ msg.text }}</div>
+
+                      @if (msg.sender !== 'USER') {
+                        <div class="bubble-footer-actions">
+                          <button
+                            type="button"
+                            class="speak-msg-btn"
+                            (click)="speakMessage(msg.text)"
+                            title="Speak Response Aloud"
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                            </svg>
+                            <span>Speak</span>
+                          </button>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
           </div>
         }
 
