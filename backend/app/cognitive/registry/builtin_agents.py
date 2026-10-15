@@ -152,9 +152,13 @@ class CodingAgent(BaseAgent):
                     "build_file",
                     "execute_code",
                     "list_directory",
+                    "self_heal_ast",
+                    "patch_file",
+                    "evolve_skill",
+                    "self_inspect",
                 ],
                 risk_tier="Tier 2",
-                description="Performs sandboxed file operations, neural code synthesis, and verification."
+                description="Performs sandboxed file operations, neural code synthesis, AST verification, and autonomous self-evolution."
             )
         )
 
@@ -330,6 +334,206 @@ class CodingAgent(BaseAgent):
                 success=True,
                 data={"directory": target_dir, "items": entries, "count": len(entries)},
                 observed_state={"exists": True, "count": len(entries)}
+            )
+
+        elif action == "self_heal_ast":
+            import ast
+            import shutil
+            filepath = params.get("path", "")
+            if not filepath or not os.path.exists(filepath):
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=False,
+                    error_message=f"File not found: {filepath}"
+                )
+            with open(filepath, "r", encoding="utf-8") as f:
+                code_content = f.read()
+
+            try:
+                ast.parse(code_content, filename=filepath)
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=True,
+                    data={"path": filepath, "healed": False, "status": "syntax_already_valid"},
+                    observed_state={"valid_ast": True, "healed": False}
+                )
+            except SyntaxError as syn_err:
+                backup_path = filepath + ".bak"
+                shutil.copy2(filepath, backup_path)
+                heal_prompt = (
+                    f"Fix this Python syntax error: '{syn_err.msg}' at line {syn_err.lineno}, offset {syn_err.offset}.\n"
+                    f"Full file code:\n{code_content}"
+                )
+                healed_code = await abhi_llm.synthesize_code(
+                    instruction=heal_prompt,
+                    language="python",
+                    file_path=filepath,
+                    context=f"Original Error: {syn_err}"
+                )
+                try:
+                    ast.parse(healed_code, filename=filepath)
+                    with open(filepath, "w", encoding="utf-8") as f:
+                        f.write(healed_code)
+                    return AgentTaskResult(
+                        task_id=request.task_id,
+                        node_id=request.node_id,
+                        agent_id=self.agent_id,
+                        action=action,
+                        success=True,
+                        data={
+                            "path": filepath,
+                            "healed": True,
+                            "original_error": str(syn_err),
+                            "backup_created": backup_path,
+                            "bytes_written": len(healed_code)
+                        },
+                        observed_state={"valid_ast": True, "healed": True}
+                    )
+                except SyntaxError as heal_err:
+                    shutil.copy2(backup_path, filepath)
+                    return AgentTaskResult(
+                        task_id=request.task_id,
+                        node_id=request.node_id,
+                        agent_id=self.agent_id,
+                        action=action,
+                        success=False,
+                        error_message=f"Autonomous healing failed AST verification: {heal_err.msg} at line {heal_err.lineno}"
+                    )
+
+        elif action == "patch_file":
+            import ast
+            import shutil
+            filepath = params.get("path", "")
+            target_str = params.get("target", "")
+            replacement_str = params.get("replacement", "")
+            allow_multiple = bool(params.get("allow_multiple", False))
+
+            if not filepath or not os.path.exists(filepath):
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=False,
+                    error_message=f"File not found: {filepath}"
+                )
+            with open(filepath, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            if target_str not in content:
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=False,
+                    error_message=f"Target string not found in {filepath}"
+                )
+
+            count = content.count(target_str)
+            if count > 1 and not allow_multiple:
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=False,
+                    error_message=f"Target string matched {count} times and allow_multiple is False."
+                )
+
+            backup_path = filepath + ".bak"
+            shutil.copy2(filepath, backup_path)
+
+            patched_content = content.replace(target_str, replacement_str) if allow_multiple else content.replace(target_str, replacement_str, 1)
+
+            if filepath.endswith(".py"):
+                try:
+                    ast.parse(patched_content, filename=filepath)
+                except SyntaxError as e:
+                    shutil.copy2(backup_path, filepath)
+                    return AgentTaskResult(
+                        task_id=request.task_id,
+                        node_id=request.node_id,
+                        agent_id=self.agent_id,
+                        action=action,
+                        success=False,
+                        error_message=f"Patch resulted in invalid Python AST: {e.msg} at line {e.lineno}"
+                    )
+
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(patched_content)
+
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"path": filepath, "replacements_made": count if allow_multiple else 1, "backup": backup_path},
+                observed_state={"patched": True, "size_bytes": os.path.getsize(filepath)}
+            )
+
+        elif action == "evolve_skill":
+            import time
+            import json
+            skill_name = params.get("name") or f"skill_{int(time.time())}"
+            description = params.get("description", "Autonomously acquired agent skill")
+            instructions = params.get("instructions", "")
+            skills_dir = os.path.join(os.getcwd(), "backend", "app", "cognitive", "skills")
+            os.makedirs(skills_dir, exist_ok=True)
+            skill_file = os.path.join(skills_dir, f"{skill_name}.json")
+            skill_payload = {
+                "skill_name": skill_name,
+                "description": description,
+                "instructions": instructions,
+                "created_at": time.time(),
+                "status": "ACTIVE_EVOLVED"
+            }
+            with open(skill_file, "w", encoding="utf-8") as f:
+                json.dump(skill_payload, f, indent=2)
+
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"skill_name": skill_name, "file": skill_file},
+                observed_state={"evolved": True, "skill": skill_name}
+            )
+
+        elif action == "self_inspect":
+            import ast
+            target_dir = params.get("path") or os.path.join(os.getcwd(), "backend", "app")
+            checked = 0
+            valid = 0
+            errors = []
+            for root, _, files in os.walk(target_dir):
+                for file in files:
+                    if file.endswith(".py"):
+                        checked += 1
+                        full_p = os.path.join(root, file)
+                        try:
+                            with open(full_p, "r", encoding="utf-8", errors="ignore") as f:
+                                ast.parse(f.read(), filename=full_p)
+                            valid += 1
+                        except SyntaxError as se:
+                            errors.append({"file": full_p, "error": se.msg, "line": se.lineno})
+
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=len(errors) == 0,
+                data={"scanned": checked, "valid": valid, "syntax_errors": errors},
+                observed_state={"scanned": checked, "valid": valid, "errors_count": len(errors)}
             )
 
         else:

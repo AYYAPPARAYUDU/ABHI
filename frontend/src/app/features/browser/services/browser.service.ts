@@ -86,48 +86,9 @@ export class BrowserService {
     }
   ]);
 
-  readonly sessions = signal<BrowserSessionModel[]>([
-    {
-      session_id: 'b_sess_demo_01',
-      task_id: 'task_browser_init',
-      browser_type: 'chromium',
-      current_origin: 'http://127.0.0.1:8765',
-      current_url: 'http://127.0.0.1:8765/test_app.html',
-      state: 'READY',
-      created_at_ts: Date.now() - 60000,
-      last_observation_ts: Date.now()
-    }
-  ]);
-
-  readonly securityEvents = signal<BrowserSecurityEventModel[]>([
-    {
-      event_id: 'sec_evt_init_01',
-      event_type: 'BROWSER_PROMPT_INJECTION_DETECTED',
-      timestamp: Date.now() - 30000,
-      details: { reason: 'Indirect prompt injection detected in page text — labeled untrusted' },
-      severity: 'HIGH'
-    },
-    {
-      event_id: 'sec_evt_init_02',
-      event_type: 'BROWSER_SENSITIVE_FIELD',
-      timestamp: Date.now() - 15000,
-      details: { target: 'txt_password', redacted: true },
-      severity: 'MEDIUM'
-    }
-  ]);
-
-  readonly downloads = signal<BrowserDownloadModel[]>([
-    {
-      download_id: 'dl_sample_01',
-      filename: 'sample_download.txt',
-      file_path: 'database/downloads/sample_download.txt',
-      origin: 'http://127.0.0.1:8765/sample_download.txt',
-      size_bytes: 142,
-      mime_type: 'text/plain',
-      is_executable: false,
-      verified: true
-    }
-  ]);
+  readonly sessions = signal<BrowserSessionModel[]>([]);
+  readonly securityEvents = signal<BrowserSecurityEventModel[]>([]);
+  readonly downloads = signal<BrowserDownloadModel[]>([]);
 
   readonly isLoading = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);

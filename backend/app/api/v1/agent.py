@@ -246,3 +246,81 @@ async def inspect_neural_network(req: NeuralInspectRequest) -> Dict[str, Any]:
         }
     }
 
+
+class EvolutionActionRequest(BaseModel):
+    action: str = Field(default="self_inspect", description="Evolution action: self_inspect, self_heal_ast, patch_file, evolve_skill")
+    path: Optional[str] = Field(default=None, description="Target file or directory path")
+    target: Optional[str] = Field(default=None, description="Target string to patch")
+    replacement: Optional[str] = Field(default=None, description="Replacement content")
+    skill_name: Optional[str] = Field(default=None, description="Name for newly evolved skill")
+    skill_instructions: Optional[str] = Field(default=None, description="Skill execution instructions")
+
+
+@router.post("/evolve")
+async def trigger_agent_evolution(req: EvolutionActionRequest) -> Dict[str, Any]:
+    """Execute autonomous agent self-evolution, AST health verification, or dynamic skill acquisition."""
+    import uuid
+    from backend.app.cognitive.registry.models import AgentTaskRequest
+    from backend.app.cognitive.registry.registry import agent_registry
+
+    coding_agent = agent_registry.get_agent("coding_agent")
+    if not coding_agent:
+        raise HTTPException(status_code=500, detail="CodingAgent not registered in AgentRegistry.")
+
+    task_req = AgentTaskRequest(
+        task_id=f"evolve_{uuid.uuid4().hex[:8]}",
+        node_id="evo_node_1",
+        action=req.action,
+        params={
+            "path": req.path,
+            "target": req.target,
+            "replacement": req.replacement,
+            "name": req.skill_name,
+            "instructions": req.skill_instructions,
+        }
+    )
+    result = await coding_agent.execute(task_req)
+    return {
+        "task_id": result.task_id,
+        "action": result.action,
+        "success": result.success,
+        "data": result.data,
+        "error_message": result.error_message,
+        "observed_state": result.observed_state,
+    }
+
+
+@router.get("/evolve/status")
+async def get_evolution_status() -> Dict[str, Any]:
+    """Retrieve sovereign self-evolution status, active capabilities, and codebase health."""
+    import os
+    import time
+    from backend.app.cognitive.registry.registry import agent_registry
+    from backend.app.services.llm.abhi_llm import abhi_llm
+
+    coding_agent = agent_registry.get_agent("coding_agent")
+    capabilities = coding_agent.metadata.capabilities if coding_agent else []
+
+    skills_dir = os.path.join(os.getcwd(), "backend", "app", "cognitive", "skills")
+    evolved_skills = []
+    if os.path.exists(skills_dir):
+        for f in os.listdir(skills_dir):
+            if f.endswith(".json"):
+                evolved_skills.append(f.replace(".json", ""))
+
+    llm_healthy = await abhi_llm.is_healthy()
+    models = await abhi_llm.list_models()
+
+    return {
+        "sovereign_permissions_active": True,
+        "autonomous_growth_enabled": True,
+        "llm_engine_healthy": llm_healthy,
+        "active_models": [m.name for m in models],
+        "default_model": abhi_llm.model_id,
+        "coding_agent_capabilities": capabilities,
+        "evolved_skills_count": len(evolved_skills),
+        "evolved_skills": evolved_skills,
+        "timestamp": int(time.time() * 1000)
+    }
+
+

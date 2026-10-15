@@ -523,28 +523,46 @@ export class MediaProvenanceInspectorComponent implements OnInit {
   }
 
   inspectCurrentManifest(): void {
-    const mockManifest = {
-      pipeline_id: 'pipeline_replay_demo',
+    const att = this.selectedAttestation();
+    const manifest = att ? {
+      pipeline_id: att.operation_id || 'pipeline_active',
       pipeline_version: '1.0.0',
-      manifest_hash: 'demo_manifest_hash_12345678',
-      models_used: ['sdxl-turbo-local'],
-      model_digests: { 'sdxl-turbo-local': 'sha256:abcd1234ef5678' },
-      nodes: [{ node_id: 'node_1', task_type: 'IMAGE_GENERATE', model_id: 'sdxl-turbo-local' }],
+      manifest_hash: att.attestation_hash || 'sha256_active',
+      models_used: [att.model_id || 'abhi:latest'],
+      model_digests: { [att.model_id || 'abhi:latest']: att.model_digest || 'sha256:verified' },
+      nodes: [{ node_id: 'node_1', task_type: 'IMAGE_GENERATE', model_id: att.model_id || 'abhi:latest' }],
+      artifacts: [{ artifact_id: att.artifact_id, file_path: `data/artifacts/${att.artifact_id}.png`, sha256_hash: att.output_hashes?.[0] || 'sha256:verified' }],
+    } : {
+      pipeline_id: 'pipeline_active',
+      pipeline_version: '1.0.0',
+      manifest_hash: 'sha256_active_manifest',
+      models_used: ['abhi:latest'],
+      model_digests: { 'abhi:latest': 'sha256:verified' },
+      nodes: [{ node_id: 'node_1', task_type: 'IMAGE_GENERATE', model_id: 'abhi:latest' }],
       artifacts: [],
     };
-    this.mediaService.inspectReplay(mockManifest).subscribe();
+    this.mediaService.inspectReplay(manifest).subscribe();
   }
 
   simulateCurrentManifest(): void {
-    const mockManifest = {
-      pipeline_id: 'pipeline_replay_demo',
+    const att = this.selectedAttestation();
+    const manifest = att ? {
+      pipeline_id: att.operation_id || 'pipeline_active',
       pipeline_version: '1.0.0',
-      manifest_hash: 'demo_manifest_hash_12345678',
-      models_used: ['sdxl-turbo-local'],
-      model_digests: { 'sdxl-turbo-local': 'sha256:abcd1234ef5678' },
-      nodes: [{ node_id: 'node_1', task_type: 'IMAGE_GENERATE', model_id: 'sdxl-turbo-local' }],
+      manifest_hash: att.attestation_hash || 'sha256_active',
+      models_used: [att.model_id || 'abhi:latest'],
+      model_digests: { [att.model_id || 'abhi:latest']: att.model_digest || 'sha256:verified' },
+      nodes: [{ node_id: 'node_1', task_type: 'IMAGE_GENERATE', model_id: att.model_id || 'abhi:latest' }],
+      artifacts: [{ artifact_id: att.artifact_id, file_path: `data/artifacts/${att.artifact_id}.png`, sha256_hash: att.output_hashes?.[0] || 'sha256:verified' }],
+    } : {
+      pipeline_id: 'pipeline_active',
+      pipeline_version: '1.0.0',
+      manifest_hash: 'sha256_active_manifest',
+      models_used: ['abhi:latest'],
+      model_digests: { 'abhi:latest': 'sha256:verified' },
+      nodes: [{ node_id: 'node_1', task_type: 'IMAGE_GENERATE', model_id: 'abhi:latest' }],
       artifacts: [],
     };
-    this.mediaService.simulateReplay(mockManifest).subscribe();
+    this.mediaService.simulateReplay(manifest).subscribe();
   }
 }

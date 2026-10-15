@@ -2,6 +2,7 @@ import { Component, inject, signal, Input, AfterViewInit, ElementRef } from '@an
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgentCommandService } from '../../../core/services/agent-command.service';
+import { SpeechVoiceService } from '../../../core/services/speech-voice.service';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
 import { UniversalResultSheetComponent } from '../result-sheet/result-sheet.component';
 import { AgentTaskCardComponent } from '../agent-task-card/agent-task-card.component';
@@ -25,6 +26,7 @@ export class AgentCommandCenterComponent implements AfterViewInit {
   @Input() compact = false;
 
   readonly commandService = inject(AgentCommandService);
+  readonly voiceService = inject(SpeechVoiceService);
   readonly operatorState = inject(OperatorStateService);
   readonly animService = inject(AnimeAnimationService);
   private hostEl = inject(ElementRef);
@@ -104,16 +106,21 @@ export class AgentCommandCenterComponent implements AfterViewInit {
   }
 
   toggleVoice(): void {
-    this.isListening.set(!this.isListening());
     if (this.isListening()) {
-      // Mock VAD & STT transition
-      setTimeout(() => {
-        if (this.isListening()) {
-          this.inputText = 'Open Calculator and calculate 25 * 19';
+      this.voiceService.stopVoiceListening();
+      this.isListening.set(false);
+    } else {
+      const started = this.voiceService.startVoiceListening(
+        (transcript: string) => {
+          this.inputText = transcript;
           this.isListening.set(false);
           this.onSubmit();
+        },
+        () => {
+          this.isListening.set(false);
         }
-      }, 2500);
+      );
+      this.isListening.set(started);
     }
   }
 

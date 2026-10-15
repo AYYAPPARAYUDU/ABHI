@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { DecisionPipelinePageComponent } from './decision-pipeline-page.component';
@@ -83,6 +83,29 @@ describe('DecisionPipelinePageComponent', () => {
   });
 
   it('should trigger decision evaluation successfully', async () => {
+    vi.spyOn(pipelineService, 'evaluateLiveDecision').mockImplementation(async () => {
+      const sampleTrace = {
+        trace_id: 'trace_test_01',
+        use_case_id: 'email',
+        timestamp: new Date().toISOString(),
+        latency_ms: 22.4,
+        confidence: 0.94,
+        score_label: 'high_priority',
+        score_value: 0.94,
+        decision_verdict: 'APPROVED',
+        target_action: 'send_reply',
+        destination_worker: 'chief_worker',
+        active_path: ['score_node', 'action_node'],
+        jev_utility: 0.92,
+        state_vector_dims: 2048,
+        spend_cost: 0.0004,
+        log_entries: [],
+        output_result: { status: 'SUCCESS' }
+      };
+      (pipelineService as any).applyEvaluationResult(sampleTrace);
+      return sampleTrace;
+    });
+
     await component.runLiveEvaluation(false);
     const newTrace = component.lastTrace();
     expect(newTrace).toBeTruthy();

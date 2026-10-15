@@ -227,7 +227,7 @@ export class DecisionPipelineService {
     this.customInputJson.set(JSON.stringify(sample, null, 2));
   }
 
-  async evaluateLiveDecision(override = false): Promise<EvaluationResponse> {
+  async evaluateLiveDecision(override = false): Promise<EvaluationResponse | null> {
     const ac = this.activeCase();
     if (!ac) throw new Error('No active use case');
 
@@ -246,29 +246,20 @@ export class DecisionPipelineService {
       // Synchronize live stats from SQLite WAL after successful real evaluation
       await this.refreshStats();
       return res;
-    } catch {
-      const mockRes: EvaluationResponse = {
-        trace_id: `trace_eval_${Date.now()}`,
-        use_case_id: ac.id,
-        timestamp: new Date().toISOString(),
-        latency_ms: 18.2,
-        confidence: 0.94,
-        score_label: 'high_confidence',
-        score_value: 0.94,
-        decision_verdict: 'APPROVED',
-        target_action: ac.target || 'draft_reply',
-        destination_worker: 'chief_worker',
-        active_path: [ac.score, 'state_encoder', 'score_head', ac.target, 'review_folder', 'human_gate'],
-        jev_utility: 0.91,
-        state_vector_dims: 2048,
-        spend_cost: 0.0004,
-        log_entries: [
-          { timestamp: new Date().toISOString(), channel: 'JEV_CORE', text: 'Live evaluation verified.' }
-        ],
-        output_result: { status: 'SUCCESS' }
-      };
-      this.applyEvaluationResult(mockRes);
-      return mockRes;
+    } catch (err) {
+      console.warn('[DecisionPipeline] Live evaluate error, querying authentic SQLite WAL trace:', err);
+      try {
+        const traces = await firstValueFrom(
+          this.http.get<EvaluationResponse[]>(`${this.apiBase}/traces?limit=1`)
+        );
+        if (traces && traces.length > 0) {
+          this.applyEvaluationResult(traces[0]);
+          return traces[0];
+        }
+      } catch (walErr) {
+        console.error('[DecisionPipeline] Failed to retrieve WAL trace fallback:', walErr);
+      }
+      return null;
     } finally {
       this.isEvaluating.set(false);
     }

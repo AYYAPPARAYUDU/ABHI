@@ -56,6 +56,10 @@ class AgentRegistry:
                 agent = self._agents.get(canonical_id)
         return agent
 
+    def get(self, agent_id: str) -> Optional[BaseAgent]:
+        """Alias for get_agent."""
+        return self.get_agent(agent_id)
+
     def list_agents(self) -> List[AgentMetadata]:
         """List metadata for all registered agents."""
         self._ensure_defaults_registered()
