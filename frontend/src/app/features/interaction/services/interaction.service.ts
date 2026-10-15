@@ -129,7 +129,17 @@ export class InteractionService implements OnDestroy {
 
       // Call backend local STT endpoint
       const sttRes = await this.apiService.transcribeAudio(undefined, language);
-      const transcribedText = sttRes.text || 'Open calculator';
+      const transcribedText = (sttRes.text || '').trim();
+      if (!transcribedText) {
+        this.state.update((s) => ({
+          ...s,
+          voiceState: 'IDLE',
+          listening: false,
+          errorMessage: 'No speech recognized. Please speak clearly into your microphone.'
+        }));
+        this.operatorState.avatarState.set('IDLE');
+        return;
+      }
 
       this.state.update((s) => ({
         ...s,

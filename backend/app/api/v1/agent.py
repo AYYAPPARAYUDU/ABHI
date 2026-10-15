@@ -324,3 +324,20 @@ async def get_evolution_status() -> Dict[str, Any]:
     }
 
 
+# Authoritative Gateway Router mirroring all agent routes under /agent-gateway
+gateway_router = APIRouter(prefix="/agent-gateway", tags=["Agent Gateway & Context"])
+for r in router.routes:
+    subpath = r.path[len(router.prefix):] if r.path.startswith(router.prefix) else r.path
+    gateway_router.add_api_route(
+        subpath,
+        r.endpoint,
+        methods=r.methods,
+        response_model=getattr(r, "response_model", None),
+        status_code=getattr(r, "status_code", None),
+        tags=getattr(r, "tags", None),
+        summary=getattr(r, "summary", None),
+        description=getattr(r, "description", None),
+    )
+
+
+

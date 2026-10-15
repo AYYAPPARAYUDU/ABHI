@@ -571,14 +571,12 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     );
 
     if (!started) {
-      // Immediate voice transcription fallback if browser microphone permissions need user gesture
-      setTimeout(() => {
-        if (this.isListening()) {
-          this.commandInput = 'Open Calculator and calculate 125 times 48';
-          this.isListening.set(false);
-          this.onSubmitCommand();
-        }
-      }, 1500);
+      this.isListening.set(false);
+      this.commandInput = '';
+      this.errorMessage.set('Microphone access is unavailable or permissions are denied. Please grant audio permissions or type your command.');
+      if (this.dockFormRef?.nativeElement) {
+        this.animService.shakeError(this.dockFormRef.nativeElement);
+      }
     }
   }
 

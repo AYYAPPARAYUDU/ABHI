@@ -18,7 +18,7 @@ from backend.app.api.v1.workflow import workflow_router
 from backend.app.api.v1.procedures import router as procedures_router
 from backend.app.api.v1.resources import router as resources_router
 from backend.app.api.v1.media import router as media_router
-from backend.app.api.v1.agent import router as agent_router
+from backend.app.api.v1.agent import router as agent_router, gateway_router
 from backend.app.api.v1.business import router as business_router
 from backend.app.api.v1.decisions import router as decisions_router
 from backend.app.api.websockets.telemetry import router as ws_router
@@ -34,6 +34,27 @@ from backend.app.runtime.resources import resource_manager
 async def lifespan(app: FastAPI):
     """Application lifespan manager handling startup and shutdown events."""
     logger.info("Initializing Local-First AI Backend Gateway & Cognitive Core...")
+
+    # Configure Windows asyncio Proactor resilience for socket closures
+    import asyncio
+    try:
+        loop = asyncio.get_running_loop()
+        orig_handler = loop.get_exception_handler()
+
+        def win_exception_handler(current_loop, context):
+            exc = context.get("exception")
+            if isinstance(exc, (ConnectionResetError, ConnectionAbortedError, BrokenPipeError)):
+                return
+            if isinstance(exc, OSError) and getattr(exc, "winerror", None) in (64, 121, 10054):
+                return
+            if orig_handler:
+                orig_handler(current_loop, context)
+            else:
+                current_loop.default_exception_handler(context)
+
+        loop.set_exception_handler(win_exception_handler)
+    except Exception:
+        pass
 
     # 1. Initialize SQLite database & WAL mode
     await init_db()
@@ -107,6 +128,7 @@ app.include_router(evaluation_router, prefix="/api/v1")
 app.include_router(resources_router, prefix="/api/v1")
 app.include_router(media_router, prefix="/api/v1")
 app.include_router(agent_router, prefix="/api/v1")
+app.include_router(gateway_router, prefix="/api/v1")
 app.include_router(business_router, prefix="/api/v1")
 app.include_router(decisions_router, prefix="/api/v1")
 app.include_router(self_healing_router, prefix="/api/v1")

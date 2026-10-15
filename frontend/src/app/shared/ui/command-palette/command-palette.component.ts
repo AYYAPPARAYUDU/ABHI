@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
 import { AgentCommandService } from '../../../core/services/agent-command.service';
+import { SpeechVoiceService } from '../../../core/services/speech-voice.service';
 import { CommandPaletteAction } from '../../../core/models/agent-experience.model';
 import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
 import { AnimeInteractiveDirective } from '../../directives/anime-interactive.directive';
@@ -31,6 +32,7 @@ export class CommandPaletteComponent implements AfterViewInit {
   readonly stateService = inject(OperatorStateService);
   readonly operatorState = inject(OperatorStateService);
   readonly commandService = inject(AgentCommandService);
+  readonly voiceService = inject(SpeechVoiceService);
   readonly animService = inject(AnimeAnimationService);
   private hostEl = inject(ElementRef);
 
@@ -287,16 +289,21 @@ export class CommandPaletteComponent implements AfterViewInit {
   }
 
   toggleVoice(): void {
-    this.isListening.set(!this.isListening());
     if (this.isListening()) {
-      // VAD & Voice STT trigger
-      setTimeout(() => {
-        if (this.isListening()) {
-          this.inputText = 'Open Calculator and calculate 25 * 19';
+      this.voiceService.stopVoiceListening();
+      this.isListening.set(false);
+    } else {
+      const started = this.voiceService.startVoiceListening(
+        (transcript: string) => {
+          this.inputText = transcript;
           this.isListening.set(false);
           this.onSubmit();
+        },
+        () => {
+          this.isListening.set(false);
         }
-      }, 2500);
+      );
+      this.isListening.set(started);
     }
   }
 

@@ -38,12 +38,12 @@ async def test_calculator_supervisor_execution_end_to_end():
     assert status_obj is not None
     assert status_obj.goal == goal
 
-    # Poll until orchestration completes (up to 5 seconds)
-    for _ in range(50):
+    # Poll until orchestration completes (up to 30 seconds for local Ollama planning)
+    for _ in range(120):
         curr_status = central_supervisor.get_task_status(status_obj.task_id)
         if curr_status and curr_status.state.value in ["COMPLETED", "FAILED"]:
             break
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.25)
 
     final_status = central_supervisor.get_task_status(status_obj.task_id)
     assert final_status is not None
