@@ -49,7 +49,7 @@ class TaskPlanner:
             '    {\n'
             '      "node_id": "step_1",\n'
             '      "title": "Short descriptive title",\n'
-            '      "agent_id": "os_desktop_agent | coding_agent | rag_agent | memory_agent",\n'
+            '      "agent_id": "os_desktop_agent | coding_agent | rag_agent | memory_agent | browser_agent | media_studio_agent | perception_agent | evaluation_agent | business_agent | engineering_repair_agent",\n'
             '      "action": "action_name",\n'
             '      "params": {},\n'
             '      "dependencies": [],\n'
@@ -331,6 +331,110 @@ class TaskPlanner:
                 risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )
+        elif any(k in goal_lower for k in ["browse", "browser", "website", "url", "navigate", "webpage", "http://", "https://"]):
+            target_url = "https://localhost:4200"
+            url_match = re.search(r"https?://[^\s]+", goal)
+            if url_match:
+                target_url = url_match.group(0)
+
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Navigate Browser to {target_url}",
+                agent_id="browser_agent",
+                action="browser_navigate",
+                params={"url": target_url, "target_name": "body"},
+                risk_tier="Tier 2",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["image", "video", "media studio", "inpainting", "subtitle", "render reel", "artwork"]):
+            if "video" in goal_lower or "reel" in goal_lower:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Synthesize Video: {goal[:30]}",
+                    agent_id="media_studio_agent",
+                    action="video_gen",
+                    params={"prompt": goal, "duration": 5.0},
+                    risk_tier="Tier 2",
+                    status=NodeStatus.PENDING
+                )
+            else:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Synthesize Media: {goal[:30]}",
+                    agent_id="media_studio_agent",
+                    action="image_gen",
+                    params={"prompt": goal},
+                    risk_tier="Tier 2",
+                    status=NodeStatus.PENDING
+                )
+
+        elif any(k in goal_lower for k in ["ocr", "screen vision", "perceive screen", "ground element", "find element", "face track", "hand track"]):
+            if "find" in goal_lower or "ground" in goal_lower:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Visual Grounding: {goal[:30]}",
+                    agent_id="perception_agent",
+                    action="visual_grounding",
+                    params={"query": goal},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            else:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Perceive Screen Elements via OCR",
+                    agent_id="perception_agent",
+                    action="ocr_screen",
+                    params={},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+
+        elif any(k in goal_lower for k in ["benchmark", "eval", "evaluation", "candidate model", "regression check"]):
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Execute Benchmark Evaluation: {goal[:30]}",
+                agent_id="evaluation_agent",
+                action="benchmark_run",
+                params={"schedule_type": "QUICK_DAILY"},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["business project", "financial summary", "revenue", "roi", "opportunity"]):
+            if "financial" in goal_lower or "revenue" in goal_lower:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Retrieve Financial Summary & Ledger",
+                    agent_id="business_agent",
+                    action="get_financial_summary",
+                    params={},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            else:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Initiate Business Initiative: {goal[:30]}",
+                    agent_id="business_agent",
+                    action="create_project",
+                    params={"name": goal[:40]},
+                    risk_tier="Tier 2",
+                    status=NodeStatus.PENDING
+                )
+
+        elif any(k in goal_lower for k in ["generate code", "write python", "patch code", "ast verify", "self heal"]):
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Synthesize Code: {goal[:30]}",
+                agent_id="coding_agent",
+                action="generate_code",
+                params={"instruction": goal, "language": "python"},
+                risk_tier="Tier 2",
+                status=NodeStatus.PENDING
+            )
+
         elif "open" in goal_lower or "launch" in goal_lower or "app" in goal_lower:
             clean_app = goal
             for p in ["open", "launch", "start", "the", "app", "application"]:

@@ -1,8 +1,9 @@
-<div *ngIf="preview() as p" class="command-preview-card p-3 rounded border border-info border-opacity-50 bg-dark text-light my-3" role="region" aria-label="Structured Command Preview">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div class="d-flex align-items-center gap-2">
-      <span class="fs-5" aria-hidden="true">🔍</span>
-      <h3 class="h6 mb-0 font-monospace text-info">STRUCTURED INTENT PREVIEW</h3>
+<div *ngIf="preview() as p" class="command-preview-card p-3 my-3" role="region" aria-label="Structured Command Preview">
+  <div class="card-title-bar">
+    <div class="card-title-group">
+      <span class="panel-icon" aria-hidden="true">🔍</span>
+      <h3 class="panel-title m-0">STRUCTURED INTENT PREVIEW</h3>
+      <span class="side-heading-capsule">LLM PARSER</span>
     </div>
     <span
       class="badge font-monospace"

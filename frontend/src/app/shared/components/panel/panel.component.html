@@ -1,11 +1,14 @@
-<div class="abhi-panel p-3" [class.panel-bordered]="bordered">
-  <div *ngIf="title || icon" class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-    <div class="d-flex align-items-center gap-2">
+<div class="abhi-panel" [class.panel-bordered]="bordered">
+  <div *ngIf="title || icon" class="panel-header-wrap">
+    <div class="panel-header-left">
       <span *ngIf="icon" class="panel-icon">{{ icon }}</span>
-      <h3 *ngIf="title" class="panel-title m-0">{{ title }}</h3>
+      <div class="panel-title-row">
+        <span class="panel-accent-dot"></span>
+        <h3 *ngIf="title" class="panel-title">{{ title }}</h3>
+      </div>
     </div>
-    <div class="panel-actions d-flex align-items-center gap-2">
-      <span *ngIf="badge" class="badge bg-secondary bg-opacity-25 text-secondary font-monospace">{{ badge }}</span>
+    <div class="panel-actions">
+      <span *ngIf="badge" class="panel-capsule-badge">{{ badge }}</span>
       <ng-content select="[panel-actions]"></ng-content>
     </div>
   </div>

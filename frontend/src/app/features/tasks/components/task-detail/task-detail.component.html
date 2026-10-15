@@ -1,16 +1,16 @@
-<div *ngIf="selectedTask" class="task-detail-card card bg-dark border border-secondary border-opacity-25 p-3">
+<div *ngIf="selectedTask" class="task-detail-card abhi-card p-3">
   <!-- Header -->
-  <div class="d-flex justify-content-between align-items-start pb-3 border-bottom border-secondary border-opacity-25 mb-3">
+  <div class="card-title-bar">
     <div>
       <div class="d-flex align-items-center gap-2 mb-1">
-        <span class="badge border font-monospace px-2 py-1" [ngClass]="selectedTask.state === 'COMPLETED' ? 'bg-success bg-opacity-25 text-success border-success' : 'bg-primary bg-opacity-25 text-info border-info'">
+        <span class="side-heading-capsule" [ngClass]="selectedTask.state === 'COMPLETED' ? 'abhi-badge-success' : 'abhi-badge-cyan'">
           {{ selectedTask.state }}
         </span>
-        <h5 class="text-light mb-0 fw-bold">{{ selectedTask.goal }}</h5>
+        <h5 class="card-title mb-0">{{ selectedTask.goal }}</h5>
       </div>
       <div class="text-muted small font-monospace">Task UUID: {{ selectedTask.task_id }}</div>
     </div>
-    <button class="btn btn-sm btn-outline-secondary font-monospace" (click)="taskHistory.clearSelection()">
+    <button class="abhi-btn btn-sm" (click)="taskHistory.clearSelection()">
       ✕ Close Detail
     </button>
   </div>

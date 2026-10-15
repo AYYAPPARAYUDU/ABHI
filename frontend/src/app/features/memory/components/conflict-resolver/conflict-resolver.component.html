@@ -1,13 +1,14 @@
 <div class="conflict-resolver-container">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-      <h5 class="text-light fw-bold mb-1">Memory Conflict & Contradiction Center</h5>
-      <p class="text-muted small mb-0 font-monospace">
-        Detected discrepancies between active memories and new candidate inputs requiring operator adjudication.
-      </p>
+  <div class="card-title-bar">
+    <div class="card-title-group">
+      <span class="panel-icon">⚠️</span>
+      <div>
+        <h5 class="panel-title mb-0">MEMORY CONFLICT & CONTRADICTION CENTER</h5>
+        <div class="section-sublabel">DETECTED DISCREPANCIES BETWEEN ACTIVE MEMORIES AND NEW CANDIDATE INPUTS</div>
+      </div>
     </div>
-    <span class="badge bg-dark border border-warning text-warning px-3 py-2 font-monospace">
-      {{ conflicts.length }} Active Contradictions
+    <span class="side-heading-capsule" [class.abhi-badge-warning]="conflicts.length > 0">
+      {{ conflicts.length }} ACTIVE CONTRADICTIONS
     </span>
   </div>
 

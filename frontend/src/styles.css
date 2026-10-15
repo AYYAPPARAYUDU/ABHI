@@ -382,4 +382,316 @@ html, body {
   background: var(--abhi-cyan, #0099cc);
 }
 
+/* ==========================================================================
+   UNIVERSAL SIDE HEADING & SECTION HEADER DESIGN SYSTEM
+   ========================================================================== */
+
+/* Universal Side Heading Capsule */
+.side-heading-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.22rem 0.65rem;
+  border-radius: var(--abhi-radius-pill, 9999px);
+  background: rgba(56, 217, 255, 0.1);
+  border: 1px solid rgba(56, 217, 255, 0.28);
+  color: var(--abhi-cyan, #38d9ff);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Universal Section Header Row with Responsive Flex */
+.section-header-flex, .workspace-section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.15));
+  position: relative;
+}
+
+.section-header-flex::after, .workspace-section-header-row::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 48px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--abhi-cyan, #38d9ff), transparent);
+  border-radius: 2px;
+}
+
+/* Universal Section Heading */
+.section-heading, .side-heading {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--abhi-text-primary, #eef5ff);
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-heading::before, .side-heading::before {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 14px;
+  background: var(--abhi-cyan, #38d9ff);
+  border-radius: 2px;
+  box-shadow: 0 0 8px var(--abhi-cyan, #38d9ff);
+}
+
+/* Universal Section Sublabel / Subtitle */
+.section-sublabel, .side-heading-sub {
+  font-size: 0.76rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: var(--abhi-cyan, #38d9ff);
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+  text-transform: uppercase;
+}
+
+/* Universal Panel, Column & Inspector Titles */
+.panel-title,
+.column-title,
+.section-title,
+.inspector-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--abhi-text-primary, #eef5ff);
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+.panel-icon,
+.header-icon {
+  font-size: 1.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 6px rgba(56, 217, 255, 0.45));
+}
+
+/* Universal Side Inspector Drawer & Section Labels */
+.inspector-header, .drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.15));
+  position: relative;
+}
+
+.inspector-section, .drawer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.section-label, .side-panel-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--abhi-text-muted, #8193ac);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.section-label::before, .side-panel-label::before {
+  content: "◈";
+  font-size: 0.65rem;
+  color: var(--abhi-cyan, #38d9ff);
+}
+
+/* Universal Card Title Bars */
+.card-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.15));
+  position: relative;
+}
+
+.card-title-bar::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 36px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--abhi-cyan, #38d9ff), transparent);
+  border-radius: 2px;
+}
+
+.card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--abhi-text-primary, #eef5ff);
+  text-transform: uppercase;
+}
+
+.card-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  background: rgba(56, 217, 255, 0.1);
+  border: 1px solid rgba(56, 217, 255, 0.3);
+  color: var(--abhi-cyan, #38d9ff);
+  text-transform: uppercase;
+}
+
+/* Universal Neumorphic Elevated Surface for Cards & Modules */
+.command-input-card,
+.voice-input-card,
+.command-preview-card,
+.gesture-status-card,
+.interaction-status-card,
+.system-diagnostics-hero,
+.system-node-card,
+.grounding-card,
+.telemetry-card,
+.safety-panel-card {
+  background: var(--abhi-surface-raised, #0e1828) !important;
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.15)) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  border-radius: 12px !important;
+  backdrop-filter: blur(14px) !important;
+}
+
+/* ==========================================================================
+   COMPATIBILITY SHIMS FOR TAILWIND DESIGN TOKENS
+   ========================================================================== */
+
+.bg-slate-900, .bg-slate-900\/85 {
+  background: var(--abhi-surface-raised, #0e1828) !important;
+}
+
+.bg-slate-950, .bg-slate-950\/70 {
+  background: var(--abhi-surface-inset, #080e18) !important;
+}
+
+.bg-slate-800, .bg-slate-800\/80 {
+  background: var(--abhi-surface, #0b1220) !important;
+}
+
+.border-slate-800, .border-slate-800\/80, .border-slate-700 {
+  border-color: var(--abhi-border, rgba(151, 185, 230, 0.15)) !important;
+}
+
+.text-slate-100, .text-slate-200 {
+  color: var(--abhi-text-primary, #eef5ff) !important;
+}
+
+.text-slate-300, .text-slate-400 {
+  color: var(--abhi-text-secondary, #a7b7cc) !important;
+}
+
+.text-slate-500 {
+  color: var(--abhi-text-muted, #8193ac) !important;
+}
+
+.bg-cyan-500\/10 {
+  background: rgba(56, 217, 255, 0.1) !important;
+}
+
+.text-cyan-300, .text-cyan-400 {
+  color: var(--abhi-cyan, #38d9ff) !important;
+}
+
+.border-cyan-500\/30, .border-cyan-500\/50 {
+  border-color: rgba(56, 217, 255, 0.35) !important;
+}
+
+.shadow-cyan-950\/30 {
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.25) !important;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.shrink-0 {
+  flex-shrink: 0 !important;
+}
+
+.flex-col {
+  flex-direction: column !important;
+}
+
+.items-start {
+  align-items: flex-start !important;
+}
+
+.items-center {
+  align-items: center !important;
+}
+
+.justify-between {
+  justify-content: space-between !important;
+}
+
+.cursor-pointer {
+  cursor: pointer !important;
+}
+
+.backdrop-blur-md {
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+}
+
+.animate-pulse {
+  animation: pulse-glow-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+@keyframes pulse-glow-ring {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.96);
+  }
+}
+
+
 

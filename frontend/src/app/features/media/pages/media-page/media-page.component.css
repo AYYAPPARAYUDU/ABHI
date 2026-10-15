@@ -226,16 +226,31 @@
 }
 
 .gallery-heading {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--abhi-text-primary, #eef5ff);
   margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gallery-heading::before {
+  content: "◈";
+  color: var(--abhi-cyan, #38d9ff);
+  font-size: 11px;
 }
 
 .gallery-count {
   font-size: 11px;
-  font-family: monospace;
-  color: var(--abhi-text-muted, #8193ac);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  color: var(--abhi-cyan, #38d9ff);
+  background: rgba(56, 217, 255, 0.1);
+  border: 1px solid rgba(56, 217, 255, 0.25);
+  border-radius: 9999px;
+  padding: 2px 8px;
 }
 
 .studio-split-grid {

@@ -42,15 +42,18 @@
 
       <!-- Honest Financial Integrity Banner (Reference 4 & Requirement 15) -->
       <section class="financial-observatory-card">
-        <div class="fin-header">
-          <div class="fin-title-group">
-            <span class="fin-title">REVENUE & LEDGER OBSERVATORY</span>
-            <span class="fin-provenance-tag">
-              PROVENANCE: {{ businessService.financials()?.revenue_provenance || 'ESTIMATED / NOT_CONNECTED' }}
-            </span>
+        <div class="card-title-bar">
+          <div class="card-title-group">
+            <span class="panel-icon">🏛️</span>
+            <div>
+              <h2 class="panel-title m-0">REVENUE & LEDGER OBSERVATORY</h2>
+              <div class="section-sublabel">
+                {{ businessService.financials()?.disclaimer || 'Forecast only — not actual earnings. No verified external banking connected.' }}
+              </div>
+            </div>
           </div>
-          <span class="fin-disclaimer-text">
-            {{ businessService.financials()?.disclaimer || 'Forecast only — not actual earnings. No verified external banking connected.' }}
+          <span class="side-heading-capsule">
+            PROVENANCE: {{ businessService.financials()?.revenue_provenance || 'ESTIMATED / NOT_CONNECTED' }}
           </span>
         </div>
 
@@ -110,9 +113,12 @@
       <div class="business-grid">
         <!-- Projects Column -->
         <div class="projects-column">
-          <div class="column-header">
-            <h2 class="column-title">Persisted Projects</h2>
-            <span class="column-badge">{{ filteredProjects().length }} projects</span>
+          <div class="card-title-bar">
+            <div class="card-title-group">
+              <span class="panel-icon">📁</span>
+              <h2 class="panel-title m-0">PERSISTED PROJECTS</h2>
+            </div>
+            <span class="side-heading-capsule">{{ filteredProjects().length }} PROJECTS</span>
           </div>
 
           <div class="projects-list">

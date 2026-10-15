@@ -1,13 +1,14 @@
 <div class="security-panel glass-panel" data-testid="browser-security-panel">
-  <div class="panel-header">
-    <div class="header-title">
-      <span class="icon-shield">🛡️</span>
+  <div class="card-title-bar">
+    <div class="card-title-group">
+      <span class="panel-icon">🛡️</span>
       <div>
-        <h4 class="title-text">Browser Guardrails & Security Audit</h4>
-        <span class="subtitle-text">Untrusted Web Content Defense & Policy Isolation</span>
+        <h4 class="panel-title mb-0">BROWSER GUARDRAILS & SECURITY AUDIT</h4>
+        <div class="section-sublabel">UNTRUSTED WEB CONTENT DEFENSE & POLICY ISOLATION</div>
       </div>
+      <span class="side-heading-capsule">POLICY SHIELD</span>
     </div>
-    <button class="btn btn-outline-sm" (click)="onClear()" *ngIf="securityEvents.length > 0" data-testid="btn-clear-events">
+    <button class="btn btn-outline-sm font-monospace" (click)="onClear()" *ngIf="securityEvents.length > 0" data-testid="btn-clear-events">
       Clear Audit Stream
     </button>
   </div>

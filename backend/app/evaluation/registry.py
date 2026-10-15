@@ -70,6 +70,10 @@ class ModelRegistry:
         """List all registered models across all states."""
         return list(self._models.values())
 
+    def list_candidates(self) -> List[ModelRecord]:
+        """List all candidate models."""
+        return [m for m in self._models.values() if m.promotion_state == ModelPromotionState.CANDIDATE]
+
     def get_model(self, model_id: str) -> Optional[ModelRecord]:
         """Get model by ID."""
         return self._models.get(model_id)

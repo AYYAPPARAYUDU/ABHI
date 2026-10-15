@@ -154,6 +154,30 @@ class MultiAgentNetworkService:
                 resource_needs={"ram_mb": 350, "vram_mb": 1024},
                 recent_outcomes=["Baseline Contract V1 Locked", "Daily Evaluation Day #23 Passed"],
             ),
+            AgentNode(
+                id="business_agent",
+                name="Enterprise & Operations Agent",
+                category="Business",
+                role="Autonomous project tracking, opportunity scoring, ledger recording, and milestone governance.",
+                status="READY",
+                capabilities=["list_sectors", "create_project", "get_financial_summary", "evaluate_opportunity", "execute_milestone", "approve_action"],
+                risk_tier="Tier 2",
+                position_3d={"x": -3.5, "y": -4.0, "z": 1.0},
+                resource_needs={"ram_mb": 200, "vram_mb": 0},
+                recent_outcomes=["SQLite WAL Financial Ledger Synced", "6 Spatial Sectors Active"],
+            ),
+            AgentNode(
+                id="engineering_repair_agent",
+                name="Engineering & Self-Healing Agent",
+                category="System",
+                role="Detects runtime anomalies, executes automated repair playbooks, and maintains service continuity.",
+                status="READY",
+                capabilities=["run_code_repair", "validate_patch", "repair_environment", "system_diagnostics"],
+                risk_tier="Tier 1",
+                position_3d={"x": 3.5, "y": 1.0, "z": -3.0},
+                resource_needs={"ram_mb": 250, "vram_mb": 0},
+                recent_outcomes=["Self-Healing Watchdog Active", "Zero Service Degradation Detected"],
+            ),
         ]
 
         edges = [
@@ -165,8 +189,11 @@ class MultiAgentNetworkService:
             AgentEdge(source="supervisor", target="media_studio_agent", type="DELEGATION", label="Creative Generation"),
             AgentEdge(source="supervisor", target="perception_agent", type="DATA_FLOW", label="Screen Perception"),
             AgentEdge(source="supervisor", target="evaluation_agent", type="VERIFICATION", label="Output Verification"),
+            AgentEdge(source="supervisor", target="business_agent", type="DELEGATION", label="Business Operations"),
+            AgentEdge(source="supervisor", target="engineering_repair_agent", type="VERIFICATION", label="Autonomous Repair"),
             AgentEdge(source="media_studio_agent", target="evaluation_agent", type="VERIFICATION", label="Attestation Check"),
             AgentEdge(source="os_desktop_agent", target="perception_agent", type="DEPENDENCY", label="Visual Grounding"),
+            AgentEdge(source="engineering_repair_agent", target="coding_agent", type="DEPENDENCY", label="Patch Application"),
         ]
 
         active_count = sum(1 for n in nodes if n.status == "ACTIVE")

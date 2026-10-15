@@ -1,16 +1,18 @@
 <div class="browser-card glass-panel" data-testid="browser-status-card">
-  <div class="card-header">
-    <div class="header-main">
-      <span class="icon-globe">🌐</span>
+  <div class="card-title-bar">
+    <div class="card-title-group">
+      <span class="panel-icon">🌐</span>
       <div>
-        <h3 class="card-title">Playwright Browser Automation</h3>
-        <span class="badge" [ngClass]="status?.worker_state === 'READY' ? 'badge-success' : 'badge-idle'">
-          {{ status?.worker_state || 'STOPPED' }}
-        </span>
+        <h3 class="panel-title mb-0">PLAYWRIGHT BROWSER AUTOMATION</h3>
+        <div class="section-sublabel">GROUNDED CHROMIUM RUNTIME & SECURITY ISOLATION</div>
       </div>
+      <span class="side-heading-capsule">SANDBOX RUNTIME</span>
     </div>
-    <div class="header-actions">
-      <button class="btn btn-primary" (click)="onStart()" data-testid="btn-start-session">
+    <div class="header-actions d-flex align-items-center gap-2">
+      <span class="badge" [ngClass]="status?.worker_state === 'READY' ? 'badge-success' : 'badge-idle'">
+        {{ status?.worker_state || 'STOPPED' }}
+      </span>
+      <button class="btn btn-primary btn-sm font-monospace" (click)="onStart()" data-testid="btn-start-session">
         + New Session
       </button>
     </div>

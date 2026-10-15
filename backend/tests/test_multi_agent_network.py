@@ -27,6 +27,8 @@ def test_agent_network_graph():
     assert "media_studio_agent" in node_ids
     assert "perception_agent" in node_ids
     assert "evaluation_agent" in node_ids
+    assert "business_agent" in node_ids
+    assert "engineering_repair_agent" in node_ids
 
     # Supervisor must be flagged as supervisor
     supervisor_node = next(n for n in data["nodes"] if n["id"] == "supervisor")

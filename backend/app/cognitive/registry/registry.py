@@ -49,7 +49,17 @@ class AgentRegistry:
                 "knowledge_agent": "rag_agent",
                 "episodic_agent": "memory_agent",
                 "repair_agent": "engineering_repair_agent",
-                "self_healing_agent": "engineering_repair_agent"
+                "self_healing_agent": "engineering_repair_agent",
+                "media_agent": "media_studio_agent",
+                "creative_agent": "media_studio_agent",
+                "video_agent": "media_studio_agent",
+                "vision_agent": "perception_agent",
+                "ocr_agent": "perception_agent",
+                "eval_agent": "evaluation_agent",
+                "benchmark_agent": "evaluation_agent",
+                "commerce_agent": "business_agent",
+                "web_agent": "browser_agent",
+                "playwright_agent": "browser_agent",
             }
             canonical_id = aliases.get(agent_id.lower())
             if canonical_id:

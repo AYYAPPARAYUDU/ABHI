@@ -1,10 +1,10 @@
 <div class="telemetry-card p-3">
   <!-- Header with Filter Tabs -->
-  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-    <div class="d-flex align-items-center gap-2">
+  <div class="card-title-bar flex-wrap">
+    <div class="card-title-group">
       <span class="panel-icon">📡</span>
       <h2 class="panel-title m-0">LIVE TELEMETRY STREAM</h2>
-      <span class="badge bg-dark border border-secondary text-secondary font-monospace ms-2">
+      <span class="side-heading-capsule">
         <span [appAnimeCounter]="filteredEvents().length">{{ filteredEvents().length }}</span> / <span [appAnimeCounter]="rawEvents().length">{{ rawEvents().length }}</span>
       </span>
     </div>
