@@ -16,22 +16,24 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: var(--abhi-bg, #f5f7fb);
-  transition: background-color 0.3s ease;
+  background-color: var(--abhi-bg, #030712);
+  transition: background-color 0.4s ease;
   overflow: hidden;
 }
 
+/* Ambient Deep Cosmic Space Radial Glow */
 .spatial-ambient-glow {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: var(--abhi-glow-bg, radial-gradient(circle at 50% 50%, rgba(0, 153, 204, 0.12) 0%, rgba(245, 247, 251, 0.65) 65%, #f5f7fb 100%));
-  transition: background 0.3s ease;
+  background: var(--abhi-glow-bg, radial-gradient(ellipse at 50% 48%, rgba(0, 240, 255, 0.09) 0%, rgba(168, 85, 247, 0.04) 30%, rgba(6, 11, 24, 0.9) 65%, #030712 100%));
+  transition: background 0.4s ease;
   z-index: 1;
 }
 
+/* Three.js Real WebGL 3D Canvas Layer */
 .spatial-webgl-canvas {
   position: absolute;
   top: 0;
@@ -43,6 +45,7 @@
   z-index: 2;
 }
 
+/* Soft Edge Vignette (Pure luxury frame with transparent center) */
 .spatial-rim-vignette {
   position: absolute;
   top: 0;
@@ -50,17 +53,18 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
-  background: var(--abhi-rim-vignette, radial-gradient(circle at 50% 50%, transparent 60%, rgba(220, 228, 240, 0.45) 85%, rgba(210, 220, 235, 0.7) 100%));
-  transition: background 0.3s ease;
+  background: var(--abhi-rim-vignette, radial-gradient(circle at 50% 50%, transparent 45%, rgba(3, 7, 18, 0.55) 75%, rgba(2, 4, 10, 0.96) 100%));
+  transition: background 0.4s ease;
   z-index: 3;
 }
 
+/* Fallback Gradient if WebGL is disabled */
 .spatial-fallback-gradient {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, var(--abhi-bg, #f5f7fb) 0%, var(--abhi-surface-raised, #ffffff) 50%, var(--abhi-surface-inset, #eaf0f8) 100%);
+  background: radial-gradient(circle at 50% 50%, #0d182e 0%, #030712 100%);
   z-index: 4;
 }

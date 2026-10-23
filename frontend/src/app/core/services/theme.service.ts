@@ -57,23 +57,23 @@ export const OBSIDIAN_CYAN_THEME: AbhiTheme = {
   label: 'Obsidian Cyan',
   isCustom: false,
   colors: {
-    background: '#050811',
-    backgroundSecondary: '#080e19',
-    surfaceRaised: '#0e1828',
-    surfaceInset: '#080e18',
-    textPrimary: '#eef5ff',
-    textSecondary: '#a7b7cc',
-    textMuted: '#8193ac',
-    accentPrimary: '#38d9ff',
-    accentSecondary: '#397bff',
-    coreGlow: '#06b6d4',
-    networkLine: '#38d9ff',
-    active: '#38d9ff',
-    border: 'rgba(151, 185, 230, 0.13)',
-    borderActive: 'rgba(56, 217, 255, 0.42)',
-    success: '#48dda2',
-    warning: '#ffca70',
-    error: '#ff5b71'
+    background: '#030712',
+    backgroundSecondary: '#070d1e',
+    surfaceRaised: '#0d182e',
+    surfaceInset: '#050a16',
+    textPrimary: '#f8fafc',
+    textSecondary: '#94a3b8',
+    textMuted: '#64748b',
+    accentPrimary: '#00f0ff',
+    accentSecondary: '#3b82f6',
+    coreGlow: '#00f0ff',
+    networkLine: '#00f0ff',
+    active: '#00f0ff',
+    border: 'rgba(0, 240, 255, 0.18)',
+    borderActive: 'rgba(0, 240, 255, 0.45)',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444'
   }
 };
 
@@ -82,10 +82,10 @@ export const MIDNIGHT_AMETHYST_THEME: AbhiTheme = {
   label: 'Midnight Amethyst',
   isCustom: false,
   colors: {
-    background: '#090514',
-    backgroundSecondary: '#110924',
-    surfaceRaised: '#190d33',
-    surfaceInset: '#0d071a',
+    background: '#05030e',
+    backgroundSecondary: '#0d071f',
+    surfaceRaised: '#170c38',
+    surfaceInset: '#090416',
     textPrimary: '#f8f5ff',
     textSecondary: '#c4b5fd',
     textMuted: '#8b7ca8',
@@ -94,8 +94,8 @@ export const MIDNIGHT_AMETHYST_THEME: AbhiTheme = {
     coreGlow: '#a855f7',
     networkLine: '#c084fc',
     active: '#e879f9',
-    border: 'rgba(192, 132, 252, 0.18)',
-    borderActive: 'rgba(232, 121, 249, 0.5)',
+    border: 'rgba(192, 132, 252, 0.22)',
+    borderActive: 'rgba(232, 121, 249, 0.55)',
     success: '#34d399',
     warning: '#fbbf24',
     error: '#f43f5e'
@@ -107,10 +107,10 @@ export const EMERALD_MATRIX_THEME: AbhiTheme = {
   label: 'Emerald Matrix',
   isCustom: false,
   colors: {
-    background: '#04110b',
-    backgroundSecondary: '#06170f',
-    surfaceRaised: '#0b261a',
-    surfaceInset: '#05140d',
+    background: '#020b06',
+    backgroundSecondary: '#05160d',
+    surfaceRaised: '#092416',
+    surfaceInset: '#030f08',
     textPrimary: '#e6fff2',
     textSecondary: '#86efac',
     textMuted: '#4ade80',
@@ -119,7 +119,7 @@ export const EMERALD_MATRIX_THEME: AbhiTheme = {
     coreGlow: '#10b981',
     networkLine: '#10b981',
     active: '#34d399',
-    border: 'rgba(16, 185, 129, 0.2)',
+    border: 'rgba(16, 185, 129, 0.22)',
     borderActive: 'rgba(52, 211, 153, 0.55)',
     success: '#10b981',
     warning: '#f59e0b',
@@ -134,13 +134,13 @@ export class ThemeService {
   private readonly STORAGE_KEY = 'abhi_theme_preference';
 
   readonly availablePresets: AbhiTheme[] = [
-    QUANTUM_WHITE_THEME,
     OBSIDIAN_CYAN_THEME,
     MIDNIGHT_AMETHYST_THEME,
-    EMERALD_MATRIX_THEME
+    EMERALD_MATRIX_THEME,
+    QUANTUM_WHITE_THEME
   ];
 
-  readonly currentTheme = signal<AbhiTheme>(QUANTUM_WHITE_THEME);
+  readonly currentTheme = signal<AbhiTheme>(OBSIDIAN_CYAN_THEME);
   readonly previewTheme = signal<AbhiTheme | null>(null);
 
   readonly activeTheme = computed(() => {
@@ -268,10 +268,10 @@ export class ThemeService {
       root.style.setProperty('--abhi-glow-bg', 'radial-gradient(circle at 50% 50%, rgba(0, 153, 204, 0.12) 0%, rgba(245, 247, 251, 0.65) 65%, #f5f7fb 100%)');
       root.style.setProperty('--abhi-rim-vignette', 'radial-gradient(circle at 50% 50%, transparent 60%, rgba(220, 228, 240, 0.45) 85%, rgba(210, 220, 235, 0.7) 100%)');
     } else {
-      root.style.setProperty('--abhi-raised-shadow', '9px 9px 22px rgba(0, 0, 0, 0.43), -6px -6px 18px rgba(44, 69, 105, 0.11)');
-      root.style.setProperty('--abhi-inset-shadow', 'inset 4px 4px 10px rgba(0, 0, 0, 0.40), inset -3px -3px 8px rgba(44, 74, 118, 0.10)');
-      root.style.setProperty('--abhi-glow-bg', 'radial-gradient(circle at 50% 50%, rgba(20, 38, 70, 0.4) 0%, rgba(5, 8, 17, 0.85) 65%, #050811 100%)');
-      root.style.setProperty('--abhi-rim-vignette', 'radial-gradient(circle at 50% 50%, transparent 55%, rgba(5, 8, 17, 0.45) 85%, rgba(5, 8, 17, 0.85) 100%)');
+      root.style.setProperty('--abhi-raised-shadow', '12px 12px 28px rgba(0, 0, 0, 0.55), -6px -6px 20px rgba(0, 240, 255, 0.04)');
+      root.style.setProperty('--abhi-inset-shadow', 'inset 4px 4px 12px rgba(0, 0, 0, 0.50), inset -3px -3px 8px rgba(0, 240, 255, 0.06)');
+      root.style.setProperty('--abhi-glow-bg', 'radial-gradient(ellipse at 50% 48%, rgba(0, 240, 255, 0.09) 0%, rgba(168, 85, 247, 0.04) 30%, rgba(6, 11, 24, 0.9) 65%, #030712 100%)');
+      root.style.setProperty('--abhi-rim-vignette', 'radial-gradient(circle at 50% 50%, transparent 45%, rgba(3, 7, 18, 0.55) 75%, rgba(2, 4, 10, 0.96) 100%)');
     }
   }
 }
