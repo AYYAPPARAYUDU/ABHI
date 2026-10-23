@@ -499,7 +499,7 @@ export class ThreeSceneManagerService {
       const theta = (2 * Math.PI * i) / goldenRatio;
       const phi = Math.acos(1 - (2 * (i + 0.5)) / particleCount);
 
-      const r = sphereRadius + Math.sin(i * 0.7) * 0.15;
+      const r = sphereRadius;
       const x = r * Math.sin(phi) * Math.cos(theta);
       const y = r * Math.sin(phi) * Math.sin(theta);
       const z = r * Math.cos(phi);

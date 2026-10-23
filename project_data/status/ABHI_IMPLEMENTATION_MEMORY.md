@@ -654,4 +654,24 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
   - Angular Production Build (`npm run build`): Generated in 16.1s with **0 errors**.
   - Backend Pytest Suite: 25/25 passed (100% on Edge-TTS neural speech and OS control).
 
+---
+
+## 26. Milestone: Centered Alignment Fix, Redundant Second Top Bar Removal & Clean HUD (Oct 2026 - COMPLETED & VERIFIED)
+- **User Request:**
+  - `"why teh input and soem are out side of ui center and remove second image ui also"`
+- **Root Cause & Fixes:**
+  1. **Off-Center Alignment Root Cause:**
+     - In `frontend/src/app/features/home/pages/home-page/home-page.component.css`, an obsolete responsive media query from legacy three-column sidebars (`@media (max-width: 1280px) { .main-agent-center-viewport { left: 330px; right: 340px; } }`) forced `.main-agent-center-viewport` to start at `left: 330px` on any screen width <= 1280px.
+     - Because `.main-agent-bottom-console`, `.subconscious-thought-bar`, and `.dynamic-core-reticle-overlay` were styled with `left: 50%` relative to `.main-agent-center-viewport`, this 330px offset pushed all centered components into the right half of the screen.
+     - **Fix:** Deleted lines 1754–1791 containing the obsolete `@media (max-width: 1280px)` and `@media (max-width: 960px)` viewport offsets. `.main-agent-center-viewport` is now strictly `position: absolute; inset: 0; width: 100%; height: 100%;` across all viewports.
+  2. **Removal of Redundant Second Top Bar (Image 2):**
+     - Completely eliminated `.stark-command-bar` (`J.A.R.V.I.S.` MARK LXXXV, `SWARM STATE...`, `AUDIO ENGAGED / PULSE / Workspaces`) and the corner calibration brackets (`.hud-corner-bracket`) from `home-page.component.html` and `home-page.component.css`.
+     - The universal top bar (`app-contextual-topbar`) serves as the single, elegant navigation bar.
+  3. **Wave Distortion Removal:**
+     - Verified vertex calculation in `three-scene-manager.service.ts`: `const r = sphereRadius;` ensures the Fibonacci sphere surface is smooth and pristine with zero scalloped ridges or wave ripples.
+  4. **Verification:**
+     - Angular Vitest Unit Tests: 131/131 test files passed (**482/482 passed 100%**).
+     - Angular Production Build (`npm run build`): Exit code 0, 0 compilation errors.
+
+
 
