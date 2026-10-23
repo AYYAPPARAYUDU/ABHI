@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 from backend.app.cognitive.planner.models import DAGNode, NodeStatus, TaskDAG
 from backend.app.cognitive.registry.registry import agent_registry
 from backend.app.core.logging import logger
-from backend.app.services.llm.ollama_client import ollama_client
+from backend.app.services.llm.abhi_llm import abhi_llm
 
 
 class TaskPlanner:
@@ -18,12 +18,12 @@ class TaskPlanner:
         dag_id = f"dag_{uuid.uuid4().hex[:12]}"
         now_ts = int(time.time() * 1000)
 
-        # Attempt structured LLM decomposition first with sufficient local model timeout
+        # Attempt structured standalone LLM decomposition first
         try:
             import asyncio
-            dag = await asyncio.wait_for(self._plan_with_llm(dag_id, task_id, goal, now_ts), timeout=20.0)
+            dag = await asyncio.wait_for(self._plan_with_llm(dag_id, task_id, goal, now_ts), timeout=5.0)
             if dag and dag.nodes:
-                logger.info(f"Generated dynamic LLM DAG plan with {len(dag.nodes)} steps for task '{task_id}' using abhi:latest")
+                logger.info(f"Generated dynamic LLM DAG plan with {len(dag.nodes)} steps for task '{task_id}' using standalone engine")
                 return dag
         except Exception as e:
             logger.warning(f"LLM planner bypassed or timed out: {str(e)}; falling back to heuristic planner.")
@@ -32,7 +32,7 @@ class TaskPlanner:
         return self._plan_with_heuristics(dag_id, task_id, goal, now_ts)
 
     async def _plan_with_llm(self, dag_id: str, task_id: str, goal: str, created_at: int) -> Optional[TaskDAG]:
-        """Query local Ollama LLM (`abhi:latest`) to generate structured plan."""
+        """Query ABHI Standalone LLM to generate structured plan."""
         from backend.app.services.llm.ollama_client import clean_json_markdown
 
         available_agents = agent_registry.list_agents()
@@ -59,7 +59,7 @@ class TaskPlanner:
             "}\n"
         )
 
-        response = await ollama_client.generate(
+        response = await abhi_llm.generate(
             prompt=f"User Goal: {goal}",
             system=system_prompt,
             format_schema={"type": "object"},

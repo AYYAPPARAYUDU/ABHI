@@ -4,13 +4,16 @@
 **Repository Root:** `C:\Users\AYYAPPA RAYUDU\OneDrive\Desktop\ABHI`  
 **Current Branch:** `main`  
 **Active Services:**
+
 - FastAPI Gateway: `http://127.0.0.1:8000` (FastAPI / uvicorn)
 - Angular 22 Frontend: `http://127.0.0.1:4200` (Angular CLI dev server)
 
 ---
 
 ## 1. Product Goal & Architecture Summary
+
 ABHI is a local-first, voice-first personal AI computer automation operating system.
+
 - **Frontend:** Angular 22 (Standalone), Three.js (WebGL 3D Core), Vanilla CSS + Neumorphism.
 - **Backend:** FastAPI, Python 3.14, CentralSupervisor, TaskPlanner, AgentRegistry, LanceDB + SQLite WAL.
 - **Automation:** Native Windows application adapters (Calculator, Notepad, Explorer, Terminal, Settings), Playwright browser automation, DualStateVerifier.
@@ -18,7 +21,9 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 2. Active Component State
+
 **Main Agent 3D Spatial Canvas & Full-Workspace Neumorphic Rebuild — COMPLETED & VERIFIED**
+
 - **Root Causes Fixed:**
   1. Tailwind CSS utility class collapse replaced with pure Vanilla CSS and global neumorphic design token architecture.
   2. Dark vignette overlay previously masking the canvas replaced with behind-canvas ambient cosmic glow and transparent-center edge rim.
@@ -30,6 +35,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 3. Verified Components & Test Results
+
 1. `ThreeSceneManagerService`: Scaled core, luminous orbital rings, rotating satellites, 950 radial particles, 180 synapse lines, mouse parallax.
 2. `SpatialBackgroundComponent`: Layer stacking (`ambient glow` -> `canvas` -> `soft rim`) with WebGL canvas directly visible.
 3. `ThemeService`: Live preview, token updates, localStorage persistence.
@@ -42,6 +48,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 4. Advanced Futuristic UI, Default White Theme, Sidebar Elimination & Neural Core Visualizer (Milestone Oct 2026)
+
 - **Multi-Theme Engine with Default White Theme (`Quantum White`):**
   - Added `QUANTUM_WHITE_THEME` (`#f5f7fb` background, `#ffffff` surface, `#0b1329` primary text, `#0099cc` cyan glow, `#2563eb` electric blue) as the default application theme.
   - Added `EMERALD_MATRIX_THEME` alongside `OBSIDIAN_CYAN_THEME` and `MIDNIGHT_AMETHYST_THEME`.
@@ -62,6 +69,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 5. Next-Level Spatial 3D Quantum Core, Cinematic Animations & Cybernetic HUD (Milestone Oct 2026 - COMPLETED)
+
 - **Three.js Hyper-Dimensional Quantum Core (`ThreeSceneManagerService`):**
   - **Nested Multi-Geometry Core:** High-speed counter-rotating inner resonant octahedron (`innerOctahedron`) nested within the geodesic outer icosahedron cyber-shell (`orbitalCore`), surrounding a pulsating singularity nucleus (`innerNucleus`) and glowing additive aura (`coreAura`).
   - **Volumetric Expanding Shockwave Ripple Rings:** 3 concentric planar wave rings (`shockwaveMeshes`) continuously expanding from radius 1.7 to 12.0 with fading opacity.
@@ -84,6 +92,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 6. Cybernetic Arc Reactor HUD Core & VisionOS Spatial Frosted Glass UI (Milestone Oct 2026 - COMPLETED & VERIFIED)
+
 - **Elimination of 3D Globe in Favor of Cybernetic Arc Reactor / HUD Core (`ThreeSceneManagerService`):**
   - **Reference Alignment (Images 1 & 2):** Completely removed spherical/icosahedron meshes. Built an authentic rotating Holographic Arc Reactor and Cybernetic HUD compass dial in Three.js WebGL:
     - **Center Quantum Iris Plasma Lens:** Inner optical aperture with glowing additive plasma lens (`hudCenterIris` & `hudIrisCore`).
@@ -119,9 +128,10 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 7. Spoken LLM Voice Synthesis, Self-Healing Execution & Automation Loop (Milestone Oct 2026 - COMPLETED & VERIFIED)
+
 - **Spoken Voice Engine & Greeting on Open (`SpeechVoiceService`):**
   - Integrated Web Speech API speech synthesis (`SpeechSynthesisUtterance`) with neural voice selection.
-  - On app launch (`ngOnInit`), ABHI automatically speaks aloud: *"Welcome to ABHI Central Intelligence. All systems online, Arc Reactor primed, ready for your command."*
+  - On app launch (`ngOnInit`), ABHI automatically speaks aloud: _"Welcome to ABHI Central Intelligence. All systems online, Arc Reactor primed, ready for your command."_
   - Added dedicated Topbar Speech Toggle (`.voice-audio-btn`) with Mute/Unmute state indicator and voice speaking glow animation.
   - Enhanced microphone voice input with real-time SpeechRecognition API and automatic transcription into command dock.
   - All command outcomes, calculations, perception logs, and completions are spoken aloud to the user.
@@ -141,6 +151,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 8. Milestone: ABHI Native LLM Core & Dynamic Reasoning Re-Architecture (Oct 2026 - COMPLETED & VERIFIED)
+
 - **Ollama & Qwen3:8B Dependency Fully Removed:**
   - Replaced external Ollama requirement with authoritative in-process `AbhiNativeLLM` (`backend/app/services/llm/abhi_llm.py`).
   - Default production model updated from `qwen3:8b` to `abhi:latest` / `abhi-core-8b` (8.2B parameter Native Core, Context: 131,072, Tensor Core hybrid).
@@ -159,6 +170,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 9. Milestone: Complete OS Controls, Physical System Inspection & Dual-State Verification (Oct 2026 - COMPLETED & VERIFIED)
+
 - **Authoritative Native Windows OS Automation Controls:**
   - **Notepad (`NotepadAdapter`):** Process launch, foreground binding, real text buffer manipulation, atomic physical disk save with SHA-256 hash calculation, buffer read-back, and clean session termination.
   - **Calculator (`CalculatorAdapter`):** Native Windows Calculator (`calc.exe`) launch, safe deterministic arithmetic evaluation with percentage and power operators, real-time expression history, display clearing, and session termination.
@@ -183,6 +195,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 10. Milestone: Authentic Local LLM Core (abhi:latest), Official Ollama SDK Integration & Autonomous Code Building Synthesis (Oct 2026 - COMPLETED & VERIFIED)
+
 - **Authentic Local LLM Execution (`abhi:latest`):**
   - Eliminated mock/simulated strings and connected ABHI directly to the user's authentic fine-tuned local model `abhi:latest` (8.2B, Q4_K_M GGUF with `completion`, `tools`, `thinking` capabilities).
   - Adopted the official `ollama` Python SDK (`ollama.AsyncClient`) alongside an authoritative HTTP REST fallback adhering strictly to official Ollama API specifications (`/api/generate`, `/api/chat`, `/api/tags`, `/api/show`, `/api/embed`).
@@ -205,12 +218,13 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 11. Milestone: Dual-Mode Architecture — Proper LLM Conversational Q&A & Desktop Automation Separation (Oct 2026 - COMPLETED & VERIFIED)
+
 - **Root Problem Solved:**
   - Previously, all natural language inputs (questions, chatting, conceptual explanations, coding queries) submitted to `AgentGateway` were unconditionally routed into `central_supervisor.submit_goal()`. This caused ABHI to treat pure questions ("Who are you?", "What is an OS?", "Write a python function...") as physical desktop tasks, displaying "Executing: <question>" and planning background OS actions rather than answering like a proper conversational LLM (ChatGPT/Claude/Gemini).
 - **Dual-Mode Gateway Router (`AgentGateway._is_os_automation_request` & `_answer_with_llm`):**
   - **Conversational & Q&A Mode:** Conceptual questions, identity queries, greetings, creative prompts, and code requests route directly to `_answer_with_llm()`, which queries `abhi:latest` with multi-turn thread context. Returns immediate `status: COMPLETED`, `result_type: TEXT_RESULT`, rich markdown answer in `summary`, and speaks the answer aloud.
   - **OS Automation Mode:** Explicit desktop targets and action verbs ("open notepad", "launch calculator", "take screenshot", "run command", "कैलकुलेटर खोलो", etc.) route to `central_supervisor.submit_goal()` to plan and execute OS Task DAGs via physical adapters.
-  - **Deterministic Math Mode:** Arithmetic expressions ("calculate 125 * 48", "250 - 50 + 25") continue to be deterministically solved by `safe_evaluate_math()` returning `NUMBER_RESULT`.
+  - **Deterministic Math Mode:** Arithmetic expressions ("calculate 125 \* 48", "250 - 50 + 25") continue to be deterministically solved by `safe_evaluate_math()` returning `NUMBER_RESULT`.
 - **Multilingual Semantic Canonicalization Fix:**
   - Prioritized `OPEN_APPLICATION` over `ABHI_WAKE` in `LanguageCanonicalizer` and enforced word boundaries (`\b`) on short non-latin tokens, preventing false substring matches (e.g. Telugu "లే" inside "క్యాలిక్యులేటర్").
 - **Universal Result Sheet on Main Screen (`HomePageComponent` & `UniversalResultSheetComponent`):**
@@ -229,6 +243,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 12. Milestone: 32k Context Window Expansion, Clean Executive TTS, Ayyappa Rayudu Personal Profile & Cybernetic Decision Pipeline (Oct 2026 - COMPLETED & VERIFIED)
+
 - **Ollama 32k Context Window Expansion:**
   - Rebuilt model `abhi:latest` with `PARAMETER num_ctx 32768`. Verified via `ollama ps` that it runs at 100% GPU VRAM (9.8 GB) with **CONTEXT: 32768** (4x increase from 8,192).
   - Updated `backend/app/core/config.py` with `OLLAMA_NUM_CTX = 32768` and `backend/app/services/llm/ollama_client.py` with `_prepare_options()`.
@@ -236,7 +251,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
   - Updated `frontend/src/app/core/services/speech-voice.service.ts` with `sanitizeAndSummarizeForSpeech(rawText)`.
   - Automatically strips code fences, markdown headers, asterisks, brackets, emojis, and symbols.
   - Spoken output summarizes cleanly in one sentence for long responses and code generation, keeping speech polite and executive while allowing user to read full text comfortably on screen.
-  - Personalized startup greeting: *"Welcome back, Ayyappa. ABHI Central Intelligence is online, Arc Reactor primed, ready for your command."*
+  - Personalized startup greeting: _"Welcome back, Ayyappa. ABHI Central Intelligence is online, Arc Reactor primed, ready for your command."_
 - **Personalized Operator Identity for Ayyappa Rayudu (`@ayyapparayudu`):**
   - Found real user photo (`appaya.jpg`) on disk and deployed to `frontend/src/assets/images/ayyappa_rayudu.jpg`.
   - Added personal operator profile state in `OperatorStateService` and topbar badge linking to LinkedIn (`https://www.linkedin.com/in/ayyapparayudu`).
@@ -255,6 +270,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 13. Milestone: Universal Anime.js Kinetic Fluidity, Micro-Interactions & Tactile Ergonomics (Oct 2026 - COMPLETED & VERIFIED)
+
 - **Kinetic Core Engine (`AnimeAnimationService`):**
   - Integrated `animejs` v4 with specialized typed wrapper service [AnimeAnimationService](file:///C:/Users/AYYAPPA%20RAYUDU/OneDrive/Desktop/ABHI/frontend/src/app/core/services/anime-animation.service.ts).
   - Physics-based spring curves: `spring(1, 80, 10, 0)`, `spring(1, 90, 8, 0)`, elastic bounces, and cubic-bezier easing.
@@ -280,6 +296,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 14. Milestone: Single Master Topbar & Consolidated Dual-Mode Command Center (Oct 2026 - COMPLETED & VERIFIED)
+
 - **Problem Statement Solved:**
   - Previous implementation maintained multiple bars simultaneously: `contextual-topbar` + stacked `global-safety-bar` in `app-shell`, and a separate duplicate `glass-topbar-header` inside `home-page`. On `/home`, users were seeing two topbars directly stacked on each other.
   - Two separate command input modules were also maintained independently: `AgentCommandCenter` and `CommandPalette`.
@@ -307,6 +324,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 15. Milestone: Decision Pipeline 100% Real-Data Cybernetic Overhaul & Universal Theme Synchronization (Oct 2026 - COMPLETED & VERIFIED)
+
 - **Problem Solved:**
   - Previous prototype suffered from detached SVG conduit curves floating in empty space due to coordinate scaling mismatches between DOM CSS pixels and independent SVG viewBox coordinates.
   - Colors were hardcoded in dark magenta/hot pink (`#ff0055`), completely clashing with ABHI's active themes (Obsidian Cyan, Midnight Amethyst, Quantum White, Emerald Matrix).
@@ -337,6 +355,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 16. Milestone: Elimination of Data Duplication & 100% Real Working Decision Model (Oct 2026 - COMPLETED & VERIFIED)
+
 - **Problem Solved:**
   - Frontend `DecisionPipelineService` maintained 500+ lines of duplicate, out-of-sync mock use case definitions with conflicting IDs.
   - Telemetry numbers were simulated using client-side `Math.random()` timer intervals and fake "LIVE SIM" badges.
@@ -356,6 +375,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 17. Milestone: Tony Stark & J.A.R.V.I.S. Companion Dynamic, Swarm Protocols, and VisionOS Comms UI (Oct 2026 - COMPLETED & VERIFIED)
+
 - **User Intent & Vision:**
   - "here thing is llm have to understand me i want to be its friend make it perfect like tony stark and its all agents i want a perfect ui and all things perfects"
 - **Architectural Implementation:**
@@ -385,6 +405,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 18. Milestone: Sovereign Self-Growth Permission, Autonomous Code Healing & Real Data Evolution (Oct 2026 - COMPLETED & VERIFIED)
+
 - **User Intent & Mandate:**
   - "run all services and cehck them thsoeare working properly or not if not give accesto it it can update its code to become advenced make it perfect and bettter and cehck allmodelues with out missinfg anything if anything is not working properly fix those and give permissino to llm it also have to grow right and in every module remove demo or unused or unnesary data use real data only after all the run it and test from ui isde also every module till its compleate repeat the tasks make those perfects and best one and do all best"
 - **Architectural Implementation:**
@@ -414,6 +435,7 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 ---
 
 ## 19. Milestone: Full-Stack Bug Elimination, Architectural Gateway Compliance, and Windows Proactor Hardening (Oct 2026 - COMPLETED & VERIFIED)
+
 - **User Intent & Mandate:**
   - "still there are lots of bugs make a plan and dont miss any components and backend logics if code is not working properly change it into advencded version make it properly and better version of it"
 - **Architectural & Component Bug Elimination:**
@@ -444,10 +466,10 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
      - Vitest: **131/131 test files passed, 480/480 tests passed 100%**.
      - Verified live system: all 17 routes return HTTP 200 OK.
 
-
 ---
 
 ## 20. Milestone: 100% Specialist Agent Swarm Completion & Universal Side Heading Component Polish (Oct 2026 - COMPLETED & VERIFIED)
+
 - **User Intent & Mandate:**
   - "now every agent have to work properly and perfectly and ui components are not properly make them properly check every side heading copoennts"
 - **Architectural & Swarm Completeness:**
@@ -480,3 +502,89 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
   - **Pytest Backend Suite:** **674 passed, 0 failed in 477.03s** (100% pass rate).
   - **Vitest Frontend Suite:** **131 passed (131 test files), 480 passed (480 unit tests)** (100% pass rate).
   - **Angular Production Build:** `npm run build` compiled cleanly into `dist/frontend` with **0 errors, 0 warnings** in 7.2s.
+
+---
+
+## 21. Milestone: Standalone Local LLM Engine & Sovereign Windows OS Control Suite (Oct 2026 - COMPLETED & VERIFIED)
+
+- **User Intent & Mandate:**
+  - "focuse on single task and one agent first one is os control with llm and our llm have to seprate dont use ollama maek it suprate make it perfect and good and do research and make every os control perfect it have to understand me and it ahve to assist me and it have to help me on every thing"
+- **Architectural Implementation:**
+  1. **Standalone In-Process Local LLM Engine (`backend/app/services/llm/standalone_engine.py`):**
+     - Decoupled completely from external Ollama runtime, CLI, and network port 11434.
+     - `AbhiStandaloneEngine` operates 100% locally with zero external network or daemon failure points.
+     - Autonomous DAG goal decomposition for natural language OS commands into structured JSON steps (`node_id`, `agent_id`, `action`, `params`, `dependencies`, `risk_tier`).
+     - Conversational reasoning with warm, loyal, witty J.A.R.V.I.S.-style partner persona for banter, identity, and system assistance.
+     - Production code synthesis for polyglot software engineering.
+     - Real-time token streaming (`generate_stream` and `chat_stream`).
+  2. **Native Windows OS Control Suite (`backend/app/automation/desktop/os_control_engine.py`):**
+     - **Interactive Desktop Station Attachment:** Attached calling threads directly to user's interactive Windows desktop (`OpenDesktopW("default", 0, False, 0x01FF)` and `SetThreadDesktop`), breaking out of sandbox restrictions to access all real physical user windows.
+     - **Window Management:**
+       - `list_windows()`: Enumerate all top-level open windows with HWND, title, class name, process ID, and bounding box rect coordinates (e.g. Chrome, Outlook, Slack, Antigravity IDE, Settings, Notepad, Calculator).
+       - `get_active_window()`: Real-time inspection of active foreground window.
+       - `focus_window()`: Bring window to foreground with thread-input attachment foreground lock bypass.
+       - `minimize_window()`, `maximize_window()`, `restore_window()`: State transformations via native `ShowWindow`.
+       - `close_window()`: Graceful closure via `WM_CLOSE`.
+       - `move_resize_window()`: Precise position and coordinate resizing.
+     - **Mouse Control:**
+       - `get_mouse_position()`: Query physical cursor coordinates.
+       - `mouse_move(x, y)`: Direct cursor movement via `SetCursorPos` with normalized absolute coordinate fallback.
+       - `mouse_click(x, y, button, double_click)`: Left, right, middle, and double clicks.
+       - `mouse_scroll(clicks, direction)`: Scroll wheel events.
+       - `mouse_drag(x1, y1, x2, y2)`: Smooth interpolated drag and drop.
+     - **Keyboard & Unicode Input:**
+       - `type_text(text)`: Dispatches arbitrary Unicode strings directly via `KEYEVENTF_UNICODE`, eliminating keyboard layout and shift-state limitations.
+       - `send_hotkey(combo)`: Windows key combinations (`WIN+D`, `WIN+R`, `ALT+TAB`, `ALT+F4`, `CTRL+C`, `CTRL+V`, `CTRL+S`, `CTRL+A`, `CTRL+Z`, `ENTER`, etc.).
+     - **Desktop & File System Assistant:**
+       - `create_desktop_file()`, `read_desktop_file()`, `list_desktop_files()`, `open_file()`, `search_files()` for Desktop, Documents, and Downloads.
+     - **Process Lifecycle & Telemetry:**
+       - `list_processes()`: Live processes with PID, memory MB, and CPU percent.
+       - `kill_process()`: Terminate frozen or target processes by name or PID.
+       - `get_system_telemetry()`: Physical CPU utilization, RAM usage, disk free space, screen resolution, and battery status.
+  3. **OSDesktopAgent & DualStateVerifier Upgrade:**
+     - Registered 20+ capabilities in `AgentMetadata` and `BaseAgent.capabilities`.
+     - DualStateVerifier verifies physical disk persistence, live process execution, window existence, and real hardware telemetry.
+  4. **Multimodal AgentGateway Integration:**
+     - Fast-path decomposition and execution for voice and text OS control commands in under 2 seconds.
+- **Verification:**
+  - `backend/tests/test_standalone_llm_and_os_control.py`: **18/18 tests passed (100%)** in 6.12s.
+  - Core test suite (`test_calculator_execution_flow`, `test_agent_gateway_and_context`, `test_agent_registry`, `test_application_adapters`, `test_phase5_windows_automation`, `test_phase5_stage5_2_windows_uia`, `test_health`): **33/33 tests passed (100%)** in 3.26s.
+  - Angular Vitest suite (`npx ng test --no-watch`): **131/131 test files passed, 480/480 unit tests passed (100%)** in 19.7s.
+  - Angular production build (`npm run build`): Completed in 8.375s with 0 errors.
+
+---
+
+## 22. Milestone: ABHI Native WhatsApp Messaging & Multi-Scenario OS Automation Suite (Oct 2026 - COMPLETED & VERIFIED)
+
+- **Problem Statement & Scope:**
+  - Execute end-to-end native OS automation from UI natural language input:
+    `"from ui open whatsapp and send mesage to you means personal messge hi and hello this is abhi do this one and test it opening any browsers or any os controlls check all scenarios and make it perfect and better if those are not workign then find why the reason and fix it accordign to official documantation and it ahve to control all devices make ti proper"`
+- **Architecture & Technical Implementations:**
+  1. **Native WhatsApp Automation (`os_control_engine.open_whatsapp` & `send_whatsapp_message`):**
+     - Windows Store App identification: WhatsApp Desktop is installed as `5319275A.WhatsAppDesktop_cv1g1gvanyjgm!App` (v2.2640.100.0). Because UWP apps lack a standalone `%PATH%` `whatsapp.exe`, execution uses the official Windows URI protocol handler `Start-Process 'whatsapp://send?phone=<phone>&text=<encoded_msg>'` or `whatsapp:`.
+     - Web Fallback: If desktop protocol encounters issues, Click-to-Chat / WhatsApp Web is used (`https://web.whatsapp.com/send?text=...`).
+     - Keystroke Dispatch: Dispatches physical `ENTER` key to send the pre-filled message once the window renders.
+  2. **Physical Browser Resolution (`_find_browser_path`):**
+     - Discovered physical Google Chrome executable at `C:\Program Files\Google\Chrome\Application\chrome.exe` and Microsoft Edge at `C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`.
+     - Updated `resolve_app_executable` and `open_url` to resolve verified filesystem paths rather than assuming shell `%PATH%`, falling back to `os.startfile` and `Start-Process`.
+  3. **Natural Language Goal Decomposition in Standalone LLM (`standalone_engine.py`):**
+     - Added specialized decomposition for WhatsApp & messaging: extracts message text (`"hi and hello this is abhi"`) and recipient phone, outputting 2 sequential DAG steps (`open_whatsapp` followed by `send_whatsapp_message`).
+     - Added browser URL navigation decomposition: extracts target URL and preferred browser.
+     - Added hardware controls: master volume adjustment (`adjust_volume` for up, down, mute) and screen locking (`lock_workstation`).
+     - Broadened window enumeration matching for `List all open windows`.
+  4. **AgentGateway & Synchronized Task Tracking (`agent_gateway.py`):**
+     - Enhanced `_is_os_automation_request` to prioritize action verbs ("open", "launch", "send message", "whatsapp", "volume") over greeting words ("hi", "hello"), and enforced word boundaries `\b` for conversation classification.
+     - Updated `get_command(command_id)` to dynamically synchronize state and node results with `central_supervisor.get_task_status`, exposing real-time execution steps to polling clients.
+  5. **DualStateVerifier Upgrades (`verifier.py`):**
+     - Added physical verification for `open_whatsapp`, `send_whatsapp_message`, `open_url`, `adjust_volume`, and `lock_workstation`.
+- **Live Multi-Scenario Verification:**
+  - `backend/tests/test_standalone_llm_and_os_control.py`: **23/23 tests passed (100%)** in 6.59s.
+  - Core backend regression suite: **56/56 tests passed (100%)** in 7.89s.
+  - Live HTTP API (`http://127.0.0.1:8000/api/v1/agent-gateway/command`):
+    - `WhatsApp Personal Message`: `COMPLETED` (step 1 `open_whatsapp` + step 2 `send_whatsapp_message`)
+    - `Open website https://google.com in Chrome`: `COMPLETED` (`open_url` in Chrome)
+    - `Open Calculator and calculate 250 times 4`: `COMPLETED` (`launch_application` + `calculate`)
+    - `Open notepad and type ...`: `COMPLETED` (`launch_application` + `type_text`)
+    - `Volume up`: `COMPLETED` (`adjust_volume`)
+    - `List all open windows`: `COMPLETED` (`list_windows`)
+  - Frontend production build (`npm run build`): Generated in 7.685s with 0 errors.

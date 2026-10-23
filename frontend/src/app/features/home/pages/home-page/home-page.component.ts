@@ -9,8 +9,6 @@ import { ThemeService, AbhiThemeColors } from '../../../../core/services/theme.s
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { AnimeAnimationService } from '../../../../core/services/anime-animation.service';
 import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
-import { AnimeCounterDirective } from '../../../../shared/directives/anime-counter.directive';
-import { NeuralNetworkViewerComponent } from '../../../../shared/components/neural-network-viewer/neural-network-viewer.component';
 import { UniversalResultSheetComponent } from '../../../../shared/ui/result-sheet/result-sheet.component';
 
 export interface SpatialNodeData {
@@ -40,10 +38,8 @@ export interface AutomationScenario {
     CommonModule,
     FormsModule,
     RouterModule,
-    NeuralNetworkViewerComponent,
     UniversalResultSheetComponent,
-    AnimeInteractiveDirective,
-    AnimeCounterDirective
+    AnimeInteractiveDirective
   ],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.css'
@@ -79,6 +75,21 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly selectedScenario = signal<AutomationScenario | null>(null);
 
   readonly spectralBars = Array.from({ length: 16 }, (_, i) => i);
+
+  // Left Column View Mode (Readings HUD vs 1-Click Automations)
+  readonly activeLeftTab = signal<'READINGS' | 'AUTOMATIONS'>('READINGS');
+
+  // Instagram Reel / Viral AI Vocal Prompt Chips
+  readonly instaReelPrompts = [
+    { icon: '💬', label: 'WhatsApp: Send Hi', cmd: 'Open WhatsApp and send message hi to personal' },
+    { icon: '⚡', label: 'Calc: 125 × 48', cmd: 'Open Calculator and calculate 125 times 48' },
+    { icon: '👁️', label: 'Screen Scan & OCR', cmd: 'Scan screen and inspect active windows' },
+    { icon: '⚙️', label: 'Audit Processes', cmd: 'Audit active desktop processes and resource consumption' },
+    { icon: '🛡️', label: 'Lock Workstation', cmd: 'Lock workstation' },
+    { icon: '🌐', label: 'Browser Research', cmd: 'Open browser and research latest local AI agent capabilities' },
+    { icon: '🤝', label: 'Be My Friend', cmd: 'I want to be your friend, buddy' },
+    { icon: '🔊', label: 'Volume to 80%', cmd: 'Increase volume to 80 percent' }
+  ];
 
   // Tony Stark & J.A.R.V.I.S. Quick Banter & Friendship Prompts
   readonly companionBanterPrompts = [
@@ -441,12 +452,29 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.onSubmitCommand();
   }
 
+  readonly availableCallsigns: ('Sir' | 'Boss' | 'Tony' | 'Partner')[] = ['Sir', 'Boss', 'Tony', 'Partner'];
+
   setPersona(mode: 'JARVIS' | 'FRIDAY'): void {
     this.speechVoice.setPersonaMode(mode);
   }
 
-  setCallsign(callsign: 'Sir' | 'Boss' | 'Tony' | 'Partner'): void {
-    this.speechVoice.setUserCallsign(callsign);
+  setCallsign(callsign: string): void {
+    if (callsign === 'Sir' || callsign === 'Boss' || callsign === 'Tony' || callsign === 'Partner') {
+      this.speechVoice.setUserCallsign(callsign);
+    }
+  }
+
+  setSpeechSpeed(speed: number): void {
+    this.speechVoice.setSpeechSpeedRate(speed);
+  }
+
+  replaySpokenText(): void {
+    const text = this.speechVoice.lastSpokenText() || 'ABHI Arc Reactor Intelligence Core online and standing by.';
+    this.speechVoice.speak(text, true);
+  }
+
+  setLeftTab(tab: 'READINGS' | 'AUTOMATIONS'): void {
+    this.activeLeftTab.set(tab);
   }
 
   speakMessage(text: string): void {

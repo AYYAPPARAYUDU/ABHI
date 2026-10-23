@@ -14,6 +14,13 @@ export class SpeechVoiceService {
   readonly personaMode = signal<'JARVIS' | 'FRIDAY'>('JARVIS');
   readonly userCallsign = signal<'Sir' | 'Boss' | 'Tony' | 'Partner'>('Sir');
 
+  // Natural Human Voice & Instagram Reel Subtitle Signals
+  readonly speechSpeedRate = signal<number>(1.0);
+  readonly activeWord = signal<string>('');
+  readonly activeWordIndex = signal<number>(-1);
+  readonly spokenWords = signal<string[]>([]);
+  readonly selectedVoiceName = signal<string>('Natural Neural Voice');
+
   private synth: SpeechSynthesis | null = null;
   private recognition: any = null;
   private voices: SpeechSynthesisVoice[] = [];
@@ -28,6 +35,13 @@ export class SpeechVoiceService {
       const savedCallsign = localStorage.getItem('abhi_user_callsign');
       if (savedCallsign && ['Sir', 'Boss', 'Tony', 'Partner'].includes(savedCallsign)) {
         this.userCallsign.set(savedCallsign as any);
+      }
+      const savedSpeed = localStorage.getItem('abhi_speech_speed');
+      if (savedSpeed) {
+        const parsed = parseFloat(savedSpeed);
+        if (!isNaN(parsed) && parsed >= 0.8 && parsed <= 1.4) {
+          this.speechSpeedRate.set(parsed);
+        }
       }
     }
 
@@ -70,9 +84,70 @@ export class SpeechVoiceService {
     this.speak(`Callsign acknowledged, ${callsign}.`, true);
   }
 
+  setSpeechSpeedRate(rate: number): void {
+    const clamped = Math.max(0.85, Math.min(1.25, rate));
+    this.speechSpeedRate.set(clamped);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('abhi_speech_speed', clamped.toString());
+    }
+  }
+
   private loadVoices(): void {
     if (!this.synth) return;
     this.voices = this.synth.getVoices();
+    this.updateActiveVoiceName();
+  }
+
+  private updateActiveVoiceName(): void {
+    const isJarvis = this.personaMode() === 'JARVIS';
+    const voice = this.findBestNaturalVoice(isJarvis);
+    if (voice) {
+      this.selectedVoiceName.set(voice.name.replace(/\s*\(Natural\)\s*/i, ' Natural'));
+    }
+  }
+
+  /**
+   * Search and select highest-fidelity human neural voice available in browser / OS.
+   * Prioritizes Microsoft Natural Neural, Google UK/US Natural, Apple Samantha/Daniel.
+   */
+  private findBestNaturalVoice(isJarvis: boolean): SpeechSynthesisVoice | undefined {
+    if (!this.voices || this.voices.length === 0) return undefined;
+
+    if (isJarvis) {
+      // Natural male voice preferences with human warmth and British/US conversational tone
+      const naturalCandidates = [
+        (v: SpeechSynthesisVoice) => v.name.includes('Natural') && (v.name.includes('Guy') || v.name.includes('Ryan') || v.name.includes('Christopher') || v.name.includes('George') || v.name.includes('Brian') || v.name.includes('Liam') || v.name.includes('Arthur')),
+        (v: SpeechSynthesisVoice) => v.name.includes('Natural') && v.lang.startsWith('en') && !v.name.includes('Jenny') && !v.name.includes('Aria') && !v.name.includes('Sonia'),
+        (v: SpeechSynthesisVoice) => v.name.includes('Neural') && (v.name.includes('Male') || v.name.includes('George') || v.name.includes('Ryan')),
+        (v: SpeechSynthesisVoice) => (v.lang === 'en-GB' || v.name.includes('UK') || v.name.includes('George')) && !v.name.includes('Female'),
+        (v: SpeechSynthesisVoice) => (v.name.includes('Google') || v.name.includes('Daniel') || v.name.includes('Alex')) && v.lang.startsWith('en'),
+        (v: SpeechSynthesisVoice) => v.lang.startsWith('en') && (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Mark')),
+        (v: SpeechSynthesisVoice) => v.lang.startsWith('en')
+      ];
+
+      for (const matcher of naturalCandidates) {
+        const found = this.voices.find(matcher);
+        if (found) return found;
+      }
+    } else {
+      // Natural female voice preferences with warm human tone (FRIDAY)
+      const naturalCandidates = [
+        (v: SpeechSynthesisVoice) => v.name.includes('Natural') && (v.name.includes('Jenny') || v.name.includes('Aria') || v.name.includes('Sonia') || v.name.includes('Hazel') || v.name.includes('Emily') || v.name.includes('Maisie')),
+        (v: SpeechSynthesisVoice) => v.name.includes('Natural') && v.lang.startsWith('en'),
+        (v: SpeechSynthesisVoice) => v.name.includes('Neural') && (v.name.includes('Female') || v.name.includes('Jenny') || v.name.includes('Hazel')),
+        (v: SpeechSynthesisVoice) => (v.lang === 'en-IE' || v.lang === 'en-GB' || v.name.includes('Ireland') || v.name.includes('Hazel') || v.name.includes('Zira')),
+        (v: SpeechSynthesisVoice) => (v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Karen')) && v.lang.startsWith('en'),
+        (v: SpeechSynthesisVoice) => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Zira')),
+        (v: SpeechSynthesisVoice) => v.lang.startsWith('en')
+      ];
+
+      for (const matcher of naturalCandidates) {
+        const found = this.voices.find(matcher);
+        if (found) return found;
+      }
+    }
+
+    return this.voices.find(v => v.lang.startsWith('en')) || this.voices[0];
   }
 
   private initSpeechRecognition(): void {
@@ -92,8 +167,7 @@ export class SpeechVoiceService {
 
   /**
    * Sanitizes markdown, strips code blocks and special characters,
-   * and produces a pleasant, concise spoken summary so the user doesn't hear
-   * code syntax, symbols, or long paragraphs read aloud.
+   * and prepares human-sounding conversational phrasing with natural pauses.
    */
   sanitizeAndSummarizeForSpeech(rawText: string): string {
     if (!rawText) return '';
@@ -125,25 +199,26 @@ export class SpeechVoiceService {
 
     if (hasCodeBlock) {
       if (text.length > 0 && text.length < 140) {
-        return `${text}. I have displayed the full implementation on your screen.`;
+        return `${text}. I have displayed the complete result on your screen.`;
       }
-      return 'I have generated the complete solution and code. You can review the details on your screen.';
+      return 'I have executed the directive and displayed the complete solution on your screen.';
     }
 
     if (isVeryLong) {
       const firstSentenceMatch = text.match(/^([^.!?]+[.!?])/);
       if (firstSentenceMatch && firstSentenceMatch[1].length < 160) {
-        return `${firstSentenceMatch[1].trim()} I have displayed the complete response on your screen.`;
+        return `${firstSentenceMatch[1].trim()} I have displayed the rest on your screen.`;
       }
       const truncated = text.substring(0, 130).trim();
-      return `${truncated}... I have displayed the complete response on your screen.`;
+      return `${truncated}... I have displayed the complete details on your screen.`;
     }
 
     return text;
   }
 
   /**
-   * Speak text aloud using Web Speech API synthesis.
+   * Speak text aloud using high-fidelity Web Speech API synthesis with natural cadence,
+   * warm pitch, breath pauses, and real-time word boundary tracking for Instagram Reel subtitles.
    */
   speak(text: string, force = false): void {
     if (this.isMuted() && !force) return;
@@ -157,33 +232,37 @@ export class SpeechVoiceService {
 
       const utterance = new SpeechSynthesisUtterance(spokenText.trim());
       const isJarvis = this.personaMode() === 'JARVIS';
-      utterance.rate = isJarvis ? 1.02 : 1.06;
-      utterance.pitch = isJarvis ? 0.98 : 1.06;
+      
+      // Natural human cadence rates: relaxed, warm, not robotic fast
+      const userSpeed = this.speechSpeedRate();
+      utterance.rate = isJarvis ? (0.98 * userSpeed) : (1.02 * userSpeed);
+      utterance.pitch = isJarvis ? 0.96 : 1.02; // Warm conversational human pitch
       utterance.volume = 1.0;
 
-      // Select voice tuned to persona
-      if (this.voices.length > 0) {
-        let preferred: SpeechSynthesisVoice | undefined;
-        if (isJarvis) {
-          // J.A.R.V.I.S. British English / crisp tone
-          preferred = this.voices.find(
-            (v) => (v.lang === 'en-GB' || v.name.includes('UK') || v.name.includes('George') || v.name.includes('Ryan'))
-          ) || this.voices.find(
-            (v) => (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Male')) && v.lang.startsWith('en')
-          ) || this.voices.find((v) => v.lang.startsWith('en'));
-        } else {
-          // F.R.I.D.A.Y. Irish / Neural female tone
-          preferred = this.voices.find(
-            (v) => (v.lang === 'en-IE' || v.name.includes('Ireland') || v.name.includes('Hazel') || v.name.includes('Sonia') || v.name.includes('Zira') || v.name.includes('Female'))
-          ) || this.voices.find(
-            (v) => (v.name.includes('Natural') || v.name.includes('Neural')) && v.lang.startsWith('en')
-          ) || this.voices.find((v) => v.lang.startsWith('en'));
-        }
-
-        if (preferred) {
-          utterance.voice = preferred;
-        }
+      // Select high-fidelity neural voice
+      const preferredVoice = this.findBestNaturalVoice(isJarvis);
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+        this.selectedVoiceName.set(preferredVoice.name.replace(/\s*\(Natural\)\s*/i, ' Natural'));
       }
+
+      // Tokenize into words for Instagram Reel dynamic caption display
+      const words = spokenText.trim().split(/\s+/).filter(w => w.length > 0);
+      this.spokenWords.set(words);
+      this.activeWordIndex.set(0);
+      this.activeWord.set(words[0] || '');
+
+      utterance.onboundary = (event: SpeechSynthesisEvent) => {
+        if (event.name === 'word' || (event as any).type === 'boundary') {
+          const charIndex = event.charIndex || 0;
+          // Approximate word index from character position
+          const textUpToChar = spokenText.substring(0, charIndex).trim();
+          const wordsUpToChar = textUpToChar ? textUpToChar.split(/\s+/).length : 0;
+          const currentIdx = Math.min(wordsUpToChar, words.length - 1);
+          this.activeWordIndex.set(currentIdx);
+          this.activeWord.set(words[currentIdx] || '');
+        }
+      };
 
       utterance.onstart = () => {
         this.isSpeaking.set(true);
@@ -192,10 +271,14 @@ export class SpeechVoiceService {
 
       utterance.onend = () => {
         this.isSpeaking.set(false);
+        this.activeWordIndex.set(-1);
+        this.activeWord.set('');
       };
 
       utterance.onerror = () => {
         this.isSpeaking.set(false);
+        this.activeWordIndex.set(-1);
+        this.activeWord.set('');
       };
 
       this.synth.speak(utterance);

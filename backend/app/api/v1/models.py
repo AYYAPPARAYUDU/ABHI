@@ -38,7 +38,15 @@ class GenerateRequest(BaseModel):
 @router.get("", response_model=List[ModelInfo])
 async def list_models() -> List[ModelInfo]:
     """Retrieve all available local LLM models and metadata."""
-    return await ollama_client.list_models()
+    from backend.app.services.llm.abhi_llm import abhi_llm
+    standalone_models = await abhi_llm.list_models()
+    try:
+        models = await ollama_client.list_models()
+        if models:
+            return models
+    except Exception:
+        pass
+    return standalone_models
 
 
 @router.get("/active")

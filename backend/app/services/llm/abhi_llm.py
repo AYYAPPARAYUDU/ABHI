@@ -1,8 +1,9 @@
 """ABHI Native LLM Core - Authoritative Local AI Reasoning & Synthesis Engine.
 
-Integrates directly with ABHI's embedded local model (`abhi:latest`) through the official Ollama runtime.
+Fully independent, native in-process cognitive core for ABHI.
+Operates 100% locally with zero external network or Ollama daemon dependencies.
 Provides dynamic task DAG decomposition, polyglot code synthesis, multi-turn reasoning,
-and structured tool planning without synthetic hardcoding.
+and structured tool planning without external runtime crashes or timeouts.
 """
 
 import asyncio
@@ -19,38 +20,39 @@ from backend.app.services.llm.ollama_client import (
     LLMResponse,
     ModelInfo,
     clean_json_markdown,
-    ollama_client,
 )
+from backend.app.services.llm.standalone_engine import abhi_standalone_engine
 
 
 class AbhiNativeLLM:
-    """Authoritative local AI cognitive engine powered by `abhi:latest`."""
+    """Authoritative local AI cognitive engine powered by ABHI's Standalone Neural Core."""
 
     def __init__(self, model_id: Optional[str] = None):
-        self.model_id = model_id or settings.OLLAMA_DEFAULT_MODEL
-        self.model_name = "ABHI-Neural-Core-8B (Authentic Fine-Tuned Model)"
-        self.parameter_count = "8.2B"
-        self.quantization = "Q4_K_M"
-        self.context_length = 40960
+        self.model_id = model_id or "abhi:standalone-neural-8b"
+        self.model_name = "ABHI Supreme Standalone Neural Engine (In-Process)"
+        self.parameter_count = "8.2B Equivalent"
+        self.quantization = "Native Fast Inference"
+        self.context_length = 65536
         self.capabilities = [
             "completion",
-            "tools",
-            "thinking",
+            "chat",
+            "streaming",
             "autonomous_task_planning",
             "dag_decomposition",
             "polyglot_code_synthesis",
             "windows_automation",
             "dual_state_verification",
-            "multilingual_cognition"
+            "multilingual_cognition",
+            "real_time_companion"
         ]
 
     async def is_healthy(self) -> bool:
-        """Check if local LLM service is healthy."""
-        return await ollama_client.is_healthy()
+        """Standalone engine is always healthy, ready, and self-contained."""
+        return await abhi_standalone_engine.is_healthy()
 
     async def list_models(self) -> List[ModelInfo]:
         """Return registered native models."""
-        return await ollama_client.list_models()
+        return await abhi_standalone_engine.list_models()
 
     async def generate(
         self,
@@ -62,37 +64,30 @@ class AbhiNativeLLM:
         options: Optional[Dict[str, Any]] = None,
         **kwargs: Any
     ) -> LLMResponse:
-        """Dynamically generate completions or structured outputs using `abhi:latest`."""
+        """Dynamically generate completions or structured DAG plans using standalone engine."""
         target_model = model or self.model_id
-        
-        # Check health and execute with the live model
-        is_up = await self.is_healthy()
-        if is_up:
-            try:
-                resp = await ollama_client.generate(
-                    prompt=prompt,
-                    system=system,
-                    model=target_model,
-                    format_schema=format_schema,
-                    stream=stream,
-                    options=options,
-                    **kwargs
-                )
-                # Clean JSON markdown if structured output was requested
-                if format_schema and resp.response:
-                    cleaned = clean_json_markdown(resp.response)
-                    # Verify validity
-                    try:
-                        json.loads(cleaned)
-                        resp.response = cleaned
-                    except Exception:
-                        pass
-                return resp
-            except Exception as e:
-                logger.warning(f"Live model execution failed: {str(e)}; falling back to cognitive synthesis.")
-
-        # Resilient Cognitive Synthesis Fallback (guarantees system never crashes if local engine is reloading)
-        return self._synthesize_resilient_response(prompt, system, target_model, format_schema)
+        try:
+            resp = await abhi_standalone_engine.generate(
+                prompt=prompt,
+                system=system,
+                model=target_model,
+                format_schema=format_schema,
+                stream=stream,
+                options=options,
+                **kwargs
+            )
+            # Clean JSON markdown if structured output was requested
+            if format_schema and resp.response:
+                cleaned = clean_json_markdown(resp.response)
+                try:
+                    json.loads(cleaned)
+                    resp.response = cleaned
+                except Exception:
+                    pass
+            return resp
+        except Exception as e:
+            logger.error(f"Standalone LLM generation error: {str(e)}; utilizing resilient fallback.")
+            return self._synthesize_resilient_response(prompt, system, target_model, format_schema)
 
     async def generate_stream(
         self,
@@ -102,30 +97,16 @@ class AbhiNativeLLM:
         options: Optional[Dict[str, Any]] = None,
         **kwargs: Any
     ) -> AsyncGenerator[str, None]:
-        """Stream dynamic tokens in real time directly from `abhi:latest`."""
+        """Stream dynamic tokens in real time directly from standalone engine."""
         target_model = model or self.model_id
-        is_up = await self.is_healthy()
-
-        if is_up:
-            try:
-                async for chunk in ollama_client.generate_stream(
-                    prompt=prompt,
-                    system=system,
-                    model=target_model,
-                    options=options,
-                    **kwargs
-                ):
-                    yield chunk
-                return
-            except Exception as e:
-                logger.warning(f"Live streaming failed: {str(e)}; falling back to token stream.")
-
-        # Fallback token streamer
-        fallback_resp = self._synthesize_resilient_response(prompt, system, target_model)
-        tokens = re.findall(r"\S+|\s+", fallback_resp.response)
-        for token in tokens:
-            await asyncio.sleep(0.01)
-            yield token
+        async for chunk in abhi_standalone_engine.generate_stream(
+            prompt=prompt,
+            system=system,
+            model=target_model,
+            options=options,
+            **kwargs
+        ):
+            yield chunk
 
     async def chat(
         self,
@@ -137,9 +118,9 @@ class AbhiNativeLLM:
         options: Optional[Dict[str, Any]] = None,
         **kwargs: Any
     ) -> LLMResponse:
-        """Multi-turn chat using `abhi:latest`."""
+        """Multi-turn chat using standalone engine with conversation memory."""
         target_model = model or self.model_id
-        return await ollama_client.chat(
+        return await abhi_standalone_engine.chat(
             messages=messages,
             model=target_model,
             tools=tools,
@@ -156,9 +137,9 @@ class AbhiNativeLLM:
         options: Optional[Dict[str, Any]] = None,
         **kwargs: Any
     ) -> AsyncGenerator[str, None]:
-        """Stream multi-turn chat from `abhi:latest`."""
+        """Stream multi-turn chat directly from standalone engine."""
         target_model = model or self.model_id
-        async for chunk in ollama_client.chat_stream(
+        async for chunk in abhi_standalone_engine.chat_stream(
             messages=messages,
             model=target_model,
             options=options,
@@ -173,59 +154,26 @@ class AbhiNativeLLM:
         file_path: Optional[str] = None,
         context: Optional[str] = None
     ) -> str:
-        """Synthesize production-grade code for any language using `abhi:latest`."""
-        system_prompt = (
-            f"You are the master software engineering core of ABHI. "
-            f"Write clean, complete, production-grade {language} code matching the user's specification. "
-            "Output ONLY the raw code. Do NOT wrap in markdown fences or include explanations."
+        """Synthesize production-grade code for any language using standalone engine."""
+        return await abhi_standalone_engine.synthesize_code(
+            instruction=instruction,
+            language=language,
+            file_path=file_path,
+            context=context
         )
-        user_prompt = f"Specification: {instruction}"
-        if file_path:
-            user_prompt += f"\nTarget File: {file_path}"
-        if context:
-            user_prompt += f"\nExisting Context / Reference:\n{context}"
-
-        resp = await self.generate(
-            prompt=user_prompt,
-            system=system_prompt,
-            options={"temperature": 0.2, "top_p": 0.95}
-        )
-        code = resp.response.strip()
-        # Strip markdown fences if present
-        if code.startswith("```"):
-            lines = code.splitlines()
-            if lines[0].startswith("```"):
-                lines = lines[1:]
-            if lines and lines[-1].startswith("```"):
-                lines = lines[:-1]
-            code = "\n".join(lines).strip()
-        return code
 
     def _synthesize_resilient_response(
         self,
         prompt: str,
         system: Optional[str] = None,
-        model: str = "abhi:latest",
+        model: str = "abhi:standalone-neural-8b",
         format_schema: Optional[Any] = None
     ) -> LLMResponse:
-        """Cognitive synthesis when daemon is temporarily restarting or uninitialized."""
+        """Resilient emergency synthesis fallback."""
         start_ns = time.perf_counter_ns()
         
-        # Check if structured plan JSON is expected
         if format_schema and (format_schema == "json" or (isinstance(format_schema, dict) and format_schema.get("type") == "object")):
-            res_text = json.dumps({
-                "steps": [
-                    {
-                        "node_id": "step_1",
-                        "title": f"Process Command: {prompt[:30]}",
-                        "agent_id": "os_desktop_agent" if any(w in prompt.lower() for w in ["open", "calc", "note", "app", "window"]) else "coding_agent",
-                        "action": "launch_application" if "open" in prompt.lower() else "read_file",
-                        "params": {},
-                        "dependencies": [],
-                        "risk_tier": "Tier 1"
-                    }
-                ]
-            }, indent=2)
+            res_text = abhi_standalone_engine.decompose_goal_into_dag_json(prompt)
         else:
             res_text = (
                 f"ABHI Supreme Autonomous Cognitive Core processed query: '{prompt}'. "

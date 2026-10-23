@@ -559,7 +559,27 @@ class OSDesktopAgent(BaseAgent):
                     "get_active_window",
                     "launch_application",
                     "focus_window",
+                    "minimize_window",
+                    "maximize_window",
+                    "restore_window",
+                    "close_window",
+                    "move_window",
+                    "resize_window",
+                    "list_windows",
                     "type_text",
+                    "mouse_click",
+                    "mouse_move",
+                    "mouse_scroll",
+                    "mouse_drag",
+                    "get_mouse_position",
+                    "create_desktop_file",
+                    "read_desktop_file",
+                    "list_desktop_files",
+                    "open_file",
+                    "search_files",
+                    "kill_process",
+                    "list_processes",
+                    "get_system_telemetry",
                     "save_file",
                     "read_text",
                     "calculate",
@@ -577,11 +597,16 @@ class OSDesktopAgent(BaseAgent):
                     "close_application",
                     "close",
                     "take_screenshot",
-                    "key_combination"
+                    "key_combination",
+                    "open_whatsapp",
+                    "send_whatsapp_message",
+                    "open_url",
+                    "adjust_volume",
+                    "lock_workstation"
                 ],
                 risk_tier="Tier 2",
                 execution_boundary="subprocess_worker",
-                description="Controls Windows OS applications and accessibility interfaces."
+                description="Controls Windows OS applications, windows, files, mouse, keyboard, and accessibility interfaces."
             )
         )
 
@@ -601,24 +626,405 @@ class OSDesktopAgent(BaseAgent):
         return n
 
     async def execute(self, request: AgentTaskRequest) -> AgentTaskResult:
+        from backend.app.automation.desktop.os_control_engine import os_control_engine
         from backend.app.automation.desktop.windows_uia_driver import windows_uia_driver
         from backend.app.services.skills.applications.registry import application_registry
 
         action = request.action
         params = request.params
 
+        # ---------------------------------------------------------------------
+        # 0. WhatsApp, Web Browsing & Hardware Controls
+        # ---------------------------------------------------------------------
+        if action in ["open_whatsapp", "launch_whatsapp"]:
+            phone = params.get("phone")
+            message = params.get("message")
+            ok, pdata, err = os_control_engine.open_whatsapp(phone=phone, message=message)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data=pdata,
+                observed_state={"opened": ok, "method": pdata.get("method"), "message": message},
+                error_message=err
+            )
+
+        if action in ["send_whatsapp_message", "whatsapp_send", "send_message"]:
+            message = str(params.get("message") or "hi and hello this is abhi")
+            phone = params.get("phone")
+            ok, sdata, err = os_control_engine.send_whatsapp_message(message=message, phone=phone)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data=sdata,
+                observed_state={"dispatched": ok, "sent": True, "message": message},
+                error_message=err
+            )
+
+        if action in ["open_url", "browse_url", "navigate_url"]:
+            url = str(params.get("url") or "https://www.google.com")
+            browser = str(params.get("browser") or "default")
+            ok, err = os_control_engine.open_url(url=url, browser=browser)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"url": url, "browser": browser, "opened": ok},
+                observed_state={"opened": ok, "url": url},
+                error_message=err
+            )
+
+        if action in ["adjust_volume", "volume_control"]:
+            direction = str(params.get("direction") or "up")
+            steps = int(params.get("steps", 2))
+            ok, err = os_control_engine.adjust_volume(direction=direction, steps=steps)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"direction": direction, "steps": steps, "adjusted": ok},
+                observed_state={"adjusted": ok, "direction": direction},
+                error_message=err
+            )
+
+        if action in ["lock_workstation", "lock_screen", "lock_pc"]:
+            ok, err = os_control_engine.lock_workstation()
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"locked": ok},
+                observed_state={"locked": ok},
+                error_message=err
+            )
+
+        # ---------------------------------------------------------------------
+        # 1. Native Window Management
+        # ---------------------------------------------------------------------
         if action == "get_active_window":
-            title = windows_uia_driver.get_foreground_window_title()
+            info = os_control_engine.get_active_window()
             return AgentTaskResult(
                 task_id=request.task_id,
                 node_id=request.node_id,
                 agent_id=self.agent_id,
                 action=action,
                 success=True,
-                data={"active_window": title},
-                observed_state={"window_title": title, "is_foreground": True}
+                data=info,
+                observed_state={"window_title": info.get("title", ""), "is_foreground": True}
             )
 
+        if action in ["list_windows", "get_windows"]:
+            wins = os_control_engine.list_windows()
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"windows": wins, "count": len(wins)},
+                observed_state={"window_count": len(wins)}
+            )
+
+        if action in ["focus_window", "focus"]:
+            target = params.get("window_title") or params.get("title") or params.get("app_name") or params.get("target")
+            ok, err = os_control_engine.focus_window(target)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"target": target, "focused": ok},
+                observed_state={"is_focused": ok},
+                error_message=err
+            )
+
+        if action in ["minimize_window", "minimize"]:
+            target = params.get("window_title") or params.get("title")
+            ok, err = os_control_engine.minimize_window(target)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"target": target, "minimized": ok},
+                observed_state={"minimized": ok},
+                error_message=err
+            )
+
+        if action in ["maximize_window", "maximize"]:
+            target = params.get("window_title") or params.get("title")
+            ok, err = os_control_engine.maximize_window(target)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"target": target, "maximized": ok},
+                observed_state={"maximized": ok},
+                error_message=err
+            )
+
+        if action in ["restore_window", "restore"]:
+            target = params.get("window_title") or params.get("title")
+            ok, err = os_control_engine.restore_window(target)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"target": target, "restored": ok},
+                observed_state={"restored": ok},
+                error_message=err
+            )
+
+        if action in ["close_window", "close_app"]:
+            target = params.get("window_title") or params.get("title") or params.get("app_name")
+            ok, err = os_control_engine.close_window(target)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"target": target, "closed": ok},
+                observed_state={"closed": ok},
+                error_message=err
+            )
+
+        if action in ["move_window", "resize_window"]:
+            target = params.get("window_title") or params.get("title")
+            x = int(params.get("x", 100))
+            y = int(params.get("y", 100))
+            w = int(params.get("width", 800))
+            h = int(params.get("height", 600))
+            ok, err = os_control_engine.move_resize_window(target, x, y, w, h)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"target": target, "x": x, "y": y, "width": w, "height": h},
+                observed_state={"moved": ok},
+                error_message=err
+            )
+
+        # ---------------------------------------------------------------------
+        # 2. Native Mouse Operations
+        # ---------------------------------------------------------------------
+        if action in ["mouse_click", "click"]:
+            x = int(params["x"]) if "x" in params else None
+            y = int(params["y"]) if "y" in params else None
+            btn = str(params.get("button", "left"))
+            dbl = bool(params.get("double_click", False))
+            ok, err = os_control_engine.mouse_click(x=x, y=y, button=btn, double_click=dbl)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"x": x, "y": y, "button": btn, "double_click": dbl},
+                observed_state={"clicked": ok},
+                error_message=err
+            )
+
+        if action in ["mouse_move", "move_cursor"]:
+            x = int(params.get("x", 500))
+            y = int(params.get("y", 500))
+            ok, err = os_control_engine.mouse_move(x, y)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"x": x, "y": y},
+                observed_state={"cursor_at": {"x": x, "y": y}},
+                error_message=err
+            )
+
+        if action in ["mouse_scroll", "scroll"]:
+            clicks = int(params.get("clicks", 3))
+            direction = str(params.get("direction", "down"))
+            ok, err = os_control_engine.mouse_scroll(clicks=clicks, direction=direction)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"clicks": clicks, "direction": direction},
+                observed_state={"scrolled": ok},
+                error_message=err
+            )
+
+        if action in ["mouse_drag", "drag"]:
+            x1 = int(params.get("x1", 100))
+            y1 = int(params.get("y1", 100))
+            x2 = int(params.get("x2", 500))
+            y2 = int(params.get("y2", 500))
+            ok, err = os_control_engine.mouse_drag(x1, y1, x2, y2)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"start": (x1, y1), "end": (x2, y2)},
+                observed_state={"dragged": ok},
+                error_message=err
+            )
+
+        if action in ["get_mouse_position", "cursor_position"]:
+            pos = os_control_engine.get_mouse_position()
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data=pos,
+                observed_state=pos
+            )
+
+        # ---------------------------------------------------------------------
+        # 3. Desktop Files & Direct Disk Assistant
+        # ---------------------------------------------------------------------
+        if action in ["create_desktop_file", "write_desktop_file"]:
+            fn = str(params.get("filename") or params.get("name") or "abhi_note.txt")
+            content = str(params.get("content") or params.get("text") or "")
+            folder = str(params.get("folder", "Desktop"))
+            ok, fpath, err = os_control_engine.create_desktop_file(fn, content, folder=folder)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"file_path": fpath, "filename": fn, "folder": folder, "size_bytes": len(content.encode("utf-8"))},
+                observed_state={"file_exists": ok, "file_path": fpath},
+                error_message=err
+            )
+
+        if action in ["read_desktop_file", "read_file"]:
+            fn = str(params.get("filename") or params.get("name") or params.get("path") or "")
+            folder = str(params.get("folder", "Desktop"))
+            ok, text, err = os_control_engine.read_desktop_file(fn, folder=folder)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"filename": fn, "content": text, "length": len(text)},
+                observed_state={"read_success": ok, "length": len(text)},
+                error_message=err
+            )
+
+        if action in ["list_desktop_files", "list_files"]:
+            folder = str(params.get("folder", "Desktop"))
+            pat = str(params.get("pattern", "*"))
+            files = os_control_engine.list_desktop_files(folder=folder, pattern=pat)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"folder": folder, "files": files, "count": len(files)},
+                observed_state={"file_count": len(files)}
+            )
+
+        if action in ["open_file", "start_file"]:
+            fpath = str(params.get("file_path") or params.get("path") or params.get("filename") or "")
+            ok, err = os_control_engine.open_file(fpath)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"file_path": fpath, "opened": ok},
+                observed_state={"opened": ok},
+                error_message=err
+            )
+
+        if action in ["search_files", "find_files"]:
+            q = str(params.get("query") or params.get("search") or "*")
+            folder = str(params.get("folder", "Desktop"))
+            results = os_control_engine.search_files(query=q, folder=folder)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"query": q, "folder": folder, "results": results, "count": len(results)},
+                observed_state={"matched_count": len(results)}
+            )
+
+        # ---------------------------------------------------------------------
+        # 4. System & Process Telemetry
+        # ---------------------------------------------------------------------
+        if action in ["get_system_telemetry", "system_status", "system_stats"]:
+            telemetry = os_control_engine.get_system_telemetry()
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data=telemetry,
+                observed_state={"cpu_percent": telemetry["cpu_percent"], "memory_pct": telemetry["memory"]["percent_used"]}
+            )
+
+        if action in ["list_processes", "get_processes"]:
+            sort_by = str(params.get("sort_by", "memory"))
+            limit = int(params.get("limit", 50))
+            procs = os_control_engine.list_processes(limit=limit, sort_by=sort_by)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"processes": procs, "count": len(procs)},
+                observed_state={"process_count": len(procs)}
+            )
+
+        if action in ["kill_process", "terminate_process"]:
+            target = params.get("process_name") or params.get("pid") or params.get("name")
+            ok, err = os_control_engine.kill_process(target)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"target": target, "terminated": ok},
+                observed_state={"terminated": ok},
+                error_message=err
+            )
+
+        # ---------------------------------------------------------------------
+        # 5. Keystrokes & Screenshots
+        # ---------------------------------------------------------------------
         if action in ["take_screenshot", "capture_screen"]:
             ok, path_or_err = windows_uia_driver.take_screenshot(params.get("output_path"))
             return AgentTaskResult(
@@ -632,9 +1038,9 @@ class OSDesktopAgent(BaseAgent):
                 error_message=None if ok else path_or_err
             )
 
-        if action in ["key_combination", "send_keys", "press_key"]:
+        if action in ["key_combination", "send_keys", "press_key", "hotkey"]:
             combo = str(params.get("key_combination") or params.get("keys") or params.get("key") or "ENTER")
-            ok, err = windows_uia_driver.send_approved_keystroke(combo)
+            ok, err = os_control_engine.send_hotkey(combo)
             return AgentTaskResult(
                 task_id=request.task_id,
                 node_id=request.node_id,
@@ -646,7 +1052,9 @@ class OSDesktopAgent(BaseAgent):
                 error_message=err
             )
 
-        # Resolve target application
+        # ---------------------------------------------------------------------
+        # 6. Unified Application Adapters & Launching
+        # ---------------------------------------------------------------------
         raw_app = params.get("app_name") or params.get("application") or params.get("title") or "notepad"
         if action in ["run_command", "run_allowlisted_command"]:
             raw_app = "terminal"
@@ -659,6 +1067,35 @@ class OSDesktopAgent(BaseAgent):
 
         app_id = self._resolve_app_name(str(raw_app))
         adapter = application_registry.get_adapter(app_id)
+
+        # Direct Universal Launching if not handled by adapter
+        if action in ["launch_application", "open_app", "open"]:
+            if adapter:
+                session = adapter.create_session(task_id=request.task_id)
+                ok, err = await adapter.launch(session, params)
+                obs, _ = await adapter.observe(session)
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=ok,
+                    data={"window_title": session.window_title, "state": session.state.value, "app_id": app_id},
+                    observed_state=obs or {"state": session.state.value},
+                    error_message=err
+                )
+            else:
+                ok, pinfo, err = os_control_engine.launch_application(str(raw_app))
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=ok,
+                    data={"app_name": raw_app, **pinfo},
+                    observed_state={"launched": ok, "pid": pinfo.get("pid")},
+                    error_message=err
+                )
 
         if not adapter:
             adapter = application_registry.get_adapter("notepad")
@@ -673,38 +1110,24 @@ class OSDesktopAgent(BaseAgent):
                 error_message=f"Application adapter '{app_id}' not found."
             )
 
-        # Retrieve or create task session
         session = adapter.create_session(task_id=request.task_id)
 
-        if action in ["launch_application", "open_app", "open"]:
-            ok, err = await adapter.launch(session, params)
-            obs, _ = await adapter.observe(session)
-            return AgentTaskResult(
-                task_id=request.task_id,
-                node_id=request.node_id,
-                agent_id=self.agent_id,
-                action=action,
-                success=ok,
-                data={"window_title": session.window_title, "state": session.state.value, "app_id": app_id},
-                observed_state=obs or {"state": session.state.value},
-                error_message=err
-            )
-
-        elif action in ["focus_window", "focus"]:
-            ok, err = await adapter.focus(session)
-            return AgentTaskResult(
-                task_id=request.task_id,
-                node_id=request.node_id,
-                agent_id=self.agent_id,
-                action=action,
-                success=ok,
-                data={"is_focused": ok, "app_id": app_id},
-                observed_state={"state": session.state.value, "focused": ok},
-                error_message=err
-            )
-
-        elif action in ["type_text", "write_text"]:
+        if action in ["type_text", "write_text"]:
+            text_val = params.get("text", "")
+            # Try adapter first, and also dispatch via Win32 unicode driver
             res = await adapter.execute_capability(session, "type_text", params, request.node_id)
+            if not res.is_success:
+                ok, err = os_control_engine.type_text(str(text_val))
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=ok,
+                    data={"text": text_val, "length": len(text_val)},
+                    observed_state={"typed": ok, "length": len(text_val)},
+                    error_message=err
+                )
             return AgentTaskResult(
                 task_id=request.task_id,
                 node_id=request.node_id,
@@ -826,6 +1249,7 @@ class OSDesktopAgent(BaseAgent):
                     observed_state=res.observed_state,
                     error_message=res.error_message
                 )
+            from backend.app.services.skills.applications.models import ApplicationState
             session.state = ApplicationState.STOPPED
             return AgentTaskResult(
                 task_id=request.task_id,
@@ -838,7 +1262,6 @@ class OSDesktopAgent(BaseAgent):
             )
 
         else:
-            # Generic capability execution on adapter
             res = await adapter.execute_capability(session, action, params, request.node_id)
             return AgentTaskResult(
                 task_id=request.task_id,

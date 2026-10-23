@@ -24,12 +24,11 @@ async def check_health():
     except Exception as e:
         db_status = f"unhealthy: {str(e)}"
 
-    # 2. Check LLM Engine (ABHI Native Core)
-    llm_healthy = await ollama_client.is_healthy()
-    models_available = []
-    if llm_healthy:
-        models = await ollama_client.list_models()
-        models_available = [m.name for m in models]
+    # 2. Check LLM Engine (ABHI Native Standalone Core)
+    from backend.app.services.llm.abhi_llm import abhi_llm
+    llm_healthy = await abhi_llm.is_healthy()
+    models = await abhi_llm.list_models()
+    models_available = [m.name for m in models]
 
     # 3. Check Disk Storage Headroom
     storage_info = {}

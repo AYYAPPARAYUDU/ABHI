@@ -17,6 +17,10 @@ class BaseAgent(ABC):
     def agent_id(self) -> str:
         return self.metadata.agent_id
 
+    @property
+    def capabilities(self) -> list:
+        return self.metadata.capabilities
+
     @abstractmethod
     async def execute(self, request: AgentTaskRequest) -> AgentTaskResult:
         """Execute a domain action and return structured results."""

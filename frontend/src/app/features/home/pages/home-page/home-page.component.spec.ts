@@ -37,7 +37,7 @@ describe('HomePageComponent', () => {
   it('should render brand identity in thought stream and calibration HUD', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('ABHI');
-    expect(compiled.textContent).toContain('CENTRAL INTELLIGENCE');
+    expect(compiled.textContent).toContain('ARC REACTOR');
     expect(compiled.querySelector('.subconscious-thought-bar')).toBeTruthy();
   });
 
@@ -49,18 +49,19 @@ describe('HomePageComponent', () => {
     expect(compiled.querySelector('.submit-btn')).toBeTruthy();
   });
 
-  it('should render in-panel view segment tabs and switch active tab', () => {
+  it('should render clean 3-part layout: Left Telemetry HUD, Center Viewport, Right Vocal Studio', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.vision-view-segment-bar')).toBeTruthy();
-    expect(component.activeMainTab()).toBe('AUTOMATION');
-    component.setActiveTab('TELEMETRY');
-    expect(component.activeMainTab()).toBe('TELEMETRY');
-    component.setActiveTab('SWARM');
-    expect(component.activeMainTab()).toBe('SWARM');
-    component.setActiveTab('NEURAL');
-    expect(component.activeMainTab()).toBe('NEURAL');
-    component.setActiveTab('COMMS');
-    expect(component.activeMainTab()).toBe('COMMS');
+    expect(compiled.querySelector('.telemetry-readings-column')).toBeTruthy();
+    expect(compiled.querySelector('.main-agent-center-viewport')).toBeTruthy();
+    expect(compiled.querySelector('.vocal-studio-column')).toBeTruthy();
+  });
+
+  it('should switch left column mode between READINGS and AUTOMATIONS', () => {
+    expect(component.activeLeftTab()).toBe('READINGS');
+    component.setLeftTab('AUTOMATIONS');
+    expect(component.activeLeftTab()).toBe('AUTOMATIONS');
+    component.setLeftTab('READINGS');
+    expect(component.activeLeftTab()).toBe('READINGS');
   });
 
   it('should have primary operating workspaces available in routing table', () => {
@@ -81,8 +82,6 @@ describe('HomePageComponent', () => {
   });
 
   it('should render auto-cycle button and toggle auto cycle loop', () => {
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.auto-cycle-btn')).toBeTruthy();
     expect(component.isAutoCycleRunning()).toBe(false);
     component.toggleAutoCycle();
     expect(component.isAutoCycleRunning()).toBe(true);
@@ -102,6 +101,15 @@ describe('HomePageComponent', () => {
     expect(component.speechVoice.userCallsign()).toBe('Tony');
   });
 
+  it('should support speech speed cadence adjustments', () => {
+    component.setSpeechSpeed(0.95);
+    expect(component.speechVoice.speechSpeedRate()).toBe(0.95);
+    component.setSpeechSpeed(1.05);
+    expect(component.speechVoice.speechSpeedRate()).toBe(1.05);
+    component.setSpeechSpeed(1.0);
+    expect(component.speechVoice.speechSpeedRate()).toBe(1.0);
+  });
+
   it('should contain 8 specialist agents configured with Stark armor protocols', () => {
     expect(component.specialistAgents.length).toBe(8);
     const protocols = component.specialistAgents.map(a => a.protocolCode);
@@ -109,8 +117,10 @@ describe('HomePageComponent', () => {
     expect(protocols).toContain('PROTOCOL-08 // VERONICA');
   });
 
-  it('should provide quick companion banter prompts', () => {
+  it('should provide quick companion banter prompts and Instagram reel action chips', () => {
     expect(component.companionBanterPrompts.length).toBe(6);
     expect(component.companionBanterPrompts[0].prompt).toContain('build something');
+    expect(component.instaReelPrompts.length).toBe(8);
+    expect(component.instaReelPrompts[0].label).toContain('WhatsApp');
   });
 });

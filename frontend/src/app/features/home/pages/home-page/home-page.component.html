@@ -1,727 +1,667 @@
-<div class="main-agent-spatial-container" role="region" aria-label="Main Agent Workspace">
-      <!-- 0. Tactical Corner Calibration Brackets -->
-      <div class="hud-corner-bracket top-left" aria-hidden="true">
-        <div class="corner-crosshair"></div>
-        <div class="corner-readout">SYS.CALIB: 0.9998 // ARC REACTOR</div>
-      </div>
-      <div class="hud-corner-bracket top-right" aria-hidden="true">
-        <div class="corner-crosshair"></div>
-        <div class="corner-readout">SAFETY.GATE: ACTIVE // DUAL-STATE</div>
-      </div>
-      <div class="hud-corner-bracket bottom-left" aria-hidden="true">
-        <div class="corner-crosshair"></div>
-        <div class="corner-readout">WAL.SYNC: STABLE // VRAM 4.2GB</div>
-      </div>
-      <div class="hud-corner-bracket bottom-right" aria-hidden="true">
-        <div class="corner-crosshair"></div>
-        <div class="corner-readout">RADAR.FPS: 60 // 18ms</div>
-      </div>
+<div class="main-agent-spatial-container" role="region" aria-label="Main Agent Spatial Intelligence Workspace">
+  <!-- 0. Tactical Corner Calibration Brackets -->
+  <div class="hud-corner-bracket top-left" aria-hidden="true">
+    <div class="corner-crosshair"></div>
+    <div class="corner-readout">SYS.CALIB: 0.9998 // ARC REACTOR</div>
+  </div>
+  <div class="hud-corner-bracket top-right" aria-hidden="true">
+    <div class="corner-crosshair"></div>
+    <div class="corner-readout">SAFETY.GATE: ACTIVE // DUAL-STATE</div>
+  </div>
+  <div class="hud-corner-bracket bottom-left" aria-hidden="true">
+    <div class="corner-crosshair"></div>
+    <div class="corner-readout">WAL.SYNC: STABLE // VRAM 4.2GB</div>
+  </div>
+  <div class="hud-corner-bracket bottom-right" aria-hidden="true">
+    <div class="corner-crosshair"></div>
+    <div class="corner-readout">RADAR.FPS: 60 // 18ms</div>
+  </div>
 
-      
+  <!-- 1. LEFT SIDE: ALL READINGS & BEST VIEW (TELEMETRY HUD) -->
+  <aside class="telemetry-readings-column" role="complementary" aria-label="Live System Telemetry HUD">
+    <!-- Telemetry Column Header -->
+    <div class="hud-col-header">
+      <div class="header-brand-line">
+        <span class="hud-dot-pulse"></span>
+        <h2 class="hud-col-title">SYSTEM READINGS</h2>
+        <span class="hud-badge-live">LIVE HUD</span>
+      </div>
+      <!-- Mode Toggle: Readings vs Automations -->
+      <div class="hud-tab-switcher">
+        <button
+          type="button"
+          class="hud-switch-btn"
+          [class.active]="activeLeftTab() === 'READINGS'"
+          (click)="setLeftTab('READINGS')"
+        >
+          <span>📊 Telemetry</span>
+        </button>
+        <button
+          type="button"
+          class="hud-switch-btn"
+          [class.active]="activeLeftTab() === 'AUTOMATIONS'"
+          (click)="setLeftTab('AUTOMATIONS')"
+        >
+          <span>⚡ 1-Click Ops</span>
+        </button>
+      </div>
+    </div>
 
-      <!-- 2. Main VisionOS Spatial Frosted Glass Control Center (Styled like Reference Image 5) -->
-      <main class="vision-glass-panel" role="main" aria-label="Spatial AI Dashboard">
-        <!-- VisionOS In-Card View Segment Strip -->
-        <div class="vision-view-segment-bar">
-          <!-- Glass Pill View Tabs -->
-          <nav class="glass-pill-nav" aria-label="Dashboard Views">
-            <button
-              type="button"
-              class="glass-nav-tab"
-              [class.active]="activeMainTab() === 'AUTOMATION'"
-              (click)="setActiveTab('AUTOMATION')"
-            >
-              <span class="tab-icon">⚡</span>
-              <span>Automations</span>
-            </button>
-            <button
-              type="button"
-              class="glass-nav-tab"
-              [class.active]="activeMainTab() === 'TELEMETRY'"
-              (click)="setActiveTab('TELEMETRY')"
-            >
-              <span class="tab-icon">📊</span>
-              <span>Telemetry HUD</span>
-            </button>
-            <button
-              type="button"
-              class="glass-nav-tab"
-              [class.active]="activeMainTab() === 'SWARM'"
-              (click)="setActiveTab('SWARM')"
-            >
-              <span class="tab-icon">🌐</span>
-              <span>Swarm Nodes (8)</span>
-            </button>
-            <button
-              type="button"
-              class="glass-nav-tab"
-              [class.active]="activeMainTab() === 'NEURAL'"
-              (click)="setActiveTab('NEURAL')"
-            >
-              <span class="tab-icon">🧠</span>
-              <span>Neural Core</span>
-            </button>
-            <button
-              type="button"
-              class="glass-nav-tab stark-comms-tab"
-              [class.active]="activeMainTab() === 'COMMS'"
-              (click)="setActiveTab('COMMS')"
-            >
-              <span class="tab-icon">💬</span>
-              <span>JARVIS Comms</span>
-            </button>
-          </nav>
+    <!-- READINGS TAB CONTENT -->
+    @if (activeLeftTab() === 'READINGS') {
+      <div class="readings-scroll-body">
+        <!-- 3 Circular Tachometer Gauges (Styled like Reference Image 3) -->
+        <div class="tachometer-gauges-cluster">
+          <!-- Gauge 1: NPU / CPU Compute Load -->
+          <div class="tachometer-dial-card" appAnimeInteractive [appAnimeType]="'card'">
+            <div class="dial-svg-wrapper">
+              <svg viewBox="0 0 100 100" class="tachometer-svg">
+                <circle cx="50" cy="50" r="40" class="gauge-bg-ring" />
+                <circle cx="50" cy="50" r="40" class="gauge-fill-ring cyan-arc" style="stroke-dasharray: 251.2; stroke-dashoffset: 75;" />
+                <!-- Tachometer Ticks -->
+                <line x1="50" y1="12" x2="50" y2="16" class="gauge-tick" />
+                <line x1="23" y1="23" x2="26" y2="26" class="gauge-tick" />
+                <line x1="77" y1="23" x2="74" y2="26" class="gauge-tick" />
+                <line x1="12" y1="50" x2="16" y2="50" class="gauge-tick" />
+                <line x1="88" y1="50" x2="84" y2="50" class="gauge-tick" />
+              </svg>
+              <div class="dial-center-content">
+                <span class="dial-metric-val">78<small>%</small></span>
+                <span class="dial-metric-label">CPU / NPU</span>
+              </div>
+            </div>
+            <div class="dial-footer-meta">
+              <span class="meta-item">Clock: <strong>3.8 GHz</strong></span>
+              <span class="meta-item">Temp: <strong>41°C</strong></span>
+            </div>
+          </div>
 
-          <!-- In-Panel Quick Actions -->
-          <div class="panel-quick-actions">
+          <!-- Gauge 2: Memory & VRAM Allocation -->
+          <div class="tachometer-dial-card" appAnimeInteractive [appAnimeType]="'card'">
+            <div class="dial-svg-wrapper">
+              <svg viewBox="0 0 100 100" class="tachometer-svg">
+                <circle cx="50" cy="50" r="40" class="gauge-bg-ring" />
+                <circle cx="50" cy="50" r="40" class="gauge-fill-ring purple-arc" style="stroke-dasharray: 251.2; stroke-dashoffset: 185;" />
+                <line x1="50" y1="12" x2="50" y2="16" class="gauge-tick" />
+                <line x1="23" y1="23" x2="26" y2="26" class="gauge-tick" />
+                <line x1="77" y1="23" x2="74" y2="26" class="gauge-tick" />
+              </svg>
+              <div class="dial-center-content">
+                <span class="dial-metric-val">26<small>%</small></span>
+                <span class="dial-metric-label">VRAM</span>
+              </div>
+            </div>
+            <div class="dial-footer-meta">
+              <span class="meta-item">Used: <strong>4.2 GB</strong></span>
+              <span class="meta-item">Free: <strong>11.8 GB</strong></span>
+            </div>
+          </div>
+
+          <!-- Gauge 3: System Cadence & FPS -->
+          <div class="tachometer-dial-card" appAnimeInteractive [appAnimeType]="'card'">
+            <div class="dial-svg-wrapper">
+              <svg viewBox="0 0 100 100" class="tachometer-svg">
+                <circle cx="50" cy="50" r="40" class="gauge-bg-ring" />
+                <circle cx="50" cy="50" r="40" class="gauge-fill-ring green-arc" style="stroke-dasharray: 251.2; stroke-dashoffset: 35;" />
+                <line x1="50" y1="12" x2="50" y2="16" class="gauge-tick" />
+                <line x1="77" y1="23" x2="74" y2="26" class="gauge-tick" />
+              </svg>
+              <div class="dial-center-content">
+                <span class="dial-metric-val">60<small>FPS</small></span>
+                <span class="dial-metric-label">RADAR</span>
+              </div>
+            </div>
+            <div class="dial-footer-meta">
+              <span class="meta-item">Latency: <strong>18 ms</strong></span>
+              <span class="meta-item">WAL: <strong>1.2 ms</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verified Subsystems Status Matrix -->
+        <div class="hud-subsystem-card">
+          <div class="subsystem-header">
+            <span class="subsystem-title">VERIFIED SUBSYSTEMS</span>
+            <span class="subsystem-badge-verified">PHYSICAL DUAL-STATE</span>
+          </div>
+
+          <div class="subsystems-list">
+            <div class="subsystem-row">
+              <span class="status-indicator-dot active"></span>
+              <div class="subsystem-info">
+                <span class="subsystem-name">Standalone Neural LLM</span>
+                <span class="subsystem-detail">ABHI Native 8.2B // Zero Ollama</span>
+              </div>
+              <span class="subsystem-tag">ONLINE</span>
+            </div>
+
+            <div class="subsystem-row">
+              <span class="status-indicator-dot active"></span>
+              <div class="subsystem-info">
+                <span class="subsystem-name">Dual-State Verifier</span>
+                <span class="subsystem-detail">Physical Disk & Window State Audit</span>
+              </div>
+              <span class="subsystem-tag">ACTIVE</span>
+            </div>
+
+            <div class="subsystem-row">
+              <span class="status-indicator-dot active"></span>
+              <div class="subsystem-info">
+                <span class="subsystem-name">Windows UIAutomation</span>
+                <span class="subsystem-detail">winsta0\default Interactive Handle</span>
+              </div>
+              <span class="subsystem-tag">BOUND</span>
+            </div>
+
+            <div class="subsystem-row">
+              <span class="status-indicator-dot active"></span>
+              <div class="subsystem-info">
+                <span class="subsystem-name">WhatsApp Direct Protocol</span>
+                <span class="subsystem-detail">Desktop URI + Physical Keystroke Relay</span>
+              </div>
+              <span class="subsystem-tag">READY</span>
+            </div>
+
+            <div class="subsystem-row">
+              <span class="status-indicator-dot active"></span>
+              <div class="subsystem-info">
+                <span class="subsystem-name">Browser Automation</span>
+                <span class="subsystem-detail">Google Chrome & Playwright Bridge</span>
+              </div>
+              <span class="subsystem-tag">READY</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Specialist Swarm Nodes Status -->
+        <div class="hud-subsystem-card">
+          <div class="subsystem-header">
+            <span class="subsystem-title">ORBITING SATELLITES (8)</span>
+            <span class="subsystem-badge-synced">100% SYNCED</span>
+          </div>
+          <div class="swarm-mini-grid">
+            @for (agent of specialistAgents; track agent.id) {
+              <div
+                class="swarm-node-pill"
+                [class.selected]="selectedNode()?.id === agent.id"
+                (click)="selectSpecialistAgent(agent)"
+                [title]="agent.role"
+              >
+                <span class="swarm-node-beacon"></span>
+                <span class="swarm-node-name">{{ agent.name.split(' ')[0] }}</span>
+                <span class="swarm-node-mark">{{ agent.suitMark?.split(' ')[1] || 'MK' }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 1-CLICK AUTOMATIONS TAB CONTENT -->
+    @if (activeLeftTab() === 'AUTOMATIONS') {
+      <div class="readings-scroll-body">
+        <div class="automations-list-wrap">
+          <div class="automations-header-line">
+            <span class="auto-heading">PHYSICAL WIN32 AUTOMATIONS</span>
             <button
               type="button"
               class="auto-cycle-btn"
               [class.active]="isAutoCycleRunning()"
               (click)="toggleAutoCycle()"
-              title="Run Continuous Autonomous Swarm Cycles"
             >
-              <span class="cycle-dot" [class.pulse]="isAutoCycleRunning()"></span>
-              <span>{{ isAutoCycleRunning() ? '⏹ Stop Loop' : '⚡ Auto-Run Loop' }}</span>
+              <span>{{ isAutoCycleRunning() ? '⏹ Stop' : '⚡ Loop' }}</span>
             </button>
+          </div>
 
+          @for (scenario of automationScenarios; track scenario.id) {
             <button
               type="button"
-              class="hud-tool-btn theme-btn"
-              (click)="toggleThemeCustomizer()"
-              [attr.aria-expanded]="showThemeCustomizer()"
-              title="Theme Customizer"
+              class="automation-quick-item"
+              appAnimeInteractive
+              [appAnimeType]="'button'"
+              (click)="executeScenario(scenario)"
+              [disabled]="isWorking()"
             >
-              <span class="btn-icon">🎨</span>
-              <span class="btn-text">Theme</span>
+              <span class="scenario-icon">{{ scenario.icon }}</span>
+              <div class="scenario-text-col">
+                <span class="scenario-title">{{ scenario.title }}</span>
+                <span class="scenario-desc">{{ scenario.description }}</span>
+              </div>
+              <span class="scenario-badge">{{ scenario.category }}</span>
             </button>
-          </div>
+          }
         </div>
+      </div>
+    }
+  </aside>
 
-        <!-- Subconscious Cognitive Thought Ticker Bar -->
-        <section class="subconscious-thought-bar" aria-label="Subconscious Cognitive Stream">
-          <div class="thought-pulse-indicator">
-            <span class="beacon-ring"></span>
-            <span class="beacon-core"></span>
-          </div>
-          <div class="thought-content-wrapper">
-            <span class="thought-prefix">ARC REACTOR AI //</span>
-            <span class="thought-stream-text">{{ activeSubconsciousThought() }}</span>
-          </div>
-          <div class="thought-quantum-tag">
-            <span class="quantum-label">ABHI CENTRAL INTELLIGENCE · WAL SYNCED</span>
-          </div>
-        </section>
-
-        <!-- TAB 1: AUTOMATIONS STUDIO (VISIONOS AUTOMATED EXECUTION - REFERENCE IMAGE 5) -->
-        @if (activeMainTab() === 'AUTOMATION') {
-          <div class="tab-body automation-tab-body">
-            <!-- Top Metric Stat Cards (Styled like Image 5 Top Stats) -->
-            <div class="vision-stats-row">
-              <div class="vision-stat-card" appAnimeInteractive [appAnimeType]="'card'">
-                <div class="stat-circle-meter" title="Core Execution Efficiency">
-                  <span class="circle-val" [appAnimeCounter]="99.8" [counterDecimals]="1" [counterSuffix]="'%'">99.8%</span>
-                </div>
-                <div class="stat-text-group">
-                  <span class="stat-title">Dual-State Verified</span>
-                  <span class="stat-num" [appAnimeCounter]="1420" [counterSuffix]="'+ Runs'">1,420+ Runs</span>
-                  <span class="stat-sub">Physical Observed State</span>
-                </div>
-              </div>
-
-              <div class="vision-stat-card" appAnimeInteractive [appAnimeType]="'card'">
-                <div class="stat-text-group">
-                  <span class="stat-title">Inference Engine</span>
-                  <span class="stat-num">ABHI Native</span>
-                  <span class="stat-sub">Neural Core 8.2B</span>
-                </div>
-              </div>
-
-              <div class="vision-stat-card" appAnimeInteractive [appAnimeType]="'card'">
-                <div class="stat-text-group">
-                  <span class="stat-title">Memory WAL Graph</span>
-                  <span class="stat-num">0 Pending</span>
-                  <span class="stat-sub">1.2ms Commit Latency</span>
-                </div>
-              </div>
-
-              <div class="vision-stat-card" appAnimeInteractive [appAnimeType]="'card'">
-                <div class="stat-text-group">
-                  <span class="stat-title">Swarm Consensus</span>
-                  <span class="stat-num">8 Agents</span>
-                  <span class="stat-sub">Laser Conduits Synced</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Main Automation Workspace Cards -->
-            <div class="automation-workspace-grid">
-              <!-- Left Card: 1-Click Interactive Automation Launcher -->
-              <div class="vision-content-card">
-                <div class="card-title-bar">
-                  <div class="card-title-group">
-                    <span class="card-icon">⚡</span>
-                    <h3 class="card-title">1-Click Autonomous OS Workflows</h3>
-                  </div>
-                  <div class="card-actions-group">
-                    <button
-                      type="button"
-                      class="auto-cycle-btn"
-                      [class.active]="isAutoCycleRunning()"
-                      (click)="toggleAutoCycle()"
-                      title="Run Continuous Autonomous Swarm Cycles"
-                    >
-                      <span class="cycle-dot" [class.pulse]="isAutoCycleRunning()"></span>
-                      <span>{{ isAutoCycleRunning() ? '⏹ Stop Loop' : '⚡ Auto-Run Loop' }}</span>
-                    </button>
-                    <span class="card-badge">LIVE EXECUTION</span>
-                  </div>
-                </div>
-
-                <div class="scenarios-list">
-                  @for (scenario of automationScenarios; track scenario.id) {
-                    <button
-                      type="button"
-                      class="scenario-pill-item"
-                      appAnimeInteractive
-                      [appAnimeType]="'button'"
-                      [class.active]="selectedScenario()?.id === scenario.id"
-                      (click)="executeScenario(scenario)"
-                      [disabled]="isWorking()"
-                      [title]="scenario.description"
-                    >
-                      <span class="scenario-icon">{{ scenario.icon }}</span>
-                      <div class="scenario-meta">
-                        <span class="scenario-name">{{ scenario.title }}</span>
-                        <span class="scenario-desc">{{ scenario.description }}</span>
-                      </div>
-                      <span class="scenario-tag">{{ scenario.category }}</span>
-                    </button>
-                  }
-                </div>
-              </div>
-
-              <!-- Right Card: Autonomous Policy Switches (Styled like Image 5 Toggles) -->
-              <div class="vision-content-card">
-                <div class="card-title-bar">
-                  <div class="card-title-group">
-                    <span class="card-icon">🛡️</span>
-                    <h3 class="card-title">Autonomous Safety & Physical Locks</h3>
-                  </div>
-                  <span class="card-badge">HARDENED</span>
-                </div>
-
-                <div class="policy-toggles-list">
-                  <div class="policy-toggle-item">
-                    <div class="policy-info">
-                      <span class="policy-name">Physical Dual-State Gate</span>
-                      <span class="policy-sub">Verify OS pixels & process handles</span>
-                    </div>
-                    <div class="toggle-pill active" title="Active">
-                      <span class="toggle-thumb"></span>
-                    </div>
-                  </div>
-
-                  <div class="policy-toggle-item">
-                    <div class="policy-info">
-                      <span class="policy-name">Air-Gapped Local Privacy</span>
-                      <span class="policy-sub">100% zero cloud inference telemetry</span>
-                    </div>
-                    <div class="toggle-pill active" title="Active">
-                      <span class="toggle-thumb"></span>
-                    </div>
-                  </div>
-
-                  <div class="policy-toggle-item">
-                    <div class="policy-info">
-                      <span class="policy-name">Self-Healing AST Engine</span>
-                      <span class="policy-sub">Autonomous error diagnosis & patch</span>
-                    </div>
-                    <div class="toggle-pill active" title="Active">
-                      <span class="toggle-thumb"></span>
-                    </div>
-                  </div>
-
-                  <div class="policy-toggle-item">
-                    <div class="policy-info">
-                      <span class="policy-name">UIAutomation Focus Lock</span>
-                      <span class="policy-sub">Sandboxed keyboard & mouse dispatch</span>
-                    </div>
-                    <div class="toggle-pill active" title="Active">
-                      <span class="toggle-thumb"></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- TAB 2: TELEMETRY HUD (CYBERNETIC GAUGES - REFERENCE IMAGE 4) -->
-        @if (activeMainTab() === 'TELEMETRY') {
-          <div class="tab-body telemetry-tab-body">
-            <div class="telemetry-grid">
-              <!-- Radial Compute Meter Card (Like Image 4 & 5) -->
-              <div class="telemetry-card">
-                <div class="card-header-clean">
-                  <span class="tel-label">NPU / COMPUTE LOAD</span>
-                  <span class="tel-val cyan">78%</span>
-                </div>
-                <div class="radial-gauge-container">
-                  <div class="radial-ring-track">
-                    <div class="radial-ring-fill"></div>
-                    <span class="radial-center-text">78%</span>
-                  </div>
-                </div>
-                <div class="tel-meta-row">
-                  <span>Tensor Cores: 32 / 32</span>
-                  <span>Clock: 2.4 GHz</span>
-                </div>
-              </div>
-
-              <!-- VRAM Memory Allocation -->
-              <div class="telemetry-card">
-                <div class="card-header-clean">
-                  <span class="tel-label">VRAM ALLOCATION</span>
-                  <span class="tel-val blue">4.2 / 16 GB</span>
-                </div>
-                <div class="linear-progress-track">
-                  <div class="linear-progress-fill" style="width: 26.25%;"></div>
-                </div>
-                <div class="tel-meta-row">
-                  <span>Quantization: Q4_K_M</span>
-                  <span>Headroom: 11.8 GB</span>
-                </div>
-              </div>
-
-              <!-- Latency & Frame Rate -->
-              <div class="telemetry-card">
-                <div class="card-header-clean">
-                  <span class="tel-label">RESPONSE LATENCY</span>
-                  <span class="tel-val green">18 ms</span>
-                </div>
-                <div class="sparkline-bar-group">
-                  @for (bar of spectralBars; track bar) {
-                    <span class="mini-bar" [style.--i]="bar"></span>
-                  }
-                </div>
-                <div class="tel-meta-row">
-                  <span>3D Radar: 60 FPS</span>
-                  <span>WAL Commit: 1.2 ms</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- TAB 3: SPECIALIST SWARM NODES (STARK ARMOR PROTOCOLS) -->
-        @if (activeMainTab() === 'SWARM') {
-          <div class="tab-body swarm-tab-body">
-            <div class="swarm-cards-grid">
-              @for (agent of specialistAgents; track agent.id) {
-                <div
-                  class="swarm-agent-card"
-                  [class.selected]="selectedNode()?.id === agent.id"
-                  (click)="selectSpecialistAgent(agent)"
-                >
-                  <div class="swarm-card-header">
-                    <span class="agent-beacon-dot"></span>
-                    <div class="agent-title-col">
-                      <span class="agent-name">{{ agent.name }}</span>
-                      @if (agent.protocolCode) {
-                        <span class="agent-protocol-code">{{ agent.protocolCode }}</span>
-                      }
-                    </div>
-                    @if (agent.suitMark) {
-                      <span class="agent-suit-mark">{{ agent.suitMark }}</span>
-                    }
-                    <span class="agent-tier">{{ agent.riskTier }}</span>
-                  </div>
-                  <p class="agent-role">{{ agent.role }}</p>
-                  <div class="caps-tags-wrap">
-                    @for (cap of agent.capabilities; track cap) {
-                      <span class="cap-tag">{{ cap }}</span>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
-
-        <!-- TAB 4: NEURAL NETWORK CORE INSPECTOR -->
-        @if (activeMainTab() === 'NEURAL') {
-          <div class="tab-body neural-tab-body">
-            <app-neural-network-viewer [isModal]="false"></app-neural-network-viewer>
-          </div>
-        }
-
-        <!-- TAB 5: TONY STARK & J.A.R.V.I.S. COMMS & CO-PILOT CHAT -->
-        @if (activeMainTab() === 'COMMS') {
-          <div class="tab-body comms-tab-body">
-            <div class="stark-comms-card">
-              <!-- Comms Header Bar -->
-              <div class="comms-header-bar">
-                <div class="comms-companion-identity">
-                  <div class="arc-reactor-avatar" [class.pulsing]="isWorking() || speechVoice.isSpeaking()">
-                    <span class="reactor-core"></span>
-                    <span class="reactor-ring"></span>
-                  </div>
-                  <div class="companion-meta">
-                    <div class="companion-title-row">
-                      <h3 class="companion-name">
-                        {{ speechVoice.personaMode() === 'JARVIS' ? 'J.A.R.V.I.S. MARK 85' : 'F.R.I.D.A.Y. TACTICAL' }}
-                      </h3>
-                      <span class="synergy-badge">⚡ 100% Synergy · Trusted Co-Pilot</span>
-                    </div>
-                    <span class="companion-subtitle">
-                      {{ speechVoice.personaMode() === 'JARVIS' ? 'Autonomous AI Companion & Engineering Confidant' : 'Tactical UI Co-Pilot & Mission Control' }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Persona & Callsign Customizer Controls -->
-                <div class="comms-config-controls">
-                  <!-- Persona Switcher -->
-                  <div class="persona-switch-group" title="Select Companion Persona">
-                    <button
-                      type="button"
-                      class="persona-toggle-pill"
-                      [class.active]="speechVoice.personaMode() === 'JARVIS'"
-                      (click)="setPersona('JARVIS')"
-                    >
-                      <span class="pill-dot jarvis-dot"></span>
-                      <span>JARVIS</span>
-                    </button>
-                    <button
-                      type="button"
-                      class="persona-toggle-pill"
-                      [class.active]="speechVoice.personaMode() === 'FRIDAY'"
-                      (click)="setPersona('FRIDAY')"
-                    >
-                      <span class="pill-dot friday-dot"></span>
-                      <span>FRIDAY</span>
-                    </button>
-                  </div>
-
-                  <!-- Callsign Picker -->
-                  <div class="callsign-picker-group" title="Select How Your AI Addresses You">
-                    <span class="callsign-label">Callsign:</span>
-                    @for (callsign of ['Sir', 'Boss', 'Tony', 'Partner']; track callsign) {
-                      <button
-                        type="button"
-                        class="callsign-chip"
-                        [class.active]="speechVoice.userCallsign() === callsign"
-                        (click)="setCallsign($any(callsign))"
-                      >
-                        {{ callsign }}
-                      </button>
-                    }
-                  </div>
-
-                  <!-- Audio & Reset Controls -->
-                  <div class="comms-action-buttons">
-                    <button
-                      type="button"
-                      class="comms-tool-btn"
-                      [class.active]="!speechVoice.isMuted()"
-                      (click)="toggleVoiceAudio()"
-                      title="Toggle Speech Audio Feedback"
-                    >
-                      <span>{{ speechVoice.isMuted() ? '🔇 Unmute' : '🔊 Voice' }}</span>
-                    </button>
-                    <button
-                      type="button"
-                      class="comms-tool-btn clear-btn"
-                      (click)="clearComms()"
-                      title="Clear Comms Stream"
-                    >
-                      <span>🗑 Clear</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Quick Banter Prompt Chips -->
-              <div class="quick-banter-strip" aria-label="Quick Conversation Starters">
-                <span class="banter-strip-label">STARK PROTOCOLS:</span>
-                <div class="banter-chips-scroll">
-                  @for (item of companionBanterPrompts; track item.label) {
-                    <button
-                      type="button"
-                      class="banter-prompt-chip"
-                      (click)="sendBanterPrompt(item.prompt)"
-                      [disabled]="isWorking()"
-                    >
-                      <span class="chip-icon">{{ item.icon }}</span>
-                      <span class="chip-text">{{ item.label }}</span>
-                    </button>
-                  }
-                </div>
-              </div>
-
-              <!-- Live Comms Conversation Feed -->
-              <div class="comms-feed-container" role="log" aria-live="polite">
-                @for (msg of commandService.commsMessages(); track msg.id) {
-                  <div
-                    class="comms-bubble-row"
-                    [class.user-row]="msg.sender === 'USER'"
-                    [class.bot-row]="msg.sender !== 'USER'"
-                  >
-                    <!-- Avatar Orb -->
-                    <div class="bubble-avatar-orb">
-                      @if (msg.sender === 'USER') {
-                        <span class="user-avatar-initial">{{ msg.callsign.charAt(0) }}</span>
-                      } @else {
-                        <span class="bot-avatar-reactor">✦</span>
-                      }
-                    </div>
-
-                    <!-- Bubble Content -->
-                    <div class="bubble-body">
-                      <div class="bubble-header-line">
-                        <span class="bubble-sender-name">
-                          {{ msg.sender === 'USER' ? msg.callsign : (msg.sender === 'JARVIS' ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.') }}
-                        </span>
-                        <span class="bubble-timestamp">{{ msg.timestamp | date:'shortTime' }}</span>
-                        @if (msg.type) {
-                          <span class="bubble-type-tag">{{ msg.type }}</span>
-                        }
-                      </div>
-
-                      <div class="bubble-text">{{ msg.text }}</div>
-
-                      @if (msg.sender !== 'USER') {
-                        <div class="bubble-footer-actions">
-                          <button
-                            type="button"
-                            class="speak-msg-btn"
-                            (click)="speakMessage(msg.text)"
-                            title="Speak Response Aloud"
-                          >
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-                            </svg>
-                            <span>Speak</span>
-                          </button>
-                        </div>
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- 3. Bottom Centered Neumorphic Command Dock Inside Glass Frame -->
-        <footer class="neumorphic-dock-container" role="region" aria-label="Command Dock">
-          <!-- Voice Spectral Resonance Equalizer -->
-          <div class="voice-spectral-analyzer" [class.active]="isListening() || isWorking()" title="Neural Audio & Energy Resonance">
-            @for (bar of spectralBars; track bar) {
-              <span class="spectrum-bar" [style.--bar-index]="bar"></span>
-            }
-          </div>
-
-          <div class="neumorphic-dock-shell" [class.working]="isWorking()" [class.has-error]="errorMessage()">
-            <form #dockFormRef class="dock-form" (ngSubmit)="onSubmitCommand()">
-              <div class="dock-input-wrapper">
-                <!-- AI Core Symbol -->
-                <div class="dock-ai-icon" [class.glow]="isWorking()">
-                  @if (isWorking()) {
-                    <span class="dock-spin">🌀</span>
-                  } @else {
-                    <span class="dock-sparkle">✦</span>
-                  }
-                </div>
-
-                <!-- Main Inset Command Input -->
-                <input
-                  #cmdInputRef
-                  type="text"
-                  class="dock-input-field"
-                  [(ngModel)]="commandInput"
-                  name="userCommand"
-                  [placeholder]="inputPlaceholder"
-                  autocomplete="off"
-                  [disabled]="isWorking()"
-                  (keydown.escape)="clearCommand()"
-                  aria-label="Command Input"
-                />
-
-                <!-- Controls: Voice Toggle & Submit -->
-                <div class="dock-controls-group">
-                  <!-- Voice Toggle Button -->
-                  <button
-                    type="button"
-                    class="dock-control-btn voice-btn"
-                    [class.listening]="isListening()"
-                    (click)="toggleVoiceInput()"
-                    title="Voice Input (Speech-to-Text)"
-                    aria-label="Toggle Voice Input"
-                  >
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                      <line x1="12" y1="19" x2="12" y2="22"/>
-                    </svg>
-                  </button>
-
-                  <!-- Submit Action Button -->
-                  <button
-                    type="submit"
-                    class="dock-control-btn submit-btn"
-                    [disabled]="!commandInput.trim() || isWorking()"
-                    title="Execute Command (Enter)"
-                    aria-label="Submit Command"
-                  >
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="22" y1="2" x2="11" y2="13"/>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </form>
-
-            <!-- Error Alert Banner in Dock if Submission Fails -->
-            @if (errorMessage()) {
-              <div class="dock-error-banner" role="alert">
-                <span class="error-icon">⚠️</span>
-                <span class="error-text">{{ errorMessage() }}</span>
-                <button type="button" class="error-close" (click)="errorMessage.set(null)">✕</button>
-              </div>
-            }
-          </div>
-        </footer>
-      </main>
-
-      <!-- 4. Interactive Theme Customizer Modal / Popover -->
-      @if (showThemeCustomizer()) {
-        <aside class="theme-customizer-panel" role="dialog" aria-label="Theme Customizer">
-          <div class="customizer-header">
-            <div class="customizer-title-group">
-              <span class="title-icon">🎨</span>
-              <span class="title-text">Theme Customizer</span>
-            </div>
-            <button type="button" class="close-customizer-btn" (click)="closeThemeCustomizer()">✕</button>
-          </div>
-
-          <div class="customizer-body">
-            <div class="preset-section">
-              <label class="section-label">THEME PRESETS</label>
-              <div class="presets-row">
-                @for (preset of themeService.availablePresets; track preset.id) {
-                  <button
-                    type="button"
-                    class="preset-pill"
-                    [class.active]="themeService.activeTheme().id === preset.id"
-                    (click)="selectPreset(preset.id)"
-                  >
-                    <span class="preset-color-dot" [style.background]="preset.colors.accentPrimary"></span>
-                    <span>{{ preset.label }}</span>
-                  </button>
-                }
-              </div>
-            </div>
-
-            <div class="customizer-actions-row">
-              <button type="button" class="action-btn reset-btn" (click)="resetTheme()">
-                Reset Default
-              </button>
-              @if (themeService.previewTheme()) {
-                <button type="button" class="action-btn cancel-btn" (click)="cancelThemePreview()">
-                  Cancel
-                </button>
-                <button type="button" class="action-btn save-btn" (click)="saveTheme()">
-                  Save Palette
-                </button>
-              }
-            </div>
-          </div>
-        </aside>
-      }
-
-      <!-- 5. Interactive Spatial Node Inspector (Contextual Card on Swarm Click) -->
-      @if (selectedNode()) {
-        <aside class="spatial-node-inspector" role="complementary" aria-label="Agent Node Details">
-          <div class="inspector-header">
-            <div class="node-title-group">
-              <span class="node-type-dot"></span>
-              <span class="node-name">{{ selectedNode()?.name }}</span>
-            </div>
-            <button type="button" class="close-inspector-btn" (click)="selectedNode.set(null)" aria-label="Close Inspector">✕</button>
-          </div>
-          <div class="inspector-body">
-            <div class="inspector-field">
-              <span class="field-label">Role:</span>
-              <span class="field-val">{{ selectedNode()?.role }}</span>
-            </div>
-            <div class="inspector-field">
-              <span class="field-label">Risk Tier:</span>
-              <span class="field-val badge-tier">{{ selectedNode()?.riskTier }}</span>
-            </div>
-            <div class="inspector-field">
-              <span class="field-label">Capabilities:</span>
-              <div class="caps-tags-wrap">
-                @for (cap of selectedNode()?.capabilities; track cap) {
-                  <span class="cap-tag">{{ cap }}</span>
-                }
-              </div>
-            </div>
-          </div>
-        </aside>
-      }
-
-      <!-- Universal Floating Result Sheet for LLM Q&A and Task Results -->
-      @if (commandService.activeResult()) {
-        <div class="active-result-overlay">
-          <app-result-sheet
-            [result]="commandService.activeResult()"
-            (onDismiss)="commandService.dismissResult()"
-          ></app-result-sheet>
-        </div>
-      }
-
-      <!-- 6. Contextual Current Task Status Floating Overlay -->
-      @if (activeTaskStatus()) {
-        <section class="contextual-task-overlay" [class.task-failed]="activeTaskStatus()?.stage === 'FAILED'" [class.task-success]="activeTaskStatus()?.stage === 'COMPLETED'">
-          <div class="task-status-pill">
-            <div class="stage-indicator-orb" [attr.data-stage]="activeTaskStatus()?.stage">
-              @if (activeTaskStatus()?.stage === 'EXECUTING' || activeTaskStatus()?.stage === 'PLANNING') {
-                <span class="spinner-dot"></span>
-              } @else if (activeTaskStatus()?.stage === 'COMPLETED') {
-                <span class="check-mark">✓</span>
-              } @else if (activeTaskStatus()?.stage === 'FAILED') {
-                <span class="error-mark">✕</span>
-              } @else {
-                <span class="info-mark">⚡</span>
-              }
-            </div>
-
-            <div class="task-info-block">
-              <div class="task-primary-line">
-                <span class="task-stage-badge">{{ activeTaskStatus()?.stage }}</span>
-                <span class="task-goal-text">{{ activeTaskStatus()?.command }}</span>
-              </div>
-              @if (activeTaskStatus()?.message) {
-                <div class="task-message-line">{{ activeTaskStatus()?.message }}</div>
-              }
-            </div>
-
-            <div class="task-actions-group">
-              @if (activeTaskStatus()?.stage === 'EXECUTING') {
-                <button type="button" class="task-cancel-btn" (click)="cancelTask()" title="Cancel Execution">
-                  Cancel
-                </button>
-              }
-              <button type="button" class="task-dismiss-btn" (click)="dismissTaskOverlay()" title="Dismiss">
-                ✕
-              </button>
-            </div>
-          </div>
-        </section>
-      }
+  <!-- 2. CENTER: SINGLE MAIN AGENT BOT (ARC REACTOR 3D INTELLIGENCE CORE) -->
+  <main class="main-agent-center-viewport" role="main" aria-label="Main Agent Intelligence Core">
+    <!-- Top Floating Holographic Intelligence Status -->
+    <div class="arc-core-hologram-badge" aria-hidden="true">
+      <span class="hologram-sparkle">✦</span>
+      <span class="hologram-label">ABHI ARC REACTOR INTELLIGENCE CORE // DUAL-STATE VERIFIED</span>
+      <span class="hologram-sparkle">✦</span>
     </div>
+
+    <!-- Center Floating Subconscious Thought Stream Ticker -->
+    <section class="subconscious-thought-bar" aria-label="Subconscious Cognitive Stream">
+      <div class="thought-pulse-indicator">
+        <span class="beacon-ring"></span>
+        <span class="beacon-core"></span>
+      </div>
+      <div class="thought-content-wrapper">
+        <span class="thought-prefix">ARC REACTOR //</span>
+        <span class="thought-stream-text">{{ activeSubconsciousThought() }}</span>
+      </div>
+      <div class="thought-quantum-tag">
+        <span class="quantum-label">WAL SYNCED · ZERO CLOUD</span>
+      </div>
+    </section>
+
+    <!-- Bottom Centered Neumorphic Command Dock -->
+    <footer class="neumorphic-dock-container" role="region" aria-label="Command Dock">
+      <!-- Voice Spectral Resonance Equalizer -->
+      <div class="voice-spectral-analyzer" [class.active]="isListening() || speechVoice.isSpeaking() || isWorking()" title="Neural Audio & Energy Resonance">
+        @for (bar of spectralBars; track bar) {
+          <span class="spectrum-bar" [style.--bar-index]="bar"></span>
+        }
+      </div>
+
+      <div class="neumorphic-dock-shell" [class.working]="isWorking()" [class.has-error]="errorMessage()">
+        <form #dockFormRef class="dock-form" (ngSubmit)="onSubmitCommand()">
+          <div class="dock-input-wrapper">
+            <!-- AI Core Symbol -->
+            <div class="dock-ai-icon" [class.glow]="isWorking()">
+              @if (isWorking()) {
+                <span class="dock-spin">🌀</span>
+              } @else {
+                <span class="dock-sparkle">✦</span>
+              }
+            </div>
+
+            <!-- Main Inset Command Input -->
+            <input
+              #cmdInputRef
+              type="text"
+              class="dock-input-field"
+              [(ngModel)]="commandInput"
+              name="userCommand"
+              [placeholder]="inputPlaceholder"
+              autocomplete="off"
+              [disabled]="isWorking()"
+              (keydown.escape)="clearCommand()"
+              aria-label="Command Input"
+            />
+
+            <!-- Controls: Voice Toggle & Submit -->
+            <div class="dock-controls-group">
+              <button
+                type="button"
+                class="dock-control-btn voice-btn"
+                [class.listening]="isListening()"
+                (click)="toggleVoiceInput()"
+                title="Voice Input (Speech-to-Text)"
+                aria-label="Toggle Voice Input"
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="22"/>
+                </svg>
+              </button>
+
+              <button
+                type="submit"
+                class="dock-control-btn submit-btn"
+                [disabled]="!commandInput.trim() || isWorking()"
+                title="Execute Command (Enter)"
+                aria-label="Submit Command"
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"/>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Error Alert Banner -->
+        @if (errorMessage()) {
+          <div class="dock-error-banner" role="alert">
+            <span class="error-icon">⚠️</span>
+            <span class="error-text">{{ errorMessage() }}</span>
+            <button type="button" class="error-close" (click)="errorMessage.set(null)">✕</button>
+          </div>
+        }
+      </div>
+    </footer>
+  </main>
+
+  <!-- 3. RIGHT SIDE: INSTAGRAM REELS AI VOCAL STUDIO (NATURAL HUMAN VOICE & DYNAMIC SUBTITLES) -->
+  <aside class="vocal-studio-column" role="complementary" aria-label="AI Speech & Dynamic Reel Subtitles">
+    <!-- Header with Live Speech State -->
+    <div class="vocal-header">
+      <div class="vocal-brand-line">
+        <span class="vocal-pulse-dot" [class.speaking]="speechVoice.isSpeaking()" [class.listening]="speechVoice.isListening()"></span>
+        <h2 class="vocal-title">AI VOCAL STUDIO</h2>
+      </div>
+      <span class="vocal-voice-badge">NATURAL HUMAN VOICE</span>
+    </div>
+
+    <div class="vocal-scroll-body">
+      <!-- Instagram Reel Floating Glowing Soundwave Orb Card -->
+      <div class="reel-speech-orb-card" [class.active-speaking]="speechVoice.isSpeaking()">
+        <div class="orb-visualizer-container">
+          <!-- Animated Concentric Soundwave Ripples -->
+          <div class="soundwave-ripple wave-3"></div>
+          <div class="soundwave-ripple wave-2"></div>
+          <div class="soundwave-ripple wave-1"></div>
+          <!-- Center Neural Vocal Orb -->
+          <div class="neural-vocal-orb" [class.speaking]="speechVoice.isSpeaking()">
+            <span class="orb-icon">{{ speechVoice.isSpeaking() ? '🎙️' : (speechVoice.isListening() ? '👂' : '✦') }}</span>
+          </div>
+        </div>
+
+        <!-- Vocal Status Pill -->
+        <div class="vocal-status-pill" [class.speaking]="speechVoice.isSpeaking()">
+          @if (speechVoice.isSpeaking()) {
+            <span class="status-pulse-dot speaking"></span>
+            <span>AI SPEAKING (NATURAL VOICE)</span>
+          } @else if (speechVoice.isListening()) {
+            <span class="status-pulse-dot listening"></span>
+            <span>LISTENING TO DIRECTIVE...</span>
+          } @else if (isWorking()) {
+            <span class="status-pulse-dot working"></span>
+            <span>DUAL-STATE PROCESSING...</span>
+          } @else {
+            <span class="status-pulse-dot idle"></span>
+            <span>STANDBY // AWAITING DIRECTIVE</span>
+          }
+        </div>
+
+        <!-- Frequency Equalizer Bars -->
+        <div class="frequency-bars-row">
+          @for (bar of spectralBars; track bar) {
+            <span class="vocal-freq-bar" [class.dance]="speechVoice.isSpeaking() || isListening()" [style.--bar-idx]="bar"></span>
+          }
+        </div>
+      </div>
+
+      <!-- Instagram Reel Word-by-Word Live Captions Card -->
+      <div class="reel-caption-card">
+        <div class="caption-header">
+          <span class="caption-label">LIVE REEL SUBTITLES</span>
+          <button
+            type="button"
+            class="caption-replay-btn"
+            (click)="replaySpokenText()"
+            title="Replay with Natural Human Voice"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+            <span>Listen</span>
+          </button>
+        </div>
+
+        <!-- Word by Word Animated Typography -->
+        <div class="caption-text-viewport">
+          @if (speechVoice.spokenWords().length > 0 && speechVoice.isSpeaking()) {
+            <div class="word-stream-wrap">
+              @for (word of speechVoice.spokenWords(); track $index) {
+                <span
+                  class="reel-word"
+                  [class.active-word]="$index === speechVoice.activeWordIndex()"
+                  [class.spoken-word]="$index < speechVoice.activeWordIndex()"
+                >{{ word }} </span>
+              }
+            </div>
+          } @else if (speechVoice.lastSpokenText()) {
+            <p class="last-spoken-quote">"{{ speechVoice.lastSpokenText() }}"</p>
+          } @else {
+            <p class="placeholder-caption">"Greetings, Sir. ABHI natural voice engine is active and tuned to conversational human warmth."</p>
+          }
+        </div>
+      </div>
+
+      <!-- Natural Voice & Human Cadence Controls -->
+      <div class="vocal-settings-card">
+        <div class="settings-title-line">
+          <span class="settings-title">HUMAN CADENCE & PERSONA</span>
+          <button
+            type="button"
+            class="mute-toggle-btn"
+            [class.muted]="speechVoice.isMuted()"
+            (click)="toggleVoiceAudio()"
+            title="Toggle Voice Speech Synthesis"
+          >
+            <span>{{ speechVoice.isMuted() ? '🔇 Unmute' : '🔊 Muted' }}</span>
+          </button>
+        </div>
+
+        <!-- Persona Switch: JARVIS (Warm Male) vs FRIDAY (Natural Female) -->
+        <div class="persona-switch-row">
+          <button
+            type="button"
+            class="persona-btn"
+            [class.active]="speechVoice.personaMode() === 'JARVIS'"
+            (click)="setPersona('JARVIS')"
+          >
+            <span class="btn-dot"></span>
+            <span>J.A.R.V.I.S. (Natural Male)</span>
+          </button>
+          <button
+            type="button"
+            class="persona-btn"
+            [class.active]="speechVoice.personaMode() === 'FRIDAY'"
+            (click)="setPersona('FRIDAY')"
+          >
+            <span class="btn-dot"></span>
+            <span>F.R.I.D.A.Y. (Natural Female)</span>
+          </button>
+        </div>
+
+        <!-- Callsign Selector -->
+        <div class="callsign-pills-row">
+          <span class="callsign-label">Callsign:</span>
+          @for (cs of availableCallsigns; track cs) {
+            <button
+              type="button"
+              class="callsign-chip"
+              [class.active]="speechVoice.userCallsign() === cs"
+              (click)="setCallsign(cs)"
+            >
+              {{ cs }}
+            </button>
+          }
+        </div>
+
+        <!-- Speech Speed / Cadence (Human Warmth) -->
+        <div class="speed-cadence-row">
+          <span class="cadence-label">Pacing:</span>
+          <button
+            type="button"
+            class="cadence-chip"
+            [class.active]="speechVoice.speechSpeedRate() === 0.95"
+            (click)="setSpeechSpeed(0.95)"
+          >
+            0.95x Relaxed
+          </button>
+          <button
+            type="button"
+            class="cadence-chip"
+            [class.active]="speechVoice.speechSpeedRate() === 1.0"
+            (click)="setSpeechSpeed(1.0)"
+          >
+            1.0x Natural
+          </button>
+          <button
+            type="button"
+            class="cadence-chip"
+            [class.active]="speechVoice.speechSpeedRate() === 1.05"
+            (click)="setSpeechSpeed(1.05)"
+          >
+            1.05x Snappy
+          </button>
+        </div>
+
+        <!-- Active Natural Voice Readout -->
+        <div class="active-voice-name-pill">
+          <span class="mic-glyph">🎙️</span>
+          <span class="voice-string">{{ speechVoice.selectedVoiceName() }}</span>
+        </div>
+      </div>
+
+      <!-- Instagram Viral Interactive Voice Action Chips -->
+      <div class="insta-prompts-card">
+        <span class="insta-prompts-title">QUICK CONVERSATION & OS ACTIONS</span>
+        <div class="insta-chips-grid">
+          @for (item of instaReelPrompts; track item.label) {
+            <button
+              type="button"
+              class="insta-prompt-chip"
+              appAnimeInteractive
+              [appAnimeType]="'button'"
+              (click)="sendBanterPrompt(item.cmd)"
+              [disabled]="isWorking()"
+            >
+              <span class="chip-icon">{{ item.icon }}</span>
+              <span class="chip-text">{{ item.label }}</span>
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 4. Interactive Theme Customizer Modal -->
+  @if (showThemeCustomizer()) {
+    <aside class="theme-customizer-panel" role="dialog" aria-label="Theme Customizer">
+      <div class="customizer-header">
+        <div class="customizer-title-group">
+          <span class="title-icon">🎨</span>
+          <span class="title-text">Theme Customizer</span>
+        </div>
+        <button type="button" class="close-customizer-btn" (click)="closeThemeCustomizer()">✕</button>
+      </div>
+
+      <div class="customizer-body">
+        <div class="preset-section">
+          <label class="section-label">THEME PRESETS</label>
+          <div class="presets-row">
+            @for (preset of themeService.availablePresets; track preset.id) {
+              <button
+                type="button"
+                class="preset-pill"
+                [class.active]="themeService.activeTheme().id === preset.id"
+                (click)="selectPreset(preset.id)"
+              >
+                <span class="preset-color-dot" [style.background]="preset.colors.accentPrimary"></span>
+                <span>{{ preset.label }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="customizer-actions-row">
+          <button type="button" class="action-btn reset-btn" (click)="resetTheme()">
+            Reset Default
+          </button>
+          @if (themeService.previewTheme()) {
+            <button type="button" class="action-btn cancel-btn" (click)="cancelThemePreview()">
+              Cancel
+            </button>
+            <button type="button" class="action-btn save-btn" (click)="saveTheme()">
+              Save Palette
+            </button>
+          }
+        </div>
+      </div>
+    </aside>
+  }
+
+  <!-- 5. Interactive Spatial Node Inspector -->
+  @if (selectedNode()) {
+    <aside class="spatial-node-inspector" role="complementary" aria-label="Agent Node Details">
+      <div class="inspector-header">
+        <div class="node-title-group">
+          <span class="node-type-dot"></span>
+          <span class="node-name">{{ selectedNode()?.name }}</span>
+        </div>
+        <button type="button" class="close-inspector-btn" (click)="selectedNode.set(null)" aria-label="Close Inspector">✕</button>
+      </div>
+      <div class="inspector-body">
+        <div class="inspector-field">
+          <span class="field-label">Role:</span>
+          <span class="field-val">{{ selectedNode()?.role }}</span>
+        </div>
+        <div class="inspector-field">
+          <span class="field-label">Risk Tier:</span>
+          <span class="field-val badge-tier">{{ selectedNode()?.riskTier }}</span>
+        </div>
+        <div class="inspector-field">
+          <span class="field-label">Capabilities:</span>
+          <div class="caps-tags-wrap">
+            @for (cap of selectedNode()?.capabilities; track cap) {
+              <span class="cap-tag">{{ cap }}</span>
+            }
+          </div>
+        </div>
+      </div>
+    </aside>
+  }
+
+  <!-- Universal Floating Result Sheet for LLM Q&A and Task Results -->
+  @if (commandService.activeResult()) {
+    <div class="active-result-overlay">
+      <app-result-sheet
+        [result]="commandService.activeResult()"
+        (onDismiss)="commandService.dismissResult()"
+      ></app-result-sheet>
+    </div>
+  }
+
+  <!-- 6. Contextual Current Task Status Floating Overlay -->
+  @if (activeTaskStatus()) {
+    <section class="contextual-task-overlay" [class.task-failed]="activeTaskStatus()?.stage === 'FAILED'" [class.task-success]="activeTaskStatus()?.stage === 'COMPLETED'">
+      <div class="task-status-pill">
+        <div class="stage-indicator-orb" [attr.data-stage]="activeTaskStatus()?.stage">
+          @if (activeTaskStatus()?.stage === 'EXECUTING' || activeTaskStatus()?.stage === 'PLANNING') {
+            <span class="spinner-dot"></span>
+          } @else if (activeTaskStatus()?.stage === 'COMPLETED') {
+            <span class="check-mark">✓</span>
+          } @else if (activeTaskStatus()?.stage === 'FAILED') {
+            <span class="error-mark">✕</span>
+          } @else {
+            <span class="info-mark">⚡</span>
+          }
+        </div>
+
+        <div class="task-info-block">
+          <div class="task-primary-line">
+            <span class="task-stage-badge">{{ activeTaskStatus()?.stage }}</span>
+            <span class="task-goal-text">{{ activeTaskStatus()?.command }}</span>
+          </div>
+          @if (activeTaskStatus()?.message) {
+            <div class="task-message-line">{{ activeTaskStatus()?.message }}</div>
+          }
+        </div>
+
+        <div class="task-actions-group">
+          @if (activeTaskStatus()?.stage === 'EXECUTING') {
+            <button type="button" class="task-cancel-btn" (click)="cancelTask()" title="Cancel Execution">
+              Cancel
+            </button>
+          }
+          <button type="button" class="task-dismiss-btn" (click)="dismissTaskOverlay()" title="Dismiss">
+            ✕
+          </button>
+        </div>
+      </div>
+    </section>
+  }
+</div>
