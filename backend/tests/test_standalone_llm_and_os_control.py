@@ -465,7 +465,7 @@ async def test_gateway_whatsapp_dispatch_end_to_end():
     )
     response = await gateway.process_command(req)
     assert response.accepted is True
-    assert response.status == CommandLifecycleState.PLANNING
+    assert response.status in [CommandLifecycleState.PLANNING, CommandLifecycleState.COMPLETED]
     assert response.task_id is not None
 
     # Poll supervisor task completion

@@ -625,3 +625,33 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
   - Angular 22 Production Build (`npm run build`): Completed in 12.3s with **0 errors**.
   - All 697 backend tests passed (100%).
 
+---
+
+## 25. Milestone: Clean Spatial HUD Layout, Plain Chat Console with Three-Dots Actions, and 3D Wave Removal (Oct 2026 - COMPLETED & VERIFIED)
+- **Problem Statement & Scope:**
+  - The user reported overlapping and misplaced components (`"here soem components are not in its palces make ti proper"`):
+    1. Top Stark command bar collided with the contextual topbar navigation ribbon.
+    2. Subconscious thought stream cut horizontally straight across the center of the 3D intelligence core ball.
+    3. Contextual task overlay and the arc core hologram badge awkwardly collided in the center.
+    4. Bottom dock was pushed off-screen due to unrestricted 100vh host container within the shell.
+    5. User requested: `"plain is simpela nd clean at botton chat input add it that will be good add three dots after input add actions there it wiil more good maek ti plain and good and remove that waves coming out of it only waver do thsi all also"`.
+- **Architectural & Aesthetic Solutions:**
+  1. **Strict Spatial Hierarchy & Zero Overlaps:**
+     - Enforced strict 100vh flex constraint in `app-shell.component.css` (`workspace-container.main-agent-view` and `workspace-main.main-agent-main` set to `max-height: 100vh; overflow: hidden;`).
+     - Set `:host` and `.main-agent-spatial-container` to `width: 100%; height: 100%;` preventing any off-screen push.
+     - Positioned `.subconscious-thought-bar` neatly at `top: 46px; left: 50%; transform: translateX(-50%);` leaving the entire center 3D core ball 100% unobstructed.
+     - Positioned `.contextual-task-overlay` as a floating toast notification in the upper-right corner (`top: 52px; right: 20px;`) so it never collides with center core elements.
+     - Removed redundant `.arc-core-hologram-badge`.
+  2. **Plain & Clean Bottom Chat Console with Three-Dots (⋯) Actions Menu:**
+     - Replaced cluttered floating chips with a single, sleek, plain neumorphic chat input dock (`plain-dock-shell`).
+     - Added dedicated Three Dots button (`dots-btn`) next to the submit button.
+     - Clicking the Three Dots toggles a clean glassmorphic actions popup card directly above the bar, providing 1-click access to Notepad, Calculator, Browser, Screenshot, Swarm deployment, and J.A.R.V.I.S. assistance.
+  3. **Pristine 3D Quantum Dot Sphere (Wave Distortion Removed):**
+     - In `ThreeSceneManagerService`: removed sinusoidal wave displacement on the Fibonacci sphere surface so the core maintains its pure, pristine, spherical mathematical form with calm, majestic rotation.
+     - Disabled expanding shockwaves for a quiet, focused, cinematic spatial intelligence core.
+- **Verification:**
+  - Angular Vitest Unit Tests: 131/131 test files passed (**482/482 tests passed 100%**).
+  - Angular Production Build (`npm run build`): Generated in 16.1s with **0 errors**.
+  - Backend Pytest Suite: 25/25 passed (100% on Edge-TTS neural speech and OS control).
+
+

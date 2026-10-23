@@ -58,14 +58,28 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('dockFormRef') dockFormRef?: ElementRef<HTMLFormElement>;
 
   commandInput = '';
-  readonly inputPlaceholder = "Ask ABHI or run desktop automation (e.g. 'Open Calculator and calculate 125 times 48')...";
+  readonly inputPlaceholder = "Ask ABHI or command your PC (e.g. 'open notepad', 'calc 125 * 48')...";
   readonly showWorkspaceMenu = signal(false);
+  readonly showActionsMenu = signal(false);
   readonly showThemeCustomizer = signal(false);
   readonly showNeuralInspector = signal(false);
   readonly isListening = signal(false);
   readonly isAutoCycleRunning = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly selectedNode = signal<SpatialNodeData | null>(null);
+
+  toggleActionsMenu(): void {
+    this.showActionsMenu.update((v) => !v);
+  }
+
+  closeActionsMenu(): void {
+    this.showActionsMenu.set(false);
+  }
+
+  executeActionFromMenu(cmd: string): void {
+    this.closeActionsMenu();
+    this.executeQuickAction(cmd);
+  }
 
   private autoCycleTimer: any = null;
   private autoCycleIndex = 0;
@@ -622,14 +636,73 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
       this.animService.tactileClick(this.dockFormRef.nativeElement);
     }
 
+    const lower = text.toLowerCase();
+    if (lower.includes('deploy swarm') || lower.includes('open iris') || lower.includes('expand swarm')) {
+      if (!this.isSwarmDeployed()) {
+        this.toggleCoreDeployment();
+      }
+    } else if (lower.includes('retract swarm') || lower.includes('close iris') || lower.includes('dock agents') || lower.includes('retract mesh')) {
+      if (this.isSwarmDeployed()) {
+        this.toggleCoreDeployment();
+      }
+    } else if (lower.includes('pulse core') || lower.includes('trigger pulse') || lower.includes('core pulse')) {
+      this.triggerCorePulse();
+    }
+
     this.errorMessage.set(null);
     try {
-      await this.commandService.submitCommand(text, 'TEXT', 'auto');
+      const res = await this.commandService.submitCommand(text, 'TEXT', 'auto');
       this.commandInput = '';
+      if (res?.summary) {
+        this.threeScene.latestJarvisMessage.set(res.summary);
+      }
     } catch (err: any) {
       this.errorMessage.set(err?.message || 'Failed to submit command to Authoritative Gateway.');
     }
   }
+
+  executeQuickAction(promptText: string): void {
+    this.commandInput = promptText;
+    this.onSubmitCommand();
+  }
+
+  // Delegated 3D Quantum Core and Swarm controls
+  get isSwarmDeployed() { return this.threeScene.isSwarmDeployed; }
+  get soundEnabled() { return this.threeScene.soundEnabled; }
+  get selectedAgent() { return this.threeScene.selectedAgent; }
+  get latestJarvisMessage() { return this.threeScene.latestJarvisMessage; }
+  get swarmAgents() { return this.threeScene.agents; }
+
+  toggleCoreDeployment(): void {
+    this.threeScene.toggleCoreDeployment();
+  }
+
+  triggerCorePulse(): void {
+    this.threeScene.triggerCorePulse();
+  }
+
+  focusAgent(agent: any): void {
+    this.threeScene.focusAgent(agent);
+  }
+
+  focusAgentPerspective(agent: any): void {
+    this.threeScene.focusAgentPerspective(agent);
+  }
+
+  executeAgentProtocol(agent: any): void {
+    this.threeScene.executeAgentProtocol(agent);
+    this.commandInput = `Engage directive for ${agent.name}: ${agent.role}`;
+    this.onSubmitCommand();
+  }
+
+  toggleSound(): void {
+    this.threeScene.toggleSound();
+  }
+
+  closeSelectedAgent(): void {
+    this.threeScene.selectedAgent.set(null);
+  }
+
 
   clearCommand(): void {
     this.commandInput = '';

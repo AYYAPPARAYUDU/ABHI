@@ -216,46 +216,103 @@ export class SpeechVoiceService {
     return text;
   }
 
+  private currentAudio: HTMLAudioElement | null = null;
+
   /**
-   * Speak text aloud using high-fidelity Web Speech API synthesis with natural cadence,
-   * warm pitch, breath pauses, and real-time word boundary tracking for Instagram Reel subtitles.
+   * Speak text aloud using authentic neural human voice streaming from backend Edge-TTS,
+   * with automatic fallback to high-fidelity Web Speech API synthesis.
+   * Real-time word boundary and progress tracking for Instagram Reel subtitles.
    */
   speak(text: string, force = false): void {
     if (this.isMuted() && !force) return;
-    if (!this.synth || !text.trim()) return;
+    if (!text.trim()) return;
 
     const spokenText = this.sanitizeAndSummarizeForSpeech(text);
     if (!spokenText.trim()) return;
 
+    // 1. Stop any currently active speech audio
+    this.stop();
+
+    const isJarvis = this.personaMode() === 'JARVIS';
+    const voice = isJarvis ? 'en-GB-RyanNeural' : 'en-IE-EmilyNeural';
+    this.selectedVoiceName.set(isJarvis ? 'J.A.R.V.I.S. (Ryan Natural Neural)' : 'F.R.I.D.A.Y. (Emily Natural Neural)');
+
+    // Tokenize into words for Instagram Reel dynamic caption display
+    const words = spokenText.trim().split(/\s+/).filter(w => w.length > 0);
+    this.spokenWords.set(words);
+    this.activeWordIndex.set(0);
+    this.activeWord.set(words[0] || '');
+
+    // 2. Stream authentic human audio from backend perception service
+    const userSpeed = this.speechSpeedRate();
+    const streamUrl = `http://127.0.0.1:8000/api/v1/perception/tts/stream?text=${encodeURIComponent(spokenText)}&voice=${encodeURIComponent(voice)}&rate=${userSpeed}`;
+
     try {
-      this.synth.cancel(); // Cancel any ongoing speech
+      const audio = new Audio(streamUrl);
+      this.currentAudio = audio;
+
+      audio.onplay = () => {
+        this.isSpeaking.set(true);
+        this.lastSpokenText.set(spokenText);
+      };
+
+      audio.ontimeupdate = () => {
+        if (audio.duration && !isNaN(audio.duration) && audio.duration > 0) {
+          const progress = audio.currentTime / audio.duration;
+          const wordIdx = Math.min(Math.floor(progress * words.length), words.length - 1);
+          this.activeWordIndex.set(wordIdx);
+          this.activeWord.set(words[wordIdx] || '');
+        }
+      };
+
+      audio.onended = () => {
+        this.isSpeaking.set(false);
+        this.activeWordIndex.set(-1);
+        this.activeWord.set('');
+        this.currentAudio = null;
+      };
+
+      audio.onerror = () => {
+        // Fallback to browser SpeechSynthesis if backend audio stream fails
+        this.fallbackSpeechSynthesis(spokenText, isJarvis, words);
+      };
+
+      audio.play().catch(() => {
+        // Browser autoplay restriction or connection error fallback
+        this.fallbackSpeechSynthesis(spokenText, isJarvis, words);
+      });
+    } catch {
+      this.fallbackSpeechSynthesis(spokenText, isJarvis, words);
+    }
+  }
+
+  /**
+   * Browser SpeechSynthesis fallback when backend audio stream is unavailable.
+   */
+  private fallbackSpeechSynthesis(spokenText: string, isJarvis: boolean, words: string[]): void {
+    if (!this.synth) {
+      this.isSpeaking.set(false);
+      return;
+    }
+
+    try {
+      this.synth.cancel();
 
       const utterance = new SpeechSynthesisUtterance(spokenText.trim());
-      const isJarvis = this.personaMode() === 'JARVIS';
-      
-      // Natural human cadence rates: relaxed, warm, not robotic fast
       const userSpeed = this.speechSpeedRate();
       utterance.rate = isJarvis ? (0.98 * userSpeed) : (1.02 * userSpeed);
-      utterance.pitch = isJarvis ? 0.96 : 1.02; // Warm conversational human pitch
+      utterance.pitch = isJarvis ? 0.96 : 1.02;
       utterance.volume = 1.0;
 
-      // Select high-fidelity neural voice
       const preferredVoice = this.findBestNaturalVoice(isJarvis);
       if (preferredVoice) {
         utterance.voice = preferredVoice;
         this.selectedVoiceName.set(preferredVoice.name.replace(/\s*\(Natural\)\s*/i, ' Natural'));
       }
 
-      // Tokenize into words for Instagram Reel dynamic caption display
-      const words = spokenText.trim().split(/\s+/).filter(w => w.length > 0);
-      this.spokenWords.set(words);
-      this.activeWordIndex.set(0);
-      this.activeWord.set(words[0] || '');
-
       utterance.onboundary = (event: SpeechSynthesisEvent) => {
         if (event.name === 'word' || (event as any).type === 'boundary') {
           const charIndex = event.charIndex || 0;
-          // Approximate word index from character position
           const textUpToChar = spokenText.substring(0, charIndex).trim();
           const wordsUpToChar = textUpToChar ? textUpToChar.split(/\s+/).length : 0;
           const currentIdx = Math.min(wordsUpToChar, words.length - 1);
@@ -288,6 +345,26 @@ export class SpeechVoiceService {
   }
 
   /**
+   * Immediately stops any active audio stream or speech synthesis utterance.
+   */
+  stop(): void {
+    if (this.currentAudio) {
+      try {
+        this.currentAudio.pause();
+        this.currentAudio.currentTime = 0;
+      } catch {}
+      this.currentAudio = null;
+    }
+    if (this.synth) {
+      this.synth.cancel();
+    }
+    this.isSpeaking.set(false);
+    this.activeWordIndex.set(-1);
+    this.activeWord.set('');
+  }
+
+
+  /**
    * Initial spoken welcome greeting on app launch tailored to Stark & JARVIS.
    */
   greetUserOnLaunch(): void {
@@ -309,10 +386,9 @@ export class SpeechVoiceService {
   toggleMute(): boolean {
     const muted = !this.isMuted();
     this.isMuted.set(muted);
-    if (muted && this.synth) {
-      this.synth.cancel();
-      this.isSpeaking.set(false);
-    } else if (!muted) {
+    if (muted) {
+      this.stop();
+    } else {
       this.speak('Voice audio enabled.');
     }
     return muted;

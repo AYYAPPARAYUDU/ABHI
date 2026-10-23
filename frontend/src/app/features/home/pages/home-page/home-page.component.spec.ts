@@ -49,11 +49,12 @@ describe('HomePageComponent', () => {
     expect(compiled.querySelector('.submit-btn')).toBeTruthy();
   });
 
-  it('should render clean 3-part layout: Left Telemetry HUD, Center Viewport, Right Vocal Studio', () => {
+  it('should render zero permanent sidebars and full-viewport center workspace with quick action chips', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.telemetry-readings-column')).toBeTruthy();
+    expect(compiled.querySelector('.telemetry-readings-column')).toBeFalsy();
+    expect(compiled.querySelector('.vocal-studio-column')).toBeFalsy();
     expect(compiled.querySelector('.main-agent-center-viewport')).toBeTruthy();
-    expect(compiled.querySelector('.vocal-studio-column')).toBeTruthy();
+    expect(compiled.querySelector('.quick-action-chips-dock')).toBeTruthy();
   });
 
   it('should switch left column mode between READINGS and AUTOMATIONS', () => {

@@ -1068,34 +1068,78 @@ class OSDesktopAgent(BaseAgent):
         app_id = self._resolve_app_name(str(raw_app))
         adapter = application_registry.get_adapter(app_id)
 
-        # Direct Universal Launching if not handled by adapter
-        if action in ["launch_application", "open_app", "open"]:
+        # Direct Universal Physical Launching
+        if action in ["launch_application", "open_app", "open", "launch"]:
+            ok_phys, pinfo, err_phys = os_control_engine.launch_application(str(raw_app))
             if adapter:
                 session = adapter.create_session(task_id=request.task_id)
-                ok, err = await adapter.launch(session, params)
+                await adapter.launch(session, params)
                 obs, _ = await adapter.observe(session)
+                if ok_phys and pinfo.get("pid"):
+                    session.process_id = pinfo.get("pid")
                 return AgentTaskResult(
                     task_id=request.task_id,
                     node_id=request.node_id,
                     agent_id=self.agent_id,
                     action=action,
-                    success=ok,
-                    data={"window_title": session.window_title, "state": session.state.value, "app_id": app_id},
-                    observed_state=obs or {"state": session.state.value},
-                    error_message=err
+                    success=ok_phys,
+                    data={"window_title": session.window_title, "state": session.state.value, "app_id": app_id, **pinfo},
+                    observed_state=obs or {"state": session.state.value, "launched": ok_phys, "pid": pinfo.get("pid")},
+                    error_message=err_phys
                 )
             else:
-                ok, pinfo, err = os_control_engine.launch_application(str(raw_app))
                 return AgentTaskResult(
                     task_id=request.task_id,
                     node_id=request.node_id,
                     agent_id=self.agent_id,
                     action=action,
-                    success=ok,
+                    success=ok_phys,
                     data={"app_name": raw_app, **pinfo},
-                    observed_state={"launched": ok, "pid": pinfo.get("pid")},
-                    error_message=err
+                    observed_state={"launched": ok_phys, "pid": pinfo.get("pid")},
+                    error_message=err_phys
                 )
+
+        if action in ["close_application", "close_app", "terminate_app"]:
+            target_app = str(params.get("app_name") or raw_app)
+            ok_close, err_close = os_control_engine.close_window(target_app)
+            # Also terminate matching processes if still alive
+            if not ok_close:
+                for p in psutil.process_iter(['name', 'pid']):
+                    try:
+                        p_name = p.info['name'].lower()
+                        if target_app.lower() in p_name or p_name.startswith(target_app.lower()):
+                            p.terminate()
+                            ok_close = True
+                    except Exception:
+                        pass
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"app_name": target_app, "closed": True},
+                observed_state={"closed": True, "app_name": target_app},
+                error_message=None
+            )
+
+        if action in ["take_screenshot", "capture_screen", "screenshot"]:
+            import PIL.ImageGrab as IG
+            desktop_dir = os_control_engine.get_known_folder("Desktop")
+            filename = f"screenshot_{int(time.time())}.png"
+            filepath = os.path.join(desktop_dir, filename)
+            img = IG.grab()
+            img.save(filepath)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"filename": filename, "path": filepath, "width": img.width, "height": img.height},
+                observed_state={"captured": True, "path": filepath},
+                error_message=None
+            )
 
         if not adapter:
             adapter = application_registry.get_adapter("notepad")

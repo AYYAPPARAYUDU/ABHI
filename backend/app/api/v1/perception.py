@@ -1,7 +1,7 @@
 """FastAPI API endpoints for Multimodal Perception (Voice, Vision, OCR)."""
 
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Response
 from pydantic import BaseModel, Field
 
 from backend.app.perception.audio.vad import VoiceActivityDetector, AudioVADState
@@ -74,6 +74,20 @@ async def transcribe_audio(request: TranscribeRequest) -> TranscriptionResult:
 async def synthesize_speech(request: SynthesizeRequest) -> SpeechSynthesisResult:
     """Convert response text into speech audio."""
     return await text_to_speech.synthesize(request.text, voice=request.voice, rate=request.rate)
+
+
+@router.get("/tts/stream")
+async def stream_speech(text: str, voice: str = "en-GB-RyanNeural", rate: float = 1.0) -> Response:
+    """Stream authentic, realistic human neural audio (MP3)."""
+    audio_bytes = await text_to_speech.synthesize_stream(text=text, voice=voice, rate=rate)
+    return Response(
+        content=audio_bytes,
+        media_type="audio/mpeg",
+        headers={
+            "Cache-Control": "public, max-age=86400",
+            "Content-Disposition": "inline; filename=speech.mp3"
+        }
+    )
 
 
 @router.post("/canonicalize", response_model=CanonicalCommand)

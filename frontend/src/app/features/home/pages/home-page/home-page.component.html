@@ -1,4 +1,70 @@
 <div class="main-agent-spatial-container" role="region" aria-label="Main Agent Spatial Intelligence Workspace">
+  <!-- TOP STARK INDUSTRIES COMMAND BAR -->
+  <header class="stark-command-bar" role="banner">
+    <!-- Arc Reactor Status Indicator -->
+    <div class="reactor-status-badge">
+      <div class="reactor-nucleus-wrap">
+        <div class="nucleus-core"></div>
+        <div class="nucleus-ping"></div>
+      </div>
+      <div class="reactor-info-col">
+        <div class="reactor-title-row">
+          <span class="stark-brand">J.A.R.V.I.S.</span>
+          <span class="suit-badge">MARK-LXXXV</span>
+        </div>
+        <div class="reactor-sub-label">QUANTUM DOT COGNITIVE SPHERE</div>
+      </div>
+    </div>
+
+    <!-- Center Orbital Swarm State Badge -->
+    <div class="orbital-state-badge" (click)="toggleCoreDeployment()" role="button" tabindex="0" title="Click to deploy / retract swarm">
+      <div class="state-dot-wrap">
+        <span class="swarm-beacon-dot" [class.deployed]="isSwarmDeployed()"></span>
+        <span class="swarm-state-label">
+          SWARM STATE: {{ isSwarmDeployed() ? 'EXPANDED // MESH SYNAPSE ACTIVE' : 'CONCENTRIC // SINGULARITY PACKED' }}
+        </span>
+      </div>
+      <div class="state-divider"></div>
+      <div class="state-stat">
+        AUTONOMOUS NODES: <strong>{{ isSwarmDeployed() ? '8 SYNCHRONIZED' : 'DORMANT IN SPHERE' }}</strong>
+      </div>
+      <div class="state-divider"></div>
+      <div class="state-stat">
+        INTER-LINK: <strong>{{ isSwarmDeployed() ? '98.4 GB/s LASER MESH' : 'STANDBY' }}</strong>
+      </div>
+    </div>
+
+    <!-- Top Right System Controls -->
+    <div class="stark-top-controls">
+      <button
+        type="button"
+        (click)="toggleSound()"
+        class="stark-action-btn"
+        title="Toggle Web Audio SFX"
+      >
+        <span>{{ soundEnabled() ? '🔊 AUDIO ENGAGED' : '🔇 MUTED' }}</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="triggerCorePulse()"
+        class="stark-action-btn pulse-btn"
+        title="Trigger Harmonic Core Pulse"
+      >
+        <span>⚡ PULSE</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="toggleWorkspaceMenu()"
+        class="stark-action-btn workspace-btn"
+        title="Operating Workspaces Switcher"
+      >
+        <span>🌐 Workspaces</span>
+      </button>
+    </div>
+  </header>
+
   <!-- 0. Tactical Corner Calibration Brackets -->
   <div class="hud-corner-bracket top-left" aria-hidden="true">
     <div class="corner-crosshair"></div>
@@ -17,241 +83,30 @@
     <div class="corner-readout">RADAR.FPS: 60 // 18ms</div>
   </div>
 
-  <!-- 1. LEFT SIDE: ALL READINGS & BEST VIEW (TELEMETRY HUD) -->
-  <aside class="telemetry-readings-column" role="complementary" aria-label="Live System Telemetry HUD">
-    <!-- Telemetry Column Header -->
-    <div class="hud-col-header">
-      <div class="header-brand-line">
-        <span class="hud-dot-pulse"></span>
-        <h2 class="hud-col-title">SYSTEM READINGS</h2>
-        <span class="hud-badge-live">LIVE HUD</span>
-      </div>
-      <!-- Mode Toggle: Readings vs Automations -->
-      <div class="hud-tab-switcher">
-        <button
-          type="button"
-          class="hud-switch-btn"
-          [class.active]="activeLeftTab() === 'READINGS'"
-          (click)="setLeftTab('READINGS')"
-        >
-          <span>📊 Telemetry</span>
-        </button>
-        <button
-          type="button"
-          class="hud-switch-btn"
-          [class.active]="activeLeftTab() === 'AUTOMATIONS'"
-          (click)="setLeftTab('AUTOMATIONS')"
-        >
-          <span>⚡ 1-Click Ops</span>
-        </button>
-      </div>
-    </div>
 
-    <!-- READINGS TAB CONTENT -->
-    @if (activeLeftTab() === 'READINGS') {
-      <div class="readings-scroll-body">
-        <!-- 3 Circular Tachometer Gauges (Styled like Reference Image 3) -->
-        <div class="tachometer-gauges-cluster">
-          <!-- Gauge 1: NPU / CPU Compute Load -->
-          <div class="tachometer-dial-card" appAnimeInteractive [appAnimeType]="'card'">
-            <div class="dial-svg-wrapper">
-              <svg viewBox="0 0 100 100" class="tachometer-svg">
-                <circle cx="50" cy="50" r="40" class="gauge-bg-ring" />
-                <circle cx="50" cy="50" r="40" class="gauge-fill-ring cyan-arc" style="stroke-dasharray: 251.2; stroke-dashoffset: 75;" />
-                <!-- Tachometer Ticks -->
-                <line x1="50" y1="12" x2="50" y2="16" class="gauge-tick" />
-                <line x1="23" y1="23" x2="26" y2="26" class="gauge-tick" />
-                <line x1="77" y1="23" x2="74" y2="26" class="gauge-tick" />
-                <line x1="12" y1="50" x2="16" y2="50" class="gauge-tick" />
-                <line x1="88" y1="50" x2="84" y2="50" class="gauge-tick" />
-              </svg>
-              <div class="dial-center-content">
-                <span class="dial-metric-val">78<small>%</small></span>
-                <span class="dial-metric-label">CPU / NPU</span>
-              </div>
-            </div>
-            <div class="dial-footer-meta">
-              <span class="meta-item">Clock: <strong>3.8 GHz</strong></span>
-              <span class="meta-item">Temp: <strong>41°C</strong></span>
-            </div>
-          </div>
-
-          <!-- Gauge 2: Memory & VRAM Allocation -->
-          <div class="tachometer-dial-card" appAnimeInteractive [appAnimeType]="'card'">
-            <div class="dial-svg-wrapper">
-              <svg viewBox="0 0 100 100" class="tachometer-svg">
-                <circle cx="50" cy="50" r="40" class="gauge-bg-ring" />
-                <circle cx="50" cy="50" r="40" class="gauge-fill-ring purple-arc" style="stroke-dasharray: 251.2; stroke-dashoffset: 185;" />
-                <line x1="50" y1="12" x2="50" y2="16" class="gauge-tick" />
-                <line x1="23" y1="23" x2="26" y2="26" class="gauge-tick" />
-                <line x1="77" y1="23" x2="74" y2="26" class="gauge-tick" />
-              </svg>
-              <div class="dial-center-content">
-                <span class="dial-metric-val">26<small>%</small></span>
-                <span class="dial-metric-label">VRAM</span>
-              </div>
-            </div>
-            <div class="dial-footer-meta">
-              <span class="meta-item">Used: <strong>4.2 GB</strong></span>
-              <span class="meta-item">Free: <strong>11.8 GB</strong></span>
-            </div>
-          </div>
-
-          <!-- Gauge 3: System Cadence & FPS -->
-          <div class="tachometer-dial-card" appAnimeInteractive [appAnimeType]="'card'">
-            <div class="dial-svg-wrapper">
-              <svg viewBox="0 0 100 100" class="tachometer-svg">
-                <circle cx="50" cy="50" r="40" class="gauge-bg-ring" />
-                <circle cx="50" cy="50" r="40" class="gauge-fill-ring green-arc" style="stroke-dasharray: 251.2; stroke-dashoffset: 35;" />
-                <line x1="50" y1="12" x2="50" y2="16" class="gauge-tick" />
-                <line x1="77" y1="23" x2="74" y2="26" class="gauge-tick" />
-              </svg>
-              <div class="dial-center-content">
-                <span class="dial-metric-val">60<small>FPS</small></span>
-                <span class="dial-metric-label">RADAR</span>
-              </div>
-            </div>
-            <div class="dial-footer-meta">
-              <span class="meta-item">Latency: <strong>18 ms</strong></span>
-              <span class="meta-item">WAL: <strong>1.2 ms</strong></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Verified Subsystems Status Matrix -->
-        <div class="hud-subsystem-card">
-          <div class="subsystem-header">
-            <span class="subsystem-title">VERIFIED SUBSYSTEMS</span>
-            <span class="subsystem-badge-verified">PHYSICAL DUAL-STATE</span>
-          </div>
-
-          <div class="subsystems-list">
-            <div class="subsystem-row">
-              <span class="status-indicator-dot active"></span>
-              <div class="subsystem-info">
-                <span class="subsystem-name">Standalone Neural LLM</span>
-                <span class="subsystem-detail">ABHI Native 8.2B // Zero Ollama</span>
-              </div>
-              <span class="subsystem-tag">ONLINE</span>
-            </div>
-
-            <div class="subsystem-row">
-              <span class="status-indicator-dot active"></span>
-              <div class="subsystem-info">
-                <span class="subsystem-name">Dual-State Verifier</span>
-                <span class="subsystem-detail">Physical Disk & Window State Audit</span>
-              </div>
-              <span class="subsystem-tag">ACTIVE</span>
-            </div>
-
-            <div class="subsystem-row">
-              <span class="status-indicator-dot active"></span>
-              <div class="subsystem-info">
-                <span class="subsystem-name">Windows UIAutomation</span>
-                <span class="subsystem-detail">winsta0\default Interactive Handle</span>
-              </div>
-              <span class="subsystem-tag">BOUND</span>
-            </div>
-
-            <div class="subsystem-row">
-              <span class="status-indicator-dot active"></span>
-              <div class="subsystem-info">
-                <span class="subsystem-name">WhatsApp Direct Protocol</span>
-                <span class="subsystem-detail">Desktop URI + Physical Keystroke Relay</span>
-              </div>
-              <span class="subsystem-tag">READY</span>
-            </div>
-
-            <div class="subsystem-row">
-              <span class="status-indicator-dot active"></span>
-              <div class="subsystem-info">
-                <span class="subsystem-name">Browser Automation</span>
-                <span class="subsystem-detail">Google Chrome & Playwright Bridge</span>
-              </div>
-              <span class="subsystem-tag">READY</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Specialist Swarm Nodes Status -->
-        <div class="hud-subsystem-card">
-          <div class="subsystem-header">
-            <span class="subsystem-title">ORBITING SATELLITES (8)</span>
-            <span class="subsystem-badge-synced">100% SYNCED</span>
-          </div>
-          <div class="swarm-mini-grid">
-            @for (agent of specialistAgents; track agent.id) {
-              <div
-                class="swarm-node-pill"
-                [class.selected]="selectedNode()?.id === agent.id"
-                (click)="selectSpecialistAgent(agent)"
-                [title]="agent.role"
-              >
-                <span class="swarm-node-beacon"></span>
-                <span class="swarm-node-name">{{ agent.name.split(' ')[0] }}</span>
-                <span class="swarm-node-mark">{{ agent.suitMark?.split(' ')[1] || 'MK' }}</span>
-              </div>
-            }
-          </div>
-        </div>
-      </div>
-    }
-
-    <!-- 1-CLICK AUTOMATIONS TAB CONTENT -->
-    @if (activeLeftTab() === 'AUTOMATIONS') {
-      <div class="readings-scroll-body">
-        <div class="automations-list-wrap">
-          <div class="automations-header-line">
-            <span class="auto-heading">PHYSICAL WIN32 AUTOMATIONS</span>
-            <button
-              type="button"
-              class="auto-cycle-btn"
-              [class.active]="isAutoCycleRunning()"
-              (click)="toggleAutoCycle()"
-            >
-              <span>{{ isAutoCycleRunning() ? '⏹ Stop' : '⚡ Loop' }}</span>
-            </button>
-          </div>
-
-          @for (scenario of automationScenarios; track scenario.id) {
-            <button
-              type="button"
-              class="automation-quick-item"
-              appAnimeInteractive
-              [appAnimeType]="'button'"
-              (click)="executeScenario(scenario)"
-              [disabled]="isWorking()"
-            >
-              <span class="scenario-icon">{{ scenario.icon }}</span>
-              <div class="scenario-text-col">
-                <span class="scenario-title">{{ scenario.title }}</span>
-                <span class="scenario-desc">{{ scenario.description }}</span>
-              </div>
-              <span class="scenario-badge">{{ scenario.category }}</span>
-            </button>
-          }
-        </div>
-      </div>
-    }
-  </aside>
 
   <!-- 2. CENTER: SINGLE MAIN AGENT BOT (ARC REACTOR 3D INTELLIGENCE CORE) -->
   <main class="main-agent-center-viewport" role="main" aria-label="Main Agent Intelligence Core">
-    <!-- Top Floating Holographic Intelligence Status -->
-    <div class="arc-core-hologram-badge" aria-hidden="true">
-      <span class="hologram-sparkle">✦</span>
-      <span class="hologram-label">ABHI ARC REACTOR INTELLIGENCE CORE // DUAL-STATE VERIFIED</span>
-      <span class="hologram-sparkle">✦</span>
+    <!-- Holographic Range Crosshairs & Minimalist 680px Frame -->
+    <div class="holographic-hud-grid-wrap" aria-hidden="true">
+      <div class="holographic-frame-680">
+        <div class="reticle-corner top-left"></div>
+        <div class="reticle-corner top-right"></div>
+        <div class="reticle-corner bottom-left"></div>
+        <div class="reticle-corner bottom-right"></div>
+      </div>
+      <div class="crosshair-axis-x"></div>
+      <div class="crosshair-axis-y"></div>
     </div>
 
-    <!-- Center Floating Subconscious Thought Stream Ticker -->
+    <!-- Upper Subconscious Thought Stream Ticker (Floating neatly below top bar) -->
     <section class="subconscious-thought-bar" aria-label="Subconscious Cognitive Stream">
       <div class="thought-pulse-indicator">
         <span class="beacon-ring"></span>
         <span class="beacon-core"></span>
       </div>
       <div class="thought-content-wrapper">
-        <span class="thought-prefix">ARC REACTOR //</span>
+        <span class="thought-prefix">ABHI ARC REACTOR //</span>
         <span class="thought-stream-text">{{ activeSubconsciousThought() }}</span>
       </div>
       <div class="thought-quantum-tag">
@@ -259,284 +114,226 @@
       </div>
     </section>
 
-    <!-- Bottom Centered Neumorphic Command Dock -->
-    <footer class="neumorphic-dock-container" role="region" aria-label="Command Dock">
-      <!-- Voice Spectral Resonance Equalizer -->
-      <div class="voice-spectral-analyzer" [class.active]="isListening() || speechVoice.isSpeaking() || isWorking()" title="Neural Audio & Energy Resonance">
-        @for (bar of spectralBars; track bar) {
-          <span class="spectrum-bar" [style.--bar-index]="bar"></span>
-        }
-      </div>
-
-      <div class="neumorphic-dock-shell" [class.working]="isWorking()" [class.has-error]="errorMessage()">
-        <form #dockFormRef class="dock-form" (ngSubmit)="onSubmitCommand()">
-          <div class="dock-input-wrapper">
-            <!-- AI Core Symbol -->
-            <div class="dock-ai-icon" [class.glow]="isWorking()">
-              @if (isWorking()) {
-                <span class="dock-spin">🌀</span>
-              } @else {
-                <span class="dock-sparkle">✦</span>
-              }
-            </div>
-
-            <!-- Main Inset Command Input -->
-            <input
-              #cmdInputRef
-              type="text"
-              class="dock-input-field"
-              [(ngModel)]="commandInput"
-              name="userCommand"
-              [placeholder]="inputPlaceholder"
-              autocomplete="off"
-              [disabled]="isWorking()"
-              (keydown.escape)="clearCommand()"
-              aria-label="Command Input"
-            />
-
-            <!-- Controls: Voice Toggle & Submit -->
-            <div class="dock-controls-group">
-              <button
-                type="button"
-                class="dock-control-btn voice-btn"
-                [class.listening]="isListening()"
-                (click)="toggleVoiceInput()"
-                title="Voice Input (Speech-to-Text)"
-                aria-label="Toggle Voice Input"
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                  <line x1="12" y1="19" x2="12" y2="22"/>
-                </svg>
-              </button>
-
-              <button
-                type="submit"
-                class="dock-control-btn submit-btn"
-                [disabled]="!commandInput.trim() || isWorking()"
-                title="Execute Command (Enter)"
-                aria-label="Submit Command"
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="22" y1="2" x2="11" y2="13"/>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </form>
-
-        <!-- Error Alert Banner -->
-        @if (errorMessage()) {
-          <div class="dock-error-banner" role="alert">
-            <span class="error-icon">⚠️</span>
-            <span class="error-text">{{ errorMessage() }}</span>
-            <button type="button" class="error-close" (click)="errorMessage.set(null)">✕</button>
-          </div>
-        }
-      </div>
-    </footer>
-  </main>
-
-  <!-- 3. RIGHT SIDE: INSTAGRAM REELS AI VOCAL STUDIO (NATURAL HUMAN VOICE & DYNAMIC SUBTITLES) -->
-  <aside class="vocal-studio-column" role="complementary" aria-label="AI Speech & Dynamic Reel Subtitles">
-    <!-- Header with Live Speech State -->
-    <div class="vocal-header">
-      <div class="vocal-brand-line">
-        <span class="vocal-pulse-dot" [class.speaking]="speechVoice.isSpeaking()" [class.listening]="speechVoice.isListening()"></span>
-        <h2 class="vocal-title">AI VOCAL STUDIO</h2>
-      </div>
-      <span class="vocal-voice-badge">NATURAL HUMAN VOICE</span>
-    </div>
-
-    <div class="vocal-scroll-body">
-      <!-- Instagram Reel Floating Glowing Soundwave Orb Card -->
-      <div class="reel-speech-orb-card" [class.active-speaking]="speechVoice.isSpeaking()">
-        <div class="orb-visualizer-container">
-          <!-- Animated Concentric Soundwave Ripples -->
-          <div class="soundwave-ripple wave-3"></div>
-          <div class="soundwave-ripple wave-2"></div>
-          <div class="soundwave-ripple wave-1"></div>
-          <!-- Center Neural Vocal Orb -->
-          <div class="neural-vocal-orb" [class.speaking]="speechVoice.isSpeaking()">
-            <span class="orb-icon">{{ speechVoice.isSpeaking() ? '🎙️' : (speechVoice.isListening() ? '👂' : '✦') }}</span>
-          </div>
+    <!-- Dynamic Core Targeting Reticle (Floating Directly Over The Ball) -->
+    <div class="dynamic-core-reticle-overlay">
+      <div
+        class="core-target-box"
+        (click)="toggleCoreDeployment()"
+        role="button"
+        tabindex="0"
+        title="Click to deploy or retract autonomous agent swarm"
+      >
+        <div class="reticle-target-brackets">
+          <div class="b-bracket tl"></div>
+          <div class="b-bracket tr"></div>
+          <div class="b-bracket bl"></div>
+          <div class="b-bracket br"></div>
         </div>
-
-        <!-- Vocal Status Pill -->
-        <div class="vocal-status-pill" [class.speaking]="speechVoice.isSpeaking()">
-          @if (speechVoice.isSpeaking()) {
-            <span class="status-pulse-dot speaking"></span>
-            <span>AI SPEAKING (NATURAL VOICE)</span>
-          } @else if (speechVoice.isListening()) {
-            <span class="status-pulse-dot listening"></span>
-            <span>LISTENING TO DIRECTIVE...</span>
-          } @else if (isWorking()) {
-            <span class="status-pulse-dot working"></span>
-            <span>DUAL-STATE PROCESSING...</span>
-          } @else {
-            <span class="status-pulse-dot idle"></span>
-            <span>STANDBY // AWAITING DIRECTIVE</span>
-          }
-        </div>
-
-        <!-- Frequency Equalizer Bars -->
-        <div class="frequency-bars-row">
-          @for (bar of spectralBars; track bar) {
-            <span class="vocal-freq-bar" [class.dance]="speechVoice.isSpeaking() || isListening()" [style.--bar-idx]="bar"></span>
-          }
-        </div>
-      </div>
-
-      <!-- Instagram Reel Word-by-Word Live Captions Card -->
-      <div class="reel-caption-card">
-        <div class="caption-header">
-          <span class="caption-label">LIVE REEL SUBTITLES</span>
-          <button
-            type="button"
-            class="caption-replay-btn"
-            (click)="replaySpokenText()"
-            title="Replay with Natural Human Voice"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-            </svg>
-            <span>Listen</span>
-          </button>
-        </div>
-
-        <!-- Word by Word Animated Typography -->
-        <div class="caption-text-viewport">
-          @if (speechVoice.spokenWords().length > 0 && speechVoice.isSpeaking()) {
-            <div class="word-stream-wrap">
-              @for (word of speechVoice.spokenWords(); track $index) {
-                <span
-                  class="reel-word"
-                  [class.active-word]="$index === speechVoice.activeWordIndex()"
-                  [class.spoken-word]="$index < speechVoice.activeWordIndex()"
-                >{{ word }} </span>
-              }
-            </div>
-          } @else if (speechVoice.lastSpokenText()) {
-            <p class="last-spoken-quote">"{{ speechVoice.lastSpokenText() }}"</p>
-          } @else {
-            <p class="placeholder-caption">"Greetings, Sir. ABHI natural voice engine is active and tuned to conversational human warmth."</p>
-          }
-        </div>
-      </div>
-
-      <!-- Natural Voice & Human Cadence Controls -->
-      <div class="vocal-settings-card">
-        <div class="settings-title-line">
-          <span class="settings-title">HUMAN CADENCE & PERSONA</span>
-          <button
-            type="button"
-            class="mute-toggle-btn"
-            [class.muted]="speechVoice.isMuted()"
-            (click)="toggleVoiceAudio()"
-            title="Toggle Voice Speech Synthesis"
-          >
-            <span>{{ speechVoice.isMuted() ? '🔇 Unmute' : '🔊 Muted' }}</span>
-          </button>
-        </div>
-
-        <!-- Persona Switch: JARVIS (Warm Male) vs FRIDAY (Natural Female) -->
-        <div class="persona-switch-row">
-          <button
-            type="button"
-            class="persona-btn"
-            [class.active]="speechVoice.personaMode() === 'JARVIS'"
-            (click)="setPersona('JARVIS')"
-          >
-            <span class="btn-dot"></span>
-            <span>J.A.R.V.I.S. (Natural Male)</span>
-          </button>
-          <button
-            type="button"
-            class="persona-btn"
-            [class.active]="speechVoice.personaMode() === 'FRIDAY'"
-            (click)="setPersona('FRIDAY')"
-          >
-            <span class="btn-dot"></span>
-            <span>F.R.I.D.A.Y. (Natural Female)</span>
-          </button>
-        </div>
-
-        <!-- Callsign Selector -->
-        <div class="callsign-pills-row">
-          <span class="callsign-label">Callsign:</span>
-          @for (cs of availableCallsigns; track cs) {
-            <button
-              type="button"
-              class="callsign-chip"
-              [class.active]="speechVoice.userCallsign() === cs"
-              (click)="setCallsign(cs)"
-            >
-              {{ cs }}
-            </button>
-          }
-        </div>
-
-        <!-- Speech Speed / Cadence (Human Warmth) -->
-        <div class="speed-cadence-row">
-          <span class="cadence-label">Pacing:</span>
-          <button
-            type="button"
-            class="cadence-chip"
-            [class.active]="speechVoice.speechSpeedRate() === 0.95"
-            (click)="setSpeechSpeed(0.95)"
-          >
-            0.95x Relaxed
-          </button>
-          <button
-            type="button"
-            class="cadence-chip"
-            [class.active]="speechVoice.speechSpeedRate() === 1.0"
-            (click)="setSpeechSpeed(1.0)"
-          >
-            1.0x Natural
-          </button>
-          <button
-            type="button"
-            class="cadence-chip"
-            [class.active]="speechVoice.speechSpeedRate() === 1.05"
-            (click)="setSpeechSpeed(1.05)"
-          >
-            1.05x Snappy
-          </button>
-        </div>
-
-        <!-- Active Natural Voice Readout -->
-        <div class="active-voice-name-pill">
-          <span class="mic-glyph">🎙️</span>
-          <span class="voice-string">{{ speechVoice.selectedVoiceName() }}</span>
-        </div>
-      </div>
-
-      <!-- Instagram Viral Interactive Voice Action Chips -->
-      <div class="insta-prompts-card">
-        <span class="insta-prompts-title">QUICK CONVERSATION & OS ACTIONS</span>
-        <div class="insta-chips-grid">
-          @for (item of instaReelPrompts; track item.label) {
-            <button
-              type="button"
-              class="insta-prompt-chip"
-              appAnimeInteractive
-              [appAnimeType]="'button'"
-              (click)="sendBanterPrompt(item.cmd)"
-              [disabled]="isWorking()"
-            >
-              <span class="chip-icon">{{ item.icon }}</span>
-              <span class="chip-text">{{ item.label }}</span>
-            </button>
-          }
+        <div class="core-prompt-pill">
+          {{ isSwarmDeployed() ? '✦ CLICK CORE BALL TO RETRACT MESH' : '⚡ CLICK CORE BALL TO DEPLOY 8-AGENT SWARM' }}
         </div>
       </div>
     </div>
-  </aside>
+
+    <!-- Focused Agent Tactical HUD Modal (Slides In On Agent Click) -->
+    @if (selectedAgent(); as current) {
+      <div class="agent-tactical-hud-modal">
+        <div class="modal-header">
+          <div class="agent-identity">
+            <div class="agent-avatar" [style.borderColor]="current.color">
+              {{ current.icon }}
+            </div>
+            <div>
+              <div class="agent-title-name">{{ current.name }}</div>
+              <div class="agent-meta-sub">{{ current.codename }} // {{ current.subsystem }}</div>
+            </div>
+          </div>
+          <button type="button" (click)="closeSelectedAgent()" class="modal-close-btn" aria-label="Close Agent Details">✕</button>
+        </div>
+
+        <p class="agent-description-text">{{ current.description }}</p>
+
+        <div class="agent-telemetry-tiles">
+          <div class="telemetry-tile">
+            <span class="tile-label">Subsystem Load</span>
+            <span class="tile-value">{{ current.load }}</span>
+          </div>
+          <div class="telemetry-tile">
+            <span class="tile-label">Synaptic Bandwidth</span>
+            <span class="tile-value text-cyan">{{ current.synapticRate }}</span>
+          </div>
+          <div class="telemetry-tile">
+            <span class="tile-label">Neural Efficiency</span>
+            <span class="tile-value text-emerald">{{ current.neuralEfficiency }}</span>
+          </div>
+          <div class="telemetry-tile">
+            <span class="tile-label">Mesh Status</span>
+            <span class="tile-value">{{ current.status }}</span>
+          </div>
+        </div>
+
+        <div class="agent-action-buttons">
+          <button type="button" (click)="executeAgentProtocol(current)" class="btn-engage-directive">
+            <span>ENGAGE DIRECTIVE</span>
+          </button>
+          <button type="button" (click)="focusAgentPerspective(current)" class="btn-align-perspective">
+            <span>ALIGN</span>
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- UNIFIED BOTTOM COMMAND & CHAT CONSOLE (Plain, Clean, Minimalist) -->
+    <div class="main-agent-bottom-console">
+      <!-- Floating J.A.R.V.I.S. Voice & Intelligence HUD Bar -->
+      @if (latestJarvisMessage(); as msg) {
+        <div class="floating-jarvis-hud-bar">
+          <div class="jarvis-symbol-icon">⚡</div>
+          <div class="jarvis-text-content">
+            <span class="jarvis-tag">[J.A.R.V.I.S.]:</span>{{ msg }}
+          </div>
+          <button type="button" (click)="latestJarvisMessage.set(null)" class="jarvis-close-btn" title="Dismiss message">✕</button>
+        </div>
+      }
+
+      <!-- Actions Popup Menu (Revealed via Three Dots Button) -->
+      <div class="actions-popup-card" [class.open]="showActionsMenu()" (click)="$event.stopPropagation()">
+        <div class="actions-popup-header">
+          <div class="actions-title-wrap">
+            <span class="actions-icon">⚡</span>
+            <span class="actions-title">SYSTEM ACTIONS & SHORTCUTS</span>
+          </div>
+          <button type="button" class="actions-close-btn" (click)="closeActionsMenu()" aria-label="Close Actions">✕</button>
+        </div>
+
+        <div class="quick-action-chips-dock actions-grid" role="group" aria-label="Quick Actions">
+          <button type="button" class="quick-chip-btn" (click)="executeActionFromMenu('Open notepad')">
+            <span class="chip-emoji">📝</span>
+            <span>Notepad</span>
+          </button>
+          <button type="button" class="quick-chip-btn" (click)="executeActionFromMenu('Open calculator and calculate 125 * 48')">
+            <span class="chip-emoji">🧮</span>
+            <span>Calculator</span>
+          </button>
+          <button type="button" class="quick-chip-btn" (click)="executeActionFromMenu('Open Chrome browser')">
+            <span class="chip-emoji">🌐</span>
+            <span>Browser</span>
+          </button>
+          <button type="button" class="quick-chip-btn" (click)="executeActionFromMenu('Take a screenshot')">
+            <span class="chip-emoji">📸</span>
+            <span>Screenshot</span>
+          </button>
+          <button type="button" class="quick-chip-btn swarm-toggle-chip" (click)="toggleCoreDeployment(); closeActionsMenu()">
+            <span class="chip-emoji">⚡</span>
+            <span>{{ isSwarmDeployed() ? 'Retract Swarm' : 'Deploy Swarm' }}</span>
+          </button>
+          <button type="button" class="quick-chip-btn ai-chat-chip" (click)="executeActionFromMenu('Who are you and what are your capabilities?')">
+            <span class="chip-emoji">💬</span>
+            <span>Ask J.A.R.V.I.S.</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Bottom Centered Plain Neumorphic Command Dock -->
+      <footer class="neumorphic-dock-container" role="region" aria-label="Command Dock">
+        <div class="neumorphic-dock-shell plain-dock-shell" [class.working]="isWorking()" [class.has-error]="errorMessage()">
+          <form #dockFormRef class="dock-form" (ngSubmit)="onSubmitCommand()">
+            <div class="dock-input-wrapper">
+              <!-- AI Core Glow Symbol -->
+              <div class="dock-ai-icon" [class.glow]="isWorking()">
+                @if (isWorking()) {
+                  <span class="dock-spin">🌀</span>
+                } @else {
+                  <span class="dock-sparkle">✦</span>
+                }
+              </div>
+
+              <!-- Main Inset Command Input Field -->
+              <input
+                #cmdInputRef
+                type="text"
+                class="dock-input-field"
+                [(ngModel)]="commandInput"
+                name="userCommand"
+                [placeholder]="inputPlaceholder"
+                autocomplete="off"
+                [disabled]="isWorking()"
+                (keydown.escape)="clearCommand()"
+                aria-label="Command Input"
+              />
+
+              <!-- Controls: Voice Mic, Submit & Three Dots for Actions -->
+              <div class="dock-controls-group">
+                <button
+                  type="button"
+                  class="dock-control-btn voice-btn"
+                  [class.listening]="isListening()"
+                  (click)="toggleVoiceInput()"
+                  title="Voice Input (Speech-to-Text)"
+                  aria-label="Toggle Voice Input"
+                >
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="22"/>
+                  </svg>
+                </button>
+
+                <button
+                  type="submit"
+                  class="dock-control-btn submit-btn"
+                  [disabled]="!commandInput.trim() || isWorking()"
+                  title="Execute Command (Enter)"
+                  aria-label="Submit Command"
+                >
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+                </button>
+
+                <!-- Three Dots Button for Actions Menu -->
+                <button
+                  type="button"
+                  class="dock-control-btn dots-btn"
+                  [class.active]="showActionsMenu()"
+                  (click)="toggleActionsMenu()"
+                  title="Quick Actions Menu (⋯)"
+                  aria-label="Toggle Actions Menu"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="6" r="2"/>
+                    <circle cx="12" cy="12" r="2"/>
+                    <circle cx="12" cy="18" r="2"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Error Alert Banner -->
+          @if (errorMessage()) {
+            <div class="dock-error-banner" role="alert">
+              <span class="error-icon">⚠️</span>
+              <span class="error-text">{{ errorMessage() }}</span>
+              <button type="button" class="error-close" (click)="errorMessage.set(null)">✕</button>
+            </div>
+          }
+        </div>
+      </footer>
+
+    <!-- Viewport 3D Interaction Hints (Subtle guide at bottom) -->
+    <div class="viewport-controls-guide" aria-hidden="true">
+      <span>DRAG TO ROTATE 3D PERSPECTIVE</span>
+      <span>•</span>
+      <span>SCROLL TO ZOOM</span>
+      <span>•</span>
+      <span>CLICK CORE BALL OR NODES DIRECTLY</span>
+    </div>
+  </div>
+</main>
+
+
 
   <!-- 4. Interactive Theme Customizer Modal -->
   @if (showThemeCustomizer()) {
