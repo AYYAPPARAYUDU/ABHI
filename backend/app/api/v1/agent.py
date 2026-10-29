@@ -30,6 +30,28 @@ async def get_agent_network() -> NetworkGraphResponse:
     return network_service.get_network_graph()
 
 
+@router.get("/swarm/mesh")
+async def get_swarm_mesh():
+    """Retrieve full live multi-agent VisionQuest swarm state, agent bonds, and transmissions."""
+    from backend.app.cognitive.swarm.vision_mesh import vision_mesh
+    return vision_mesh.get_mesh_state()
+
+
+@router.post("/swarm/{agent_id}/ping")
+async def ping_swarm_agent(agent_id: str):
+    """Stimulate synaptic transmission and increase bond level for a target agent."""
+    from backend.app.cognitive.swarm.vision_mesh import vision_mesh
+    return await vision_mesh.ping_agent(agent_id)
+
+
+@router.post("/swarm/{agent_id}/evolve")
+async def evolve_swarm_agent(agent_id: str, payload: Optional[Dict[str, Any]] = None):
+    """Trigger autonomous AST capability evolution for an agent."""
+    from backend.app.cognitive.swarm.vision_mesh import vision_mesh
+    spec = payload.get("specification") if payload else None
+    return await vision_mesh.evolve_agent(agent_id, spec)
+
+
 @router.post("/command", response_model=AgentCommandResponse)
 async def submit_command(request: AgentCommandRequest) -> AgentCommandResponse:
     """Submit a multimodal or natural language command to the Authoritative Agent Gateway."""

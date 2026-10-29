@@ -129,17 +129,18 @@ import { AnimeInteractiveDirective } from '../../directives/anime-interactive.di
 
     .result-sheet-container {
       position: relative;
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 18px;
-      overflow: hidden;
-      padding: 16px 20px;
+      background: rgba(8, 18, 36, 0.95);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      border-radius: 20px;
+      overflow-y: auto;
+      max-height: 400px;
+      padding: 18px 24px;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65), 0 0 25px rgba(0, 240, 255, 0.15);
       animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 

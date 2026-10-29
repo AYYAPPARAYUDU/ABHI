@@ -18,7 +18,7 @@ export interface AgentNode {
   name: string;
   codename: string;
   role: string;
-  status: 'DORMANT' | 'ORBITING' | 'LOCKED' | 'EXECUTING';
+  status: 'DORMANT' | 'ORBITING' | 'LOCKED' | 'EXECUTING' | 'EVOLVING';
   color: string;
   hexColor: number;
   icon: string;
@@ -31,6 +31,10 @@ export interface AgentNode {
   load: string;
   synapticRate: string;
   neuralEfficiency: string;
+  bondLevel?: number;
+  bondStatus?: string;
+  lastChatter?: string;
+  packetsExchanged?: number;
 }
 
 export interface AgentSatelliteNode {
@@ -930,6 +934,7 @@ export class ThreeSceneManagerService {
       this.agents.update((list) =>
         list.map((a) => ({ ...a, status: 'ORBITING' }))
       );
+      this.startMultiAgentBondLoop();
     } else {
       this.playHoloSound('dock');
       this.latestJarvisMessage.set(
@@ -970,6 +975,197 @@ export class ThreeSceneManagerService {
     this.latestJarvisMessage.set(
       `Directive engaged for [${agent.name}]: Executing ${agent.role.toUpperCase()}. Systems synchronized.`
     );
+  }
+
+  pingAgent(agent: AgentNode): void {
+    this.playHoloSound('beep');
+    const newBond = Math.min(100.0, +((agent.bondLevel || 99.0) + 0.25).toFixed(2));
+    const newPackets = (agent.packetsExchanged || 1000) + 5;
+    const ack = `Synaptic pulse ACK from ${agent.name}. Bond elevated to ${newBond}%. Telemetry verified.`;
+
+    this.agents.update((list) =>
+      list.map((a) =>
+        a.id === agent.id
+          ? {
+              ...a,
+              bondLevel: newBond,
+              bondStatus: `${newBond.toFixed(1)}% SYNERGIZED`,
+              lastChatter: ack,
+              packetsExchanged: newPackets
+            }
+          : a
+      )
+    );
+
+    if (this.selectedAgent()?.id === agent.id) {
+      this.selectedAgent.update((cur) =>
+        cur
+          ? {
+              ...cur,
+              bondLevel: newBond,
+              bondStatus: `${newBond.toFixed(1)}% SYNERGIZED`,
+              lastChatter: ack,
+              packetsExchanged: newPackets
+            }
+          : null
+      );
+    }
+
+    const meshData = this.agentMeshMap.get(agent.id);
+    if (meshData && meshData.beam) {
+      (meshData.beam.material as THREE.LineBasicMaterial).opacity = 1.0;
+      setTimeout(() => {
+        if (meshData && meshData.beam) {
+          (meshData.beam.material as THREE.LineBasicMaterial).opacity = 0.45;
+        }
+      }, 500);
+    }
+
+    this.latestJarvisMessage.set(`[VISION -> ${agent.name}]: Synaptic ping ACK verified. Bond at ${newBond}%.`);
+  }
+
+  evolveAgent(agent: AgentNode): void {
+    this.playHoloSound('deploy');
+    const newBond = 100.0;
+    const newPackets = (agent.packetsExchanged || 1000) + 15;
+    const evolvedMsg = `Self-evolution verified. AST compiled with 0 defects. Full synergy locked at 100%.`;
+
+    this.agents.update((list) =>
+      list.map((a) =>
+        a.id === agent.id
+          ? {
+              ...a,
+              bondLevel: newBond,
+              bondStatus: '100.0% FULLY SYNERGIZED',
+              lastChatter: evolvedMsg,
+              neuralEfficiency: '100%',
+              packetsExchanged: newPackets,
+              status: 'ORBITING'
+            }
+          : a
+      )
+    );
+
+    if (this.selectedAgent()?.id === agent.id) {
+      this.selectedAgent.update((cur) =>
+        cur
+          ? {
+              ...cur,
+              bondLevel: newBond,
+              bondStatus: '100.0% FULLY SYNERGIZED',
+              lastChatter: evolvedMsg,
+              neuralEfficiency: '100%',
+              packetsExchanged: newPackets,
+              status: 'ORBITING'
+            }
+          : null
+      );
+    }
+
+    this.latestJarvisMessage.set(`[${agent.name} EVOLVED]: ${evolvedMsg}`);
+  }
+
+  private bondChatterTimer: any = null;
+  private bondAgentIndex = 0;
+
+  startMultiAgentBondLoop(): void {
+    if (this.bondChatterTimer) return;
+
+    const chatterPresets: Record<string, string[]> = {
+      'agent-sentinel': [
+        'Perimeter locked. Deflector field harmonic resonance stable at 1.42 THz.',
+        'Shield matrix harmonic frequency adjusted to deflect kinetic interference.',
+        'Zero anomalous intrusions detected across active system boundaries.'
+      ],
+      'agent-synthex': [
+        'Web telemetry nexus active. Ingesting sandboxed Chromium state.',
+        'DOM grounding pipeline synchronized across Playwright browser worker.',
+        'Network telemetry stream latency at 1.2ms. Zero jitter observed.'
+      ],
+      'agent-archon': [
+        'AST verification complete. 0 syntax anomalies across codebase.',
+        'Self-healing code compilation engine standing by in avionics forge.',
+        'Polyglot synthesis compiler pre-warmed for rapid execution.'
+      ],
+      'agent-aura': [
+        'Multispectral visual parser locked at 60 FPS. Foreground window identified.',
+        'Screen perception LiDAR scan verified zero UI bounding box drift.',
+        'Visual OCR buffer updated with active desktop pixel grid.'
+      ],
+      'agent-chronos': [
+        'Task DAG corridor prediction 99.8% optimal. Wavefront ready.',
+        'Kahn topological levels computed with zero cycles.',
+        'Priority task min-heap balanced. Fast-path dispatch primed.'
+      ],
+      'agent-synapse': [
+        'Neural inference throughput steady at 38 tokens/sec on local RTX core.',
+        'Token context window memory cache active at 40K tokens.',
+        'Cognitive reasoning attention heads aligned with operator intention.'
+      ],
+      'agent-aegis': [
+        'Dual-state physical verifier confirmed SQLite WAL commit.',
+        'Physical verification confirmed on filesystem handles.',
+        'Integrity audit passed: 100% deterministic state transitions.'
+      ],
+      'agent-nexus': [
+        'Speech resonance audio matrix calibrated. Awaiting operator voice.',
+        'Voice synthesis pitch and rate modulated for natural human warmth.',
+        'Audio spectrum harmonic analyzer listening on local microphone channel.'
+      ]
+    };
+
+    this.bondChatterTimer = setInterval(() => {
+      const agentList = this.agents();
+      if (agentList.length === 0) return;
+
+      const targetAgent = agentList[this.bondAgentIndex % agentList.length];
+      this.bondAgentIndex++;
+
+      const presets = chatterPresets[targetAgent.id] || ['Synaptic link verified.'];
+      const chatter = presets[Math.floor(Math.random() * presets.length)];
+      const newBond = Math.min(100.0, +((targetAgent.bondLevel || 99.0) + 0.05).toFixed(2));
+      const newPackets = (targetAgent.packetsExchanged || 1000) + 1;
+
+      this.agents.update((list) =>
+        list.map((a) =>
+          a.id === targetAgent.id
+            ? {
+                ...a,
+                bondLevel: newBond,
+                bondStatus: `${newBond.toFixed(1)}% SYNERGIZED`,
+                lastChatter: chatter,
+                packetsExchanged: newPackets
+              }
+            : a
+        )
+      );
+
+      if (this.selectedAgent()?.id === targetAgent.id) {
+        this.selectedAgent.update((cur) =>
+          cur
+            ? {
+                ...cur,
+                bondLevel: newBond,
+                bondStatus: `${newBond.toFixed(1)}% SYNERGIZED`,
+                lastChatter: chatter,
+                packetsExchanged: newPackets
+              }
+            : null
+        );
+      }
+
+      const meshData = this.agentMeshMap.get(targetAgent.id);
+      if (meshData && meshData.beam) {
+        (meshData.beam.material as THREE.LineBasicMaterial).opacity = 0.95;
+        setTimeout(() => {
+          if (meshData && meshData.beam) {
+            (meshData.beam.material as THREE.LineBasicMaterial).opacity = 0.45;
+          }
+        }, 400);
+      }
+
+      this.latestJarvisMessage.set(`[${targetAgent.name} -> VISION]: "${chatter}"`);
+    }, 2800);
   }
 
   // --- 60 FPS ANIMATION LOOP ---
@@ -1217,6 +1413,10 @@ export class ThreeSceneManagerService {
 
   cleanup(): void {
     this.pause();
+    if (this.bondChatterTimer) {
+      clearInterval(this.bondChatterTimer);
+      this.bondChatterTimer = null;
+    }
     this.agentMeshMap.clear();
     if (this.renderer) {
       this.renderer.dispose();

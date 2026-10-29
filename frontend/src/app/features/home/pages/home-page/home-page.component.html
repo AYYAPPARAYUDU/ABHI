@@ -28,6 +28,26 @@
       </div>
     </section>
 
+    <!-- Floating Swarm Quick-Select Ribbon (8 VisionQuest Autonomous Agents) -->
+    <nav class="floating-swarm-roster-ribbon" aria-label="Autonomous Swarm Agents">
+      <span class="roster-tag">SWARM MESH //</span>
+      <div class="roster-chips-wrap">
+        @for (ag of swarmAgents(); track ag.id) {
+          <button
+            type="button"
+            class="swarm-chip-btn"
+            [class.active]="selectedAgent()?.id === ag.id"
+            (click)="focusAgent(ag)"
+            [title]="ag.name + ' (' + ag.codename + '): ' + ag.role"
+          >
+            <span class="chip-icon">{{ ag.icon }}</span>
+            <span class="chip-name">{{ ag.name }}</span>
+            <span class="chip-bond text-cyan">{{ ag.bondLevel || 99.2 }}%</span>
+          </button>
+        }
+      </div>
+    </nav>
+
     <!-- Dynamic Core Targeting Reticle (Floating Directly Over The Ball) -->
     <div class="dynamic-core-reticle-overlay">
       <div
@@ -69,6 +89,29 @@
 
         <p class="agent-description-text">{{ current.description }}</p>
 
+        <!-- Vision Synaptic Bond Bar -->
+        <div class="agent-bond-wrapper">
+          <div class="bond-header-row">
+            <span class="bond-title">✦ VISION CORE SYNAPSE BOND</span>
+            <span class="bond-pct-badge text-cyan">{{ current.bondStatus || ((current.bondLevel || 99.4) + '% SYNERGIZED') }}</span>
+          </div>
+          <div class="bond-progress-track">
+            <div class="bond-progress-fill" [style.width.%]="current.bondLevel || 99.4" [style.backgroundColor]="current.color"></div>
+          </div>
+          <div class="bond-sub-info">
+            <span>Packets Exchanged: {{ current.packetsExchanged || 1840 }}</span>
+            <span>Channel: Laser Synapse Bus</span>
+          </div>
+        </div>
+
+        <!-- Live Inter-Agent Transmission -->
+        @if (current.lastChatter) {
+          <div class="agent-live-transmission-box">
+            <span class="tx-prefix">LIVE TRANSMISSION //</span>
+            <span class="tx-text">"{{ current.lastChatter }}"</span>
+          </div>
+        }
+
         <div class="agent-telemetry-tiles">
           <div class="telemetry-tile">
             <span class="tile-label">Subsystem Load</span>
@@ -89,11 +132,14 @@
         </div>
 
         <div class="agent-action-buttons">
-          <button type="button" (click)="executeAgentProtocol(current)" class="btn-engage-directive">
-            <span>ENGAGE DIRECTIVE</span>
+          <button type="button" (click)="pingAgent(current)" class="btn-ping-synapse" title="Send Synaptic Ping">
+            <span>⚡ PING AGENT</span>
           </button>
-          <button type="button" (click)="focusAgentPerspective(current)" class="btn-align-perspective">
-            <span>ALIGN</span>
+          <button type="button" (click)="evolveAgent(current)" class="btn-evolve-skill" title="Evolve Capability">
+            <span>🧬 EVOLVE</span>
+          </button>
+          <button type="button" (click)="executeAgentProtocol(current)" class="btn-engage-directive">
+            <span>ENGAGE</span>
           </button>
         </div>
       </div>

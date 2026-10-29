@@ -43,6 +43,12 @@
   display: block;
   opacity: 1 !important;
   z-index: 2;
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.spatial-webgl-canvas:active {
+  cursor: grabbing;
 }
 
 /* Soft Edge Vignette (Pure luxury frame with transparent center) */

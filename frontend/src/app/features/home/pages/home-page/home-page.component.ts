@@ -1089,6 +1089,14 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.onSubmitCommand();
   }
 
+  pingAgent(agent: any): void {
+    this.threeScene.pingAgent(agent);
+  }
+
+  evolveAgent(agent: any): void {
+    this.threeScene.evolveAgent(agent);
+  }
+
   toggleSound(): void {
     this.threeScene.toggleSound();
   }

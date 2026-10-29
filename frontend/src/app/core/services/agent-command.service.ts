@@ -404,14 +404,19 @@ export class AgentCommandService {
       } else if (lower.includes('thank')) {
         summary = `At your absolute service, always, ${callsign}. It's a genuine pleasure engineering with you.`;
         title = 'Stark Protocol · At Your Service';
+      } else if (lower === 'hi' || lower === 'hello' || lower.startsWith('hi ') || lower.startsWith('hello ') || lower === 'hey' || lower.startsWith('hey ')) {
+        const timeGreeting = new Date().getHours() < 12 ? 'Good morning' : (new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening');
+        summary = `${timeGreeting}, ${callsign}! ABHI Central Intelligence and all 8 VisionQuest multi-agents are synchronized. I am at your service as your trusted friend and co-pilot. What are we building or automating on your workstation today?`;
+        title = `Greeting · ${callsign}`;
       } else {
-        summary = `Consider it done, ${callsign}. All local intelligence pipelines are synced and operating under your direct authorization.`;
+        summary = `Hello ${callsign}! I've processed your thought "${text}". All local intelligence pipelines are synchronized and operating under your direct authorization.`;
+        title = `Intelligence · ${callsign}`;
       }
 
       return {
         resultId: `res_auto_${Date.now()}`,
         commandId,
-        type: 'TASK_RESULT',
+        type: 'TEXT_RESULT',
         title,
         summary,
         timestamp: Date.now()

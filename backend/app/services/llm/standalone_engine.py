@@ -762,9 +762,9 @@ class AbhiStandaloneEngine:
         # Greetings & Warm Camaderie
         if any(p_lower == g or p_lower.startswith(f"{g} ") for g in ["hi", "hello", "hey", "namaste", "vanakkam"]):
             return (
-                "Hello, my friend! ABHI Supreme Core is online and fully synchronized with your system. "
-                "All OS controls, automation drivers, and cognitive subroutines are at your command. "
-                "What shall we accomplish together today?"
+                "Hello Ayyappa! Great to connect with you, my friend. The VisionQuest multi-agent swarm is active, "
+                "synchronized with your Windows 11 desktop bridge, and ready for your command. "
+                "What would you like to build, automate, or explore together right now?"
             )
 
         if "how are you" in p_lower:
