@@ -81,6 +81,17 @@ class AgentGateway:
             ("mobile", "mobile:phone"),
             ("camera", "mobile:camera"),
             ("youtube", "app:youtube"),
+            ("edge", "app:browser"),
+            ("files", "app:explorer"),
+            ("folder", "app:explorer"),
+            ("diagnostic", "action:diagnostic"),
+            ("diagnostics", "action:diagnostic"),
+            ("memory", "action:memory"),
+            ("message", "action:message"),
+            ("device", "action:device"),
+            ("devices", "action:device"),
+            ("screen", "action:screen"),
+            ("desktop", "action:desktop"),
         ]:
             self._fuzzy_matcher.insert(term, payload)
 

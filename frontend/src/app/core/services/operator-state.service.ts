@@ -28,6 +28,7 @@ export class OperatorStateService {
     browserWorker: 'HEALTHY',
     safetyPolicy: 'HEALTHY',
     leaseManager: 'HEALTHY',
+    mobileBridge: 'HEALTHY',
     availableModels: []
   });
 
@@ -519,9 +520,11 @@ export class OperatorStateService {
     const subs = raw.subsystems || {};
 
     const mapStatus = (s: string) => {
-      if (s === 'healthy') return 'HEALTHY';
-      if (s === 'degraded' || s === 'low') return 'DEGRADED';
-      if (s === 'unreachable') return 'LOCAL';
+      if (!s) return 'UNAVAILABLE';
+      const lower = s.toLowerCase();
+      if (lower.includes('healthy') || lower.includes('connected') || lower.includes('ready')) return 'HEALTHY';
+      if (lower.includes('degraded') || lower.includes('low')) return 'DEGRADED';
+      if (lower.includes('unreachable') || lower.includes('offline')) return 'LOCAL';
       return 'UNAVAILABLE';
     };
 
@@ -536,6 +539,7 @@ export class OperatorStateService {
       browserWorker: 'HEALTHY',
       safetyPolicy: 'HEALTHY',
       leaseManager: 'HEALTHY',
+      mobileBridge: mapStatus(subs.mobile_bridge || 'ready'),
       availableModels: subs.available_models || []
     });
   }

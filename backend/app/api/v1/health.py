@@ -43,6 +43,15 @@ async def check_health():
     except Exception:
         storage_info = {"status": "unknown"}
 
+    # 4. Check Mobile ADB Bridge
+    mobile_status = "offline"
+    try:
+        from backend.app.automation.mobile.adb_controller import adb_controller
+        devices = await adb_controller.list_devices()
+        mobile_status = f"connected ({len(devices)} device)" if devices else "ready (listening)"
+    except Exception:
+        mobile_status = "unavailable"
+
     overall_status = "healthy" if (db_status == "healthy" and llm_healthy) else "degraded"
 
     return {
@@ -51,8 +60,9 @@ async def check_health():
         "subsystems": {
             "api_gateway": "healthy",
             "database_sqlite": db_status,
-            "ollama_service": "healthy",
-            "abhi_llm_core": "healthy",
+            "ollama_service": "healthy" if llm_healthy else "degraded",
+            "abhi_llm_core": "healthy" if llm_healthy else "degraded",
+            "mobile_bridge": mobile_status,
             "available_models": models_available,
             "default_model": settings.OLLAMA_DEFAULT_MODEL,
             "storage": storage_info

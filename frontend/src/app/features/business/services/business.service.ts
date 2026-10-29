@@ -80,7 +80,7 @@ export class BusinessService {
       tap((newProj) => {
         this.projects.update((prev) => [...prev, newProj]);
         this.selectedProject.set(newProj);
-        this.fetchSectors().subscribe();
+        this.fetchSectors().subscribe({ error: () => {} });
       }),
       catchError((err) => {
         this.errorMessage.set(err.message || 'Failed to create business project');
@@ -94,8 +94,8 @@ export class BusinessService {
       override_stop_conditions: overrideStop,
     }).pipe(
       tap(() => {
-        this.fetchProject(projectId).subscribe();
-        this.fetchFinancials().subscribe();
+        this.fetchProject(projectId).subscribe({ error: () => {} });
+        this.fetchFinancials().subscribe({ error: () => {} });
       })
     );
   }
@@ -105,7 +105,7 @@ export class BusinessService {
       approve,
     }).pipe(
       tap(() => {
-        this.fetchProject(projectId).subscribe();
+        this.fetchProject(projectId).subscribe({ error: () => {} });
       })
     );
   }

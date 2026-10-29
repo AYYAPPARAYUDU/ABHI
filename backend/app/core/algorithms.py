@@ -320,3 +320,4 @@ class PriorityTaskQueue(Generic[V]):
 
     def __len__(self) -> int:
         return len(self._heap)
+

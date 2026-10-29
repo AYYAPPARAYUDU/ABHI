@@ -38,6 +38,7 @@ export interface SystemHealthSummary {
   browserWorker: SubsystemHealthState;
   safetyPolicy: SubsystemHealthState;
   leaseManager: SubsystemHealthState;
+  mobileBridge?: SubsystemHealthState;
   availableModels: string[];
 }
 

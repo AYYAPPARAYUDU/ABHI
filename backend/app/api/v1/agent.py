@@ -1,13 +1,14 @@
+"""FastAPI Router for Agent Gateway & Context (Phase 9 Stage 3)."""
+
 import os
 import time
 import psutil
+from typing import Any, Dict, List, Optional
+from fastapi import APIRouter, HTTPException, status
+
 from backend.app.automation.desktop.os_control_engine import os_control_engine
 from backend.app.automation.mobile.adb_controller import adb_controller
 from backend.app.services.llm.abhi_llm import get_live_thoughts
-"""FastAPI Router for Agent Gateway & Context (Phase 9 Stage 3)."""
-
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, status
 
 from backend.app.cognitive.gateway.agent_gateway import agent_gateway
 from backend.app.cognitive.gateway.models import (

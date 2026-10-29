@@ -539,6 +539,10 @@ export class AgentCommandService {
    * Dismiss the currently displayed active result.
    */
   dismissResult(): void {
+    if (this.activePollTimer) {
+      clearInterval(this.activePollTimer);
+      this.activePollTimer = null;
+    }
     this.activeResult.set(null);
     this.lifecycle.set('RECEIVED');
     this.operatorState.setSpatialMode('DEFAULT');

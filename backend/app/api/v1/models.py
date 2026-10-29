@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.app.core.config import settings
+from backend.app.services.llm.abhi_llm import abhi_llm
 from backend.app.services.llm.ollama_client import LLMResponse, ModelInfo, ollama_client
 
 router = APIRouter(prefix="/models", tags=["Models"])
@@ -77,7 +78,7 @@ async def chat_completion(req: ChatRequest) -> LLMResponse:
         options["num_predict"] = req.max_tokens
 
     try:
-        return await ollama_client.chat(
+        return await abhi_llm.chat(
             messages=messages_payload,
             model=req.model,
             format_schema=req.format,
@@ -95,7 +96,7 @@ async def generate_completion(req: GenerateRequest) -> LLMResponse:
         options["num_predict"] = req.max_tokens
 
     try:
-        return await ollama_client.generate(
+        return await abhi_llm.generate(
             prompt=req.prompt,
             system=req.system,
             model=req.model,
