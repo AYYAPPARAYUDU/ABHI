@@ -52,6 +52,22 @@ async def evolve_swarm_agent(agent_id: str, payload: Optional[Dict[str, Any]] = 
     return await vision_mesh.evolve_agent(agent_id, spec)
 
 
+@router.post("/swarm/negotiate")
+async def negotiate_swarm_task(payload: Dict[str, Any]):
+    """Execute dynamic multi-agent negotiation, capability bidding, and consensus protocol."""
+    from backend.app.cognitive.swarm.vision_mesh import vision_mesh
+    goal = payload.get("goal") or payload.get("text") or "Execute collaborative system directives."
+    return await vision_mesh.negotiate_task(goal)
+
+
+@router.get("/swarm/negotiations")
+async def get_swarm_negotiations():
+    """Retrieve history of multi-agent negotiations and consensus transcripts."""
+    from backend.app.cognitive.swarm.vision_mesh import vision_mesh
+    state = vision_mesh.get_mesh_state()
+    return state.get("active_negotiations", [])
+
+
 @router.post("/command", response_model=AgentCommandResponse)
 async def submit_command(request: AgentCommandRequest) -> AgentCommandResponse:
     """Submit a multimodal or natural language command to the Authoritative Agent Gateway."""

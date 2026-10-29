@@ -78,7 +78,7 @@ export class ThreeSceneManagerService {
       angle: 0,
       elevation: 0.35,
       speed: 0.85,
-      orbitRadius: 8.8,
+      orbitRadius: 9.2,
       description: 'Generates quantum harmonic electromagnetic deflector arrays to neutralize kinetic and energy strikes.',
       subsystem: 'DEFENSE MATRIX',
       load: 'STABLE // 100%',
@@ -91,8 +91,8 @@ export class ThreeSceneManagerService {
       codename: 'MARK-II',
       role: 'Sub-Orbital Telemetry & Web Uplink',
       status: 'DORMANT',
-      color: '#38bdf8',
-      hexColor: 0x38bdf8,
+      color: '#10b981',
+      hexColor: 0x10b981,
       icon: '🌐',
       angle: (Math.PI * 2 / 8) * 1,
       elevation: -0.45,
@@ -110,13 +110,13 @@ export class ThreeSceneManagerService {
       codename: 'MARK-III',
       role: 'Microcode & Avionics Re-Assembler',
       status: 'DORMANT',
-      color: '#34d399',
-      hexColor: 0x34d399,
+      color: '#f59e0b',
+      hexColor: 0xf59e0b,
       icon: '⚡',
       angle: (Math.PI * 2 / 8) * 2,
       elevation: 0.55,
       speed: 0.75,
-      orbitRadius: 8.2,
+      orbitRadius: 8.8,
       description: 'Executes zero-latency firmware compilation, autonomous AST healing, and nanotech reassembly.',
       subsystem: 'AVIONICS FORGE',
       load: 'FREQ 6.2 GHz',
@@ -129,13 +129,13 @@ export class ThreeSceneManagerService {
       codename: 'MARK-IV',
       role: 'Multispectral LiDAR & Recon',
       status: 'DORMANT',
-      color: '#fbbf24',
-      hexColor: 0xfbbf24,
+      color: '#a855f7',
+      hexColor: 0xa855f7,
       icon: '👁️',
       angle: (Math.PI * 2 / 8) * 3,
       elevation: -0.3,
       speed: 0.88,
-      orbitRadius: 10.0,
+      orbitRadius: 10.2,
       description: 'Produces millimeter-precision 3D topological point clouds, thermal thermography, and hyper-spectral screen OCR scans.',
       subsystem: 'OPTIC SENSORS',
       load: 'LIDAR LOCKED',
@@ -148,13 +148,13 @@ export class ThreeSceneManagerService {
       codename: 'MARK-V',
       role: 'Tactical Trajectory Forecaster',
       status: 'DORMANT',
-      color: '#f43f5e',
-      hexColor: 0xf43f5e,
+      color: '#ef4444',
+      hexColor: 0xef4444,
       icon: '🔮',
       angle: (Math.PI * 2 / 8) * 4,
       elevation: 0.3,
       speed: 0.8,
-      orbitRadius: 8.6,
+      orbitRadius: 9.0,
       description: 'Predicts target maneuvers, war-game outcome contingencies, and computes optimal Task DAG corridors.',
       subsystem: 'TACTICAL MATRIX',
       load: 'ACCURACY 99.8%',
@@ -167,13 +167,13 @@ export class ThreeSceneManagerService {
       codename: 'MARK-VI',
       role: 'Deep Cognitive Neural Orchestrator',
       status: 'DORMANT',
-      color: '#c084fc',
-      hexColor: 0xc084fc,
+      color: '#ec4899',
+      hexColor: 0xec4899,
       icon: '🧠',
       angle: (Math.PI * 2 / 8) * 5,
       elevation: -0.2,
       speed: 0.92,
-      orbitRadius: 9.2,
+      orbitRadius: 9.4,
       description: 'Distributes reasoning computations across sub-agents and orchestrates real-time synthetic heuristics with zero cloud.',
       subsystem: 'COGNITIVE CLOUD',
       load: 'INFERENCE 1.2 ms',
@@ -186,8 +186,8 @@ export class ThreeSceneManagerService {
       codename: 'MARK-VII',
       role: 'Dual-State Physical Verifier',
       status: 'DORMANT',
-      color: '#f59e0b',
-      hexColor: 0xf59e0b,
+      color: '#84cc16',
+      hexColor: 0x84cc16,
       icon: '⚖️',
       angle: (Math.PI * 2 / 8) * 6,
       elevation: 0.4,
@@ -205,8 +205,8 @@ export class ThreeSceneManagerService {
       codename: 'MARK-VIII',
       role: 'Neural Voice Synthesis & Comms',
       status: 'DORMANT',
-      color: '#818cf8',
-      hexColor: 0x818cf8,
+      color: '#3b82f6',
+      hexColor: 0x3b82f6,
       icon: '🎙️',
       angle: (Math.PI * 2 / 8) * 7,
       elevation: -0.4,
@@ -246,11 +246,14 @@ export class ThreeSceneManagerService {
   private hudBracketGroup: THREE.Group | null = null;
   private shockwaveMeshes: { mesh: THREE.Mesh; phase: number; speed: number }[] = [];
 
-  // Multi-Agent Mesh Mapping
+  // Multi-Agent Mesh Mapping (Quantum Dot Balls + Nuclei + Micro-Rings)
   private agentMeshMap: Map<string, {
     group: THREE.Group;
-    orb: THREE.Mesh;
-    haloCloud: THREE.Points;
+    orb: THREE.Mesh; // Raycast hit sphere
+    dotBall: THREE.Points; // Colored Fibonacci Quantum Dot Ball
+    innerNucleus: THREE.Mesh; // Crystalline emissive polyhedral nucleus
+    microRing: THREE.Mesh; // Orbiting micro-torus ring
+    haloCloud: THREE.Points; // Surrounding particle aura
     beam: THREE.Line;
     currentRadius: number;
     currentScale: number;
@@ -258,6 +261,16 @@ export class ThreeSceneManagerService {
 
   private interAgentMeshLines: THREE.LineSegments | null = null;
   private cachedAgentVectors: THREE.Vector3[] = [];
+
+  // 3D Architectural Spatial Volume for Agent Swarm Home
+  private swarmArchitectureGroup: THREE.Group | null = null;
+  private volumetricColumns: { mesh: THREE.Mesh; baseOpacity: number; phase: number }[] = [];
+
+  // Smooth Cinematic Camera Transitions
+  private targetCameraPos = new THREE.Vector3(0, 0, 24);
+  private currentCameraPos = new THREE.Vector3(0, 0, 24);
+  private targetCameraLookAt = new THREE.Vector3(0, 0, 0);
+  private currentCameraLookAt = new THREE.Vector3(0, 0, 0);
 
   // Stardust & Ambient Starfield
   private ambientStarSystem: THREE.Points | null = null;
@@ -437,6 +450,7 @@ export class ThreeSceneManagerService {
       this.buildAmbientStarfield();
       this.buildMultiAgents();
       this.createHolographicHorizonDisc();
+      this.createSwarmHomeArchitecture();
       this.createNetworkGraphVisuals();
       this.createBusinessSectorVisuals();
 
@@ -679,51 +693,104 @@ export class ThreeSceneManagerService {
 
   /**
    * Advanced Multi-Agents construction:
-   * Concealed inside central singularity at scale 0.001,
-   * erupting outward with micro-quantum particle halo clouds,
-   * core energy laser tethers, and 3D inter-agent synaptic laser mesh.
+   * Multi-colored Quantum Dot Balls with inner crystalline nuclei,
+   * orbiting micro-torus rings, and enlarged raycast hit spheres.
    */
   private buildMultiAgents(): void {
     if (!this.scene) return;
     this.agentMeshMap.clear();
 
+    const phiRatio = (1 + Math.sqrt(5)) / 2;
+
     this.agents().forEach((agent) => {
       const group = new THREE.Group();
 
-      // Primary Glowing Node Orb
-      const orbGeo = new THREE.SphereGeometry(0.70, 32, 32);
-      const orbMat = new THREE.MeshStandardMaterial({
+      // 1. Quantum Dot Ball: spherical Fibonacci point cloud (192 colored dots)
+      const dotCount = 192;
+      const dotGeo = new THREE.BufferGeometry();
+      const dotPos = new Float32Array(dotCount * 3);
+      const dotColors = new Float32Array(dotCount * 3);
+      const c = new THREE.Color(agent.hexColor);
+
+      for (let i = 0; i < dotCount; i++) {
+        const theta = 2 * Math.PI * i / phiRatio;
+        const phi = Math.acos(1 - 2 * (i + 0.5) / dotCount);
+        const r = 0.72;
+        dotPos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        dotPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        dotPos[i * 3 + 2] = r * Math.cos(phi);
+
+        dotColors[i * 3] = c.r;
+        dotColors[i * 3 + 1] = c.g;
+        dotColors[i * 3 + 2] = c.b;
+      }
+      dotGeo.setAttribute('position', new THREE.BufferAttribute(dotPos, 3));
+      dotGeo.setAttribute('color', new THREE.BufferAttribute(dotColors, 3));
+      const dotMat = new THREE.PointsMaterial({
+        size: 0.12,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.95,
+        blending: THREE.AdditiveBlending,
+      });
+      const dotBall = new THREE.Points(dotGeo, dotMat);
+      group.add(dotBall);
+
+      // 2. Inner Radiant Crystalline Nucleus
+      const innerGeo = new THREE.OctahedronGeometry(0.38, 2);
+      const innerMat = new THREE.MeshStandardMaterial({
         color: agent.hexColor,
         emissive: agent.hexColor,
-        emissiveIntensity: 0.95,
-        roughness: 0.15,
+        emissiveIntensity: 0.90,
+        roughness: 0.18,
+        metalness: 0.8,
       });
-      const orb = new THREE.Mesh(orbGeo, orbMat);
-      orb.userData = { agentId: agent.id };
-      group.add(orb);
+      const innerNucleus = new THREE.Mesh(innerGeo, innerMat);
+      group.add(innerNucleus);
 
-      // Micro Quantum Particle Cloud swirling around each agent (64 particles)
+      // 3. Orbiting Micro-Torus Ring
+      const ringGeo = new THREE.TorusGeometry(0.95, 0.022, 12, 48);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: agent.hexColor,
+        transparent: true,
+        opacity: 0.75,
+        blending: THREE.AdditiveBlending,
+      });
+      const microRing = new THREE.Mesh(ringGeo, ringMat);
+      microRing.rotation.x = Math.PI * 0.25;
+      group.add(microRing);
+
+      // 4. Micro Quantum Particle Cloud swirling around each agent (64 particles)
       const cloudCount = 64;
       const cloudGeo = new THREE.BufferGeometry();
       const cloudPos = new Float32Array(cloudCount * 3);
-      for (let c = 0; c < cloudCount; c++) {
+      for (let cIdx = 0; cIdx < cloudCount; cIdx++) {
         const theta = Math.random() * Math.PI * 2;
         const phi = Math.acos(Math.random() * 2 - 1);
-        const rad = 1.1 + Math.random() * 0.4;
-        cloudPos[c * 3] = rad * Math.sin(phi) * Math.cos(theta);
-        cloudPos[c * 3 + 1] = rad * Math.sin(phi) * Math.sin(theta);
-        cloudPos[c * 3 + 2] = rad * Math.cos(phi);
+        const rad = 1.15 + Math.random() * 0.45;
+        cloudPos[cIdx * 3] = rad * Math.sin(phi) * Math.cos(theta);
+        cloudPos[cIdx * 3 + 1] = rad * Math.sin(phi) * Math.sin(theta);
+        cloudPos[cIdx * 3 + 2] = rad * Math.cos(phi);
       }
       cloudGeo.setAttribute('position', new THREE.BufferAttribute(cloudPos, 3));
       const cloudMat = new THREE.PointsMaterial({
         color: agent.hexColor,
-        size: 0.08,
+        size: 0.07,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.85,
         blending: THREE.AdditiveBlending,
       });
       const haloCloud = new THREE.Points(cloudGeo, cloudMat);
       group.add(haloCloud);
+
+      // 5. Enlarged Invisible Raycast Hit-Sphere (r = 1.6) for effortless 100% click hit rate
+      const hitGeo = new THREE.SphereGeometry(1.6, 16, 16);
+      const hitMat = new THREE.MeshBasicMaterial({
+        visible: false,
+      });
+      const hitSphere = new THREE.Mesh(hitGeo, hitMat);
+      hitSphere.userData = { agentId: agent.id };
+      group.add(hitSphere);
 
       // Energy Laser Tether Beam linking Agent to Central Singularity
       const beamGeo = new THREE.BufferGeometry().setFromPoints([
@@ -745,7 +812,10 @@ export class ThreeSceneManagerService {
       this.scene?.add(group);
       this.agentMeshMap.set(agent.id, {
         group,
-        orb,
+        orb: hitSphere,
+        dotBall,
+        innerNucleus,
+        microRing,
         haloCloud,
         beam,
         currentRadius: 0,
@@ -811,6 +881,160 @@ export class ThreeSceneManagerService {
 
     this.horizonDisc = new THREE.LineSegments(horizonGeo, horizonMat);
     this.scene.add(this.horizonDisc);
+  }
+
+  /**
+   * 3D Architectural Spatial Volume for Multi-Agent Swarm:
+   * Multi-tier stepped Cybernetic Citadel dais,
+   * 8 radial docking pods with glowing accent rims,
+   * volumetric holographic light columns rising into space,
+   * radial energy causeway bridges, and architectural pylons.
+   */
+  private createSwarmHomeArchitecture(): void {
+    if (!this.scene) return;
+    this.swarmArchitectureGroup = new THREE.Group();
+
+    // 1. Central Multi-Tier Hexagonal Citadel Dais
+    const baseGeo = new THREE.CylinderGeometry(13.5, 14.5, 0.4, 6);
+    const baseMat = new THREE.MeshStandardMaterial({
+      color: 0x050c18,
+      roughness: 0.35,
+      metalness: 0.85,
+    });
+    const baseDais = new THREE.Mesh(baseGeo, baseMat);
+    baseDais.position.y = -5.8;
+    this.swarmArchitectureGroup.add(baseDais);
+
+    // Glowing edge contours for the central citadel
+    const edgesGeo = new THREE.EdgesGeometry(baseGeo);
+    const edgesMat = new THREE.LineBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.45,
+      blending: THREE.AdditiveBlending,
+    });
+    const baseEdges = new THREE.LineSegments(edgesGeo, edgesMat);
+    baseEdges.position.y = -5.8;
+    this.swarmArchitectureGroup.add(baseEdges);
+
+    // Upper stepped dais
+    const stepGeo = new THREE.CylinderGeometry(8.5, 9.2, 0.35, 6);
+    const stepMesh = new THREE.Mesh(stepGeo, baseMat);
+    stepMesh.position.y = -5.45;
+    this.swarmArchitectureGroup.add(stepMesh);
+
+    const stepEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(stepGeo),
+      new THREE.LineBasicMaterial({
+        color: 0x38bdf8,
+        transparent: true,
+        opacity: 0.55,
+        blending: THREE.AdditiveBlending,
+      })
+    );
+    stepEdges.position.y = -5.45;
+    this.swarmArchitectureGroup.add(stepEdges);
+
+    // 2. 8 Dedicated Volumetric Docking Chambers
+    this.volumetricColumns = [];
+    const radius = 9.8;
+    const agentList = this.agents();
+
+    agentList.forEach((agent, index) => {
+      const angle = (index / agentList.length) * Math.PI * 2;
+      const posX = Math.cos(angle) * radius;
+      const posZ = Math.sin(angle) * radius;
+      const posY = -5.0;
+
+      const podGroup = new THREE.Group();
+      podGroup.position.set(posX, posY, posZ);
+
+      // Hexagonal Station Platform
+      const padGeo = new THREE.CylinderGeometry(1.5, 1.7, 0.35, 6);
+      const padMat = new THREE.MeshStandardMaterial({
+        color: 0x081326,
+        roughness: 0.25,
+        metalness: 0.9,
+      });
+      const pad = new THREE.Mesh(padGeo, padMat);
+      podGroup.add(pad);
+
+      // Station Perimeter Accent Ring in agent's signature color
+      const rimGeo = new THREE.TorusGeometry(1.45, 0.035, 16, 48);
+      const rimMat = new THREE.MeshBasicMaterial({
+        color: agent.hexColor,
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+      });
+      const rim = new THREE.Mesh(rimGeo, rimMat);
+      rim.rotation.x = Math.PI * 0.5;
+      rim.position.y = 0.18;
+      podGroup.add(rim);
+
+      // Station Radial Energy Causeway connecting Central Citadel to this Pod
+      const causewayGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, -5.45, 0),
+        new THREE.Vector3(posX, posY, posZ),
+      ]);
+      const causewayMat = new THREE.LineBasicMaterial({
+        color: agent.hexColor,
+        transparent: true,
+        opacity: 0.35,
+        blending: THREE.AdditiveBlending,
+      });
+      const causeway = new THREE.Line(causewayGeo, causewayMat);
+      this.swarmArchitectureGroup?.add(causeway);
+
+      // Volumetric Holographic Light Column (translucent energy column rising into sky)
+      const colHeight = 8.5;
+      const colGeo = new THREE.CylinderGeometry(0.85, 0.85, colHeight, 16, 1, true);
+      const colMat = new THREE.MeshBasicMaterial({
+        color: agent.hexColor,
+        transparent: true,
+        opacity: 0.18,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const colMesh = new THREE.Mesh(colGeo, colMat);
+      colMesh.position.y = colHeight * 0.5;
+      podGroup.add(colMesh);
+
+      this.volumetricColumns.push({
+        mesh: colMesh,
+        baseOpacity: 0.18,
+        phase: index * 0.78,
+      });
+
+      // 3 Architectural Pylons around pod
+      for (let p = 0; p < 3; p++) {
+        const pAngle = (p / 3) * Math.PI * 2;
+        const pGeo = new THREE.BoxGeometry(0.08, 1.8, 0.08);
+        const pMat = new THREE.MeshStandardMaterial({
+          color: 0x1e293b,
+          roughness: 0.4,
+          metalness: 0.8,
+        });
+        const pylon = new THREE.Mesh(pGeo, pMat);
+        pylon.position.set(Math.cos(pAngle) * 1.35, 0.9, Math.sin(pAngle) * 1.35);
+        podGroup.add(pylon);
+
+        // Pylon Tip Light
+        const tipGeo = new THREE.SphereGeometry(0.06, 8, 8);
+        const tipMat = new THREE.MeshBasicMaterial({
+          color: agent.hexColor,
+          blending: THREE.AdditiveBlending,
+        });
+        const tip = new THREE.Mesh(tipGeo, tipMat);
+        tip.position.set(Math.cos(pAngle) * 1.35, 1.85, Math.sin(pAngle) * 1.35);
+        podGroup.add(tip);
+      }
+
+      this.swarmArchitectureGroup?.add(podGroup);
+    });
+
+    this.scene.add(this.swarmArchitectureGroup);
   }
 
   private createNetworkGraphVisuals(): void {
@@ -943,7 +1167,7 @@ export class ThreeSceneManagerService {
       this.agents.update((list) =>
         list.map((a) => ({ ...a, status: 'DORMANT' }))
       );
-      this.selectedAgent.set(null);
+      this.resetCameraFocus();
     }
   }
 
@@ -957,8 +1181,20 @@ export class ThreeSceneManagerService {
     this.selectedAgent.set(agent);
     this.playHoloSound('beep');
     this.latestJarvisMessage.set(
-      `Tracking sub-agent [${agent.codename}] ${agent.name}. Directive ready.`
+      `Tracking sub-agent [${agent.codename}] ${agent.name}. Volumetric 3D Pod engaged.`
     );
+    const data = this.agentMeshMap.get(agent.id);
+    if (data) {
+      const p = data.group.position;
+      this.targetCameraPos.set(p.x * 0.72 + 2.4, p.y + 1.6, p.z * 0.72 + 6.4);
+      this.targetCameraLookAt.set(p.x, p.y, p.z);
+    }
+  }
+
+  resetCameraFocus(): void {
+    this.selectedAgent.set(null);
+    this.targetCameraPos.set(0, 0, 24);
+    this.targetCameraLookAt.set(0, 0, 0);
   }
 
   focusAgentPerspective(agent: AgentNode): void {
@@ -1282,6 +1518,16 @@ export class ThreeSceneManagerService {
             data.haloCloud.rotation.y += 0.01;
             data.haloCloud.rotation.x += 0.008;
           }
+          if (data.dotBall) {
+            data.dotBall.rotation.y += 0.015;
+          }
+          if (data.microRing) {
+            data.microRing.rotation.z += 0.02;
+          }
+          if (data.innerNucleus) {
+            data.innerNucleus.rotation.x += 0.012;
+            data.innerNucleus.rotation.y += 0.016;
+          }
 
           // In-place buffer mutation: zero GC overhead
           if (data.beam && data.beam.geometry) {
@@ -1328,6 +1574,23 @@ export class ThreeSceneManagerService {
 
           const pulseOpacity = (0.2 + Math.sin(time * 3.5) * 0.1) * (isDeployed ? 1 : 0);
           (this.interAgentMeshLines.material as THREE.LineBasicMaterial).opacity = pulseOpacity;
+        }
+
+        // 9. Volumetric Energy Columns Pulse & Swarm Architecture
+        if (this.volumetricColumns.length > 0) {
+          this.volumetricColumns.forEach((col) => {
+            const pulse = Math.sin(time * 2.2 + col.phase);
+            (col.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0.06, col.baseOpacity + pulse * 0.08);
+            col.mesh.rotation.y = time * 0.12;
+          });
+        }
+
+        // 10. Smooth Cinematic Camera Glide & Framing
+        if (this.camera) {
+          this.currentCameraPos.lerp(this.targetCameraPos, 0.045);
+          this.currentCameraLookAt.lerp(this.targetCameraLookAt, 0.045);
+          this.camera.position.copy(this.currentCameraPos);
+          this.camera.lookAt(this.currentCameraLookAt);
         }
 
         if (this.renderer && this.scene && this.camera) {
@@ -1418,6 +1681,8 @@ export class ThreeSceneManagerService {
       this.bondChatterTimer = null;
     }
     this.agentMeshMap.clear();
+    this.volumetricColumns = [];
+    this.swarmArchitectureGroup = null;
     if (this.renderer) {
       this.renderer.dispose();
       this.renderer = null;

@@ -1310,10 +1310,32 @@
   box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
 }
 
+.btn-negotiate-mesh {
+  flex: 1;
+  padding: 9px;
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-negotiate-mesh:hover {
+  background: rgba(16, 185, 129, 0.3);
+  border-color: #10b981;
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
 /* Floating Swarm Roster Ribbon */
 .floating-swarm-roster-ribbon {
   position: absolute;
-  top: 96px;
+  top: 54px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 30;
