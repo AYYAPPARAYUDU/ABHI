@@ -205,23 +205,6 @@
     </div>
   </div>
 
-  <!-- Dedicated Universal Workspace Navigation Ribbon (Rendered for secondary views, streamlined on /home) -->
-  @if (!isActive('/home')) {
-    <nav class="bar-nav-ribbon" aria-label="Workspace Navigation">
-      @for (item of navItems; track item.route) {
-        <button
-          type="button"
-          class="ribbon-btn"
-          appAnimeInteractive
-          [appAnimeType]="'button'"
-          [class.active]="isActive(item.route)"
-          (click)="navigateTo(item.route, $event)"
-          [title]="item.label"
-        >
-          <span class="ribbon-icon">{{ item.icon }}</span>
-          <span class="ribbon-label">{{ item.label }}</span>
-        </button>
-      }
-    </nav>
-  }
+  <!-- Dedicated Standalone Working Environment Component (Universal Access Across All Views) -->
+  <app-working-environment></app-working-environment>
 </header>

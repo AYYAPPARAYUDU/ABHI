@@ -10,11 +10,12 @@ import { ThemeService } from '../../../core/services/theme.service';
 import { SpeechVoiceService } from '../../../core/services/speech-voice.service';
 import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
 import { AnimeInteractiveDirective } from '../../../shared/directives/anime-interactive.directive';
+import { WorkingEnvironmentComponent, WORKING_ENVIRONMENTS } from '../working-environment/working-environment.component';
 
 @Component({
   selector: 'app-contextual-topbar',
   standalone: true,
-  imports: [CommonModule, RouterModule, AnimeInteractiveDirective],
+  imports: [CommonModule, RouterModule, AnimeInteractiveDirective, WorkingEnvironmentComponent],
   templateUrl: './contextual-topbar.component.html',
   styleUrl: './contextual-topbar.component.css'
 })

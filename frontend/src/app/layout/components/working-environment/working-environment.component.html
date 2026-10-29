@@ -1,0 +1,33 @@
+<div class="working-environment-container" role="navigation" aria-label="Working Environments Navigation">
+  <!-- Minimalist Cybernetic Environment Tag -->
+  <div class="env-sector-tag" title="ABHI Autonomous Engineering Workspaces">
+    <span class="sector-symbol">◈</span>
+    <span class="sector-text">WORKSPACES</span>
+  </div>
+
+  <!-- Primary Working Environment Pill Track -->
+  <nav class="bar-nav-ribbon environments-track" aria-label="Workspace Environments">
+    @for (env of environments; track env.route) {
+      <button
+        type="button"
+        class="ribbon-btn env-btn"
+        appAnimeInteractive
+        [appAnimeType]="'button'"
+        [class.active]="isActive(env.route)"
+        (click)="navigateTo(env.route, $event)"
+        [title]="env.label + ' — ' + env.description"
+        [attr.data-env]="env.id"
+        [attr.aria-label]="env.label + ' Workspace'"
+      >
+        <span class="env-icon ribbon-icon">{{ env.icon }}</span>
+        <span class="env-label ribbon-label">{{ env.label }}</span>
+        @if (env.badge) {
+          <span class="env-badge font-monospace">{{ env.badge }}</span>
+        }
+        @if (isActive(env.route)) {
+          <span class="env-active-glow"></span>
+        }
+      </button>
+    }
+  </nav>
+</div>
