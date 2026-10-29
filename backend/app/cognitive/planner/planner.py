@@ -49,7 +49,7 @@ class TaskPlanner:
             '    {\n'
             '      "node_id": "step_1",\n'
             '      "title": "Short descriptive title",\n'
-            '      "agent_id": "os_desktop_agent | coding_agent | rag_agent | memory_agent | browser_agent | media_studio_agent | perception_agent | evaluation_agent | business_agent | engineering_repair_agent",\n'
+            '      "agent_id": "os_desktop_agent | mobile_device_agent | coding_agent | rag_agent | memory_agent | browser_agent | media_studio_agent | perception_agent | evaluation_agent | business_agent | engineering_repair_agent",\n'
             '      "action": "action_name",\n'
             '      "params": {},\n'
             '      "dependencies": [],\n'
@@ -331,6 +331,105 @@ class TaskPlanner:
                 risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )
+        elif any(k in goal_lower for k in ["mobile", "phone", "android", "cellphone", "smartphone", "adb"]):
+            if "battery" in goal_lower:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Check Mobile Battery & Power Diagnostics",
+                    agent_id="mobile_device_agent",
+                    action="get_device_status",
+                    params={},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            elif "lock" in goal_lower:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Lock Mobile Device Screen",
+                    agent_id="mobile_device_agent",
+                    action="lock_device",
+                    params={},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            elif any(w in goal_lower for w in ["unlock", "wake"]):
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Wake & Unlock Mobile Device Screen",
+                    agent_id="mobile_device_agent",
+                    action="unlock_device",
+                    params={},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            elif "screenshot" in goal_lower:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Capture Mobile Screen via ADB",
+                    agent_id="mobile_device_agent",
+                    action="take_screenshot",
+                    params={},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            elif "whatsapp" in goal_lower or "message" in goal_lower:
+                phone = None
+                phone_match = re.search(r"(?:to|phone|number)\s+([+]?\d{7,15})", goal)
+                if phone_match:
+                    phone = phone_match.group(1).strip()
+                message = "Hello from ABHI"
+                msg_match = re.search(r"(?:saying|message|text)\s+['\"]?(.+?)['\"]?$", goal, re.IGNORECASE)
+                if msg_match:
+                    message = msg_match.group(1).strip()
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Send WhatsApp Message on Mobile",
+                    agent_id="mobile_device_agent",
+                    action="send_whatsapp",
+                    params={"phone": phone, "message": message},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            elif any(w in goal_lower for w in ["call", "dial"]):
+                num = ""
+                m = re.search(r"(\+?\d{5,15})", goal)
+                if m:
+                    num = m.group(1)
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Dial Phone Number: {num or 'Default'}",
+                    agent_id="mobile_device_agent",
+                    action="dial_phone",
+                    params={"number": num},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            elif any(w in goal_lower for w in ["open", "launch", "start"]):
+                app = "whatsapp"
+                for a in ["whatsapp", "youtube", "camera", "chrome", "settings", "maps", "spotify", "instagram"]:
+                    if a in goal_lower:
+                        app = a
+                        break
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Launch Mobile App: {app.title()}",
+                    agent_id="mobile_device_agent",
+                    action="launch_app",
+                    params={"app": app},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            else:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Inspect Mobile Connection & Status",
+                    agent_id="mobile_device_agent",
+                    action="get_device_status",
+                    params={},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+
         elif any(k in goal_lower for k in ["browse", "browser", "website", "url", "navigate", "webpage", "http://", "https://"]):
             target_url = "https://localhost:4200"
             url_match = re.search(r"https?://[^\s]+", goal)
@@ -432,6 +531,40 @@ class TaskPlanner:
                 action="generate_code",
                 params={"instruction": goal, "language": "python"},
                 risk_tier="Tier 2",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(w in goal_lower for w in ["whatsapp", "personal message", "personal messge", "send mesage", "send message"]):
+            message = "hi and hello this is abhi"
+            msg_match = re.search(r"""(?:saying|message|personal message|personal messge|text|content)\s+['"]?(.+?)['"]?$""", goal, re.IGNORECASE)
+            if msg_match:
+                extracted = msg_match.group(1).strip()
+                extracted = re.split(r"\b(do this|and test|test it|opening any|check all|make it)\b", extracted, flags=re.IGNORECASE)[0].strip()
+                if extracted:
+                    message = extracted
+
+            phone = None
+            phone_match = re.search(r"(?:to|phone|number)\s+([+]?\d{7,15})", goal)
+            if phone_match:
+                phone = phone_match.group(1).strip()
+
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Open WhatsApp: {phone or 'Personal'}",
+                agent_id="os_desktop_agent",
+                action="open_whatsapp",
+                params={"message": message, "phone": phone},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+            nodes["step_2"] = DAGNode(
+                node_id="step_2",
+                title=f"Deliver Message: {message[:30]}",
+                agent_id="os_desktop_agent",
+                action="send_whatsapp_message",
+                params={"message": message, "phone": phone},
+                dependencies=["step_1"],
+                risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )
 

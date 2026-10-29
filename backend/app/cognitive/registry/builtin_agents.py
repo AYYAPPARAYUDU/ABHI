@@ -2069,6 +2069,222 @@ class BusinessAgent(BaseAgent):
             )
 
 
+class MobileDeviceAgent(BaseAgent):
+    """Specialized Agent for local Android & mobile device automation via ADB."""
+
+    def __init__(self):
+        super().__init__(
+            AgentMetadata(
+                agent_id="mobile_device_agent",
+                name="Mobile & Personal Device Agent",
+                capabilities=[
+                    "get_device_status",
+                    "list_devices",
+                    "lock_device",
+                    "unlock_device",
+                    "send_keyevent",
+                    "launch_app",
+                    "send_whatsapp",
+                    "dial_phone",
+                    "take_screenshot",
+                    "tap_screen",
+                    "swipe_screen",
+                    "type_text",
+                    "connect_wireless"
+                ],
+                risk_tier="Tier 1",
+                description="Controls mobile devices via ADB: lock/unlock, battery, WhatsApp, calls, apps, screen capture."
+            )
+        )
+
+    async def execute(self, request: AgentTaskRequest) -> AgentTaskResult:
+        from backend.app.automation.mobile.adb_controller import adb_controller
+        action = request.action
+        params = request.params
+        serial = params.get("serial")
+
+        if action in ["get_device_status", "device_status", "battery_status"]:
+            status = await adb_controller.get_device_status(serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data=status,
+                observed_state={"connected": status.get("connected", False)}
+            )
+
+        elif action in ["list_devices", "scan_devices"]:
+            devs = await adb_controller.list_devices()
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"devices": devs, "count": len(devs)},
+                observed_state={"device_count": len(devs)}
+            )
+
+        elif action in ["lock_device", "lock_phone", "lock"]:
+            ok = await adb_controller.lock_device(serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"locked": True},
+                observed_state={"screen_locked": True}
+            )
+
+        elif action in ["unlock_device", "unlock_phone", "unlock", "wake"]:
+            ok = await adb_controller.unlock_device(serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"unlocked": True},
+                observed_state={"screen_awake": True}
+            )
+
+        elif action in ["send_keyevent", "keyevent", "press_key"]:
+            key = params.get("key", "home")
+            ok = await adb_controller.send_keyevent(key, serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"key": key},
+                observed_state={"key_sent": key}
+            )
+
+        elif action in ["launch_app", "open_app"]:
+            app = params.get("app") or params.get("app_name") or params.get("package", "whatsapp")
+            res = await adb_controller.launch_app(app, serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=res.get("success", False),
+                data=res,
+                observed_state={"app_launched": app}
+            )
+
+        elif action in ["send_whatsapp", "whatsapp_message", "send_whatsapp_message"]:
+            phone = params.get("phone")
+            message = params.get("message", "Hello from ABHI")
+            res = await adb_controller.send_whatsapp_message(phone=phone, message=message, serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=res.get("success", False),
+                data=res,
+                observed_state={"whatsapp_intent_sent": True}
+            )
+
+        elif action in ["dial_phone", "call_phone", "dial"]:
+            number = params.get("number") or params.get("phone", "")
+            res = await adb_controller.dial_phone(number, serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=res.get("success", False),
+                data=res,
+                observed_state={"dialed": number}
+            )
+
+        elif action in ["take_screenshot", "capture_screen", "screenshot"]:
+            png_bytes = await adb_controller.take_screenshot_bytes(serial=serial)
+            has_bytes = bool(png_bytes and len(png_bytes) > 0)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=has_bytes,
+                data={"bytes_length": len(png_bytes) if png_bytes else 0},
+                observed_state={"screenshot_captured": has_bytes}
+            )
+
+        elif action in ["tap", "tap_screen"]:
+            x = int(params.get("x", 500))
+            y = int(params.get("y", 1000))
+            ok = await adb_controller.tap(x, y, serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"x": x, "y": y},
+                observed_state={"tapped": [x, y]}
+            )
+
+        elif action in ["swipe", "swipe_screen"]:
+            x1 = int(params.get("x1", 500))
+            y1 = int(params.get("y1", 1200))
+            x2 = int(params.get("x2", 500))
+            y2 = int(params.get("y2", 400))
+            ok = await adb_controller.swipe(x1, y1, x2, y2, serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"from": [x1, y1], "to": [x2, y2]},
+                observed_state={"swiped": True}
+            )
+
+        elif action in ["type", "type_text"]:
+            text = params.get("text", "")
+            ok = await adb_controller.type_text(text, serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"text": text},
+                observed_state={"typed": text}
+            )
+
+        elif action in ["connect_wireless", "connect_wifi"]:
+            ip = params.get("ip", "192.168.1.100")
+            port = int(params.get("port", 5555))
+            res = await adb_controller.connect_wireless(ip, port)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=res.get("success", False),
+                data=res,
+                observed_state={"connected": res.get("success", False)}
+            )
+
+        else:
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=False,
+                error_message=f"Unsupported mobile device action '{action}'"
+            )
+
+
 def register_builtin_agents():
     """Register all built-in specialized agents in the central registry."""
     agent_registry.register(RAGAgent())
@@ -2080,6 +2296,7 @@ def register_builtin_agents():
     agent_registry.register(PerceptionAgent())
     agent_registry.register(EvaluationAgent())
     agent_registry.register(BusinessAgent())
+    agent_registry.register(MobileDeviceAgent())
 
 
 # Auto-register on module import

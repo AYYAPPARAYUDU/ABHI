@@ -1,3 +1,4 @@
+import { AgentApiService } from '../../../../core/api/agent-api.service';
 import { Component, inject, OnInit, OnDestroy, AfterViewInit, signal, computed, effect, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -50,6 +51,7 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly themeService = inject(ThemeService);
   readonly speechVoice = inject(SpeechVoiceService);
   readonly animService = inject(AnimeAnimationService);
+  private readonly agentApi = inject(AgentApiService);
   private readonly router = inject(Router);
   private readonly threeScene = inject(ThreeSceneManagerService);
   private readonly hostEl = inject(ElementRef);
@@ -115,17 +117,21 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     { icon: '💡', label: 'Tell me a joke', prompt: 'Tell me a joke, buddy' }
   ];
 
-  readonly subconsciousThoughts = [
-    'Autonomous Arc Reactor: Monitoring Windows UIAutomation + Playwright event buses...',
-    'Dual-State Physical Verifier: Live pixel differential verification & process audit active...',
-    'Local Inference Engine: ABHI Native Neural Core synchronized with zero cloud telemetry...',
-    'Specialist Swarm: 8 autonomous agent satellites orbiting with laser conduits active...',
-    'Cognitive Memory: SQLite WAL persistent graph primed, zero uncommitted transitions...',
-    'Cybernetic Arc Optics: Concentric counter-rotating mechanical dials & 360° radar active...'
-  ];
+  readonly liveThoughts = signal<string[]>([
+    'Local Neural Core: Active on abhi:latest (Qwen3 8.2B, 40K context)',
+    'Physical OS Bridge: Windows 11 UIA worker synchronized',
+    'Mobile Device Bus: ADB bridge online (tcp:5037)',
+    'Dual-State Verifier: Pixel & process verification active',
+    'Autonomous personal companion ready for Ayyappa Rayudu'
+  ]);
   readonly activeThoughtIndex = signal(0);
-  readonly activeSubconsciousThought = computed(() => this.subconsciousThoughts[this.activeThoughtIndex()]);
+  readonly activeSubconsciousThought = computed(() => {
+    const list = this.liveThoughts();
+    return list[this.activeThoughtIndex() % list.length] || '';
+  });
   private thoughtIntervalId: any = null;
+  private thoughtFetchIntervalId: any = null;
+  readonly mobileState = signal<any>(null);
 
   // 1-Click Interactive Automation Scenarios
   readonly automationScenarios: AutomationScenario[] = [
@@ -382,8 +388,24 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.threeScene.setMode('MAIN_AGENT');
     this.speechVoice.greetUserOnLaunch();
     this.thoughtIntervalId = setInterval(() => {
-      this.activeThoughtIndex.update((idx) => (idx + 1) % this.subconsciousThoughts.length);
+      this.activeThoughtIndex.update((idx) => (idx + 1) % this.liveThoughts().length);
     }, 4500);
+    this.fetchLiveThoughts();
+    this.thoughtFetchIntervalId = setInterval(() => this.fetchLiveThoughts(), 5000);
+  }
+
+  private async fetchLiveThoughts(): Promise<void> {
+    try {
+      const data = await this.agentApi.getLiveThoughts();
+      if (data && data.thoughts && Array.isArray(data.thoughts) && data.thoughts.length > 0) {
+        this.liveThoughts.set(data.thoughts);
+      }
+      if (data && data.mobile) {
+        this.mobileState.set(data.mobile);
+      }
+    } catch {
+      // Retain previous thoughts on transient network drop
+    }
   }
 
   ngAfterViewInit(): void {
@@ -391,7 +413,7 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!root) return;
 
     // Animate HUD pill, tabs, and controls with staggered entrance
-    const hudPills = root.querySelectorAll('.hud-brand-pill, .glass-nav-tab, .hud-tool-btn, .subconscious-thought-bar');
+    const hudPills = root.querySelectorAll('.hud-brand-pill, .glass-nav-tab, .hud-tool-btn');
     if (hudPills.length > 0) {
       this.animService.staggerEnter({
         targets: hudPills,
@@ -433,6 +455,10 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.thoughtIntervalId) {
       clearInterval(this.thoughtIntervalId);
       this.thoughtIntervalId = null;
+    }
+    if (this.thoughtFetchIntervalId) {
+      clearInterval(this.thoughtFetchIntervalId);
+      this.thoughtFetchIntervalId = null;
     }
     if (this.autoCycleTimer) {
       clearInterval(this.autoCycleTimer);

@@ -68,6 +68,19 @@
 
     <!-- Right: Voice Audio, Operator Profile, Command Palette, Theme, Mode, Health, E-STOP -->
     <div class="bar-right">
+      <!-- Dynamic Mobile Device Status Pill -->
+      <button
+        type="button"
+        class="topbar-tool-btn mobile-status-btn"
+        appAnimeInteractive
+        [appAnimeType]="'button'"
+        [class.connected]="isMobileConnected()"
+        [title]="mobileTooltip()"
+      >
+        <span class="btn-icon">{{ isMobileConnected() ? '📱' : '📲' }}</span>
+        <span class="btn-text">{{ mobileLabel() }}</span>
+      </button>
+
       <!-- Voice Audio Speech Synthesis Toggle -->
       <button
         type="button"

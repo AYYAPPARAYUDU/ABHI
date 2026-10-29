@@ -974,13 +974,16 @@ export class ThreeSceneManagerService {
   // --- 60 FPS ANIMATION LOOP ---
   private startAnimationLoop(): void {
     this.ngZone.runOutsideAngular(() => {
-      const clock = new THREE.Clock();
+      let lastTime = performance.now();
+      const startTime = lastTime;
 
       const animate = () => {
         if (!this.isRunning) return;
 
-        const delta = clock.getDelta();
-        const time = clock.getElapsedTime();
+        const now = performance.now();
+        const delta = Math.min((now - lastTime) / 1000, 0.1);
+        const time = (now - startTime) / 1000;
+        lastTime = now;
 
         // 1. Smooth Euler Rotation interpolation
         this.sceneRotation.x += (this.targetRotation.x - this.sceneRotation.x) * 0.08;

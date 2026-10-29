@@ -330,6 +330,18 @@
   border-color: rgba(255, 255, 255, 0.1);
 }
 
+.mobile-status-btn {
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+.mobile-status-btn.connected {
+  border-color: var(--abhi-cyan, #00f0ff);
+  color: #00f0ff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+  background: rgba(0, 240, 255, 0.08);
+}
+
 @keyframes pulseAudio {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.03); }

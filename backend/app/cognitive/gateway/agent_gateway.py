@@ -337,20 +337,25 @@ class AgentGateway:
         if is_canonical_action:
             return True
 
-        # 6. Explicit OS Action keywords & targets
-        if any(w in text_lower for w in ["screenshot", "whatsapp", "volume up", "volume down", "lock screen", "lock workstation", "mute", "unmute"]):
+        # 6. Explicit OS & Mobile Action keywords & targets
+        if any(w in text_lower for w in [
+            "screenshot", "whatsapp", "volume up", "volume down", "lock screen", "lock workstation",
+            "mute", "unmute", "lock phone", "lock mobile", "unlock phone", "unlock mobile",
+            "phone battery", "mobile battery", "check battery", "mobile screen"
+        ]):
             return True
 
         has_action_verb = any(v in text_lower for v in [
             "open", "launch", "start", "run", "execute", "close", "kill", "terminate",
             "screenshot", "capture screen", "lock workstation", "lock screen",
             "volume up", "volume down", "mute", "unmute", "create folder", "make folder", "mkdir",
-            "build file", "create directory"
+            "build file", "create directory", "dial", "call", "tap", "swipe", "connect"
         ])
         has_desktop_target = any(t in text_lower for t in [
             "notepad", "calculator", "calc", "terminal", "powershell", "cmd", "command prompt",
             "browser", "chrome", "edge", "settings", "vs code", "vscode", "explorer", "screen",
-            "screenshot", "folder", "directory", "process", "app", "application", "window", "whatsapp"
+            "screenshot", "folder", "directory", "process", "app", "application", "window", "whatsapp",
+            "phone", "mobile", "android", "cellphone", "smartphone", "device"
         ])
 
         if has_action_verb and (has_desktop_target or text_lower.startswith(("run ", "execute ", "open ", "launch ", "start "))):

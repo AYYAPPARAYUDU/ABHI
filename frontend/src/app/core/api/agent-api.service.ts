@@ -118,4 +118,48 @@ export class AgentApiService {
       return { voice_mode: 'NOT_AVAILABLE', status: 'UNAVAILABLE' };
     }
   }
+
+  /**
+   * Fetch live dynamic thoughts, active window, and mobile state from Gateway.
+   */
+  async getLiveThoughts(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/live-thoughts`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Fetch mobile status (battery, screen, connection).
+   */
+  async getMobileStatus(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/devices/mobile/status`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Execute mobile device action (lock, unlock, app, whatsapp, dial, screenshot).
+   */
+  async executeMobileAction(action: string, params: Record<string, any> = {}): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/devices/mobile/action`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, params })
+    });
+    return await response.json();
+  }
 }

@@ -149,12 +149,12 @@ export class AvatarViewportComponent implements AfterViewInit, OnDestroy {
 
   private startAnimationLoop(): void {
     if (!this.renderer) return;
-    const clock = new THREE.Clock();
+    const startTime = performance.now();
 
     const animate = () => {
       if (!this.renderer) return;
       this.animationFrameId = requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
+      const elapsed = (performance.now() - startTime) / 1000;
       const state = this.avatarState();
       const isVoiceListening = this.voiceState().isListening;
       const headPose = this.faceHeadState().headPose;

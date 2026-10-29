@@ -32,6 +32,8 @@
     <div class="dynamic-core-reticle-overlay">
       <div
         class="core-target-box"
+        appAnimeInteractive
+        [appAnimeType]="'button'"
         (click)="toggleCoreDeployment()"
         role="button"
         tabindex="0"
@@ -106,7 +108,7 @@
           <div class="jarvis-text-content">
             <span class="jarvis-tag">[J.A.R.V.I.S.]:</span>{{ msg }}
           </div>
-          <button type="button" (click)="latestJarvisMessage.set(null)" class="jarvis-close-btn" title="Dismiss message">✕</button>
+          <button type="button" (click)="latestJarvisMessage.set(null)" class="jarvis-close-btn" appAnimeInteractive [appAnimeType]="'button'" title="Dismiss message">✕</button>
         </div>
       }
 
@@ -117,33 +119,49 @@
             <span class="actions-icon">⚡</span>
             <span class="actions-title">SYSTEM ACTIONS & SHORTCUTS</span>
           </div>
-          <button type="button" class="actions-close-btn" (click)="closeActionsMenu()" aria-label="Close Actions">✕</button>
+          <button type="button" class="actions-close-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="closeActionsMenu()" aria-label="Close Actions">✕</button>
         </div>
 
         <div class="quick-action-chips-dock actions-grid" role="group" aria-label="Quick Actions">
-          <button type="button" class="quick-chip-btn" (click)="executeActionFromMenu('Open notepad')">
+          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Open notepad')">
             <span class="chip-emoji">📝</span>
             <span>Notepad</span>
           </button>
-          <button type="button" class="quick-chip-btn" (click)="executeActionFromMenu('Open calculator and calculate 125 * 48')">
+          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Open calculator and calculate 125 * 48')">
             <span class="chip-emoji">🧮</span>
             <span>Calculator</span>
           </button>
-          <button type="button" class="quick-chip-btn" (click)="executeActionFromMenu('Open Chrome browser')">
+          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Open Chrome browser')">
             <span class="chip-emoji">🌐</span>
             <span>Browser</span>
           </button>
-          <button type="button" class="quick-chip-btn" (click)="executeActionFromMenu('Take a screenshot')">
+          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Take a screenshot')">
             <span class="chip-emoji">📸</span>
             <span>Screenshot</span>
+          </button>
+          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Check phone battery and status')">
+            <span class="chip-emoji">🔋</span>
+            <span>Phone Battery</span>
+          </button>
+          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Lock my phone')">
+            <span class="chip-emoji">📱</span>
+            <span>Lock Phone</span>
+          </button>
+          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Take screenshot on phone')">
+            <span class="chip-emoji">📲</span>
+            <span>Phone Screen</span>
+          </button>
+          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Open WhatsApp on mobile')">
+            <span class="chip-emoji">💬</span>
+            <span>WhatsApp</span>
           </button>
           <button type="button" class="quick-chip-btn swarm-toggle-chip" (click)="toggleCoreDeployment(); closeActionsMenu()">
             <span class="chip-emoji">⚡</span>
             <span>{{ isSwarmDeployed() ? 'Retract Swarm' : 'Deploy Swarm' }}</span>
           </button>
           <button type="button" class="quick-chip-btn ai-chat-chip" (click)="executeActionFromMenu('Who are you and what are your capabilities?')">
-            <span class="chip-emoji">💬</span>
-            <span>Ask J.A.R.V.I.S.</span>
+            <span class="chip-emoji">🤖</span>
+            <span>Ask ABHI</span>
           </button>
         </div>
       </div>
@@ -180,7 +198,7 @@
               <div class="dock-controls-group">
                 <button
                   type="button"
-                  class="dock-control-btn voice-btn"
+                  class="dock-control-btn voice-btn" appAnimeInteractive [appAnimeType]="'button'"
                   [class.listening]="isListening()"
                   (click)="toggleVoiceInput()"
                   title="Voice Input (Speech-to-Text)"
@@ -195,7 +213,7 @@
 
                 <button
                   type="submit"
-                  class="dock-control-btn submit-btn"
+                  class="dock-control-btn submit-btn" appAnimeInteractive [appAnimeType]="'button'"
                   [disabled]="!commandInput.trim() || isWorking()"
                   title="Execute Command (Enter)"
                   aria-label="Submit Command"
@@ -209,7 +227,7 @@
                 <!-- Three Dots Button for Actions Menu -->
                 <button
                   type="button"
-                  class="dock-control-btn dots-btn"
+                  class="dock-control-btn dots-btn" appAnimeInteractive [appAnimeType]="'button'"
                   [class.active]="showActionsMenu()"
                   (click)="toggleActionsMenu()"
                   title="Quick Actions Menu (⋯)"

@@ -1,4 +1,5 @@
-import { Component, inject, computed, AfterViewInit, ElementRef } from '@angular/core';
+import { AgentApiService } from '../../../core/api/agent-api.service';
+import { Component, inject, computed, AfterViewInit, ElementRef, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -17,13 +18,30 @@ import { AnimeInteractiveDirective } from '../../../shared/directives/anime-inte
   templateUrl: './contextual-topbar.component.html',
   styleUrl: './contextual-topbar.component.css'
 })
-export class ContextualTopbarComponent implements AfterViewInit {
+export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly stateService = inject(OperatorStateService);
   readonly themeService = inject(ThemeService);
   readonly speechVoice = inject(SpeechVoiceService);
   readonly animService = inject(AnimeAnimationService);
   private readonly router = inject(Router);
   private readonly hostEl = inject(ElementRef);
+  private readonly agentApi = inject(AgentApiService);
+  readonly mobileStatus = signal<any>(null);
+  private mobilePollInterval: any = null;
+
+  readonly isMobileConnected = computed(() => this.mobileStatus()?.connected === true);
+  readonly mobileLabel = computed(() => {
+    const m = this.mobileStatus();
+    if (!m || !m.connected) return 'Mobile Ready';
+    const dev = m.device_info?.model || 'Device';
+    const bat = m.battery?.level;
+    return `${dev}${bat ? ' ' + bat + '%' : ''}`;
+  });
+  readonly mobileTooltip = computed(() => {
+    const m = this.mobileStatus();
+    if (!m || !m.connected) return 'Mobile Controller: ADB Ready on tcp:5037. Connect phone via USB or Wi-Fi to automate.';
+    return `Connected Phone: ${m.device_info?.model || 'Android'} | Battery: ${m.battery?.level}% (${m.battery?.status})`;
+  });
 
   readonly safety = this.stateService.safety;
   readonly isWorking = computed(() => this.stateService.isBusy() || this.safety().emergencyStopped);
@@ -107,6 +125,29 @@ export class ContextualTopbarComponent implements AfterViewInit {
       this.animService.tactileClick(event.currentTarget as HTMLElement);
     }
     this.router.navigateByUrl(route);
+  }
+
+  ngOnInit(): void {
+    this.fetchMobileStatus();
+    this.mobilePollInterval = setInterval(() => this.fetchMobileStatus(), 6000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.mobilePollInterval) {
+      clearInterval(this.mobilePollInterval);
+      this.mobilePollInterval = null;
+    }
+  }
+
+  private async fetchMobileStatus(): Promise<void> {
+    try {
+      const res = await this.agentApi.getMobileStatus();
+      if (res && res.data) {
+        this.mobileStatus.set(res.data);
+      }
+    } catch {
+      // Retain previous status
+    }
   }
 
   handleAvatarFallback(e: Event): void {

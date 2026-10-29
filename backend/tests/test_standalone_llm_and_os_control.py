@@ -45,24 +45,24 @@ async def test_standalone_llm_health_and_models():
 async def test_standalone_llm_conversational_understanding():
     """Verify standalone LLM understands user intent and responds with companion persona."""
     # Greeting
-    resp_greeting = await abhi_llm.generate("Hello ABHI!")
+    resp_greeting = await abhi_standalone_engine.generate("Hello ABHI!")
     assert resp_greeting.done is True
     assert len(resp_greeting.response) > 10
     assert any(w in resp_greeting.response.lower() for w in ["hello", "friend", "synchronized", "ready"])
 
     # Capabilities inquiry
-    resp_help = await abhi_llm.generate("What can you do with OS control?")
+    resp_help = await abhi_standalone_engine.generate("What can you do with OS control?")
     assert "Window Management" in resp_help.response or "Mouse & Keyboard" in resp_help.response
 
     # Identity
-    resp_who = await abhi_llm.generate("Who are you?")
+    resp_who = await abhi_standalone_engine.generate("Who are you?")
     assert "ABHI" in resp_help.response or "companion" in resp_who.response.lower()
 
 
 @pytest.mark.asyncio
 async def test_standalone_llm_code_synthesis():
     """Verify standalone code generation produces valid clean code."""
-    code = await abhi_llm.synthesize_code("write a python hello world function", language="python")
+    code = await abhi_standalone_engine.synthesize_code("write a python hello world function", language="python")
     assert "def " in code or "print(" in code
     assert "Hello, World" in code or "hello world" in code.lower()
 
@@ -97,7 +97,7 @@ async def test_standalone_llm_dag_decomposition():
 async def test_standalone_llm_streaming():
     """Verify real-time token streaming from standalone engine."""
     tokens = []
-    async for chunk in abhi_llm.generate_stream("How are you today?"):
+    async for chunk in abhi_standalone_engine.generate_stream("How are you today?"):
         tokens.append(chunk)
     assert len(tokens) > 0
     full_text = "".join(tokens)
@@ -483,3 +483,55 @@ async def test_gateway_whatsapp_dispatch_end_to_end():
     assert nodes_list[1].action == "send_whatsapp_message"
 
 
+
+
+# =============================================================================
+# 7. MOBILE DEVICE CONTROLLER & LIVE THOUGHTS TESTS
+# =============================================================================
+
+@pytest.mark.asyncio
+async def test_mobile_controller_and_agent():
+    """Verify ADB controller discovery, status, and mobile_device_agent registration."""
+    from backend.app.automation.mobile.adb_controller import adb_controller
+    assert await adb_controller.is_available() is True
+    devs = await adb_controller.list_devices()
+    assert isinstance(devs, list)
+
+    agent = agent_registry.get_agent("mobile_device_agent")
+    assert agent is not None
+    assert "lock_device" in agent.metadata.capabilities
+    assert "send_whatsapp" in agent.metadata.capabilities
+    assert "get_device_status" in agent.metadata.capabilities
+
+    # Test status action on agent
+    req = AgentTaskRequest(
+        task_id="test_task_mobile",
+        node_id="step_1",
+        action="get_device_status",
+        params={}
+    )
+    res = await agent.execute(req)
+    assert res.success is True
+    assert "connected" in res.data
+
+
+@pytest.mark.asyncio
+async def test_live_thoughts_endpoint():
+    """Verify live subconscious thoughts, active window, and telemetry."""
+    from backend.app.api.v1.agent import get_live_subconscious_thoughts
+    data = await get_live_subconscious_thoughts()
+    assert data["status"] == "synchronized"
+    assert len(data["thoughts"]) >= 3
+    assert "active_window" in data
+    assert "mobile" in data
+    assert "telemetry" in data
+
+
+@pytest.mark.asyncio
+async def test_task_planner_mobile_decomposition():
+    """Verify task planner decomposes mobile goals to mobile_device_agent."""
+    plan = await task_planner.create_plan("task_mob_1", "Lock my phone and check battery")
+    assert plan is not None
+    assert len(plan.nodes) >= 1
+    node1 = list(plan.nodes.values())[0]
+    assert node1.agent_id == "mobile_device_agent"
