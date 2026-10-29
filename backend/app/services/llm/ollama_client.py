@@ -160,9 +160,13 @@ class OllamaClient:
             ]
 
     def _prepare_options(self, options: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-        """Ensure full context window and model hyperparameters are applied."""
+        """Ensure optimized context window and model hyperparameters are applied."""
         merged: Dict[str, Any] = {
-            "num_ctx": getattr(settings, "OLLAMA_NUM_CTX", 32768)
+            "num_ctx": getattr(settings, "OLLAMA_NUM_CTX", 8192),
+            "num_predict": 512,
+            "temperature": 0.4,
+            "repeat_penalty": 1.1,
+            "num_thread": 8,
         }
         if options:
             merged.update(options)

@@ -161,3 +161,4 @@ async def get_all_connected_devices():
         "mobile_count": len(mobiles),
         "active_mobile": mobiles[0] if mobiles else None
     }
+

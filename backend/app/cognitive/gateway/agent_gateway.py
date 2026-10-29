@@ -1,3 +1,4 @@
+from backend.app.core.algorithms import TrieFuzzyMatcher
 """Authoritative Agent Gateway Engine (Phase 9 Stage 3).
 
 Central gateway orchestrating multimodal input validation, context resolution,
@@ -56,6 +57,54 @@ class AgentGateway:
         self._commands: Dict[str, AgentCommandResponse] = {}
         self._attention_items: Dict[str, AgentAttentionItem] = {}
         self._llm = AbhiNativeLLM()
+
+        # O(L) Trie & Levenshtein DP matcher for robust command disambiguation
+        self._fuzzy_matcher = TrieFuzzyMatcher()
+        for term, payload in [
+            ("notepad", "app:notepad"),
+            ("calculator", "app:calculator"),
+            ("calc", "app:calculator"),
+            ("chrome", "app:browser"),
+            ("browser", "app:browser"),
+            ("terminal", "app:terminal"),
+            ("powershell", "app:terminal"),
+            ("cmd", "app:terminal"),
+            ("explorer", "app:explorer"),
+            ("settings", "app:settings"),
+            ("whatsapp", "app:whatsapp"),
+            ("screenshot", "action:screenshot"),
+            ("volume", "action:volume"),
+            ("lock", "action:lock"),
+            ("unlock", "action:unlock"),
+            ("battery", "mobile:battery"),
+            ("phone", "mobile:phone"),
+            ("mobile", "mobile:phone"),
+            ("camera", "mobile:camera"),
+            ("youtube", "app:youtube"),
+        ]:
+            self._fuzzy_matcher.insert(term, payload)
+
+    def fuzzy_normalize_query(self, raw_text: str) -> str:
+        """Correct user typos against known system targets using Levenshtein Trie DP in O(L + DP)."""
+        tokens = raw_text.split()
+        modified = False
+        reconstructed = []
+        for token in tokens:
+            punct = '.,!?:;"\'()[]{}'
+            clean_token = token.lower().strip(punct)
+            if len(clean_token) >= 4 and not self._fuzzy_matcher.search_exact(clean_token):
+                # Search nearest match with edit distance <= 2
+                match = self._fuzzy_matcher.find_nearest_match(clean_token, max_distance=2)
+                if match and match[2] > 0:
+                    corrected_word = match[0]
+                    # Preserve original punctuation
+                    prefix = token[:len(token) - len(token.lstrip(punct))]
+                    suffix = token[len(token.rstrip(punct)):]
+                    reconstructed.append(prefix + corrected_word + suffix)
+                    modified = True
+                    continue
+            reconstructed.append(token)
+        return " ".join(reconstructed) if modified else raw_text
 
     def _sanitize_text(self, text: str) -> str:
         """Redact sensitive credentials from persistence logs."""
@@ -141,6 +190,7 @@ class AgentGateway:
         now_ts = int(time.time() * 1000)
         raw_text = request.text.strip()
         clean_text = self._sanitize_text(raw_text)
+        clean_text = self.fuzzy_normalize_query(clean_text)
 
         # 1. Thread Association
         thread_id = request.thread_id or f"thread_{uuid.uuid4().hex[:8]}"

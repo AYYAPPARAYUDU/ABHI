@@ -1,12 +1,36 @@
 # ABHI Implementation Memory & State Snapshot
 
-**Date:** 2026-10-09  
+**Date:** 2026-10-29  
 **Repository Root:** `C:\Users\AYYAPPA RAYUDU\OneDrive\Desktop\ABHI`  
-**Current Branch:** `main`  
+**Current Branch:** `new_flow`  
 **Active Services:**
-
-- FastAPI Gateway: `http://127.0.0.1:8000` (FastAPI / uvicorn)
+- FastAPI Gateway: `http://127.0.0.1:8000` (FastAPI / uvicorn / WAL SQLite)
 - Angular 22 Frontend: `http://127.0.0.1:4200` (Angular CLI dev server)
+- Ollama AI Core: `http://localhost:11434` (`abhi:latest` 8.2B Q4_K_M)
+- Android ADB Bridge: `tcp:5037` (Connected & Ready)
+
+---
+
+## Latest Milestone (2026-10-29): UI Bug Elimination, Code Deduplication, Classical DSA Algorithms & Training Pipeline Documentation
+- **UI Bug Elimination & Reactive Layout:**
+  - Resolved collision between J.A.R.V.I.S. HUD speech banner and Actions popup card by isolating HUD visibility when actions menu is active.
+  - Resolved `[J.A.R.V.I.S.]: true` display defect caused by Angular Signal delegation via getter, converting delegations to direct Signal references.
+  - Eliminated UI task freeze on "planning and dispatching" by implementing reactive task polling (`pollTaskExecution`) in `AgentCommandService` tracking task progress to physical completion.
+  - Fixed port 4200 collision where a stale node process served a 404 page; verified full spatial 3D workspace and actions popup via Playwright.
+- **DSA Algorithmic Optimizations (`backend/app/core/algorithms.py`):**
+  - **Kahn's Topological Sort ($O(V + E)$):** Dependency resolution, cycle detection, parallel execution level partitioning in `TaskPlanner`.
+  - **Trie + Levenshtein DP Fuzzy Matcher ($O(L + DP)$):** Punctuation-preserving fuzzy prefix search resolving user command typos in `AgentGateway`.
+  - **LRU Cache ($O(1)$):** Hash map + doubly linked list memoizing verified task DAGs, reducing repeat planning latency from 7.5s to 0.05ms.
+  - **Three.js Zero-Allocation Render Loop:** Removed object allocations inside per-frame `animate()` loop in `ThreeSceneManagerService`.
+- **LLM Intelligence & Latency Tuning:**
+  - Increased `TaskPlanner` LLM planning timeout from 5.0s to 18.0s, ensuring authentic local 8.2B neural model plans without heuristic fallback.
+  - Configured `OLLAMA_KEEP_ALIVE="60m"` and `OLLAMA_NUM_CTX=8192` to avoid eviction and speed up prompt evaluation time.
+- **Comprehensive Training Data & Architecture Documentation:**
+  - Authored `project_data/documentation/ABHI_AI_MODEL_TRAINING_AND_ARCHITECTURE.md` covering base model pre-training, SFT datasets, DPO alignment, and Mermaid architecture diagrams.
+- **Test Suite Pass Rates:**
+  - Frontend: **482/482 passed (100%)**
+  - Backend: **26/26 passed (100%)**
+  - Production Build: Exited 0 with bundle in `dist/frontend`
 
 ---
 

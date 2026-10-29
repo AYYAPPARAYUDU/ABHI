@@ -430,3 +430,4 @@ class AdbController:
 
 # Global singleton controller
 adb_controller = AdbController()
+

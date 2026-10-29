@@ -253,6 +253,7 @@ export class ThreeSceneManagerService {
   }> = new Map();
 
   private interAgentMeshLines: THREE.LineSegments | null = null;
+  private cachedAgentVectors: THREE.Vector3[] = [];
 
   // Stardust & Ambient Starfield
   private ambientStarSystem: THREE.Points | null = null;
@@ -1051,9 +1052,12 @@ export class ThreeSceneManagerService {
           });
         }
 
-        // 7. Multi-Agent Eruption & Inter-Agent Synaptic Trajectory Mesh
+        // 7. Multi-Agent Eruption & Inter-Agent Synaptic Trajectory Mesh (Zero-allocation)
         const isDeployed = this.isSwarmDeployed();
-        const agentPositions: THREE.Vector3[] = [];
+        const agentCount = this.agents().length;
+        while (this.cachedAgentVectors.length < agentCount) {
+          this.cachedAgentVectors.push(new THREE.Vector3());
+        }
 
         this.agents().forEach((agent, index) => {
           const data = this.agentMeshMap.get(agent.id);
@@ -1075,7 +1079,7 @@ export class ThreeSceneManagerService {
           const posY = Math.sin(time * 0.6 + index) * 0.6 + agent.elevation;
 
           data.group.position.set(posX, posY, posZ);
-          agentPositions.push(new THREE.Vector3(posX, posY, posZ));
+          this.cachedAgentVectors[index].set(posX, posY, posZ);
 
           // Orbit micro quantum particle halo around each agent
           if (data.haloCloud) {
@@ -1083,35 +1087,48 @@ export class ThreeSceneManagerService {
             data.haloCloud.rotation.x += 0.008;
           }
 
-          // Update tether laser beam linking agent back to singularity
+          // In-place buffer mutation: zero GC overhead
           if (data.beam && data.beam.geometry) {
-            const positions = new Float32Array([0, 0, 0, posX, posY, posZ]);
-            data.beam.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const attr = data.beam.geometry.attributes['position'] as THREE.BufferAttribute;
+            if (attr) {
+              const arr = attr.array as Float32Array;
+              arr[3] = posX;
+              arr[4] = posY;
+              arr[5] = posZ;
+              attr.needsUpdate = true;
+            }
             (data.beam.material as THREE.LineBasicMaterial).opacity = isDeployed ? data.currentScale * 0.45 : 0;
           }
         });
 
-        // 8. Dynamically re-link Inter-Agent Synaptic Laser Mesh
-        if (this.interAgentMeshLines && agentPositions.length >= 2) {
-          const linePos: number[] = [];
-          const numAgents = agentPositions.length;
+        // 8. Dynamically re-link Inter-Agent Synaptic Laser Mesh (Zero allocation in-place buffer mutation)
+        if (this.interAgentMeshLines && agentCount >= 2) {
+          const attr = this.interAgentMeshLines.geometry.attributes['position'] as THREE.BufferAttribute;
+          if (attr) {
+            const arr = attr.array as Float32Array;
+            let ptr = 0;
+            for (let i = 0; i < agentCount; i++) {
+              const next = (i + 1) % agentCount;
+              const cross = (i + 2) % agentCount;
 
-          for (let i = 0; i < numAgents; i++) {
-            const next = (i + 1) % numAgents;
-            const cross = (i + 2) % numAgents;
+              // Perimeter line
+              arr[ptr++] = this.cachedAgentVectors[i].x;
+              arr[ptr++] = this.cachedAgentVectors[i].y;
+              arr[ptr++] = this.cachedAgentVectors[i].z;
+              arr[ptr++] = this.cachedAgentVectors[next].x;
+              arr[ptr++] = this.cachedAgentVectors[next].y;
+              arr[ptr++] = this.cachedAgentVectors[next].z;
 
-            // Perimeter line
-            linePos.push(agentPositions[i].x, agentPositions[i].y, agentPositions[i].z);
-            linePos.push(agentPositions[next].x, agentPositions[next].y, agentPositions[next].z);
-
-            // Cross-synapse line for polyhedral neural mesh
-            linePos.push(agentPositions[i].x, agentPositions[i].y, agentPositions[i].z);
-            linePos.push(agentPositions[cross].x, agentPositions[cross].y, agentPositions[cross].z);
+              // Cross-synapse line for polyhedral neural mesh
+              arr[ptr++] = this.cachedAgentVectors[i].x;
+              arr[ptr++] = this.cachedAgentVectors[i].y;
+              arr[ptr++] = this.cachedAgentVectors[i].z;
+              arr[ptr++] = this.cachedAgentVectors[cross].x;
+              arr[ptr++] = this.cachedAgentVectors[cross].y;
+              arr[ptr++] = this.cachedAgentVectors[cross].z;
+            }
+            attr.needsUpdate = true;
           }
-
-          const posArray = new Float32Array(linePos);
-          this.interAgentMeshLines.geometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-          this.interAgentMeshLines.geometry.attributes['position'].needsUpdate = true;
 
           const pulseOpacity = (0.2 + Math.sin(time * 3.5) * 0.1) * (isDeployed ? 1 : 0);
           (this.interAgentMeshLines.material as THREE.LineBasicMaterial).opacity = pulseOpacity;

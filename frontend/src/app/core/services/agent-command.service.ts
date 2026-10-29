@@ -2,6 +2,7 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { OperatorStateService } from './operator-state.service';
 import { AgentApiService, BackendCommandResponse } from '../api/agent-api.service';
+import { TaskApiService } from '../api/task-api.service';
 import { SpeechVoiceService } from './speech-voice.service';
 import {
   AgentCommandRequest,
@@ -27,8 +28,12 @@ export interface StarkChatMessage {
 export class AgentCommandService {
   private readonly operatorState = inject(OperatorStateService);
   private readonly agentApi = inject(AgentApiService);
+  private readonly taskApi = inject(TaskApiService);
   private readonly speechVoice = inject(SpeechVoiceService);
   private readonly router = inject(Router);
+
+  // Active polling timer handle for background task state
+  private activePollTimer: any = null;
 
   // Command State Signals
   readonly lifecycle = signal<CommandLifecycleState>('RECEIVED');
@@ -139,6 +144,22 @@ export class AgentCommandService {
       this.activeResult.set(result);
       this.saveContextFromCommand(commandId, result, response.task_id);
 
+      // If backend dispatched a background task and it's not yet completed, start polling
+      if (response.task_id && response.status !== 'COMPLETED') {
+        this.operatorState.currentTask.set({
+          taskId: response.task_id,
+          goal: text,
+          state: 'EXECUTING',
+          isSuccess: false,
+          progressPercent: 20,
+          currentStep: response.message || 'Executing action...',
+          startTime: Date.now(),
+          durationMs: 0,
+          actionsExecuted: 1
+        });
+        this.pollTaskExecution(response.task_id, commandId, text, result);
+      }
+
       // Record AI response in Stark Comms stream
       const persona = this.speechVoice.personaMode();
       this.commsMessages.update((msgs) => [
@@ -225,6 +246,101 @@ export class AgentCommandService {
         type: 'PROTOCOL'
       }
     ]);
+  }
+
+  /**
+   * Asynchronously poll the backend task endpoint until terminal state (COMPLETED, FAILED, CANCELLED).
+   */
+  private pollTaskExecution(
+    taskId: string,
+    commandId: string,
+    rawText: string,
+    initialResult: AgentCommandResult
+  ): void {
+    if (this.activePollTimer) {
+      clearInterval(this.activePollTimer);
+      this.activePollTimer = null;
+    }
+
+    const startTime = Date.now();
+    const maxPollMs = 90000;
+
+    this.activePollTimer = setInterval(async () => {
+      if (Date.now() - startTime > maxPollMs) {
+        if (this.activePollTimer) {
+          clearInterval(this.activePollTimer);
+          this.activePollTimer = null;
+        }
+        return;
+      }
+
+      try {
+        const taskStatus = await this.taskApi.getTaskStatus(taskId);
+        if (!taskStatus) return;
+
+        const state = (taskStatus.state || '').toUpperCase();
+
+        // Update Operator State currentTask
+        this.operatorState.currentTask.update((prev) => {
+          if (!prev) {
+            return {
+              taskId,
+              goal: rawText,
+              state,
+              isSuccess: state === 'COMPLETED',
+              progressPercent: state === 'COMPLETED' ? 100 : 50,
+              currentStep: taskStatus.active_node_id ? `Executing: ${taskStatus.active_node_id}` : 'Running verified action...',
+              startTime,
+              durationMs: Date.now() - startTime,
+              actionsExecuted: 1
+            };
+          }
+          return {
+            ...prev,
+            state,
+            isSuccess: state === 'COMPLETED',
+            progressPercent: state === 'COMPLETED' ? 100 : (state === 'EXECUTING' ? 65 : prev.progressPercent),
+            currentStep: taskStatus.active_node_id ? `Executing: ${taskStatus.active_node_id}` : (state === 'COMPLETED' ? 'Task execution verified & complete.' : prev.currentStep),
+            durationMs: Date.now() - startTime
+          };
+        });
+
+        if (state === 'COMPLETED') {
+          if (this.activePollTimer) {
+            clearInterval(this.activePollTimer);
+            this.activePollTimer = null;
+          }
+          this.lifecycle.set('COMPLETED');
+          const finalSummary = `Verified Execution Complete: ${rawText}. Action executed successfully on Windows OS.`;
+          const updatedResult: AgentCommandResult = {
+            ...initialResult,
+            title: `Execution Completed: ${this.formatCommandTitle(rawText)}`,
+            summary: finalSummary,
+            timestamp: Date.now()
+          };
+          this.activeResult.set(updatedResult);
+          this.speechVoice.speak(finalSummary);
+        } else if (state === 'FAILED' || state === 'CANCELLED' || state === 'EMERGENCY_STOPPED') {
+          if (this.activePollTimer) {
+            clearInterval(this.activePollTimer);
+            this.activePollTimer = null;
+          }
+          this.lifecycle.set(state === 'FAILED' ? 'FAILED' : 'CANCELLED');
+          const errorMsg = taskStatus.error_message || `Execution stopped (${state}).`;
+          const updatedResult: AgentCommandResult = {
+            ...initialResult,
+            title: `Task ${state}: ${this.formatCommandTitle(rawText)}`,
+            summary: errorMsg,
+            timestamp: Date.now()
+          };
+          this.activeResult.set(updatedResult);
+        } else if (state === 'WAITING_FOR_APPROVAL') {
+          this.lifecycle.set('WAITING_FOR_APPROVAL');
+        }
+      } catch (_err) {
+        // Quietly retry next poll interval
+      }
+    }, 500);
   }
 
   /**

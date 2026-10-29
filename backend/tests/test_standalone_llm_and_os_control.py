@@ -346,7 +346,7 @@ async def test_gateway_os_command_dispatch():
     assert response.task_id is not None
 
     # Poll supervisor task completion
-    for _ in range(40):
+    for _ in range(120):
         curr_status = central_supervisor.get_task_status(response.task_id)
         if curr_status and curr_status.state.value in ["COMPLETED", "FAILED"]:
             break
@@ -469,7 +469,7 @@ async def test_gateway_whatsapp_dispatch_end_to_end():
     assert response.task_id is not None
 
     # Poll supervisor task completion
-    for _ in range(40):
+    for _ in range(120):
         curr_status = central_supervisor.get_task_status(response.task_id)
         if curr_status and curr_status.state.value in ["COMPLETED", "FAILED"]:
             break

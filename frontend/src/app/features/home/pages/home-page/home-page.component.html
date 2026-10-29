@@ -103,6 +103,7 @@
     <div class="main-agent-bottom-console">
       <!-- Floating J.A.R.V.I.S. Voice & Intelligence HUD Bar -->
       @if (latestJarvisMessage(); as msg) {
+        @if (!showActionsMenu()) {
         <div class="floating-jarvis-hud-bar">
           <div class="jarvis-symbol-icon">⚡</div>
           <div class="jarvis-text-content">
@@ -110,6 +111,7 @@
           </div>
           <button type="button" (click)="latestJarvisMessage.set(null)" class="jarvis-close-btn" appAnimeInteractive [appAnimeType]="'button'" title="Dismiss message">✕</button>
         </div>
+        }
       }
 
       <!-- Actions Popup Menu (Revealed via Three Dots Button) -->
