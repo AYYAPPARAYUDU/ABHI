@@ -853,6 +853,28 @@ class OSControlEngine:
         except Exception as e:
             return False, f"Failed to open URL '{url}': {str(e)}"
 
+    def open_email(
+        self,
+        to: str = "",
+        subject: str = "Message from ABHI",
+        body: str = "",
+        use_gmail: bool = True
+    ) -> Tuple[bool, Dict[str, Any], Optional[str]]:
+        """Open Gmail Web Compose or system default mail handler with prefilled recipient, subject, and body."""
+        enc_to = urllib.parse.quote(to)
+        enc_sub = urllib.parse.quote(subject)
+        enc_body = urllib.parse.quote(body)
+
+        if use_gmail:
+            target_url = f"https://mail.google.com/mail/?view=cm&fs=1&to={enc_to}&su={enc_sub}&body={enc_body}"
+            method = "gmail_web_compose"
+        else:
+            target_url = f"mailto:{to}?subject={enc_sub}&body={enc_body}"
+            method = "system_mailto_protocol"
+
+        ok, err = self.open_url(target_url, browser="chrome")
+        return ok, {"method": method, "to": to, "subject": subject, "dispatched": ok}, err
+
     def adjust_volume(self, direction: str = "up", steps: int = 2) -> Tuple[bool, Optional[str]]:
         """Adjust system master volume up, down, or toggle mute."""
         if not self.is_windows or not self._user32:

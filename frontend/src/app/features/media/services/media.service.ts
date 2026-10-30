@@ -43,7 +43,7 @@ import {
 })
 export class MediaService {
   private http = inject(HttpClient);
-  private baseUrl = '/api/v1/media';
+  private baseUrl = 'http://127.0.0.1:8000/api/v1/media';
 
   // Core Signals (Workflow Composer Domain - Phase 8 Stage 8.4)
   templates = signal<MediaWorkflowTemplate[]>([]);

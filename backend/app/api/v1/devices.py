@@ -36,6 +36,8 @@ async def get_mobile_status(serial: Optional[str] = Query(None)):
     """Fetch current mobile connection, battery, screen state, and hardware details."""
     try:
         status = await adb_controller.get_device_status(serial=serial)
+        identifiers = await adb_controller.get_phone_identifiers(serial=serial)
+        status["identifiers"] = identifiers
         return {"success": True, "data": status}
     except Exception as e:
         logger.error(f"Error fetching mobile status: {e}")
@@ -47,6 +49,17 @@ async def get_mobile_status(serial: Optional[str] = Query(None)):
                 "message": f"Unable to reach mobile controller: {str(e)}"
             }
         }
+
+
+@router.get("/mobile/identifiers")
+async def get_mobile_identifiers(serial: Optional[str] = Query(None)):
+    """Fetch phone hardware specs: IMEI, Serial Number, Wi-Fi IP address, and OS build."""
+    try:
+        identifiers = await adb_controller.get_phone_identifiers(serial=serial)
+        return {"success": True, "data": identifiers}
+    except Exception as e:
+        logger.error(f"Error fetching mobile identifiers: {e}")
+        return {"success": False, "error": str(e)}
 
 
 @router.get("/mobile/list")
@@ -118,6 +131,22 @@ async def execute_mobile_action(request: MobileActionRequest):
             text = params.get("text", "")
             res = await adb_controller.type_text(text, serial=serial)
             return {"success": res, "action": action, "typed": text}
+
+        elif action in ["notifications", "expand_notifications"]:
+            res = await adb_controller.expand_notifications(serial=serial)
+            return {"success": res, "action": action, "message": "Notification shade expanded"}
+
+        elif action in ["shell", "exec_shell"]:
+            cmd = params.get("command") or params.get("cmd", "echo 1")
+            res = await adb_controller.execute_shell_command(cmd, serial=serial)
+            return {"success": res["success"], "action": action, "data": res}
+
+        elif action in ["gmail", "send_gmail", "email"]:
+            to = params.get("to") or "recipient@example.com"
+            sub = params.get("subject") or "Message from ABHI"
+            body = params.get("body") or params.get("message") or ""
+            res = await adb_controller.send_gmail_intent(to=to, subject=sub, body=body, serial=serial)
+            return res
 
         else:
             raise HTTPException(status_code=400, detail=f"Unsupported mobile action: {action}")

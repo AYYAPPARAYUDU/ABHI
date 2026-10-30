@@ -34,7 +34,7 @@ import { MediaArtifactDTO } from '../../models/media.model';
                 class="relative aspect-square bg-slate-900 overflow-hidden cursor-pointer flex items-center justify-center"
               >
                 <img
-                  [src]="'/api/v1/media/artifacts/' + art.artifact_id + '/file'"
+                  [src]="'http://127.0.0.1:8000/api/v1/media/artifacts/' + art.artifact_id + '/file'"
                   [alt]="art.prompt_preview || art.filename"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
@@ -112,7 +112,7 @@ import { MediaArtifactDTO } from '../../models/media.model';
             </div>
             <div class="p-4 bg-slate-950 flex items-center justify-center max-h-[500px]">
               <img
-                [src]="'/api/v1/media/artifacts/' + selectedArtifact()?.artifact_id + '/file'"
+                [src]="'http://127.0.0.1:8000/api/v1/media/artifacts/' + selectedArtifact()?.artifact_id + '/file'"
                 [alt]="selectedArtifact()?.filename"
                 class="max-h-[460px] object-contain rounded-lg"
               />

@@ -1163,7 +1163,7 @@ export class NeuralNetworkViewerComponent implements OnInit {
   }
 
   loadTelemetry(): void {
-    this.http.get<any>('/api/v1/agent/neural/telemetry').subscribe({
+    this.http.get<any>('http://127.0.0.1:8000/api/v1/agent/neural/telemetry').subscribe({
       next: (res) => this.telemetry.set(res),
       error: () => {
         // Fallback telemetry
@@ -1194,7 +1194,7 @@ export class NeuralNetworkViewerComponent implements OnInit {
 
     this.isLoading.set(true);
 
-    this.http.post<any>('/api/v1/agent/neural/inspect', { prompt: text, max_tokens: 24 }).subscribe({
+    this.http.post<any>('http://127.0.0.1:8000/api/v1/agent/neural/inspect', { prompt: text, max_tokens: 24 }).subscribe({
       next: (res) => {
         this.isLoading.set(false);
         this.applyInspectionResult(res);

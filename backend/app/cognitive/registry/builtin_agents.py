@@ -696,6 +696,23 @@ class OSDesktopAgent(BaseAgent):
                 error_message=err
             )
 
+        if action in ["open_email", "send_email", "email", "gmail", "compose_email"]:
+            to = str(params.get("to") or "recipient@example.com")
+            subject = str(params.get("subject") or "Message from ABHI")
+            body = str(params.get("body") or params.get("message") or "")
+            use_gmail = bool(params.get("use_gmail", True))
+            ok, edata, err = os_control_engine.open_email(to=to, subject=subject, body=body, use_gmail=use_gmail)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data=edata,
+                observed_state={"email_opened": ok, "to": to, "subject": subject},
+                error_message=err
+            )
+
         if action in ["lock_workstation", "lock_screen", "lock_pc"]:
             ok, err = os_control_engine.lock_workstation()
             return AgentTaskResult(

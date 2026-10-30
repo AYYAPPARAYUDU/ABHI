@@ -13,6 +13,25 @@
       </div>
     </section>
 
+    <!-- Tactical 8-Agent Swarm Selector Dock (Instant 1-Click Pod Camera Zoom & HUD) -->
+    <section class="swarm-tactical-deck" aria-label="8-Agent Swarm Command Deck">
+      <div class="swarm-agent-chips-row">
+        @for (agent of swarmAgents(); track agent.id) {
+          <button
+            type="button"
+            class="swarm-chip-btn"
+            [class.active]="selectedAgent()?.id === agent.id"
+            (click)="focusAgent(agent)"
+            [title]="agent.name + ': ' + agent.role"
+          >
+            <span class="agent-chip-dot" [style.backgroundColor]="agent.color"></span>
+            <span class="agent-chip-name">{{ agent.name }}</span>
+            <span class="agent-chip-bond" [style.color]="agent.color">{{ agent.bondLevel || 100 }}%</span>
+          </button>
+        }
+      </div>
+    </section>
+
     <!-- Focused Agent Tactical HUD Modal (Slides In On Agent Click) -->
     @if (selectedAgent(); as current) {
       <div class="agent-tactical-hud-modal">
@@ -86,6 +105,40 @@
           <button type="button" (click)="executeAgentProtocol(current)" class="btn-engage-directive">
             <span>ENGAGE</span>
           </button>
+        </div>
+
+        <!-- Direct Small-LLM Brain Chat Console -->
+        <div class="agent-brain-chat-section">
+          <div class="brain-chat-header">
+            <span class="brain-icon">🧠</span>
+            <span class="brain-title">CHAT WITH {{ current.name }} SPECIALIST BRAIN</span>
+          </div>
+
+          <div class="brain-chat-history">
+            @for (msg of agentChatHistory(); track $index) {
+              <div class="brain-chat-bubble" [class.operator]="msg.sender === 'OPERATOR'">
+                <div class="bubble-sender">{{ msg.sender }} <span class="bubble-time">{{ msg.time }}</span></div>
+                <div class="bubble-text">{{ msg.text }}</div>
+              </div>
+            }
+            @if (agentChatHistory().length === 0) {
+              <div class="brain-chat-empty">Direct synaptic link ready. Ask {{ current.name }} to perform specialized analysis or OS tasks.</div>
+            }
+          </div>
+
+          <form class="brain-chat-input-row" (ngSubmit)="sendAgentChat(current)">
+            <input
+              type="text"
+              class="brain-input-field"
+              [(ngModel)]="agentChatInput"
+              name="agentMsg"
+              [placeholder]="'Message ' + current.name + '...'"
+              [disabled]="isSendingAgentChat()"
+            />
+            <button type="submit" class="brain-send-btn" [disabled]="!agentChatInput.trim() || isSendingAgentChat()">
+              {{ isSendingAgentChat() ? '...' : 'SEND' }}
+            </button>
+          </form>
         </div>
       </div>
     }

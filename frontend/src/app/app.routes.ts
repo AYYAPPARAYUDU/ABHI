@@ -14,11 +14,23 @@ export const routes: Routes = [
       )
   },
   {
-    path: 'network',
+    path: 'workspace',
     loadComponent: () =>
-      import('./features/network/pages/network-page/network-page.component').then(
-        (m) => m.NetworkPageComponent
+      import('./features/workspace/pages/workspace-page/workspace-page.component').then(
+        (m) => m.WorkspacePageComponent
       )
+  },
+  {
+    path: 'automation',
+    loadComponent: () =>
+      import('./features/automation/pages/automation-page/automation-page.component').then(
+        (m) => m.AutomationPageComponent
+      )
+  },
+  {
+    path: 'network',
+    redirectTo: 'automation',
+    pathMatch: 'full'
   },
   {
     path: 'intelligence',
@@ -41,36 +53,28 @@ export const routes: Routes = [
   },
   {
     path: 'console',
-    redirectTo: 'tasks',
+    redirectTo: 'automation',
     pathMatch: 'full'
   },
   {
     path: 'tasks',
-    loadComponent: () =>
-      import('./features/tasks/pages/tasks-page/tasks-page.component').then(
-        (m) => m.TasksPageComponent
-      )
+    redirectTo: 'automation',
+    pathMatch: 'full'
   },
   {
     path: 'applications',
-    loadComponent: () =>
-      import('./features/applications/pages/applications-page/applications-page.component').then(
-        (m) => m.ApplicationsPageComponent
-      )
+    redirectTo: 'automation',
+    pathMatch: 'full'
   },
   {
     path: 'browser',
-    loadComponent: () =>
-      import('./features/browser/pages/browser-page/browser-page.component').then(
-        (m) => m.BrowserPageComponent
-      )
+    redirectTo: 'automation',
+    pathMatch: 'full'
   },
   {
     path: 'memory',
-    loadComponent: () =>
-      import('./features/memory/pages/memory-page/memory-page.component').then(
-        (m) => m.MemoryPageComponent
-      )
+    redirectTo: 'automation',
+    pathMatch: 'full'
   },
   {
     path: 'knowledge',
@@ -116,14 +120,12 @@ export const routes: Routes = [
   },
   {
     path: 'decision-pipeline',
-    loadComponent: () =>
-      import('./features/decision-pipeline/pages/decision-pipeline-page/decision-pipeline-page.component').then(
-        (m) => m.DecisionPipelinePageComponent
-      )
+    redirectTo: 'intelligence',
+    pathMatch: 'full'
   },
   {
     path: 'workflows',
-    redirectTo: 'decision-pipeline',
+    redirectTo: 'intelligence',
     pathMatch: 'full'
   },
   {

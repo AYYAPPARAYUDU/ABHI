@@ -362,6 +362,30 @@ class TaskPlanner:
                 status=NodeStatus.PENDING
             )
 
+        elif any(e in goal_lower for e in ["email", "gmail", "mail"]) and any(w in goal_lower for w in ["open", "send", "compose", "write", "check", "draft"]):
+            to = "recipient@example.com"
+            to_m = re.search(r"(?:to|recipient)\s+([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", goal)
+            if to_m:
+                to = to_m.group(1).strip()
+            subject = "Message from ABHI"
+            sub_m = re.search(r"(?:subject|about)\s+['\"]?([^'\"]+)['\"]?", goal, re.IGNORECASE)
+            if sub_m:
+                subject = sub_m.group(1).strip()
+            body = "Hello, this is an automated message dispatched from ABHI."
+            body_m = re.search(r"(?:body|saying|text|message)\s+['\"]?(.+?)['\"]?$", goal, re.IGNORECASE)
+            if body_m:
+                body = body_m.group(1).strip()
+
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Open Gmail & Compose: {to}",
+                agent_id="os_desktop_agent",
+                action="open_email",
+                params={"to": to, "subject": subject, "body": body, "use_gmail": True},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
         elif any(b in goal_lower for b in ["chrome", "edge", "firefox", "browser", "web"]) and any(s in goal_lower for s in ["search", "google", "find", "open", "browse", "lookup", "look up", "navigate"]):
             # Extract search query
             q = ""

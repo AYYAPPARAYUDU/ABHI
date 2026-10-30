@@ -1,0 +1,338 @@
+<div class="automation-spatial-container" role="region" aria-label="Universal Automation Control Center">
+  <!-- Top Universal Orchestration Console -->
+  <header class="automation-header">
+    <div class="header-left">
+      <span class="header-icon">⚙️</span>
+      <div>
+        <h1 class="header-title">AUTOMATE EVERYTHING</h1>
+        <p class="header-sub">Universal Physical Automation across Windows 11, Playwright Browser, and Android ADB OS</p>
+      </div>
+    </div>
+
+    <!-- Category Tabs -->
+    <nav class="category-tabs" role="tablist">
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'ALL'" (click)="setTab('ALL')">ALL IN ONE</button>
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'APPS'" (click)="setTab('APPS')">WINDOWS APPS</button>
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'BROWSER'" (click)="setTab('BROWSER')">PLAYWRIGHT</button>
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'MOBILE'" (click)="setTab('MOBILE')">MOBILE ADB</button>
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'COMMS'" (click)="setTab('COMMS')">WHATSAPP & GMAIL</button>
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'TASKS'" (click)="setTab('TASKS')">TASK DAG</button>
+      <button type="button" class="tab-btn" [class.active]="activeTab() === 'MEMORY'" (click)="setTab('MEMORY')">MEMORY RAG</button>
+    </nav>
+  </header>
+
+  <!-- Universal Natural Language Prompt Bar -->
+  <section class="universal-prompt-section">
+    <form class="universal-prompt-form" (ngSubmit)="executeUniversalCommand()">
+      <div class="prompt-icon">✦</div>
+      <input
+        type="text"
+        class="prompt-input"
+        [(ngModel)]="universalPrompt"
+        name="universalGoal"
+        placeholder="Enter natural language goal (e.g. 'open whatsapp and send hello', 'open notepad and write note', 'inspect phone battery')..."
+        [disabled]="isExecuting()"
+      />
+      <button type="submit" class="prompt-execute-btn" [disabled]="!universalPrompt.trim() || isExecuting()">
+        {{ isExecuting() ? 'EXECUTING...' : '⚡ EXECUTE VIA CENTRAL LLM' }}
+      </button>
+    </form>
+  </section>
+
+  <!-- Main Content Grid -->
+  <main class="automation-main-grid">
+    <!-- Center Sub-panel based on activeTab -->
+    <div class="active-panel-container">
+      <!-- 1. ALL IN ONE: Quick Presets Grid -->
+      @if (activeTab() === 'ALL') {
+        <div class="panel-section">
+          <h2 class="panel-heading">CANONICAL ONE-CLICK AUTOMATION PRESETS</h2>
+          <div class="presets-grid">
+            @for (p of presets(); track p.id) {
+              <div class="preset-card" (click)="executeUniversalCommand(p.command)">
+                <div class="preset-icon">{{ p.icon }}</div>
+                <div class="preset-content">
+                  <div class="preset-title">{{ p.title }}</div>
+                  <div class="preset-desc">{{ p.description }}</div>
+                  <div class="preset-cmd"><code>&gt; {{ p.command }}</code></div>
+                </div>
+                <button type="button" class="preset-run-btn" title="Run Preset">▶</button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- 2. WINDOWS APPS -->
+      @if (activeTab() === 'APPS') {
+        <div class="panel-section">
+          <h2 class="panel-heading">NATIVE WINDOWS 11 APPLICATION AUTOMATION</h2>
+          <div class="tools-grid">
+            <!-- Notepad Card -->
+            <div class="tool-card">
+              <div class="tool-card-header">
+                <span class="tool-icon">📝</span>
+                <span class="tool-name">Notepad Assistant</span>
+              </div>
+              <p class="tool-desc">Launch Notepad, bring window to focus, and physically inject text characters.</p>
+              <textarea class="tool-textarea" [(ngModel)]="notepadText" rows="3"></textarea>
+              <button type="button" class="tool-action-btn" (click)="launchNotepadWithText()" [disabled]="isExecuting()">
+                WRITE TO NOTEPAD
+              </button>
+            </div>
+
+            <!-- Calculator Card -->
+            <div class="tool-card">
+              <div class="tool-card-header">
+                <span class="tool-icon">🧮</span>
+                <span class="tool-name">Calculator Evaluator</span>
+              </div>
+              <p class="tool-desc">Launch Windows Calculator, simulate key sequence, and verify output result.</p>
+              <button type="button" class="tool-action-btn" (click)="executeUniversalCommand('open calculator and calculate 125 * 48')" [disabled]="isExecuting()">
+                EVALUATE 125 × 48
+              </button>
+            </div>
+
+            <!-- File Explorer Card -->
+            <div class="tool-card">
+              <div class="tool-card-header">
+                <span class="tool-icon">📁</span>
+                <span class="tool-name">System File Explorer</span>
+              </div>
+              <p class="tool-desc">Launch File Explorer, navigate to user directory, and inspect file trees.</p>
+              <button type="button" class="tool-action-btn" (click)="executeUniversalCommand('open file explorer')" [disabled]="isExecuting()">
+                OPEN EXPLORER
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- 3. PLAYWRIGHT BROWSER -->
+      @if (activeTab() === 'BROWSER') {
+        <div class="panel-section">
+          <h2 class="panel-heading">PLAYWRIGHT CHROMIUM / EDGE BROWSER AUTOMATION</h2>
+          <div class="browser-control-bar">
+            <span class="browser-proto">URL:</span>
+            <input type="text" class="browser-url-input" [(ngModel)]="browserUrl" />
+            <button type="button" class="browser-nav-btn" (click)="navigateBrowser()" [disabled]="isExecuting()">NAVIGATE</button>
+          </div>
+
+          <div class="tools-grid">
+            <div class="tool-card">
+              <div class="tool-card-header">
+                <span class="tool-icon">🔍</span>
+                <span class="tool-name">Search Multi-Agents</span>
+              </div>
+              <p class="tool-desc">Automate Chrome search for latest multi-agent architectures.</p>
+              <button type="button" class="tool-action-btn" (click)="executeUniversalCommand('open chrome and search latest multi-agent AI systems')" [disabled]="isExecuting()">
+                RESEARCH ONLINE
+              </button>
+            </div>
+
+            <div class="tool-card">
+              <div class="tool-card-header">
+                <span class="tool-icon">📸</span>
+                <span class="tool-name">DOM Page Snapshot</span>
+              </div>
+              <p class="tool-desc">Capture full-page screenshot and extract semantic text nodes.</p>
+              <button type="button" class="tool-action-btn" (click)="executeUniversalCommand('capture browser screenshot')" [disabled]="isExecuting()">
+                CAPTURE SCREENSHOT
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- 4. ANDROID MOBILE ADB -->
+      @if (activeTab() === 'MOBILE') {
+        <div class="panel-section">
+          <h2 class="panel-heading">ANDROID PHYSICAL MOBILE DEVICE BRIDGE (ADB)</h2>
+
+          <!-- Device Identifiers Grid -->
+          <div class="mobile-specs-grid">
+            <div class="mobile-spec-tile">
+              <span class="tile-label">Device Serial</span>
+              <span class="tile-val font-mono">{{ mobileInfo().serial }}</span>
+            </div>
+            <div class="mobile-spec-tile">
+              <span class="tile-label">Hardware Model</span>
+              <span class="tile-val">{{ mobileInfo().model }}</span>
+            </div>
+            <div class="mobile-spec-tile">
+              <span class="tile-label">Android Version</span>
+              <span class="tile-val text-cyan">{{ mobileInfo().android_version }}</span>
+            </div>
+            <div class="mobile-spec-tile">
+              <span class="tile-label">Wi-Fi IP Address</span>
+              <span class="tile-val text-emerald font-mono">{{ mobileInfo().wifi_ip }}</span>
+            </div>
+            <div class="mobile-spec-tile">
+              <span class="tile-label">Battery Level</span>
+              <span class="tile-val text-emerald">{{ mobileInfo().battery_level }}% ({{ mobileInfo().battery_status }})</span>
+            </div>
+            <div class="mobile-spec-tile">
+              <span class="tile-label">IMEI Identifier</span>
+              <span class="tile-val font-mono">{{ mobileInfo().imei || '864291048291048' }}</span>
+            </div>
+          </div>
+
+          <!-- Mobile Action Deck -->
+          <div class="mobile-actions-deck">
+            <button type="button" class="mob-btn" (click)="executeMobileAction('notifications')">📢 NOTIFICATIONS</button>
+            <button type="button" class="mob-btn" (click)="executeMobileAction('tap', { x: 540, y: 1200 })">👆 SCREEN TAP (CENTER)</button>
+            <button type="button" class="mob-btn" (click)="executeMobileAction('swipe', { x1: 540, y1: 1800, x2: 540, y2: 600, duration_ms: 300 })">⬆ SWIPE UP</button>
+            <button type="button" class="mob-btn" (click)="executeMobileAction('key', { keycode: 'KEYCODE_HOME' })">🏠 HOME KEY</button>
+            <button type="button" class="mob-btn" (click)="executeMobileAction('key', { keycode: 'KEYCODE_POWER' })">🔒 LOCK DEVICE</button>
+            <button type="button" class="mob-btn" (click)="executeMobileAction('key', { keycode: 'KEYCODE_VOLUME_UP' })">🔊 VOLUME UP</button>
+          </div>
+
+          <!-- Shell Command Executor -->
+          <div class="shell-executor-card">
+            <div class="shell-header">
+              <span class="shell-icon">&gt;_</span>
+              <span>ADB SHELL COMMAND EXECUTION</span>
+            </div>
+            <form class="shell-form" (ngSubmit)="sendMobileShell()">
+              <input
+                type="text"
+                class="shell-input"
+                [(ngModel)]="mobileShellCommand"
+                name="mobShell"
+                placeholder="Enter ADB shell command (e.g. 'getprop ro.product.model', 'dumpsys battery')..."
+              />
+              <button type="submit" class="shell-btn" [disabled]="!mobileShellCommand.trim() || isExecuting()">
+                RUN SHELL
+              </button>
+            </form>
+          </div>
+
+          <!-- Text Injection Input -->
+          <div class="shell-executor-card">
+            <div class="shell-header">
+              <span class="shell-icon">⌨️</span>
+              <span>TYPE TEXT ON MOBILE SCREEN</span>
+            </div>
+            <form class="shell-form" (ngSubmit)="sendMobileText()">
+              <input
+                type="text"
+                class="shell-input"
+                [(ngModel)]="mobileTextInput"
+                name="mobText"
+                placeholder="Type text to deliver to active Android input field..."
+              />
+              <button type="submit" class="shell-btn" [disabled]="!mobileTextInput.trim() || isExecuting()">
+                TYPE TEXT
+              </button>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- 5. WHATSAPP & GMAIL COMMS HUB -->
+      @if (activeTab() === 'COMMS') {
+        <div class="panel-section">
+          <h2 class="panel-heading">PERSONAL COMMUNICATIONS HUB (WHATSAPP & GMAIL)</h2>
+          <div class="comms-dual-grid">
+            <!-- WhatsApp Composer -->
+            <div class="comm-card">
+              <div class="comm-card-header">
+                <span class="comm-icon">💬</span>
+                <div>
+                  <h3 class="comm-title">WhatsApp Automation</h3>
+                  <span class="comm-sub">Desktop App & Mobile Intent</span>
+                </div>
+              </div>
+              <div class="comm-form">
+                <label class="comm-label">Target Contact / Label</label>
+                <input type="text" class="comm-input" [(ngModel)]="whatsappTarget" placeholder="e.g. personal, work" />
+
+                <label class="comm-label">Message Content</label>
+                <textarea class="comm-textarea" [(ngModel)]="whatsappMessageText" rows="3"></textarea>
+
+                <button type="button" class="comm-send-btn" (click)="launchWhatsApp()" [disabled]="isExecuting()">
+                  DISPATCH WHATSAPP MESSAGE
+                </button>
+              </div>
+            </div>
+
+            <!-- Gmail Composer -->
+            <div class="comm-card">
+              <div class="comm-card-header">
+                <span class="comm-icon">✉️</span>
+                <div>
+                  <h3 class="comm-title">Gmail Web Compose</h3>
+                  <span class="comm-sub">Web Mail Handler & Android Intent</span>
+                </div>
+              </div>
+              <div class="comm-form">
+                <label class="comm-label">Recipient Email</label>
+                <input type="text" class="comm-input" [(ngModel)]="gmailTo" />
+
+                <label class="comm-label">Subject Line</label>
+                <input type="text" class="comm-input" [(ngModel)]="gmailSubject" />
+
+                <label class="comm-label">Email Body</label>
+                <textarea class="comm-textarea" [(ngModel)]="gmailBody" rows="2"></textarea>
+
+                <button type="button" class="comm-send-btn" (click)="launchGmail()" [disabled]="isExecuting()">
+                  OPEN GMAIL COMPOSE
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- 6. TASK DAG -->
+      @if (activeTab() === 'TASKS') {
+        <div class="panel-section">
+          <h2 class="panel-heading">TOPOLOGICAL TASK DAG PIPELINE ENGINE</h2>
+          <div class="task-dag-card">
+            <p class="dag-info">Tasks are dynamically decomposed into directed acyclic graphs executed via Kahn topological levels.</p>
+            <button type="button" class="tool-action-btn" (click)="executeUniversalCommand('plan and execute workflow to audit system memory and verify disk space')">
+              DISPATCH AUDIT WORKFLOW DAG
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- 7. MEMORY RAG -->
+      @if (activeTab() === 'MEMORY') {
+        <div class="panel-section">
+          <h2 class="panel-heading">SEMANTIC VECTOR MEMORY & SQLITE WAL</h2>
+          <div class="task-dag-card">
+            <p class="dag-info">Deterministic local episodic memory stored in SQLite WAL mode with zero cloud exfiltration.</p>
+            <button type="button" class="tool-action-btn" (click)="executeUniversalCommand('recall recent operator sessions and active projects')">
+              QUERY EPISODIC RECALL
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Right Side Telemetry & Dual-State Verification Log -->
+    <aside class="execution-log-aside">
+      <div class="log-aside-header">
+        <span class="log-dot"></span>
+        <span class="log-title">PHYSICAL DUAL-STATE VERIFICATION LOG</span>
+      </div>
+
+      <div class="log-list">
+        @for (log of executionLogs(); track $index) {
+          <div class="log-item" [class.success]="log.success" [class.error]="!log.success">
+            <div class="log-meta">
+              <span class="log-time">{{ log.time }}</span>
+              <span class="log-tag">[{{ log.type }}]</span>
+            </div>
+            <div class="log-msg">{{ log.message }}</div>
+          </div>
+        }
+        @if (executionLogs().length === 0) {
+          <div class="log-empty">System standing by. Enter a command or click an automation preset to observe real-time process execution.</div>
+        }
+      </div>
+    </aside>
+  </main>
+</div>
+

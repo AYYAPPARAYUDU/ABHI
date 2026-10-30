@@ -268,6 +268,35 @@ class AbhiStandaloneEngine:
         steps: List[Dict[str, Any]] = []
 
         # ---------------------------------------------------------------------
+        # 0.05 Gmail & Email Workflows
+        # e.g., "open gmail and write email to test@example.com", "send email to X saying Y"
+        # ---------------------------------------------------------------------
+        if any(w in g_lower for w in ["gmail", "email", "send email", "compose email", "write email", "mail"]):
+            to = "recipient@example.com"
+            to_m = re.search(r"(?:to|recipient)\s+([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", goal)
+            if to_m:
+                to = to_m.group(1).strip()
+            subject = "Message from ABHI"
+            sub_m = re.search(r"(?:subject|about)\s+['\"]?([^'\"]+)['\"]?", goal, re.IGNORECASE)
+            if sub_m:
+                subject = sub_m.group(1).strip()
+            body = "Hello from ABHI."
+            body_m = re.search(r"(?:body|saying|text|message)\s+['\"]?(.+?)['\"]?$", goal, re.IGNORECASE)
+            if body_m:
+                body = body_m.group(1).strip()
+
+            steps.append({
+                "node_id": "step_1",
+                "title": f"Open Gmail & Compose: {to}",
+                "agent_id": "os_desktop_agent",
+                "action": "open_email",
+                "params": {"to": to, "subject": subject, "body": body, "use_gmail": True},
+                "dependencies": [],
+                "risk_tier": "Tier 1"
+            })
+            return steps
+
+        # ---------------------------------------------------------------------
         # 0. WhatsApp & Messaging Workflows
         # e.g., "From UI open whatsapp and send message to you means personal message hi and hello this is abhi"
         #       "Open whatsapp and send message hello", "send whatsapp message to +919876543210 saying meeting at 5"

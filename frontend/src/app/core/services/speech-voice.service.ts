@@ -156,7 +156,7 @@ export class SpeechVoiceService {
     if (SpeechRecognition) {
       try {
         this.recognition = new SpeechRecognition();
-        this.recognition.continuous = false;
+        this.recognition.continuous = true;
         this.recognition.interimResults = true;
         this.recognition.lang = 'en-US';
       } catch {
@@ -394,23 +394,39 @@ export class SpeechVoiceService {
     return muted;
   }
 
+  private silenceTimer: any = null;
+
   /**
-   * Start listening to voice input from microphone with callback for transcribed text.
+   * Start listening to voice input from microphone with callback for transcribed text and natural turn-taking silence detection.
    */
   startVoiceListening(onResult: (text: string) => void, onEnd?: () => void): boolean {
     if (!this.recognition) return false;
 
     try {
       this.isListening.set(true);
+      let finalTranscript = '';
 
       this.recognition.onresult = (event: any) => {
-        let transcript = '';
+        let interimTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          transcript += event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
         }
-        if (transcript) {
-          onResult(transcript);
+        const currentText = (finalTranscript + ' ' + interimTranscript).trim();
+        if (currentText) {
+          onResult(currentText);
         }
+
+        if (this.silenceTimer) clearTimeout(this.silenceTimer);
+        this.silenceTimer = setTimeout(() => {
+          if (this.isListening() && finalTranscript.trim()) {
+            this.stopVoiceListening();
+            if (onEnd) onEnd();
+          }
+        }, 1800);
       };
 
       this.recognition.onerror = () => {

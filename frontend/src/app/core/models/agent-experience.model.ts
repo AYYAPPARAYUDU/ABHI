@@ -3,6 +3,8 @@ export type UserExperienceMode = 'USER' | 'ADVANCED' | 'DEVELOPER';
 export type SpatialEnvironmentMode =
   | 'DEFAULT'
   | 'MAIN_AGENT'
+  | 'WORKSPACE'
+  | 'AUTOMATION'
   | 'NETWORK'
   | 'INTELLIGENCE'
   | 'BUSINESS'

@@ -36,14 +36,34 @@ export const WORKING_ENVIRONMENTS: WorkingEnvironmentItem[] = [
     shortcut: '1'
   },
   {
-    id: 'decision-pipeline',
-    route: '/decision-pipeline',
-    label: 'Decisions',
+    id: 'workspace',
+    route: '/workspace',
+    label: 'Workspace',
+    icon: '🏢',
+    category: 'CORE',
+    description: '3D Cybernetic living bot colony base with 8 working specialist bots',
+    badge: 'BOTS',
+    shortcut: '2'
+  },
+  {
+    id: 'automation',
+    route: '/automation',
+    label: 'Automate Everything',
     icon: '⚡',
     category: 'AUTOMATION',
-    description: 'AST execution traces, DAG pipeline steps & physical dual-state verification',
-    badge: 'DAG',
-    shortcut: '2'
+    description: 'Universal physical automation across Windows apps, browser, ADB phone, WhatsApp & Gmail',
+    badge: 'ALL',
+    shortcut: '3'
+  },
+  {
+    id: 'intelligence',
+    route: '/intelligence',
+    label: 'Neural & Decisions',
+    icon: '🧠',
+    category: 'INTELLIGENCE',
+    description: 'Merged DAG decision pipeline, AST traces & local LLM neural observatory',
+    badge: 'DAG+LLM',
+    shortcut: '4'
   },
   {
     id: 'business',
@@ -53,77 +73,17 @@ export const WORKING_ENVIRONMENTS: WorkingEnvironmentItem[] = [
     category: 'CORE',
     description: 'Enterprise operational workflows, SQLite WAL state & operator credentials',
     badge: 'WAL',
-    shortcut: '3'
-  },
-  {
-    id: 'intelligence',
-    route: '/intelligence',
-    label: 'Neural Lab',
-    icon: '🧠',
-    category: 'INTELLIGENCE',
-    description: 'LLM evaluation, neural weights inspection & fine-tuning telemetry',
-    badge: 'LLM',
-    shortcut: '4'
-  },
-  {
-    id: 'applications',
-    route: '/applications',
-    label: 'Apps',
-    icon: '💻',
-    category: 'AUTOMATION',
-    description: 'Windows 11 UI Automation, Win32 desktop hooks & process tree',
-    badge: 'WIN',
     shortcut: '5'
-  },
-  {
-    id: 'browser',
-    route: '/browser',
-    label: 'Browser',
-    icon: '🌍',
-    category: 'AUTOMATION',
-    description: 'Playwright CDP web automation, screenshot OCR & active browser sessions',
-    badge: 'CDP',
-    shortcut: '6'
   },
   {
     id: 'media',
     route: '/media',
-    label: 'Media',
+    label: 'Media Studio',
     icon: '✦',
     category: 'INTELLIGENCE',
-    description: 'Generative media studio, audio synthesis & C2PA provenance attestation',
-    badge: 'C2PA',
-    shortcut: '7'
-  },
-  {
-    id: 'memory',
-    route: '/memory',
-    label: 'Memory',
-    icon: '◌',
-    category: 'CORE',
-    description: 'Episodic memory matrix, semantic vector store & conversation state',
-    badge: 'RAG',
-    shortcut: '8'
-  },
-  {
-    id: 'tasks',
-    route: '/tasks',
-    label: 'Tasks',
-    icon: '◈',
-    category: 'AUTOMATION',
-    description: 'Autonomous multi-step goal scheduler & topological DAG coordinator',
-    badge: 'SCHED',
-    shortcut: '9'
-  },
-  {
-    id: 'network',
-    route: '/network',
-    label: 'Network',
-    icon: '☊',
-    category: 'SYSTEM',
-    description: 'Distributed P2P agent mesh, latency matrix & swarm communication logs',
-    badge: 'P2P',
-    shortcut: '0'
+    description: '3D Spatial generative media studio, creative pipeline & C2PA provenance',
+    badge: '3D',
+    shortcut: '6'
   },
   {
     id: 'system',
@@ -131,9 +91,9 @@ export const WORKING_ENVIRONMENTS: WorkingEnvironmentItem[] = [
     label: 'Diagnostics',
     icon: '⚙',
     category: 'SYSTEM',
-    description: 'Hardware sensors, ADB mobile bridge, GPU/CPU thermals & system health',
+    description: 'Hardware sensors, ADB mobile bridge, GPU/CPU thermals & self-healing health',
     badge: 'HW',
-    shortcut: 'D'
+    shortcut: '7'
   }
 ];
 

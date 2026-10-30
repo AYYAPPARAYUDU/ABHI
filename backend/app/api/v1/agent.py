@@ -55,9 +55,39 @@ async def evolve_swarm_agent(agent_id: str, payload: Optional[Dict[str, Any]] = 
 @router.post("/swarm/negotiate")
 async def negotiate_swarm_task(payload: Dict[str, Any]):
     """Execute dynamic multi-agent negotiation, capability bidding, and consensus protocol."""
+    from backend.app.cognitive.swarm.family_negotiation import family_swarm
     from backend.app.cognitive.swarm.vision_mesh import vision_mesh
     goal = payload.get("goal") or payload.get("text") or "Execute collaborative system directives."
-    return await vision_mesh.negotiate_task(goal)
+    user_name = payload.get("user_name") or "Sir"
+    session = await family_swarm.execute_family_negotiation(goal=goal, user_name=user_name)
+    # Also record in vision mesh
+    await vision_mesh.negotiate_task(goal)
+    return session.model_dump()
+
+
+@router.get("/swarm/family-status")
+async def get_family_swarm_status():
+    """Retrieve real-time status of all 8 Small-LLM specialist brains."""
+    from backend.app.cognitive.swarm.family_negotiation import family_swarm
+    brains = family_swarm.list_brains()
+    return {
+        "status": "ONLINE",
+        "family_name": "ABHI Multi-Agent Small-LLM Swarm",
+        "total_brains": len(brains),
+        "brains": [b.model_dump() for b in brains],
+        "recent_negotiations": [n.model_dump() for n in family_swarm.get_recent_negotiations(5)]
+    }
+
+
+@router.post("/swarm/family-chat")
+async def chat_with_family_member(payload: Dict[str, Any]):
+    """Chat directly with an individual Small-LLM brain or broadcast to the family."""
+    from backend.app.cognitive.swarm.family_negotiation import family_swarm
+    agent_id = payload.get("agent_id") or "agent-friday"
+    message = payload.get("message") or payload.get("text") or "Status report, team."
+    user_name = payload.get("user_name") or "Sir"
+    exchange = await family_swarm.chat_with_brain(agent_id=agent_id, message=message, user_name=user_name)
+    return exchange.model_dump()
 
 
 @router.get("/swarm/negotiations")

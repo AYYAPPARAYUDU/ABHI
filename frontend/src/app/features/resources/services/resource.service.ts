@@ -15,7 +15,7 @@ import {
 })
 export class ResourceService {
   private http = inject(HttpClient);
-  private baseUrl = '/api/v1/resources';
+  private baseUrl = 'http://127.0.0.1:8000/api/v1/resources';
 
   // Core Signals
   summary = signal<ResourceSummaryDTO | null>(null);

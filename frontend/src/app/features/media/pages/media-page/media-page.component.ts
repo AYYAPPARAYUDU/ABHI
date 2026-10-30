@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
 import { MediaService } from '../../services/media.service';
 import { ImageGenerationFormComponent } from '../../components/image-generation-form/image-generation-form.component';
 import { MediaJobQueueComponent } from '../../components/media-job-queue/media-job-queue.component';
@@ -59,14 +60,16 @@ import { AnimeCounterDirective } from '../../../../shared/directives/anime-count
 export class MediaPageComponent implements OnInit {
   @ViewChild('workflowComposer') workflowComposer?: VisualWorkflowComposerComponent;
 
-  mediaService = inject(MediaService);
-  activeTab = signal<'provenance' | 'creative' | 'composer' | 'edit' | 'video' | 'image'>('provenance');
+  readonly mediaService = inject(MediaService);
+  private readonly threeScene = inject(ThreeSceneManagerService);
+  activeTab = signal<'creative' | 'provenance' | 'composer' | 'edit' | 'video' | 'image'>('creative');
 
   selectedSourceArtifact = signal<MediaArtifactDTO | null>(null);
   currentMaskBase64 = signal<string | null>(null);
   latestEditedArtifact = signal<MediaArtifactDTO | null>(null);
 
   ngOnInit(): void {
+    this.threeScene.setMode('MEDIA');
     this.mediaService.refreshAll();
     this.mediaService.fetchTemplates().subscribe();
 

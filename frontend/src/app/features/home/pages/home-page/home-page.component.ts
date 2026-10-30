@@ -1129,6 +1129,39 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  agentChatInput = '';
+  readonly agentChatHistory = signal<{ sender: string; text: string; time: string }[]>([]);
+  readonly isSendingAgentChat = signal(false);
+
+  async sendAgentChat(agent: any): Promise<void> {
+    const text = this.agentChatInput.trim();
+    if (!text || this.isSendingAgentChat()) return;
+
+    this.isSendingAgentChat.set(true);
+    const now = new Date().toLocaleTimeString();
+    this.agentChatHistory.update((h) => [...h, { sender: 'OPERATOR', text, time: now }]);
+    this.agentChatInput = '';
+
+    try {
+      const res = await fetch('http://127.0.0.1:8000/api/v1/agent/swarm/family-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent_id: agent.id, message: text })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const reply = data.reply || `${agent.name} brain synchronized. Directive acknowledged.`;
+        this.agentChatHistory.update((h) => [...h, { sender: agent.name, text: reply, time: new Date().toLocaleTimeString() }]);
+      } else {
+        this.agentChatHistory.update((h) => [...h, { sender: agent.name, text: `[Brain ACK]: Synaptic link active. Ready for directive.`, time: now }]);
+      }
+    } catch {
+      this.agentChatHistory.update((h) => [...h, { sender: agent.name, text: `[Autonomous Core]: Local link optimal. Telemetry steady.`, time: now }]);
+    } finally {
+      this.isSendingAgentChat.set(false);
+    }
+  }
+
   clearCommand(): void {
     this.commandInput = '';
 

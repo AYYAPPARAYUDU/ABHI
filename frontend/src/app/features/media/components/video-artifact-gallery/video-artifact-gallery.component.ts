@@ -25,7 +25,7 @@ import { VideoArtifactDTO } from '../../models/media.model';
               >
                 <img
                   *ngIf="artifact.poster_path"
-                  [src]="'/api/v1/media/video/artifacts/' + artifact.artifact_id + '/thumbnail'"
+                  [src]="'http://127.0.0.1:8000/api/v1/media/video/artifacts/' + artifact.artifact_id + '/thumbnail'"
                   class="w-100 h-100 object-fit-cover"
                   [alt]="artifact.filename"
                 />
@@ -63,7 +63,7 @@ import { VideoArtifactDTO } from '../../models/media.model';
                 <!-- Footer Actions -->
                 <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
                   <a
-                    [href]="'/api/v1/media/video/artifacts/' + artifact.artifact_id + '/file'"
+                    [href]="'http://127.0.0.1:8000/api/v1/media/video/artifacts/' + artifact.artifact_id + '/file'"
                     target="_blank"
                     class="btn btn-sm btn-outline-info py-0 px-2 small"
                     title="Open or download raw video file"
@@ -118,7 +118,7 @@ import { VideoArtifactDTO } from '../../models/media.model';
               loop
               class="w-100"
               style="max-height: 520px;"
-              [src]="'/api/v1/media/video/artifacts/' + selectedArtifact.artifact_id + '/file'"
+              [src]="'http://127.0.0.1:8000/api/v1/media/video/artifacts/' + selectedArtifact.artifact_id + '/file'"
             ></video>
           </div>
           <div class="modal-footer border-secondary justify-content-between">

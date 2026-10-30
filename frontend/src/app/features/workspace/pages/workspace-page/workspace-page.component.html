@@ -1,0 +1,221 @@
+<div class="workspace-spatial-container" role="region" aria-label="3D Cybernetic Bot Workspace">
+  <!-- Top Command HUD Header -->
+  <header class="workspace-hud-header">
+    <div class="hud-brand-group">
+      <span class="hud-brand-symbol">◈</span>
+      <div>
+        <h1 class="hud-title">3D LIVING BOT WORKSPACE</h1>
+        <p class="hud-subtitle">8 Small-LLM Specialist Brains Active on Hexagonal Colony Base // Zero-Cloud Local Inference</p>
+      </div>
+    </div>
+
+    <div class="hud-actions-group">
+      <div class="consensus-badge">
+        <span class="pulse-dot"></span>
+        <span class="consensus-label">FAMILY CONSENSUS:</span>
+        <span class="consensus-val">{{ consensusScore() }}% RATIFIED</span>
+      </div>
+
+      <button
+        type="button"
+        class="council-btn"
+        (click)="triggerFamilyDeliberation()"
+        [disabled]="isDeliberating()"
+      >
+        <span>{{ isDeliberating() ? 'DELIBERATING...' : '⚡ SWARM COUNCIL DEBATE' }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="council-toggle-btn"
+        (click)="showFamilyCouncil.set(!showFamilyCouncil())"
+        title="Toggle Family Dialogue Log"
+      >
+        <span>💬 LOGS ({{ familyDialogue().length }})</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Interactive 8-Bot Stations Dock (Bottom Dock overlooking the 3D Colony) -->
+  <footer class="stations-dock-container">
+    <div class="stations-dock-title">
+      <span>AUTONOMOUS SPECIALIST STATIONS // CLICK TO INSPECT WORKSTATION IN 3D</span>
+    </div>
+
+    <div class="stations-grid">
+      @for (agent of agents(); track agent.id) {
+        <div
+          class="station-card"
+          [class.active]="selectedAgent()?.id === agent.id"
+          [style.borderColor]="selectedAgent()?.id === agent.id ? agent.color : 'rgba(56, 189, 248, 0.2)'"
+          (click)="selectStation(agent)"
+        >
+          <div class="station-card-header">
+            <div class="station-dot" [style.backgroundColor]="agent.color"></div>
+            <div class="station-identity">
+              <span class="station-name">{{ agent.name }}</span>
+              <span class="station-code">{{ agent.codename }}</span>
+            </div>
+            <span class="station-badge" [style.color]="agent.color">{{ agent.bondLevel || 100 }}%</span>
+          </div>
+
+          <div class="station-subsystem">{{ agent.subsystem }}</div>
+          <div class="station-work-output">
+            <span class="output-prefix">&gt; </span>{{ agent.lastChatter || agent.role }}
+          </div>
+
+          <div class="station-card-footer">
+            <span class="station-load">{{ agent.load }}</span>
+            <span class="station-inspect-link">INSPECT ↗</span>
+          </div>
+        </div>
+      }
+    </div>
+  </footer>
+
+  <!-- Slide-In Station Inspector Drawer -->
+  @if (selectedAgent(); as current) {
+    <aside class="station-drawer" role="dialog" aria-label="Station Details">
+      <div class="drawer-header">
+        <div class="drawer-agent-info">
+          <div class="drawer-avatar" [style.borderColor]="current.color">{{ current.icon }}</div>
+          <div>
+            <h2 class="drawer-agent-name">{{ current.name }}</h2>
+            <div class="drawer-agent-sub">{{ current.codename }} // {{ current.subsystem }}</div>
+          </div>
+        </div>
+        <button type="button" class="drawer-close-btn" (click)="closeStationDrawer()">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <!-- Small-LLM Brain Specs -->
+        <div class="drawer-section">
+          <h3 class="section-title">✦ SPECIALIST BRAIN SPECIFICATIONS</h3>
+          <div class="spec-grid">
+            <div class="spec-tile">
+              <span class="spec-label">Model Architecture</span>
+              <span class="spec-val">abhi:small-specialist@8b</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">Context Memory</span>
+              <span class="spec-val">4,096 Tokens</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">Inference Mode</span>
+              <span class="spec-val text-emerald">Zero-Cloud Local RTX</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">Synaptic Efficiency</span>
+              <span class="spec-val text-cyan">{{ current.neuralEfficiency }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Physical Work Output -->
+        <div class="drawer-section">
+          <h3 class="section-title">✦ CURRENT PHYSICAL WORK OUTPUT</h3>
+          <div class="work-output-terminal">
+            <div class="terminal-line"><span class="t-dim">[STATUS]:</span> {{ current.status }}</div>
+            <div class="terminal-line"><span class="t-dim">[STREAM]:</span> "{{ current.lastChatter || current.description }}"</div>
+            <div class="terminal-line"><span class="t-dim">[TELEMETRY]:</span> {{ current.synapticRate }} throughput · {{ current.load }}</div>
+          </div>
+        </div>
+
+        <!-- Direct Small-LLM Brain Chat -->
+        <div class="drawer-section">
+          <h3 class="section-title">✦ DIRECT SYNAPTIC CHAT WITH {{ current.name }}</h3>
+          <div class="brain-chat-box">
+            @for (msg of brainChatMessages(); track $index) {
+              <div class="chat-item" [class.user]="msg.sender === 'OPERATOR'">
+                <div class="chat-meta">{{ msg.sender }} · {{ msg.time }}</div>
+                <div class="chat-content">{{ msg.text }}</div>
+              </div>
+            }
+          </div>
+
+          <form class="brain-chat-form" (ngSubmit)="sendBrainChat(current)">
+            <input
+              type="text"
+              class="brain-chat-input"
+              [(ngModel)]="brainChatInput"
+              name="brainMsg"
+              [placeholder]="'Instruct ' + current.name + ' brain...'"
+              [disabled]="isSendingBrainChat()"
+            />
+            <button type="submit" class="brain-chat-send" [disabled]="!brainChatInput.trim() || isSendingBrainChat()">
+              {{ isSendingBrainChat() ? '...' : 'SEND' }}
+            </button>
+          </form>
+        </div>
+
+        <!-- Task Delegation -->
+        <div class="drawer-section">
+          <h3 class="section-title">✦ DELEGATE PHYSICAL OS DIRECTIVE</h3>
+          <div class="delegation-form">
+            <input
+              type="text"
+              class="delegation-input"
+              [(ngModel)]="delegationGoal"
+              name="stationGoal"
+              [placeholder]="'Delegate goal to ' + current.name + ' (e.g. compile, audit, inspect)...'"
+              [disabled]="isDelegating()"
+            />
+            <button
+              type="button"
+              class="delegation-btn"
+              (click)="delegateTaskToStation(current)"
+              [disabled]="!delegationGoal.trim() || isDelegating()"
+            >
+              {{ isDelegating() ? 'DELEGATING...' : 'ENGAGE DIRECTIVE' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  }
+
+  <!-- Family Council Dialogue Modal -->
+  @if (showFamilyCouncil()) {
+    <div class="family-council-modal" role="dialog" aria-label="Family Council Dialogue">
+      <div class="council-modal-header">
+        <div class="council-title-wrap">
+          <span class="council-icon">🤝</span>
+          <div>
+            <h2 class="council-title">SWARM FAMILY COUNCIL DELIBERATION</h2>
+            <div class="council-sub">Inter-Agent Bidding, Critique, and Autonomous Consensus</div>
+          </div>
+        </div>
+        <button type="button" class="council-close-btn" (click)="showFamilyCouncil.set(false)">✕</button>
+      </div>
+
+      <div class="council-modal-body">
+        <div class="council-consensus-bar">
+          <span>Consensus Gauge:</span>
+          <div class="consensus-track">
+            <div class="consensus-fill" [style.width.%]="consensusScore()"></div>
+          </div>
+          <span class="consensus-val-text">{{ consensusScore() }}%</span>
+        </div>
+
+        <div class="dialogue-feed">
+          @for (d of familyDialogue(); track d.id) {
+            <div class="dialogue-card" [class.ratified]="d.sentiment === 'RATIFIED'">
+              <div class="dialogue-meta">
+                <span class="dialogue-sender">{{ d.sender }}</span>
+                <span class="dialogue-sentiment">[{{ d.sentiment }}]</span>
+                <span class="dialogue-time">{{ d.time }}</span>
+              </div>
+              <p class="dialogue-msg">{{ d.message }}</p>
+            </div>
+          }
+          @if (familyDialogue().length === 0) {
+            <div class="dialogue-empty">
+              No recent deliberation. Click "SWARM COUNCIL DEBATE" above to initiate autonomous 3-round family negotiation.
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

@@ -1,7 +1,8 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EvaluationService } from '../../../llm-evaluation/services/evaluation.service';
 import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
+import { DecisionPipelinePageComponent } from '../../../decision-pipeline/pages/decision-pipeline-page/decision-pipeline-page.component';
 import { DailyScorecardComponent } from '../../../llm-evaluation/components/daily-scorecard/daily-scorecard.component';
 import { CapabilityRadarComponent } from '../../../llm-evaluation/components/capability-radar/capability-radar.component';
 import { BenchmarkHeatmapComponent } from '../../../llm-evaluation/components/benchmark-heatmap/benchmark-heatmap.component';
@@ -20,6 +21,7 @@ import { NeuralNetworkViewerComponent } from '../../../../shared/components/neur
   standalone: true,
   imports: [
     CommonModule,
+    DecisionPipelinePageComponent,
     DailyScorecardComponent,
     CapabilityRadarComponent,
     BenchmarkHeatmapComponent,
@@ -40,8 +42,14 @@ export class IntelligencePageComponent implements OnInit {
   readonly evalService = inject(EvaluationService);
   private readonly threeScene = inject(ThreeSceneManagerService);
 
+  readonly activeTab = signal<'DECISIONS' | 'NEURAL'>('DECISIONS');
+
   ngOnInit(): void {
     this.threeScene.setMode('INTELLIGENCE');
     this.evalService.loadAll();
+  }
+
+  setTab(tab: 'DECISIONS' | 'NEURAL'): void {
+    this.activeTab.set(tab);
   }
 }

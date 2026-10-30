@@ -1,3 +1,53 @@
+.intelligence-unified-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.unified-intelligence-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px;
+}
+
+.switch-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #cbd5e1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.switch-tab-btn:hover {
+  border-color: #00f0ff;
+  color: #ffffff;
+}
+
+.switch-tab-btn.active {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: #00f0ff;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
+}
+
+.tab-icon {
+  font-size: 14px;
+}
+
+.decisions-container {
+  width: 100%;
+}
+
 .intelligence-workspace {
       display: flex;
       flex-direction: column;
