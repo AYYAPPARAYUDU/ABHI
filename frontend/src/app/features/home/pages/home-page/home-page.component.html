@@ -1,19 +1,7 @@
 <div class="main-agent-spatial-container" role="region" aria-label="Main Agent Spatial Intelligence Workspace">
   <!-- CENTER: ARC REACTOR 3D INTELLIGENCE CORE -->
   <main class="main-agent-center-viewport" role="main" aria-label="Main Agent Intelligence Core">
-    <!-- Holographic Range Crosshairs & Minimalist 680px Frame -->
-    <div class="holographic-hud-grid-wrap" aria-hidden="true">
-      <div class="holographic-frame-680">
-        <div class="reticle-corner top-left"></div>
-        <div class="reticle-corner top-right"></div>
-        <div class="reticle-corner bottom-left"></div>
-        <div class="reticle-corner bottom-right"></div>
-      </div>
-      <div class="crosshair-axis-x"></div>
-      <div class="crosshair-axis-y"></div>
-    </div>
-
-    <!-- Upper Subconscious Thought Stream Ticker (Floating neatly below top bar) -->
+    <!-- Minimalist Subconscious Thought Stream Ticker (Discreet, Clean, Spacious) -->
     <section class="subconscious-thought-bar" aria-label="Subconscious Cognitive Stream">
       <div class="thought-pulse-indicator">
         <span class="beacon-ring"></span>
@@ -23,53 +11,7 @@
         <span class="thought-prefix">ABHI ARC REACTOR //</span>
         <span class="thought-stream-text">{{ activeSubconsciousThought() }}</span>
       </div>
-      <div class="thought-quantum-tag">
-        <span class="quantum-label">WAL SYNCED · ZERO CLOUD</span>
-      </div>
     </section>
-
-    <!-- Floating Swarm Quick-Select Ribbon (8 VisionQuest Autonomous Agents) -->
-    <nav class="floating-swarm-roster-ribbon" aria-label="Autonomous Swarm Agents">
-      <span class="roster-tag">SWARM MESH //</span>
-      <div class="roster-chips-wrap">
-        @for (ag of swarmAgents(); track ag.id) {
-          <button
-            type="button"
-            class="swarm-chip-btn"
-            [class.active]="selectedAgent()?.id === ag.id"
-            (click)="focusAgent(ag)"
-            [title]="ag.name + ' (' + ag.codename + '): ' + ag.role"
-          >
-            <span class="chip-icon">{{ ag.icon }}</span>
-            <span class="chip-name">{{ ag.name }}</span>
-            <span class="chip-bond text-cyan">{{ ag.bondLevel || 99.2 }}%</span>
-          </button>
-        }
-      </div>
-    </nav>
-
-    <!-- Dynamic Core Targeting Reticle (Floating Directly Over The Ball) -->
-    <div class="dynamic-core-reticle-overlay">
-      <div
-        class="core-target-box"
-        appAnimeInteractive
-        [appAnimeType]="'button'"
-        (click)="toggleCoreDeployment()"
-        role="button"
-        tabindex="0"
-        title="Click to deploy or retract autonomous agent swarm"
-      >
-        <div class="reticle-target-brackets">
-          <div class="b-bracket tl"></div>
-          <div class="b-bracket tr"></div>
-          <div class="b-bracket bl"></div>
-          <div class="b-bracket br"></div>
-        </div>
-        <div class="core-prompt-pill">
-          {{ isSwarmDeployed() ? '✦ CLICK CORE BALL TO RETRACT MESH' : '⚡ CLICK CORE BALL TO DEPLOY 8-AGENT SWARM' }}
-        </div>
-      </div>
-    </div>
 
     <!-- Focused Agent Tactical HUD Modal (Slides In On Agent Click) -->
     @if (selectedAgent(); as current) {
@@ -305,16 +247,8 @@
         </div>
       </footer>
 
-    <!-- Viewport 3D Interaction Hints (Subtle guide at bottom) -->
-    <div class="viewport-controls-guide" aria-hidden="true">
-      <span>DRAG TO ROTATE 3D PERSPECTIVE</span>
-      <span>•</span>
-      <span>SCROLL TO ZOOM</span>
-      <span>•</span>
-      <span>CLICK CORE BALL OR NODES DIRECTLY</span>
     </div>
-  </div>
-</main>
+  </main>
 
 
 

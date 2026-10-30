@@ -268,12 +268,13 @@ export class ThreeSceneManagerService {
   private podHitMeshes: THREE.Mesh[] = [];
   private floatingConsoles: { mesh: THREE.Mesh; baseY: number; phase: number }[] = [];
   private groundRadarMesh: THREE.LineSegments | null = null;
+  private agentBots: { group: THREE.Group; baseY: number; phase: number }[] = [];
 
-  // Smooth Cinematic Camera Transitions
-  private targetCameraPos = new THREE.Vector3(0, 0, 24);
-  private currentCameraPos = new THREE.Vector3(0, 0, 24);
-  private targetCameraLookAt = new THREE.Vector3(0, 0, 0);
-  private currentCameraLookAt = new THREE.Vector3(0, 0, 0);
+  // Smooth Cinematic Camera Transitions (Elevated Isometric Colony View)
+  private targetCameraPos = new THREE.Vector3(0, 11.5, 23.0);
+  private currentCameraPos = new THREE.Vector3(0, 11.5, 23.0);
+  private targetCameraLookAt = new THREE.Vector3(0, -2.5, 0);
+  private currentCameraLookAt = new THREE.Vector3(0, -2.5, 0);
 
   // Stardust & Ambient Starfield
   private ambientStarSystem: THREE.Points | null = null;
@@ -981,6 +982,28 @@ export class ThreeSceneManagerService {
     this.podHitMeshes = [];
     this.floatingConsoles = [];
 
+    // 0. Planetary Terrain Ground Base (Image 1 style)
+    const terrainGeo = new THREE.CylinderGeometry(26, 28, 0.45, 36);
+    const terrainMat = new THREE.MeshStandardMaterial({
+      color: 0x081324,
+      roughness: 0.9,
+      metalness: 0.15,
+    });
+    const terrainBase = new THREE.Mesh(terrainGeo, terrainMat);
+    terrainBase.position.y = -6.2;
+    this.swarmArchitectureGroup.add(terrainBase);
+
+    const terrainRim = new THREE.LineSegments(
+      new THREE.EdgesGeometry(terrainGeo),
+      new THREE.LineBasicMaterial({
+        color: 0x1e3a5f,
+        transparent: true,
+        opacity: 0.4,
+      })
+    );
+    terrainRim.position.y = -6.2;
+    this.swarmArchitectureGroup.add(terrainRim);
+
     // 1. Central Multi-Tier Hexagonal Citadel Dais
     const baseGeo = new THREE.CylinderGeometry(13.5, 14.5, 0.4, 6);
     const baseMat = new THREE.MeshStandardMaterial({
@@ -1045,7 +1068,7 @@ export class ThreeSceneManagerService {
     this.groundRadarMesh = new THREE.LineSegments(radarGeo, radarMat);
     this.swarmArchitectureGroup.add(this.groundRadarMesh);
 
-    // 2. 8 Dedicated Volumetric Docking Chambers
+    // 2. 8 Dedicated Volumetric Docking Chambers & Hexagonal Sector Platforms (Inspired by Planetary Base)
     this.volumetricColumns = [];
     const radius = 9.8;
     const agentList = this.agents();
@@ -1061,33 +1084,41 @@ export class ThreeSceneManagerService {
       podGroup.userData = { agentId: agent.id, agent };
 
       // Dedicated PointLight casting agent's signature neon glow onto pod platform
-      const podLight = new THREE.PointLight(agent.hexColor, 2.5, 7.0, 1.2);
+      const podLight = new THREE.PointLight(agent.hexColor, 2.2, 6.5, 1.2);
       podLight.position.set(0, 0.8, 0);
       podGroup.add(podLight);
 
-      // Hexagonal Station Platform
-      const padGeo = new THREE.CylinderGeometry(1.5, 1.7, 0.35, 6);
+      // Modular Hexagonal Sector Platform (Image 1 Cybernetic Base Colony)
+      const padGeo = new THREE.CylinderGeometry(2.2, 2.5, 0.35, 6);
       const padMat = new THREE.MeshStandardMaterial({
-        color: 0x081326,
-        roughness: 0.25,
-        metalness: 0.9,
+        color: 0x07152c,
+        roughness: 0.3,
+        metalness: 0.85,
       });
       const pad = new THREE.Mesh(padGeo, padMat);
       pad.userData = { agentId: agent.id, agent };
       podGroup.add(pad);
 
-      // Station Perimeter Accent Ring in agent's signature color
-      const rimGeo = new THREE.TorusGeometry(1.45, 0.035, 16, 48);
-      const rimMat = new THREE.MeshBasicMaterial({
-        color: agent.hexColor,
-        transparent: true,
-        opacity: 0.85,
-        blending: THREE.AdditiveBlending,
-      });
-      const rim = new THREE.Mesh(rimGeo, rimMat);
-      rim.rotation.x = Math.PI * 0.5;
-      rim.position.y = 0.18;
-      podGroup.add(rim);
+      // Hexagonal Perimeter Neon Accent Border
+      const hexEdges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(padGeo),
+        new THREE.LineBasicMaterial({
+          color: agent.hexColor,
+          transparent: true,
+          opacity: 0.75,
+          blending: THREE.AdditiveBlending,
+        })
+      );
+      podGroup.add(hexEdges);
+
+      // Distinct Sci-Fi Modular Architecture for each District (Image 1 Colony World)
+      const districtModule = this.createDistrictColonyModule(agent, index);
+      podGroup.add(districtModule);
+
+      // Mini Robotic Agent Bot Avatar stationed on Hex District
+      const miniBot = this.createMiniBotAvatar(agent, index);
+      podGroup.add(miniBot);
+      this.agentBots.push({ group: miniBot, baseY: 0.25, phase: index * 0.78 });
 
       // Station Radial Energy Causeway connecting Central Citadel to this Pod
       const causewayGeo = new THREE.BufferGeometry().setFromPoints([
@@ -1103,76 +1134,77 @@ export class ThreeSceneManagerService {
       const causeway = new THREE.Line(causewayGeo, causewayMat);
       this.swarmArchitectureGroup?.add(causeway);
 
-      // Volumetric Holographic Light Column (translucent energy column rising into sky)
-      const colHeight = 8.5;
-      const colGeo = new THREE.CylinderGeometry(0.85, 0.85, colHeight, 16, 1, true);
+      // Refined, Low-Profile Holographic Emitter Beacon (Non-Obtrusive, 1.2 height instead of giant 8.5 slab)
+      const colHeight = 1.2;
+      const colGeo = new THREE.CylinderGeometry(0.35, 0.35, colHeight, 16, 1, true);
       const colMat = new THREE.MeshBasicMaterial({
         color: agent.hexColor,
         transparent: true,
-        opacity: 0.18,
+        opacity: 0.12,
         side: THREE.DoubleSide,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
       const colMesh = new THREE.Mesh(colGeo, colMat);
-      colMesh.position.y = colHeight * 0.5;
+      colMesh.position.y = colHeight * 0.5 + 0.3;
       colMesh.userData = { agentId: agent.id, agent };
       podGroup.add(colMesh);
 
       this.volumetricColumns.push({
         mesh: colMesh,
-        baseOpacity: 0.18,
+        baseOpacity: 0.12,
         phase: index * 0.78,
       });
 
-      // Floating Holographic Workstation Terminal Console in 3D
+      // Holographic Workstation Console Screen (Clean on-demand projection in 3D)
       const consoleTex = this.createPodConsoleTexture(agent);
       const consoleGeo = new THREE.PlaneGeometry(2.3, 1.35);
       const consoleMat = new THREE.MeshBasicMaterial({
         map: consoleTex,
         transparent: true,
-        opacity: 0.94,
+        opacity: 0.0, // Hidden in default view to keep the world clean & spacious!
         side: THREE.DoubleSide,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
       const consoleMesh = new THREE.Mesh(consoleGeo, consoleMat);
-      consoleMesh.position.set(0, 1.45, 1.25);
+      consoleMesh.position.set(0, 1.5, 1.35);
       consoleMesh.rotation.y = Math.PI;
+      consoleMesh.visible = false;
       consoleMesh.userData = { agentId: agent.id, agent };
       podGroup.add(consoleMesh);
-      this.floatingConsoles.push({ mesh: consoleMesh, baseY: 1.45, phase: index * 0.78 });
+      this.floatingConsoles.push({ mesh: consoleMesh, baseY: 1.5, phase: index * 0.78 });
 
       // Invisible Raycast Hit Cylinder for the entire 3D pod volume (guarantees 100% click accessibility)
-      const hitPodGeo = new THREE.CylinderGeometry(2.2, 2.2, 9.5, 16);
+      const hitPodGeo = new THREE.CylinderGeometry(2.4, 2.4, 6.0, 16);
       const hitPodMat = new THREE.MeshBasicMaterial({ visible: false });
       const hitPod = new THREE.Mesh(hitPodGeo, hitPodMat);
-      hitPod.position.y = 4.75;
+      hitPod.position.y = 3.0;
       hitPod.userData = { agentId: agent.id, agent };
       podGroup.add(hitPod);
       this.podHitMeshes.push(hitPod);
 
-      // 3 Architectural Pylons around pod
+      // 3 Sleek Architectural Pylons around pod
       for (let p = 0; p < 3; p++) {
         const pAngle = (p / 3) * Math.PI * 2;
-        const pGeo = new THREE.BoxGeometry(0.08, 1.8, 0.08);
+        const pGeo = new THREE.BoxGeometry(0.08, 1.2, 0.08);
         const pMat = new THREE.MeshStandardMaterial({
           color: 0x1e293b,
           roughness: 0.4,
           metalness: 0.8,
         });
         const pylon = new THREE.Mesh(pGeo, pMat);
-        pylon.position.set(Math.cos(pAngle) * 1.35, 0.9, Math.sin(pAngle) * 1.35);
+        pylon.position.set(Math.cos(pAngle) * 1.5, 0.6, Math.sin(pAngle) * 1.5);
         podGroup.add(pylon);
 
         // Pylon Tip Light
-        const tipGeo = new THREE.SphereGeometry(0.06, 8, 8);
+        const tipGeo = new THREE.SphereGeometry(0.05, 8, 8);
         const tipMat = new THREE.MeshBasicMaterial({
           color: agent.hexColor,
           blending: THREE.AdditiveBlending,
         });
         const tip = new THREE.Mesh(tipGeo, tipMat);
-        tip.position.set(Math.cos(pAngle) * 1.35, 1.85, Math.sin(pAngle) * 1.35);
+        tip.position.set(Math.cos(pAngle) * 1.5, 1.25, Math.sin(pAngle) * 1.5);
         podGroup.add(tip);
       }
 
@@ -1369,6 +1401,15 @@ export class ThreeSceneManagerService {
     const posZ = Math.sin(angle) * 9.8;
     const posY = -5.0;
 
+    // Reveal focused agent console and hide others for clean spacious view
+    this.floatingConsoles.forEach((fc) => {
+      const match = fc.mesh.userData['agentId'] === agent.id;
+      fc.mesh.visible = match;
+      if (fc.mesh.material instanceof THREE.MeshBasicMaterial) {
+        fc.mesh.material.opacity = match ? 0.95 : 0.0;
+      }
+    });
+
     // Glide camera directly in front of the pod looking into the console and quantum ball
     this.targetCameraPos.set(posX * 0.68, posY + 2.4, posZ * 0.68 + 4.2);
     this.targetCameraLookAt.set(posX, posY + 1.2, posZ);
@@ -1376,8 +1417,14 @@ export class ThreeSceneManagerService {
 
   resetCameraFocus(): void {
     this.selectedAgent.set(null);
-    this.targetCameraPos.set(0, 0, 24);
-    this.targetCameraLookAt.set(0, 0, 0);
+    this.floatingConsoles.forEach((fc) => {
+      fc.mesh.visible = false;
+      if (fc.mesh.material instanceof THREE.MeshBasicMaterial) {
+        fc.mesh.material.opacity = 0.0;
+      }
+    });
+    this.targetCameraPos.set(0, 11.5, 23.0);
+    this.targetCameraLookAt.set(0, -2.5, 0);
   }
 
   focusAgentPerspective(agent: AgentNode): void {
@@ -1780,6 +1827,13 @@ export class ThreeSceneManagerService {
           this.groundRadarMesh.rotation.y = time * 0.03;
         }
 
+        // Mini Robotic Agent Bots Breathing Animation
+        if (this.agentBots.length > 0) {
+          this.agentBots.forEach((bot) => {
+            bot.group.position.y = bot.baseY + Math.sin(time * 2.4 + bot.phase) * 0.035;
+          });
+        }
+
         // 10. Smooth Cinematic Camera Glide & Framing
         if (this.camera) {
           this.currentCameraPos.lerp(this.targetCameraPos, 0.045);
@@ -1816,7 +1870,10 @@ export class ThreeSceneManagerService {
       } else if (mode === 'BUSINESS') {
         this.camera.position.set(0, 1.2, 24);
       } else {
-        this.camera.position.set(0, 1.2, 19.0);
+        this.targetCameraPos.set(0, 11.5, 23.0);
+        this.targetCameraLookAt.set(0, -2.5, 0);
+        this.camera.position.set(0, 11.5, 23.0);
+        this.camera.lookAt(0, -2.5, 0);
       }
     }
   }
@@ -1884,5 +1941,195 @@ export class ThreeSceneManagerService {
     }
     this.scene = null;
     this.camera = null;
+  }
+
+  private createDistrictColonyModule(agent: AgentNode, index: number): THREE.Group {
+    const group = new THREE.Group();
+    group.userData = { agentId: agent.id, agent };
+
+    const accentMat = new THREE.MeshBasicMaterial({
+      color: agent.hexColor,
+      blending: THREE.AdditiveBlending,
+    });
+    const hullMat = new THREE.MeshStandardMaterial({
+      color: 0x0f223d,
+      roughness: 0.3,
+      metalness: 0.85,
+    });
+
+    if (index === 0) {
+      // 1. Colony Research Lander (White spherical command pod on 3 tripod landing legs + beacon)
+      const landerSphere = new THREE.Mesh(
+        new THREE.SphereGeometry(0.72, 16, 16),
+        new THREE.MeshStandardMaterial({ color: 0x1e3a5f, roughness: 0.2, metalness: 0.9 })
+      );
+      landerSphere.position.y = 0.85;
+      group.add(landerSphere);
+
+      const beaconCap = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 12), accentMat);
+      beaconCap.position.y = 1.55;
+      group.add(beaconCap);
+
+      for (let leg = 0; leg < 3; leg++) {
+        const lAngle = (leg / 3) * Math.PI * 2;
+        const legMesh = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.035, 0.05, 1.1, 8),
+          hullMat
+        );
+        legMesh.position.set(Math.cos(lAngle) * 0.55, 0.45, Math.sin(lAngle) * 0.55);
+        legMesh.rotation.z = Math.cos(lAngle) * 0.32;
+        legMesh.rotation.x = -Math.sin(lAngle) * 0.32;
+        group.add(legMesh);
+      }
+    } else if (index === 1) {
+      // 2. Photovoltaic Solar Farm (Dual tilted solar panel arrays)
+      const solarMast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.8, 8), hullMat);
+      solarMast.position.y = 0.4;
+      group.add(solarMast);
+
+      [-0.45, 0.45].forEach((offset) => {
+        const panel = new THREE.Mesh(
+          new THREE.BoxGeometry(0.65, 0.03, 0.42),
+          new THREE.MeshStandardMaterial({ color: 0x0a3c74, roughness: 0.15, metalness: 0.95 })
+        );
+        panel.position.set(offset, 0.8, 0);
+        panel.rotation.x = 0.55;
+        group.add(panel);
+
+        const gridBorder = new THREE.LineSegments(
+          new THREE.EdgesGeometry(new THREE.BoxGeometry(0.65, 0.03, 0.42)),
+          accentMat
+        );
+        gridBorder.position.copy(panel.position);
+        gridBorder.rotation.copy(panel.rotation);
+        group.add(gridBorder);
+      });
+    } else if (index === 2) {
+      // 3. Central Command Spire & Radar Ring
+      const spire = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.25, 1.6, 8), hullMat);
+      spire.position.y = 0.8;
+      group.add(spire);
+
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.03, 8, 24), accentMat);
+      ring.position.y = 1.2;
+      ring.rotation.x = Math.PI * 0.5;
+      group.add(ring);
+
+      const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), accentMat);
+      beacon.position.y = 1.65;
+      group.add(beacon);
+    } else if (index === 3) {
+      // 4. Deep-Space Comms Dish & Optical Sensor
+      const dishMast = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.65, 8), hullMat);
+      dishMast.position.y = 0.32;
+      group.add(dishMast);
+
+      const dish = new THREE.Mesh(
+        new THREE.SphereGeometry(0.6, 16, 8, 0, Math.PI * 2, 0, Math.PI * 0.4),
+        new THREE.MeshStandardMaterial({ color: 0x142c4c, roughness: 0.25, metalness: 0.9, side: THREE.DoubleSide })
+      );
+      dish.position.set(0, 0.85, 0);
+      dish.rotation.x = -0.65;
+      group.add(dish);
+
+      const feedHorn = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.35, 6), accentMat);
+      feedHorn.position.set(0, 0.95, -0.15);
+      feedHorn.rotation.x = -0.65;
+      group.add(feedHorn);
+    } else if (index === 4) {
+      // 5. Temporal Gyroscope Vault
+      const outerRing = new THREE.Mesh(new THREE.TorusGeometry(0.65, 0.04, 12, 32), accentMat);
+      outerRing.position.y = 0.65;
+      group.add(outerRing);
+
+      const innerRing = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.03, 12, 24), hullMat);
+      innerRing.position.y = 0.65;
+      innerRing.rotation.y = Math.PI * 0.35;
+      group.add(innerRing);
+
+      const coreOrb = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 12), accentMat);
+      coreOrb.position.y = 0.65;
+      group.add(coreOrb);
+    } else if (index === 5) {
+      // 6. Neural Synapse Biodome (Translucent dome with interior glowing neural core)
+      const dome = new THREE.Mesh(
+        new THREE.SphereGeometry(0.72, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.5),
+        new THREE.MeshPhysicalMaterial({
+          color: 0x08203e,
+          roughness: 0.1,
+          transmission: 0.75,
+          thickness: 0.5,
+          transparent: true,
+          opacity: 0.65,
+        })
+      );
+      dome.position.y = 0.18;
+      group.add(dome);
+
+      const synapticCore = new THREE.Mesh(new THREE.IcosahedronGeometry(0.25, 1), accentMat);
+      synapticCore.position.y = 0.45;
+      group.add(synapticCore);
+    } else if (index === 6) {
+      // 7. Security Bastion Turret & Shield Emitter
+      const turretBase = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.6, 0.55, 6), hullMat);
+      turretBase.position.y = 0.28;
+      group.add(turretBase);
+
+      const shieldDome = new THREE.Mesh(new THREE.SphereGeometry(0.38, 12, 12), accentMat);
+      shieldDome.position.y = 0.65;
+      group.add(shieldDome);
+    } else {
+      // 8. Communications Array & Telemetry Masts
+      for (let m = 0; m < 3; m++) {
+        const xOff = (m - 1) * 0.35;
+        const mastHeight = 0.8 + m * 0.25;
+        const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, mastHeight, 6), hullMat);
+        mast.position.set(xOff, mastHeight * 0.5, 0);
+        group.add(mast);
+
+        const tip = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), accentMat);
+        tip.position.set(xOff, mastHeight + 0.04, 0);
+        group.add(tip);
+      }
+    }
+
+    return group;
+  }
+
+  private createMiniBotAvatar(agent: AgentNode, index: number): THREE.Group {
+    const bot = new THREE.Group();
+    bot.position.set(0.85, 0.25, 0.65);
+    bot.rotation.y = Math.PI * 0.75;
+    bot.userData = { agentId: agent.id, agent };
+
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: 0x111c2e,
+      roughness: 0.35,
+      metalness: 0.85,
+    });
+    const visorMat = new THREE.MeshBasicMaterial({
+      color: agent.hexColor,
+      blending: THREE.AdditiveBlending,
+    });
+
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.22, 0.12), bodyMat);
+    torso.position.y = 0.18;
+    bot.add(torso);
+
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.13, 0.13), bodyMat);
+    head.position.y = 0.37;
+    bot.add(head);
+
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.035, 0.04), visorMat);
+    visor.position.set(0, 0.37, 0.07);
+    bot.add(visor);
+
+    [-0.045, 0.045].forEach((lx) => {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.14, 6), bodyMat);
+      leg.position.set(lx, 0.07, 0);
+      bot.add(leg);
+    });
+
+    return bot;
   }
 }

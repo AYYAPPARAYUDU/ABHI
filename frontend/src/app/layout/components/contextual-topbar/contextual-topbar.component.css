@@ -45,6 +45,12 @@
   gap: 4px;
 }
 
+.contextual-bar.main-agent-active .mode-switcher,
+.contextual-bar.main-agent-active .page-title-wrap,
+.contextual-bar.main-agent-active .environments-track {
+  display: none !important;
+}
+
 .topbar-safety-alert {
   display: flex;
   align-items: center;

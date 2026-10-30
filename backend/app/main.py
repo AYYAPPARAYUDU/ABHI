@@ -101,6 +101,7 @@ app = FastAPI(
 )
 
 # Add Middleware
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -108,7 +109,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(SecurityHeadersMiddleware)
 
 from backend.app.api.v1.self_healing import router as self_healing_router
 

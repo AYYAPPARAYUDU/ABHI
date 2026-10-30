@@ -1052,6 +1052,24 @@ class OSDesktopAgent(BaseAgent):
                 error_message=err
             )
 
+        if action in ["type_text", "type", "write_text"]:
+            text_val = str(params.get("text") or params.get("content") or "")
+            target_app = str(params.get("app_name") or params.get("window_title") or "notepad")
+            # Ensure window is focused so keystrokes land directly in the active edit control
+            os_control_engine.focus_window(target_app)
+            time.sleep(0.35)
+            ok, err = os_control_engine.type_text(text_val)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"text": text_val, "target_app": target_app, "characters": len(text_val)},
+                observed_state={"typed": ok, "target_app": target_app, "length": len(text_val)},
+                error_message=err
+            )
+
         # ---------------------------------------------------------------------
         # 6. Unified Application Adapters & Launching
         # ---------------------------------------------------------------------

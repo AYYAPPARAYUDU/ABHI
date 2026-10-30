@@ -241,6 +241,13 @@ class NotepadAdapter(BaseApplicationAdapter):
                 self._text_buffer += text
             else:
                 self._text_buffer = text
+            try:
+                from backend.app.automation.desktop.os_control_engine import os_control_engine
+                os_control_engine.focus_window("Notepad")
+                time.sleep(0.2)
+                os_control_engine.type_text(str(text))
+            except Exception:
+                pass
             session.last_observation_ts = int(time.time() * 1000)
             dur = int((time.perf_counter() - start_ts) * 1000)
             return SkillResult(

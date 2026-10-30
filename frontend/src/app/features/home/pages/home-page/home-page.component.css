@@ -28,34 +28,41 @@
   overflow: hidden;
 }
 
-/* Center Subconscious Thought Ticker (Floating neatly below topbar) */
+/* Minimalist Subconscious Thought Ticker (Discreet, Clean, Spacious) */
 .subconscious-thought-bar {
   position: absolute;
-  top: 14px;
+  top: 8px;
   left: 0;
   right: 0;
   margin-inline: auto;
   width: fit-content;
-  max-width: 860px;
+  max-width: 650px;
   z-index: 35;
   pointer-events: auto;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 7px 18px;
-  background: rgba(10, 16, 26, 0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(0, 240, 255, 0.28);
-  border-radius: 30px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  gap: 8px;
+  padding: 3px 12px;
+  background: rgba(6, 12, 24, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 240, 255, 0.18);
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   white-space: nowrap;
+  font-size: 10px;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.subconscious-thought-bar:hover {
+  opacity: 1;
 }
 
 .thought-content-wrapper {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   white-space: nowrap;
 }
 

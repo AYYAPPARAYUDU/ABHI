@@ -2,6 +2,7 @@ from backend.app.core.algorithms import LRUCache, KahnTopologicalSort
 """Task DAG Planner Engine."""
 
 import json
+import urllib.parse
 import time
 import uuid
 from typing import Any, Dict, List, Optional
@@ -357,6 +358,32 @@ class TaskPlanner:
                 agent_id="os_desktop_agent",
                 action="close_application",
                 params={"app_name": clean_app},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(b in goal_lower for b in ["chrome", "edge", "firefox", "browser", "web"]) and any(s in goal_lower for s in ["search", "google", "find", "open", "browse", "lookup", "look up", "navigate"]):
+            # Extract search query
+            q = ""
+            for pat in [
+                r"(?:search|google|find|query|lookup|look up)\s+(?:for\s+)?['\"]?([^'\"]+)['\"]?",
+                r"(?:search|google)\s+(.*)",
+                r"(?:browse|open\s+chrome\s+and\s+search)\s+(.*)"
+            ]:
+                m = re.search(pat, goal, re.IGNORECASE)
+                if m:
+                    q = m.group(1).strip()
+                    break
+            if not q or q.lower() in ["chrome", "browser", "google"]:
+                q = "artificial intelligence autonomous agents"
+
+            search_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(q)}"
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Open Chrome & Search: {q[:35]}",
+                agent_id="os_desktop_agent",
+                action="open_url",
+                params={"url": search_url, "browser": "chrome"},
                 risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )

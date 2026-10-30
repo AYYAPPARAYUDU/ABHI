@@ -313,9 +313,28 @@ class AbhiStandaloneEngine:
             return steps
 
         # ---------------------------------------------------------------------
-        # 0.1 Browser & Web Navigation Workflows
-        # e.g., "Open website https://google.com in Chrome", "Browse to github.com"
+        # 0.1 Browser, Web Navigation & Search Workflows
+        # e.g., "open chrome and search artificial intelligence", "search on chrome python tutorial", "open chrome"
         # ---------------------------------------------------------------------
+        if any(w in g_lower for w in ["search in chrome", "search on chrome", "search with chrome", "open chrome and search", "chrome search", "google search", "search google"]) or (
+            "chrome" in g_lower and any(w in g_lower for w in ["search", "find", "look up", "query"])
+        ):
+            query_match = re.search(r"(?:search|query|find|look up)\s+(?:for\s+)?['\"]?(.+?)['\"]?$", goal, re.IGNORECASE)
+            search_query = query_match.group(1).strip() if query_match else "artificial intelligence"
+            search_query = re.sub(r"\s+(?:on|in|with|using)\s+chrome.*$", "", search_query, flags=re.IGNORECASE).strip()
+            import urllib.parse
+            target_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(search_query)}"
+            steps.append({
+                "node_id": "step_1",
+                "title": f"Search in Chrome: {search_query[:35]}",
+                "agent_id": "os_desktop_agent",
+                "action": "open_url",
+                "params": {"url": target_url, "browser": "chrome", "query": search_query},
+                "dependencies": [],
+                "risk_tier": "Tier 1"
+            })
+            return steps
+
         if any(w in g_lower for w in ["open url", "open website", "browse to", "open link", "go to url", "visit website"]) or (
             any(b in g_lower for b in ["browser", "chrome", "edge"]) and any(d in g_lower for d in ["http", ".com", ".org", ".net", ".io", "google", "github"])
         ):
@@ -496,11 +515,10 @@ class AbhiStandaloneEngine:
             return steps
 
         # ---------------------------------------------------------------------
-        # 4. Notepad Workflow: "Open notepad and type ..."
+        # 4. Notepad Workflow: "Open notepad and write/type ..."
         # ---------------------------------------------------------------------
-        if "notepad" in g_lower and any(w in g_lower for w in ["type", "write"]):
-            # Extract text
-            match = re.search(r"(?:type|write)\s+['\"]?(.+?)['\"]?$", goal, re.IGNORECASE)
+        if "notepad" in g_lower and any(w in g_lower for w in ["type", "write", "note", "message"]):
+            match = re.search(r"(?:type|write|message|note)\s+['\"]?(.+?)['\"]?$", goal, re.IGNORECASE)
             text_to_type = match.group(1).strip() if match else "Hello from ABHI OS Assistant!"
             steps.append({
                 "node_id": "step_1",
