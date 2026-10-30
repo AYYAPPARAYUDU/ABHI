@@ -57,4 +57,16 @@ describe('WorkingEnvironmentComponent', () => {
     expect(sectorTag).toBeTruthy();
     expect(sectorTag?.textContent).toContain('WORKSPACES');
   });
+
+  it('should toggle workspace drawer open and closed', () => {
+    expect(component.isDrawerOpen()).toBe(false);
+    component.toggleWorkspaceDrawer();
+    expect(component.isDrawerOpen()).toBe(true);
+    fixture.detectChanges();
+    const modal = fixture.nativeElement.querySelector('.workspace-drawer-panel');
+    expect(modal).toBeTruthy();
+    component.closeWorkspaceDrawer();
+    expect(component.isDrawerOpen()).toBe(false);
+  });
 });
+

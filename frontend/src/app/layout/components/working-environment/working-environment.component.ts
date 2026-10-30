@@ -150,6 +150,7 @@ export class WorkingEnvironmentComponent implements OnInit, OnDestroy {
 
   readonly environments = WORKING_ENVIRONMENTS;
   readonly selectedCategory = signal<string>('ALL');
+  readonly isDrawerOpen = signal<boolean>(false);
 
   // Reactive URL signal
   readonly currentUrl = toSignal(
@@ -185,10 +186,19 @@ export class WorkingEnvironmentComponent implements OnInit, OnDestroy {
     return current.startsWith(route);
   }
 
+  toggleWorkspaceDrawer(): void {
+    this.isDrawerOpen.update((v) => !v);
+  }
+
+  closeWorkspaceDrawer(): void {
+    this.isDrawerOpen.set(false);
+  }
+
   navigateTo(route: string, event?: Event): void {
     if (event) {
       event.preventDefault();
     }
+    this.closeWorkspaceDrawer();
     this.router.navigateByUrl(route);
   }
 

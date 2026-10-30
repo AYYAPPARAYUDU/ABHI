@@ -265,6 +265,9 @@ export class ThreeSceneManagerService {
   // 3D Architectural Spatial Volume for Agent Swarm Home
   private swarmArchitectureGroup: THREE.Group | null = null;
   private volumetricColumns: { mesh: THREE.Mesh; baseOpacity: number; phase: number }[] = [];
+  private podHitMeshes: THREE.Mesh[] = [];
+  private floatingConsoles: { mesh: THREE.Mesh; baseY: number; phase: number }[] = [];
+  private groundRadarMesh: THREE.LineSegments | null = null;
 
   // Smooth Cinematic Camera Transitions
   private targetCameraPos = new THREE.Vector3(0, 0, 24);
@@ -884,15 +887,99 @@ export class ThreeSceneManagerService {
   }
 
   /**
+   * Generates a realistic dynamic holographic console screen texture for an agent pod.
+   */
+  private createPodConsoleTexture(agent: any): THREE.CanvasTexture {
+    if (typeof document === 'undefined') {
+      return new THREE.CanvasTexture({} as any);
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext ? canvas.getContext('2d') : null;
+    if (ctx) {
+      // Dark cybernetic holographic glass background
+      ctx.fillStyle = 'rgba(2, 9, 22, 0.92)';
+      ctx.fillRect(0, 0, 512, 256);
+
+      // Border in signature neon color
+      ctx.strokeStyle = agent.hexColor || '#00f0ff';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(6, 6, 500, 244);
+
+      // Corner Reticle Brackets
+      ctx.fillStyle = agent.hexColor || '#00f0ff';
+      ctx.fillRect(6, 6, 24, 6);
+      ctx.fillRect(6, 6, 6, 24);
+      ctx.fillRect(482, 6, 24, 6);
+      ctx.fillRect(500, 6, 6, 24);
+      ctx.fillRect(6, 244, 24, 6);
+      ctx.fillRect(6, 226, 6, 24);
+      ctx.fillRect(482, 244, 24, 6);
+      ctx.fillRect(500, 226, 6, 24);
+
+      // Header Bar
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.fillRect(10, 10, 492, 42);
+
+      ctx.fillStyle = agent.hexColor || '#00f0ff';
+      ctx.font = 'bold 22px monospace';
+      ctx.fillText(agent.name, 22, 38);
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.font = '14px monospace';
+      ctx.fillText(`// ${agent.codename || 'MARK-II'}`, 280, 38);
+
+      // Body: Role & Subsystem
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '16px sans-serif';
+      ctx.fillText(`ROLE: ${agent.role || 'Specialist'}`, 22, 85);
+
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.9)';
+      ctx.font = '14px monospace';
+      ctx.fillText(`SUBSYSTEM: ${agent.subsystem || 'Autonomous'}`, 22, 115);
+      ctx.fillText(`LATENCY: ${agent.latencyMs || 12}ms · LOAD: ${agent.load || 'OPTIMAL'}`, 22, 142);
+
+      // Cybernetic Waveform Graph
+      ctx.strokeStyle = agent.hexColor || '#00f0ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let x = 0; x < 468; x += 8) {
+        const y = 195 + Math.sin(x * 0.08) * 16 + (Math.random() - 0.5) * 6;
+        if (x === 0) ctx.moveTo(22 + x, y);
+        else ctx.lineTo(22 + x, y);
+      }
+      ctx.stroke();
+
+      // Status Pill
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+      ctx.fillRect(22, 220, 160, 22);
+      ctx.strokeStyle = '#10b981';
+      ctx.strokeRect(22, 220, 160, 22);
+      ctx.fillStyle = '#10b981';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText('● SYNAPSE 99.2%', 32, 235);
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  /**
    * 3D Architectural Spatial Volume for Multi-Agent Swarm:
    * Multi-tier stepped Cybernetic Citadel dais,
    * 8 radial docking pods with glowing accent rims,
    * volumetric holographic light columns rising into space,
-   * radial energy causeway bridges, and architectural pylons.
+   * floating holographic data console screens in 3D,
+   * radial energy causeway bridges, dedicated pod lighting, and architectural pylons.
    */
   private createSwarmHomeArchitecture(): void {
     if (!this.scene) return;
     this.swarmArchitectureGroup = new THREE.Group();
+    this.podHitMeshes = [];
+    this.floatingConsoles = [];
 
     // 1. Central Multi-Tier Hexagonal Citadel Dais
     const baseGeo = new THREE.CylinderGeometry(13.5, 14.5, 0.4, 6);
@@ -935,6 +1022,29 @@ export class ThreeSceneManagerService {
     stepEdges.position.y = -5.45;
     this.swarmArchitectureGroup.add(stepEdges);
 
+    // Ground Radar Rings embedded in citadel floor
+    const radarLines: THREE.Vector3[] = [];
+    const radarRadii = [3.5, 6.2, 9.8, 12.8];
+    radarRadii.forEach((r) => {
+      for (let i = 0; i < 48; i++) {
+        const a1 = (i / 48) * Math.PI * 2;
+        const a2 = ((i + 1) / 48) * Math.PI * 2;
+        radarLines.push(
+          new THREE.Vector3(Math.cos(a1) * r, -5.76, Math.sin(a1) * r),
+          new THREE.Vector3(Math.cos(a2) * r, -5.76, Math.sin(a2) * r)
+        );
+      }
+    });
+    const radarGeo = new THREE.BufferGeometry().setFromPoints(radarLines);
+    const radarMat = new THREE.LineBasicMaterial({
+      color: 0x00f0ff,
+      transparent: true,
+      opacity: 0.28,
+      blending: THREE.AdditiveBlending,
+    });
+    this.groundRadarMesh = new THREE.LineSegments(radarGeo, radarMat);
+    this.swarmArchitectureGroup.add(this.groundRadarMesh);
+
     // 2. 8 Dedicated Volumetric Docking Chambers
     this.volumetricColumns = [];
     const radius = 9.8;
@@ -948,6 +1058,12 @@ export class ThreeSceneManagerService {
 
       const podGroup = new THREE.Group();
       podGroup.position.set(posX, posY, posZ);
+      podGroup.userData = { agentId: agent.id, agent };
+
+      // Dedicated PointLight casting agent's signature neon glow onto pod platform
+      const podLight = new THREE.PointLight(agent.hexColor, 2.5, 7.0, 1.2);
+      podLight.position.set(0, 0.8, 0);
+      podGroup.add(podLight);
 
       // Hexagonal Station Platform
       const padGeo = new THREE.CylinderGeometry(1.5, 1.7, 0.35, 6);
@@ -957,6 +1073,7 @@ export class ThreeSceneManagerService {
         metalness: 0.9,
       });
       const pad = new THREE.Mesh(padGeo, padMat);
+      pad.userData = { agentId: agent.id, agent };
       podGroup.add(pad);
 
       // Station Perimeter Accent Ring in agent's signature color
@@ -999,6 +1116,7 @@ export class ThreeSceneManagerService {
       });
       const colMesh = new THREE.Mesh(colGeo, colMat);
       colMesh.position.y = colHeight * 0.5;
+      colMesh.userData = { agentId: agent.id, agent };
       podGroup.add(colMesh);
 
       this.volumetricColumns.push({
@@ -1006,6 +1124,33 @@ export class ThreeSceneManagerService {
         baseOpacity: 0.18,
         phase: index * 0.78,
       });
+
+      // Floating Holographic Workstation Terminal Console in 3D
+      const consoleTex = this.createPodConsoleTexture(agent);
+      const consoleGeo = new THREE.PlaneGeometry(2.3, 1.35);
+      const consoleMat = new THREE.MeshBasicMaterial({
+        map: consoleTex,
+        transparent: true,
+        opacity: 0.94,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const consoleMesh = new THREE.Mesh(consoleGeo, consoleMat);
+      consoleMesh.position.set(0, 1.45, 1.25);
+      consoleMesh.rotation.y = Math.PI;
+      consoleMesh.userData = { agentId: agent.id, agent };
+      podGroup.add(consoleMesh);
+      this.floatingConsoles.push({ mesh: consoleMesh, baseY: 1.45, phase: index * 0.78 });
+
+      // Invisible Raycast Hit Cylinder for the entire 3D pod volume (guarantees 100% click accessibility)
+      const hitPodGeo = new THREE.CylinderGeometry(2.2, 2.2, 9.5, 16);
+      const hitPodMat = new THREE.MeshBasicMaterial({ visible: false });
+      const hitPod = new THREE.Mesh(hitPodGeo, hitPodMat);
+      hitPod.position.y = 4.75;
+      hitPod.userData = { agentId: agent.id, agent };
+      podGroup.add(hitPod);
+      this.podHitMeshes.push(hitPod);
 
       // 3 Architectural Pylons around pod
       for (let p = 0; p < 3; p++) {
@@ -1139,8 +1284,39 @@ export class ThreeSceneManagerService {
         const found = this.agents().find((a) => a.id === agentId);
         if (found) {
           this.ngZone.run(() => this.focusAgent(found));
+          return;
         }
       }
+
+      // Check click on 3D Volumetric Pods & Workspaces (Stations)
+      if (this.podHitMeshes.length > 0) {
+        const podHits = this.raycaster.intersectObjects(this.podHitMeshes, true);
+        if (podHits.length > 0) {
+          const agent = podHits[0].object.userData?.['agent'];
+          if (agent) {
+            this.ngZone.run(() => this.focusAgent(agent));
+            return;
+          }
+        }
+      }
+    });
+
+    // POINTER HOVER FEEDBACK (Cursor changes to pointer over tactile 3D nodes & pods)
+    canvas.addEventListener('pointermove', (e) => {
+      if (!this.camera || !this.raycaster) return;
+      const rect = canvas.getBoundingClientRect();
+      this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      this.raycaster.setFromCamera(this.mouse, this.camera);
+
+      const agentOrbs = Array.from(this.agentMeshMap.values()).map((m) => m.orb);
+      const testObjects = [
+        ...agentOrbs,
+        ...this.podHitMeshes,
+        ...(this.coreHitSphere ? [this.coreHitSphere] : []),
+      ];
+      const hits = this.raycaster.intersectObjects(testObjects, true);
+      canvas.style.cursor = hits.length > 0 ? 'pointer' : 'default';
     });
   }
 
@@ -1178,17 +1354,24 @@ export class ThreeSceneManagerService {
   }
 
   focusAgent(agent: AgentNode): void {
+    if (!this.isSwarmDeployed()) {
+      this.toggleCoreDeployment();
+    }
     this.selectedAgent.set(agent);
     this.playHoloSound('beep');
     this.latestJarvisMessage.set(
-      `Tracking sub-agent [${agent.codename}] ${agent.name}. Volumetric 3D Pod engaged.`
+      `Entering 3D Workspace for [${agent.codename}] ${agent.name}. Volumetric Chamber engaged.`
     );
-    const data = this.agentMeshMap.get(agent.id);
-    if (data) {
-      const p = data.group.position;
-      this.targetCameraPos.set(p.x * 0.72 + 2.4, p.y + 1.6, p.z * 0.72 + 6.4);
-      this.targetCameraLookAt.set(p.x, p.y, p.z);
-    }
+    const agentList = this.agents();
+    const index = agentList.findIndex((a) => a.id === agent.id);
+    const angle = (index >= 0 ? index / agentList.length : 0) * Math.PI * 2;
+    const posX = Math.cos(angle) * 9.8;
+    const posZ = Math.sin(angle) * 9.8;
+    const posY = -5.0;
+
+    // Glide camera directly in front of the pod looking into the console and quantum ball
+    this.targetCameraPos.set(posX * 0.68, posY + 2.4, posZ * 0.68 + 4.2);
+    this.targetCameraLookAt.set(posX, posY + 1.2, posZ);
   }
 
   resetCameraFocus(): void {
@@ -1583,6 +1766,18 @@ export class ThreeSceneManagerService {
             (col.mesh.material as THREE.MeshBasicMaterial).opacity = Math.max(0.06, col.baseOpacity + pulse * 0.08);
             col.mesh.rotation.y = time * 0.12;
           });
+        }
+
+        // Floating Holographic Workstation Consoles Levitation
+        if (this.floatingConsoles.length > 0) {
+          this.floatingConsoles.forEach((c) => {
+            c.mesh.position.y = c.baseY + Math.sin(time * 1.8 + c.phase) * 0.08;
+          });
+        }
+
+        // Ground Radar Rotation
+        if (this.groundRadarMesh) {
+          this.groundRadarMesh.rotation.y = time * 0.03;
         }
 
         // 10. Smooth Cinematic Camera Glide & Framing

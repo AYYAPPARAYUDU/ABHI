@@ -1,9 +1,17 @@
 <div class="working-environment-container" role="navigation" aria-label="Working Environments Navigation">
-  <!-- Minimalist Cybernetic Environment Tag -->
-  <div class="env-sector-tag" title="ABHI Autonomous Engineering Workspaces">
+  <!-- Interactive Cybernetic Workspaces Tag / Hub Trigger -->
+  <button
+    type="button"
+    class="env-sector-tag interactive-hub-btn"
+    (click)="toggleWorkspaceDrawer()"
+    [class.drawer-active]="isDrawerOpen()"
+    title="Open Realistic 3D Workspaces Command Center"
+    aria-label="Toggle Workspaces Command Center"
+  >
     <span class="sector-symbol">◈</span>
     <span class="sector-text">WORKSPACES</span>
-  </div>
+    <span class="hub-caret">{{ isDrawerOpen() ? '▲' : '▼' }}</span>
+  </button>
 
   <!-- Primary Working Environment Pill Track -->
   <nav class="bar-nav-ribbon environments-track" aria-label="Workspace Environments">
@@ -30,4 +38,80 @@
       </button>
     }
   </nav>
+
+  <!-- Realistic 3D Workspaces Command Center Modal / Overlay -->
+  @if (isDrawerOpen()) {
+    <div class="workspace-drawer-backdrop" (click)="closeWorkspaceDrawer()">
+      <div class="workspace-drawer-panel" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+        <!-- Header -->
+        <div class="drawer-header">
+          <div class="drawer-header-left">
+            <span class="drawer-symbol">◈</span>
+            <div>
+              <h2 class="drawer-title">AUTONOMOUS WORKSPACES COMMAND CENTER</h2>
+              <p class="drawer-subtitle">11 Physical & Neural Environments Synchronized · SQLite WAL · Zero Cloud</p>
+            </div>
+          </div>
+          <button type="button" class="drawer-close-btn" (click)="closeWorkspaceDrawer()" aria-label="Close Command Center">✕</button>
+        </div>
+
+        <!-- Category Filter Tabs -->
+        <div class="drawer-filter-bar">
+          @for (cat of ['ALL', 'CORE', 'AUTOMATION', 'INTELLIGENCE', 'SYSTEM']; track cat) {
+            <button
+              type="button"
+              class="filter-pill"
+              [class.active]="selectedCategory() === cat"
+              (click)="setCategory(cat)"
+            >
+              {{ cat }}
+            </button>
+          }
+        </div>
+
+        <!-- 3D Realistic Workspace Cards Grid -->
+        <div class="workspaces-grid">
+          @for (env of filteredEnvironments(); track env.route) {
+            <div
+              class="workspace-card"
+              [class.active]="isActive(env.route)"
+              (click)="navigateTo(env.route)"
+              tabindex="0"
+              (keydown.enter)="navigateTo(env.route)"
+            >
+              <div class="card-glow-rim"></div>
+              <div class="card-top-row">
+                <div class="card-icon-pill">
+                  <span class="card-icon">{{ env.icon }}</span>
+                </div>
+                <div class="card-badge-group">
+                  <span class="card-category-tag font-monospace">{{ env.category }}</span>
+                  @if (env.badge) {
+                    <span class="card-badge font-monospace">{{ env.badge }}</span>
+                  }
+                </div>
+              </div>
+
+              <div class="card-info">
+                <h3 class="card-title">{{ env.label }}</h3>
+                <p class="card-desc">{{ env.description }}</p>
+              </div>
+
+              <div class="card-bottom-row">
+                <span class="status-indicator-tag">
+                  <span class="pulse-dot"></span>
+                  <span class="status-text font-monospace">{{ isActive(env.route) ? 'ACTIVE NOW' : 'ONLINE' }}</span>
+                </span>
+
+                <button type="button" class="enter-workspace-btn" (click)="navigateTo(env.route, $event)">
+                  <span>{{ isActive(env.route) ? 'FOCUSED' : 'ENTER' }}</span>
+                  <span class="enter-arrow">→</span>
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
 </div>
