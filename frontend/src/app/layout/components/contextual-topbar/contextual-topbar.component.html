@@ -132,6 +132,33 @@
         <kbd class="shortcut-badge">⌘K</kbd>
       </button>
 
+      <!-- View Zoom Controls (Allows user to zoom in/out on secondary pages) -->
+      @if (!isActive('/home') && !isActive('/workspace')) {
+        <div class="zoom-controls-group" title="Viewport Zoom">
+          <button
+            type="button"
+            class="zoom-btn"
+            (click)="stateService.zoomOut()"
+            title="Zoom Out (Compact)"
+            [disabled]="stateService.pageZoomLevel() <= 70"
+          >
+            -
+          </button>
+          <span class="zoom-level-text font-monospace" (click)="stateService.resetZoom()" title="Click to Reset 100%">
+            {{ stateService.pageZoomLevel() }}%
+          </span>
+          <button
+            type="button"
+            class="zoom-btn"
+            (click)="stateService.zoomIn()"
+            title="Zoom In (Enlarge)"
+            [disabled]="stateService.pageZoomLevel() >= 150"
+          >
+            +
+          </button>
+        </div>
+      }
+
       <!-- Theme Quick Cycler -->
       <button
         type="button"

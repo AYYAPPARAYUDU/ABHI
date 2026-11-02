@@ -154,10 +154,42 @@ export class OperatorStateService {
   }
 
 
+  // Viewport Content Zoom Level (For compact view with user zoom)
+  readonly pageZoomLevel = signal<number>(100);
+
+  setPageZoom(level: number): void {
+    const clamped = Math.min(150, Math.max(70, level));
+    this.pageZoomLevel.set(clamped);
+    try {
+      localStorage.setItem('abhi_page_zoom', clamped.toString());
+    } catch {}
+  }
+
+  zoomIn(): void {
+    this.setPageZoom(this.pageZoomLevel() + 10);
+  }
+
+  zoomOut(): void {
+    this.setPageZoom(this.pageZoomLevel() - 10);
+  }
+
+  resetZoom(): void {
+    this.setPageZoom(100);
+  }
+
   constructor(
     private readonly apiService: TaskApiService,
     private readonly telemetryService: TelemetryService
   ) {
+    try {
+      const savedZoom = localStorage.getItem('abhi_page_zoom');
+      if (savedZoom) {
+        const val = parseInt(savedZoom, 10);
+        if (!isNaN(val) && val >= 70 && val <= 150) {
+          this.pageZoomLevel.set(val);
+        }
+      }
+    } catch {}
     // Subscribe to live telemetry events
     this.telemetryService.events$.subscribe((event) => {
       this.processTelemetryEvent(event);

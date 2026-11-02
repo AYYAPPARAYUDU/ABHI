@@ -11,7 +11,31 @@
 
 ---
 
-## Latest Milestone (2026-10-30): M-38 3D Bot Living Workspace, Automate Everything Hub, Small-LLM Brain Swarm, Android ADB & Multi-Scenario Synthesis
+## Latest Milestone (2026-11-02): M-39 Workspace Multi-Viewport Visibility, Viewport Zoom Scaling, Home Alignment & Secondary Compactness Polish
+- **Full Viewport Integration for `/workspace`:**
+  - Added `/workspace` to `isMainAgent()` computed signal in `app-shell.component.ts`, giving it the dedicated `.main-agent-view` container class with zero-sidebar full viewport height, minimal padding (`6px 14px 8px 14px`), and `overflow: hidden`.
+  - Updated `.workspace-spatial-container` in `workspace-page.component.css` from rigid `100vw/100vh` to fluid `width: 100%; height: 100%; min-height: calc(100vh - 80px)`.
+  - Re-proportioned top HUD header (`top: 6px`, `padding: 8px 16px`) and bottom stations dock (`bottom: 8px`, `padding: 6px 8px`, `gap: 3px`) preventing vertical clipping.
+  - Verified across multiple viewport aspect ratios (1920x1080 Full HD, 1366x768 Laptop, 1024x768 Tablet) with 100% visible elements.
+- **Home/3D Core Spatial Layout Harmony:**
+  - Tightened subconscious thought stream ticker to `top: 4px` (`padding: 2px 10px`).
+  - Shifted 8-agent swarm tactical deck upward to `top: 42px` (`gap: 4px`), completely eliminating visual collision with central Fibonacci quantum dot ball.
+- **Dynamic Viewport Content Zoom Engine:**
+  - Implemented `pageZoomLevel` signal, `setPageZoom`, `zoomIn`, `zoomOut`, and `resetZoom` in `OperatorStateService` with persistent `localStorage` (`abhi_page_zoom`).
+  - Embedded sleek `- [100%] +` zoom controls in `contextual-topbar` visible on all secondary workspaces (`/automation`, `/intelligence`, `/business`, `/media`, `/system`).
+  - Applied CSS `[style.zoom]` scaling to `workspace-main`, enabling users to freely compact (down to 70%) or zoom in (up to 150%) on content-heavy pages.
+- **Production Build & Playwright Physical Verification:**
+  - Angular production build passed with zero errors in 18.3s (`dist/frontend`).
+  - Comprehensive Playwright end-to-end verification script (`scripts/verify_workspace_and_automation_ui.py`) ran across all 5 key views with 100% pass:
+    - `/home`: 8 swarm chips, SYNTHEX click, Tactical HUD modal.
+    - `/workspace`: 8 station cards, Station Inspector Drawer, Swarm Council Debate.
+    - `/automation`: 7 presets, Android ADB hardware telemetry, WhatsApp/Gmail hub.
+    - `/intelligence`: Unified Decision DAG pipeline & Neural Observatory.
+    - `/media`: 3D Media Studio with VRAM and active job tracking.
+
+---
+
+## Milestone (2026-10-30): M-38 3D Bot Living Workspace, Automate Everything Hub, Small-LLM Brain Swarm, Android ADB & Multi-Scenario Synthesis
 - **Dedicated `/workspace` 3D Bot Colony Archipelago:**
   - 19 hexagonal foundation tiles in a living archipelago with 8 specialized station complexes, domes, energy conduits, and central tactical council hub.
   - 8 animated 3D working bot avatars (torso, glowing visor head, articulated tool arm, plasma thruster disc) stationed on the tiles.

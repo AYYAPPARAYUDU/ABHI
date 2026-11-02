@@ -37,6 +37,11 @@ export class AppShellComponent {
 
   readonly isMainAgent = computed(() => {
     const url = this.currentUrl() || '';
-    return url === '' || url === '/' || url.startsWith('/home');
+    return (
+      url === '' ||
+      url === '/' ||
+      url.startsWith('/home') ||
+      url.startsWith('/workspace')
+    );
   });
 }

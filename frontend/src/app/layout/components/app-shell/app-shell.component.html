@@ -12,7 +12,12 @@
     <app-contextual-topbar></app-contextual-topbar>
 
     <!-- Primary Routed Content -->
-    <main class="workspace-main" [class.main-agent-main]="isMainAgent()" role="main">
+    <main
+      class="workspace-main"
+      [class.main-agent-main]="isMainAgent()"
+      [style.zoom]="isMainAgent() ? '1' : (stateService.pageZoomLevel() / 100).toString()"
+      role="main"
+    >
       <router-outlet></router-outlet>
     </main>
   </div>

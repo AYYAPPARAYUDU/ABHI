@@ -36,6 +36,7 @@ async def run_verification():
         print("[OK] Verified streamlined 7-workspace navbar!")
 
         # Check 8-Agent Swarm Selector Dock
+        await page.wait_for_selector(".swarm-chip-btn", timeout=10000)
         chips = page.locator(".swarm-chip-btn")
         chip_count = await chips.count()
         print(f"Swarm Selector Dock has {chip_count} agent chips.")

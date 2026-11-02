@@ -462,6 +462,55 @@
   color: var(--abhi-cyan, #00f0ff);
 }
 
+/* Viewport Zoom Controls */
+.zoom-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--abhi-surface-inset, rgba(7, 12, 22, 0.7));
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  padding: 2px 6px;
+  height: 28px;
+  box-sizing: border-box;
+}
+
+.zoom-btn {
+  background: transparent;
+  border: none;
+  color: var(--abhi-cyan, #00f0ff);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: all 0.15s ease;
+}
+
+.zoom-btn:hover:not(:disabled) {
+  color: #ffffff;
+  transform: scale(1.15);
+}
+
+.zoom-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.zoom-level-text {
+  font-size: 10px;
+  font-weight: 700;
+  color: #cbd5e1;
+  padding: 0 4px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.zoom-level-text:hover {
+  color: var(--abhi-cyan, #00f0ff);
+}
+
 /* Theme Button */
 .theme-quick-btn {
   display: flex;
