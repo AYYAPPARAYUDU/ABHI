@@ -1249,3 +1249,34 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
   - Angular Vitest Unit Tests: **132 / 132 test files passed, 488 / 488 tests passed (100%)**.
   - Backend Pytest Suite: **26 / 26 passed (100%)** in 73.72s.
   - Angular Production Build (`npm run build`): **0 compilation errors**, compiled cleanly in 37.7s.
+
+
+---
+
+## Milestone M-50: Human Voice Sanitization, De-Cluttered 3D Labels, Direct OS Application Launching & Resilient Agent Modals (Completed 2026-11-02)
+
+### 1. Human Companion TTS Voice & Speech Sanitization
+- Overhauled `sanitizeAndSummarizeForSpeech` in `frontend/src/app/core/services/speech-voice.service.ts`:
+  - Full Unicode regex emoji removal (`\u{1F000}-\u{1FAFF}`, variation selectors `\u{FE0F}`, pictographs `\u{2600}-\u{27BF}`).
+  - Phonetic mappings for spoken abbreviations (`J.A.R.V.I.S.`/`JARVIS` -> `Jarvis`, `F.R.I.D.A.Y.` -> `Friday`, `A.B.H.I.` -> `Abhi`, `UI` -> `user interface`, `OS` -> `operating system`, `calc` -> `calculator`).
+  - Replaced robotic meta strings ("contracting synaptic vectors into central quantum dot singularity" -> "All specialist agents docked.", "zero dependencies", "token context window memory cache" chatter removed).
+
+### 2. 3D Scene Click Raycasting & Outside Click Isolation
+- Overhauled `three-scene-manager.service.ts`:
+  - Reduced `coreHitSphere` radius from 4.2 to 2.3, strictly isolated to `MAIN_AGENT` / `DEFAULT` mode when `centralCoreGroup.visible`.
+  - Empty space canvas clicks cleanly deselect focused agent without accidental deployment or audio burst.
+  - De-cluttered billboard sprites so that all 8 nameplates never overlap simultaneously; only the hovered or currently selected agent's badge is rendered.
+  - Humanized multi-agent chatter presets across all 8 specialist personas.
+
+### 3. Direct Signal Synchronization & Responsive Modals
+- Bound `selectedAgent = this.threeScene.selectedAgent` directly in `WorkspacePageComponent` and `HomePageComponent`, eliminating duplicate signal latency and state synchronization bugs.
+- Fixed keyframe animation initial opacity to `0.95` with `forwards` fill-mode on `.station-drawer` and `.agent-tactical-hud-modal`.
+
+### 4. Direct Windows OS Application Launching
+- Fixed `open_url` in `backend/app/automation/desktop/os_control_engine.py`: eliminated `cmd.exe /c` quote-stripping by using direct `subprocess.Popen([clean_exe, target_url])` and native `os.startfile(target_url)` fallback.
+- Added autocorrect resilience in `AgentCommandService` (`opn yt` -> `open youtube`, `opn calclatr` -> `open calculator`, `notepd` -> `notepad`).
+
+### 5. Verification
+- Angular production build passed in 14.58s with 0 errors (`npm --prefix frontend run build`).
+- Backend integration pytest: 28/28 tests passed (100% pass rate in 28.7s).
+- Verified via Playwright live browser automation with screenshots `home_tactical_hud_verified.png` and `workspace_station_drawer_verified.png`.

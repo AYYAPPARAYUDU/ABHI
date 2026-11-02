@@ -44,6 +44,8 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
   readonly agents = this.threeScene.agents;
   readonly selectedAgent = this.threeScene.selectedAgent;
 
+  constructor() {}
+
   readonly isDeliberating = signal(false);
   readonly consensusScore = signal(98.6);
   readonly familyDialogue = signal<FamilyChatMessage[]>([]);

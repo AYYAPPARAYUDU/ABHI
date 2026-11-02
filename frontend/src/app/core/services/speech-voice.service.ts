@@ -168,12 +168,35 @@ export class SpeechVoiceService {
   }
 
   /**
-   * Sanitizes markdown, strips code blocks and special characters,
-   * and prepares human-sounding conversational phrasing with natural pauses.
+   * Sanitizes markdown, strips code blocks, eliminates robotic jargon,
+   * phonetically translates abbreviations, and formats text for warm, human speech.
    */
   sanitizeAndSummarizeForSpeech(rawText: string): string {
     if (!rawText) return '';
     let text = rawText.trim();
+
+    // 1. Strip agent system sender tags (e.g. [J.A.R.V.I.S.]: or [SYNAPSE-AI -> VISION]:)
+    text = text.replace(/^\[.*?\]:\s*/g, '');
+    text = text.replace(/\[[A-Z0-9_\-\s]+->[A-Z0-9_\-\s]+\]:?\s*/g, '');
+    text = text.replace(/\[MARK-[IVXLCDM]+\]/gi, '');
+
+    // 2. Map robotic canned system messages to natural human responses
+    if (/contracting synaptic vectors|quantum dot singularity|sub-agents recalled/i.test(text)) {
+      return 'All specialist agents have been docked.';
+    }
+    if (/iris unsealed|deploying 8 autonomous|synaptic laser mesh active/i.test(text)) {
+      return 'All specialist agents deployed and online.';
+    }
+    if (/harmonic pulse dispatched through core/i.test(text)) {
+      return 'Core systems harmonized.';
+    }
+    if (/token context window memory cache/i.test(text)) {
+      return ''; // Omit internal memory cache ticker chatter from voice
+    }
+    if (/zero dependencies|zero cloud egress/i.test(text)) {
+      text = text.replace(/zero cloud egress/gi, 'local inference');
+      text = text.replace(/zero dependencies/gi, 'fully independent');
+    }
 
     const hasCodeBlock = text.includes('```');
     const isVeryLong = text.length > 200 || (text.match(/\n/g) || []).length > 2;
@@ -192,9 +215,30 @@ export class SpeechVoiceService {
     text = text.replace(/^[>\-\*\+]\s+/gm, ''); // lists & blockquotes
     text = text.replace(/---+/g, ''); // dividers
 
-    // Remove emojis and miscellaneous non-alphanumeric punctuation symbols
-    text = text.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+    // Comprehensive Emoji Removal (preventing TTS engines from reading "brain", "rocket", "lightning", etc.)
+    text = text.replace(/[\u{1F000}-\u{1FAFF}\u{200D}\u{FE0F}\u{2600}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2300}-\u{23FF}\u{2B50}\u{203C}\u{2049}\u{25AA}-\u{25FE}]/gu, '');
     text = text.replace(/[\\\/\{\}\[\]<>~_=\|\^]/g, ' ');
+
+    // Natural phonetic expansions of abbreviations so they aren't spelled out letter-by-letter
+    text = text.replace(/\bJ\.?A\.?R\.?V\.?I\.?S\.?\b/gi, 'Jarvis');
+    text = text.replace(/\bF\.?R\.?I\.?D\.?A\.?Y\.?\b/gi, 'Friday');
+    text = text.replace(/\bA\.?B\.?H\.?I\.?\b/gi, 'Abhi');
+    text = text.replace(/\bUI\b/g, 'user interface');
+    text = text.replace(/\bOS\b/g, 'operating system');
+    text = text.replace(/\bTTS\b/g, 'voice synthesis');
+    text = text.replace(/\bSTT\b/g, 'voice input');
+    text = text.replace(/\bLLMs\b/g, 'language models');
+    text = text.replace(/\bLLM\b/g, 'language model');
+    text = text.replace(/\bDAG\b/g, 'pipeline');
+    text = text.replace(/\bWAL\b/g, 'log');
+    text = text.replace(/\bDB\b/g, 'database');
+    text = text.replace(/\bcalc\b/gi, 'calculator');
+    text = text.replace(/\byoutube\b/gi, 'YouTube');
+
+    // Strip remaining robotic filler words
+    text = text.replace(/\bdispatching task\b/gi, 'executing');
+    text = text.replace(/\bcontracting synaptic vectors\b/gi, 'docking');
+    text = text.replace(/\bSQLite WAL verified\b/gi, 'verified');
 
     // Collapse whitespace
     text = text.replace(/\s+/g, ' ').trim();

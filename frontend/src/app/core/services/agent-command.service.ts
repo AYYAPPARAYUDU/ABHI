@@ -64,6 +64,32 @@ export class AgentCommandService {
   });
 
   /**
+   * Autocorrects common typos and command shortcuts using fuzzy regex mapping.
+   */
+  autocorrectCommand(input: string): string {
+    let corrected = input.trim();
+    const typoMap: [RegExp, string][] = [
+      [/\b(opn|ope|lanch|start)\s+(calclatr|calculator|clac|calk)\b/gi, 'open calculator'],
+      [/\b(calclatr|clac|calk)\b/gi, 'calculator'],
+      [/\b(opn|ope)\s+(yt|youtub|youtbe|youtube)\b/gi, 'open youtube'],
+      [/\b(yt|youtub|youtbe)\b/gi, 'youtube'],
+      [/\b(notepd|notepadd|notpad)\b/gi, 'notepad'],
+      [/\b(wrkspce|wrkspace|workspce)\b/gi, 'workspace'],
+      [/\b(shw|sho)\s+(me\s+)?(wrkspce|workspace)\b/gi, 'open workspace'],
+      [/\b(settngs|setings)\b/gi, 'settings'],
+      [/\b(termnal|termnl|cmd)\b/gi, 'terminal'],
+      [/\b(explorr|explrer|fls)\b/gi, 'explorer'],
+      [/\b(scrnshot|screnshot|ss)\b/gi, 'screenshot'],
+      [/\b(cmra|camra|webcm)\b/gi, 'camera'],
+    ];
+
+    for (const [pattern, replacement] of typoMap) {
+      corrected = corrected.replace(pattern, replacement);
+    }
+    return corrected;
+  }
+
+  /**
    * Submit natural language command to Authoritative Backend Agent Gateway.
    */
   async submitCommand(
@@ -71,8 +97,39 @@ export class AgentCommandService {
     inputMode: 'TEXT' | 'VOICE' = 'TEXT',
     language: 'en' | 'te' | 'hi' | 'ta' | 'auto' = 'auto'
   ): Promise<AgentCommandResult | null> {
-    const text = rawText.trim();
+    const text = this.autocorrectCommand(rawText).trim();
     if (!text || this.isProcessing()) return null;
+
+    // Instant UI Navigation Shortcuts
+    const lower = text.toLowerCase();
+    if (lower === 'workspace' || lower === 'open workspace' || lower === 'show workspace') {
+      this.router.navigate(['/workspace']);
+      const navResult: AgentCommandResult = {
+        resultId: `res_${Date.now()}`,
+        commandId: `cmd_${Date.now()}`,
+        type: 'TASK_RESULT',
+        title: '3D Bot Workspace',
+        summary: 'Opening 3D Living Bot Workspace.',
+        timestamp: Date.now()
+      };
+      this.speechVoice.speak('Opening workspace.');
+      this.activeResult.set(navResult);
+      return navResult;
+    }
+    if (lower === 'core' || lower === '3d core' || lower === 'home' || lower === 'show core') {
+      this.router.navigate(['/home']);
+      const navResult: AgentCommandResult = {
+        resultId: `res_${Date.now()}`,
+        commandId: `cmd_${Date.now()}`,
+        type: 'TASK_RESULT',
+        title: '3D Intelligence Core',
+        summary: 'Returning to 3D Intelligence Core.',
+        timestamp: Date.now()
+      };
+      this.speechVoice.speak('Displaying 3D core.');
+      this.activeResult.set(navResult);
+      return navResult;
+    }
 
     // Check if context has expired (> 5 minutes)
     if (Date.now() - this.contextTimestamp > 5 * 60 * 1000) {
@@ -311,7 +368,21 @@ export class AgentCommandService {
             this.activePollTimer = null;
           }
           this.lifecycle.set('COMPLETED');
-          const finalSummary = `Verified Execution Complete: ${rawText}. Action executed successfully on Windows OS.`;
+          let finalSummary = `Done, ${this.speechVoice.userCallsign()}. Action completed.`;
+          const lowerG = rawText.toLowerCase();
+          if (lowerG.includes('youtube') || lowerG.includes('yt')) {
+            finalSummary = `I've opened YouTube for you, ${this.speechVoice.userCallsign()}.`;
+          } else if (lowerG.includes('calc') || lowerG.includes('calculator')) {
+            finalSummary = `Calculator is open and ready.`;
+          } else if (lowerG.includes('notepad')) {
+            finalSummary = `I've opened Notepad for you.`;
+          } else if (lowerG.includes('camera') || lowerG.includes('webcam')) {
+            finalSummary = `Windows Camera is open, ${this.speechVoice.userCallsign()}.`;
+          } else if (lowerG.includes('volume')) {
+            finalSummary = `Volume adjusted as requested.`;
+          } else {
+            finalSummary = `Done, ${this.speechVoice.userCallsign()}. ${this.formatCommandTitle(rawText)} completed.`;
+          }
           const updatedResult: AgentCommandResult = {
             ...initialResult,
             title: `Execution Completed: ${this.formatCommandTitle(rawText)}`,

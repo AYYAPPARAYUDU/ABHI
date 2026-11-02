@@ -842,21 +842,32 @@ class OSControlEngine:
         target_url = url if url.startswith(("http://", "https://")) else f"https://{url}"
         b = browser.lower().strip()
         try:
-            browser_path = self._find_browser_path(b)
-            if browser_path:
-                try:
-                    subprocess.Popen(f"{browser_path} {target_url}", shell=True)
-                    return True, None
-                except Exception:
-                    pass
+            # 1. If explicit browser requested, try direct executable launch without shell quoting issues
+            if b in ("chrome", "edge", "firefox", "brave"):
+                found = find_browser_executable(b)
+                if found:
+                    clean_exe = found.strip('"\'')
+                    try:
+                        subprocess.Popen([clean_exe, target_url])
+                        return True, None
+                    except Exception:
+                        pass
+
+            # 2. Windows native URL activation (opens target in user's default browser reliably)
             if self.is_windows:
                 try:
                     os.startfile(target_url)
+                    return True, None
                 except Exception:
-                    subprocess.Popen(["powershell", "-Command", f"Start-Process '{target_url}'"], shell=True)
+                    try:
+                        subprocess.Popen(["powershell", "-NoProfile", "-Command", f"Start-Process '{target_url}'"])
+                        return True, None
+                    except Exception:
+                        subprocess.Popen(f'start "" "{target_url}"', shell=True)
+                        return True, None
             else:
                 subprocess.Popen(["xdg-open", target_url])
-            return True, None
+                return True, None
         except Exception as e:
             return False, f"Failed to open URL '{url}': {str(e)}"
 

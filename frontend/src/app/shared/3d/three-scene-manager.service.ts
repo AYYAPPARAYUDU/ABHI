@@ -688,7 +688,7 @@ export class ThreeSceneManagerService {
     this.centralCoreGroup.add(this.hudRadarSweeper);
 
     // 7. RAYCAST TARGET SPHERE (Enables clicking the central core)
-    const hitGeo = new THREE.SphereGeometry(4.2, 16, 16);
+    const hitGeo = new THREE.SphereGeometry(2.3, 16, 16);
     const hitMat = new THREE.MeshBasicMaterial({
       transparent: true,
       opacity: 0.001,
@@ -2467,7 +2467,7 @@ export class ThreeSceneManagerService {
       }
     });
 
-    // RAYCAST CLICK HANDLER (Direct clicks on the Central Core or Orbiting Agents)
+    // RAYCAST CLICK HANDLER (Direct clicks on the Central Core, Orbiting Agents, or Colony Stations)
     canvas.addEventListener('click', (e) => {
       if (!this.camera || !this.raycaster) return;
 
@@ -2477,46 +2477,59 @@ export class ThreeSceneManagerService {
 
       this.raycaster.setFromCamera(this.mouse, this.camera);
 
-      // Check click on Central Core Hit Sphere
-      if (this.coreHitSphere) {
-        const coreHits = this.raycaster.intersectObject(this.coreHitSphere, false);
-        if (coreHits.length > 0) {
-          this.ngZone.run(() => this.toggleCoreDeployment());
-          return;
-        }
-      }
+      const isHome = this.currentMode === 'MAIN_AGENT' || this.currentMode === 'DEFAULT';
 
-      // Check click on Orbiting Agents
-      const agentOrbs = Array.from(this.agentMeshMap.values()).map((m) => m.orb);
-      const agentHits = this.raycaster.intersectObjects(agentOrbs, true);
-      if (agentHits.length > 0) {
-        let obj = agentHits[0].object;
-        while (obj.parent && !obj.userData?.['agentId']) {
-          obj = obj.parent as THREE.Object3D;
+      if (isHome) {
+        // 1. Check click on Orbiting Agents in 3D Core
+        const agentGroups = Array.from(this.agentMeshMap.values()).map((m) => m.group);
+        const agentHits = this.raycaster.intersectObjects(agentGroups, true);
+        if (agentHits.length > 0) {
+          let obj: THREE.Object3D | null = agentHits[0].object;
+          while (obj && !obj.userData?.['agentId'] && !obj.userData?.['agent'] && obj.parent) {
+            obj = obj.parent;
+          }
+          const agentId = obj?.userData?.['agentId'];
+          const found = obj?.userData?.['agent'] || this.agents().find((a) => a.id === agentId);
+          if (found) {
+            this.ngZone.run(() => this.focusAgent(found));
+            return;
+          }
         }
-        const agentId = obj.userData?.['agentId'];
-        const found = this.agents().find((a) => a.id === agentId);
-        if (found) {
-          this.ngZone.run(() => this.focusAgent(found));
-          return;
-        }
-      }
 
-      // Check click on 3D Volumetric Pods & Workspaces (Stations)
-      if (this.podHitMeshes.length > 0) {
-        const podHits = this.raycaster.intersectObjects(this.podHitMeshes, true);
+        // 2. Check click on Central Core Hit Sphere (strictly restricted to home mode & visible core)
+        if (this.coreHitSphere && this.centralCoreGroup?.visible) {
+          const coreHits = this.raycaster.intersectObject(this.coreHitSphere, false);
+          if (coreHits.length > 0) {
+            this.ngZone.run(() => this.toggleCoreDeployment());
+            return;
+          }
+        }
+      } else if (this.currentMode === 'WORKSPACE') {
+        // Check click on 3D Volumetric Pods, Avatars & Hexagonal Base Stations
+        const workspaceTargets = [
+          ...this.podHitMeshes,
+          ...(this.workspaceGroup ? [this.workspaceGroup] : [])
+        ];
+        const podHits = this.raycaster.intersectObjects(workspaceTargets, true);
         if (podHits.length > 0) {
           let hitObj: THREE.Object3D | null = podHits[0].object;
-          while (hitObj && !hitObj.userData?.['agent'] && hitObj.parent) {
+          while (hitObj && !hitObj.userData?.['agent'] && !hitObj.userData?.['agentId'] && hitObj.parent) {
             hitObj = hitObj.parent;
           }
-          const agent = hitObj?.userData?.['agent'];
+          const agent = hitObj?.userData?.['agent'] || this.agents().find((a) => a.id === hitObj?.userData?.['agentId']);
           if (agent) {
             this.ngZone.run(() => this.focusAgent(agent));
             return;
           }
         }
       }
+
+      // Clicked in empty outside space: smoothly deselect without triggering accidental actions
+      this.ngZone.run(() => {
+        if (this.selectedAgent()) {
+          this.resetCameraFocus();
+        }
+      });
     });
 
     // POINTER HOVER FEEDBACK (Cursor changes to pointer over tactile 3D nodes & pods + Dynamic Hover HUD)
@@ -2527,12 +2540,18 @@ export class ThreeSceneManagerService {
       this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       this.raycaster.setFromCamera(this.mouse, this.camera);
 
-      const agentOrbs = Array.from(this.agentMeshMap.values()).map((m) => m.orb);
-      const testObjects = [
-        ...agentOrbs,
-        ...this.podHitMeshes,
-        ...(this.coreHitSphere ? [this.coreHitSphere] : []),
-      ];
+      const isHome = this.currentMode === 'MAIN_AGENT' || this.currentMode === 'DEFAULT';
+      const testObjects: THREE.Object3D[] = [];
+
+      if (isHome) {
+        Array.from(this.agentMeshMap.values()).forEach((m) => testObjects.push(m.group));
+        if (this.coreHitSphere && this.centralCoreGroup?.visible) {
+          testObjects.push(this.coreHitSphere);
+        }
+      } else if (this.currentMode === 'WORKSPACE') {
+        testObjects.push(...this.podHitMeshes);
+      }
+
       const hits = this.raycaster.intersectObjects(testObjects, true);
       canvas.style.cursor = hits.length > 0 ? 'pointer' : 'default';
 
@@ -2567,7 +2586,7 @@ export class ThreeSceneManagerService {
     if (deployed) {
       this.playHoloSound('deploy');
       this.latestJarvisMessage.set(
-        'Iris unsealed. Deploying 8 autonomous sub-agents. Inter-agent synaptic laser mesh active.'
+        'Specialist agents deployed and ready.'
       );
       this.agents.update((list) =>
         list.map((a) => ({ ...a, status: 'ORBITING' }))
@@ -2576,7 +2595,7 @@ export class ThreeSceneManagerService {
     } else {
       this.playHoloSound('dock');
       this.latestJarvisMessage.set(
-        'Sub-agents recalled. Contracting synaptic vectors into central quantum dot singularity.'
+        'All specialist agents docked.'
       );
       this.agents.update((list) =>
         list.map((a) => ({ ...a, status: 'DORMANT' }))
@@ -2588,7 +2607,7 @@ export class ThreeSceneManagerService {
   triggerCorePulse(): void {
     this.playHoloSound('pulse');
     this.targetRotation.y += Math.PI * 0.4;
-    this.latestJarvisMessage.set('Harmonic pulse dispatched through core electromagnetic lattice.');
+    this.latestJarvisMessage.set('Core systems harmonized.');
   }
 
   focusAgent(agent: AgentNode): void {
@@ -2598,7 +2617,7 @@ export class ThreeSceneManagerService {
     this.selectedAgent.set(agent);
     this.playHoloSound('beep');
     this.latestJarvisMessage.set(
-      `Station Lock: [${agent.codename}] ${agent.name}. Rotating 3D spatial chamber to active front.`
+      `Active focus: ${agent.name}. Workstation synchronized.`
     );
 
     const agentList = this.agents();
@@ -2721,7 +2740,7 @@ export class ThreeSceneManagerService {
       }, 500);
     }
 
-    this.latestJarvisMessage.set(`[VISION -> ${agent.name}]: Synaptic ping ACK verified. Bond at ${newBond}%.`);
+    this.latestJarvisMessage.set(`Ping acknowledged for ${agent.name}. Synchronization at ${newBond}%.`);
   }
 
   evolveAgent(agent: AgentNode): void {
@@ -2762,7 +2781,7 @@ export class ThreeSceneManagerService {
       );
     }
 
-    this.latestJarvisMessage.set(`[${agent.name} EVOLVED]: ${evolvedMsg}`);
+    this.latestJarvisMessage.set(`${agent.name} upgraded: ${evolvedMsg}`);
   }
 
   private bondChatterTimer: any = null;
@@ -2773,44 +2792,44 @@ export class ThreeSceneManagerService {
 
     const chatterPresets: Record<string, string[]> = {
       'agent-sentinel': [
-        'Perimeter locked. Deflector field harmonic resonance stable at 1.42 THz.',
-        'Shield matrix harmonic frequency adjusted to deflect kinetic interference.',
-        'Zero anomalous intrusions detected across active system boundaries.'
+        'System security is active and intact, Sir.',
+        'All boundaries are monitored. No unauthorized activities detected.',
+        'Protection matrix is fully operational and guarding your workspace.'
       ],
       'agent-synthex': [
-        'Web telemetry nexus active. Ingesting sandboxed Chromium state.',
-        'DOM grounding pipeline synchronized across Playwright browser worker.',
-        'Network telemetry stream latency at 1.2ms. Zero jitter observed.'
+        'Browser environment is synchronized and ready.',
+        'Web connection is completely stable with minimal latency.',
+        'Telemetry stream is running smoothly in the background.'
       ],
       'agent-archon': [
-        'AST verification complete. 0 syntax anomalies across codebase.',
-        'Self-healing code compilation engine standing by in avionics forge.',
-        'Polyglot synthesis compiler pre-warmed for rapid execution.'
+        'Workspace code has been checked. Everything is clean and building properly.',
+        'Compiler engines are pre-warmed and ready for your code updates.',
+        'Codebase integrity verified with zero compilation errors.'
       ],
       'agent-aura': [
-        'Multispectral visual parser locked at 60 FPS. Foreground window identified.',
-        'Screen perception LiDAR scan verified zero UI bounding box drift.',
-        'Visual OCR buffer updated with active desktop pixel grid.'
+        'Screen vision parser is focused on your foreground window.',
+        'All UI elements and spatial coordinates are clearly aligned.',
+        'Visual scanning is active and tracking smoothly.'
       ],
       'agent-chronos': [
-        'Task DAG corridor prediction 99.8% optimal. Wavefront ready.',
-        'Kahn topological levels computed with zero cycles.',
-        'Priority task min-heap balanced. Fast-path dispatch primed.'
+        'Execution timeline is optimized for fast processing.',
+        'Task schedule is completely cleared and ready for your next request.',
+        'Workflow priorities have been organized for peak efficiency.'
       ],
       'agent-synapse': [
-        'Neural inference throughput steady at 38 tokens/sec on local RTX core.',
-        'Token context window memory cache active at 40K tokens.',
-        'Cognitive reasoning attention heads aligned with operator intention.'
+        'Local intelligence model is preloaded and ready to reason with you.',
+        'Working memory is refreshed and prepared for deep problem solving.',
+        'Neural assistants are aligned with your goals.'
       ],
       'agent-aegis': [
-        'Dual-state physical verifier confirmed SQLite WAL commit.',
-        'Physical verification confirmed on filesystem handles.',
-        'Integrity audit passed: 100% deterministic state transitions.'
+        'All task records and state changes have been physically verified.',
+        'System storage is verified and completely synchronized.',
+        'State integrity audit completed with complete success.'
       ],
       'agent-nexus': [
-        'Speech resonance audio matrix calibrated. Awaiting operator voice.',
-        'Voice synthesis pitch and rate modulated for natural human warmth.',
-        'Audio spectrum harmonic analyzer listening on local microphone channel.'
+        'Voice channel is calibrated with natural human warmth.',
+        'Audio resonance is balanced and ready for operator input.',
+        'Voice assistant is listening and ready whenever you speak.'
       ]
     };
 
@@ -2864,7 +2883,7 @@ export class ThreeSceneManagerService {
         }, 400);
       }
 
-      this.latestJarvisMessage.set(`[${targetAgent.name} -> VISION]: "${chatter}"`);
+      this.latestJarvisMessage.set(`${targetAgent.name}: "${chatter}"`);
     }, 2800);
   }
 
