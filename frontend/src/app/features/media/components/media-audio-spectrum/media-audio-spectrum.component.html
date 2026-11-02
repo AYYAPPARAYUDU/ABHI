@@ -1,0 +1,302 @@
+<div class="media-audio-panel">
+  <!-- Top Audio HUD Header -->
+  <header class="audio-hud-header">
+    <div class="audio-hud-title-box">
+      <div class="hud-status-indicator" [class.active]="isPlaying()">
+        <span class="hud-pulse-dot"></span>
+        <span class="hud-tag">3D SPATIAL AUDIO & SPECTRUM ENGINE</span>
+      </div>
+      <h2 class="audio-main-title">
+        <span class="title-glyph">🎵</span> Dynamic Audio Spectrum & Master Player
+      </h2>
+      <p class="audio-subtitle">
+        Hardware-synchronized 3D equalizer bars, real-time waveform analysis, speech synthesis, and C2PA cryptographic audio provenance.
+      </p>
+    </div>
+
+    <!-- Right Quick Status Badges -->
+    <div class="audio-telemetry-cluster">
+      <div class="telemetry-pill">
+        <span class="pill-label">AUDIO CODEC</span>
+        <span class="pill-val cyan">PCM 48kHz / 24b</span>
+      </div>
+      <div class="telemetry-pill">
+        <span class="pill-label">C2PA PROVENANCE</span>
+        <span class="pill-val emerald">✓ Cryptographically Signed</span>
+      </div>
+      <div class="telemetry-pill">
+        <span class="pill-label">SPATIAL CORE</span>
+        <span class="pill-val violet">Three.js Linked</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grid: Left Spectrum & Oscilloscope, Right Track Control & Presets -->
+  <div class="audio-workspace-grid">
+    <!-- Left Column: Waveform Oscilloscope + Dynamic 32-Band Equalizer -->
+    <section class="spectrum-visualizer-card">
+      <div class="card-glass-header">
+        <div class="header-label-group">
+          <span class="header-icon">📊</span>
+          <span class="header-title">REAL-TIME FAST FOURIER TRANSFORM (FFT) EQUALIZER</span>
+        </div>
+        <div class="eq-controls-strip">
+          <span class="channel-tag">STEREO L / R</span>
+          <span class="db-readout">{{ isPlaying() ? '-3.2 dBFS' : '-∞ dBFS' }}</span>
+        </div>
+      </div>
+
+      <!-- Oscilloscope Waveform Canvas -->
+      <div class="oscilloscope-container">
+        <div class="oscilloscope-hud-overlay">
+          <span class="osc-label">OSCILLOSCOPE • 64-PT PHASE</span>
+          <span class="osc-freq">{{ isPlaying() ? '440 Hz Fundamental' : 'Standby / Idle' }}</span>
+        </div>
+        <canvas #waveformCanvas width="640" height="90" class="oscilloscope-canvas"></canvas>
+      </div>
+
+      <!-- 32-Band Visualizer Bars -->
+      <div class="equalizer-bars-rack">
+        @for (level of spectrumBars(); track $index) {
+          <div class="eq-col">
+            <div class="eq-peak-indicator" [style.bottom.%]="peakBars()[$index]"></div>
+            <div
+              class="eq-bar-fill"
+              [style.height.%]="level"
+              [class.active]="isPlaying()"
+              [class.high-frequency]="$index >= 20"
+              [class.mid-frequency]="$index >= 8 && $index < 20"
+              [class.low-frequency]="$index < 8"
+            ></div>
+            <span class="eq-band-label" *ngIf="$index % 4 === 0">
+              {{ $index * 600 > 1000 ? ($index * 0.6 | number:'1.0-1') + 'k' : ($index * 600) + 'Hz' }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <!-- Stereo Master VU Meters -->
+      <div class="stereo-vu-section">
+        <div class="vu-channel">
+          <span class="vu-label">L</span>
+          <div class="vu-meter-trough">
+            <div class="vu-meter-bar left" [style.width.%]="vuMeterLeft()"></div>
+          </div>
+          <span class="vu-value">{{ vuMeterLeft() }}%</span>
+        </div>
+        <div class="vu-channel">
+          <span class="vu-label">R</span>
+          <div class="vu-meter-trough">
+            <div class="vu-meter-bar right" [style.width.%]="vuMeterRight()"></div>
+          </div>
+          <span class="vu-value">{{ vuMeterRight() }}%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Interactive Player & Transport Controls -->
+    <section class="audio-transport-card">
+      <div class="card-glass-header">
+        <div class="header-label-group">
+          <span class="header-icon">🎛️</span>
+          <span class="header-title">MASTER PLAYBACK TRANSPORT</span>
+        </div>
+        <span class="track-format-chip">{{ activeTrack().genre }}</span>
+      </div>
+
+      <!-- Active Track Banner -->
+      <div class="active-track-banner">
+        <div class="album-art-pod">
+          <span class="art-icon">🎵</span>
+          <div class="spin-disc" [class.spinning]="isPlaying()"></div>
+        </div>
+        <div class="track-meta-cluster">
+          <h3 class="track-title-text">{{ activeTrack().title }}</h3>
+          <span class="track-artist-text">{{ activeTrack().artist }}</span>
+          <div class="track-provenance-meta">
+            <span class="c2pa-badge-mini" *ngIf="activeTrack().c2paSigned">
+              🛡️ C2PA Signed
+            </span>
+            <span class="hash-preview-text">{{ activeTrack().provenanceHash | slice:0:22 }}...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time Progress Scrubber -->
+      <div class="progress-scrubber-group">
+        <div class="time-readout-row">
+          <span class="time-now">{{ formatTime(currentTime()) }}</span>
+          <span class="time-total">{{ formatTime(duration()) }}</span>
+        </div>
+        <div class="timeline-slider-wrapper">
+          <input
+            type="range"
+            class="neumorphic-slider"
+            min="0"
+            [max]="duration()"
+            [value]="currentTime()"
+            (input)="seek($event)"
+          />
+          <div class="slider-progress-fill" [style.width.%]="(currentTime() / duration()) * 100"></div>
+        </div>
+      </div>
+
+      <!-- Main Tactile Playback Controls -->
+      <div class="transport-buttons-row">
+        <button
+          type="button"
+          class="tactile-btn small"
+          appAnimeInteractive
+          (click)="stopAudio()"
+          title="Stop & Rewind"
+        >
+          ⏹️
+        </button>
+
+        <button
+          type="button"
+          class="tactile-btn primary-play-btn"
+          [class.playing]="isPlaying()"
+          appAnimeInteractive
+          (click)="togglePlay()"
+          title="Play / Pause Audio"
+        >
+          <span>{{ isPlaying() ? '⏸️ PAUSE' : '▶ PLAY' }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="tactile-btn small"
+          appAnimeInteractive
+          (click)="toggleMute()"
+          [class.muted]="isMuted()"
+          title="Mute / Unmute"
+        >
+          {{ isMuted() ? '🔇' : '🔊' }}
+        </button>
+      </div>
+
+      <!-- Volume & Speed Controls -->
+      <div class="audio-adjustments-row">
+        <div class="volume-control-box">
+          <span class="control-label">MASTER VOL</span>
+          <input
+            type="range"
+            class="neumorphic-mini-slider"
+            min="0"
+            max="1"
+            step="0.05"
+            [value]="isMuted() ? 0 : volume()"
+            (input)="setVolume($event)"
+          />
+          <span class="control-val">{{ isMuted() ? '0%' : (volume() * 100 | number:'1.0-0') + '%' }}</span>
+        </div>
+
+        <div class="speed-selector-box">
+          <span class="control-label">SPEED</span>
+          <div class="speed-chips">
+            @for (spd of [0.5, 1.0, 1.25, 1.5, 2.0]; track spd) {
+              <button
+                type="button"
+                class="speed-chip"
+                [class.active]="playbackRate() === spd"
+                (click)="setSpeed(spd)"
+              >
+                {{ spd }}x
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Presets & Custom File Loader -->
+      <div class="track-presets-section">
+        <div class="presets-header-row">
+          <span class="control-label">AUDIO TRACK LIBRARY</span>
+          <button
+            type="button"
+            class="upload-track-btn"
+            appAnimeInteractive
+            (click)="fileInput.click()"
+          >
+            📂 Load Local Audio
+          </button>
+          <input
+            #fileInput
+            type="file"
+            accept="audio/*"
+            style="display: none"
+            (change)="onFileSelected($event)"
+          />
+        </div>
+
+        <div class="presets-list">
+          @for (trk of presets; track trk.id) {
+            <div
+              class="preset-item-card"
+              [class.active]="activeTrack().id === trk.id"
+              (click)="selectPreset(trk)"
+            >
+              <div class="preset-info">
+                <span class="preset-name">{{ trk.title }}</span>
+                <span class="preset-sub">{{ trk.artist }} • {{ formatTime(trk.duration) }}</span>
+              </div>
+              <span class="preset-chip" [class.c2pa]="trk.c2paSigned">
+                {{ trk.c2paSigned ? 'C2PA ✓' : 'LOCAL' }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Bottom Interactive Speech & Narration Synthesizer Card -->
+  <section class="speech-synthesizer-card">
+    <div class="card-glass-header">
+      <div class="header-label-group">
+        <span class="header-icon">🎙️</span>
+        <span class="header-title">MULTIMODAL SPEECH & NARRATION SYNTHESIZER</span>
+      </div>
+      <span class="pill-val cyan">Neural Voice Generation</span>
+    </div>
+
+    <div class="synth-body-grid">
+      <div class="synth-input-col">
+        <label class="field-label">NARRATION SCRIPT / PROMPT</label>
+        <textarea
+          class="neumorphic-textarea"
+          rows="2"
+          [ngModel]="narrationText()"
+          (ngModelChange)="narrationText.set($event)"
+          placeholder="Enter text to synthesize spoken voice with active spectrum analysis..."
+        ></textarea>
+      </div>
+
+      <div class="synth-actions-col">
+        <div class="voice-picker-group">
+          <label class="field-label">LANGUAGE & VOICE</label>
+          <select
+            class="neumorphic-select"
+            [ngModel]="narrationVoice()"
+            (ngModelChange)="narrationVoice.set($event)"
+          >
+            <option value="en">English (Neural en-US)</option>
+            <option value="te">Telugu (తెలుగు - te-IN)</option>
+            <option value="hi">Hindi (हिन्दी - hi-IN)</option>
+            <option value="ta">Tamil (தமிழ் - ta-IN)</option>
+          </select>
+        </div>
+
+        <button
+          type="button"
+          class="synth-execute-btn"
+          [disabled]="isSynthesizing() || !narrationText().trim()"
+          (click)="synthesizeNarration()"
+        >
+          <span>{{ isSynthesizing() ? '⚡ Synthesizing...' : '✨ Synthesize & Stream Spectrum' }}</span>
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

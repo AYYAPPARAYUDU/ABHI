@@ -99,6 +99,7 @@ async def get_swarm_negotiations():
 
 
 @router.post("/command", response_model=AgentCommandResponse)
+@router.post("/commands", response_model=AgentCommandResponse)
 async def submit_command(request: AgentCommandRequest) -> AgentCommandResponse:
     """Submit a multimodal or natural language command to the Authoritative Agent Gateway."""
     return await agent_gateway.process_command(request)

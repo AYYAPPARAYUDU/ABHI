@@ -102,6 +102,7 @@
 
 .cyan-val { color: var(--abhi-cyan, #38d9ff); }
 .blue-val { color: var(--abhi-blue, #397bff); }
+.emerald-val { color: #34d399; }
 
 .media-refresh-btn {
   width: 38px;

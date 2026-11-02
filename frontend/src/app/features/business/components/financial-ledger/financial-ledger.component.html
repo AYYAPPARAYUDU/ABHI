@@ -1,0 +1,108 @@
+<section class="financial-ledger-card">
+  <div class="card-title-bar">
+    <div class="card-title-group">
+      <span class="panel-icon">🏛️</span>
+      <div>
+        <h2 class="panel-title m-0">REVENUE & LEDGER OBSERVATORY</h2>
+        <div class="section-sublabel">
+          {{ financials()?.disclaimer || 'Forecast only — not actual earnings. No verified external banking connected.' }}
+        </div>
+      </div>
+    </div>
+    <div class="provenance-badges">
+      <span class="provenance-capsule">
+        PROVENANCE: {{ financials()?.revenue_provenance || 'ESTIMATED / NOT_CONNECTED' }}
+      </span>
+      <span class="connection-status-pill" [class.connected]="financials()?.has_verified_financial_connection">
+        <span class="status-indicator-dot"></span>
+        {{ financials()?.has_verified_financial_connection ? 'BANK LINKED' : 'UNCONNECTED (LOCAL SANDBOX)' }}
+      </span>
+    </div>
+  </div>
+
+  <div class="fin-metrics-grid">
+    <div class="fin-metric-box received">
+      <div class="metric-top">
+        <span class="fin-label">ACTUAL RECEIVED</span>
+        <span class="badge-mini success">VERIFIED</span>
+      </div>
+      <span
+        class="fin-val text-cyan"
+        [appAnimeCounter]="financials()?.actual_revenue_received_usd || 0"
+        [counterPrefix]="'$ '"
+        [counterDecimals]="2"
+      >
+        $ {{ (financials()?.actual_revenue_received_usd || 0).toFixed(2) }}
+      </span>
+      <span class="fin-sub">Confirmed bank deposits</span>
+    </div>
+
+    <div class="fin-metric-box expense">
+      <div class="metric-top">
+        <span class="fin-label">OPERATING EXPENSES</span>
+        <span class="badge-mini warning">OUTFLOW</span>
+      </div>
+      <span
+        class="fin-val text-amber"
+        [appAnimeCounter]="financials()?.operating_expenses_usd || 0"
+        [counterPrefix]="'$ '"
+        [counterDecimals]="2"
+      >
+        $ {{ (financials()?.operating_expenses_usd || 0).toFixed(2) }}
+      </span>
+      <span class="fin-sub">VRAM compute & local energy</span>
+    </div>
+
+    <div class="fin-metric-box net">
+      <div class="metric-top">
+        <span class="fin-label">NET RESULT</span>
+        <span class="badge-mini" [class.success]="isNetPositive" [class.danger]="!isNetPositive">
+          {{ isNetPositive ? 'SURPLUS' : 'DEFICIT' }}
+        </span>
+      </div>
+      <span
+        class="fin-val"
+        [class.text-green]="isNetPositive"
+        [class.text-rose]="!isNetPositive"
+        [appAnimeCounter]="financials()?.net_result_usd || 0"
+        [counterPrefix]="'$ '"
+        [counterDecimals]="2"
+      >
+        $ {{ (financials()?.net_result_usd || 0).toFixed(2) }}
+      </span>
+      <span class="fin-sub">Actual Received − Operating Expenses</span>
+    </div>
+
+    <div class="fin-metric-box pending">
+      <div class="metric-top">
+        <span class="fin-label">PENDING INVOICES</span>
+        <span class="badge-mini info">AWAITING</span>
+      </div>
+      <span
+        class="fin-val text-blue"
+        [appAnimeCounter]="financials()?.pending_payments_usd || 0"
+        [counterPrefix]="'$ '"
+        [counterDecimals]="2"
+      >
+        $ {{ (financials()?.pending_payments_usd || 0).toFixed(2) }}
+      </span>
+      <span class="fin-sub">Unverified / in transit</span>
+    </div>
+
+    <div class="fin-metric-box forecast">
+      <div class="metric-top">
+        <span class="fin-label">FORECAST REVENUE</span>
+        <span class="badge-mini purple">PROJECTION</span>
+      </div>
+      <span
+        class="fin-val text-purple"
+        [appAnimeCounter]="financials()?.forecast_revenue_usd || 0"
+        [counterPrefix]="'$ '"
+        [counterDecimals]="2"
+      >
+        $ {{ (financials()?.forecast_revenue_usd || 0).toFixed(2) }}
+      </span>
+      <span class="fin-sub">Grounded pipeline projection</span>
+    </div>
+  </div>
+</section>

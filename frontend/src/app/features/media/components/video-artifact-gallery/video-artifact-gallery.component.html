@@ -1,0 +1,137 @@
+<div class="video-gallery-card">
+  <!-- Card Header -->
+  <div class="gallery-header">
+    <div class="header-title-group">
+      <span class="header-icon">🎞️</span>
+      <div>
+        <h3 class="header-title">Synthesized Video Artifacts Gallery</h3>
+        <p class="header-subtitle">Hardware-verified video files with frame-accurate playback & hashes</p>
+      </div>
+    </div>
+    <span class="count-badge">{{ artifacts.length }} Artifacts</span>
+  </div>
+
+  <!-- Artifacts Grid -->
+  @if (artifacts.length > 0) {
+    <div class="artifacts-grid">
+      @for (artifact of artifacts; track artifact.artifact_id) {
+        <div class="artifact-item-card">
+          <!-- Thumbnail Container -->
+          <div class="thumb-container" (click)="selectedArtifact = artifact">
+            @if (artifact.poster_path) {
+              <img
+                [src]="'http://127.0.0.1:8000/api/v1/media/video/artifacts/' + artifact.artifact_id + '/thumbnail'"
+                class="thumb-img"
+                [alt]="artifact.filename"
+              />
+            } @else {
+              <div class="thumb-placeholder">
+                <span class="placeholder-icon">▶</span>
+              </div>
+            }
+
+            <!-- Play Overlay -->
+            <div class="play-overlay">
+              <span class="play-glyph">▶</span>
+            </div>
+
+            <!-- Badges -->
+            <span class="duration-badge">
+              {{ artifact.duration_seconds }}s @ {{ artifact.fps }}fps
+            </span>
+          </div>
+
+          <!-- Card Details -->
+          <div class="artifact-body">
+            <div class="body-top-row">
+              <span class="format-chip">{{ artifact.format }}</span>
+              <span class="filesize-text">{{ formatBytes(artifact.size_bytes) }}</span>
+            </div>
+
+            <p class="prompt-text" [title]="artifact.prompt_preview || artifact.filename">
+              {{ artifact.prompt_preview || artifact.filename }}
+            </p>
+
+            <div class="meta-row font-mono">
+              <span>{{ artifact.width }}x{{ artifact.height }}</span>
+              <span class="model-tag">{{ artifact.model_id }}</span>
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="artifact-actions-row">
+              <a
+                [href]="'http://127.0.0.1:8000/api/v1/media/video/artifacts/' + artifact.artifact_id + '/file'"
+                target="_blank"
+                class="action-btn download"
+                title="Download raw video stream"
+              >
+                ⬇ Download
+              </a>
+              <button
+                type="button"
+                class="action-btn inspect"
+                (click)="selectedArtifact = artifact"
+                title="Inspect in Player"
+              >
+                🔍 Play
+              </button>
+              <button
+                type="button"
+                class="action-btn delete"
+                (click)="delete.emit(artifact.artifact_id)"
+                title="Delete artifact"
+              >
+                🗑️
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- Empty State -->
+    <div class="empty-gallery-state">
+      <span class="empty-glyph">🎬</span>
+      <h4 class="empty-title">No Local Video Artifacts Rendered</h4>
+      <p class="empty-sub">
+        Configure prompt, resolution, and fps in the Video Studio form to synthesize your first local video sequence.
+      </p>
+    </div>
+  }
+</div>
+
+<!-- Modal Video Player Preview -->
+@if (selectedArtifact) {
+  <div class="video-modal-backdrop" (click)="selectedArtifact = null">
+    <div class="video-modal-window" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="modal-icon">🎥</span>
+          <h4 class="modal-title">{{ selectedArtifact.filename }}</h4>
+        </div>
+        <button type="button" class="modal-close-btn" (click)="selectedArtifact = null">✕</button>
+      </div>
+
+      <div class="modal-viewport">
+        <video
+          controls
+          autoplay
+          loop
+          class="modal-video-elem"
+          [src]="'http://127.0.0.1:8000/api/v1/media/video/artifacts/' + selectedArtifact.artifact_id + '/file'"
+        ></video>
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-telemetry font-mono">
+          <span>SHA-256: {{ selectedArtifact.sha256 | slice:0:20 }}...</span>
+          <span>• {{ selectedArtifact.width }}x{{ selectedArtifact.height }} @ {{ selectedArtifact.fps }}fps</span>
+          <span>• Duration: {{ selectedArtifact.duration_seconds }}s</span>
+        </div>
+        <button type="button" class="modal-dismiss-btn" (click)="selectedArtifact = null">
+          Close Player
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,64 @@
+<section class="market-dynamics-card">
+  <div class="card-title-bar">
+    <div class="card-title-group">
+      <span class="panel-icon">📈</span>
+      <div>
+        <h2 class="panel-title m-0">MARKET DYNAMICS & SCORED CONCEPTS</h2>
+        <div class="section-sublabel">
+          Multi-Dimensional Opportunity Evaluation · Grounded Valuation Formula
+        </div>
+      </div>
+    </div>
+    <div class="header-action-group">
+      <span class="side-heading-capsule">{{ opportunities().length }} RESEARCHED</span>
+      <button class="btn-score-opp" (click)="onOpenNewOpportunity($event)">
+        <span>+ Score Concept</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Formula Banner -->
+  <div class="formula-banner">
+    <div class="formula-title">FORMULA (6-DIMENSIONAL WEIGHTED MATRIX):</div>
+    <div class="formula-code">
+      Score = 0.25·Demand + 0.20·(100 - Competition) + 0.20·Feasibility + 0.15·Pricing + 0.10·(100 - Time) + 0.10·Policy
+    </div>
+  </div>
+
+  <div class="opps-grid">
+    @if (opportunities().length === 0) {
+      <div class="empty-opps">
+        <span>No researched market concepts available yet. Click "+ Score Concept" to evaluate a venture.</span>
+      </div>
+    }
+    @for (opp of opportunities(); track opp.id) {
+      <div class="opp-card" appAnimeInteractive [appAnimeType]="'card'">
+        <div class="opp-header">
+          <div>
+            <span class="opp-sector">{{ opp.sector_id }}</span>
+            <h3 class="opp-title">{{ opp.title }}</h3>
+          </div>
+          <div class="score-circle">
+            <span class="score-num">{{ opp.total_score.toFixed(0) }}</span>
+            <span class="score-sub">/100</span>
+          </div>
+        </div>
+
+        <p class="opp-summary">{{ opp.summary }}</p>
+
+        <div class="dimensions-list">
+          @for (dim of opp.dimensions; track dim.dimension) {
+            <div class="dim-row">
+              <span class="dim-name">{{ dim.dimension }}</span>
+              <div class="dim-bar-wrap">
+                <div class="dim-bar-fill" [style.width.%]="dim.score"></div>
+              </div>
+              <span class="dim-prov-badge">{{ dim.provenance }}</span>
+              <span class="dim-score">{{ dim.score.toFixed(0) }}%</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</section>

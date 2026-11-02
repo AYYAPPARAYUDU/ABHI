@@ -15,7 +15,8 @@ router = APIRouter(prefix="/devices", tags=["devices"])
 
 
 class MobileActionRequest(BaseModel):
-    action: str = Field(..., description="Action name: lock, unlock, keyevent, launch_app, send_whatsapp, dial, tap, swipe, type")
+    model_config = {"extra": "allow"}
+    action: str = Field(..., description="Action name: lock, unlock, wake, key, keyevent, launch_app, send_whatsapp, dial, tap, swipe, type, shell, notifications, gmail")
     params: Dict[str, Any] = Field(default_factory=dict, description="Action specific parameters")
     serial: Optional[str] = Field(None, description="Target device serial (optional)")
 
@@ -77,20 +78,27 @@ async def list_mobile_devices():
 async def execute_mobile_action(request: MobileActionRequest):
     """Execute mobile control action (lock, keyevent, launch app, whatsapp, etc.)."""
     action = request.action.lower().strip()
-    params = request.params
+    # Merge any top-level parameters into params
+    params = dict(request.params)
+    for k, v in request.__dict__.items():
+        if k not in ["action", "params", "serial", "__pydantic_extra__", "__pydantic_fields_set__"] and v is not None:
+            params.setdefault(k, v)
+    if hasattr(request, "__pydantic_extra__") and request.__pydantic_extra__:
+        for k, v in request.__pydantic_extra__.items():
+            params.setdefault(k, v)
     serial = request.serial
 
     try:
         if action == "lock":
             res = await adb_controller.lock_device(serial=serial)
-            return {"success": res, "action": action, "message": "Device locked"}
+            return {"success": res, "action": action, "message": "Device locked" if res else "No active device to lock"}
 
         elif action in ["unlock", "wake"]:
             res = await adb_controller.unlock_device(serial=serial)
-            return {"success": res, "action": action, "message": "Device unlocked / screen woke up"}
+            return {"success": res, "action": action, "message": "Device unlocked / screen woke up" if res else "No active device to unlock"}
 
-        elif action == "keyevent":
-            key = params.get("key", "home")
+        elif action in ["key", "keyevent"]:
+            key = params.get("key") or params.get("keycode") or params.get("key_name", "home")
             res = await adb_controller.send_keyevent(key, serial=serial)
             return {"success": res, "action": action, "key": key}
 

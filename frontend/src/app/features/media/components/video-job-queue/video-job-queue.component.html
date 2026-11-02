@@ -1,0 +1,107 @@
+<div class="video-queue-card">
+  <!-- Header -->
+  <div class="queue-header">
+    <div class="header-title-group">
+      <span class="header-icon">⚡</span>
+      <div>
+        <h4 class="header-title">Live Video Job Queue & Temporal Chunks</h4>
+        <p class="header-subtitle">Streamed frame diffusion, status telemetry & chunk buffers</p>
+      </div>
+    </div>
+    <span class="count-badge">{{ jobs.length }} Total Jobs</span>
+  </div>
+
+  <!-- Active Job Live Progress Panel -->
+  @if (activeJob) {
+    <div class="active-job-panel">
+      <div class="active-job-header">
+        <span class="job-id-text font-mono">{{ activeJob.job_id }}</span>
+        <span class="job-status-badge" [ngClass]="getStatusBadgeClass(activeJob.status)">
+          {{ activeJob.status }}
+        </span>
+      </div>
+
+      <p class="job-prompt-text font-mono">{{ activeJob.prompt }}</p>
+
+      <!-- Animated Glowing Progress Bar -->
+      <div class="progress-trough">
+        <div
+          class="progress-fill"
+          [style.width.%]="activeJob.progress"
+          [class.generating]="activeJob.status === 'GENERATING'"
+        ></div>
+      </div>
+
+      <div class="progress-metrics-row">
+        <span>Current Phase: <strong class="phase-highlight">{{ activeJob.current_phase || 'DIFFUSION_INFERENCE' }}</strong></span>
+        <span class="pct-highlight">{{ activeJob.progress | number:'1.0-0' }}%</span>
+      </div>
+
+      <!-- Temporal Chunk Streaming Badges -->
+      @if (activeJob.status === 'GENERATING') {
+        <div class="temporal-streaming-box">
+          <span class="streaming-label font-mono">⚡ TEMPORAL CHUNK BUFFER:</span>
+          <div class="streaming-chips">
+            <span class="chunk-chip ready">Chunk 1 ✓</span>
+            <span class="chunk-chip generating">Chunk 2 ⚙ Active</span>
+            <span class="chunk-chip pending">Chunk 3 Pending</span>
+          </div>
+        </div>
+      }
+
+      @if (isActive(activeJob)) {
+        <div class="cancel-row">
+          <button
+            type="button"
+            class="cancel-job-btn"
+            (click)="cancel.emit(activeJob.job_id)"
+          >
+            ✕ Cancel Active Synthesis
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Job History Queue List -->
+  <div class="queue-history-section">
+    <span class="history-label">RECENT VIDEO EXECUTION QUEUE</span>
+
+    @if (jobs.length === 0) {
+      <div class="empty-queue-sub">
+        <span>Queue is idle. No pending video generation tasks.</span>
+      </div>
+    } @else {
+      <div class="jobs-scroll-rack">
+        @for (job of jobs; track job.job_id) {
+          <div class="job-row-card">
+            <div class="job-row-top">
+              <span class="job-id-mono font-mono">{{ job.job_id }}</span>
+              <span class="job-status-badge" [ngClass]="getStatusBadgeClass(job.status)">
+                {{ job.status }}
+              </span>
+            </div>
+
+            <div class="job-row-mid">
+              <span class="job-model font-mono">{{ job.model_id }}</span>
+              <span class="job-fps font-mono">{{ job.parameters['fps'] || 24 }} fps</span>
+              <span class="job-time font-mono">{{ job.duration_ms ? job.duration_ms + 'ms' : '0ms' }}</span>
+            </div>
+
+            @if (isActive(job)) {
+              <div class="job-row-actions">
+                <button
+                  type="button"
+                  class="cancel-mini-btn"
+                  (click)="cancel.emit(job.job_id)"
+                >
+                  Cancel Job
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -32,6 +32,14 @@ describe('BusinessPageComponent', () => {
     expect(compiled.textContent).toContain('Forecast only — not actual earnings');
   });
 
+  it('should toggle workspace perspective tabs cleanly', () => {
+    expect(component.activeTab()).toBe('all');
+    component.setWorkspaceTab('sectors');
+    expect(component.activeTab()).toBe('sectors');
+    component.setWorkspaceTab('financials');
+    expect(component.activeTab()).toBe('financials');
+  });
+
   it('should toggle modals cleanly', () => {
     expect(component.showNewProjModal()).toBe(false);
     component.showNewProjModal.set(true);

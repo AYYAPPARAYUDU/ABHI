@@ -1,0 +1,176 @@
+<div class="video-form-card">
+  <!-- Card Header -->
+  <div class="video-form-header">
+    <div class="header-title-group">
+      <span class="header-icon">🎥</span>
+      <div>
+        <h3 class="header-title">Local Video Generation Studio</h3>
+        <p class="header-subtitle">Autoregressive chunk streaming & temporal diffusion synthesis</p>
+      </div>
+    </div>
+    <span class="vram-badge">RTX 5050 Bounded</span>
+  </div>
+
+  <form (ngSubmit)="onSubmit()" class="video-form-body">
+    <!-- Prompt -->
+    <div class="form-group">
+      <div class="label-row">
+        <label class="field-label">MOTION & SCENE PROMPT</label>
+        <span class="char-count">{{ prompt.length }}/1000</span>
+      </div>
+      <textarea
+        class="neumorphic-textarea"
+        rows="3"
+        placeholder="e.g. Cinematic drone tracking shot of cybernetic citadel at sunset, volumetric fog, neon reflections, 8k resolution..."
+        [(ngModel)]="prompt"
+        name="prompt"
+        [disabled]="isGenerating"
+        required
+      ></textarea>
+    </div>
+
+    <!-- Negative Prompt -->
+    <div class="form-group">
+      <label class="field-label">NEGATIVE PROMPT (OPTIONAL)</label>
+      <input
+        type="text"
+        class="neumorphic-input"
+        placeholder="e.g. jitter, flickering, distortion, static, low quality"
+        [(ngModel)]="negativePrompt"
+        name="negativePrompt"
+        [disabled]="isGenerating"
+      />
+    </div>
+
+    <!-- Model Selection -->
+    <div class="form-group">
+      <label class="field-label">NEURAL VIDEO MODEL</label>
+      <select
+        class="neumorphic-select"
+        [(ngModel)]="selectedModelId"
+        name="modelId"
+        [disabled]="isGenerating"
+      >
+        @for (model of models; track model.model_id) {
+          <option [value]="model.model_id">
+            {{ model.name }} ({{ model.quantization }} | {{ model.base_vram_mb }}MB VRAM)
+            {{ model.is_candidate ? '[Candidate]' : '[Production]' }}
+          </option>
+        }
+      </select>
+    </div>
+
+    <!-- 2-Col Grid: Resolution & FPS -->
+    <div class="form-grid-2col">
+      <div class="form-group">
+        <label class="field-label">FRAME RESOLUTION</label>
+        <select
+          class="neumorphic-select"
+          [(ngModel)]="selectedResolution"
+          name="resolution"
+          [disabled]="isGenerating"
+        >
+          <option value="256x256">256 x 256 (Fast Preview)</option>
+          <option value="512x512">512 x 512 (Standard HD)</option>
+          <option value="768x432">768 x 432 (16:9 Cinematic)</option>
+          <option value="768x768">768 x 768 (Square High)</option>
+          <option value="1280x720">1280 x 720 (720p Widescreen)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">FRAME RATE (FPS)</label>
+        <select
+          class="neumorphic-select"
+          [(ngModel)]="fps"
+          name="fps"
+          [disabled]="isGenerating"
+        >
+          <option [ngValue]="12">12 FPS (Stylized Stop-motion)</option>
+          <option [ngValue]="16">16 FPS (Smooth Fast)</option>
+          <option [ngValue]="24">24 FPS (Cinematic 24p)</option>
+          <option [ngValue]="30">30 FPS (Standard 30p)</option>
+          <option [ngValue]="60">60 FPS (Ultra Smooth)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- 2-Col Grid: Duration & Sampling Steps -->
+    <div class="form-grid-2col">
+      <div class="form-group">
+        <div class="label-row">
+          <label class="field-label">DURATION (SECONDS)</label>
+          <span class="field-val-hint">{{ durationSeconds }}s</span>
+        </div>
+        <input
+          type="number"
+          class="neumorphic-input"
+          [(ngModel)]="durationSeconds"
+          name="durationSeconds"
+          min="1.0"
+          max="12.0"
+          step="0.5"
+          [disabled]="isGenerating"
+        />
+      </div>
+
+      <div class="form-group">
+        <div class="label-row">
+          <label class="field-label">SAMPLING STEPS</label>
+          <span class="field-val-hint">{{ steps }} steps</span>
+        </div>
+        <input
+          type="number"
+          class="neumorphic-input"
+          [(ngModel)]="steps"
+          name="steps"
+          min="1"
+          max="50"
+          [disabled]="isGenerating"
+        />
+      </div>
+    </div>
+
+    <!-- 2-Col Grid: Seed & Format -->
+    <div class="form-grid-2col">
+      <div class="form-group">
+        <label class="field-label">DETERMINISTIC SEED</label>
+        <input
+          type="number"
+          class="neumorphic-input"
+          placeholder="Random (Automatic)"
+          [(ngModel)]="seed"
+          name="seed"
+          [disabled]="isGenerating"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">OUTPUT CONTAINER</label>
+        <select
+          class="neumorphic-select"
+          [(ngModel)]="outputFormat"
+          name="outputFormat"
+          [disabled]="isGenerating"
+        >
+          <option value="MP4">MP4 (H.264 / mp4v)</option>
+          <option value="WEBM">WebM (VP9 High Profile)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button
+      type="submit"
+      class="generate-video-btn"
+      [disabled]="isGenerating || !prompt.trim()"
+    >
+      @if (isGenerating) {
+        <span class="btn-spinner"></span>
+        <span>Synthesizing Video Stream...</span>
+      } @else {
+        <span>▶ Generate Local Video</span>
+      }
+    </button>
+  </form>
+</div>

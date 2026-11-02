@@ -143,6 +143,11 @@
   flex-direction: column;
   gap: 5px;
   z-index: 50;
+  pointer-events: none;
+}
+
+.stations-dock-container > * {
+  pointer-events: auto;
 }
 
 .stations-dock-header-bar {

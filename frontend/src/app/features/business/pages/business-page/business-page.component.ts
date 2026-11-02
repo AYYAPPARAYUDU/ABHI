@@ -5,21 +5,28 @@ import { RouterModule } from '@angular/router';
 import { BusinessService } from '../../services/business.service';
 import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
 import { AnimeAnimationService } from '../../../../core/services/anime-animation.service';
-import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
-import { AnimeCounterDirective } from '../../../../shared/directives/anime-counter.directive';
-import {
-  BusinessApproval,
-  BusinessOpportunity,
-  BusinessProject,
-  BusinessSector,
-} from '../../models/business.model';
+import { SectorsDashboardComponent } from '../../components/sectors-dashboard/sectors-dashboard.component';
+import { FinancialLedgerComponent } from '../../components/financial-ledger/financial-ledger.component';
+import { ProjectInitiativesComponent } from '../../components/project-initiatives/project-initiatives.component';
+import { MarketDynamicsComponent } from '../../components/market-dynamics/market-dynamics.component';
+import { BusinessProject } from '../../models/business.model';
+
+export type BusinessWorkspaceTab = 'all' | 'sectors' | 'initiatives' | 'financials' | 'market';
 
 @Component({
   selector: 'app-business-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, AnimeInteractiveDirective, AnimeCounterDirective],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    SectorsDashboardComponent,
+    FinancialLedgerComponent,
+    ProjectInitiativesComponent,
+    MarketDynamicsComponent,
+  ],
   templateUrl: './business-page.component.html',
-  styleUrl: './business-page.component.css'
+  styleUrl: './business-page.component.css',
 })
 export class BusinessPageComponent implements OnInit, AfterViewInit {
   readonly businessService = inject(BusinessService);
@@ -27,6 +34,7 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
   private readonly threeScene = inject(ThreeSceneManagerService);
   private readonly hostEl = inject(ElementRef);
 
+  readonly activeTab = signal<BusinessWorkspaceTab>('all');
   readonly selectedSectorId = signal<string | null>(null);
   readonly isExecuting = signal<boolean>(false);
   readonly showNewProjModal = signal<boolean>(false);
@@ -57,37 +65,31 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
     this.animateCards();
   }
 
+  setWorkspaceTab(tab: BusinessWorkspaceTab, event?: MouseEvent): void {
+    if (event?.currentTarget) {
+      this.animService.tactileClick(event.currentTarget as HTMLElement);
+    }
+    this.activeTab.set(tab);
+    setTimeout(() => this.animateCards(), 50);
+  }
+
   private animateCards(): void {
     const root = this.hostEl.nativeElement;
     if (!root) return;
 
-    const metrics = root.querySelectorAll('.fin-metric-box, .sector-tab');
-    if (metrics.length > 0) {
+    const sections = root.querySelectorAll('app-sectors-dashboard, app-financial-ledger, app-project-initiatives, app-market-dynamics');
+    if (sections.length > 0) {
       this.animService.staggerEnter({
-        targets: metrics,
-        translateY: [15, 0],
+        targets: sections,
+        translateY: [16, 0],
         opacity: [0, 1],
-        duration: 550,
-        delay: 40
-      });
-    }
-
-    const cards = root.querySelectorAll('.project-card, .opp-card');
-    if (cards.length > 0) {
-      this.animService.staggerEnter({
-        targets: cards,
-        translateY: [20, 0],
-        opacity: [0, 1],
-        duration: 600,
-        delay: 60
+        duration: 500,
+        delay: 50,
       });
     }
   }
 
-  selectSector(sectorId: string, event?: MouseEvent): void {
-    if (event?.currentTarget) {
-      this.animService.tactileClick(event.currentTarget as HTMLElement);
-    }
+  onSectorSelected(sectorId: string): void {
     if (this.selectedSectorId() === sectorId) {
       this.selectedSectorId.set(null);
       this.businessService.fetchProjects().subscribe(() => this.animateCards());
@@ -104,6 +106,10 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
     return all.filter((p) => p.sector_id === sec);
   }
 
+  onProjectSelected(proj: BusinessProject): void {
+    this.businessService.selectedProject.set(proj);
+  }
+
   executeNextStep(projectId: string): void {
     this.isExecuting.set(true);
     this.businessService.executeNextStep(projectId).subscribe({
@@ -112,8 +118,8 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
     });
   }
 
-  resolveApproval(projectId: string, approvalId: string, approve: boolean): void {
-    this.businessService.resolveApproval(projectId, approvalId, approve).subscribe();
+  resolveApproval(event: { projectId: string; approvalId: string; approve: boolean }): void {
+    this.businessService.resolveApproval(event.projectId, event.approvalId, event.approve).subscribe();
   }
 
   createProject(): void {
@@ -149,19 +155,8 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
       });
   }
 
-  getAutonomyDescription(level: number): string {
-    switch (level) {
-      case 0: return 'Level 0 — Observe Only (No automated action)';
-      case 1: return 'Level 1 — Research & synthesis';
-      case 2: return 'Level 2 — Planning & design specification';
-      case 3: return 'Level 3 — Local build & verification';
-      case 4: return 'Level 4 — Execute approved internal work';
-      case 5: return 'Level 5 — External action requiring explicit approval';
-      default: return `Level ${level}`;
-    }
-  }
-
   onAvatarErr(e: Event): void {
-    (e.target as HTMLImageElement).src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72"><rect width="100%" height="100%" fill="%2306b6d4"/><text x="50%" y="55%" fill="%23000" font-size="24" font-family="sans-serif" font-weight="bold" dominant-baseline="middle" text-anchor="middle">AR</text></svg>';
+    (e.target as HTMLImageElement).src =
+      'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72"><rect width="100%" height="100%" fill="%2306b6d4"/><text x="50%" y="55%" fill="%23000" font-size="24" font-family="sans-serif" font-weight="bold" dominant-baseline="middle" text-anchor="middle">AR</text></svg>';
   }
 }

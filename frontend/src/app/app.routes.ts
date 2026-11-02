@@ -47,6 +47,11 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'sectors',
+    redirectTo: 'business',
+    pathMatch: 'full'
+  },
+  {
     path: 'ask',
     redirectTo: 'home',
     pathMatch: 'full'

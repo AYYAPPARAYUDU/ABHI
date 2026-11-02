@@ -26,13 +26,13 @@ describe('WorkingEnvironmentComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render 11 working environments in the navigation ribbon', () => {
+  it('should render 7 working environments in the navigation ribbon', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const track = compiled.querySelector('.environments-track.bar-nav-ribbon');
     expect(track).toBeTruthy();
-    expect(component.environments.length).toBe(11);
+    expect(component.environments.length).toBe(7);
     const buttons = compiled.querySelectorAll('.env-btn');
-    expect(buttons.length).toBe(11);
+    expect(buttons.length).toBe(7);
   });
 
   it('should correctly identify active route for /home and secondary paths', () => {

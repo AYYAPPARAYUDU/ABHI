@@ -1,0 +1,208 @@
+.financial-ledger-card {
+  background: var(--abhi-surface-raised, #0e1828);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+  border-radius: var(--abhi-radius-control, 18px);
+  box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.card-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.panel-icon {
+  font-size: 22px;
+  filter: drop-shadow(0 0 8px rgba(56, 217, 255, 0.4));
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--abhi-text-primary, #eef5ff);
+}
+
+.section-sublabel {
+  font-size: 12px;
+  color: var(--abhi-text-secondary, #a7b7cc);
+  margin-top: 2px;
+  max-width: 650px;
+}
+
+.provenance-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.provenance-capsule {
+  font-size: 10px;
+  font-family: monospace;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(255, 202, 112, 0.12);
+  color: var(--abhi-amber, #ffca70);
+  border: 1px solid rgba(255, 202, 112, 0.28);
+  letter-spacing: 0.04em;
+}
+
+.connection-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--abhi-text-muted, #8193ac);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  letter-spacing: 0.04em;
+}
+
+.connection-status-pill.connected {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.status-indicator-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+}
+
+.connection-status-pill.connected .status-indicator-dot {
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.fin-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.fin-metric-box {
+  background: var(--abhi-surface-inset, #080e18);
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.fin-metric-box:hover {
+  transform: translateY(-2px);
+  border-color: var(--abhi-border-active, rgba(56, 217, 255, 0.42));
+}
+
+.metric-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.fin-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--abhi-text-secondary, #a7b7cc);
+}
+
+.badge-mini {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+.badge-mini.success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badge-mini.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-mini.danger {
+  background: rgba(244, 63, 94, 0.15);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+}
+
+.badge-mini.info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.badge-mini.purple {
+  background: rgba(168, 85, 247, 0.15);
+  color: #a855f7;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.fin-val {
+  font-size: 22px;
+  font-weight: 800;
+  font-family: monospace;
+  letter-spacing: -0.02em;
+}
+
+.text-cyan {
+  color: var(--abhi-cyan, #38d9ff);
+  text-shadow: 0 0 16px rgba(56, 217, 255, 0.25);
+}
+
+.text-amber {
+  color: #fb923c;
+}
+
+.text-green {
+  color: #10b981;
+  text-shadow: 0 0 16px rgba(16, 185, 129, 0.25);
+}
+
+.text-rose {
+  color: #f43f5e;
+  text-shadow: 0 0 16px rgba(244, 63, 94, 0.25);
+}
+
+.text-blue {
+  color: #60a5fa;
+}
+
+.text-purple {
+  color: #c084fc;
+}
+
+.fin-sub {
+  font-size: 11px;
+  color: var(--abhi-text-muted, #8193ac);
+}

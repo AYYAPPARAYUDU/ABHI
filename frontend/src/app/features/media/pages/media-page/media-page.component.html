@@ -18,6 +18,11 @@
     <!-- Telemetry & Status Badges -->
     <div class="media-telemetry-row">
       <div class="media-metric-well">
+        <span class="metric-label">3D SPATIAL CORE</span>
+        <span class="metric-value emerald-val">SYNCHRONIZED</span>
+      </div>
+
+      <div class="media-metric-well">
         <span class="metric-label">VRAM HEADROOM</span>
         <span class="metric-value cyan-val">
           <span [appAnimeCounter]="mediaService.vramFreeMB()">{{ mediaService.vramFreeMB() }}</span> MB Free
@@ -49,11 +54,21 @@
       type="button"
       appAnimeInteractive
       role="tab"
+      (click)="activeTab.set('audio')"
+      [class.active]="activeTab() === 'audio'"
+      class="media-tab-btn"
+    >
+      <span>🎵</span> Audio & 3D Spectrum
+    </button>
+    <button
+      type="button"
+      appAnimeInteractive
+      role="tab"
       (click)="activeTab.set('provenance')"
       [class.active]="activeTab() === 'provenance'"
       class="media-tab-btn"
     >
-      <span>🛡️</span> Provenance & Replay
+      <span>🛡️</span> C2PA Provenance & Replay
     </button>
     <button
       type="button"
@@ -69,11 +84,11 @@
       type="button"
       appAnimeInteractive
       role="tab"
-      (click)="activeTab.set('composer')"
-      [class.active]="activeTab() === 'composer'"
+      (click)="activeTab.set('video')"
+      [class.active]="activeTab() === 'video'"
       class="media-tab-btn"
     >
-      <span>⚡</span> Workflow Composer
+      <span>🎥</span> Video Studio
     </button>
     <button
       type="button"
@@ -89,11 +104,11 @@
       type="button"
       appAnimeInteractive
       role="tab"
-      (click)="activeTab.set('video')"
-      [class.active]="activeTab() === 'video'"
+      (click)="activeTab.set('composer')"
+      [class.active]="activeTab() === 'composer'"
       class="media-tab-btn"
     >
-      <span>🎥</span> Video Studio
+      <span>⚡</span> Workflow Composer
     </button>
     <button
       type="button"
@@ -112,6 +127,13 @@
     <div class="media-error-alert" role="alert">
       <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage() }}</span>
       <button type="button" (click)="clearErrors()" class="error-dismiss-btn">✕</button>
+    </div>
+  }
+
+  <!-- AUDIO & 3D SPECTRUM TAB CONTENT -->
+  @if (activeTab() === 'audio') {
+    <div class="tab-pane-container">
+      <app-media-audio-spectrum></app-media-audio-spectrum>
     </div>
   }
 

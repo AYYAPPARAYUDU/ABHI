@@ -1,0 +1,197 @@
+<section class="initiatives-container">
+  <!-- Projects Master List -->
+  <div class="projects-master-card">
+    <div class="card-title-bar">
+      <div class="card-title-group">
+        <span class="panel-icon">📁</span>
+        <div>
+          <h2 class="panel-title m-0">PROJECT INITIATIVES</h2>
+          <div class="section-sublabel">Autonomously Tracked & Persisted Milestones</div>
+        </div>
+      </div>
+      <div class="header-action-group">
+        <span class="side-heading-capsule">{{ projects().length }} ACTIVE</span>
+        <button class="btn-create-initiative" (click)="onOpenNewProject($event)">
+          <span>+ New Project</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="projects-scroll-list">
+      @if (projects().length === 0) {
+        <div class="empty-projects-state">
+          <span>No projects found for the selected sector.</span>
+        </div>
+      }
+      @for (proj of projects(); track proj.id) {
+        <div
+          class="project-item-card"
+          [class.selected]="selectedProject()?.id === proj.id"
+          appAnimeInteractive
+          [appAnimeType]="'card'"
+          (click)="onSelectProject(proj, $event)"
+          [attr.tabindex]="0"
+          role="button"
+        >
+          <div class="proj-card-top">
+            <span class="proj-sector-badge">{{ proj.sector_id }}</span>
+            <span class="status-pill" [attr.data-status]="proj.status">{{ proj.status }}</span>
+          </div>
+
+          <h3 class="proj-name">{{ proj.name }}</h3>
+          <p class="proj-objective">{{ proj.objective }}</p>
+
+          <div class="proj-meta-row">
+            <span class="autonomy-tag">LEVEL {{ proj.autonomy_level }}</span>
+            <span class="budget-tag">
+              Spent: \${{ proj.spent_usd.toFixed(2) }} / \${{ proj.budget_limit_usd.toFixed(2) }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Project Detail Inspector -->
+  <div class="project-detail-card">
+    @if (selectedProject(); as proj) {
+      <div class="detail-content">
+        <div class="detail-header-bar">
+          <div class="detail-title-block">
+            <span class="detail-sec-pill">{{ proj.sector_id }}</span>
+            <h2 class="detail-title">{{ proj.name }}</h2>
+            <p class="detail-desc">{{ proj.objective }}</p>
+          </div>
+          <div class="detail-controls">
+            <span class="status-pill large" [attr.data-status]="proj.status">{{ proj.status }}</span>
+            <button
+              class="execute-step-btn"
+              [disabled]="isExecuting()"
+              (click)="onExecuteStep(proj.id, $event)"
+            >
+              @if (isExecuting()) {
+                <span class="spinner-dot"></span>
+                <span>Executing Step...</span>
+              } @else {
+                <span>▶ Execute Next Step</span>
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- Governance & Budget Gauge -->
+        <div class="governance-card">
+          <div class="gov-col">
+            <span class="gov-label">AUTONOMY BOUNDARY</span>
+            <span class="gov-val highlight">LEVEL {{ proj.autonomy_level }}</span>
+            <span class="gov-desc">{{ getAutonomyDescription(proj.autonomy_level) }}</span>
+          </div>
+
+          <div class="gov-col">
+            <span class="gov-label">AUTOPILOT PROFILE</span>
+            <span class="gov-val">{{ proj.autopilot_mode }}</span>
+            <span class="gov-desc">Strict stop-conditions on budget and missing capabilities</span>
+          </div>
+
+          <div class="gov-col">
+            <span class="gov-label">BUDGET BOUNDARY</span>
+            <span class="gov-val">$ {{ proj.spent_usd.toFixed(2) }} / $ {{ proj.budget_limit_usd.toFixed(2) }}</span>
+            <div class="budget-bar">
+              <div
+                class="budget-fill"
+                [style.width.%]="proj.budget_limit_usd > 0 ? (proj.spent_usd / proj.budget_limit_usd) * 100 : 0"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pending Approvals (Level 5 Policy Gates) -->
+        @if (proj.approvals && proj.approvals.length > 0) {
+          <div class="approvals-section">
+            <div class="section-badge-bar">
+              <span class="section-label">POLICY APPROVAL REQUESTS (HUMAN-IN-THE-LOOP)</span>
+            </div>
+            @for (app of proj.approvals; track app.id) {
+              <div class="approval-card" [class.pending]="app.status === 'PENDING'">
+                <div class="app-info">
+                  <span class="app-desc">{{ app.action_description }}</span>
+                  <span class="app-tier">{{ app.risk_tier }} · Required: {{ app.required_permission }}</span>
+                </div>
+                @if (app.status === 'PENDING') {
+                  <div class="app-actions">
+                    <button class="app-btn approve" (click)="onResolveApproval(proj.id, app.id, true)">Authorize</button>
+                    <button class="app-btn reject" (click)="onResolveApproval(proj.id, app.id, false)">Reject</button>
+                  </div>
+                } @else {
+                  <span class="app-resolved-badge" [attr.data-status]="app.status">{{ app.status }}</span>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Milestones & Deliverables -->
+        <div class="milestones-section">
+          <div class="section-badge-bar">
+            <span class="section-label">MILESTONES & VERIFIED DELIVERABLES</span>
+          </div>
+          <div class="milestones-list">
+            @for (m of proj.milestones; track m.id) {
+              <div class="milestone-item" [class.done]="m.status === 'COMPLETED'">
+                <div class="ms-marker">
+                  @if (m.status === 'COMPLETED') {
+                    <span>✓</span>
+                  } @else if (m.status === 'IN_PROGRESS') {
+                    <span>▶</span>
+                  } @else {
+                    <span>○</span>
+                  }
+                </div>
+                <div class="ms-body">
+                  <div class="ms-top">
+                    <span class="ms-title">{{ m.title }}</span>
+                    <span class="ms-status-badge" [attr.data-status]="m.status">{{ m.status }}</span>
+                  </div>
+                  <p class="ms-desc">{{ m.description }}</p>
+                  @if (m.deliverable_ref) {
+                    <div class="ms-deliverable">
+                      <span class="deliv-label">Deliverable:</span>
+                      <span class="deliv-ref">{{ m.deliverable_ref }}</span>
+                      @if (m.verified) {
+                        <span class="verified-tag">PHYSICALLY VERIFIED</span>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Evidence Ledger -->
+        @if (proj.evidences && proj.evidences.length > 0) {
+          <div class="evidences-section">
+            <div class="section-badge-bar">
+              <span class="section-label">EVIDENCE LEDGER & PROVENANCE</span>
+            </div>
+            <div class="evidences-list">
+              @for (ev of proj.evidences; track ev.id) {
+                <div class="evidence-item">
+                  <span class="ev-tag" [attr.data-prov]="ev.provenance_type">{{ ev.provenance_type }}</span>
+                  <span class="ev-claim">{{ ev.claim }}</span>
+                  <span class="ev-source">Source: {{ ev.source }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="detail-empty">
+        <span class="empty-icon">📁</span>
+        <h3 class="empty-title">No Initiative Selected</h3>
+        <p class="empty-sub">Select a project from the left or launch a new initiative to inspect milestones and governance.</p>
+      </div>
+    }
+  </div>
+</section>

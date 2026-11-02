@@ -258,10 +258,11 @@ class AdbController:
     async def send_keyevent(self, key: str | int, serial: Optional[str] = None) -> bool:
         """Dispatch hardware keyevent (home, back, power, volume, etc.)."""
         if isinstance(key, str):
-            code = self.KEY_MAP.get(key.lower().strip())
+            clean_key = key.lower().replace("keycode_", "").strip()
+            code = self.KEY_MAP.get(clean_key)
             if code is None:
                 try:
-                    code = int(key)
+                    code = int(clean_key)
                 except ValueError:
                     logger.warning(f"Unknown key name: {key}")
                     return False

@@ -1,0 +1,59 @@
+<section class="sectors-dashboard-card">
+  <div class="card-title-bar">
+    <div class="card-title-group">
+      <span class="panel-icon">🌐</span>
+      <div>
+        <h2 class="panel-title m-0">AUTONOMOUS BUSINESS SECTORS</h2>
+        <div class="section-sublabel">
+          6 Spatial Domain Clusters · Sandboxed Local Autonomy Boundaries
+        </div>
+      </div>
+    </div>
+    <div class="stats-capsules">
+      <span class="stat-capsule">
+        <strong class="capsule-val">{{ sectors().length }}</strong> SECTORS
+      </span>
+      <span class="stat-capsule">
+        <strong class="capsule-val">{{ totalProjects }}</strong> ACTIVE PROJECTS
+      </span>
+      <span class="stat-capsule highlight">
+        LEVEL 0–5 GOVERNED
+      </span>
+    </div>
+  </div>
+
+  <div class="sectors-grid">
+    @for (sec of sectors(); track sec.id) {
+      <div
+        class="sector-card"
+        [class.selected]="selectedSectorId() === sec.id"
+        appAnimeInteractive
+        [appAnimeType]="'card'"
+        (click)="onSelectSector(sec.id, $event)"
+        [attr.tabindex]="0"
+        role="button"
+      >
+        <div class="sector-card-top">
+          <div class="sector-identity">
+            <span class="sector-color-gem" [style.background-color]="sec.color" [style.box-shadow]="'0 0 10px ' + sec.color"></span>
+            <span class="sector-name">{{ sec.name }}</span>
+          </div>
+          <span class="sector-status-pill" [class.has-projects]="sec.active_projects_count > 0">
+            {{ sec.active_projects_count }} {{ sec.active_projects_count === 1 ? 'Project' : 'Projects' }}
+          </span>
+        </div>
+
+        <p class="sector-desc">{{ sec.description }}</p>
+
+        <div class="sector-card-bottom">
+          <span class="spatial-coord">
+            3D: [{{ sec.position_3d.x.toFixed(1) }}, {{ sec.position_3d.y.toFixed(1) }}, {{ sec.position_3d.z.toFixed(1) }}]
+          </span>
+          <span class="sector-filter-hint">
+            {{ selectedSectorId() === sec.id ? 'Active Filter ✓' : 'Filter by Sector →' }}
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+</section>

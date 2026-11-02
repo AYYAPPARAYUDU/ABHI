@@ -349,6 +349,8 @@ export class ThreeSceneManagerService {
   private workspaceRadarDishMat: THREE.MeshStandardMaterial | null = null;
   private workspaceHemiLight: THREE.HemisphereLight | null = null;
   private workspaceSunLight: THREE.DirectionalLight | null = null;
+  private workspaceFillLight: THREE.DirectionalLight | null = null;
+  private workspaceSpecularSunLight: THREE.DirectionalLight | null = null;
   private workspaceBotChassisMaterials: {
     torsoMat: THREE.MeshStandardMaterial;
     headMat: THREE.MeshStandardMaterial;
@@ -1352,6 +1354,54 @@ export class ThreeSceneManagerService {
     if (!this.scene) return;
     this.sectorGroup = new THREE.Group();
     this.sectorGroup.visible = false;
+
+    const sectorDefs = [
+      { id: 'automation_services', name: 'Automation Services', color: 0x06b6d4, pos: new THREE.Vector3(-8.0, 2.0, -4.0) },
+      { id: 'digital_products', name: 'Digital Products', color: 0x3b82f6, pos: new THREE.Vector3(-4.0, -1.5, 4.0) },
+      { id: 'media_studio', name: 'Content & Media Studio', color: 0xa855f7, pos: new THREE.Vector3(0.0, 4.0, -6.0) },
+      { id: 'software_tools', name: 'Software Tools', color: 0x10b981, pos: new THREE.Vector3(4.0, -2.0, 3.0) },
+      { id: 'research_products', name: 'Research & Data', color: 0xf59e0b, pos: new THREE.Vector3(7.0, 3.0, -3.0) },
+      { id: 'workflow_solutions', name: 'Workflow Solutions', color: 0xec4899, pos: new THREE.Vector3(2.0, -4.0, 6.0) },
+    ];
+
+    sectorDefs.forEach((def) => {
+      const nodeGroup = new THREE.Group();
+      nodeGroup.position.copy(def.pos);
+
+      const coreGeo = new THREE.IcosahedronGeometry(0.85, 1);
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: def.color,
+        emissive: def.color,
+        emissiveIntensity: 0.5,
+        roughness: 0.25,
+        metalness: 0.8,
+      });
+      const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+      nodeGroup.add(coreMesh);
+
+      const ringGeo = new THREE.TorusGeometry(1.4, 0.04, 16, 64);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: def.color,
+        transparent: true,
+        opacity: 0.7,
+        blending: THREE.AdditiveBlending,
+      });
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+      ringMesh.rotation.x = Math.PI * 0.35;
+      nodeGroup.add(ringMesh);
+
+      const points = [new THREE.Vector3(0, 0, 0), def.pos];
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+      const lineMat = new THREE.LineBasicMaterial({
+        color: def.color,
+        transparent: true,
+        opacity: 0.25,
+      });
+      const line = new THREE.Line(lineGeo, lineMat);
+      this.sectorGroup!.add(line);
+
+      this.sectorGroup!.add(nodeGroup);
+    });
     this.scene.add(this.sectorGroup);
   }
 
@@ -1427,18 +1477,29 @@ export class ThreeSceneManagerService {
     this.nexusAcousticRings = [];
     this.workspaceBotChassisMaterials = [];
 
-    // 1. Dedicated Colony Planetary Sun & Ambient Fill (Crisp, vibrant sci-fi daylight from Image 1)
-    const sunLight = new THREE.DirectionalLight(0xfff8ed, 2.8);
-    sunLight.position.set(16, 28, 20);
+    // 1. Dedicated 4-Point Colony Studio Lighting Rig (Balanced shining metallic luster across all 37 tiles & stations)
+    // Key Light 1 (Overhead Specular Sun): Positioned at (0, 24, -22) pointing towards center.
+    // Bounces direct specular sheen forward across horizontal tiles (0,1,0) into camera at (0, 7.5, 21.5)!
+    const specSunLight = new THREE.DirectionalLight(0xfffbf0, 3.2);
+    specSunLight.position.set(0, 24, -22);
+    this.workspaceGroup.add(specSunLight);
+    this.workspaceSpecularSunLight = specSunLight;
+
+    // Key Light 2 (Planetary Sunlight): Warm angled sun from upper right (16, 26, 16)
+    const sunLight = new THREE.DirectionalLight(0xfffaed, 2.4);
+    sunLight.position.set(16, 26, 16);
     this.workspaceGroup.add(sunLight);
     this.workspaceSunLight = sunLight;
 
-    const fillLight = new THREE.DirectionalLight(0x818cf8, 1.2);
-    fillLight.position.set(-16, 14, -12);
+    // Key Light 3 (Cool Sci-Fi Fill): Cyan fill from upper left (-16, 22, -14)
+    const fillLight = new THREE.DirectionalLight(0x38bdf8, 2.2);
+    fillLight.position.set(-16, 22, -14);
     this.workspaceGroup.add(fillLight);
+    this.workspaceFillLight = fillLight;
     this.themeColorLights.push({ light: fillLight, isSecondary: true });
 
-    const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x0c1e3d, 1.6);
+    // Key Light 4 (Atmospheric Hemisphere Light): Bounces ambient cyan glow from sky into terrain
+    const hemiLight = new THREE.HemisphereLight(0x00f0ff, 0x0c1e3d, 1.6);
     this.workspaceGroup.add(hemiLight);
     this.workspaceHemiLight = hemiLight;
 
@@ -1457,14 +1518,16 @@ export class ThreeSceneManagerService {
 
     const baseHexGeo = new THREE.CylinderGeometry(hexRadius * 0.96, hexRadius, hexHeight, 6);
     this.workspaceTileMat = new THREE.MeshStandardMaterial({
-      color: 0x0f233f,
+      color: 0x11213b,
       roughness: 0.28,
-      metalness: 0.85,
+      metalness: 0.58,
+      emissive: 0x06111f,
+      emissiveIntensity: 0.12,
     });
     this.workspaceHexEdgeMat = new THREE.LineBasicMaterial({
       color: 0x00f0ff,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.65,
       blending: THREE.AdditiveBlending,
     });
     const standardTileMat = this.workspaceTileMat;
@@ -1739,12 +1802,14 @@ export class ThreeSceneManagerService {
       );
       stationGroup.add(conduitLine);
 
-      // Station Hexagonal Platform Pad
+      // Station Hexagonal Platform Pad (Tuned roughness: 0.20, metalness: 0.88 with subtle emissive reflection)
       const padGeo = new THREE.CylinderGeometry(2.2, 2.5, 0.4, 6);
       const padMat = new THREE.MeshStandardMaterial({
-        color: 0x071b36,
-        roughness: 0.25,
-        metalness: 0.9,
+        color: 0x081e3a,
+        roughness: 0.20,
+        metalness: 0.88,
+        emissive: agent.hexColor,
+        emissiveIntensity: 0.16,
       });
       const pad = new THREE.Mesh(padGeo, padMat);
       stationGroup.add(pad);
@@ -1761,14 +1826,41 @@ export class ThreeSceneManagerService {
       );
       stationGroup.add(padBorder);
 
-      // Local Ambient Platform Light
-      const pLight = new THREE.PointLight(agent.hexColor, 1.8, 5.5, 1.2);
-      pLight.position.set(0, 1.2, 0);
+      // Glowing Inner Neon Rings on Station Platform (High-tech concentric rings)
+      const innerRingGeo = new THREE.RingGeometry(1.35, 1.48, 32);
+      const innerRingMat = new THREE.MeshBasicMaterial({
+        color: agent.hexColor,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+      });
+      const innerRing = new THREE.Mesh(innerRingGeo, innerRingMat);
+      innerRing.rotation.x = -Math.PI * 0.5;
+      innerRing.position.y = 0.21;
+      stationGroup.add(innerRing);
+
+      const coreRingGeo = new THREE.RingGeometry(0.72, 0.80, 32);
+      const coreRingMat = new THREE.MeshBasicMaterial({
+        color: agent.hexColor,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.65,
+        blending: THREE.AdditiveBlending,
+      });
+      const coreRing = new THREE.Mesh(coreRingGeo, coreRingMat);
+      coreRing.rotation.x = -Math.PI * 0.5;
+      coreRing.position.y = 0.21;
+      stationGroup.add(coreRing);
+
+      // Dedicated Downward Illumination Light (Bright point light with decay 1.2, intensity 3.5)
+      const pLight = new THREE.PointLight(agent.hexColor, 3.5, 7.0, 1.2);
+      pLight.position.set(0, 1.4, 0);
       stationGroup.add(pLight);
 
-      // High-intensity overhead spotlight pointing down on specialist station
-      const overheadLight = new THREE.SpotLight(0xffffff, 3.0, 9.0, Math.PI * 0.4, 0.35, 1.0);
-      overheadLight.position.set(0, 2.4, 0);
+      // Dedicated Overhead Downward Spotlight casting specular cone on station & bot
+      const overheadLight = new THREE.SpotLight(0xffffff, 3.5, 10.0, Math.PI * 0.38, 0.35, 1.2);
+      overheadLight.position.set(0, 2.8, 0);
       const overheadTarget = new THREE.Object3D();
       overheadTarget.position.set(0, 0, 0);
       stationGroup.add(overheadTarget);
@@ -1970,9 +2062,9 @@ export class ThreeSceneManagerService {
       const torsoMat = new THREE.MeshStandardMaterial({
         color: 0x1e293b,
         emissive: agent.hexColor,
-        emissiveIntensity: 0.25,
-        metalness: 0.85,
-        roughness: 0.25,
+        emissiveIntensity: 0.28,
+        metalness: 0.88,
+        roughness: 0.20,
       });
       const torso = new THREE.Mesh(torsoGeo, torsoMat);
       botGroup.add(torso);
@@ -1982,9 +2074,9 @@ export class ThreeSceneManagerService {
       const headMat = new THREE.MeshStandardMaterial({
         color: 0x0f172a,
         emissive: agent.hexColor,
-        emissiveIntensity: 0.25,
-        metalness: 0.9,
-        roughness: 0.2,
+        emissiveIntensity: 0.28,
+        metalness: 0.92,
+        roughness: 0.20,
       });
       const head = new THREE.Mesh(headGeo, headMat);
       head.position.y = 0.38;
@@ -2524,11 +2616,11 @@ export class ThreeSceneManagerService {
       // Rotate the 3D colony around Y so this station rotates directly to the FRONT of the user's screen!
       // In Three.js, front of screen is +Z (angle = Math.PI / 2)
       this.targetRotation.y = stationAngle - (Math.PI / 2);
-      this.targetRotation.x = 0.22; // Elevated angle looking directly into the workstation
+      this.targetRotation.x = 0.08; // Gentle eye-level perspective looking directly into the workstation
 
       // Smoothly zoom camera to frame the front station and animated bot avatar perfectly centered
-      this.targetCameraPos.set(0, -0.6, 15.6);
-      this.targetCameraLookAt.set(0, -2.6, 8.8);
+      this.targetCameraPos.set(0, 0.2, 17.2);
+      this.targetCameraLookAt.set(0, -3.4, 9.0);
     } else {
       // MAIN_AGENT / DEFAULT mode:
       // Rotate the scene so this agent swings directly to the FRONT-CENTER of the main screen!
@@ -2563,7 +2655,7 @@ export class ThreeSceneManagerService {
 
     // Reset rotation smoothly back to default panoramic overview
     this.targetRotation.y = 0;
-    this.targetRotation.x = this.currentMode === 'WORKSPACE' ? 0.30 : 0.15;
+    this.targetRotation.x = this.currentMode === 'WORKSPACE' ? 0 : 0.15;
 
     this.applyResponsiveCamera();
     this.updateBillboardLabelVisibility();
@@ -3152,7 +3244,7 @@ export class ThreeSceneManagerService {
   getBaseCameraForMode(mode: SpatialEnvironmentMode): { pos: THREE.Vector3; lookAt: THREE.Vector3 } {
     if (mode === 'WORKSPACE') {
       return {
-        pos: new THREE.Vector3(0, 8.2, 19.5),
+        pos: new THREE.Vector3(0, 7.5, 21.5),
         lookAt: new THREE.Vector3(0, -3.8, 0),
       };
     } else if (mode === 'AUTOMATION') {
@@ -3225,6 +3317,10 @@ export class ThreeSceneManagerService {
   setMode(mode: SpatialEnvironmentMode): void {
     this.currentMode = mode;
     this.selectedAgent.set(null);
+    if (mode === 'WORKSPACE') {
+      this.targetRotation.y = 0;
+      this.targetRotation.x = 0;
+    }
     const isHome = mode === 'MAIN_AGENT' || mode === 'DEFAULT';
 
     // Strictly isolate Main Agent orbital agents & beams to /home only
@@ -3355,8 +3451,22 @@ export class ThreeSceneManagerService {
       if (this.workspaceTileMat) {
         if (isLight) {
           this.workspaceTileMat.color.set(0xdbeafe);
+          this.workspaceTileMat.roughness = 0.22;
+          this.workspaceTileMat.metalness = 0.75;
+          this.workspaceTileMat.emissive.set(0x000000);
+          this.workspaceTileMat.emissiveIntensity = 0.0;
         } else {
-          this.workspaceTileMat.color.set(colors.surfaceInset || colors.backgroundSecondary || 0x0f233f);
+          let darkFloorColor = 0x11213b;
+          if (activeThemeId === 'midnight-amethyst') {
+            darkFloorColor = 0x1d1430;
+          } else if (activeThemeId === 'emerald-matrix') {
+            darkFloorColor = 0x0d261e;
+          }
+          this.workspaceTileMat.color.set(darkFloorColor);
+          this.workspaceTileMat.roughness = 0.28;
+          this.workspaceTileMat.metalness = 0.58;
+          this.workspaceTileMat.emissive.set(colors.accentPrimary);
+          this.workspaceTileMat.emissiveIntensity = 0.08;
         }
       }
       if (this.workspaceCommandDomeMat) {
@@ -3365,8 +3475,14 @@ export class ThreeSceneManagerService {
       if (this.workspaceRadarDishMat) {
         this.workspaceRadarDishMat.color.set(colors.accentPrimary);
       }
+      if (this.workspaceSpecularSunLight) {
+        this.workspaceSpecularSunLight.intensity = isLight ? 2.6 : 3.2;
+      }
       if (this.workspaceSunLight) {
-        this.workspaceSunLight.intensity = isLight ? 2.4 : 2.8;
+        this.workspaceSunLight.intensity = isLight ? 2.2 : 2.4;
+      }
+      if (this.workspaceFillLight) {
+        this.workspaceFillLight.intensity = isLight ? 1.8 : 2.2;
       }
       if (this.workspaceHemiLight) {
         this.workspaceHemiLight.intensity = isLight ? 2.0 : 1.6;

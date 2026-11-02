@@ -19,6 +19,7 @@ import { WorkflowSimulationPanelComponent } from '../../components/workflow-simu
 import { WorkflowManifestViewerComponent } from '../../components/workflow-manifest-viewer/workflow-manifest-viewer.component';
 import { CreativePipelineStudioComponent } from '../../components/creative-pipeline-studio/creative-pipeline-studio.component';
 import { MediaProvenanceInspectorComponent } from '../../components/media-provenance-inspector/media-provenance-inspector.component';
+import { MediaAudioSpectrumComponent } from '../../components/media-audio-spectrum/media-audio-spectrum.component';
 import {
   ImageGenerationRequestDTO,
   VideoGenerationRequestDTO,
@@ -51,6 +52,7 @@ import { AnimeCounterDirective } from '../../../../shared/directives/anime-count
     WorkflowSimulationPanelComponent,
     WorkflowManifestViewerComponent,
     MediaProvenanceInspectorComponent,
+    MediaAudioSpectrumComponent,
     AnimeInteractiveDirective,
     AnimeCounterDirective,
   ],
@@ -62,7 +64,7 @@ export class MediaPageComponent implements OnInit {
 
   readonly mediaService = inject(MediaService);
   private readonly threeScene = inject(ThreeSceneManagerService);
-  activeTab = signal<'creative' | 'provenance' | 'composer' | 'edit' | 'video' | 'image'>('creative');
+  activeTab = signal<'provenance' | 'audio' | 'creative' | 'video' | 'edit' | 'composer' | 'image'>('provenance');
 
   selectedSourceArtifact = signal<MediaArtifactDTO | null>(null);
   currentMaskBase64 = signal<string | null>(null);

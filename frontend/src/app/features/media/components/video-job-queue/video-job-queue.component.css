@@ -1,0 +1,306 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.video-queue-card {
+  background: var(--abhi-surface-raised, #0e1828);
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+  border-radius: var(--abhi-radius-control, 18px);
+  box-shadow: var(--abhi-raised-shadow, 9px 9px 22px rgba(0, 0, 0, 0.43));
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  backdrop-filter: blur(14px);
+}
+
+.queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+  padding-bottom: 14px;
+}
+
+.header-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-icon {
+  font-size: 18px;
+}
+
+.header-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--abhi-text-primary, #eef5ff);
+}
+
+.header-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 10px;
+  color: var(--abhi-text-muted, #8193ac);
+}
+
+.count-badge {
+  font-size: 10px;
+  font-family: monospace;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(151, 185, 230, 0.1);
+  color: var(--abhi-text-secondary, #a7b7cc);
+}
+
+/* Active Job */
+.active-job-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--abhi-surface-inset, #080e18);
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.2));
+  border-radius: 14px;
+  box-shadow: var(--abhi-inset-shadow, inset 4px 4px 10px rgba(0, 0, 0, 0.4));
+}
+
+.active-job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.job-id-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--abhi-cyan, #38d9ff);
+}
+
+.job-status-badge {
+  font-size: 9px;
+  font-family: monospace;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.badge-generating {
+  background: rgba(56, 217, 255, 0.15);
+  border: 1px solid rgba(56, 217, 255, 0.35);
+  color: var(--abhi-cyan, #38d9ff);
+  animation: pulse 1.8s infinite;
+}
+
+.badge-completed {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.badge-failed {
+  background: rgba(255, 91, 113, 0.15);
+  border: 1px solid rgba(255, 91, 113, 0.35);
+  color: #ff5b71;
+}
+
+.badge-queued {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.job-prompt-text {
+  margin: 0;
+  font-size: 11px;
+  color: var(--abhi-text-secondary, #a7b7cc);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.progress-trough {
+  width: 100%;
+  height: 8px;
+  background: #040810;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(151, 185, 230, 0.1);
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--abhi-cyan, #38d9ff);
+  box-shadow: 0 0 10px var(--abhi-cyan, #38d9ff);
+  transition: width 200ms ease;
+}
+
+.progress-fill.generating {
+  background: linear-gradient(90deg, #38d9ff, #397bff, #c084fc);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.progress-metrics-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--abhi-text-muted, #8193ac);
+}
+
+.phase-highlight {
+  color: var(--abhi-text-primary, #eef5ff);
+}
+
+.pct-highlight {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--abhi-cyan, #38d9ff);
+}
+
+.temporal-streaming-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--abhi-surface-raised, #0e1828);
+  border-radius: 8px;
+  border: 1px solid rgba(56, 217, 255, 0.2);
+}
+
+.streaming-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--abhi-cyan, #38d9ff);
+}
+
+.streaming-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chunk-chip {
+  font-size: 9px;
+  font-family: monospace;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.chunk-chip.ready {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.chunk-chip.generating {
+  background: rgba(56, 217, 255, 0.15);
+  color: var(--abhi-cyan, #38d9ff);
+  animation: pulse 1.2s infinite;
+}
+
+.chunk-chip.pending {
+  background: rgba(151, 185, 230, 0.08);
+  color: var(--abhi-text-muted, #8193ac);
+}
+
+.cancel-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cancel-job-btn {
+  padding: 4px 10px;
+  background: rgba(255, 91, 113, 0.12);
+  border: 1px solid rgba(255, 91, 113, 0.35);
+  border-radius: 6px;
+  color: #ff5b71;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--abhi-transition-fast, 160ms);
+}
+
+.cancel-job-btn:hover {
+  background: rgba(255, 91, 113, 0.25);
+}
+
+/* History */
+.queue-history-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-label {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--abhi-text-muted, #8193ac);
+}
+
+.jobs-scroll-rack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.job-row-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  background: var(--abhi-surface-inset, #080e18);
+  border: 1px solid var(--abhi-border, rgba(151, 185, 230, 0.13));
+  border-radius: 10px;
+}
+
+.job-row-top,
+.job-row-mid {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.job-id-mono {
+  font-size: 11px;
+  color: var(--abhi-cyan, #38d9ff);
+}
+
+.job-model,
+.job-fps,
+.job-time {
+  font-size: 10px;
+  color: var(--abhi-text-secondary, #a7b7cc);
+}
+
+.cancel-mini-btn {
+  padding: 2px 6px;
+  background: none;
+  border: 1px solid rgba(255, 91, 113, 0.3);
+  border-radius: 4px;
+  color: #ff5b71;
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.cancel-mini-btn:hover {
+  background: rgba(255, 91, 113, 0.2);
+}
+
+.empty-queue-sub {
+  font-size: 11px;
+  color: var(--abhi-text-muted, #8193ac);
+  padding: 12px 0;
+  text-align: center;
+}
