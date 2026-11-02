@@ -340,6 +340,15 @@ export class ThreeSceneManagerService {
   private stationMarkers: { mesh: THREE.Mesh; agentId: string; baseY: number; phase: number }[] = [];
   private orbitalMarkers: { mesh: THREE.Mesh; agentId: string; baseY: number; phase: number }[] = [];
 
+  // Dynamic Universal Theme Synchronization tracking
+  private themeColorMeshes: { mesh: THREE.Mesh | THREE.Line | THREE.LineSegments; isSecondary?: boolean }[] = [];
+  private themeColorLights: { light: THREE.Light; isSecondary?: boolean }[] = [];
+  private workspaceHexEdgeMat: THREE.LineBasicMaterial | null = null;
+  private workspaceTileMat: THREE.MeshStandardMaterial | null = null;
+  private workspaceCommandDomeMat: THREE.MeshStandardMaterial | null = null;
+  private workspaceRadarDishMat: THREE.MeshStandardMaterial | null = null;
+  private workspaceHemiLight: THREE.HemisphereLight | null = null;
+
   // Public reference for backward compatibility
   orbitalCore: THREE.Group | THREE.Mesh | null = null;
 
@@ -553,6 +562,7 @@ export class ThreeSceneManagerService {
     });
     this.innerSingularityMesh = new THREE.Mesh(singGeo, singMat);
     this.centralCoreGroup.add(this.innerSingularityMesh);
+    this.themeColorMeshes.push({ mesh: this.innerSingularityMesh });
 
     // 2. Atmospheric Plasma Corona Glow (Volumetric Soft Shell)
     const coronaGeo = new THREE.SphereGeometry(2.1, 32, 32);
@@ -564,6 +574,7 @@ export class ThreeSceneManagerService {
     });
     this.coreCoronaMesh = new THREE.Mesh(coronaGeo, coronaMat);
     this.centralCoreGroup.add(this.coreCoronaMesh);
+    this.themeColorMeshes.push({ mesh: this.coreCoronaMesh });
 
     // 3. PURE HIGH-DENSITY QUANTUM DOT PARTICLE BALL (3,200 Holographic Dots)
     const particleCount = 3200;
@@ -625,6 +636,7 @@ export class ThreeSceneManagerService {
       const arcMesh = new THREE.Mesh(arcGeo, seg1Mat);
       arcMesh.position.z = 0.05;
       this.hudSegmentedRing1.add(arcMesh);
+      this.themeColorMeshes.push({ mesh: arcMesh });
     }
     this.centralCoreGroup.add(this.hudSegmentedRing1);
 
@@ -650,6 +662,7 @@ export class ThreeSceneManagerService {
     });
     this.hudAzimuthTicks = new THREE.LineSegments(ticksGeo, ticksMat);
     this.centralCoreGroup.add(this.hudAzimuthTicks);
+    this.themeColorMeshes.push({ mesh: this.hudAzimuthTicks });
 
     // 6. Rotating 360° Radar Scanner Beam
     const radarPoints = [
@@ -694,6 +707,7 @@ export class ThreeSceneManagerService {
       const sMesh = new THREE.Mesh(sGeo, sMat);
       sMesh.rotation.x = Math.PI / 2;
       this.scene.add(sMesh);
+      this.themeColorMeshes.push({ mesh: sMesh });
       this.shockwaveMeshes.push({
         mesh: sMesh,
         phase: i * (1.0 / 3.0),
@@ -714,6 +728,7 @@ export class ThreeSceneManagerService {
       const vMesh = new THREE.Mesh(vGeo, vMat);
       vMesh.rotation.x = Math.PI * 0.5;
       this.centralCoreGroup.add(vMesh);
+      this.themeColorMeshes.push({ mesh: vMesh });
       this.voiceRippleRings.push({
         mesh: vMesh,
         phase: i * (1.0 / 3.0),
@@ -1409,9 +1424,11 @@ export class ThreeSceneManagerService {
     const fillLight = new THREE.DirectionalLight(0x818cf8, 1.2);
     fillLight.position.set(-16, 14, -12);
     this.workspaceGroup.add(fillLight);
+    this.themeColorLights.push({ light: fillLight, isSecondary: true });
 
     const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x0c1e3d, 1.6);
     this.workspaceGroup.add(hemiLight);
+    this.workspaceHemiLight = hemiLight;
 
     // 2. Expansive 37-Tile Hexagonal Terrain Base (q, r hex axial coordinates)
     const hexCoords: { q: number; r: number }[] = [];
@@ -1427,17 +1444,19 @@ export class ThreeSceneManagerService {
     }
 
     const baseHexGeo = new THREE.CylinderGeometry(hexRadius * 0.96, hexRadius, hexHeight, 6);
-    const standardTileMat = new THREE.MeshStandardMaterial({
+    this.workspaceTileMat = new THREE.MeshStandardMaterial({
       color: 0x0f233f,
       roughness: 0.28,
       metalness: 0.85,
     });
-    const hexEdgeMat = new THREE.LineBasicMaterial({
+    this.workspaceHexEdgeMat = new THREE.LineBasicMaterial({
       color: 0x00f0ff,
       transparent: true,
       opacity: 0.55,
       blending: THREE.AdditiveBlending,
     });
+    const standardTileMat = this.workspaceTileMat;
+    const hexEdgeMat = this.workspaceHexEdgeMat;
 
     // Functional tile categorization for peripheral colony structures
     const solarCoords = new Set(['-2,-1', '2,-3', '-1,3', '3,0']);
@@ -1489,6 +1508,7 @@ export class ThreeSceneManagerService {
           gridLine.position.set(sx, 0.83, 0);
           gridLine.rotation.x = -Math.PI * 0.18;
           solarGroup.add(gridLine);
+          this.themeColorMeshes.push({ mesh: gridLine, isSecondary: true });
         });
         this.workspaceGroup?.add(solarGroup);
       } else if (cargoCoords.has(coordKey)) {
@@ -1550,6 +1570,7 @@ export class ThreeSceneManagerService {
         );
         circle1.rotation.x = -Math.PI * 0.5;
         padGroup.add(circle1);
+        this.themeColorMeshes.push({ mesh: circle1 });
 
         const circle2 = new THREE.Mesh(
           new THREE.RingGeometry(1.4, 1.55, 24),
@@ -1557,6 +1578,7 @@ export class ThreeSceneManagerService {
         );
         circle2.rotation.x = -Math.PI * 0.5;
         padGroup.add(circle2);
+        this.themeColorMeshes.push({ mesh: circle2, isSecondary: true });
 
         // Corner runway strobe lights
         [-1.6, 1.6].forEach((lx) => {
@@ -1567,6 +1589,7 @@ export class ThreeSceneManagerService {
             );
             strobe.position.set(lx, 0.15, lz);
             padGroup.add(strobe);
+            this.themeColorMeshes.push({ mesh: strobe });
           });
         });
         this.workspaceGroup?.add(padGroup);
@@ -1590,6 +1613,7 @@ export class ThreeSceneManagerService {
           coilRing.rotation.x = Math.PI * 0.5;
           coilRing.position.y = cy;
           capGroup.add(coilRing);
+          this.themeColorMeshes.push({ mesh: coilRing, isSecondary: true });
         });
         this.workspaceGroup?.add(capGroup);
       }
@@ -1623,14 +1647,14 @@ export class ThreeSceneManagerService {
 
     // Geodesic Translucent Command Dome
     const domeGeo = new THREE.SphereGeometry(1.4, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.5);
-    const domeMat = new THREE.MeshStandardMaterial({
+    this.workspaceCommandDomeMat = new THREE.MeshStandardMaterial({
       color: 0x00f0ff,
       transparent: true,
       opacity: 0.45,
       roughness: 0.1,
       metalness: 0.9,
     });
-    const dome = new THREE.Mesh(domeGeo, domeMat);
+    const dome = new THREE.Mesh(domeGeo, this.workspaceCommandDomeMat);
     dome.position.set(0, -3.45, 0);
     this.workspaceGroup.add(dome);
 
@@ -1658,12 +1682,12 @@ export class ThreeSceneManagerService {
     radarGroup.position.set(0, -1.8, 0);
 
     const radarDishGeo = new THREE.CylinderGeometry(0.65, 0.15, 0.18, 16);
-    const radarDishMat = new THREE.MeshStandardMaterial({
+    this.workspaceRadarDishMat = new THREE.MeshStandardMaterial({
       color: 0x00f0ff,
       metalness: 0.85,
       roughness: 0.2,
     });
-    const radarDish = new THREE.Mesh(radarDishGeo, radarDishMat);
+    const radarDish = new THREE.Mesh(radarDishGeo, this.workspaceRadarDishMat);
     radarDish.rotation.z = Math.PI * 0.35;
     radarGroup.add(radarDish);
 
@@ -2458,11 +2482,11 @@ export class ThreeSceneManagerService {
       // Rotate the 3D colony around Y so this station rotates directly to the FRONT of the user's screen!
       // In Three.js, front of screen is +Z (angle = Math.PI / 2)
       this.targetRotation.y = stationAngle - (Math.PI / 2);
-      this.targetRotation.x = 0.28; // Elevated angle looking directly into the workstation
+      this.targetRotation.x = 0.22; // Elevated angle looking directly into the workstation
 
-      // Smoothly zoom camera to frame the front station and animated bot avatar
-      this.targetCameraPos.set(0, -1.6, 16.5);
-      this.targetCameraLookAt.set(0, -3.6, 8.8);
+      // Smoothly zoom camera to frame the front station and animated bot avatar perfectly centered
+      this.targetCameraPos.set(0, -0.6, 15.6);
+      this.targetCameraLookAt.set(0, -2.6, 8.8);
     } else {
       // MAIN_AGENT / DEFAULT mode:
       // Rotate the scene so this agent swings directly to the FRONT-CENTER of the main screen!
@@ -2497,7 +2521,7 @@ export class ThreeSceneManagerService {
 
     // Reset rotation smoothly back to default panoramic overview
     this.targetRotation.y = 0;
-    this.targetRotation.x = this.currentMode === 'WORKSPACE' ? 0.35 : 0.15;
+    this.targetRotation.x = this.currentMode === 'WORKSPACE' ? 0.30 : 0.15;
 
     this.applyResponsiveCamera();
     this.updateBillboardLabelVisibility();
@@ -3140,8 +3164,8 @@ export class ThreeSceneManagerService {
   getBaseCameraForMode(mode: SpatialEnvironmentMode): { pos: THREE.Vector3; lookAt: THREE.Vector3 } {
     if (mode === 'WORKSPACE') {
       return {
-        pos: new THREE.Vector3(0, 11.0, 16.5),
-        lookAt: new THREE.Vector3(0, -3.6, 0),
+        pos: new THREE.Vector3(0, 8.2, 19.5),
+        lookAt: new THREE.Vector3(0, -3.8, 0),
       };
     } else if (mode === 'AUTOMATION') {
       return {
@@ -3280,10 +3304,25 @@ export class ThreeSceneManagerService {
   updateThemeColors(colors: AbhiThemeColors): void {
     if (!this.scene) return;
     try {
+      // 1. Dynamic Background Fog & Clear Color
+      if (this.scene.fog && this.scene.fog instanceof THREE.FogExp2) {
+        this.scene.fog.color.set(colors.background);
+      }
+      if (this.renderer) {
+        this.renderer.setClearColor(new THREE.Color(colors.background), 1);
+      }
+
+      // 2. Lights Synchronization
       if (this.pointLight1) this.pointLight1.color.set(colors.accentPrimary);
       if (this.pointLight2) this.pointLight2.color.set(colors.accentSecondary);
       if (this.pointLightCore) this.pointLightCore.color.set(colors.accentPrimary);
+      if (this.ambientLight) this.ambientLight.color.set(colors.backgroundSecondary);
 
+      this.themeColorLights.forEach(({ light, isSecondary }) => {
+        light.color.set(isSecondary ? colors.accentSecondary : colors.accentPrimary);
+      });
+
+      // 3. Central Core HUD Rings, Meshes & Coronas
       if (this.coreCoronaMesh && this.coreCoronaMesh.material instanceof THREE.MeshBasicMaterial) {
         this.coreCoronaMesh.material.color.set(colors.accentPrimary);
       }
@@ -3292,6 +3331,76 @@ export class ThreeSceneManagerService {
       }
       if (this.horizonDisc && this.horizonDisc.material instanceof THREE.LineBasicMaterial) {
         this.horizonDisc.material.color.set(colors.accentPrimary);
+      }
+      if (this.innerSingularityMesh && this.innerSingularityMesh.material instanceof THREE.MeshBasicMaterial) {
+        this.innerSingularityMesh.material.color.set(colors.accentPrimary);
+      }
+      this.shockwaveMeshes.forEach((s) => {
+        if (s.mesh.material instanceof THREE.MeshBasicMaterial) {
+          s.mesh.material.color.set(colors.accentPrimary);
+        }
+      });
+      this.voiceRippleRings.forEach((v) => {
+        if (v.mesh.material instanceof THREE.MeshBasicMaterial) {
+          v.mesh.material.color.set(colors.accentPrimary);
+        }
+      });
+
+      // 4. Registered Universal Theme Meshes
+      this.themeColorMeshes.forEach(({ mesh, isSecondary }) => {
+        const targetColor = isSecondary ? colors.accentSecondary : colors.accentPrimary;
+        if (mesh.material instanceof THREE.Material && 'color' in mesh.material) {
+          (mesh.material as any).color.set(targetColor);
+        }
+      });
+
+      // 5. Workspace Colony Materials & Lighting
+      if (this.workspaceHexEdgeMat) {
+        this.workspaceHexEdgeMat.color.set(colors.accentPrimary);
+      }
+      if (this.workspaceTileMat) {
+        this.workspaceTileMat.color.set(colors.surfaceInset || colors.backgroundSecondary);
+      }
+      if (this.workspaceCommandDomeMat) {
+        this.workspaceCommandDomeMat.color.set(colors.accentPrimary);
+      }
+      if (this.workspaceRadarDishMat) {
+        this.workspaceRadarDishMat.color.set(colors.accentPrimary);
+      }
+      if (this.workspaceHemiLight) {
+        this.workspaceHemiLight.color.set(colors.accentPrimary);
+        this.workspaceHemiLight.groundColor.set(colors.background);
+      }
+
+      // 6. Dynamic 3,200 Quantum Dot Fibonacci Core Particles Recoloring
+      if (this.quantumDotSphere && this.quantumOriginalPositions && this.quantumOriginalColors) {
+        const primary = new THREE.Color(colors.accentPrimary);
+        const secondary = new THREE.Color(colors.accentSecondary);
+        const white = new THREE.Color(0xffffff);
+        const origCol = this.quantumOriginalColors;
+        const count = origCol.length / 3;
+        const origPos = this.quantumOriginalPositions;
+
+        for (let i = 0; i < count; i++) {
+          const y = origPos[i * 3 + 1];
+          const normY = Math.max(0, Math.min(1, (y + 3.8) / 7.6));
+          const c = new THREE.Color();
+          if (normY < 0.45) {
+            c.copy(secondary).lerp(primary, normY / 0.45);
+          } else if (normY < 0.82) {
+            c.copy(primary).lerp(white, (normY - 0.45) / 0.37);
+          } else {
+            c.copy(white).lerp(primary, (normY - 0.82) / 0.18);
+          }
+          origCol[i * 3] = c.r;
+          origCol[i * 3 + 1] = c.g;
+          origCol[i * 3 + 2] = c.b;
+        }
+        const colorAttr = this.quantumDotSphere.geometry.attributes['color'] as THREE.BufferAttribute;
+        if (colorAttr) {
+          (colorAttr.array as Float32Array).set(origCol);
+          colorAttr.needsUpdate = true;
+        }
       }
     } catch (err) {
       console.warn('ThreeSceneManagerService updateThemeColors error:', err);

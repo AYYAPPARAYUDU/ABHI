@@ -11,7 +11,33 @@
 
 ---
 
-## Latest Milestone (2026-11-02): M-44 "Bot Crossing" Living 3D Miniature Base (Image 1), Zero Text Label Clutter, Holographic Beacons & Autonomous Courier Droids
+## Latest Milestone (2026-11-02): M-45 Universal Dynamic 3D & DOM Theme Synchronization & Balanced Workspace Isometric Framing
+- **Universal Dynamic Three.js Theme Synchronization:**
+  - Resolved theme decoupling in ThreeSceneManagerService where changing themes previously left the 3D core, fog, and colony base in hardcoded cyan.
+  - When the user cycles themes (Obsidian Cyan -> Midnight Amethyst -> Emerald Matrix -> Quantum White), the entire WebGL scene synchronously shifts color palettes:
+    - Atmospheric fog (this.scene.fog.color.set(colors.background))
+    - WebGL renderer background clear color (setClearColor(colors.background))
+    - Dynamic 3,200 Quantum Dot Fibonacci Core recoloring: Recalculates dot particle vertex colors in quantumOriginalColors across secondary, primary, and white along the Y-axis. In Midnight Amethyst, the core glows with rich amethyst and lavender; in Emerald Matrix, it shifts to vivid matrix emerald and mint cyan.
+    - Central HUD segmented dials, azimuth ticks, horizon tactical disc, shockwaves, acoustic ripple rings, and central singularity core.
+    - Workspace Colony: 37 hexagonal colony tiles (workspaceTileMat), neon edge borders (workspaceHexEdgeMat), geodesic command dome (workspaceCommandDomeMat), sweeping radar dish (workspaceRadarDishMat), solar panel gridlines, drone landing rings, capacitor coil rings, and hemisphere/fill lighting.
+- **CSS Theme Modernization:**
+  - Modernized workspace-page.component.css replacing all hardcoded #00f0ff, #38bdf8, and rgba(56, 189, 248, ...) with CSS variables (var(--abhi-cyan), var(--abhi-blue), var(--abhi-border), var(--abhi-surface-raised), var(--abhi-surface-inset)), harmonizing the DOM with the active theme.
+- **Balanced Workspace Isometric Perspective & Centered Station Focus Framing:**
+  - Adjusted getBaseCameraForMode('WORKSPACE') from steep 41.5 overhead view (pos: (0, 11.0, 16.5)) to a balanced 30 isometric perspective (pos: (0, 8.2, 19.5), lookAt: (0, -3.8, 0)), ensuring the full 37-tile colony with its bots, depots, and arrays is centered with generous margins.
+  - Reframed station focus camera from pos: (0, -1.6, 16.5), lookAt: (0, -3.6, 8.8) to pos: (0, -0.6, 15.6), lookAt: (0, -2.6, 8.8) with targetRotation.x = 0.22, placing the focused station, bot avatar, and active effects right at the vertical center (Y ~ 50%) of the viewport.
+- **Physical Verification:**
+  - Clean Angular production build (ng build, 14.0s).
+  - Playwright visual tests verified with 5 physical screenshots:
+    - theme_home_obsidian_cyan.png
+    - theme_home_midnight_amethyst.png
+    - theme_home_emerald_matrix.png
+    - theme_workspace_emerald_matrix.png
+    - theme_workspace_midnight_amethyst.png
+    - workspace_station_archon_centered.png
+
+---
+
+## Prior Milestone (2026-11-02): M-44 "Bot Crossing" Living 3D Miniature Base (Image 1), Zero Text Label Clutter, Holographic Beacons & Autonomous Courier Droids
 - **Modeled on Reference Video (Instagram @otofficial & @reada.io "Bot Crossing"):**
   - Completely overhauled `/workspace` into a vibrant, living 3D miniature sci-fi colony base inspired by the user reference video.
   - 37-tile interlocking terraced hexagonal terrain with crisp planetary daylight (`DirectionalLight(0xfff8ed, 2.8)`), cyan sky fill (`HemisphereLight(0x38bdf8, 0x0c1e3d, 1.6)`), and peripheral functional modules.
