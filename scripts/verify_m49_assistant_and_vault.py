@@ -53,3 +53,4 @@ async def verify_assistant_and_vault():
 
 if __name__ == "__main__":
     asyncio.run(verify_assistant_and_vault())
+

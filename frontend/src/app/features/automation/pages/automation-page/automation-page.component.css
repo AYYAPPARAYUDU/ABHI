@@ -1,12 +1,13 @@
 .automation-spatial-container {
   position: relative;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  min-height: calc(100vh - 80px);
   overflow-y: auto;
   background: transparent;
   font-family: 'Inter', system-ui, sans-serif;
   color: #f1f5f9;
-  padding: 16px 24px;
+  padding: 16px 20px 48px;
   box-sizing: border-box;
 }
 
@@ -17,12 +18,12 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  background: rgba(6, 16, 36, 0.88);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  border-radius: 14px;
-  padding: 14px 20px;
-  backdrop-filter: blur(16px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  background: rgba(6, 16, 36, 0.92);
+  border: 1px solid var(--abhi-border, rgba(56, 189, 248, 0.28));
+  border-radius: 16px;
+  padding: 14px 22px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .header-left {
@@ -57,28 +58,30 @@
 }
 
 .tab-btn {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(10, 22, 44, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #cbd5e1;
-  padding: 6px 12px;
-  border-radius: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .tab-btn:hover {
-  border-color: #38bdf8;
+  border-color: var(--abhi-cyan, #00f0ff);
   color: #ffffff;
+  background: rgba(0, 240, 255, 0.12);
+  transform: translateY(-1px);
 }
 
 .tab-btn.active {
-  background: rgba(0, 240, 255, 0.18);
-  border-color: #00f0ff;
+  background: rgba(0, 240, 255, 0.22);
+  border-color: var(--abhi-cyan, #00f0ff);
   color: #ffffff;
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.35);
 }
 
 /* Universal Prompt Bar */
@@ -90,11 +93,11 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(6, 16, 36, 0.9);
-  border: 1px solid rgba(0, 240, 255, 0.35);
-  border-radius: 12px;
+  background: rgba(5, 12, 26, 0.92);
+  border: 1px solid var(--abhi-cyan, #00f0ff);
+  border-radius: 14px;
   padding: 8px 14px;
-  box-shadow: 0 6px 24px rgba(0, 240, 255, 0.15);
+  box-shadow: 0 6px 24px rgba(0, 240, 255, 0.2), inset 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
 .prompt-icon {
@@ -113,7 +116,7 @@
 }
 
 .prompt-execute-btn {
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(16, 185, 129, 0.25));
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.3), rgba(16, 185, 129, 0.3));
   border: 1px solid #00f0ff;
   color: #ffffff;
   padding: 8px 18px;
@@ -126,8 +129,55 @@
 }
 
 .prompt-execute-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.4), rgba(16, 185, 129, 0.4));
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.45), rgba(16, 185, 129, 0.45));
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Quick Scenarios Inspiration Strip */
+.quick-chips-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: rgba(4, 12, 26, 0.75);
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.15);
+}
+
+.chips-label {
+  font-size: 10px;
+  color: #94a3b8;
+  letter-spacing: 0.06em;
+}
+
+.chips-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quick-chip-btn {
+  background: rgba(15, 28, 54, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-chip-btn:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: var(--abhi-cyan, #00f0ff);
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+  transform: translateY(-1px);
 }
 
 /* Main Grid */

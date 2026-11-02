@@ -42,14 +42,14 @@ export class IntelligencePageComponent implements OnInit {
   readonly evalService = inject(EvaluationService);
   private readonly threeScene = inject(ThreeSceneManagerService);
 
-  readonly activeTab = signal<'DECISIONS' | 'NEURAL'>('DECISIONS');
+  readonly activeTab = signal<'NEURAL' | 'DECISIONS' | 'EVALUATION'>('NEURAL');
 
   ngOnInit(): void {
     this.threeScene.setMode('INTELLIGENCE');
     this.evalService.loadAll();
   }
 
-  setTab(tab: 'DECISIONS' | 'NEURAL'): void {
+  setTab(tab: 'NEURAL' | 'DECISIONS' | 'EVALUATION'): void {
     this.activeTab.set(tab);
   }
 }

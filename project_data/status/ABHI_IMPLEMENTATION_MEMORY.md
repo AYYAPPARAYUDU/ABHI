@@ -1280,3 +1280,44 @@ ABHI is a local-first, voice-first personal AI computer automation operating sys
 - Angular production build passed in 14.58s with 0 errors (`npm --prefix frontend run build`).
 - Backend integration pytest: 28/28 tests passed (100% pass rate in 28.7s).
 - Verified via Playwright live browser automation with screenshots `home_tactical_hud_verified.png` and `workspace_station_drawer_verified.png`.
+
+
+---
+
+## Milestone M-51: Clean Deep Space Canvas, Metallic 3D Dais Lighting, Quantum Neural Attention UI & 14-Scenario Automation Hub (Completed 2026-11-02)
+
+### 1. 3D Space Background De-Cluttering & Pure Deep Cosmic Canvas
+- Fully eliminated mbientStarSystem (1,200 scattered star particles) from uildAmbientStarfield(), keeping pure celestial cosmic gradient in Three.js and CSS backdrop.
+- Removed swirling particle haloCloud from uildMultiAgents(), leaving pure luminous Fibonacci quantum spheres for each of the 8 small-LLM specialist agents.
+- Resolved TypeScript shorthand scoping error on haloCloud in 	hree-scene-manager.service.ts to restore continuous instant HMR rebuilding.
+
+### 2. 3D Core Space Metallic Luster & 4-Point Colony Lighting Rig
+- Injected dedicated 4-point studio colony lighting rig into createSwarmHomeArchitecture():
+  - homeSpecSun: DirectionalLight(0xfffbf0, 3.2) at (0, 24, -22) pointing towards center.
+  - homeSun: DirectionalLight(0xfffaed, 2.4) at (16, 26, 16).
+  - homeFill: DirectionalLight(0x38bdf8, 2.2) at (-16, 22, -14).
+  - homeHemi: HemisphereLight(0x00f0ff, 0x0c1e3d, 1.6).
+- Replaced flat dark materials on central core platform base and peripheral pads with obsidian metallic finish (color: 0x11213b, roughness: 0.28, metalness: 0.58, emissive: 0x06111f, emissiveIntensity: 0.12), unifying /home and /workspace visual fidelity.
+
+### 3. Intelligence Page Quantum Neural Attention Architecture
+- Elevated QUANTUM NEURAL NETWORK & ATTENTION as the primary default tab on /intelligence (IntelligencePageComponent.activeTab = signal('NEURAL')).
+- Embedded <app-neural-network-viewer> front-and-center displaying:
+  - 8-token interactive sequence embeddings and positional encodings.
+  - Interactive FlashAttention-2 multi-head attention heatmap with head switching.
+  - 28-layer hidden state activation bars with live sparsity percentages.
+  - Softmax projection next-token probabilities.
+
+### 4. Dynamic Automation Hub & Canonical Scenarios
+- Added sleek quick-action trigger chips strip with 8 immediate commands.
+- Configured 14 canonical registered one-click automation presets spanning Windows Apps, Playwright Browser, Android ADB, Communications, OCR Perception, Audio/Volume, and SQLite Memory RAG.
+- Corrected double-scrollbar viewport bug in utomation-page.component.css (width: 100%; min-height: calc(100vh - 80px); overflow-y: auto).
+
+### 5. Full End-to-End Verification
+- Frontend production build (
+pm --prefix frontend run build): Completed in 21.73s with 0 errors.
+- Backend test suite (	est_standalone_llm_and_os_control.py, 	est_specialist_agents_full.py, 	est_tasks_api.py): 33/33 tests passed in 52.26s.
+- Playwright verified live screenshots:
+  - clean_home_no_dots.png: Pure space background with metallic core dais.
+  - clean_workspace_no_dots.png: Pure space background overlooking hexagonal colony.
+  - clean_intelligence_neural.png: Live Quantum Neural Attention Inspector.
+  - current_live_automation.png: 14-scenario automation hub.

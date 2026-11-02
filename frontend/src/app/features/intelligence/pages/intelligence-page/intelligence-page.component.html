@@ -4,6 +4,15 @@
     <button
       type="button"
       class="switch-tab-btn"
+      [class.active]="activeTab() === 'NEURAL'"
+      (click)="setTab('NEURAL')"
+    >
+      <span class="tab-icon">🧠</span>
+      <span>QUANTUM NEURAL NETWORK & ATTENTION</span>
+    </button>
+    <button
+      type="button"
+      class="switch-tab-btn"
       [class.active]="activeTab() === 'DECISIONS'"
       (click)="setTab('DECISIONS')"
     >
@@ -13,13 +22,19 @@
     <button
       type="button"
       class="switch-tab-btn"
-      [class.active]="activeTab() === 'NEURAL'"
-      (click)="setTab('NEURAL')"
+      [class.active]="activeTab() === 'EVALUATION'"
+      (click)="setTab('EVALUATION')"
     >
-      <span class="tab-icon">🧠</span>
-      <span>NEURAL LAB & EVALUATION</span>
+      <span class="tab-icon">📊</span>
+      <span>BENCHMARKS & EVALUATION LAB</span>
     </button>
   </div>
+
+  @if (activeTab() === 'NEURAL') {
+    <div class="neural-container">
+      <app-neural-network-viewer></app-neural-network-viewer>
+    </div>
+  }
 
   @if (activeTab() === 'DECISIONS') {
     <div class="decisions-container">
@@ -27,7 +42,7 @@
     </div>
   }
 
-  @if (activeTab() === 'NEURAL') {
+  @if (activeTab() === 'EVALUATION') {
     <div class="intelligence-workspace">
       <!-- Workspace Header -->
       <header class="workspace-header">

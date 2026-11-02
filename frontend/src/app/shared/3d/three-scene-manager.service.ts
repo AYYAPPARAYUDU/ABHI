@@ -258,7 +258,7 @@ export class ThreeSceneManagerService {
     dotBall: THREE.Points; // Colored Fibonacci Quantum Dot Ball
     innerNucleus: THREE.Mesh; // Crystalline emissive polyhedral nucleus
     microRing: THREE.Mesh; // Orbiting micro-torus ring
-    haloCloud: THREE.Points; // Surrounding particle aura
+    haloCloud?: THREE.Points; // Surrounding particle aura
     beam: THREE.Line;
     currentRadius: number;
     currentScale: number;
@@ -751,54 +751,9 @@ export class ThreeSceneManagerService {
    * Deep Cosmic Ambient Micro-Starfield (1,200 fine twinkling pinpoint stars).
    */
   private buildAmbientStarfield(): void {
+    // Disabled per user instruction: clean, pure cosmic gradient background without scattered space dot clutter.
     if (!this.scene) return;
-
-    const count = 1200;
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(count * 3);
-    const colors = new Float32Array(count * 3);
-
-    const cWhite = new THREE.Color(0xffffff);
-    const cCyan = new THREE.Color(0x00f0ff);
-    const cViolet = new THREE.Color(0xa855f7);
-
-    for (let i = 0; i < count; i++) {
-      const idx = i * 3;
-      const r = 7.0 + Math.random() * 29.0;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-
-      positions[idx] = r * Math.sin(phi) * Math.cos(theta);
-      positions[idx + 1] = r * Math.sin(phi) * Math.sin(theta);
-      positions[idx + 2] = r * Math.cos(phi) - 4.0;
-
-      const rand = Math.random();
-      let starColor = cWhite.clone();
-      if (rand < 0.25) {
-        starColor.lerp(cCyan, 0.6);
-      } else if (rand < 0.45) {
-        starColor.lerp(cViolet, 0.5);
-      }
-
-      colors[idx] = starColor.r;
-      colors[idx + 1] = starColor.g;
-      colors[idx + 2] = starColor.b;
-    }
-
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-    const material = new THREE.PointsMaterial({
-      size: 0.11,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.85,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-
-    this.ambientStarSystem = new THREE.Points(geometry, material);
-    this.scene.add(this.ambientStarSystem);
+    this.ambientStarSystem = new THREE.Group() as any;
   }
 
   /**
@@ -871,28 +826,7 @@ export class ThreeSceneManagerService {
       microRing.rotation.x = Math.PI * 0.25;
       group.add(microRing);
 
-      // 4. Micro Quantum Particle Cloud swirling around each agent (64 particles)
-      const cloudCount = 64;
-      const cloudGeo = new THREE.BufferGeometry();
-      const cloudPos = new Float32Array(cloudCount * 3);
-      for (let cIdx = 0; cIdx < cloudCount; cIdx++) {
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(Math.random() * 2 - 1);
-        const rad = 1.15 + Math.random() * 0.45;
-        cloudPos[cIdx * 3] = rad * Math.sin(phi) * Math.cos(theta);
-        cloudPos[cIdx * 3 + 1] = rad * Math.sin(phi) * Math.sin(theta);
-        cloudPos[cIdx * 3 + 2] = rad * Math.cos(phi);
-      }
-      cloudGeo.setAttribute('position', new THREE.BufferAttribute(cloudPos, 3));
-      const cloudMat = new THREE.PointsMaterial({
-        color: agent.hexColor,
-        size: 0.07,
-        transparent: true,
-        opacity: 0.85,
-        blending: THREE.AdditiveBlending,
-      });
-      const haloCloud = new THREE.Points(cloudGeo, cloudMat);
-      group.add(haloCloud);
+      // 4. Pure luminous core - particle dot clouds removed per user instruction
 
       // 5. Enlarged Raycast Hit-Sphere (r = 1.6) for effortless 100% click hit rate
       const hitGeo = new THREE.SphereGeometry(1.6, 16, 16);
@@ -949,7 +883,6 @@ export class ThreeSceneManagerService {
         dotBall,
         innerNucleus,
         microRing,
-        haloCloud,
         beam,
         currentRadius: agent.orbitRadius,
         currentScale: 1.0,
@@ -1111,12 +1044,30 @@ export class ThreeSceneManagerService {
     this.podHitMeshes = [];
     this.floatingConsoles = [];
 
-    // 1. Central Multi-Tier Hexagonal Citadel Dais
+    // Dedicated 4-Point Colony Studio Lighting Rig for 3D Core Space (Matching Workspace metallic luster)
+    const homeSpecSun = new THREE.DirectionalLight(0xfffbf0, 3.2);
+    homeSpecSun.position.set(0, 24, -22);
+    this.swarmArchitectureGroup.add(homeSpecSun);
+
+    const homeSun = new THREE.DirectionalLight(0xfffaed, 2.4);
+    homeSun.position.set(16, 26, 16);
+    this.swarmArchitectureGroup.add(homeSun);
+
+    const homeFill = new THREE.DirectionalLight(0x38bdf8, 2.2);
+    homeFill.position.set(-16, 22, -14);
+    this.swarmArchitectureGroup.add(homeFill);
+
+    const homeHemi = new THREE.HemisphereLight(0x00f0ff, 0x0c1e3d, 1.6);
+    this.swarmArchitectureGroup.add(homeHemi);
+
+    // 1. Central Multi-Tier Hexagonal Citadel Dais with metallic luster matching Workspace
     const baseGeo = new THREE.CylinderGeometry(13.5, 14.5, 0.4, 6);
     const baseMat = new THREE.MeshStandardMaterial({
-      color: 0x050c18,
-      roughness: 0.35,
-      metalness: 0.85,
+      color: 0x11213b,
+      roughness: 0.28,
+      metalness: 0.58,
+      emissive: 0x06111f,
+      emissiveIntensity: 0.12,
     });
     const baseDais = new THREE.Mesh(baseGeo, baseMat);
     baseDais.position.y = -5.8;
@@ -1198,9 +1149,11 @@ export class ThreeSceneManagerService {
       // Modular Hexagonal Sector Platform (Image 1 Cybernetic Base Colony)
       const padGeo = new THREE.CylinderGeometry(2.2, 2.5, 0.35, 6);
       const padMat = new THREE.MeshStandardMaterial({
-        color: 0x07152c,
-        roughness: 0.3,
-        metalness: 0.85,
+        color: 0x11213b,
+        roughness: 0.28,
+        metalness: 0.58,
+        emissive: 0x06111f,
+        emissiveIntensity: 0.12,
       });
       const pad = new THREE.Mesh(padGeo, padMat);
       pad.userData = { agentId: agent.id, agent };

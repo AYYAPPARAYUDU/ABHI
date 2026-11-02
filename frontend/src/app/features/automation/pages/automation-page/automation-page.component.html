@@ -38,6 +38,37 @@
       </button>
     </form>
 
+    <!-- Quick Scenario Execution Chips (Instant 1-Click Triggers) -->
+    <div class="quick-chips-strip">
+      <span class="chips-label font-mono">QUICK SCENARIOS:</span>
+      <div class="chips-list">
+        <button type="button" class="quick-chip-btn" (click)="executeUniversalCommand('open notepad and write Hello from ABHI Personal Assistant on Windows 11')">
+          📝 Write Notepad
+        </button>
+        <button type="button" class="quick-chip-btn" (click)="executeUniversalCommand('open calculator and calculate 125 * 48')">
+          🧮 Compute 125 * 48
+        </button>
+        <button type="button" class="quick-chip-btn" (click)="executeUniversalCommand('increase system volume by 4 steps')">
+          🔊 Volume Up
+        </button>
+        <button type="button" class="quick-chip-btn" (click)="executeUniversalCommand('open chrome and search latest autonomous multi-agent systems')">
+          🌐 Chrome Search
+        </button>
+        <button type="button" class="quick-chip-btn" (click)="executeUniversalCommand('scan screen with OCR perception and locate UI elements')">
+          👁️ Screen OCR
+        </button>
+        <button type="button" class="quick-chip-btn" (click)="executeUniversalCommand('open file explorer')">
+          📁 Open Explorer
+        </button>
+        <button type="button" class="quick-chip-btn" (click)="executeUniversalCommand('check phone battery and status')">
+          🔋 Phone Battery
+        </button>
+        <button type="button" class="quick-chip-btn" (click)="executeUniversalCommand('open whatsapp and send message hello from abhi to personal')">
+          💬 WhatsApp Send Hi
+        </button>
+      </div>
+    </div>
+
     <!-- Dynamic Execution Progress Bar -->
     @if (executionProgress() > 0) {
       <div class="progress-container">
