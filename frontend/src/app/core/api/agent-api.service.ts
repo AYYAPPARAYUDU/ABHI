@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { getApiBaseUrl } from '../config/api-config';
 
 export interface BackendCommandRequest {
   command_id?: string;
@@ -37,7 +38,7 @@ export interface BackendAttentionItem {
   providedIn: 'root'
 })
 export class AgentApiService {
-  private readonly baseUrl = 'http://127.0.0.1:8000';
+  private readonly baseUrl = getApiBaseUrl();
 
   /**
    * Submit natural language command to Authoritative Agent Gateway.

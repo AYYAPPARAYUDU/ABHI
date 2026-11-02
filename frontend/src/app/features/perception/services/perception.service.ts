@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, inject, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { getApiUrl } from '../../../core/config/api-config';
 import { TelemetryService } from '../../../core/websocket/telemetry.service';
 import { TaskApiService } from '../../../core/api/task-api.service';
 import { TelemetryEvent } from '../../../core/models/telemetry.model';
@@ -403,7 +404,7 @@ export class PerceptionService implements OnDestroy {
     }));
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/v1/perception/vision/screen_ocr', {
+      const response = await fetch(getApiUrl('/api/v1/perception/vision/screen_ocr'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image_width: 1920, image_height: 1080, target_query: query || null })

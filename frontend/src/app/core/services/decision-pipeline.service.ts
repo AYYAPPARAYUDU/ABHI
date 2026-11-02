@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { getApiUrl } from '../config/api-config';
 
 export interface DecisionNode {
   id: string;
@@ -104,7 +105,7 @@ export interface EvaluationResponse {
 })
 export class DecisionPipelineService {
   private readonly http = inject(HttpClient);
-  private readonly apiBase = 'http://127.0.0.1:8000/api/v1/decisions';
+  private readonly apiBase = getApiUrl('/api/v1/decisions');
 
   // Core State Signals
   readonly useCases = signal<UseCase[]>(this.buildCanonicalFallbackCases());

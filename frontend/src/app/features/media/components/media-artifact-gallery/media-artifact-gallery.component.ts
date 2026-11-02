@@ -1,6 +1,7 @@
 import { Component, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MediaArtifactDTO } from '../../models/media.model';
+import { getApiUrl } from '../../../../core/config/api-config';
 
 @Component({
   selector: 'app-media-artifact-gallery',
@@ -34,7 +35,7 @@ import { MediaArtifactDTO } from '../../models/media.model';
                 class="relative aspect-square bg-slate-900 overflow-hidden cursor-pointer flex items-center justify-center"
               >
                 <img
-                  [src]="'http://127.0.0.1:8000/api/v1/media/artifacts/' + art.artifact_id + '/file'"
+                  [src]="getArtifactUrl(art.artifact_id)"
                   [alt]="art.prompt_preview || art.filename"
                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
@@ -112,7 +113,7 @@ import { MediaArtifactDTO } from '../../models/media.model';
             </div>
             <div class="p-4 bg-slate-950 flex items-center justify-center max-h-[500px]">
               <img
-                [src]="'http://127.0.0.1:8000/api/v1/media/artifacts/' + selectedArtifact()?.artifact_id + '/file'"
+                [src]="getArtifactUrl(selectedArtifact()?.artifact_id)"
                 [alt]="selectedArtifact()?.filename"
                 class="max-h-[460px] object-contain rounded-lg"
               />
@@ -133,6 +134,10 @@ export class MediaArtifactGalleryComponent {
   delete = output<string>();
 
   selectedArtifact = signal<MediaArtifactDTO | null>(null);
+
+  getArtifactUrl(artifactId: string | undefined): string {
+    return artifactId ? getApiUrl(`/api/v1/media/artifacts/${artifactId}/file`) : '';
+  }
 
   formatBytes(bytes: number): string {
     if (bytes < 1024) return bytes + ' B';

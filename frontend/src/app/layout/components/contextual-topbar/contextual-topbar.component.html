@@ -81,6 +81,22 @@
         <span class="btn-text">{{ mobileLabel() }}</span>
       </button>
 
+      <!-- Human-Brain & Autonomous Communications Hub -->
+      <button
+        type="button"
+        class="topbar-tool-btn brain-comms-btn"
+        appAnimeInteractive
+        [appAnimeType]="'button'"
+        (click)="assistantService.openModal()"
+        [title]="'Human-Brain & Autonomous Comms: ' + (assistantService.brainStatus()?.version || 'Ready') + (assistantService.isConfigured() ? ' (Connected)' : ' (Setup Required)')"
+      >
+        <span class="btn-icon">🧠</span>
+        <span class="btn-text">{{ assistantService.brainStatus()?.version || 'Brain Comms' }}</span>
+        @if (!assistantService.isConfigured()) {
+          <span class="setup-dot-alert" title="Connect Email & Phone">!</span>
+        }
+      </button>
+
       <!-- Voice Audio Speech Synthesis Toggle -->
       <button
         type="button"

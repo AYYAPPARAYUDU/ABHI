@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { AgentCommandService } from '../../../../core/services/agent-command.service';
+import { CommunicationsAssistantService, InboxMessage } from '../../../../core/services/communications-assistant.service';
+import { getApiUrl } from '../../../../core/config/api-config';
 
 export type AutomationCategory = 'ALL' | 'APPS' | 'BROWSER' | 'MOBILE' | 'COMMS' | 'TASKS' | 'MEMORY';
 
@@ -41,6 +43,7 @@ export class AutomationPageComponent implements OnInit {
   readonly threeScene = inject(ThreeSceneManagerService);
   readonly speechVoice = inject(SpeechVoiceService);
   readonly commandService = inject(AgentCommandService);
+  readonly commsAssistant = inject(CommunicationsAssistantService);
 
   readonly activeTab = signal<AutomationCategory>('ALL');
   readonly isExecuting = signal(false);
@@ -48,6 +51,13 @@ export class AutomationPageComponent implements OnInit {
   readonly executionStage = signal<string>('IDLE');
   readonly executionLogs = signal<{ time: string; type: string; message: string; success: boolean }[]>([]);
   readonly lastOutputData = signal<any>(null);
+
+  // Assistant Comms State
+  customAutomationReply = signal<string>('');
+  commsInputEmail = '';
+  commsInputPhone = '';
+  commsInputMode: 'HUMAN_CONFIRMATION' | 'FULLY_AUTONOMOUS' = 'HUMAN_CONFIRMATION';
+  isEditingCommsProfile = signal<boolean>(false);
 
   // Universal Natural Language Prompt
   universalPrompt = '';
@@ -186,7 +196,7 @@ export class AutomationPageComponent implements OnInit {
 
   async loadPresets(): Promise<void> {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/automation/presets');
+      const res = await fetch(getApiUrl('/api/v1/automation/presets'));
       if (res.ok) {
         const data = await res.json();
         if (data?.presets?.length) {
@@ -200,7 +210,7 @@ export class AutomationPageComponent implements OnInit {
 
   async fetchMobileIdentifiers(): Promise<void> {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/devices/mobile/status');
+      const res = await fetch(getApiUrl('/api/v1/devices/mobile/status'));
       if (res.ok) {
         const json = await res.json();
         const data = json.data || {};
@@ -241,7 +251,7 @@ export class AutomationPageComponent implements OnInit {
       this.executionProgress.set(50);
       this.executionStage.set('EXECUTING');
 
-      const res = await fetch('http://127.0.0.1:8000/api/v1/automation/execute', {
+      const res = await fetch(getApiUrl('/api/v1/automation/execute'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category, action, params })
@@ -347,7 +357,7 @@ export class AutomationPageComponent implements OnInit {
       this.executionStage.set('EXECUTING');
 
       // First try /api/v1/automation/execute with goal
-      const res = await fetch('http://127.0.0.1:8000/api/v1/automation/execute', {
+      const res = await fetch(getApiUrl('/api/v1/automation/execute'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ category: 'TASK', action: 'goal', goal: text })
@@ -442,7 +452,7 @@ export class AutomationPageComponent implements OnInit {
       this.executionProgress.set(60);
       this.executionStage.set('EXECUTING');
 
-      const res = await fetch('http://127.0.0.1:8000/api/v1/devices/mobile/action', {
+      const res = await fetch(getApiUrl('/api/v1/devices/mobile/action'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action, params })
@@ -485,6 +495,49 @@ export class AutomationPageComponent implements OnInit {
     if (!this.mobileTextInput.trim()) return;
     await this.executeMobileAction('type', { text: this.mobileTextInput.trim() });
     this.mobileTextInput = '';
+  }
+
+  toggleCommsProfileEdit(): void {
+    const prof = this.commsAssistant.profile();
+    if (prof) {
+      this.commsInputEmail = prof.email || '';
+      this.commsInputPhone = prof.phone_number || '';
+      this.commsInputMode = prof.auto_reply_mode;
+    }
+    this.isEditingCommsProfile.set(!this.isEditingCommsProfile());
+  }
+
+  async saveCommsProfile(): Promise<void> {
+    const ok = await this.commsAssistant.saveProfile(
+      this.commsInputEmail,
+      this.commsInputPhone,
+      true,
+      this.commsInputMode
+    );
+    if (ok) {
+      this.isEditingCommsProfile.set(false);
+      this.addLog('ASSISTANT_PROFILE', `Profile connected: ${this.commsInputEmail}`, true);
+    }
+  }
+
+  selectCommsMessage(msg: InboxMessage): void {
+    this.commsAssistant.selectMessage(msg);
+    this.customAutomationReply.set('');
+  }
+
+  selectReplyOptionText(text: string): void {
+    this.customAutomationReply.set(text);
+  }
+
+  async sendCommsReply(msg: InboxMessage, replyText: string): Promise<void> {
+    const ok = await this.commsAssistant.sendReply(msg, replyText);
+    this.addLog('COMMS_DISPATCH', `Dispatched reply to ${msg.sender} via ${msg.channel.toUpperCase()}`, ok);
+  }
+
+  async triggerBrainUpgrade(): Promise<void> {
+    const ok = await this.commsAssistant.evaluateAndUpgradeBrain();
+    const ver = this.commsAssistant.brainStatus()?.version || 'Tuned';
+    this.addLog('BRAIN_UPGRADE', `Autonomous self-evaluation loop completed -> ${ver}`, ok);
   }
 
   private addLog(type: string, message: string, success: boolean): void {

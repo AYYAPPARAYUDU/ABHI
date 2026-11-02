@@ -3,6 +3,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
 import asyncio
+from backend.app.core.paths import get_project_root
 from backend.app.services.memory.database import init_db, AsyncSessionFactory
 from backend.app.services.memory.models import UserProfileRecord, EpisodicMemoryRecord
 from sqlalchemy import delete
@@ -21,7 +22,7 @@ async def clean_and_seed():
                     "name": "Ayyappa Rayudu Ravuvari",
                     "handle": "@ayyapparayudu",
                     "role": "Principal Systems & AI Architect",
-                    "workspace": "C:\\Users\\AYYAPPA RAYUDU\\OneDrive\\Desktop\\ABHI",
+                    "workspace": str(get_project_root()),
                     "verified": True
                 }
             ),

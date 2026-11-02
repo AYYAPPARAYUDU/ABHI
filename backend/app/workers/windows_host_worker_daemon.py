@@ -11,6 +11,7 @@ import time
 import signal
 import asyncio
 import logging
+from typing import Optional
 from pathlib import Path
 from datetime import datetime, timezone
 
@@ -43,8 +44,8 @@ logger = logging.getLogger("windows_host_worker")
 class WindowsHostWorkerDaemon:
     """Manages the lifecycle of the host-native Windows UIA automation worker."""
 
-    def __init__(self, backend_url: str = "http://127.0.0.1:8000"):
-        self.backend_url = backend_url
+    def __init__(self, backend_url: Optional[str] = None):
+        self.backend_url = backend_url or os.getenv("BACKEND_URL", "http://127.0.0.1:8000")
         self.worker = windows_worker
         self.uia_driver = windows_uia_driver
         self.leases = lease_manager

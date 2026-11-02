@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { getApiUrl } from '../config/api-config';
 
 @Injectable({
   providedIn: 'root'
@@ -278,7 +279,7 @@ export class SpeechVoiceService {
 
     // 2. Stream authentic human audio from backend perception service
     const userSpeed = this.speechSpeedRate();
-    const streamUrl = `http://127.0.0.1:8000/api/v1/perception/tts/stream?text=${encodeURIComponent(spokenText)}&voice=${encodeURIComponent(voice)}&rate=${userSpeed}`;
+    const streamUrl = getApiUrl(`/api/v1/perception/tts/stream?text=${encodeURIComponent(spokenText)}&voice=${encodeURIComponent(voice)}&rate=${userSpeed}`);
 
     try {
       const audio = new Audio(streamUrl);

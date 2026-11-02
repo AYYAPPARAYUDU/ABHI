@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { getApiUrl } from '../../../core/config/api-config';
 import {
   MediaJobDTO,
   MediaArtifactDTO,
@@ -35,6 +36,10 @@ import {
   MediaReuseRecommendationDTO,
   MediaCollectionDTO,
   MediaAnalysisJobDTO,
+  MediaVaultItemDTO,
+  MediaVaultSummaryDTO,
+  AutomatedStudioRequestDTO,
+  AutomatedStudioResultDTO,
 } from '../models/media.model';
 
 
@@ -43,7 +48,7 @@ import {
 })
 export class MediaService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://127.0.0.1:8000/api/v1/media';
+  private baseUrl = getApiUrl('/api/v1/media');
 
   // Core Signals (Workflow Composer Domain - Phase 8 Stage 8.4)
   templates = signal<MediaWorkflowTemplate[]>([]);
@@ -106,6 +111,17 @@ export class MediaService {
   indexingJobs = signal<MediaAnalysisJobDTO[]>([]);
   isLibraryLoading = signal<boolean>(false);
   libraryErrorMessage = signal<string | null>(null);
+
+  // Core Signals (Animated Media Storage Vault & Automated Studio)
+  vaultItems = signal<MediaVaultItemDTO[]>([]);
+  vaultSummary = signal<MediaVaultSummaryDTO | null>(null);
+  isVaultLoading = signal<boolean>(false);
+  vaultError = signal<string | null>(null);
+  vaultFilterType = signal<string>('all');
+  vaultSearchQuery = signal<string>('');
+  activeVaultPreview = signal<MediaVaultItemDTO | null>(null);
+  isAutomating = signal<boolean>(false);
+  latestAutomationResult = signal<AutomatedStudioResultDTO | null>(null);
 
 
   // Computed Signals (Creative Studio)
@@ -974,6 +990,70 @@ export class MediaService {
     );
   }
 
+  // ============================================================================
+  // Animated Media Storage Vault & Automated Studio Methods
+  // ============================================================================
+
+  fetchVault(
+    type?: string,
+    search?: string,
+    limit: number = 100,
+    offset: number = 0,
+    sort: string = 'newest'
+  ): Observable<MediaVaultSummaryDTO> {
+    this.isVaultLoading.set(true);
+    this.vaultError.set(null);
+    let url = `${this.baseUrl}/vault?limit=${limit}&offset=${offset}&sort=${sort}`;
+    if (type && type !== 'all') {
+      url += `&type=${encodeURIComponent(type)}`;
+    }
+    if (search && search.trim()) {
+      url += `&search=${encodeURIComponent(search.trim())}`;
+    }
+
+    return this.http.get<MediaVaultSummaryDTO>(url).pipe(
+      tap({
+        next: (summary) => {
+          this.vaultSummary.set(summary);
+          this.vaultItems.set(summary.items || []);
+          this.isVaultLoading.set(false);
+        },
+        error: (err) => {
+          this.vaultError.set(err?.error?.detail || 'Failed to scan media vault');
+          this.isVaultLoading.set(false);
+        },
+      })
+    );
+  }
+
+  executeAutomated(request: AutomatedStudioRequestDTO): Observable<AutomatedStudioResultDTO> {
+    this.isAutomating.set(true);
+    this.errorMessage.set(null);
+    return this.http.post<AutomatedStudioResultDTO>(`${this.baseUrl}/automated/generate`, request).pipe(
+      tap({
+        next: (res) => {
+          this.latestAutomationResult.set(res);
+          this.isAutomating.set(false);
+          // Refresh vault to include newly generated media
+          this.fetchVault(this.vaultFilterType(), this.vaultSearchQuery()).subscribe();
+          this.refreshAll();
+        },
+        error: (err) => {
+          this.errorMessage.set(err?.error?.detail || 'Automated generation failed');
+          this.isAutomating.set(false);
+        },
+      })
+    );
+  }
+
+  getVaultStreamUrl(relativePath: string): string {
+    return `${this.baseUrl}/vault/stream?path=${encodeURIComponent(relativePath)}`;
+  }
+
+  getVaultDownloadUrl(relativePath: string): string {
+    return `${this.baseUrl}/vault/download?path=${encodeURIComponent(relativePath)}`;
+  }
+
   refreshAll(): void {
     this.fetchModels().subscribe();
     this.fetchEditModels().subscribe();
@@ -988,6 +1068,7 @@ export class MediaService {
     this.fetchCreativeTemplates().subscribe();
     this.fetchCreativePipelines().subscribe();
     this.fetchAttestations().subscribe();
+    this.fetchVault().subscribe();
   }
 
   refreshLibrary(): void {

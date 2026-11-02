@@ -1000,4 +1000,452 @@ async def list_media_indexing_jobs():
     return await media_indexing_manager.list_jobs()
 
 
+# ============================================================================
+# Dynamic Animated Media Storage Vault & Automated Studio Endpoints
+# ============================================================================
+
+import uuid
+from datetime import datetime, timezone
+
+class MediaVaultItem(BaseModel):
+    id: str
+    filename: str
+    media_type: str  # "image" | "video" | "audio"
+    extension: str
+    size_bytes: int
+    size_formatted: str
+    created_at: float
+    created_iso: str
+    relative_path: str
+    stream_url: str
+    download_url: str
+    prompt: Optional[str] = None
+    model_id: Optional[str] = None
+    dimensions: Optional[str] = None
+    sha256: Optional[str] = None
+
+
+class MediaVaultSummary(BaseModel):
+    total_count: int
+    image_count: int
+    video_count: int
+    audio_count: int
+    total_bytes: int
+    total_size_formatted: str
+    items: List[MediaVaultItem]
+
+
+class AudioGenerateRequest(BaseModel):
+    prompt: str = Field(..., description="Prompt text or narration script for audio synthesis")
+    voice: Optional[str] = Field(default="en-GB-RyanNeural", description="Neural voice identifier")
+    style: Optional[str] = Field(default="SPEECH", description="Audio style: SPEECH or MUSIC")
+
+
+class AutomatedStudioRequest(BaseModel):
+    category: str = Field(..., description="'image', 'video', or 'audio'")
+    prompt: str = Field(..., description="Prompt or description")
+    aspect_ratio: Optional[str] = Field(default="1:1", description="1:1, 16:9, or 9:16")
+
+
+VAULT_MIME_MAP = {
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".webp": "image/webp",
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".mov": "video/quicktime",
+    ".wav": "audio/wav",
+    ".mp3": "audio/mpeg",
+    ".ogg": "audio/ogg",
+    ".flac": "audio/flac",
+}
+
+
+def _format_size(size_bytes: int) -> str:
+    for unit in ["B", "KB", "MB", "GB"]:
+        if size_bytes < 1024.0:
+            return f"{size_bytes:.1f} {unit}"
+        size_bytes /= 1024.0
+    return f"{size_bytes:.1f} TB"
+
+
+def _resolve_project_root() -> Path:
+    curr = Path(__file__).resolve().parent
+    for p in [curr] + list(curr.parents):
+        if (p / "backend").exists() and ((p / "frontend").exists() or (p / "project_data").exists()):
+            return p
+    return Path(__file__).resolve().parents[4]
+
+
+def _get_media_dirs() -> List[Path]:
+    root = _resolve_project_root()
+    dirs = [
+        (root / "project_data" / "media").resolve(),
+        (root / "media").resolve(),
+        (root / "database" / "media").resolve(),
+    ]
+    (root / "project_data" / "media").mkdir(parents=True, exist_ok=True)
+    return [d for d in dirs if d.exists()]
+
+
+def _resolve_vault_file(relative_or_safe_path: str) -> Optional[Path]:
+    clean_path = relative_or_safe_path.strip().replace("\\", "/").lstrip("/")
+    if ".." in clean_path:
+        return None
+    root = _resolve_project_root()
+    for base in _get_media_dirs():
+        candidate = (base / clean_path).resolve()
+        if candidate.exists() and candidate.is_file():
+            if str(candidate).startswith(str(base)) or str(candidate).startswith(str(root)):
+                return candidate
+        # Also check direct filename match in subdirectories
+        candidate_flat = (base / Path(clean_path).name).resolve()
+        if candidate_flat.exists() and candidate_flat.is_file():
+            return candidate_flat
+        # Check recursively if single file name provided
+        matches = list(base.rglob(Path(clean_path).name))
+        if matches and matches[0].is_file():
+            return matches[0]
+    return None
+
+
+@router.get("/vault", response_model=MediaVaultSummary)
+async def get_media_vault(
+    type: Optional[str] = Query(default=None, description="Filter by type: image, video, audio"),
+    search: Optional[str] = Query(default=None, description="Search keyword in filename or prompt"),
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    sort: str = Query(default="newest", description="'newest', 'oldest', or 'size'")
+):
+    """Dynamically scan physical storage and SQLite WAL for all real generated media."""
+    root = _resolve_project_root()
+    media_dirs = _get_media_dirs()
+
+    # 1. Query SQLite WAL metadata map
+    db_meta: Dict[str, Dict[str, Any]] = {}
+    try:
+        db_paths = [
+            root / "database" / "relational" / "system.db",
+            root / "backend" / "database" / "relational" / "system.db"
+        ]
+        import sqlite3
+        for db_file in db_paths:
+            if db_file.exists():
+                conn = sqlite3.connect(f"file:{db_file}?mode=ro", uri=True)
+                cur = conn.cursor()
+                try:
+                    cur.execute("SELECT filename, prompt_preview, model_id, sha256, width, height FROM media_artifacts")
+                    for row in cur.fetchall():
+                        db_meta[row[0]] = {"prompt": row[1], "model": row[2], "sha256": row[3], "dims": f"{row[4]}x{row[5]}"}
+                except Exception:
+                    pass
+                try:
+                    cur.execute("SELECT filename, prompt_preview, model_id, sha256, width, height, fps, duration_seconds FROM video_artifacts")
+                    for row in cur.fetchall():
+                        db_meta[row[0]] = {"prompt": row[1], "model": row[2], "sha256": row[3], "dims": f"{row[4]}x{row[5]} @ {row[6]}fps"}
+                except Exception:
+                    pass
+                conn.close()
+    except Exception as e:
+        logger.debug(f"SQLite WAL metadata query skipped: {e}")
+
+    # Merge in-memory coordinator artifacts
+    for art in media_coordinator.list_artifacts(limit=200):
+        if art.filename not in db_meta:
+            db_meta[art.filename] = {
+                "prompt": art.prompt_preview,
+                "model": art.model_id,
+                "sha256": art.sha256,
+                "dims": f"{art.width}x{art.height}"
+            }
+    for vart in video_coordinator.list_artifacts(limit=200):
+        if vart.filename not in db_meta:
+            db_meta[vart.filename] = {
+                "prompt": vart.prompt_preview,
+                "model": vart.model_id,
+                "sha256": vart.sha256,
+                "dims": f"{vart.width}x{vart.height}"
+            }
+
+    # 2. Dynamic Disk Scan
+    raw_items = []
+    seen_hashes = set()
+    total_counts = {"image": 0, "video": 0, "audio": 0}
+    total_bytes = 0
+
+    for base_dir in media_dirs:
+        if not base_dir.exists():
+            continue
+        for f in base_dir.rglob("*"):
+            if not f.is_file():
+                continue
+            ext = f.suffix.lower()
+            if ext not in VAULT_MIME_MAP:
+                continue
+
+            m_type = "image" if ext in (".png", ".jpg", ".jpeg", ".webp") else ("video" if ext in (".mp4", ".webm", ".mov") else "audio")
+            try:
+                st = f.stat()
+            except OSError:
+                continue
+
+            # Deduplicate by (filename, size)
+            dedup_key = f"{f.name}_{st.st_size}"
+            if dedup_key in seen_hashes:
+                continue
+            seen_hashes.add(dedup_key)
+
+            total_counts[m_type] += 1
+            total_bytes += st.st_size
+
+            # Relative path from base_dir
+            try:
+                rel = str(f.relative_to(base_dir)).replace("\\", "/")
+            except ValueError:
+                rel = f.name
+
+            meta = db_meta.get(f.name, {})
+            prompt_val = meta.get("prompt")
+            if not prompt_val:
+                prompt_val = f.name.replace(".png", "").replace(".mp4", "").replace(".wav", "").replace("_", " ")
+
+            raw_items.append({
+                "id": f.stem,
+                "filename": f.name,
+                "media_type": m_type,
+                "extension": ext.lstrip("."),
+                "size_bytes": st.st_size,
+                "size_formatted": _format_size(st.st_size),
+                "created_at": st.st_mtime,
+                "created_iso": datetime.fromtimestamp(st.st_mtime, tz=timezone.utc).isoformat(),
+                "relative_path": rel,
+                "stream_url": f"/api/v1/media/vault/stream?path={rel}",
+                "download_url": f"/api/v1/media/vault/download?path={rel}",
+                "prompt": prompt_val,
+                "model_id": meta.get("model"),
+                "dimensions": meta.get("dims"),
+                "sha256": meta.get("sha256")
+            })
+
+    # Filter by type
+    if type and type.lower() != "all":
+        target = type.lower()
+        raw_items = [it for it in raw_items if it["media_type"] == target]
+
+    # Filter by search
+    if search:
+        q = search.lower()
+        raw_items = [
+            it for it in raw_items
+            if q in it["filename"].lower() or (it.get("prompt") and q in it["prompt"].lower())
+        ]
+
+    # Sort
+    if sort == "oldest":
+        raw_items.sort(key=lambda x: x["created_at"])
+    elif sort == "size":
+        raw_items.sort(key=lambda x: x["size_bytes"], reverse=True)
+    else:  # newest
+        raw_items.sort(key=lambda x: x["created_at"], reverse=True)
+
+    paginated = raw_items[offset : offset + limit]
+
+    return MediaVaultSummary(
+        total_count=len(raw_items),
+        image_count=total_counts["image"],
+        video_count=total_counts["video"],
+        audio_count=total_counts["audio"],
+        total_bytes=total_bytes,
+        total_size_formatted=_format_size(total_bytes),
+        items=[MediaVaultItem(**it) for it in paginated]
+    )
+
+
+@router.get("/vault/stream")
+async def stream_vault_media(path: str = Query(..., description="Relative path of media file")):
+    """Dynamically stream any media file with byte-range support for browser playback."""
+    file_path = _resolve_vault_file(path)
+    if not file_path or not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"Media file not found in storage: {path}")
+
+    ext = file_path.suffix.lower()
+    media_type = VAULT_MIME_MAP.get(ext, "application/octet-stream")
+    return FileResponse(
+        path=str(file_path),
+        media_type=media_type,
+        filename=file_path.name,
+        headers={"Accept-Ranges": "bytes"}
+    )
+
+
+@router.get("/vault/download")
+async def download_vault_media(path: str = Query(..., description="Relative path of media file")):
+    """Dynamically download raw media file binary."""
+    file_path = _resolve_vault_file(path)
+    if not file_path or not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"Media file not found in storage: {path}")
+
+    return FileResponse(
+        path=str(file_path),
+        media_type="application/octet-stream",
+        filename=file_path.name
+    )
+
+
+@router.post("/audio/generate", status_code=status.HTTP_201_CREATED)
+async def generate_speech_or_music(payload: AudioGenerateRequest):
+    """Dynamically generate speech audio or musical sequence, storing to physical vault storage."""
+    from backend.app.perception.audio.tts import text_to_speech
+    import time
+    import hashlib
+
+    text = payload.prompt.strip()
+    if not text:
+        raise HTTPException(status_code=400, detail="Prompt must not be empty")
+
+    root = _resolve_project_root()
+    audio_dir = (root / "media" / "audio").resolve()
+    audio_dir.mkdir(parents=True, exist_ok=True)
+    proj_audio_dir = (root / "project_data" / "media" / "audio").resolve()
+    proj_audio_dir.mkdir(parents=True, exist_ok=True)
+
+    tts_res = await text_to_speech.synthesize(
+        text=text,
+        voice=payload.voice or "en-GB-RyanNeural"
+    )
+
+    file_id = f"audio_{uuid.uuid4().hex[:10]}"
+    filename = f"{file_id}.wav"
+    dest_path = audio_dir / filename
+    with open(dest_path, "wb") as f:
+        f.write(tts_res.audio_bytes)
+
+    # Sync into project_data/media/audio
+    try:
+        with open(proj_audio_dir / filename, "wb") as f:
+            f.write(tts_res.audio_bytes)
+    except Exception:
+        pass
+
+    sha256 = hashlib.sha256(tts_res.audio_bytes).hexdigest()
+    rel_path = f"audio/{filename}"
+
+    # Register artifact in media coordinator
+    try:
+        from backend.app.media.models import MediaArtifact, ImageFormat, MediaType
+        art = MediaArtifact(
+            artifact_id=f"art_{file_id}",
+            job_id=f"job_{file_id}",
+            media_type=MediaType.AUDIO,
+            path=f"media/{rel_path}",
+            filename=filename,
+            format=ImageFormat.PNG,
+            width=0,
+            height=0,
+            size_bytes=len(tts_res.audio_bytes),
+            sha256=sha256,
+            created_at=time.time(),
+            model_id=tts_res.engine_used,
+            generation_parameters_hash=f"gen_{hash(text)}",
+            prompt_preview=text[:80],
+            provenance="ACTUAL"
+        )
+        media_coordinator.storage.register_artifact(art)
+    except Exception as e:
+        logger.warning(f"Failed to register audio artifact in media storage: {e}")
+
+    return {
+        "status": "SUCCESS",
+        "id": file_id,
+        "filename": filename,
+        "media_type": "audio",
+        "size_bytes": len(tts_res.audio_bytes),
+        "size_formatted": _format_size(len(tts_res.audio_bytes)),
+        "duration_seconds": tts_res.duration_seconds,
+        "relative_path": rel_path,
+        "stream_url": f"/api/v1/media/vault/stream?path={rel_path}",
+        "download_url": f"/api/v1/media/vault/download?path={rel_path}",
+        "prompt": text,
+        "created_at": time.time(),
+        "created_iso": datetime.now(timezone.utc).isoformat(),
+        "sha256": sha256
+    }
+
+
+@router.post("/automated/generate", status_code=status.HTTP_201_CREATED)
+async def automated_generate(payload: AutomatedStudioRequest):
+    """Unified 1-click automated media synthesis: automates model selection, dimensions, resources."""
+    prompt = payload.prompt.strip()
+    if not prompt:
+        raise HTTPException(status_code=400, detail="Prompt is required")
+
+    cat = payload.category.lower().strip()
+    if cat == "image":
+        dim_map = {
+            "1:1": (512, 512),
+            "16:9": (768, 432),
+            "9:16": (432, 768),
+        }
+        w, h = dim_map.get(payload.aspect_ratio or "1:1", (512, 512))
+        available_models = media_coordinator.get_models()
+        model_id = available_models[0].model_id if available_models else "sd-turbo-local"
+        from backend.app.media.models import ImageGenerationRequest, ImageFormat, QualityProfile
+        req = ImageGenerationRequest(
+            prompt=prompt,
+            model_id=model_id,
+            width=w,
+            height=h,
+            steps=20,
+            output_format=ImageFormat.PNG,
+            quality_profile=QualityProfile.STANDARD,
+            preferred_device="GPU",
+        )
+        success, job, msg = media_coordinator.submit_image_generation(req)
+        return {
+            "status": "SUCCESS" if success else "FAILED",
+            "category": "image",
+            "job": job.model_dump() if hasattr(job, "model_dump") else job,
+            "message": msg or "Image generation job submitted"
+        }
+
+    elif cat == "video":
+        dim_map = {
+            "1:1": (512, 512),
+            "16:9": (576, 320),
+            "9:16": (320, 576),
+        }
+        w, h = dim_map.get(payload.aspect_ratio or "1:1", (512, 512))
+        v_models = video_coordinator.get_models()
+        v_model_id = v_models[0].model_id if v_models else "svd-turbo-local"
+        from backend.app.media.video_models import VideoGenerationRequest, VideoFormat
+        v_req = VideoGenerationRequest(
+            prompt=prompt,
+            model_id=v_model_id,
+            width=w,
+            height=h,
+            fps=24,
+            duration_seconds=2.0,
+            steps=20,
+            output_format=VideoFormat.MP4,
+            preferred_device="GPU",
+        )
+        success, job, msg = video_coordinator.submit_video_generation(v_req)
+        return {
+            "status": "SUCCESS" if success else "FAILED",
+            "category": "video",
+            "job": job.model_dump() if hasattr(job, "model_dump") else job,
+            "message": msg or "Video generation job submitted"
+        }
+
+    elif cat in ("audio", "speech", "music"):
+        return await generate_speech_or_music(AudioGenerateRequest(
+            prompt=prompt,
+            style="MUSIC" if "music" in cat else "SPEECH"
+        ))
+    else:
+        raise HTTPException(status_code=400, detail=f"Unsupported category: {payload.category}")
+
+
+
 

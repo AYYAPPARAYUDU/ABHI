@@ -975,4 +975,51 @@ export interface MediaAnalysisJobDTO {
   completed_at?: number | null;
 }
 
+export interface MediaVaultItemDTO {
+  id: string;
+  filename: string;
+  media_type: 'image' | 'video' | 'audio';
+  extension: string;
+  size_bytes: number;
+  size_formatted: string;
+  created_at: number;
+  created_iso: string;
+  relative_path: string;
+  stream_url: string;
+  download_url: string;
+  prompt?: string | null;
+  model_id?: string | null;
+  dimensions?: string | null;
+  sha256?: string | null;
+}
+
+export interface MediaVaultSummaryDTO {
+  total_count: number;
+  image_count: number;
+  video_count: number;
+  audio_count: number;
+  total_bytes: number;
+  total_size_formatted: string;
+  items: MediaVaultItemDTO[];
+}
+
+export interface AutomatedStudioRequestDTO {
+  category: 'image' | 'video' | 'audio';
+  prompt: string;
+  aspect_ratio?: string;
+}
+
+export interface AutomatedStudioResultDTO {
+  status: 'SUCCESS' | 'FAILED';
+  category: string;
+  job?: any;
+  message?: string;
+  id?: string;
+  filename?: string;
+  stream_url?: string;
+  download_url?: string;
+  duration_seconds?: number;
+}
+
+
 

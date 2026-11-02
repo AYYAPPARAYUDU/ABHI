@@ -4,14 +4,14 @@
     <div class="media-title-group">
       <div class="media-title-row">
         <h1 class="media-title">
-          <span class="title-sparkle">✨</span> Local Media, Inpainting & Video Studio
+          <span class="title-sparkle">✨</span> Antigravity Media Studio & Vault
         </h1>
         <span class="media-stage-badge">
-          Phase 8.6 Hardened
+          Automated Local-First
         </span>
       </div>
       <p class="media-subtitle">
-        Multimodal creative pipelines, DAG workflows, non-destructive editing, inpainting, canvas outpainting, diffusion synthesis & lineage tracking
+        One-click automated synthesis for Images, Videos, Speech & Music — coupled with an animated physical storage vault.
       </p>
     </div>
 
@@ -19,7 +19,7 @@
     <div class="media-telemetry-row">
       <div class="media-metric-well">
         <span class="metric-label">3D SPATIAL CORE</span>
-        <span class="metric-value emerald-val">SYNCHRONIZED</span>
+        <span class="metric-value emerald-val">ONLINE</span>
       </div>
 
       <div class="media-metric-well">
@@ -30,9 +30,9 @@
       </div>
 
       <div class="media-metric-well">
-        <span class="metric-label">ACTIVE JOBS</span>
+        <span class="metric-label">STORAGE VAULT</span>
         <span class="metric-value blue-val">
-          <span [appAnimeCounter]="mediaService.activeJobsCount()">{{ mediaService.activeJobsCount() }}</span> Active
+          <span [appAnimeCounter]="mediaService.vaultSummary()?.total_count || mediaService.vaultItems().length">{{ mediaService.vaultSummary()?.total_count || mediaService.vaultItems().length }}</span> Real Files
         </span>
       </div>
 
@@ -41,241 +41,867 @@
         appAnimeInteractive
         (click)="mediaService.refreshAll()"
         class="media-refresh-btn"
-        title="Refresh Media State"
+        title="Refresh Media & Vault State"
       >
         🔄
       </button>
     </div>
   </header>
 
-  <!-- Studio Navigation Tabs (Neumorphic Ribbon) -->
-  <nav class="media-tabs-ribbon" role="tablist" aria-label="Media Studio Sub-routes">
+  <!-- Studio Navigation Tabs (Streamlined Neumorphic Ribbon) -->
+  <nav class="media-tabs-ribbon" role="tablist" aria-label="Media Studio Navigation">
     <button
       type="button"
       appAnimeInteractive
       role="tab"
-      (click)="activeTab.set('audio')"
-      [class.active]="activeTab() === 'audio'"
-      class="media-tab-btn"
+      (click)="activeTab.set('studio')"
+      [class.active]="activeTab() === 'studio'"
+      class="media-tab-btn primary-tab"
     >
-      <span>🎵</span> Audio & 3D Spectrum
+      <span class="tab-icon">⚡</span> Automated Studio
     </button>
+
     <button
       type="button"
       appAnimeInteractive
       role="tab"
-      (click)="activeTab.set('provenance')"
-      [class.active]="activeTab() === 'provenance'"
-      class="media-tab-btn"
+      (click)="openVaultTab()"
+      [class.active]="activeTab() === 'vault'"
+      class="media-tab-btn primary-tab"
     >
-      <span>🛡️</span> C2PA Provenance & Replay
+      <span class="tab-icon">💎</span> Animated Storage Vault
+      @if (mediaService.vaultSummary()?.total_count) {
+        <span class="tab-count-badge">
+          {{ mediaService.vaultSummary()?.total_count }}
+        </span>
+      }
     </button>
+
     <button
       type="button"
       appAnimeInteractive
       role="tab"
-      (click)="activeTab.set('creative')"
-      [class.active]="activeTab() === 'creative'"
-      class="media-tab-btn"
+      (click)="activeTab.set('advanced')"
+      [class.active]="activeTab() === 'advanced' || ['provenance', 'audio', 'creative', 'video', 'edit', 'composer', 'image'].includes(activeTab())"
+      class="media-tab-btn secondary-tab"
     >
-      <span>🎬</span> Creative Studio
-    </button>
-    <button
-      type="button"
-      appAnimeInteractive
-      role="tab"
-      (click)="activeTab.set('video')"
-      [class.active]="activeTab() === 'video'"
-      class="media-tab-btn"
-    >
-      <span>🎥</span> Video Studio
-    </button>
-    <button
-      type="button"
-      appAnimeInteractive
-      role="tab"
-      (click)="activeTab.set('edit')"
-      [class.active]="activeTab() === 'edit'"
-      class="media-tab-btn"
-    >
-      <span>🎨</span> Edit & Inpainting
-    </button>
-    <button
-      type="button"
-      appAnimeInteractive
-      role="tab"
-      (click)="activeTab.set('composer')"
-      [class.active]="activeTab() === 'composer'"
-      class="media-tab-btn"
-    >
-      <span>⚡</span> Workflow Composer
-    </button>
-    <button
-      type="button"
-      appAnimeInteractive
-      role="tab"
-      (click)="activeTab.set('image')"
-      [class.active]="activeTab() === 'image'"
-      class="media-tab-btn"
-    >
-      <span>🖼️</span> Image Synthesis
+      <span class="tab-icon">⚙️</span> Advanced Modules
     </button>
   </nav>
 
-  <!-- Error Message Banner -->
-  @if (mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage()) {
+  <!-- Feedback Banner / Error Messages -->
+  @if (mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage() || mediaService.vaultError()) {
     <div class="media-error-alert" role="alert">
-      <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage() }}</span>
+      <span>⚠️ {{ mediaService.errorMessage() || mediaService.videoErrorMessage() || mediaService.editErrorMessage() || mediaService.creativeErrorMessage() || mediaService.provenanceErrorMessage() || mediaService.vaultError() }}</span>
       <button type="button" (click)="clearErrors()" class="error-dismiss-btn">✕</button>
     </div>
   }
 
-  <!-- AUDIO & 3D SPECTRUM TAB CONTENT -->
-  @if (activeTab() === 'audio') {
-    <div class="tab-pane-container">
-      <app-media-audio-spectrum></app-media-audio-spectrum>
+  @if (copyFeedback()) {
+    <div class="media-toast-alert" role="status">
+      <span>📋 {{ copyFeedback() }}</span>
     </div>
   }
 
-  <!-- PROVENANCE & REPLAY TAB CONTENT (Phase 8.6) -->
-  @if (activeTab() === 'provenance') {
-    <div class="tab-pane-container">
-      <app-media-provenance-inspector></app-media-provenance-inspector>
-    </div>
-  }
+  <!-- ========================================================================= -->
+  <!-- TAB 1: AUTOMATED 3-BUTTON STUDIO (Streamlined Minimal Automation)        -->
+  <!-- ========================================================================= -->
+  @if (activeTab() === 'studio') {
+    <div class="automated-studio-container">
+      <!-- 3 Minimal Mode Selector Buttons -->
+      <section class="mode-selector-section" aria-label="Synthesis Category">
+        <div class="studio-mode-buttons">
+          <button
+            type="button"
+            appAnimeInteractive
+            (click)="setCategory('image')"
+            [class.active]="automatedCategory() === 'image'"
+            class="mode-btn mode-btn-image"
+          >
+            <span class="mode-icon">🎨</span>
+            <div class="mode-meta">
+              <span class="mode-title">Generate Image</span>
+              <span class="mode-sub">Diffusion 512p/768p Auto</span>
+            </div>
+          </button>
 
-  <!-- CREATIVE STUDIO TAB CONTENT (Phase 8.5) -->
-  @if (activeTab() === 'creative') {
-    <div class="tab-pane-container">
-      <app-creative-pipeline-studio></app-creative-pipeline-studio>
-    </div>
-  }
+          <button
+            type="button"
+            appAnimeInteractive
+            (click)="setCategory('video')"
+            [class.active]="automatedCategory() === 'video'"
+            class="mode-btn mode-btn-video"
+          >
+            <span class="mode-icon">🎬</span>
+            <div class="mode-meta">
+              <span class="mode-title">Generate Video</span>
+              <span class="mode-sub">Temporal SVD 24fps Auto</span>
+            </div>
+          </button>
 
-  <!-- WORKFLOW COMPOSER TAB CONTENT (Phase 8.4) -->
-  @if (activeTab() === 'composer') {
-    <div class="tab-pane-container composer-grid">
-      <div class="composer-main-col">
-        <app-visual-workflow-composer #workflowComposer></app-visual-workflow-composer>
-        <app-workflow-simulation-panel
-          [simulation]="mediaService.simulationResult()"
-        ></app-workflow-simulation-panel>
-      </div>
-
-      <div class="composer-side-col">
-        <app-workflow-template-catalog
-          [templates]="mediaService.templates()"
-          (templateSelected)="onTemplateSelected($event)"
-        ></app-workflow-template-catalog>
-
-        <app-workflow-manifest-viewer
-          [manifest]="mediaService.activeManifest()"
-        ></app-workflow-manifest-viewer>
-      </div>
-    </div>
-  }
-
-  <!-- EDIT & INPAINTING STUDIO TAB CONTENT (Phase 8.3) -->
-  @if (activeTab() === 'edit') {
-    <div class="tab-pane-container edit-grid">
-      <div class="edit-form-col">
-        <app-image-edit-form
-          [sourceArtifact]="selectedSourceArtifact()"
-          [editModels]="mediaService.editModels()"
-          [maskBase64]="currentMaskBase64()"
-          [isLoading]="mediaService.isEditLoading()"
-          (editSubmitted)="onEditSubmitted($event)"
-        ></app-image-edit-form>
-
-        <app-artifact-lineage-graph
-          [selectedArtifact]="selectedSourceArtifact()"
-          [lineageRecord]="mediaService.activeLineage()"
-        ></app-artifact-lineage-graph>
-      </div>
-
-      <div class="edit-canvas-col">
-        <app-mask-canvas-editor
-          [sourceArtifact]="selectedSourceArtifact()"
-          (maskApplied)="onMaskApplied($event)"
-        ></app-mask-canvas-editor>
-
-        @if (selectedSourceArtifact() && latestEditedArtifact()) {
-          <app-image-diff-viewer
-            [originalArtifact]="selectedSourceArtifact()"
-            [editedArtifact]="latestEditedArtifact()"
-            [lineageRecord]="mediaService.activeLineage()"
-          ></app-image-diff-viewer>
-        }
-      </div>
-
-      <div class="edit-gallery-row">
-        <div class="gallery-title-bar">
-          <h3 class="gallery-heading">
-            Source Image Artifacts (Click image to load into Edit Studio)
-          </h3>
-          <span class="gallery-count">
-            {{ mediaService.artifacts().length }} Registered Local Artifacts
-          </span>
+          <button
+            type="button"
+            appAnimeInteractive
+            (click)="setCategory('audio')"
+            [class.active]="automatedCategory() === 'audio'"
+            class="mode-btn mode-btn-audio"
+          >
+            <span class="mode-icon">🎙️</span>
+            <div class="mode-meta">
+              <span class="mode-title">Generate Speech & Music</span>
+              <span class="mode-sub">Neural Waveform 24kHz</span>
+            </div>
+          </button>
         </div>
-        <app-media-artifact-gallery
-          [artifacts]="mediaService.artifacts()"
-          (delete)="onDeleteImageArtifact($event)"
-        ></app-media-artifact-gallery>
-      </div>
+      </section>
+
+      <!-- Clean Prompt Input & Automated 1-Click Action Card -->
+      <section class="prompt-action-card">
+        <div class="prompt-header-row">
+          <label for="automatedPrompt" class="prompt-title-label">
+            {{ getPromptLabel() }}
+          </label>
+          <div class="auto-engine-tags">
+            <span class="engine-tag">⚡ Automated Local Model Selection</span>
+            <span class="engine-tag">🛡️ Physical WAL Persistence</span>
+          </div>
+        </div>
+
+        <div class="prompt-input-wrapper">
+          <textarea
+            id="automatedPrompt"
+            [(ngModel)]="promptText"
+            [placeholder]="getPlaceholder()"
+            rows="3"
+            class="automated-textarea"
+          ></textarea>
+        </div>
+
+        <!-- Minimal 1-Click Controls Bar -->
+        <div class="prompt-controls-bar">
+          <!-- Visual Aspect Ratio Selector -->
+          @if (automatedCategory() !== 'audio') {
+            <div class="minimal-option-group">
+              <span class="option-label">Aspect:</span>
+              <div class="chip-group">
+                <button
+                  type="button"
+                  (click)="selectedAspectRatio.set('1:1')"
+                  [class.selected]="selectedAspectRatio() === '1:1'"
+                  class="option-chip"
+                >
+                  1:1 Square
+                </button>
+                <button
+                  type="button"
+                  (click)="selectedAspectRatio.set('16:9')"
+                  [class.selected]="selectedAspectRatio() === '16:9'"
+                  class="option-chip"
+                >
+                  16:9 Cinema
+                </button>
+                <button
+                  type="button"
+                  (click)="selectedAspectRatio.set('9:16')"
+                  [class.selected]="selectedAspectRatio() === '9:16'"
+                  class="option-chip"
+                >
+                  9:16 Story
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Audio Style Selector -->
+          @if (automatedCategory() === 'audio') {
+            <div class="minimal-option-group">
+              <span class="option-label">Audio Style:</span>
+              <div class="chip-group">
+                <button
+                  type="button"
+                  (click)="selectedAudioStyle.set('SPEECH')"
+                  [class.selected]="selectedAudioStyle() === 'SPEECH'"
+                  class="option-chip"
+                >
+                  🗣️ Neural Speech
+                </button>
+                <button
+                  type="button"
+                  (click)="selectedAudioStyle.set('MUSIC')"
+                  [class.selected]="selectedAudioStyle() === 'MUSIC'"
+                  class="option-chip"
+                >
+                  🎵 Melodic Audio
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- 1-Click Action Button -->
+          <button
+            type="button"
+            appAnimeInteractive
+            (click)="createNow()"
+            [disabled]="mediaService.isAutomating() || !promptText.trim()"
+            class="create-now-btn"
+          >
+            @if (!mediaService.isAutomating()) {
+              <span class="btn-sparkle">✨</span> Create Now
+            } @else {
+              <span class="animating-spinner"></span> Synthesizing Media...
+            }
+          </button>
+        </div>
+      </section>
+
+      <!-- Live Synthesis & Progress Feedback -->
+      @if (mediaService.isAutomating()) {
+        <div class="synthesis-progress-card">
+          <div class="progress-indicator">
+            <span class="glowing-orb"></span>
+            <div class="progress-details">
+              <span class="progress-heading">Autonomous Engine Executing</span>
+              <span class="progress-sub">Allocating local resources, running diffusion inference & hashing output...</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Instant Output Showcase -->
+      @if (mediaService.latestAutomationResult()) {
+        <section class="latest-output-card" aria-label="Generated Media Output">
+          <div class="output-header">
+            <div class="output-title-group">
+              <span class="output-badge">⚡ Synthesis Complete</span>
+              <h3 class="output-title">Newly Generated Artifact</h3>
+            </div>
+            <button
+              type="button"
+              appAnimeInteractive
+              (click)="openVaultTab()"
+              class="vault-jump-btn"
+            >
+              <span>💎 View in Storage Vault</span> ➔
+            </button>
+          </div>
+
+          <div class="output-preview-container">
+            <!-- Audio Output -->
+            @if (mediaService.latestAutomationResult()?.category === 'audio' && mediaService.latestAutomationResult()?.stream_url) {
+              <div class="audio-showcase-box">
+                <div class="audio-waveform-graphic">
+                  <span class="wave-bar bar-1"></span>
+                  <span class="wave-bar bar-2"></span>
+                  <span class="wave-bar bar-3"></span>
+                  <span class="wave-bar bar-4"></span>
+                  <span class="wave-bar bar-5"></span>
+                </div>
+                <audio
+                  [src]="mediaService.latestAutomationResult()?.stream_url"
+                  controls
+                  class="showcase-audio-player"
+                ></audio>
+                <div class="audio-meta-row">
+                  <span>{{ mediaService.latestAutomationResult()?.filename }}</span>
+                  <span>{{ mediaService.latestAutomationResult()?.duration_seconds | number:'1.1-2' }}s</span>
+                </div>
+              </div>
+            }
+
+            <!-- Image Output -->
+            @if (mediaService.latestAutomationResult()?.category === 'image') {
+              <div class="image-showcase-box">
+                <p class="showcase-info-text">
+                  ✨ Image successfully rendered and saved to physical storage:
+                  <strong>{{ mediaService.latestAutomationResult()?.job?.job_id || 'Completed' }}</strong>
+                </p>
+                <button
+                  type="button"
+                  appAnimeInteractive
+                  (click)="openVaultTab()"
+                  class="action-pill-btn"
+                >
+                  Open Storage Vault
+                </button>
+              </div>
+            }
+
+            <!-- Video Output -->
+            @if (mediaService.latestAutomationResult()?.category === 'video') {
+              <div class="video-showcase-box">
+                <p class="showcase-info-text">
+                  🎬 Video sequence synthesized and committed:
+                  <strong>{{ mediaService.latestAutomationResult()?.job?.job_id || 'Completed' }}</strong>
+                </p>
+                <button
+                  type="button"
+                  appAnimeInteractive
+                  (click)="openVaultTab()"
+                  class="action-pill-btn"
+                >
+                  Open Storage Vault
+                </button>
+              </div>
+            }
+          </div>
+        </section>
+      }
     </div>
   }
 
-  <!-- VIDEO STUDIO TAB CONTENT (Phase 8.2) -->
-  @if (activeTab() === 'video') {
-    <div class="tab-pane-container studio-split-grid">
-      <div class="studio-main-col">
-        <app-video-generation-form
-          [models]="mediaService.videoModels()"
-          [isGenerating]="mediaService.isVideoLoading()"
-          (generate)="onGenerateVideo($event)"
-        ></app-video-generation-form>
+  <!-- ========================================================================= -->
+  <!-- TAB 2: ANIMATED MEDIA STORAGE VAULT (Real Physical Storage & SQLite WAL) -->
+  <!-- ========================================================================= -->
+  @if (activeTab() === 'vault') {
+    <div class="storage-vault-container">
+      <!-- Vault Stats Dashboard (100% Dynamic Real Data) -->
+      <section class="vault-stats-panel" aria-label="Vault Storage Summary">
+        <div class="stat-card">
+          <span class="stat-label">TOTAL ASSETS</span>
+          <span class="stat-number cyan-glow">
+            {{ mediaService.vaultSummary()?.total_count || mediaService.vaultItems().length }}
+          </span>
+          <span class="stat-desc">Physical Files</span>
+        </div>
 
-        <app-video-artifact-gallery
-          [artifacts]="mediaService.videoArtifacts()"
-          (delete)="onDeleteVideoArtifact($event)"
-        ></app-video-artifact-gallery>
-      </div>
+        <div class="stat-card">
+          <span class="stat-label">IMAGES</span>
+          <span class="stat-number blue-glow">
+            {{ mediaService.vaultSummary()?.image_count || 0 }}
+          </span>
+          <span class="stat-desc">PNG, JPG, WebP</span>
+        </div>
 
-      <div class="studio-side-col">
-        <app-video-job-queue
-          [jobs]="mediaService.videoJobs()"
-          [activeJob]="mediaService.activeVideoJob()"
-          (cancel)="onCancelVideoJob($event)"
-        ></app-video-job-queue>
-      </div>
+        <div class="stat-card">
+          <span class="stat-label">VIDEOS</span>
+          <span class="stat-number purple-glow">
+            {{ mediaService.vaultSummary()?.video_count || 0 }}
+          </span>
+          <span class="stat-desc">MP4, WebM</span>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-label">AUDIO</span>
+          <span class="stat-number emerald-glow">
+            {{ mediaService.vaultSummary()?.audio_count || 0 }}
+          </span>
+          <span class="stat-desc">WAV, MP3</span>
+        </div>
+
+        <div class="stat-card">
+          <span class="stat-label">DISK USAGE</span>
+          <span class="stat-number gold-glow">
+            {{ mediaService.vaultSummary()?.total_size_formatted || '0 MB' }}
+          </span>
+          <span class="stat-desc">Zero Demo / Mock Data</span>
+        </div>
+      </section>
+
+      <!-- Filter Ribbon & Search Bar -->
+      <section class="vault-toolbar" aria-label="Storage Vault Controls">
+        <div class="vault-filter-tabs">
+          <button
+            type="button"
+            (click)="filterVault('all')"
+            [class.active]="vaultFilterType() === 'all'"
+            class="filter-pill"
+          >
+            All Items
+          </button>
+          <button
+            type="button"
+            (click)="filterVault('image')"
+            [class.active]="vaultFilterType() === 'image'"
+            class="filter-pill"
+          >
+            🎨 Images ({{ mediaService.vaultSummary()?.image_count || 0 }})
+          </button>
+          <button
+            type="button"
+            (click)="filterVault('video')"
+            [class.active]="vaultFilterType() === 'video'"
+            class="filter-pill"
+          >
+            🎬 Videos ({{ mediaService.vaultSummary()?.video_count || 0 }})
+          </button>
+          <button
+            type="button"
+            (click)="filterVault('audio')"
+            [class.active]="vaultFilterType() === 'audio'"
+            class="filter-pill"
+          >
+            🎙️ Audio ({{ mediaService.vaultSummary()?.audio_count || 0 }})
+          </button>
+        </div>
+
+        <div class="vault-search-sort-group">
+          <div class="vault-search-box">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              [value]="vaultSearchQuery()"
+              (input)="onSearchVault($event)"
+              placeholder="Search filename or prompt..."
+              class="vault-search-input"
+            />
+            @if (vaultSearchQuery()) {
+              <button
+                type="button"
+                (click)="clearVaultSearch()"
+                class="search-clear-btn"
+                title="Clear Search"
+              >
+                ✕
+              </button>
+            }
+          </div>
+
+          <select
+            [value]="vaultSort()"
+            (change)="onSortVault($event)"
+            class="vault-sort-select"
+            title="Sort Order"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="size">Largest Size</option>
+          </select>
+
+          <button
+            type="button"
+            appAnimeInteractive
+            (click)="openVaultTab()"
+            class="vault-refresh-btn"
+            title="Rescan Disk Storage"
+          >
+            🔄 Scan
+          </button>
+        </div>
+      </section>
+
+      <!-- Animated Media Grid (100% Real Physical Files) -->
+      @if (mediaService.isVaultLoading()) {
+        <div class="vault-loading-state">
+          <div class="loading-spinner"></div>
+          <span>Scanning physical media storage and SQLite WAL...</span>
+        </div>
+      } @else if (mediaService.vaultItems().length === 0) {
+        <div class="vault-empty-state">
+          <span class="empty-icon">📂</span>
+          <h3>No matching media found</h3>
+          <p>No real media files match your current filter or search criteria.</p>
+          <button
+            type="button"
+            appAnimeInteractive
+            (click)="activeTab.set('studio')"
+            class="create-media-link"
+          >
+            ✨ Create Media Now
+          </button>
+        </div>
+      } @else {
+        <div class="vault-grid">
+          @for (item of mediaService.vaultItems(); track item.id + item.filename) {
+            <article class="vault-card" (click)="openLightbox(item)">
+              <!-- Media Visual Preview Container -->
+              <div class="card-visual-wrapper">
+                <!-- Image Preview -->
+                @if (item.media_type === 'image') {
+                  <img
+                    [src]="mediaService.getVaultStreamUrl(item.relative_path)"
+                    [alt]="item.prompt || item.filename"
+                    loading="lazy"
+                    class="vault-thumbnail"
+                  />
+                  <span class="type-pill image-pill">IMAGE</span>
+                }
+
+                <!-- Video Preview -->
+                @if (item.media_type === 'video') {
+                  <div class="video-preview-holder">
+                    <video
+                      [src]="mediaService.getVaultStreamUrl(item.relative_path)"
+                      preload="metadata"
+                      muted
+                      loop
+                      class="vault-video-thumb"
+                      onmouseover="this.play()"
+                      onmouseout="this.pause()"
+                    ></video>
+                    <div class="play-overlay-badge">
+                      <span class="play-symbol">▶</span>
+                    </div>
+                  </div>
+                  <span class="type-pill video-pill">VIDEO</span>
+                }
+
+                <!-- Audio Preview -->
+                @if (item.media_type === 'audio') {
+                  <div class="audio-card-visual">
+                    <span class="audio-wave-icon">🎙️</span>
+                    <div class="mini-equalizer">
+                      <span class="eq-bar bar-a"></span>
+                      <span class="eq-bar bar-b"></span>
+                      <span class="eq-bar bar-c"></span>
+                      <span class="eq-bar bar-d"></span>
+                    </div>
+                  </div>
+                  <span class="type-pill audio-pill">AUDIO</span>
+                }
+
+                <!-- Hover Action Overlay -->
+                <div class="card-hover-actions">
+                  <button
+                    type="button"
+                    (click)="openLightbox(item)"
+                    class="card-action-btn view-btn"
+                    title="Preview Fullscreen"
+                  >
+                    👁️
+                  </button>
+                  <button
+                    type="button"
+                    (click)="downloadItem(item, $event)"
+                    class="card-action-btn download-btn"
+                    title="Download File"
+                  >
+                    ⬇️
+                  </button>
+                  <button
+                    type="button"
+                    (click)="copyUrl(item, $event)"
+                    class="card-action-btn copy-btn"
+                    title="Copy URL"
+                  >
+                    📋
+                  </button>
+                </div>
+              </div>
+
+              <!-- Card Content & Metadata -->
+              <div class="card-body">
+                <h4 class="card-filename" [title]="item.filename">
+                  {{ item.filename }}
+                </h4>
+
+                @if (item.prompt) {
+                  <p class="card-prompt" [title]="item.prompt">
+                    {{ item.prompt }}
+                  </p>
+                }
+
+                <div class="card-meta-footer">
+                  <span class="file-size-badge">{{ item.size_formatted }}</span>
+                  <span class="file-ext-badge">{{ item.extension.toUpperCase() }}</span>
+                  <span class="file-date">{{ item.created_at * 1000 | date:'shortDate' }}</span>
+                </div>
+              </div>
+            </article>
+          }
+        </div>
+      }
+
+      <!-- Animated Lightbox Modal for Real Media Playback / Preview -->
+      @if (lightboxItem(); as modalItem) {
+        <div class="vault-lightbox-backdrop" (click)="closeLightbox()">
+          <div class="vault-lightbox-modal" (click)="$event.stopPropagation()">
+            <!-- Lightbox Header -->
+            <div class="lightbox-header">
+              <div class="lightbox-title-box">
+                <span class="lightbox-type-badge">{{ modalItem.media_type.toUpperCase() }}</span>
+                <h3 class="lightbox-filename">{{ modalItem.filename }}</h3>
+              </div>
+              <div class="lightbox-controls">
+                <button
+                  type="button"
+                  (click)="downloadItem(modalItem)"
+                  class="lightbox-btn"
+                  title="Download File"
+                >
+                  ⬇️ Download
+                </button>
+                <button
+                  type="button"
+                  (click)="copyUrl(modalItem)"
+                  class="lightbox-btn"
+                  title="Copy Stream Link"
+                >
+                  📋 Copy Link
+                </button>
+                <button
+                  type="button"
+                  (click)="closeLightbox()"
+                  class="lightbox-close-btn"
+                  title="Close Lightbox"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <!-- Lightbox Main Stage -->
+            <div class="lightbox-stage">
+              @if (modalItem.media_type === 'image') {
+                <img
+                  [src]="mediaService.getVaultStreamUrl(modalItem.relative_path)"
+                  [alt]="modalItem.filename"
+                  class="lightbox-full-image"
+                />
+              }
+
+              @if (modalItem.media_type === 'video') {
+                <video
+                  [src]="mediaService.getVaultStreamUrl(modalItem.relative_path)"
+                  controls
+                  autoplay
+                  class="lightbox-full-video"
+                ></video>
+              }
+
+              @if (modalItem.media_type === 'audio') {
+                <div class="lightbox-audio-stage">
+                  <div class="lightbox-audio-visualizer">
+                    <span class="audio-big-icon">🎙️</span>
+                    <div class="big-equalizer">
+                      <span class="big-bar bar-1"></span>
+                      <span class="big-bar bar-2"></span>
+                      <span class="big-bar bar-3"></span>
+                      <span class="big-bar bar-4"></span>
+                      <span class="big-bar bar-5"></span>
+                      <span class="big-bar bar-6"></span>
+                    </div>
+                  </div>
+                  <audio
+                    [src]="mediaService.getVaultStreamUrl(modalItem.relative_path)"
+                    controls
+                    autoplay
+                    class="lightbox-full-audio"
+                  ></audio>
+                </div>
+              }
+            </div>
+
+            <!-- Lightbox Metadata Footer -->
+            <div class="lightbox-footer">
+              <div class="lightbox-meta-grid">
+                <div class="meta-item">
+                  <span class="meta-item-label">Size</span>
+                  <span class="meta-item-value">{{ modalItem.size_formatted }} ({{ modalItem.size_bytes }} B)</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-item-label">Format</span>
+                  <span class="meta-item-value">{{ modalItem.extension.toUpperCase() }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-item-label">Created</span>
+                  <span class="meta-item-value">{{ modalItem.created_at * 1000 | date:'medium' }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-item-label">Storage Path</span>
+                  <span class="meta-item-value path-val">{{ modalItem.relative_path }}</span>
+                </div>
+              </div>
+
+              @if (modalItem.prompt) {
+                <div class="lightbox-prompt-box">
+                  <span class="prompt-box-label">Generation Prompt / Description:</span>
+                  <p class="prompt-box-text">{{ modalItem.prompt }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
     </div>
   }
 
-  <!-- IMAGE STUDIO TAB CONTENT (Phase 8.1) -->
-  @if (activeTab() === 'image') {
-    <div class="tab-pane-container studio-split-grid">
-      <div class="studio-main-col">
-        <app-image-generation-form
-          [models]="mediaService.models()"
-          [isLoading]="mediaService.isLoading()"
-          (generate)="onGenerateImage($event)"
-        ></app-image-generation-form>
+  <!-- ========================================================================= -->
+  <!-- TAB 3: ADVANCED MODULES (Preserved Legacy & Deep Tools)                   -->
+  <!-- ========================================================================= -->
+  @if (activeTab() === 'advanced' || ['provenance', 'audio', 'creative', 'video', 'edit', 'composer', 'image'].includes(activeTab())) {
+    <div class="advanced-workspace-container">
+      <nav class="advanced-subnav-ribbon" role="tablist">
+        <button
+          type="button"
+          (click)="activeTab.set('provenance')"
+          [class.active]="activeTab() === 'provenance'"
+          class="subnav-btn"
+        >
+          🛡️ C2PA Provenance
+        </button>
+        <button
+          type="button"
+          (click)="activeTab.set('audio')"
+          [class.active]="activeTab() === 'audio'"
+          class="subnav-btn"
+        >
+          🎵 3D Audio Spectrum
+        </button>
+        <button
+          type="button"
+          (click)="activeTab.set('creative')"
+          [class.active]="activeTab() === 'creative'"
+          class="subnav-btn"
+        >
+          🎬 Creative Studio
+        </button>
+        <button
+          type="button"
+          (click)="activeTab.set('composer')"
+          [class.active]="activeTab() === 'composer'"
+          class="subnav-btn"
+        >
+          ⚡ Workflow Composer
+        </button>
+        <button
+          type="button"
+          (click)="activeTab.set('edit')"
+          [class.active]="activeTab() === 'edit'"
+          class="subnav-btn"
+        >
+          🎨 Edit & Inpaint
+        </button>
+        <button
+          type="button"
+          (click)="activeTab.set('video')"
+          [class.active]="activeTab() === 'video'"
+          class="subnav-btn"
+        >
+          🎥 Video Subsystem
+        </button>
+        <button
+          type="button"
+          (click)="activeTab.set('image')"
+          [class.active]="activeTab() === 'image'"
+          class="subnav-btn"
+        >
+          🖼️ Image Subsystem
+        </button>
+      </nav>
 
-        <app-media-artifact-gallery
-          [artifacts]="mediaService.artifacts()"
-          (delete)="onDeleteImageArtifact($event)"
-        ></app-media-artifact-gallery>
-      </div>
+      <!-- Advanced Sub-components -->
+      @if (activeTab() === 'audio') {
+        <div class="tab-pane-container">
+          <app-media-audio-spectrum></app-media-audio-spectrum>
+        </div>
+      }
 
-      <div class="studio-side-col">
-        <app-media-job-queue
-          [jobs]="mediaService.jobs()"
-          (cancel)="onCancelImageJob($event)"
-        ></app-media-job-queue>
+      @if (activeTab() === 'provenance' || activeTab() === 'advanced') {
+        <div class="tab-pane-container">
+          <app-media-provenance-inspector></app-media-provenance-inspector>
+        </div>
+      }
 
-        <app-media-model-catalog
-          [models]="mediaService.models()"
-        ></app-media-model-catalog>
-      </div>
+      @if (activeTab() === 'creative') {
+        <div class="tab-pane-container">
+          <app-creative-pipeline-studio></app-creative-pipeline-studio>
+        </div>
+      }
+
+      @if (activeTab() === 'composer') {
+        <div class="tab-pane-container composer-grid">
+          <div class="composer-main-col">
+            <app-visual-workflow-composer #workflowComposer></app-visual-workflow-composer>
+            <app-workflow-simulation-panel
+              [simulation]="mediaService.simulationResult()"
+            ></app-workflow-simulation-panel>
+          </div>
+          <div class="composer-side-col">
+            <app-workflow-template-catalog
+              [templates]="mediaService.templates()"
+              (templateSelected)="onTemplateSelected($event)"
+            ></app-workflow-template-catalog>
+            <app-workflow-manifest-viewer
+              [manifest]="mediaService.activeManifest()"
+            ></app-workflow-manifest-viewer>
+          </div>
+        </div>
+      }
+
+      @if (activeTab() === 'edit') {
+        <div class="tab-pane-container edit-grid">
+          <div class="edit-form-col">
+            <app-image-edit-form
+              [sourceArtifact]="selectedSourceArtifact()"
+              [editModels]="mediaService.editModels()"
+              [maskBase64]="currentMaskBase64()"
+              [isLoading]="mediaService.isEditLoading()"
+              (editSubmitted)="onEditSubmitted($event)"
+            ></app-image-edit-form>
+            <app-artifact-lineage-graph
+              [selectedArtifact]="selectedSourceArtifact()"
+              [lineageRecord]="mediaService.activeLineage()"
+            ></app-artifact-lineage-graph>
+          </div>
+          <div class="edit-canvas-col">
+            <app-mask-canvas-editor
+              [sourceArtifact]="selectedSourceArtifact()"
+              (maskApplied)="onMaskApplied($event)"
+            ></app-mask-canvas-editor>
+            @if (selectedSourceArtifact() && latestEditedArtifact()) {
+              <app-image-diff-viewer
+                [originalArtifact]="selectedSourceArtifact()"
+                [editedArtifact]="latestEditedArtifact()"
+                [lineageRecord]="mediaService.activeLineage()"
+              ></app-image-diff-viewer>
+            }
+          </div>
+          <div class="edit-gallery-row">
+            <app-media-artifact-gallery
+              [artifacts]="mediaService.artifacts()"
+              (delete)="onDeleteImageArtifact($event)"
+            ></app-media-artifact-gallery>
+          </div>
+        </div>
+      }
+
+      @if (activeTab() === 'video') {
+        <div class="tab-pane-container studio-split-grid">
+          <div class="studio-main-col">
+            <app-video-generation-form
+              [models]="mediaService.videoModels()"
+              [isGenerating]="mediaService.isVideoLoading()"
+              (generate)="onGenerateVideo($event)"
+            ></app-video-generation-form>
+            <app-video-artifact-gallery
+              [artifacts]="mediaService.videoArtifacts()"
+              (delete)="onDeleteVideoArtifact($event)"
+            ></app-video-artifact-gallery>
+          </div>
+          <div class="studio-side-col">
+            <app-video-job-queue
+              [jobs]="mediaService.videoJobs()"
+              [activeJob]="mediaService.activeVideoJob()"
+              (cancel)="onCancelVideoJob($event)"
+            ></app-video-job-queue>
+          </div>
+        </div>
+      }
+
+      @if (activeTab() === 'image') {
+        <div class="tab-pane-container studio-split-grid">
+          <div class="studio-main-col">
+            <app-image-generation-form
+              [models]="mediaService.models()"
+              [isLoading]="mediaService.isLoading()"
+              (generate)="onGenerateImage($event)"
+            ></app-image-generation-form>
+            <app-media-artifact-gallery
+              [artifacts]="mediaService.artifacts()"
+              (delete)="onDeleteImageArtifact($event)"
+            ></app-media-artifact-gallery>
+          </div>
+          <div class="studio-side-col">
+            <app-media-job-queue
+              [jobs]="mediaService.jobs()"
+              (cancel)="onCancelImageJob($event)"
+            ></app-media-job-queue>
+            <app-media-model-catalog
+              [models]="mediaService.models()"
+            ></app-media-model-catalog>
+          </div>
+        </div>
+      }
     </div>
   }
 </div>

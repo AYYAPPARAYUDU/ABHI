@@ -2,13 +2,14 @@ import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { ApplicationDetail, ApplicationItem, CapabilityItem } from '../models/application.model';
+import { getApiUrl } from '../../../core/config/api-config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApplicationService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://127.0.0.1:8000/api/v1/applications';
+  private readonly baseUrl = getApiUrl('/api/v1/applications');
 
   // Signals
   readonly applications = signal<ApplicationItem[]>([

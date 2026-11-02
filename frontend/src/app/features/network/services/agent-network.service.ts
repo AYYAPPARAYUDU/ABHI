@@ -2,13 +2,14 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap, catchError, of } from 'rxjs';
 import { AgentNode, NetworkGraphData } from '../models/network.model';
+import { getApiUrl } from '../../../core/config/api-config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AgentNetworkService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://127.0.0.1:8000/api/v1/agent/network';
+  private readonly apiUrl = getApiUrl('/api/v1/agent/network');
 
   readonly networkData = signal<NetworkGraphData | null>(null);
   readonly selectedNode = signal<AgentNode | null>(null);

@@ -275,11 +275,15 @@ class SettingsAdapter(BaseApplicationAdapter):
                         pass
                 elif setting_id == "storage":
                     try:
+                        import os
                         import shutil
-                        usage = shutil.disk_usage("C:\\")
+                        from backend.app.core.paths import get_system_drive
+                        sys_drive = get_system_drive()
+                        usage = shutil.disk_usage(sys_drive)
                         free_gb = round(usage.free / (1024**3), 1)
                         total_gb = round(usage.total / (1024**3), 1)
-                        info["current_value"] = f"Local Disk (C:) {free_gb} GB free of {total_gb} GB"
+                        label = sys_drive.rstrip(r"\/")
+                        info["current_value"] = f"Local Disk ({label}) {free_gb} GB free of {total_gb} GB"
                     except Exception:
                         pass
                 elif setting_id == "about":

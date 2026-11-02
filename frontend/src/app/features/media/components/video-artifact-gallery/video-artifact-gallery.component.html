@@ -20,7 +20,7 @@
           <div class="thumb-container" (click)="selectedArtifact = artifact">
             @if (artifact.poster_path) {
               <img
-                [src]="'http://127.0.0.1:8000/api/v1/media/video/artifacts/' + artifact.artifact_id + '/thumbnail'"
+                [src]="getThumbnailUrl(artifact.artifact_id)"
                 class="thumb-img"
                 [alt]="artifact.filename"
               />
@@ -60,7 +60,7 @@
             <!-- Footer Actions -->
             <div class="artifact-actions-row">
               <a
-                [href]="'http://127.0.0.1:8000/api/v1/media/video/artifacts/' + artifact.artifact_id + '/file'"
+                [href]="getVideoUrl(artifact.artifact_id)"
                 target="_blank"
                 class="action-btn download"
                 title="Download raw video stream"
@@ -118,7 +118,7 @@
           autoplay
           loop
           class="modal-video-elem"
-          [src]="'http://127.0.0.1:8000/api/v1/media/video/artifacts/' + selectedArtifact.artifact_id + '/file'"
+          [src]="getVideoUrl(selectedArtifact.artifact_id)"
         ></video>
       </div>
 

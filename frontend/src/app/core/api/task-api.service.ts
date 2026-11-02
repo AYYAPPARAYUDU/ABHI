@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
+import { getApiBaseUrl } from '../config/api-config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TaskApiService {
-  private readonly baseUrl = 'http://127.0.0.1:8000';
+  private readonly baseUrl = getApiBaseUrl();
 
   /**
    * Fetch comprehensive subsystem health status.

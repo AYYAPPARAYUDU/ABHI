@@ -32,7 +32,7 @@ describe('MediaPageComponent', () => {
   });
 
   it('should switch between provenance, creative, composer, edit, video and image studio tabs', () => {
-    expect(component.activeTab()).toBe('provenance');
+    expect(component.activeTab()).toBe('studio');
     component.activeTab.set('composer');
     expect(component.activeTab()).toBe('composer');
     component.activeTab.set('edit');
@@ -45,6 +45,8 @@ describe('MediaPageComponent', () => {
     expect(component.activeTab()).toBe('creative');
     component.activeTab.set('provenance');
     expect(component.activeTab()).toBe('provenance');
+    component.openVaultTab();
+    expect(component.activeTab()).toBe('vault');
   });
 
   it('should handle onTemplateSelected by delegating to workflowComposer if present', () => {
@@ -134,8 +136,41 @@ describe('MediaPageComponent', () => {
     expect(mediaService.editErrorMessage()).toBeNull();
   });
 
-  it('should initialize activeTab with provenance default', () => {
-    expect(component.activeTab()).toBe('provenance');
+  it('should initialize activeTab with studio default', () => {
+    expect(component.activeTab()).toBe('studio');
+  });
+
+  it('should execute automated creation when createNow is called', () => {
+    const autoSpy = vi.spyOn(mediaService, 'executeAutomated').mockReturnValue(of({ status: 'SUCCESS' } as any));
+    component.promptText = 'A neon landscape';
+    component.automatedCategory.set('image');
+    component.createNow();
+    expect(autoSpy).toHaveBeenCalledWith({
+      category: 'image',
+      prompt: 'A neon landscape',
+      aspect_ratio: '1:1',
+    });
+    expect(component.promptText).toBe('');
+  });
+
+  it('should open and close lightbox modal', () => {
+    const mockItem = {
+      id: 'img_1',
+      filename: 'img_1.png',
+      media_type: 'image' as const,
+      extension: 'png',
+      size_bytes: 1024,
+      size_formatted: '1.0 KB',
+      created_at: 1000,
+      created_iso: '2026-10-01',
+      relative_path: 'images/img_1.png',
+      stream_url: '/api/v1/media/vault/stream?path=images/img_1.png',
+      download_url: '/api/v1/media/vault/download?path=images/img_1.png',
+    };
+    component.openLightbox(mockItem);
+    expect(component.lightboxItem()).toEqual(mockItem);
+    component.closeLightbox();
+    expect(component.lightboxItem()).toBeNull();
   });
 
   it('should handle video generation error state without crashing', () => {

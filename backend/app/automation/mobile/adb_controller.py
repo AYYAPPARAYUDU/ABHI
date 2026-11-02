@@ -17,17 +17,13 @@ import shutil
 import urllib.parse
 from typing import Any, Dict, List, Optional, Tuple
 from backend.app.core.logging import logger
+from backend.app.core.paths import find_adb_candidates
 
 
 class AdbController:
     """Authoritative asynchronous Android Debug Bridge controller."""
 
-    KNOWN_ADB_PATHS = [
-        r"C:\Users\AYYAPPA RAYUDU\platform-tools\platform-tools\adb.exe",
-        r"C:\Users\AYYAPPA RAYUDU\platform-tools\adb.exe",
-        r"C:\Users\AYYAPPA RAYUDU\AppData\Local\Android\Sdk\platform-tools\adb.exe",
-        r"C:\platform-tools\adb.exe",
-    ]
+    KNOWN_ADB_PATHS = find_adb_candidates()
 
     KEY_MAP = {
         "home": 3,

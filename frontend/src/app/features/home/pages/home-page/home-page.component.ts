@@ -1,4 +1,5 @@
 import { AgentApiService } from '../../../../core/api/agent-api.service';
+import { getApiUrl } from '../../../../core/config/api-config';
 import {
   Component,
   inject,
@@ -1111,7 +1112,7 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
       this.threeScene.latestJarvisMessage.set(
         `[VISION QUEST]: Initiating multi-agent negotiation with ${agent.name} across all 8 nodes...`
       );
-      const res = await fetch('http://127.0.0.1:8000/api/v1/agent/swarm/negotiate', {
+      const res = await fetch(getApiUrl('/api/v1/agent/swarm/negotiate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ goal: `Collaborative execution of ${agent.role} under ${agent.codename}` })
@@ -1144,7 +1145,7 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.agentChatInput = '';
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/agent/swarm/family-chat', {
+      const res = await fetch(getApiUrl('/api/v1/agent/swarm/family-chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agent_id: agent.id, message: text })

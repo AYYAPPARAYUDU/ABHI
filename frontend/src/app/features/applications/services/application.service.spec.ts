@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { ApplicationService } from './application.service';
+import { getApiUrl } from '../../../core/config/api-config';
 
 describe('ApplicationService', () => {
   let service: ApplicationService;

@@ -304,15 +304,236 @@
       <!-- 5. WHATSAPP & GMAIL COMMS HUB -->
       @if (activeTab() === 'COMMS') {
         <div class="panel-section">
-          <h2 class="panel-heading">PERSONAL COMMUNICATIONS HUB (WHATSAPP & GMAIL)</h2>
-          <div class="comms-dual-grid">
+          <div class="panel-header-row">
+            <h2 class="panel-heading">HUMAN-BRAIN & AUTONOMOUS COMMUNICATIONS COMPANION</h2>
+            <div class="header-badges-row">
+              @if (commsAssistant.brainStatus()) {
+                <span class="badge-brain-tag font-mono">{{ commsAssistant.brainStatus()?.version }}</span>
+                <span class="badge-score-tag font-mono">⚡ {{ ((commsAssistant.brainStatus()?.alignment_score || 0.94) * 100).toFixed(1) }}% ALIGNED</span>
+              }
+            </div>
+          </div>
+
+          <!-- ONBOARDING PROMPT (When email or phone is unconfigured) -->
+          @if (!commsAssistant.isConfigured() || isEditingCommsProfile()) {
+            <div class="comms-onboarding-card">
+              <div class="onboarding-top">
+                <span class="warn-badge">⚠️</span>
+                <div>
+                  <h3 class="onboarding-head font-mono">CONNECT YOUR EMAIL & PHONE FOR AUTONOMOUS COMPANION</h3>
+                  <p class="onboarding-desc">
+                    Enable ABHI to query phone ADB notifications, SMS, WhatsApp web, and Gmail thread traces to autonomously suggest and dispatch replies.
+                  </p>
+                </div>
+              </div>
+
+              <div class="onboarding-inputs-grid">
+                <div class="input-grp">
+                  <label class="input-lbl font-mono">Primary Email Address</label>
+                  <input type="email" class="text-inp font-mono" [(ngModel)]="commsInputEmail" placeholder="e.g. operator@gmail.com" />
+                </div>
+                <div class="input-grp">
+                  <label class="input-lbl font-mono">Phone Number (WhatsApp & SMS)</label>
+                  <input type="tel" class="text-inp font-mono" [(ngModel)]="commsInputPhone" placeholder="e.g. +91 98765 43210" />
+                </div>
+                <div class="input-grp">
+                  <label class="input-lbl font-mono">Auto-Reply Decision Mode</label>
+                  <select class="select-inp font-mono" [(ngModel)]="commsInputMode">
+                    <option value="HUMAN_CONFIRMATION">Human Confirmation (1-Click Approval)</option>
+                    <option value="FULLY_AUTONOMOUS">Fully Autonomous (Self-Dispatched)</option>
+                  </select>
+                </div>
+                <div class="input-grp btn-align-end">
+                  <button
+                    type="button"
+                    class="save-comms-btn font-mono"
+                    (click)="saveCommsProfile()"
+                    [disabled]="!commsInputEmail || !commsInputPhone || commsAssistant.isLoading()"
+                  >
+                    {{ commsAssistant.isLoading() ? 'SAVING...' : 'SAVE & CONNECT PROFILE' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <!-- Connected Status Strip -->
+            <div class="comms-connected-strip">
+              <div class="conn-details">
+                <span class="live-dot"></span>
+                <span class="conn-text font-mono">
+                  CONNECTED: <strong>{{ commsAssistant.profile()?.email }}</strong> • <strong>{{ commsAssistant.profile()?.phone_number }}</strong>
+                </span>
+                <span class="mode-pill font-mono">{{ commsAssistant.profile()?.auto_reply_mode }}</span>
+              </div>
+              <button type="button" class="edit-pill-btn font-mono" (click)="toggleCommsProfileEdit()">✎ EDIT PROFILE</button>
+            </div>
+          }
+
+          <!-- Brain Self-Upgrading Metaparameter Strip -->
+          <div class="brain-strip-card">
+            <div class="strip-metrics">
+              <div class="strip-item">
+                <span class="strip-lbl font-mono">Core Version:</span>
+                <span class="strip-val text-cyan font-mono">{{ commsAssistant.brainStatus()?.version || 'v1.0' }}</span>
+              </div>
+              <div class="strip-item">
+                <span class="strip-lbl font-mono">Alignment:</span>
+                <span class="strip-val text-emerald font-mono">
+                  {{ ((commsAssistant.brainStatus()?.alignment_score || 0.94) * 100).toFixed(1) }}%
+                </span>
+              </div>
+              <div class="strip-item">
+                <span class="strip-lbl font-mono">Temperature:</span>
+                <span class="strip-val text-amethyst font-mono">{{ commsAssistant.brainStatus()?.temperature || 0.40 }}</span>
+              </div>
+              <div class="strip-item">
+                <span class="strip-lbl font-mono">Reasoning:</span>
+                <span class="strip-val text-amber font-mono">{{ commsAssistant.brainStatus()?.reasoning_depth || 'DEEP' }}</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="upgrade-brain-btn font-mono"
+              (click)="triggerBrainUpgrade()"
+              [disabled]="commsAssistant.isUpgradingBrain()"
+            >
+              <span>✨ {{ commsAssistant.isUpgradingBrain() ? 'EVALUATING TRACES...' : 'EVALUATE & UPGRADE BRAIN' }}</span>
+            </button>
+          </div>
+
+          <!-- Inbox Stream & AI Context-Aware Reply Deck -->
+          <div class="comms-workspace-layout">
+            <!-- Left: Incoming Messages Stream -->
+            <div class="stream-card">
+              <div class="stream-head">
+                <div class="stream-title-row">
+                  <span class="stream-icon">📥</span>
+                  <h3 class="stream-title font-mono">INCOMING COMMUNICATIONS STREAM</h3>
+                </div>
+                <button type="button" class="refresh-stream-btn font-mono" (click)="commsAssistant.fetchInbox()">↻ REFRESH</button>
+              </div>
+
+              <div class="stream-msgs-list">
+                @for (msg of commsAssistant.inbox(); track msg.message_id) {
+                  <div
+                    class="stream-item"
+                    [class.selected]="commsAssistant.activeMessage()?.message_id === msg.message_id"
+                    (click)="selectCommsMessage(msg)"
+                  >
+                    <div class="item-top">
+                      <div class="item-sender-wrap">
+                        <span class="chan-tag" [ngClass]="'tag-' + msg.channel">
+                          {{ msg.channel === 'whatsapp' ? '💬 WA' : (msg.channel === 'gmail' ? '✉️ GMAIL' : '📱 SMS') }}
+                        </span>
+                        <strong class="item-sender font-mono">{{ msg.sender }}</strong>
+                      </div>
+                      <span class="item-status font-mono" [ngClass]="'status-' + msg.reply_status">
+                        {{ msg.reply_status === 'replied' ? '✓ REPLIED' : (msg.reply_status === 'suggested' ? '⚡ READY' : 'PENDING') }}
+                      </span>
+                    </div>
+
+                    <div class="item-subject font-mono">{{ msg.subject || 'Incoming Message' }}</div>
+                    <div class="item-snippet">{{ msg.body }}</div>
+                    <div class="item-time font-mono">{{ msg.timestamp | date:'short' }}</div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Right: 3 AI Brain Suggested Replies & Send -->
+            <div class="reply-engine-card">
+              <div class="stream-head">
+                <div class="stream-title-row">
+                  <span class="stream-icon">⚡</span>
+                  <h3 class="stream-title font-mono">AI BRAIN 3-STYLE CONTEXT REPLIES</h3>
+                </div>
+                @if (commsAssistant.activeMessage()) {
+                  <button
+                    type="button"
+                    class="refresh-stream-btn font-mono"
+                    (click)="commsAssistant.generateSuggestions()"
+                    [disabled]="commsAssistant.isGeneratingReplies()"
+                  >
+                    {{ commsAssistant.isGeneratingReplies() ? 'THINKING...' : '⚡ RE-GENERATE' }}
+                  </button>
+                }
+              </div>
+
+              @if (commsAssistant.activeMessage(); as activeMsg) {
+                <!-- Active message brief -->
+                <div class="active-preview-box">
+                  <div class="preview-meta font-mono">
+                    From: <strong>{{ activeMsg.sender }}</strong> via {{ activeMsg.channel.toUpperCase() }}
+                  </div>
+                  <p class="preview-text">"{{ activeMsg.body }}"</p>
+                </div>
+
+                <!-- 3 One-Click AI Reply Cards -->
+                <div class="three-replies-grid">
+                  @if (commsAssistant.isGeneratingReplies()) {
+                    <div class="thinking-state font-mono">Synthesizing human-like replies via local fine-tuned core...</div>
+                  } @else {
+                    @for (r of commsAssistant.suggestedReplies(); track r.category) {
+                      <div class="ai-reply-card" (click)="selectReplyOptionText(r.text)">
+                        <div class="reply-category-row font-mono">
+                          <span class="reply-cat-name">
+                            {{ r.category.includes('Professional') ? '👔 ' : (r.category.includes('Direct') ? '⚡ ' : '😊 ') }}
+                            {{ r.category }}
+                          </span>
+                          <button
+                            type="button"
+                            class="one-click-send-btn font-mono"
+                            (click)="$event.stopPropagation(); sendCommsReply(activeMsg, r.text)"
+                            [disabled]="commsAssistant.isSendingReply()"
+                          >
+                            1-CLICK SEND ➔
+                          </button>
+                        </div>
+                        <p class="reply-body-text">"{{ r.text }}"</p>
+                      </div>
+                    }
+                  }
+                </div>
+
+                <!-- Custom / Loaded Reply Text Area -->
+                <div class="custom-dispatch-box">
+                  <textarea
+                    class="dispatch-textarea font-mono"
+                    rows="2"
+                    [(ngModel)]="customAutomationReply"
+                    placeholder="Click any suggestion above to load, or type a custom message..."
+                  ></textarea>
+
+                  <div class="dispatch-foot">
+                    <span class="dest-label font-mono">
+                      Target: {{ activeMsg.channel.toUpperCase() }} ({{ activeMsg.sender }})
+                    </span>
+                    <button
+                      type="button"
+                      class="dispatch-action-btn font-mono"
+                      (click)="sendCommsReply(activeMsg, customAutomationReply())"
+                      [disabled]="!customAutomationReply().trim() || commsAssistant.isSendingReply()"
+                    >
+                      {{ commsAssistant.isSendingReply() ? 'SENDING...' : 'DISPATCH REPLY ➔' }}
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div class="thinking-state font-mono">Select a message from the incoming stream to generate replies.</div>
+              }
+            </div>
+          </div>
+
+          <!-- Secondary Direct WhatsApp & Gmail Manual Overrides -->
+          <div class="comms-dual-grid" style="margin-top: 1.5rem;">
             <!-- WhatsApp Composer -->
             <div class="comm-card">
               <div class="comm-card-header">
                 <span class="comm-icon">💬</span>
                 <div>
-                  <h3 class="comm-title">WhatsApp Automation</h3>
-                  <span class="comm-sub">Desktop App & Mobile Intent</span>
+                  <h3 class="comm-title">WhatsApp Manual Composer</h3>
+                  <span class="comm-sub">Direct Desktop & Mobile Protocol</span>
                 </div>
               </div>
               <div class="comm-form">
@@ -333,7 +554,7 @@
               <div class="comm-card-header">
                 <span class="comm-icon">✉️</span>
                 <div>
-                  <h3 class="comm-title">Gmail Web Compose</h3>
+                  <h3 class="comm-title">Gmail Web Manual Compose</h3>
                   <span class="comm-sub">Web Mail Handler & Android Intent</span>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import { Injectable, signal, computed, OnDestroy } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { ConnectionStatus, TelemetryEvent } from '../models/telemetry.model';
+import { getWsUrl } from '../config/api-config';
 
 @Injectable({
   providedIn: 'root'
@@ -162,10 +163,7 @@ export class TelemetryService implements OnDestroy {
   }
 
   private getDefaultWebSocketUrl(): string {
-    const loc = typeof window !== 'undefined' ? window.location : null;
-    const protocol = loc && loc.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = loc && loc.hostname ? loc.hostname : '127.0.0.1';
-    return `${protocol}//${host}:8000/ws/telemetry`;
+    return getWsUrl('/ws/telemetry');
   }
 
   ngOnDestroy(): void {

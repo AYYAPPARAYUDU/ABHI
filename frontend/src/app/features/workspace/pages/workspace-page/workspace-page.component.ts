@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ThreeSceneManagerService, AgentNode } from '../../../../shared/3d/three-scene-manager.service';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { AgentCommandService } from '../../../../core/services/agent-command.service';
+import { getApiUrl } from '../../../../core/config/api-config';
 
 interface SmallLLMBrain {
   id: string;
@@ -79,7 +80,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
 
   async fetchFamilyStatus(): Promise<void> {
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/agent/swarm/family-status');
+      const res = await fetch(getApiUrl('/api/v1/agent/swarm/family-status'));
       if (res.ok) {
         const data = await res.json();
         if (data.chat_history && Array.isArray(data.chat_history) && data.chat_history.length > 0) {
@@ -132,7 +133,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
     const goal = this.delegationGoal.trim() || 'Execute holistic autonomous workspace optimization across Windows 11 desktop, web browser, and Android mobile OS';
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/agent/swarm/negotiate', {
+      const res = await fetch(getApiUrl('/api/v1/agent/swarm/negotiate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ goal })
@@ -174,7 +175,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
     this.brainChatInput = '';
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/v1/agent/swarm/family-chat', {
+      const res = await fetch(getApiUrl('/api/v1/agent/swarm/family-chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agent_id: agent.id, message: text })

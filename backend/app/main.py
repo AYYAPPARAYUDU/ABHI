@@ -112,10 +112,12 @@ app.add_middleware(
 
 from backend.app.api.v1.self_healing import router as self_healing_router
 from backend.app.api.v1.automation import router as automation_router
+from backend.app.assistant.communications_assistant import router as assistant_router
 
 # Register API Routers
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(automation_router, prefix="/api/v1")
+app.include_router(assistant_router, prefix="/api/v1")
 app.include_router(models_router, prefix="/api/v1")
 app.include_router(tasks_router, prefix="/api/v1")
 app.include_router(skills_router, prefix="/api/v1")

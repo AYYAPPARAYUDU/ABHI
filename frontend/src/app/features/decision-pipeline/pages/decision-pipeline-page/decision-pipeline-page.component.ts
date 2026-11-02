@@ -7,6 +7,7 @@ import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-i
 import { AnimeCounterDirective } from '../../../../shared/directives/anime-counter.directive';
 import { ThemeService } from '../../../../core/services/theme.service';
 import { DecisionPipelineService, DecisionNode, NodeConnection, UseCase, EvaluationResponse } from '../../../../core/services/decision-pipeline.service';
+import { getApiBaseUrl } from '../../../../core/config/api-config';
 
 @Component({
   selector: 'app-decision-pipeline-page',
@@ -52,7 +53,7 @@ export class DecisionPipelinePageComponent implements OnInit, OnDestroy, AfterVi
     }
     return [
       { timestamp: '10:00:00', channel: 'encoder', text: 'Authoritative Decision DAG initialized with 6 forward stages' },
-      { timestamp: '10:00:01', channel: 'engine', text: 'Local FastAPI Gateway active at http://127.0.0.1:8000' },
+      { timestamp: '10:00:01', channel: 'engine', text: `Local FastAPI Gateway active at ${getApiBaseUrl() || 'same-origin'}` },
       { timestamp: '10:00:02', channel: 'memory', text: 'SQLite WAL persistent trace storage ready for real execution' }
     ];
   });

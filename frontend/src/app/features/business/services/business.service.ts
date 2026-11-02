@@ -8,13 +8,14 @@ import {
   BusinessSector,
   FinancialSummary,
 } from '../models/business.model';
+import { getApiUrl } from '../../../core/config/api-config';
 
 @Injectable({
   providedIn: 'root',
 })
 export class BusinessService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://127.0.0.1:8000/api/v1/business';
+  private readonly baseUrl = getApiUrl('/api/v1/business');
 
   readonly sectors = signal<BusinessSector[]>([]);
   readonly projects = signal<BusinessProject[]>([]);

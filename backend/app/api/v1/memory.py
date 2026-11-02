@@ -65,12 +65,14 @@ async def list_memories(
     db_records = await memory_repo.list_memories_paginated(limit=100, offset=0, category=category, search=query)
     current_memories: Dict[str, MemoryContract] = {}
 
-    # 1. Base verified preferences for Ayyappa Rayudu
+    # 1. Base verified preferences
+    from backend.app.core.paths import get_project_root
+    project_root_str = str(get_project_root())
     for key, val, cat in [
         ("editor", "VS Code (TypeScript / Angular / Python)", "editor"),
         ("theme", "Obsidian Cyan & Midnight Amethyst", "ui"),
         ("language", "English", "system"),
-        ("working_directory", "C:\\Users\\AYYAPPA RAYUDU\\OneDrive\\Desktop\\ABHI", "filesystem"),
+        ("working_directory", project_root_str, "filesystem"),
         ("llm_model", "abhi:latest (32,768 Context / 100% RTX GPU)", "system"),
         ("response_format", "concise executive insights", "interaction"),
     ]:

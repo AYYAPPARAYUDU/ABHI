@@ -517,7 +517,8 @@ class BrowserSkillAdapter:
 
         if self._mock_mode:
             session.current_url = canonical_url
-            session.current_origin = "http://localhost:8000"
+            parsed = urllib.parse.urlparse(canonical_url)
+            session.current_origin = f"{parsed.scheme}://{parsed.netloc}" if parsed.netloc else "about:blank"
             return {"url": canonical_url, "title": "Mock Browser Page", "status": "LOADED"}, None, None
 
         action = ExecutionAction(
@@ -581,7 +582,7 @@ class BrowserSkillAdapter:
             bounded_text, is_trunc = self.security.enforce_content_limits(raw_text, max_chars)
             return {
                 "title": self._mock_state.get("title", "Browser Page"),
-                "url": session.current_url or "http://localhost:8000",
+                "url": session.current_url or "about:blank",
                 "main_text": bounded_text,
                 "is_truncated": is_trunc,
                 "has_prompt_injection": has_inj,
@@ -877,7 +878,8 @@ class BrowserSkillAdapter:
         """Handler for browser.extract_links."""
         max_links = min(params.get("max_links", 50), 100)
         if self._mock_mode:
-            return {"links": [{"text": "Subpage", "href": "http://localhost:8000/subpage.html"}]}, None, None
+            base = session.current_origin or "about:blank"
+            return {"links": [{"text": "Subpage", "href": f"{base}/subpage.html"}]}, None, None
 
         if not self.worker._page:
             return None, SkillFailureCode.WORKER_UNAVAILABLE, "Browser page not available."
@@ -945,7 +947,8 @@ class BrowserSkillAdapter:
         """Handler for browser.search."""
         query = params.get("query", "")
         if self._mock_mode:
-            return {"query": query, "results": [{"title": f"Result for {query}", "url": f"http://localhost:8000/search?q={query}"}]}, None, None
+            base = session.current_origin or "https://www.google.com"
+            return {"query": query, "results": [{"title": f"Result for {query}", "url": f"{base}/search?q={urllib.parse.quote_plus(query)}"}]}, None, None
 
         search_loc = None
         for sel in ["input[type='search']", "input[name='q']", "input[name='query']", "#txt_message", "input[type='text']"]:

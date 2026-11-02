@@ -11,7 +11,39 @@
 
 ---
 
-## Latest Milestone (2026-11-02): M-48 Universal Shining Metallic Colony Sheen, 4-Point Studio Rig, Zero-Label-Overlap & Multi-Theme Visual Verification
+## Latest Milestone (2026-11-02): M-49 Automated 3-Button Media Studio, Animated Storage Vault, Human-Brain Communications Assistant & Dynamic Codebase Mobility
+- **Automated 3-Button Media Studio & Animated Storage Vault:**
+  - Radically simplified `/media` UI by replacing complex technical parameter controls (masks, latent seeds, sampler steps) with an automated 3-button category selector:
+    - `[🎨 Generate Image]`
+    - `[🎬 Generate Video]`
+    - `[🎙️ Generate Speech & Music]`
+  - Added an intuitive prompt input with dynamic context guidance and a single `[✨ CREATE NOW]` trigger.
+  - Implemented the **Animated Media Storage Vault** (`/api/v1/media/vault`): Dynamically scans real files in `project_data/media/` and SQLite WAL with file size, creation timestamp, type badges, animated hover glow, fullscreen playback lightbox, one-click download, and shareable link copying. Zero mock/demo data.
+- **Human-Brain & Autonomous Communications Assistant:**
+  - Created `backend/app/assistant/communications_assistant.py` with persistent SQLite WAL storage for user profile: `email`, `phone_number`, `whatsapp_enabled`, `auto_reply_mode` (`HUMAN_CONFIRMATION` vs `FULLY_AUTONOMOUS`), and `monitored_threads`.
+  - Built dynamic inbox ingestion aggregating phone ADB notifications, SMS, WhatsApp cache, and Gmail thread traces.
+  - Cognitive Response Synthesis: Uses local `abhi:latest` / Small-LLM to generate 3 human-like context-aware replies:
+    1. Professional & Polite
+    2. Direct & Concise
+    3. Friendly & Warm
+  - One-click physical reply dispatch via WhatsApp desktop protocol, Android ADB intent, Gmail compose, and native SMS.
+  - **Autonomous Brain Meta-Evaluation & Self-Upgrading Loop**: `POST /api/v1/assistant/brain/evaluate-and-upgrade` analyzes user interactions, evaluates decision alignment, tunes prompt metaparameters in SQLite WAL, and records self-upgrade versions (e.g. `v1.0` -> `v1.1-Self-Tuned`).
+- **Dynamic Codebase Mobility & Zero Hardcoded Paths:**
+  - Authored `backend/app/core/paths.py` with dynamic `get_project_root()`, `find_adb_candidates()`, `find_browser_executable()`, and `get_system_drive()` resolvers.
+  - Replaced hardcoded `C:\` and user home paths in `adb_controller.py`, `os_control_engine.py`, `memory.py`, and `settings.py`.
+  - Created frontend `frontend/src/app/core/config/api-config.ts` replacing hardcoded `127.0.0.1:8000` with host-relative dynamic origin resolution (`window.location.origin:8000`).
+- **Verification & Testing:**
+  - Pytest 10/10 passed (100%).
+  - Angular production build complete in 11.0s with zero errors.
+  - Captured Playwright physical verification screenshots:
+    - `media_studio_m49_automated.png`
+    - `media_vault_m49_animated.png`
+    - `brain_communications_assistant_m49.png`
+    - `automation_hub_m49_assistant.png`
+
+---
+
+## Prior Milestone (2026-11-02): M-48 Universal Shining Metallic Colony Sheen, 4-Point Studio Rig, Zero-Label-Overlap & Multi-Theme Visual Verification
 - **Universal Shining Metallic Colony Sheen & 4-Point Studio Rig:**
   - Modeled directly on the user's highlighted specular floor photos where one spot shone brilliantly like polished chrome.
   - Added dedicated overhead specular directional sun (`specSunLight`) at `(0, 24, -22)` pointing toward the center `(0, -4, 0)`: With camera positioned at `(0, 7.5, 21.5)`, light reflecting off horizontal hexagonal tiles `(N = 0, 1, 0)` bounces forward directly into the camera across all 37 tiles.

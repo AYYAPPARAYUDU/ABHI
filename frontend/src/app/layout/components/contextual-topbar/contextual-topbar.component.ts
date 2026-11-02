@@ -8,6 +8,7 @@ import { OperatorStateService } from '../../../core/services/operator-state.serv
 import { UserExperienceMode } from '../../../core/models/agent-experience.model';
 import { ThemeService } from '../../../core/services/theme.service';
 import { SpeechVoiceService } from '../../../core/services/speech-voice.service';
+import { CommunicationsAssistantService } from '../../../core/services/communications-assistant.service';
 import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
 import { AnimeInteractiveDirective } from '../../../shared/directives/anime-interactive.directive';
 import { WorkingEnvironmentComponent, WORKING_ENVIRONMENTS } from '../working-environment/working-environment.component';
@@ -23,6 +24,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
   readonly stateService = inject(OperatorStateService);
   readonly themeService = inject(ThemeService);
   readonly speechVoice = inject(SpeechVoiceService);
+  readonly assistantService = inject(CommunicationsAssistantService);
   readonly animService = inject(AnimeAnimationService);
   private readonly router = inject(Router);
   private readonly hostEl = inject(ElementRef);

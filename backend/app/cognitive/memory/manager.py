@@ -53,11 +53,12 @@ class PersonalMemoryManager:
 
     def _seed_default_preferences(self) -> None:
         """Seed baseline personal preferences and procedures."""
+        from backend.app.core.paths import get_project_root
         base_prefs = [
             ("editor", "VS Code", "editor", MemorySource.USER_EXPLICIT),
             ("theme", "dark", "ui", MemorySource.USER_EXPLICIT),
             ("language", "English", "system", MemorySource.USER_EXPLICIT),
-            ("working_directory", "C:\\Users\\AYYAPPA RAYUDU\\OneDrive\\Desktop\\ABHI", "filesystem", MemorySource.USER_EXPLICIT),
+            ("working_directory", str(get_project_root()), "filesystem", MemorySource.USER_EXPLICIT),
             ("response_format", "concise", "interaction", MemorySource.USER_EXPLICIT),
         ]
         for key, val, cat, src in base_prefs:

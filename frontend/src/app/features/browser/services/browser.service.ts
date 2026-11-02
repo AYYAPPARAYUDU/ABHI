@@ -8,13 +8,14 @@ import {
   BrowserSessionModel,
   BrowserStatusModel
 } from '../models/browser.model';
+import { getApiUrl } from '../../../core/config/api-config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BrowserService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = 'http://127.0.0.1:8000/api/v1/browser';
+  private readonly baseUrl = getApiUrl('/api/v1/browser');
 
   // Signals
   readonly status = signal<BrowserStatusModel>({

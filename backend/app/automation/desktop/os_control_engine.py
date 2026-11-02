@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import psutil
 
 from backend.app.core.logging import logger
+from backend.app.core.paths import find_browser_executable, get_system_drive
 
 # Win32 Constants
 SW_HIDE = 0
@@ -651,27 +652,10 @@ class OSControlEngine:
     # =========================================================================
 
     def _find_browser_path(self, browser: str) -> Optional[str]:
-        """Locate verified physical path for Chrome or Edge on Windows."""
-        b = browser.lower().strip()
-        if "chrome" in b:
-            candidates = [
-                r"C:\Program Files\Google\Chrome\Application\chrome.exe",
-                r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-                os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe")
-            ]
-            for c in candidates:
-                if os.path.exists(c):
-                    return f'"{c}"'
-            return "chrome.exe"
-        if "edge" in b:
-            candidates = [
-                r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-                r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"
-            ]
-            for c in candidates:
-                if os.path.exists(c):
-                    return f'"{c}"'
-            return "msedge.exe"
+        """Locate verified physical path for Chrome or Edge dynamically across all systems."""
+        found = find_browser_executable(browser)
+        if found:
+            return f'"{found}"' if (" " in found and not found.startswith('"')) else found
         return None
 
     def resolve_app_executable(self, raw_name: str) -> Tuple[str, List[str], bool]:
@@ -1141,7 +1125,7 @@ class OSControlEngine:
 
         disk = None
         try:
-            root_drive = "C:\\" if self.is_windows else "/"
+            root_drive = get_system_drive() if self.is_windows else "/"
             disk_usage = psutil.disk_usage(root_drive)
             disk = {
                 "total_gb": round(disk_usage.total / (1024**3), 1),
