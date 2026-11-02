@@ -13,25 +13,6 @@
       </div>
     </section>
 
-    <!-- Tactical 8-Agent Swarm Selector Dock (Instant 1-Click Pod Camera Zoom & HUD) -->
-    <section class="swarm-tactical-deck" aria-label="8-Agent Swarm Command Deck">
-      <div class="swarm-agent-chips-row">
-        @for (agent of swarmAgents(); track agent.id) {
-          <button
-            type="button"
-            class="swarm-chip-btn"
-            [class.active]="selectedAgent()?.id === agent.id"
-            (click)="focusAgent(agent)"
-            [title]="agent.name + ': ' + agent.role"
-          >
-            <span class="agent-chip-dot" [style.backgroundColor]="agent.color"></span>
-            <span class="agent-chip-name">{{ agent.name }}</span>
-            <span class="agent-chip-bond" [style.color]="agent.color">{{ agent.bondLevel || 100 }}%</span>
-          </button>
-        }
-      </div>
-    </section>
-
     <!-- Focused Agent Tactical HUD Modal (Slides In On Agent Click) -->
     @if (selectedAgent(); as current) {
       <div class="agent-tactical-hud-modal">

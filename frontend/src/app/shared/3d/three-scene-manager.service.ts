@@ -12,6 +12,7 @@ import { Injectable, NgZone, inject, signal } from '@angular/core';
 import * as THREE from 'three';
 import { SpatialEnvironmentMode } from '../../core/models/agent-experience.model';
 import { ThemeService, AbhiThemeColors } from '../../core/services/theme.service';
+import { SpeechVoiceService } from '../../core/services/speech-voice.service';
 
 export interface AgentNode {
   id: string;
@@ -55,9 +56,10 @@ export interface AgentSatelliteNode {
 export class ThreeSceneManagerService {
   private themeService = inject(ThemeService);
   private ngZone = inject(NgZone);
+  private speechVoice = inject(SpeechVoiceService);
 
   // Component Signals & State
-  readonly isSwarmDeployed = signal<boolean>(false);
+  readonly isSwarmDeployed = signal<boolean>(true);
   readonly soundEnabled = signal<boolean>(true);
   readonly selectedAgent = signal<AgentNode | null>(null);
   readonly latestJarvisMessage = signal<string | null>(
@@ -76,7 +78,7 @@ export class ThreeSceneManagerService {
       hexColor: 0x00f0ff,
       icon: '🛡️',
       angle: 0,
-      elevation: 0.35,
+      elevation: 0.15,
       speed: 0.85,
       orbitRadius: 9.2,
       description: 'Generates quantum harmonic electromagnetic deflector arrays to neutralize kinetic and energy strikes.',
@@ -95,9 +97,9 @@ export class ThreeSceneManagerService {
       hexColor: 0x10b981,
       icon: '🌐',
       angle: (Math.PI * 2 / 8) * 1,
-      elevation: -0.45,
-      speed: 0.95,
-      orbitRadius: 9.6,
+      elevation: -0.15,
+      speed: 0.85,
+      orbitRadius: 9.2,
       description: 'Intercepts orbital satellite constellations and synthesizes real-time tactical planetary relays & browser automation.',
       subsystem: 'TELEMETRY NEXUS',
       load: 'THROUGHPUT 48 TB/s',
@@ -114,9 +116,9 @@ export class ThreeSceneManagerService {
       hexColor: 0xf59e0b,
       icon: '⚡',
       angle: (Math.PI * 2 / 8) * 2,
-      elevation: 0.55,
-      speed: 0.75,
-      orbitRadius: 8.8,
+      elevation: 0.15,
+      speed: 0.85,
+      orbitRadius: 9.2,
       description: 'Executes zero-latency firmware compilation, autonomous AST healing, and nanotech reassembly.',
       subsystem: 'AVIONICS FORGE',
       load: 'FREQ 6.2 GHz',
@@ -133,9 +135,9 @@ export class ThreeSceneManagerService {
       hexColor: 0xa855f7,
       icon: '👁️',
       angle: (Math.PI * 2 / 8) * 3,
-      elevation: -0.3,
-      speed: 0.88,
-      orbitRadius: 10.2,
+      elevation: -0.15,
+      speed: 0.85,
+      orbitRadius: 9.2,
       description: 'Produces millimeter-precision 3D topological point clouds, thermal thermography, and hyper-spectral screen OCR scans.',
       subsystem: 'OPTIC SENSORS',
       load: 'LIDAR LOCKED',
@@ -152,9 +154,9 @@ export class ThreeSceneManagerService {
       hexColor: 0xef4444,
       icon: '🔮',
       angle: (Math.PI * 2 / 8) * 4,
-      elevation: 0.3,
-      speed: 0.8,
-      orbitRadius: 9.0,
+      elevation: 0.15,
+      speed: 0.85,
+      orbitRadius: 9.2,
       description: 'Predicts target maneuvers, war-game outcome contingencies, and computes optimal Task DAG corridors.',
       subsystem: 'TACTICAL MATRIX',
       load: 'ACCURACY 99.8%',
@@ -171,9 +173,9 @@ export class ThreeSceneManagerService {
       hexColor: 0xec4899,
       icon: '🧠',
       angle: (Math.PI * 2 / 8) * 5,
-      elevation: -0.2,
-      speed: 0.92,
-      orbitRadius: 9.4,
+      elevation: -0.15,
+      speed: 0.85,
+      orbitRadius: 9.2,
       description: 'Distributes reasoning computations across sub-agents and orchestrates real-time synthetic heuristics with zero cloud.',
       subsystem: 'COGNITIVE CLOUD',
       load: 'INFERENCE 1.2 ms',
@@ -190,9 +192,9 @@ export class ThreeSceneManagerService {
       hexColor: 0x84cc16,
       icon: '⚖️',
       angle: (Math.PI * 2 / 8) * 6,
-      elevation: 0.4,
-      speed: 0.82,
-      orbitRadius: 10.4,
+      elevation: 0.15,
+      speed: 0.85,
+      orbitRadius: 9.2,
       description: 'Validates real system state transitions on physical disk, window handles, and SQLite WAL before marking tasks completed.',
       subsystem: 'VERIFICATION AUDIT',
       load: 'PASS 100%',
@@ -209,9 +211,9 @@ export class ThreeSceneManagerService {
       hexColor: 0x3b82f6,
       icon: '🎙️',
       angle: (Math.PI * 2 / 8) * 7,
-      elevation: -0.4,
-      speed: 0.9,
-      orbitRadius: 9.0,
+      elevation: -0.15,
+      speed: 0.85,
+      orbitRadius: 9.2,
       description: 'Streams authentic Paul Bettany British neural speech and processes real-time audio spectral harmonics.',
       subsystem: 'AUDIO RESONANCE',
       load: 'LATENCY 14 ms',
@@ -290,7 +292,16 @@ export class ThreeSceneManagerService {
   private workspaceGroup: THREE.Group | null = null;
   private automationGroup: THREE.Group | null = null;
   private mediaGroup: THREE.Group | null = null;
-  private workspaceBotAvatars: { group: THREE.Group; phase: number; toolMesh?: THREE.Mesh; headMesh?: THREE.Mesh }[] = [];
+  private workspaceBotAvatars: {
+    group: THREE.Group;
+    phase: number;
+    basePos: THREE.Vector3;
+    toolMesh?: THREE.Mesh;
+    headMesh?: THREE.Mesh;
+    leftArm?: THREE.Mesh;
+    rightArm?: THREE.Mesh;
+  }[] = [];
+  private workspaceRadarDish: THREE.Group | THREE.Mesh | null = null;
   private automationDataPackets: { mesh: THREE.Mesh; t: number; speed: number; curve: THREE.CatmullRomCurve3 }[] = [];
   private mediaSpectrumBars: THREE.Mesh[] = [];
 
@@ -830,7 +841,7 @@ export class ThreeSceneManagerService {
       this.scene?.add(beam);
 
       // Concealed inside core at startup
-      group.scale.set(0.001, 0.001, 0.001);
+      group.scale.set(1.0, 1.0, 1.0);
       group.position.set(0, 0, 0);
 
       this.scene?.add(group);
@@ -842,8 +853,8 @@ export class ThreeSceneManagerService {
         microRing,
         haloCloud,
         beam,
-        currentRadius: 0,
-        currentScale: 0.001,
+        currentRadius: agent.orbitRadius,
+        currentScale: 1.0,
       });
     });
 
@@ -1202,11 +1213,6 @@ export class ThreeSceneManagerService {
       podGroup.add(hitPod);
       this.podHitMeshes.push(hitPod);
 
-      // Floating 3D Nameplate Sprite over each Docking Pod
-      const podNameplate = this.createAgentBillboardSprite(agent);
-      podNameplate.position.set(0, 2.6, 0);
-      podGroup.add(podNameplate);
-
       // 3 Sleek Architectural Pylons around pod
       for (let p = 0; p < 3; p++) {
         const pAngle = (p / 3) * Math.PI * 2;
@@ -1306,8 +1312,9 @@ export class ThreeSceneManagerService {
 
   /**
    * 3D Cybernetic Colony & Multi-Agent Living Base (Image 1 Style):
-   * Hexagonal island archipelago with 19 interlocking hex foundations,
-   * 8 dedicated specialist bot workstations, and 8 animated physical bot avatars.
+   * Expansive hexagonal planetary surface with 37 interlocking hex tiles,
+   * Central Autonomous Command Hub with rotating radar array,
+   * 8 distinct architectural specialist stations, and 8 animated autonomous bots.
    */
   private createWorkspaceBaseEnvironment(): void {
     if (!this.scene) return;
@@ -1315,35 +1322,46 @@ export class ThreeSceneManagerService {
     this.workspaceGroup.visible = false;
     this.workspaceBotAvatars = [];
 
-    const hexCoords = [
-      { q: 0, r: 0 },
-      { q: 1, r: 0 }, { q: 1, r: -1 }, { q: 0, r: -1 },
-      { q: -1, r: 0 }, { q: -1, r: 1 }, { q: 0, r: 1 },
-      { q: 2, r: 0 }, { q: 2, r: -1 }, { q: 2, r: -2 },
-      { q: 1, r: -2 }, { q: 0, r: -2 }, { q: -1, r: -1 },
-      { q: -2, r: 0 }, { q: -2, r: 1 }, { q: -2, r: 2 },
-      { q: -1, r: 2 }, { q: 0, r: 2 }, { q: 1, r: 1 }
-    ];
+    // Dedicated Colony Sun & Fill Illumination (Bright, crisp sci-fi base aesthetic from Image 1)
+    const sunLight = new THREE.DirectionalLight(0xdbeafe, 2.6);
+    sunLight.position.set(12, 24, 16);
+    this.workspaceGroup.add(sunLight);
 
+    const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x091426, 1.4);
+    this.workspaceGroup.add(hemiLight);
+
+    // 1. Expansive 37-Tile Hexagonal Terrain Base (q, r hex axial coordinates)
+    const hexCoords: { q: number; r: number }[] = [];
     const hexRadius = 3.6;
     const hexHeight = 0.5;
+
+    for (let q = -3; q <= 3; q++) {
+      const r1 = Math.max(-3, -q - 3);
+      const r2 = Math.min(3, -q + 3);
+      for (let r = r1; r <= r2; r++) {
+        hexCoords.push({ q, r });
+      }
+    }
+
     const hexTileGeo = new THREE.CylinderGeometry(hexRadius * 0.96, hexRadius, hexHeight, 6);
     const hexTileMat = new THREE.MeshStandardMaterial({
-      color: 0x07152b,
-      roughness: 0.35,
-      metalness: 0.85,
+      color: 0x0d1d33,
+      roughness: 0.32,
+      metalness: 0.82,
     });
     const hexEdgeMat = new THREE.LineBasicMaterial({
       color: 0x00f0ff,
       transparent: true,
-      opacity: 0.4,
+      opacity: 0.55,
       blending: THREE.AdditiveBlending,
     });
 
     hexCoords.forEach((coord) => {
       const x = hexRadius * Math.sqrt(3) * (coord.q + coord.r / 2);
       const z = hexRadius * (3 / 2) * coord.r;
-      const y = -4.8 + Math.sin(coord.q * 1.5 + coord.r) * 0.15;
+      // Gentle terraced elevation for terrain depth
+      const distFromCenter = Math.sqrt(x * x + z * z);
+      const y = -4.8 - Math.min(1.2, distFromCenter * 0.04) + Math.sin(coord.q * 1.5 + coord.r) * 0.12;
 
       const tileMesh = new THREE.Mesh(hexTileGeo, hexTileMat);
       tileMesh.position.set(x, y, z);
@@ -1354,48 +1372,99 @@ export class ThreeSceneManagerService {
       this.workspaceGroup?.add(edgeMesh);
     });
 
-    const hubBaseGeo = new THREE.CylinderGeometry(2.4, 2.7, 0.6, 6);
-    const hubBase = new THREE.Mesh(hubBaseGeo, new THREE.MeshStandardMaterial({
-      color: 0x0c274d,
-      roughness: 0.25,
-      metalness: 0.9,
-    }));
-    hubBase.position.set(0, -4.2, 0);
+    // 2. Central Command Hub (Image 1 Spaceport / Observatory)
+    const hubBaseGeo = new THREE.CylinderGeometry(2.6, 3.0, 0.7, 6);
+    const hubBase = new THREE.Mesh(
+      hubBaseGeo,
+      new THREE.MeshStandardMaterial({
+        color: 0x0c2547,
+        roughness: 0.25,
+        metalness: 0.92,
+      })
+    );
+    hubBase.position.set(0, -4.1, 0);
     this.workspaceGroup.add(hubBase);
 
-    const tableGeo = new THREE.CylinderGeometry(1.6, 1.8, 0.25, 32);
-    const tableMat = new THREE.MeshBasicMaterial({
+    // Elevated terrace deck
+    const deckGeo = new THREE.CylinderGeometry(1.9, 2.1, 0.3, 32);
+    const deck = new THREE.Mesh(
+      deckGeo,
+      new THREE.MeshStandardMaterial({
+        color: 0x081b33,
+        roughness: 0.2,
+        metalness: 0.95,
+      })
+    );
+    deck.position.set(0, -3.6, 0);
+    this.workspaceGroup.add(deck);
+
+    // Geodesic Translucent Command Dome
+    const domeGeo = new THREE.SphereGeometry(1.4, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.5);
+    const domeMat = new THREE.MeshStandardMaterial({
       color: 0x00f0ff,
       transparent: true,
-      opacity: 0.75,
-      blending: THREE.AdditiveBlending,
+      opacity: 0.45,
+      roughness: 0.1,
+      metalness: 0.9,
     });
-    const table = new THREE.Mesh(tableGeo, tableMat);
-    table.position.set(0, -3.7, 0);
-    this.workspaceGroup.add(table);
+    const dome = new THREE.Mesh(domeGeo, domeMat);
+    dome.position.set(0, -3.45, 0);
+    this.workspaceGroup.add(dome);
 
-    const globeGeo = new THREE.SphereGeometry(0.85, 24, 24);
-    const globeMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.6,
-      blending: THREE.AdditiveBlending,
+    // Central Holo-Core inside dome
+    const coreHolo = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.5, 2),
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending,
+      })
+    );
+    coreHolo.position.set(0, -2.8, 0);
+    this.workspaceGroup.add(coreHolo);
+
+    // Central Rotating Radar Array (Sweeps over colony)
+    const mastGeo = new THREE.CylinderGeometry(0.08, 0.08, 1.6, 8);
+    const mast = new THREE.Mesh(mastGeo, new THREE.MeshStandardMaterial({ color: 0x334155 }));
+    mast.position.set(0, -2.6, 0);
+    this.workspaceGroup.add(mast);
+
+    const radarGroup = new THREE.Group();
+    radarGroup.position.set(0, -1.8, 0);
+
+    const radarDishGeo = new THREE.CylinderGeometry(0.65, 0.15, 0.18, 16);
+    const radarDishMat = new THREE.MeshStandardMaterial({
+      color: 0x00f0ff,
+      metalness: 0.85,
+      roughness: 0.2,
     });
-    const globe = new THREE.Mesh(globeGeo, globeMat);
-    globe.position.set(0, -2.5, 0);
-    this.workspaceGroup.add(globe);
+    const radarDish = new THREE.Mesh(radarDishGeo, radarDishMat);
+    radarDish.rotation.z = Math.PI * 0.35;
+    radarGroup.add(radarDish);
 
+    const radarAntenna = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03, 0.03, 0.6, 6),
+      new THREE.MeshBasicMaterial({ color: 0xffffff })
+    );
+    radarAntenna.position.set(0.35, 0.25, 0);
+    radarGroup.add(radarAntenna);
+
+    this.workspaceRadarDish = radarGroup;
+    this.workspaceGroup.add(radarGroup);
+
+    // 3. 8 Specialist Architectural Modules & Autonomous Bots
     const agentList = this.agents();
     const stationPositions = [
-      { x: 0, z: -8.0 },
-      { x: 7.2, z: -4.5 },
-      { x: 9.0, z: 2.2 },
-      { x: 4.5, z: 8.5 },
-      { x: -4.5, z: 8.5 },
-      { x: -9.0, z: 2.2 },
-      { x: -7.2, z: -4.5 },
-      { x: 0, z: 8.8 }
+      { x: 0, z: -8.8 },
+      { x: 7.6, z: -4.8 },
+      { x: 9.2, z: 2.4 },
+      { x: 4.8, z: 8.8 },
+      { x: -4.8, z: 8.8 },
+      { x: -9.2, z: 2.4 },
+      { x: -7.6, z: -4.8 },
+      { x: 0, z: 9.4 },
     ];
 
     agentList.forEach((agent, i) => {
@@ -1404,60 +1473,183 @@ export class ThreeSceneManagerService {
       stationGroup.position.set(pos.x, -4.2, pos.z);
       stationGroup.userData = { agentId: agent.id, agent };
 
-      const padGeo = new THREE.CylinderGeometry(1.8, 2.0, 0.35, 6);
+      // Radial Power Conduit connecting Station back to Central Command Hub
+      const conduitGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0.1, 0),
+        new THREE.Vector3(-pos.x, 0.4, -pos.z),
+      ]);
+      const conduitLine = new THREE.Line(
+        conduitGeo,
+        new THREE.LineBasicMaterial({
+          color: agent.hexColor,
+          transparent: true,
+          opacity: 0.45,
+          blending: THREE.AdditiveBlending,
+        })
+      );
+      stationGroup.add(conduitLine);
+
+      // Station Hexagonal Platform Pad
+      const padGeo = new THREE.CylinderGeometry(2.2, 2.5, 0.4, 6);
       const padMat = new THREE.MeshStandardMaterial({
-        color: 0x091c36,
-        roughness: 0.3,
-        metalness: 0.85,
+        color: 0x071b36,
+        roughness: 0.25,
+        metalness: 0.9,
       });
       const pad = new THREE.Mesh(padGeo, padMat);
       stationGroup.add(pad);
 
+      // Neon Platform Rim
       const padBorder = new THREE.LineSegments(
         new THREE.EdgesGeometry(padGeo),
         new THREE.LineBasicMaterial({
           color: agent.hexColor,
           transparent: true,
-          opacity: 0.85,
+          opacity: 0.9,
           blending: THREE.AdditiveBlending,
         })
       );
       stationGroup.add(padBorder);
 
-      const domeGeo = new THREE.SphereGeometry(0.8, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.5);
-      const domeMat = new THREE.MeshStandardMaterial({
-        color: 0x0e2b52,
-        roughness: 0.2,
-        metalness: 0.9,
-      });
-      const dome = new THREE.Mesh(domeGeo, domeMat);
-      dome.position.set(0.6, 0.18, -0.6);
-      stationGroup.add(dome);
+      // Local Ambient Platform Light
+      const pLight = new THREE.PointLight(agent.hexColor, 1.8, 5.5, 1.2);
+      pLight.position.set(0, 1.2, 0);
+      stationGroup.add(pLight);
 
-      const torusGeo = new THREE.TorusGeometry(0.82, 0.035, 12, 32);
-      const torusMat = new THREE.MeshBasicMaterial({
-        color: agent.hexColor,
-        transparent: true,
-        opacity: 0.9,
-        blending: THREE.AdditiveBlending,
-      });
-      const torus = new THREE.Mesh(torusGeo, torusMat);
-      torus.rotation.x = Math.PI * 0.5;
-      torus.position.set(0.6, 0.45, -0.6);
-      stationGroup.add(torus);
+      // --- Distinct Architectural Building per Agent ---
+      const buildingGroup = new THREE.Group();
+      buildingGroup.position.set(0.65, 0.2, -0.65);
 
+      if (i === 0) {
+        // SENTINEL-X: Cyber Defense Bastion
+        const bastionGeo = new THREE.BoxGeometry(0.9, 1.6, 0.9);
+        const bastion = new THREE.Mesh(bastionGeo, new THREE.MeshStandardMaterial({ color: 0x091e38, metalness: 0.9 }));
+        buildingGroup.add(bastion);
+        // 4 Perimeter Kinetic Shield Emitters
+        const pylonOffsets = [{ x: -0.6, z: -0.6 }, { x: 0.6, z: -0.6 }, { x: -0.6, z: 0.6 }, { x: 0.6, z: 0.6 }];
+        pylonOffsets.forEach((po) => {
+          const pyl = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.8, 8), new THREE.MeshBasicMaterial({ color: agent.hexColor }));
+          pyl.position.set(po.x, 0.2, po.z);
+          buildingGroup.add(pyl);
+        });
+        const shieldRing = new THREE.Mesh(
+          new THREE.TorusGeometry(1.1, 0.03, 12, 32),
+          new THREE.MeshBasicMaterial({ color: agent.hexColor, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending })
+        );
+        shieldRing.rotation.x = Math.PI * 0.5;
+        shieldRing.position.y = 0.9;
+        buildingGroup.add(shieldRing);
+      } else if (i === 1) {
+        // SYNTHEX: Satellite Telemetry Uplink Array
+        const baseMast = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 1.2, 8), new THREE.MeshStandardMaterial({ color: 0x1e293b }));
+        buildingGroup.add(baseMast);
+        const dish = new THREE.Mesh(
+          new THREE.SphereGeometry(0.8, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.4),
+          new THREE.MeshStandardMaterial({ color: 0x0a3328, metalness: 0.85, roughness: 0.25 })
+        );
+        dish.rotation.x = -Math.PI * 0.35;
+        dish.position.set(0, 0.9, 0);
+        buildingGroup.add(dish);
+        const feedHorn = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 6), new THREE.MeshBasicMaterial({ color: agent.hexColor }));
+        feedHorn.position.set(0, 1.15, 0.3);
+        buildingGroup.add(feedHorn);
+      } else if (i === 2) {
+        // ARCHON: Microcode Avionics Forge Hangar
+        const hangar = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.9, 0.9, 1.4, 16, 1, false, 0, Math.PI),
+          new THREE.MeshStandardMaterial({ color: 0x271905, metalness: 0.9, roughness: 0.3 })
+        );
+        hangar.rotation.z = Math.PI * 0.5;
+        hangar.position.y = 0.45;
+        buildingGroup.add(hangar);
+        const forgeBeam = new THREE.Mesh(
+          new THREE.BoxGeometry(0.1, 0.1, 1.2),
+          new THREE.MeshBasicMaterial({ color: agent.hexColor, blending: THREE.AdditiveBlending })
+        );
+        forgeBeam.position.set(0, 0.8, 0);
+        buildingGroup.add(forgeBeam);
+      } else if (i === 3) {
+        // AURA-VISION: LiDAR & Optic Recon Observatory
+        const baseCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.8, 0.7, 16), new THREE.MeshStandardMaterial({ color: 0x180d2b }));
+        buildingGroup.add(baseCyl);
+        const obsDome = new THREE.Mesh(
+          new THREE.SphereGeometry(0.72, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.5),
+          new THREE.MeshStandardMaterial({ color: 0x2e1059, metalness: 0.85 })
+        );
+        obsDome.position.y = 0.35;
+        buildingGroup.add(obsDome);
+        const lensEye = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 12), new THREE.MeshBasicMaterial({ color: agent.hexColor }));
+        lensEye.position.set(0, 0.6, 0.55);
+        buildingGroup.add(lensEye);
+      } else if (i === 4) {
+        // CHRONOS: Tactical Trajectory Engine & Solar Collector Wings
+        const chronoPillar = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.4, 0.5), new THREE.MeshStandardMaterial({ color: 0x240a0c }));
+        buildingGroup.add(chronoPillar);
+        // Dual angled solar wings
+        [-1, 1].forEach((side) => {
+          const wing = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.05, 0.6), new THREE.MeshStandardMaterial({ color: 0x050e1f, metalness: 0.95 }));
+          wing.position.set(side * 0.85, 0.7, 0);
+          wing.rotation.z = side * 0.35;
+          buildingGroup.add(wing);
+        });
+      } else if (i === 5) {
+        // SYNAPSE-AI: Deep Cognitive Bio-Neural Vats
+        [-0.45, 0.45].forEach((vx, vIdx) => {
+          const vat = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.3, 1.1, 16),
+            new THREE.MeshStandardMaterial({ color: 0x2d0826, transparent: true, opacity: 0.75, metalness: 0.9 })
+          );
+          vat.position.set(vx, 0.55, vIdx === 0 ? -0.2 : 0.2);
+          buildingGroup.add(vat);
+          const fluid = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.85, 12), new THREE.MeshBasicMaterial({ color: agent.hexColor, transparent: true, opacity: 0.85 }));
+          fluid.position.copy(vat.position);
+          buildingGroup.add(fluid);
+        });
+      } else if (i === 6) {
+        // AEGIS-SENTRY: Dual-State Physical Verification Rig
+        const archLeft = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.3, 0.15), new THREE.MeshStandardMaterial({ color: 0x112908 }));
+        archLeft.position.set(-0.6, 0.65, 0);
+        buildingGroup.add(archLeft);
+        const archRight = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.3, 0.15), new THREE.MeshStandardMaterial({ color: 0x112908 }));
+        archRight.position.set(0.6, 0.65, 0);
+        buildingGroup.add(archRight);
+        const beamBar = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.12, 0.15), new THREE.MeshStandardMaterial({ color: 0x112908 }));
+        beamBar.position.set(0, 1.3, 0);
+        buildingGroup.add(beamBar);
+        const laserScanner = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.0), new THREE.MeshBasicMaterial({ color: agent.hexColor, side: THREE.DoubleSide, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending }));
+        laserScanner.position.set(0, 0.75, 0);
+        buildingGroup.add(laserScanner);
+      } else {
+        // NEXUS-STARK: Resonance Comms Spire
+        const spire = new THREE.Mesh(new THREE.ConeGeometry(0.35, 2.0, 8), new THREE.MeshStandardMaterial({ color: 0x091b38, metalness: 0.9 }));
+        spire.position.y = 1.0;
+        buildingGroup.add(spire);
+        [0.6, 1.1, 1.6].forEach((ry) => {
+          const ring = new THREE.Mesh(new THREE.TorusGeometry(0.5 - ry * 0.15, 0.025, 8, 24), new THREE.MeshBasicMaterial({ color: agent.hexColor, transparent: true, opacity: 0.85 }));
+          ring.rotation.x = Math.PI * 0.5;
+          ring.position.y = ry;
+          buildingGroup.add(ring);
+        });
+      }
+
+      stationGroup.add(buildingGroup);
+
+      // --- Animated Autonomous Cybernetic Bot Avatar (Image 1 bots doing physical work!) ---
       const botGroup = new THREE.Group();
-      botGroup.position.set(-0.4, 0.5, 0.4);
+      const botBasePos = new THREE.Vector3(-0.6, 0.5, 0.6);
+      botGroup.position.copy(botBasePos);
 
-      const torsoGeo = new THREE.CylinderGeometry(0.24, 0.28, 0.55, 12);
+      // Bot Torso
+      const torsoGeo = new THREE.CylinderGeometry(0.22, 0.26, 0.5, 12);
       const torsoMat = new THREE.MeshStandardMaterial({
         color: 0x1e293b,
-        metalness: 0.8,
-        roughness: 0.3,
+        metalness: 0.85,
+        roughness: 0.25,
       });
       const torso = new THREE.Mesh(torsoGeo, torsoMat);
       botGroup.add(torso);
 
+      // Bot Head
       const headGeo = new THREE.SphereGeometry(0.18, 16, 16);
       const headMat = new THREE.MeshStandardMaterial({
         color: 0x0f172a,
@@ -1465,58 +1657,70 @@ export class ThreeSceneManagerService {
         roughness: 0.2,
       });
       const head = new THREE.Mesh(headGeo, headMat);
-      head.position.y = 0.42;
+      head.position.y = 0.38;
       botGroup.add(head);
 
-      const visorGeo = new THREE.BoxGeometry(0.22, 0.08, 0.12);
+      // Glowing LED Visor
+      const visorGeo = new THREE.BoxGeometry(0.2, 0.08, 0.12);
       const visorMat = new THREE.MeshBasicMaterial({
         color: agent.hexColor,
         blending: THREE.AdditiveBlending,
       });
       const visor = new THREE.Mesh(visorGeo, visorMat);
-      visor.position.set(0, 0.42, 0.12);
+      visor.position.set(0, 0.38, 0.11);
       botGroup.add(visor);
 
-      const armGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.4, 8);
-      const armMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
-      const arm = new THREE.Mesh(armGeo, armMat);
-      arm.rotation.z = Math.PI * 0.35;
-      arm.position.set(0.25, 0.15, 0.15);
-      botGroup.add(arm);
+      // Articulated Left Arm
+      const lArm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.38, 8), new THREE.MeshStandardMaterial({ color: 0x334155 }));
+      lArm.position.set(-0.25, 0.12, 0.05);
+      botGroup.add(lArm);
 
-      const thrusterGeo = new THREE.RingGeometry(0.1, 0.28, 16);
-      const thrusterMat = new THREE.MeshBasicMaterial({
-        color: agent.hexColor,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.85,
-        blending: THREE.AdditiveBlending,
-      });
-      const thruster = new THREE.Mesh(thrusterGeo, thrusterMat);
+      // Articulated Right Arm (Tool Arm)
+      const rArm = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.38, 8), new THREE.MeshStandardMaterial({ color: 0x334155 }));
+      rArm.position.set(0.25, 0.12, 0.05);
+      botGroup.add(rArm);
+
+      // Hover Propulsion Thruster Ring
+      const thruster = new THREE.Mesh(
+        new THREE.RingGeometry(0.08, 0.24, 16),
+        new THREE.MeshBasicMaterial({
+          color: agent.hexColor,
+          side: THREE.DoubleSide,
+          transparent: true,
+          opacity: 0.9,
+          blending: THREE.AdditiveBlending,
+        })
+      );
       thruster.rotation.x = Math.PI * 0.5;
-      thruster.position.y = -0.32;
+      thruster.position.y = -0.28;
       botGroup.add(thruster);
 
       stationGroup.add(botGroup);
+
       this.workspaceBotAvatars.push({
         group: botGroup,
         phase: i * 0.85,
-        toolMesh: arm,
+        basePos: botBasePos,
+        toolMesh: rArm,
         headMesh: head,
+        leftArm: lArm,
+        rightArm: rArm,
       });
 
+      // Floating 3D Billboard Label
       const sprite = this.createAgentBillboardSprite(agent);
-      sprite.position.set(0, 2.2, 0);
+      sprite.position.set(0, 2.5, 0);
       stationGroup.add(sprite);
 
-      const hitGeo = new THREE.CylinderGeometry(2.2, 2.2, 4.5, 16);
+      // Tactile Invisible Raycast Hit Cylinder (Effortless click detection)
+      const hitGeo = new THREE.CylinderGeometry(2.8, 2.8, 5.0, 16);
       const hitMat = new THREE.MeshBasicMaterial({
         transparent: true,
         opacity: 0.001,
         depthWrite: false,
       });
       const hitMesh = new THREE.Mesh(hitGeo, hitMat);
-      hitMesh.position.y = 2.0;
+      hitMesh.position.y = 2.2;
       hitMesh.userData = { agentId: agent.id, agent };
       stationGroup.add(hitMesh);
       this.podHitMeshes.push(hitMesh);
@@ -2149,13 +2353,15 @@ export class ThreeSceneManagerService {
           this.quantumDotSphere.rotation.x = Math.sin(time * 0.15) * 0.03;
         }
 
-        // 3. Inner Arc Singularity Breathing Pulse & Corona Expansion
+        // 3. Inner Arc Singularity Breathing Pulse & Corona Expansion + Dynamic Speech Vibration
+        const isSpeaking = this.speechVoice.isSpeaking();
+        const coreVibration = isSpeaking ? Math.sin(time * 38.0) * 0.09 : 0;
         if (this.innerSingularityMesh) {
-          const pulse = 1 + Math.sin(time * 1.2) * 0.04;
+          const pulse = (1 + Math.sin(time * 1.2) * 0.04) + coreVibration;
           this.innerSingularityMesh.scale.set(pulse, pulse, pulse);
         }
         if (this.coreCoronaMesh) {
-          const coronaPulse = 1 + Math.sin(time * 1.0 + 1) * 0.05;
+          const coronaPulse = (1 + Math.sin(time * 1.0 + 1) * 0.05) + coreVibration * 1.4;
           this.coreCoronaMesh.scale.set(coronaPulse, coronaPulse, coronaPulse);
           this.coreCoronaMesh.rotation.y = -time * 0.015;
         }
@@ -2204,14 +2410,26 @@ export class ThreeSceneManagerService {
 
           data.group.scale.set(data.currentScale, data.currentScale, data.currentScale);
 
-          // Calm and Majestic Trajectory Coordinates
-          const currentAngle = agent.angle + time * (agent.speed * 0.10);
+          // Calm, Synchronized & Ordered Orbital Trajectory Coordinates (Shared Angular Velocity)
+          const sharedOrbitalSpeed = 0.085;
+          const currentAngle = agent.angle + time * sharedOrbitalSpeed;
           const posX = Math.cos(currentAngle) * data.currentRadius;
           const posZ = Math.sin(currentAngle) * data.currentRadius;
-          const posY = Math.sin(time * 0.6 + index) * 0.6 + agent.elevation;
+          const posY = Math.sin(time * 0.6 + index) * 0.25 + agent.elevation;
 
-          data.group.position.set(posX, posY, posZ);
-          this.cachedAgentVectors[index].set(posX, posY, posZ);
+          // Realistic Speech Acoustic Vibration on Agent when Speaking or Selected
+          const isSelected = this.selectedAgent()?.id === agent.id;
+          const agentVibration = (isSpeaking && isSelected) ? Math.sin(time * 42.0) * 0.08 : 0;
+          data.group.position.set(posX, posY + agentVibration, posZ);
+          this.cachedAgentVectors[index].set(posX, posY + agentVibration, posZ);
+
+          // Vibrate inner nucleus and dot ball when speaking
+          if (data.innerNucleus && isSpeaking && isSelected) {
+            const vibScale = 1.0 + Math.sin(time * 36.0) * 0.15;
+            data.innerNucleus.scale.set(vibScale, vibScale, vibScale);
+          } else if (data.innerNucleus) {
+            data.innerNucleus.scale.set(1, 1, 1);
+          }
 
           // Orbit micro quantum particle halo around each agent
           if (data.haloCloud) {
@@ -2298,16 +2516,30 @@ export class ThreeSceneManagerService {
         }
 
         // 10. Workspace Autonomous Bot Avatars Physical Animation (Image 1 bots doing physical work!)
-        if (this.workspaceBotAvatars.length > 0 && this.workspaceGroup?.visible) {
-          this.workspaceBotAvatars.forEach((bot) => {
-            bot.group.position.y = 0.5 + Math.sin(time * 2.0 + bot.phase) * 0.08;
-            if (bot.headMesh) {
-              bot.headMesh.rotation.y = Math.sin(time * 1.2 + bot.phase) * 0.4;
-            }
-            if (bot.toolMesh) {
-              bot.toolMesh.rotation.z = Math.PI * 0.35 + Math.sin(time * 3.5 + bot.phase) * 0.25;
-            }
-          });
+        if (this.workspaceGroup?.visible) {
+          if (this.workspaceRadarDish) {
+            this.workspaceRadarDish.rotation.y = time * 0.8;
+          }
+          if (this.workspaceBotAvatars.length > 0) {
+            this.workspaceBotAvatars.forEach((bot) => {
+              // Smooth walking patrol circuit around workstation
+              const botAngle = time * 0.85 + bot.phase;
+              bot.group.position.x = bot.basePos.x + Math.cos(botAngle) * 0.55;
+              bot.group.position.z = bot.basePos.z + Math.sin(botAngle) * 0.55;
+              bot.group.position.y = 0.52 + Math.abs(Math.sin(time * 3.4 + bot.phase)) * 0.08;
+              bot.group.rotation.y = -botAngle + Math.PI / 2;
+
+              if (bot.headMesh) {
+                bot.headMesh.rotation.y = Math.sin(time * 1.5 + bot.phase) * 0.35;
+              }
+              if (bot.leftArm) {
+                bot.leftArm.rotation.x = Math.sin(time * 3.4 + bot.phase) * 0.5;
+              }
+              if (bot.rightArm) {
+                bot.rightArm.rotation.x = -Math.sin(time * 3.4 + bot.phase) * 0.5;
+              }
+            });
+          }
         }
 
         // 11. Automation Nexus Flowing High-Speed Data Packets
@@ -2348,6 +2580,14 @@ export class ThreeSceneManagerService {
 
   setMode(mode: SpatialEnvironmentMode): void {
     this.currentMode = mode;
+    const isHome = mode === 'MAIN_AGENT' || mode === 'DEFAULT';
+
+    // Strictly isolate Main Agent orbital agents & beams to /home only
+    this.agentMeshMap.forEach((m) => {
+      m.group.visible = isHome;
+      if (m.beam) m.beam.visible = isHome;
+    });
+
     if (this.networkNodeGroup) {
       this.networkNodeGroup.visible = mode === 'NETWORK';
     }
@@ -2364,17 +2604,17 @@ export class ThreeSceneManagerService {
       this.mediaGroup.visible = mode === 'MEDIA';
     }
     if (this.centralCoreGroup) {
-      this.centralCoreGroup.visible = mode === 'MAIN_AGENT' || mode === 'DEFAULT';
+      this.centralCoreGroup.visible = isHome;
     }
     if (this.swarmArchitectureGroup) {
-      this.swarmArchitectureGroup.visible = mode === 'MAIN_AGENT' || mode === 'DEFAULT';
+      this.swarmArchitectureGroup.visible = isHome;
     }
 
     if (this.camera) {
       if (mode === 'WORKSPACE') {
-        // High isometric colony view matching Image 1
-        this.targetCameraPos.set(0, 16.5, 23.5);
-        this.targetCameraLookAt.set(0, -1.5, 0);
+        // High-definition isometric perspective overlooking the living bot colony (Image 1 Style)
+        this.targetCameraPos.set(0, 11.0, 16.5);
+        this.targetCameraLookAt.set(0, -3.6, 0);
       } else if (mode === 'AUTOMATION') {
         this.targetCameraPos.set(0, 7.5, 19.0);
         this.targetCameraLookAt.set(0, 1.2, 0);

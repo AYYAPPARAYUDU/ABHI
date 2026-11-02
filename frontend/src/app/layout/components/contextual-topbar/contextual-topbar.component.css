@@ -5,6 +5,7 @@
   z-index: 50;
   margin-bottom: 16px;
   width: 100%;
+  pointer-events: auto;
 }
 
 :host:has(.main-agent-active) {

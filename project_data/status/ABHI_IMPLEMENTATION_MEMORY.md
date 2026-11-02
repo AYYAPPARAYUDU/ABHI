@@ -11,7 +11,30 @@
 
 ---
 
-## Latest Milestone (2026-11-02): M-39 Workspace Multi-Viewport Visibility, Viewport Zoom Scaling, Home Alignment & Secondary Compactness Polish
+## Latest Milestone (2026-11-02): M-40 Spatial Clutter Elimination, Synchronized Ordered Orbits, Acoustic Speech Vibration & 3D Cybernetic Bot Colony Archipelago
+- **Redundant Overlay Buttons Removed from `/home`:**
+  - Removed `<section class="swarm-tactical-deck">` from `home-page.component.html` per user instruction (`"remove the buttons"`), restoring an immaculate, spacious 3D spatial viewport with zero redundant button chips.
+- **Single Billboard Sprites & Synchronized Equidistant Orbits:**
+  - Removed duplicate pod billboards in `three-scene-manager.service.ts`; only active orbiting agent orbs hold floating 3D billboard labels.
+  - Equalized orbital speed ($0.085$) and radius ($9.2$) across all 8 agents with alternating clean elevations ($\pm 0.15$), ensuring perfect, majestic 45-degree equidistant formation with zero overtaking or collisions.
+  - Fully isolated orbital agent meshes to `/home` (`MAIN_AGENT`) so they never float into `/workspace`.
+- **Acoustic Real-Time Speech Vibration:**
+  - Injected `SpeechVoiceService` into `ThreeSceneManagerService`.
+  - Core vibration: Inner singularity and corona mesh dynamically vibrate ($\sin(t \cdot 38) \cdot 0.09$) during speech output.
+  - Agent vibration: Selected/speaking agent orb vibrates with acoustic jitter ($\sin(t \cdot 42) \cdot 0.08$) and nucleus scale pulsation ($\sin(t \cdot 36) \cdot 0.15$) with zero latency.
+- **Direct 3D Canvas Raycasting Pointer-Events Pipeline:**
+  - Fixed pointer event stacking in `app-shell.component.css` (`.abhi-app-shell.main-agent-shell { pointer-events: none; }`) and `spatial-background.component.css` (`:host { pointer-events: auto; }`).
+  - Verified with Playwright that top hit element across the 3D scene is `CANVAS spatial-webgl-canvas`.
+- **Image 1 3D Cybernetic Bot Colony & Station Inspector:**
+  - Built expansive 37-tile hexagonal terrain base (`q, r` axial grid) with dedicated sun/hemisphere lighting and glowing edge bevels.
+  - Central Autonomous Command Hub with translucent geodesic dome, holo-core, and rotating radar scanner dish.
+  - 8 distinct architectural stations (Cyber Defense Bastion, Uplink Dish, Avionics Forge, LiDAR Observatory, Solar Wings, Quantum Vats, Verification Rig, Comms Spire).
+  - 8 animated cybernetic bots performing walking patrol circuits with articulated arms and rotating visor heads.
+  - Verified Station Inspector Drawer with Small-LLM Brain specs, current physical work output, and direct synaptic chat.
+
+---
+
+## Milestone (2026-11-02): M-39 Workspace Multi-Viewport Visibility, Viewport Zoom Scaling, Home Alignment & Secondary Compactness Polish
 - **Full Viewport Integration for `/workspace`:**
   - Added `/workspace` to `isMainAgent()` computed signal in `app-shell.component.ts`, giving it the dedicated `.main-agent-view` container class with zero-sidebar full viewport height, minimal padding (`6px 14px 8px 14px`), and `overflow: hidden`.
   - Updated `.workspace-spatial-container` in `workspace-page.component.css` from rigid `100vw/100vh` to fluid `width: 100%; height: 100%; min-height: calc(100vh - 80px)`.
