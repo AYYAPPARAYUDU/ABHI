@@ -47,6 +47,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
   readonly consensusScore = signal(98.6);
   readonly familyDialogue = signal<FamilyChatMessage[]>([]);
   readonly showFamilyCouncil = signal(false);
+  readonly dockExpanded = signal(false);
 
   // Direct Small LLM Brain Chat
   brainChatInput = '';
@@ -107,6 +108,16 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
         time: new Date().toLocaleTimeString()
       }
     ]);
+  }
+
+  onPillHover(agent: AgentNode): void {
+    this.threeScene.hoveredAgent.set(agent);
+    this.threeScene.updateBillboardLabelVisibility();
+  }
+
+  onPillLeave(): void {
+    this.threeScene.hoveredAgent.set(null);
+    this.threeScene.updateBillboardLabelVisibility();
   }
 
   closeStationDrawer(): void {

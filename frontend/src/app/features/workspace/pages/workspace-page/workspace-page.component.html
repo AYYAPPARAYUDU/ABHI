@@ -37,40 +37,75 @@
   </header>
 
   <!-- Interactive 8-Bot Stations Dock (Bottom Dock overlooking the 3D Colony) -->
-  <footer class="stations-dock-container">
-    <div class="stations-dock-title">
-      <span>AUTONOMOUS SPECIALIST STATIONS // CLICK TO INSPECT WORKSTATION IN 3D</span>
+  <footer class="stations-dock-container" [class.expanded]="dockExpanded()">
+    <div class="stations-dock-header-bar">
+      <div class="stations-dock-title">
+        <span>AUTONOMOUS SPECIALIST STATIONS // CLICK TO ROTATE 3D WORKSTATION TO FRONT</span>
+      </div>
+      <button
+        type="button"
+        class="dock-toggle-btn"
+        (click)="dockExpanded.set(!dockExpanded())"
+        title="Toggle station cards view"
+      >
+        <span>{{ dockExpanded() ? '▼ MINIMIZE DOCK' : '▲ EXPAND CARDS' }}</span>
+      </button>
     </div>
 
-    <div class="stations-grid">
-      @for (agent of agents(); track agent.id) {
-        <div
-          class="station-card"
-          [class.active]="selectedAgent()?.id === agent.id"
-          [style.borderColor]="selectedAgent()?.id === agent.id ? agent.color : 'rgba(56, 189, 248, 0.2)'"
-          (click)="selectStation(agent)"
-        >
-          <div class="station-card-header">
-            <div class="station-dot" [style.backgroundColor]="agent.color"></div>
-            <div class="station-identity">
-              <span class="station-name">{{ agent.name }}</span>
-              <span class="station-code">{{ agent.codename }}</span>
+    @if (!dockExpanded()) {
+      <!-- Sleek Compact Floating Pill Bar: Zero occlusion of the 3D colony -->
+      <div class="stations-compact-bar">
+        @for (agent of agents(); track agent.id) {
+          <button
+            type="button"
+            class="compact-station-pill"
+            [class.active]="selectedAgent()?.id === agent.id"
+            [style.borderColor]="selectedAgent()?.id === agent.id ? agent.color : 'rgba(56, 189, 248, 0.25)'"
+            (click)="selectStation(agent)"
+            (mouseenter)="onPillHover(agent)"
+            (mouseleave)="onPillLeave()"
+            [title]="'Rotate to ' + agent.name + ' (' + agent.subsystem + ')'"
+          >
+            <span class="pill-dot" [style.backgroundColor]="agent.color"></span>
+            <span class="pill-name">{{ agent.name }}</span>
+            <span class="pill-sub">{{ agent.subsystem }}</span>
+          </button>
+        }
+      </div>
+    } @else {
+      <!-- Full Expanded 8-Station Grid -->
+      <div class="stations-grid">
+        @for (agent of agents(); track agent.id) {
+          <div
+            class="station-card"
+            [class.active]="selectedAgent()?.id === agent.id"
+            [style.borderColor]="selectedAgent()?.id === agent.id ? agent.color : 'rgba(56, 189, 248, 0.2)'"
+            (click)="selectStation(agent)"
+            (mouseenter)="onPillHover(agent)"
+            (mouseleave)="onPillLeave()"
+          >
+            <div class="station-card-header">
+              <div class="station-dot" [style.backgroundColor]="agent.color"></div>
+              <div class="station-identity">
+                <span class="station-name">{{ agent.name }}</span>
+                <span class="station-code">{{ agent.codename }}</span>
+              </div>
+              <span class="station-badge" [style.color]="agent.color">{{ agent.bondLevel || 100 }}%</span>
             </div>
-            <span class="station-badge" [style.color]="agent.color">{{ agent.bondLevel || 100 }}%</span>
-          </div>
 
-          <div class="station-subsystem">{{ agent.subsystem }}</div>
-          <div class="station-work-output">
-            <span class="output-prefix">&gt; </span>{{ agent.lastChatter || agent.role }}
-          </div>
+            <div class="station-subsystem">{{ agent.subsystem }}</div>
+            <div class="station-work-output">
+              <span class="output-prefix">&gt; </span>{{ agent.lastChatter || agent.role }}
+            </div>
 
-          <div class="station-card-footer">
-            <span class="station-load">{{ agent.load }}</span>
-            <span class="station-inspect-link">INSPECT ↗</span>
+            <div class="station-card-footer">
+              <span class="station-load">{{ agent.load }}</span>
+              <span class="station-inspect-link">INSPECT ↗</span>
+            </div>
           </div>
-        </div>
-      }
-    </div>
+        }
+      </div>
+    }
   </footer>
 
   <!-- Slide-In Station Inspector Drawer -->
