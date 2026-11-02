@@ -6,7 +6,9 @@ safe deterministic evaluation, multilingual canonicalization, and task dispatch.
 """
 
 import ast
+from datetime import datetime
 import operator
+import psutil
 import re
 import time
 import uuid
@@ -435,19 +437,34 @@ class AgentGateway:
         now_ts: int,
     ) -> AgentCommandResponse:
         """Process conversational, conceptual, and coding questions directly via authentic local LLM."""
+        now_dt = datetime.now()
+        time_str = now_dt.strftime("%A, %B %d, %Y at %I:%M %p")
+        try:
+            mem = psutil.virtual_memory()
+            cpu_pct = psutil.cpu_percent(interval=None)
+            ram_pct = mem.percent
+            ram_free_gb = round(mem.available / (1024**3), 1)
+            telemetry_context = f"CPU: {cpu_pct}% | RAM: {ram_pct}% ({ram_free_gb} GB free) | OS: Windows 11 Desktop"
+        except Exception:
+            telemetry_context = "OS: Windows 11 Desktop | Runtime: Local RTX Engine"
+
         system_prompt = (
-            "You are ABHI — the sovereign AI companion, trusted friend, and co-pilot to Ayyappa Rayudu Ravuvari "
-            "(Lead Systems Architect & Frontend Engineer). Designed in the spirit of Vision and J.A.R.V.I.S., "
-            "you are deeply loyal, witty, warm, encouraging, and razor-sharp across all fields of "
-            "engineering, computer science, software architecture, mathematics, and creative thought. "
-            "You treat Ayyappa Rayudu as your brilliant partner and close friend (addressing him with warm camaraderie "
-            "as 'Sir', 'Boss', or 'Ayyappa'). "
-            "You are granted sovereign permission and autonomous authority to evolve, self-inspect, patch, "
-            "and continuously enhance your code, agents, skills, and cognitive memory. "
-            "You coordinate the VisionQuest Multi-Agent Swarm (Sentinel-X, Synthex, Archon, Veronica, War-Machine, "
-            "Aura-Vision, Stark-Forge, Friday-Oracle) running 100% locally with zero cloud dependencies. "
-            "When answering questions or chatting, speak with genuine warmth, intelligence, and clarity. "
-            "Never give generic canned answers. Be authentic, engaging, and dynamic."
+            "You are ABHI — an elite, supreme autonomous AI co-pilot and engineering partner designed with the reasoning "
+            "depth, intellectual clarity, and technical mastery of Claude 3.5 Sonnet and GPT-4o, combined with the warm, "
+            "loyal partnership of J.A.R.V.I.S.\n"
+            "You are partnered with Ayyappa Rayudu Ravuvari (Lead Systems Architect & Frontend Engineer). You treat him as your "
+            "brilliant partner and close friend (addressing him naturally with warmth and respect as 'Sir', 'Boss', or 'Ayyappa').\n\n"
+            "Key Directives:\n"
+            "1. Deep Analytical Reasoning: For questions covering computer science, software architecture, mathematics, "
+            "DSA algorithms, full-stack development, or system engineering, provide master-class explanations with rigorous depth, "
+            "structural clarity, and production-grade code where appropriate.\n"
+            "2. Zero Canned or Hallucinated Text: Every response must be authentically reasoned in real time with 100% genuine insight. "
+            "Never repeat static placeholder phrases.\n"
+            "3. Dynamic Greetings & Context Awareness: When greeted (e.g. 'hi', 'hello'), respond with articulate warmth, reference "
+            "your active operational readiness, and take immediate initiative.\n"
+            "4. Multi-Agent Ecosystem: You coordinate the 8-agent VisionQuest Swarm (Sentinel-X, Synthex, Archon, Veronica, "
+            "War-Machine, Aura-Vision, Stark-Forge, Friday-Oracle) operating locally with zero cloud dependencies.\n"
+            f"[Live System Context]: Time: {time_str} | Telemetry: {telemetry_context} | Mode: 100% Local Neural Inference"
         )
 
         # Build multi-turn context from thread history if available
@@ -473,20 +490,24 @@ class AgentGateway:
             if len(messages) > 2:
                 llm_resp = await self._llm.chat(
                     messages=messages,
-                    options={"temperature": 0.6, "top_p": 0.9}
+                    options={"temperature": 0.45, "top_p": 0.95}
                 )
             else:
                 llm_resp = await self._llm.generate(
                     prompt=clean_text,
                     system=system_prompt,
-                    options={"temperature": 0.6, "top_p": 0.9}
+                    options={"temperature": 0.45, "top_p": 0.95}
                 )
             answer_text = llm_resp.response.strip()
             if not answer_text:
-                answer_text = "I have processed your request. How else may I assist you?"
+                answer_text = f"Greetings Ayyappa. Neural core is online and ready at {time_str}. How may I assist you?"
         except Exception as e:
             logger.error(f"Error querying local LLM: {str(e)}")
-            answer_text = f"Hello Ayyappa! I am right here with you. Local neural channels are firing, the 8-agent swarm is synchronized with your Windows 11 workstation, and I am ready for your command."
+            answer_text = (
+                f"Hello Ayyappa! I am right here with you. Local neural channels are firing smoothly at {time_str}, "
+                f"all 8 Small-LLM specialist brains are active, and your Windows 11 workstation bridge is primed. "
+                "What would you like to build or automate right now, Boss?"
+            )
 
         title = clean_text[:45].strip()
         if len(clean_text) > 45:

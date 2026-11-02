@@ -234,6 +234,7 @@ export class ThreeSceneManagerService {
   private centralCoreGroup: THREE.Group | null = null;
   private quantumDotSphere: THREE.Points | null = null;
   private quantumOriginalPositions: Float32Array | null = null;
+  private quantumOriginalColors: Float32Array | null = null;
   private innerSingularityMesh: THREE.Mesh | null = null;
   private coreCoronaMesh: THREE.Mesh | null = null;
   private coreHitSphere: THREE.Mesh | null = null;
@@ -561,6 +562,7 @@ export class ThreeSceneManagerService {
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     this.quantumOriginalPositions = new Float32Array(positions);
+    this.quantumOriginalColors = new Float32Array(colors);
 
     const material = new THREE.PointsMaterial({
       size: 0.13,
@@ -2339,29 +2341,86 @@ export class ThreeSceneManagerService {
           this.centralCoreGroup.position.z += (this.targetMouseParallax.z - this.centralCoreGroup.position.z) * 0.04;
         }
 
-        // 2. Pure Fibonacci Quantum Dot Sphere (Pristine Spherical Shape, Zero Distorting Waves)
+        // 2. Dynamic Quantum Dot Voice Waveforms (Advanced neural harmonics when speaking)
+        const isSpeaking = this.speechVoice.isSpeaking();
         if (this.quantumDotSphere && this.quantumOriginalPositions) {
           const posAttr = this.quantumDotSphere.geometry.attributes['position'] as THREE.BufferAttribute;
+          const colorAttr = this.quantumDotSphere.geometry.attributes['color'] as THREE.BufferAttribute;
           const positions = posAttr.array as Float32Array;
-          const orig = this.quantumOriginalPositions;
-          // Maintain pristine, smooth spherical Fibonacci lattice
-          if (positions[0] !== orig[0] || positions[1] !== orig[1]) {
-            positions.set(orig);
+          const colors = colorAttr ? (colorAttr.array as Float32Array) : null;
+          const origPos = this.quantumOriginalPositions;
+          const origCol = this.quantumOriginalColors;
+          const count = positions.length / 3;
+          const invR = 1.0 / 3.8;
+
+          if (isSpeaking) {
+            // High-definition acoustic wave harmonics radiating across Fibonacci quantum dots
+            for (let i = 0; i < count; i++) {
+              const ox = origPos[i * 3];
+              const oy = origPos[i * 3 + 1];
+              const oz = origPos[i * 3 + 2];
+              const nx = ox * invR;
+              const ny = oy * invR;
+              const nz = oz * invR;
+
+              // Advanced speech vocal harmonics (multi-frequency wave crests)
+              const vocalWave =
+                Math.sin(time * 24.0 + oy * 3.0) * 0.32 +
+                Math.cos(time * 36.0 + ox * 3.8) * 0.20 +
+                Math.sin(time * 16.0 + oz * 2.5) * 0.14;
+              const r = 3.8 + vocalWave;
+
+              positions[i * 3] = nx * r;
+              positions[i * 3 + 1] = ny * r;
+              positions[i * 3 + 2] = nz * r;
+
+              if (colors && origCol) {
+                const shimmer = Math.max(0, vocalWave * 2.4);
+                colors[i * 3] = Math.min(1.0, origCol[i * 3] + shimmer * 0.6);
+                colors[i * 3 + 1] = Math.min(1.0, origCol[i * 3 + 1] + shimmer * 0.4);
+                colors[i * 3 + 2] = 1.0;
+              }
+            }
             posAttr.needsUpdate = true;
+            if (colorAttr) colorAttr.needsUpdate = true;
+          } else {
+            // Calm, serene breathing lattice when silent (steady, pristine spherical Fibonacci core)
+            for (let i = 0; i < count; i++) {
+              const ox = origPos[i * 3];
+              const oy = origPos[i * 3 + 1];
+              const oz = origPos[i * 3 + 2];
+              const nx = ox * invR;
+              const ny = oy * invR;
+              const nz = oz * invR;
+
+              const calmWave = Math.sin(time * 1.5 + oy * 1.2) * 0.04;
+              const r = 3.8 + calmWave;
+
+              positions[i * 3] = nx * r;
+              positions[i * 3 + 1] = ny * r;
+              positions[i * 3 + 2] = nz * r;
+
+              if (colors && origCol) {
+                colors[i * 3] = origCol[i * 3];
+                colors[i * 3 + 1] = origCol[i * 3 + 1];
+                colors[i * 3 + 2] = origCol[i * 3 + 2];
+              }
+            }
+            posAttr.needsUpdate = true;
+            if (colorAttr) colorAttr.needsUpdate = true;
           }
-          this.quantumDotSphere.rotation.y = time * 0.02;
+
+          this.quantumDotSphere.rotation.y = time * 0.025;
           this.quantumDotSphere.rotation.x = Math.sin(time * 0.15) * 0.03;
         }
 
-        // 3. Inner Arc Singularity Breathing Pulse & Corona Expansion + Dynamic Speech Vibration
-        const isSpeaking = this.speechVoice.isSpeaking();
-        const coreVibration = isSpeaking ? Math.sin(time * 38.0) * 0.09 : 0;
+        // 3. Inner Arc Singularity & Corona (Pristine, Calm, and Steady — Zero Rigid Shaking)
         if (this.innerSingularityMesh) {
-          const pulse = (1 + Math.sin(time * 1.2) * 0.04) + coreVibration;
+          const pulse = 1 + Math.sin(time * 1.2) * 0.03;
           this.innerSingularityMesh.scale.set(pulse, pulse, pulse);
         }
         if (this.coreCoronaMesh) {
-          const coronaPulse = (1 + Math.sin(time * 1.0 + 1) * 0.05) + coreVibration * 1.4;
+          const coronaPulse = 1 + Math.sin(time * 0.9 + 1) * 0.04;
           this.coreCoronaMesh.scale.set(coronaPulse, coronaPulse, coronaPulse);
           this.coreCoronaMesh.rotation.y = -time * 0.015;
         }

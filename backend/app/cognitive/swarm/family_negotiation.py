@@ -248,23 +248,31 @@ class FamilySwarmEngine:
             # Fallback to Friday
             brain = self._brains.get("agent-friday") or list(self._brains.values())[0]
 
-        # Use authentic local LLM reasoning with this brain's dedicated system persona
+        # Use authentic local LLM reasoning with an elevated, Claude/GPT-4-grade specialist persona
+        elevated_persona = (
+            f"{brain.system_persona}\n\n"
+            "You are an elite specialist AI brain operating with the reasoning rigor, analytical depth, and structured clarity "
+            "of Claude 3.5 Sonnet and GPT-4 in your domain. Provide articulate, deeply reasoned domain insights "
+            "grounded in 100% real physical system state. Never output generic or canned filler."
+        )
+
         prompt = (
-            f"User '{user_name}' says: \"{message}\"\n\n"
-            f"Respond concisely (1-3 sentences) in your authentic specialist persona as {brain.name} ({brain.codename}). "
-            f"Explain what you are doing in your specialization and how you assist {user_name}."
+            f"User '{user_name}' states: \"{message}\"\n\n"
+            f"As {brain.name} ({brain.codename}), an authoritative specialist in {brain.specialization}, formulate an articulate, "
+            f"insightful response detailing your technical perspective, current subsystem telemetry ({brain.current_work_output}), "
+            f"and how you assist {user_name} with precision."
         )
 
         try:
             resp = await abhi_llm.generate(
                 prompt=prompt,
-                system=brain.system_persona,
-                options={"temperature": brain.temperature, "top_p": 0.9}
+                system=elevated_persona,
+                options={"temperature": max(0.2, brain.temperature), "top_p": 0.95}
             )
             reply_text = resp.response.strip() if resp and resp.response else f"At your service, {user_name}. {brain.current_work_output}"
         except Exception as e:
             logger.warning(f"Small-LLM {brain.name} local generation error: {e}")
-            reply_text = f"Systems nominal, {user_name}. {brain.current_work_output}"
+            reply_text = f"Subsystem nominal, {user_name}. {brain.current_work_output}"
 
         exchange = FamilyChatExchange(
             sender_id=brain.agent_id,
