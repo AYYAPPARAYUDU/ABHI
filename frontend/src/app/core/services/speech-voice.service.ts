@@ -24,6 +24,7 @@ export class SpeechVoiceService {
   private synth: SpeechSynthesis | null = null;
   private recognition: any = null;
   private voices: SpeechSynthesisVoice[] = [];
+  private sharedAudioCtx: AudioContext | null = null;
 
   constructor() {
     // Restore persistent persona preferences
@@ -216,6 +217,33 @@ export class SpeechVoiceService {
     return text;
   }
 
+  /**
+   * Prime and unlock browser audio playback directly in user interaction call stack.
+   * Resumes Web Speech Synthesis and Web Audio Context so responses play without delay.
+   */
+  primeAudio(): void {
+    if (typeof window === 'undefined') return;
+    this.hasUserInteracted.set(true);
+
+    if ('speechSynthesis' in window && window.speechSynthesis) {
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+    }
+
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        if (!this.sharedAudioCtx) {
+          this.sharedAudioCtx = new AudioCtx();
+        }
+        if (this.sharedAudioCtx.state === 'suspended') {
+          this.sharedAudioCtx.resume().catch(() => {});
+        }
+      }
+    } catch {}
+  }
+
   private currentAudio: HTMLAudioElement | null = null;
 
   /**
@@ -226,6 +254,11 @@ export class SpeechVoiceService {
   speak(text: string, force = false): void {
     if (this.isMuted() && !force) return;
     if (!text.trim()) return;
+
+    // Unpause speech synthesis if currently paused by browser
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
 
     const spokenText = this.sanitizeAndSummarizeForSpeech(text);
     if (!spokenText.trim()) return;
@@ -251,6 +284,13 @@ export class SpeechVoiceService {
       const audio = new Audio(streamUrl);
       this.currentAudio = audio;
 
+      let fallbackTriggered = false;
+      const triggerFallback = () => {
+        if (fallbackTriggered) return;
+        fallbackTriggered = true;
+        this.fallbackSpeechSynthesis(spokenText, isJarvis, words);
+      };
+
       audio.onplay = () => {
         this.isSpeaking.set(true);
         this.lastSpokenText.set(spokenText);
@@ -274,12 +314,12 @@ export class SpeechVoiceService {
 
       audio.onerror = () => {
         // Fallback to browser SpeechSynthesis if backend audio stream fails
-        this.fallbackSpeechSynthesis(spokenText, isJarvis, words);
+        triggerFallback();
       };
 
       audio.play().catch(() => {
         // Browser autoplay restriction or connection error fallback
-        this.fallbackSpeechSynthesis(spokenText, isJarvis, words);
+        triggerFallback();
       });
     } catch {
       this.fallbackSpeechSynthesis(spokenText, isJarvis, words);
@@ -296,7 +336,14 @@ export class SpeechVoiceService {
     }
 
     try {
+      if (this.synth.paused) {
+        this.synth.resume();
+      }
       this.synth.cancel();
+
+      if (!this.voices || this.voices.length === 0) {
+        this.loadVoices();
+      }
 
       const utterance = new SpeechSynthesisUtterance(spokenText.trim());
       const userSpeed = this.speechSpeedRate();
@@ -338,7 +385,13 @@ export class SpeechVoiceService {
         this.activeWord.set('');
       };
 
+      if (this.synth.paused) {
+        this.synth.resume();
+      }
       this.synth.speak(utterance);
+      if (this.synth.paused) {
+        this.synth.resume();
+      }
     } catch {
       this.isSpeaking.set(false);
     }

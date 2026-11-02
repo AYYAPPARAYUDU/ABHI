@@ -81,8 +81,13 @@ class AgentGateway:
             ("battery", "mobile:battery"),
             ("phone", "mobile:phone"),
             ("mobile", "mobile:phone"),
-            ("camera", "mobile:camera"),
+            ("camera", "app:camera"),
+            ("webcam", "app:camera"),
             ("youtube", "app:youtube"),
+            ("spotify", "app:spotify"),
+            ("gmail", "app:gmail"),
+            ("mail", "app:gmail"),
+            ("instagram", "app:instagram"),
             ("edge", "app:browser"),
             ("files", "app:explorer"),
             ("folder", "app:explorer"),
@@ -301,17 +306,50 @@ class AgentGateway:
             summary=f"Task initiated: {goal_to_submit}",
         )
 
+        # Craft interactive, informative message for the user
+        lower_g = goal_to_submit.lower()
+        if "youtube" in lower_g:
+            user_msg = "Opening YouTube in your browser, Sir."
+        elif any(c in lower_g for c in ["camera", "webcam"]):
+            user_msg = "Windows Camera launched, Sir."
+        elif "chrome" in lower_g or "browser" in lower_g:
+            user_msg = "Opening Google Chrome, Sir."
+        elif "spotify" in lower_g:
+            user_msg = "Launching Spotify, Sir."
+        elif "whatsapp" in lower_g:
+            user_msg = "Launching WhatsApp, Sir."
+        elif "screenshot" in lower_g:
+            user_msg = "Capturing screen display, Sir."
+        elif "volume" in lower_g:
+            user_msg = "Adjusting master volume, Sir."
+        elif any(c in lower_g for c in ["calc", "calculator"]):
+            user_msg = "Launching Windows Calculator, Sir."
+        elif "notepad" in lower_g:
+            user_msg = "Opening Notepad editor, Sir."
+        elif "settings" in lower_g:
+            user_msg = "Opening Windows Settings, Sir."
+        elif any(t in lower_g for t in ["terminal", "powershell", "cmd"]):
+            user_msg = "Opening Windows Terminal, Sir."
+        elif any(m in lower_g for m in ["gmail", "email", "mail"]):
+            user_msg = "Opening Gmail inbox, Sir."
+        elif "instagram" in lower_g:
+            user_msg = "Opening Instagram, Sir."
+        elif any(e in lower_g for e in ["explorer", "files", "folder"]):
+            user_msg = "Opening File Explorer, Sir."
+        else:
+            user_msg = f"Executing {goal_to_submit}, Sir."
+
         response = AgentCommandResponse(
             command_id=cmd_id,
             task_id=status_obj.task_id,
             thread_id=thread_id,
             status=CommandLifecycleState.PLANNING,
             accepted=True,
-            message=f"Goal accepted: {goal_to_submit}",
+            message=user_msg,
             result={
                 "result_type": "TASK_RESULT",
                 "title": f"Executing: {goal_to_submit}",
-                "summary": "ABHI is planning and dispatching the task.",
+                "summary": user_msg,
                 "data": {"task_id": status_obj.task_id, "state": status_obj.state.value},
             },
             context_reference=res_ref,
@@ -326,6 +364,39 @@ class AgentGateway:
         """Determine if a user utterance requests explicit Windows OS automation or LLM Q&A/cognition."""
         text_lower = raw_text.strip().lower()
         intent_lower = canonical_intent.strip().lower()
+
+        # Known desktop target keywords
+        desktop_targets = [
+            "notepad", "calculator", "calc", "terminal", "powershell", "cmd", "command prompt",
+            "browser", "chrome", "edge", "settings", "vs code", "vscode", "explorer", "screen",
+            "screenshot", "folder", "directory", "process", "app", "application", "window", "whatsapp",
+            "youtube", "camera", "webcam", "spotify", "gmail", "mail", "instagram", "maps", "volume",
+            "phone", "mobile", "android", "cellphone", "smartphone", "device"
+        ]
+
+        # Action verbs
+        action_verbs = [
+            "open", "launch", "start", "run", "execute", "close", "kill", "terminate",
+            "screenshot", "capture screen", "take screenshot", "lock workstation", "lock screen",
+            "volume up", "volume down", "adjust volume", "mute", "unmute", "create folder",
+            "make folder", "mkdir", "build file", "create directory", "dial", "call", "tap",
+            "swipe", "connect"
+        ]
+
+        # 0. Polite direct intent check (e.g. "can you open youtube", "please open camera", "i want to open chrome")
+        has_polite_open = (
+            any(p in text_lower for p in [
+                "can you open", "could you open", "please open", "i want to open", "i need to open", "would you open",
+                "can you launch", "could you launch", "please launch", "i want to launch", "would you launch",
+                "can you start", "could you start", "please start", "i want to start",
+                "can you take", "take a screenshot", "take screenshot", "adjust volume", "change volume"
+            ])
+            or (any(prefix in text_lower for prefix in ["can you ", "could you ", "please ", "i want to ", "i need to "])
+                and any(v in text_lower for v in ["open ", "launch ", "start ", "take ", "run ", "adjust "])
+                and any(t in text_lower for t in desktop_targets))
+        )
+        if has_polite_open:
+            return True
 
         # 1. Check if canonical intent from multilingual canonicalizer indicates app or system action
         is_canonical_action = any(
@@ -359,19 +430,20 @@ class AgentGateway:
         )
 
         if is_explicit_question:
-            # Polite desktop action requests (e.g. "can you open notepad", "please open calculator")
-            polite_open = any(v in text_lower for v in ["open ", "launch ", "start "]) and any(
-                app in text_lower for app in [
-                    "notepad", "calculator", "calc", "terminal", "powershell", "cmd", "browser", "chrome", "settings"
-                ]
+            # Polite desktop action requests (e.g. "can you open notepad?", "could you launch camera?")
+            polite_open = any(v in text_lower for v in ["open ", "launch ", "start ", "take ", "adjust "]) and any(
+                app in text_lower for app in desktop_targets
             )
             if polite_open and not text_lower.startswith(("how ", "how to", "why ", "what is", "explain")):
                 return True
             return False
 
         # 3. Conversational / Greetings / Friendship & Banter (LLM query)
-        # 3. Conversational / Greetings / Friendship & Banter (LLM query)
-        has_automation_intent = any(act in text_lower for act in ["open", "launch", "start", "send", "whatsapp", "notepad", "calc", "powershell", "terminal"])
+        has_automation_intent = any(act in text_lower for act in [
+            "open", "launch", "start", "send", "whatsapp", "notepad", "calc", "powershell",
+            "terminal", "youtube", "camera", "webcam", "spotify", "chrome", "screenshot", "volume",
+            "gmail", "mail", "instagram"
+        ])
         words_set = set(text_lower.split())
         is_conversational = (not has_automation_intent) and any(
             text_lower == greeting or text_lower.startswith(f"{greeting} ") or greeting in words_set
@@ -402,24 +474,15 @@ class AgentGateway:
 
         # 6. Explicit OS & Mobile Action keywords & targets
         if any(w in text_lower for w in [
-            "screenshot", "whatsapp", "volume up", "volume down", "lock screen", "lock workstation",
-            "mute", "unmute", "lock phone", "lock mobile", "unlock phone", "unlock mobile",
-            "phone battery", "mobile battery", "check battery", "mobile screen"
+            "screenshot", "whatsapp", "volume up", "volume down", "adjust volume", "lock screen",
+            "lock workstation", "mute", "unmute", "lock phone", "lock mobile", "unlock phone",
+            "unlock mobile", "phone battery", "mobile battery", "check battery", "mobile screen",
+            "take screenshot", "open camera", "open youtube", "open spotify", "open chrome"
         ]):
             return True
 
-        has_action_verb = any(v in text_lower for v in [
-            "open", "launch", "start", "run", "execute", "close", "kill", "terminate",
-            "screenshot", "capture screen", "lock workstation", "lock screen",
-            "volume up", "volume down", "mute", "unmute", "create folder", "make folder", "mkdir",
-            "build file", "create directory", "dial", "call", "tap", "swipe", "connect"
-        ])
-        has_desktop_target = any(t in text_lower for t in [
-            "notepad", "calculator", "calc", "terminal", "powershell", "cmd", "command prompt",
-            "browser", "chrome", "edge", "settings", "vs code", "vscode", "explorer", "screen",
-            "screenshot", "folder", "directory", "process", "app", "application", "window", "whatsapp",
-            "phone", "mobile", "android", "cellphone", "smartphone", "device"
-        ])
+        has_action_verb = any(v in text_lower for v in action_verbs)
+        has_desktop_target = any(t in text_lower for t in desktop_targets)
 
         if has_action_verb and (has_desktop_target or text_lower.startswith(("run ", "execute ", "open ", "launch ", "start "))):
             return True

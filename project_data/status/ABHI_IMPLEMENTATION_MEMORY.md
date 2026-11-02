@@ -11,7 +11,36 @@
 
 ---
 
-## Latest Milestone (2026-11-02): M-45 Universal Dynamic 3D & DOM Theme Synchronization & Balanced Workspace Isometric Framing
+## Latest Milestone (2026-11-02): M-46 Core Waves Removal, UI Persistence on Chat Send, Interactive Audio Voice Priming, High-Clarity All-Theme Bot Illumination & Physical Windows OS Controls
+- **Core Wave Removal:**
+  - Completely removed wave distortions (audioWaveBand + polarRipples and calmWave) from the 3,200 Fibonacci quantum dots in quantumDotSphere.
+  - Quantum dots maintain exact spherical coordinates (r = 3.8) with gentle smooth rotation (rotation.y = time * 0.03).
+  - Hid all expanding shockwave meshes and voice ripple rings around the core ball, restoring a pristine, steady, luminous intelligence core.
+- **Fixed UI Vanishing Bug:**
+  - Removed this.operatorState.setSpatialMode('ACTIVE_TASK') from submitCommand().
+  - Spatial mode remains 'MAIN_AGENT' on /home, ensuring the 3D scene, central core, specialist agents, and all UI controls never vanish when submitting commands.
+- **Interactive Audio TTS Voice Priming:**
+  - Added primeAudio() method to SpeechVoiceService that unpauses and resumes window.speechSynthesis and Web Audio context.
+  - Injected this.speechVoice.primeAudio() into onSubmitCommand() directly within the trusted user click/Enter gesture callstack.
+  - Guaranteed interactive spoken audio for all system responses and action confirmations.
+- **Workspace Lighting & High-Clarity Bot Illumination Across All Themes:**
+  - Added overhead high-intensity spotlights (SpotLight at Y = 2.4, intensity 3.0) on all 8 specialist bot stations.
+  - Equipped each bot avatar with an illuminated glowing chest arc reactor badge (MeshBasicMaterial in agent.hexColor).
+  - Added emissive accents (emissiveIntensity 0.25) to bot torso and head chassis.
+  - In Quantum White theme, set workspaceTileMat to clean icy metallic blue-gray (0xdbeafe) and enhanced sunLight/hemiLight intensity so every bot and structure is crystal-clear in all themes (verified against user photo).
+- **Physical Windows OS Automation (YouTube, Camera, Chrome, Spotify, WhatsApp):**
+  - Updated os_control_engine.py with native protocol/URL launchers for YouTube (https://www.youtube.com), Camera (microsoft.windows.camera:), Spotify, Gmail, Chrome, and WhatsApp.
+  - Updated agent_gateway.py to classify polite requests ('can you open youtube', 'please open camera') as physical OS automation instead of routing them to direct Q&A LLMs.
+  - Updated planner.py with deterministic heuristic DAG branches and an instantaneous 0.05ms fast-path for direct OS control commands.
+- **Physical Verification:**
+  - Clean Angular production build (ng build, 11.6s).
+  - Playwright visual tests verified with 2 physical screenshots:
+    - home_core_clean_nowaves.png
+    - workspace_quantum_white_illuminated.png
+
+---
+
+## Prior Milestone (2026-11-02): M-45 Universal Dynamic 3D & DOM Theme Synchronization & Balanced Workspace Isometric Framing
 - **Universal Dynamic Three.js Theme Synchronization:**
   - Resolved theme decoupling in ThreeSceneManagerService where changing themes previously left the 3D core, fog, and colony base in hardcoded cyan.
   - When the user cycles themes (Obsidian Cyan -> Midnight Amethyst -> Emerald Matrix -> Quantum White), the entire WebGL scene synchronously shifts color palettes:

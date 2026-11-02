@@ -991,6 +991,7 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async onSubmitCommand(): Promise<void> {
+    this.speechVoice.primeAudio();
     const text = this.commandInput.trim();
 
     if (!text) {

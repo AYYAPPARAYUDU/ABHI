@@ -93,7 +93,7 @@ export class AgentCommandService {
     this.currentCommand.set(request);
     this.isProcessing.set(true);
     this.lifecycle.set('UNDERSTANDING');
-    this.operatorState.setSpatialMode('ACTIVE_TASK');
+    // Keep spatialMode as MAIN_AGENT so 3D central core and UI controls remain visible during command execution
 
     // Add to live Stark Comms conversation stream
     this.commsMessages.update((msgs) => [
@@ -550,7 +550,7 @@ export class AgentCommandService {
     }
     this.activeResult.set(null);
     this.lifecycle.set('RECEIVED');
-    this.operatorState.setSpatialMode('DEFAULT');
+    this.operatorState.setSpatialMode('MAIN_AGENT');
   }
 
   /**

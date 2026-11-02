@@ -348,6 +348,12 @@ export class ThreeSceneManagerService {
   private workspaceCommandDomeMat: THREE.MeshStandardMaterial | null = null;
   private workspaceRadarDishMat: THREE.MeshStandardMaterial | null = null;
   private workspaceHemiLight: THREE.HemisphereLight | null = null;
+  private workspaceSunLight: THREE.DirectionalLight | null = null;
+  private workspaceBotChassisMaterials: {
+    torsoMat: THREE.MeshStandardMaterial;
+    headMat: THREE.MeshStandardMaterial;
+    agentHex: number;
+  }[] = [];
 
   // Public reference for backward compatibility
   orbitalCore: THREE.Group | THREE.Mesh | null = null;
@@ -706,6 +712,7 @@ export class ThreeSceneManagerService {
       });
       const sMesh = new THREE.Mesh(sGeo, sMat);
       sMesh.rotation.x = Math.PI / 2;
+      sMesh.visible = false;
       this.scene.add(sMesh);
       this.themeColorMeshes.push({ mesh: sMesh });
       this.shockwaveMeshes.push({
@@ -727,6 +734,7 @@ export class ThreeSceneManagerService {
       });
       const vMesh = new THREE.Mesh(vGeo, vMat);
       vMesh.rotation.x = Math.PI * 0.5;
+      vMesh.visible = false;
       this.centralCoreGroup.add(vMesh);
       this.themeColorMeshes.push({ mesh: vMesh });
       this.voiceRippleRings.push({
@@ -1307,6 +1315,8 @@ export class ThreeSceneManagerService {
         const pGeo = new THREE.BoxGeometry(0.08, 1.2, 0.08);
         const pMat = new THREE.MeshStandardMaterial({
           color: 0x1e293b,
+        emissive: agent.hexColor,
+        emissiveIntensity: 0.25,
           roughness: 0.4,
           metalness: 0.8,
         });
@@ -1415,11 +1425,13 @@ export class ThreeSceneManagerService {
     this.stationMarkers = [];
     this.rovingCourierBots = [];
     this.nexusAcousticRings = [];
+    this.workspaceBotChassisMaterials = [];
 
     // 1. Dedicated Colony Planetary Sun & Ambient Fill (Crisp, vibrant sci-fi daylight from Image 1)
     const sunLight = new THREE.DirectionalLight(0xfff8ed, 2.8);
     sunLight.position.set(16, 28, 20);
     this.workspaceGroup.add(sunLight);
+    this.workspaceSunLight = sunLight;
 
     const fillLight = new THREE.DirectionalLight(0x818cf8, 1.2);
     fillLight.position.set(-16, 14, -12);
@@ -1754,6 +1766,15 @@ export class ThreeSceneManagerService {
       pLight.position.set(0, 1.2, 0);
       stationGroup.add(pLight);
 
+      // High-intensity overhead spotlight pointing down on specialist station
+      const overheadLight = new THREE.SpotLight(0xffffff, 3.0, 9.0, Math.PI * 0.4, 0.35, 1.0);
+      overheadLight.position.set(0, 2.4, 0);
+      const overheadTarget = new THREE.Object3D();
+      overheadTarget.position.set(0, 0, 0);
+      stationGroup.add(overheadTarget);
+      overheadLight.target = overheadTarget;
+      stationGroup.add(overheadLight);
+
       // --- Distinct Architectural Building per Agent ---
       const buildingGroup = new THREE.Group();
       buildingGroup.position.set(0.65, 0.2, -0.65);
@@ -1948,6 +1969,8 @@ export class ThreeSceneManagerService {
       const torsoGeo = new THREE.CylinderGeometry(0.22, 0.26, 0.5, 12);
       const torsoMat = new THREE.MeshStandardMaterial({
         color: 0x1e293b,
+        emissive: agent.hexColor,
+        emissiveIntensity: 0.25,
         metalness: 0.85,
         roughness: 0.25,
       });
@@ -1958,12 +1981,31 @@ export class ThreeSceneManagerService {
       const headGeo = new THREE.SphereGeometry(0.18, 16, 16);
       const headMat = new THREE.MeshStandardMaterial({
         color: 0x0f172a,
+        emissive: agent.hexColor,
+        emissiveIntensity: 0.25,
         metalness: 0.9,
         roughness: 0.2,
       });
       const head = new THREE.Mesh(headGeo, headMat);
       head.position.y = 0.38;
       botGroup.add(head);
+
+      this.workspaceBotChassisMaterials.push({
+        torsoMat,
+        headMat,
+        agentHex: agent.hexColor,
+      });
+
+      // Illuminated Glowing Chest Arc Reactor Badge
+      const chestBadgeGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.04, 16);
+      const chestBadgeMat = new THREE.MeshBasicMaterial({
+        color: agent.hexColor,
+        blending: THREE.AdditiveBlending,
+      });
+      const chestBadge = new THREE.Mesh(chestBadgeGeo, chestBadgeMat);
+      chestBadge.rotation.x = Math.PI * 0.5;
+      chestBadge.position.set(0, 0.05, 0.24);
+      botGroup.add(chestBadge);
 
       // Glowing LED Visor Eye
       const visorGeo = new THREE.BoxGeometry(0.2, 0.08, 0.12);
@@ -2765,97 +2807,43 @@ export class ThreeSceneManagerService {
           this.centralCoreGroup.position.z += (this.targetMouseParallax.z - this.centralCoreGroup.position.z) * 0.04;
         }
 
-        // 2. Dynamic Quantum Dot Voice Waveforms (Advanced neural harmonics when speaking)
+        // 2. Steady, Pristine Spherical Quantum Dot Core (Zero Wave Warping)
         const isSpeaking = this.speechVoice.isSpeaking();
         if (this.quantumDotSphere && this.quantumOriginalPositions) {
           const posAttr = this.quantumDotSphere.geometry.attributes['position'] as THREE.BufferAttribute;
-          const colorAttr = this.quantumDotSphere.geometry.attributes['color'] as THREE.BufferAttribute;
           const positions = posAttr.array as Float32Array;
-          const colors = colorAttr ? (colorAttr.array as Float32Array) : null;
-          const origPos = this.quantumOriginalPositions;
-          const origCol = this.quantumOriginalColors;
-          const count = positions.length / 3;
-          const invR = 1.0 / 3.8;
 
-          if (isSpeaking) {
-            // Dynamic CGI Acoustic Voice Waveforms: Longitudinal traveling audio wave band + polar acoustic ripples
-            for (let i = 0; i < count; i++) {
-              const ox = origPos[i * 3];
-              const oy = origPos[i * 3 + 1];
-              const oz = origPos[i * 3 + 2];
-              const nx = ox * invR;
-              const ny = oy * invR;
-              const nz = oz * invR;
-
-              const lat = Math.asin(Math.max(-1, Math.min(1, ny)));
-              const lon = Math.atan2(nz, nx);
-              const equatorEnvelope = Math.exp(-ny * ny * 7.5); // Focused along the equator
-              const audioWaveBand = Math.sin(time * 20.0 + lon * 5.0) * 0.12 * equatorEnvelope;
-              const polarRipples = Math.cos(time * 14.0 - Math.abs(lat) * 6.5) * 0.05 * (1.0 - equatorEnvelope * 0.6);
-              const totalWave = audioWaveBand + polarRipples;
-              const r = 3.8 + totalWave;
-
-              positions[i * 3] = nx * r;
-              positions[i * 3 + 1] = ny * r;
-              positions[i * 3 + 2] = nz * r;
-
-              if (colors && origCol) {
-                const crest = Math.max(0, totalWave * 5.5);
-                colors[i * 3] = Math.min(1.0, origCol[i * 3] + crest * 0.55);
-                colors[i * 3 + 1] = Math.min(1.0, origCol[i * 3 + 1] + crest * 0.40);
-                colors[i * 3 + 2] = 1.0;
-              }
-            }
+          // Ensure dots remain pristine at their exact Fibonacci sphere positions (r = 3.8)
+          if (positions[0] !== this.quantumOriginalPositions[0]) {
+            positions.set(this.quantumOriginalPositions);
             posAttr.needsUpdate = true;
-            if (colorAttr) colorAttr.needsUpdate = true;
-          } else {
-            // Calm, serene breathing lattice when silent (steady, pristine spherical Fibonacci core)
-            for (let i = 0; i < count; i++) {
-              const ox = origPos[i * 3];
-              const oy = origPos[i * 3 + 1];
-              const oz = origPos[i * 3 + 2];
-              const nx = ox * invR;
-              const ny = oy * invR;
-              const nz = oz * invR;
-
-              const calmWave = Math.sin(time * 1.5 + oy * 1.2) * 0.04;
-              const r = 3.8 + calmWave;
-
-              positions[i * 3] = nx * r;
-              positions[i * 3 + 1] = ny * r;
-              positions[i * 3 + 2] = nz * r;
-
-              if (colors && origCol) {
-                colors[i * 3] = origCol[i * 3];
-                colors[i * 3 + 1] = origCol[i * 3 + 1];
-                colors[i * 3 + 2] = origCol[i * 3 + 2];
-              }
-            }
-            posAttr.needsUpdate = true;
-            if (colorAttr) colorAttr.needsUpdate = true;
           }
 
-          this.quantumDotSphere.rotation.y = time * (isSpeaking ? 0.055 : 0.025);
-          this.quantumDotSphere.rotation.x = Math.sin(time * 0.15) * 0.03;
-        }
-
-        // Voice Ripple Rings animation (expanding sound horizon waves when speaking)
-        if (this.voiceRippleRings.length > 0) {
-          this.voiceRippleRings.forEach((ring) => {
-            if (isSpeaking) {
-              ring.phase = (ring.phase + delta * 0.65) % 1.0;
-              const scale = 1.0 + ring.phase * 1.5;
-              ring.mesh.scale.set(scale, scale, scale);
-              const alpha = Math.sin(ring.phase * Math.PI) * 0.55;
-              (ring.mesh.material as THREE.MeshBasicMaterial).opacity = alpha;
-              ring.mesh.visible = true;
-            } else {
-              const mat = ring.mesh.material as THREE.MeshBasicMaterial;
-              mat.opacity *= 0.88;
-              if (mat.opacity < 0.01) {
-                ring.mesh.visible = false;
+          if (this.quantumOriginalColors) {
+            const colorAttr = this.quantumDotSphere.geometry.attributes['color'] as THREE.BufferAttribute;
+            if (colorAttr) {
+              const colors = colorAttr.array as Float32Array;
+              if (colors[0] !== this.quantumOriginalColors[0]) {
+                colors.set(this.quantumOriginalColors);
+                colorAttr.needsUpdate = true;
               }
             }
+          }
+
+          // Maintain only gentle smooth rotation
+          this.quantumDotSphere.rotation.y = time * 0.03;
+          this.quantumDotSphere.rotation.x = 0;
+        }
+
+        // Hide expanding shockwave meshes and voice ripple rings around the core
+        if (this.voiceRippleRings.length > 0) {
+          this.voiceRippleRings.forEach((ring) => {
+            ring.mesh.visible = false;
+          });
+        }
+        if (this.shockwaveMeshes.length > 0) {
+          this.shockwaveMeshes.forEach((item) => {
+            item.mesh.visible = false;
           });
         }
 
@@ -3355,11 +3343,21 @@ export class ThreeSceneManagerService {
       });
 
       // 5. Workspace Colony Materials & Lighting
+      const activeThemeId = this.themeService.activeTheme()?.id;
+      const isLight =
+        activeThemeId === 'quantum-white' ||
+        colors.background.toLowerCase().startsWith('#f') ||
+        colors.background.toLowerCase() === '#ffffff';
+
       if (this.workspaceHexEdgeMat) {
         this.workspaceHexEdgeMat.color.set(colors.accentPrimary);
       }
       if (this.workspaceTileMat) {
-        this.workspaceTileMat.color.set(colors.surfaceInset || colors.backgroundSecondary);
+        if (isLight) {
+          this.workspaceTileMat.color.set(0xdbeafe);
+        } else {
+          this.workspaceTileMat.color.set(colors.surfaceInset || colors.backgroundSecondary || 0x0f233f);
+        }
       }
       if (this.workspaceCommandDomeMat) {
         this.workspaceCommandDomeMat.color.set(colors.accentPrimary);
@@ -3367,9 +3365,32 @@ export class ThreeSceneManagerService {
       if (this.workspaceRadarDishMat) {
         this.workspaceRadarDishMat.color.set(colors.accentPrimary);
       }
+      if (this.workspaceSunLight) {
+        this.workspaceSunLight.intensity = isLight ? 2.4 : 2.8;
+      }
       if (this.workspaceHemiLight) {
+        this.workspaceHemiLight.intensity = isLight ? 2.0 : 1.6;
         this.workspaceHemiLight.color.set(colors.accentPrimary);
-        this.workspaceHemiLight.groundColor.set(colors.background);
+        this.workspaceHemiLight.groundColor.set(isLight ? 0x94a3b8 : colors.background);
+      }
+      if (this.workspaceBotChassisMaterials.length > 0) {
+        this.workspaceBotChassisMaterials.forEach(({ torsoMat, headMat, agentHex }) => {
+          if (isLight) {
+            torsoMat.color.set(0x334155);
+            torsoMat.emissive.set(agentHex);
+            torsoMat.emissiveIntensity = 0.35;
+            headMat.color.set(0x1e293b);
+            headMat.emissive.set(agentHex);
+            headMat.emissiveIntensity = 0.35;
+          } else {
+            torsoMat.color.set(0x1e293b);
+            torsoMat.emissive.set(agentHex);
+            torsoMat.emissiveIntensity = 0.25;
+            headMat.color.set(0x0f172a);
+            headMat.emissive.set(agentHex);
+            headMat.emissiveIntensity = 0.25;
+          }
+        });
       }
 
       // 6. Dynamic 3,200 Quantum Dot Fibonacci Core Particles Recoloring
@@ -3435,6 +3456,7 @@ export class ThreeSceneManagerService {
     this.orbitalMarkers = [];
     this.rovingCourierBots = [];
     this.nexusAcousticRings = [];
+    this.workspaceBotChassisMaterials = [];
     this.voiceRippleRings = [];
     this.volumetricColumns = [];
     this.podHitMeshes = [];

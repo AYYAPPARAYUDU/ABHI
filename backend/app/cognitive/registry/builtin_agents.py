@@ -1090,7 +1090,7 @@ class OSDesktopAgent(BaseAgent):
         # ---------------------------------------------------------------------
         # 6. Unified Application Adapters & Launching
         # ---------------------------------------------------------------------
-        raw_app = params.get("app_name") or params.get("application") or params.get("title") or "notepad"
+        raw_app = params.get("app_name") or params.get("application") or params.get("app") or params.get("title") or "notepad"
         if action in ["run_command", "run_allowlisted_command"]:
             raw_app = "terminal"
         elif action in ["search_settings", "read_setting"]:

@@ -680,22 +680,44 @@ class OSControlEngine:
         """
         n = raw_name.lower().strip()
 
-        # URI protocols
-        if any(n.startswith(p) for p in ["ms-settings:", "calc:", "http://", "https://", "mailto:", "whatsapp:", "whatsapp://"]):
+        # Direct URI protocols or web addresses
+        if any(n.startswith(p) for p in [
+            "ms-settings:", "calc:", "http://", "https://", "mailto:",
+            "whatsapp:", "whatsapp://", "microsoft.windows.camera:",
+            "spotify:", "bingmaps:"
+        ]):
             return n, [], True
 
+        # Web & Protocol Target Mappings
+        if "youtube" in n or n == "yt":
+            return "https://www.youtube.com", [], True
+        if any(c in n for c in ["camera", "webcam", "web cam", "cam"]):
+            return "microsoft.windows.camera:", [], True
+        if "spotify" in n:
+            return "spotify:", [], True
+        if any(m in n for m in ["gmail", "google mail", "mail", "email"]):
+            return "https://mail.google.com", [], True
+        if "instagram" in n or n == "insta":
+            return "https://www.instagram.com", [], True
+        if "map" in n:
+            if "google" in n:
+                return "https://maps.google.com", [], True
+            return "bingmaps:", [], True
         if "whatsapp" in n:
             return "whatsapp:", [], True
-        if any(b in n for b in ["browser", "web browser", "internet", "chrome"]):
+        if any(b in n for b in ["browser", "web browser", "internet", "chrome", "google chrome"]):
             c_path = self._find_browser_path("chrome")
             return c_path or "chrome.exe", [], False
+        if "edge" in n or "msedge" in n:
+            e_path = self._find_browser_path("edge")
+            return e_path or "msedge.exe", [], False
         if "setting" in n or "config" in n:
             return "ms-settings:", [], True
         if "calc" in n:
             return "calc.exe", [], False
         if "note" in n or "text" in n:
             return "notepad.exe", [], False
-        if "explorer" in n or "folder" in n or "my computer" in n:
+        if "explorer" in n or "folder" in n or "my computer" in n or "files" in n:
             return "explorer.exe", [], False
         if "cmd" in n or "command prompt" in n:
             return "cmd.exe", [], False
@@ -707,9 +729,6 @@ class OSControlEngine:
             return "taskmgr.exe", [], False
         if "vscode" in n or "code" in n:
             return "code.cmd", [], False
-        if "edge" in n:
-            e_path = self._find_browser_path("edge")
-            return e_path or "msedge.exe", [], False
 
         # Default: preserve as provided with .exe if no extension
         if not os.path.splitext(n)[1] and not any(ch in n for ch in [":", "/", "\\"]):
@@ -728,16 +747,19 @@ class OSControlEngine:
         combined_args = (args or []) + def_args
 
         try:
-            if is_uri:
-                # Launch Windows protocol URI via powershell Start-Process or os.startfile
+            if is_uri or target.startswith(("http://", "https://", "mailto:")) or (":" in target and not os.path.exists(target)):
+                # Launch Windows protocol URI or URL via os.startfile or Start-Process
                 if self.is_windows:
                     try:
-                        subprocess.Popen(["powershell", "-Command", f"Start-Process '{target}'"], shell=True)
-                    except Exception:
                         os.startfile(target)
+                    except Exception:
+                        try:
+                            subprocess.Popen(["powershell", "-Command", f"Start-Process '{target}'"], shell=True)
+                        except Exception:
+                            subprocess.Popen(f'start "" "{target}"', shell=True)
                 else:
                     subprocess.Popen(["xdg-open", target])
-                return True, {"target": target, "is_uri": True}, None
+                return True, {"target": target, "is_uri": True, "launched": True}, None
 
             # Subprocess executable launch
             cmd = [target] + combined_args
@@ -866,8 +888,12 @@ class OSControlEngine:
         enc_body = urllib.parse.quote(body)
 
         if use_gmail:
-            target_url = f"https://mail.google.com/mail/?view=cm&fs=1&to={enc_to}&su={enc_sub}&body={enc_body}"
-            method = "gmail_web_compose"
+            if not to and not body and (subject == "Message from ABHI" or not subject):
+                target_url = "https://mail.google.com"
+                method = "gmail_inbox"
+            else:
+                target_url = f"https://mail.google.com/mail/?view=cm&fs=1&to={enc_to}&su={enc_sub}&body={enc_body}"
+                method = "gmail_web_compose"
         else:
             target_url = f"mailto:{to}?subject={enc_sub}&body={enc_body}"
             method = "system_mailto_protocol"

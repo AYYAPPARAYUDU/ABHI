@@ -51,19 +51,27 @@ class TaskPlanner:
                 created_at_ts=now_ts
             )
 
-        # 2. Authentic LLM decomposition (with 18.0s window for real local 8.2B neural model)
-        dag: Optional[TaskDAG] = None
-        try:
-            import asyncio
-            dag = await asyncio.wait_for(self._plan_with_llm(dag_id, task_id, goal, now_ts), timeout=18.0)
-            if dag and dag.nodes:
-                logger.info(f"Generated dynamic neural LLM DAG plan with {len(dag.nodes)} steps for task '{task_id}' using abhi:latest")
-        except Exception as e:
-            logger.warning(f"LLM planner bypassed or timed out: {str(e)}; falling back to heuristic planner.")
+        # 2. Check deterministic heuristic fast-path for direct OS commands
+        heuristic_dag = self._plan_with_heuristics(dag_id, task_id, goal, now_ts)
+        has_specific_heuristic = any(
+            n.agent_id != "memory_agent" or n.action != "recall_recent"
+            for n in heuristic_dag.nodes.values()
+        )
+        if has_specific_heuristic:
+            dag = heuristic_dag
+        else:
+            # 3. Authentic LLM decomposition (with 18.0s window for real local 8.2B neural model)
+            dag = None
+            try:
+                import asyncio
+                dag = await asyncio.wait_for(self._plan_with_llm(dag_id, task_id, goal, now_ts), timeout=18.0)
+                if dag and dag.nodes:
+                    logger.info(f"Generated dynamic neural LLM DAG plan with {len(dag.nodes)} steps for task '{task_id}' using abhi:latest")
+            except Exception as e:
+                logger.warning(f"LLM planner bypassed or timed out: {str(e)}; falling back to heuristic planner.")
 
-        # 3. Deterministic heuristic fallback planner if LLM produced no plan
-        if not dag or not dag.nodes:
-            dag = self._plan_with_heuristics(dag_id, task_id, goal, now_ts)
+            if not dag or not dag.nodes:
+                dag = heuristic_dag
 
         # 4. Kahn's Algorithm: Topological Sort & Cycle Detection Verification O(V + E)
         is_valid, parallel_levels, cycle_nodes = KahnTopologicalSort.analyze_dag(dag.nodes)
@@ -362,8 +370,94 @@ class TaskPlanner:
                 status=NodeStatus.PENDING
             )
 
-        elif any(e in goal_lower for e in ["email", "gmail", "mail"]) and any(w in goal_lower for w in ["open", "send", "compose", "write", "check", "draft"]):
-            to = "recipient@example.com"
+        elif "youtube" in goal_lower:
+            # Explicit physical YouTube branch
+            query = ""
+            for pat in [
+                r"(?:search|play|find)\s+(?:on\s+youtube\s+)?['\"]?([^'\"]+)['\"]?",
+                r"youtube\s+(?:for\s+|search\s+)?['\"]?([^'\"]+)['\"]?",
+            ]:
+                m = re.search(pat, goal, re.IGNORECASE)
+                if m:
+                    cand = m.group(1).strip()
+                    if cand.lower() not in ["youtube", "video", "videos"]:
+                        query = cand
+                        break
+            if query:
+                yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote_plus(query)}"
+                title = f"Search YouTube: {query[:30]}"
+            else:
+                yt_url = "https://www.youtube.com"
+                title = "Open YouTube"
+
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=title,
+                agent_id="os_desktop_agent",
+                action="open_url",
+                params={"url": yt_url, "browser": "chrome"},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["camera", "webcam"]):
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title="Launch Windows Camera",
+                agent_id="os_desktop_agent",
+                action="launch_application",
+                params={"app_name": "camera"},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif "spotify" in goal_lower or ("music" in goal_lower and ("play" in goal_lower or "open" in goal_lower)):
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title="Launch Spotify Music",
+                agent_id="os_desktop_agent",
+                action="launch_application",
+                params={"app_name": "spotify"},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(v in goal_lower for v in ["volume", "sound", "mute", "unmute"]):
+            direction = "up"
+            steps = 2
+            if "down" in goal_lower or "lower" in goal_lower or "decrease" in goal_lower:
+                direction = "down"
+            elif "mute" in goal_lower:
+                direction = "mute"
+            m_steps = re.search(r"(\d+)", goal)
+            if m_steps:
+                try:
+                    steps = min(20, max(1, int(m_steps.group(1))))
+                except Exception:
+                    pass
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Adjust System Volume ({direction.upper()})",
+                agent_id="os_desktop_agent",
+                action="adjust_volume",
+                params={"direction": direction, "steps": steps},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif "instagram" in goal_lower or "insta" in goal_lower:
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title="Open Instagram",
+                agent_id="os_desktop_agent",
+                action="open_url",
+                params={"url": "https://www.instagram.com", "browser": "chrome"},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(e in goal_lower for e in ["email", "gmail", "mail"]) and any(w in goal_lower for w in ["open", "send", "compose", "write", "check", "draft", "inbox"]):
+            to = ""
             to_m = re.search(r"(?:to|recipient)\s+([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", goal)
             if to_m:
                 to = to_m.group(1).strip()
@@ -371,20 +465,31 @@ class TaskPlanner:
             sub_m = re.search(r"(?:subject|about)\s+['\"]?([^'\"]+)['\"]?", goal, re.IGNORECASE)
             if sub_m:
                 subject = sub_m.group(1).strip()
-            body = "Hello, this is an automated message dispatched from ABHI."
+            body = ""
             body_m = re.search(r"(?:body|saying|text|message)\s+['\"]?(.+?)['\"]?$", goal, re.IGNORECASE)
             if body_m:
                 body = body_m.group(1).strip()
 
-            nodes["step_1"] = DAGNode(
-                node_id="step_1",
-                title=f"Open Gmail & Compose: {to}",
-                agent_id="os_desktop_agent",
-                action="open_email",
-                params={"to": to, "subject": subject, "body": body, "use_gmail": True},
-                risk_tier="Tier 1",
-                status=NodeStatus.PENDING
-            )
+            if not to and not body and subject == "Message from ABHI":
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Open Gmail Inbox",
+                    agent_id="os_desktop_agent",
+                    action="open_url",
+                    params={"url": "https://mail.google.com", "browser": "chrome"},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            else:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Open Gmail & Compose: {to or 'Draft'}",
+                    agent_id="os_desktop_agent",
+                    action="open_email",
+                    params={"to": to, "subject": subject, "body": body, "use_gmail": True},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
 
         elif any(b in goal_lower for b in ["chrome", "edge", "firefox", "browser", "web"]) and any(s in goal_lower for s in ["search", "google", "find", "open", "browse", "lookup", "look up", "navigate"]):
             # Extract search query
@@ -396,15 +501,20 @@ class TaskPlanner:
             ]:
                 m = re.search(pat, goal, re.IGNORECASE)
                 if m:
-                    q = m.group(1).strip()
-                    break
-            if not q or q.lower() in ["chrome", "browser", "google"]:
-                q = "artificial intelligence autonomous agents"
+                    cand = m.group(1).strip()
+                    if cand.lower() not in ["chrome", "browser", "google", "web"]:
+                        q = cand
+                        break
+            if q:
+                search_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(q)}"
+                step_title = f"Open Chrome & Search: {q[:35]}"
+            else:
+                search_url = "https://www.google.com"
+                step_title = "Open Chrome Browser"
 
-            search_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(q)}"
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
-                title=f"Open Chrome & Search: {q[:35]}",
+                title=step_title,
                 agent_id="os_desktop_agent",
                 action="open_url",
                 params={"url": search_url, "browser": "chrome"},
