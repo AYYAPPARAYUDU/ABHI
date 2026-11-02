@@ -273,11 +273,28 @@ export class ThreeSceneManagerService {
   private groundRadarMesh: THREE.LineSegments | null = null;
   private agentBots: { group: THREE.Group; baseY: number; phase: number }[] = [];
 
-  // Smooth Cinematic Camera Transitions (Elevated Isometric Colony View)
-  private targetCameraPos = new THREE.Vector3(0, 11.5, 23.0);
-  private currentCameraPos = new THREE.Vector3(0, 11.5, 23.0);
-  private targetCameraLookAt = new THREE.Vector3(0, -2.5, 0);
-  private currentCameraLookAt = new THREE.Vector3(0, -2.5, 0);
+  // 8 Specialist Architectural Station Coordinates across the Hexagonal Colony
+  readonly stationPositions = [
+    { x: 0, z: -8.8 },
+    { x: 7.6, z: -4.8 },
+    { x: 9.2, z: 2.4 },
+    { x: 4.8, z: 8.8 },
+    { x: -4.8, z: 8.8 },
+    { x: -9.2, z: 2.4 },
+    { x: -7.6, z: -4.8 },
+    { x: 0, z: 9.4 },
+  ];
+
+  // Billboard nameplates tracking for anti-overlap and focused highlight
+  private orbitalSprites: THREE.Sprite[] = [];
+  private workspaceSprites: THREE.Sprite[] = [];
+  private responsiveScaleFactor = 1.0;
+
+  // Smooth Cinematic Camera Transitions (Default Centered Majestic Perspective)
+  private targetCameraPos = new THREE.Vector3(0, 3.2, 21.0);
+  private currentCameraPos = new THREE.Vector3(0, 3.2, 21.0);
+  private targetCameraLookAt = new THREE.Vector3(0, -0.8, 0);
+  private currentCameraLookAt = new THREE.Vector3(0, -0.8, 0);
 
   // Stardust & Ambient Starfield
   private ambientStarSystem: THREE.Points | null = null;
@@ -432,7 +449,8 @@ export class ThreeSceneManagerService {
       this.scene.fog = new THREE.FogExp2(0x01040a, 0.022);
 
       this.camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 1000);
-      this.camera.position.set(0, 1.2, 19.0);
+      this.camera.position.set(0, 3.2, 21.0);
+      this.camera.lookAt(0, -0.8, 0);
 
       // 2. High-Performance WebGL Renderer
       if (this.renderer) {
@@ -729,6 +747,7 @@ export class ThreeSceneManagerService {
   private buildMultiAgents(): void {
     if (!this.scene) return;
     this.agentMeshMap.clear();
+    this.orbitalSprites = [];
 
     const phiRatio = (1 + Math.sqrt(5)) / 2;
 
@@ -828,6 +847,7 @@ export class ThreeSceneManagerService {
       const nameplate = this.createAgentBillboardSprite(agent);
       nameplate.position.set(0, 1.45, 0);
       group.add(nameplate);
+      this.orbitalSprites.push(nameplate);
 
       // Energy Laser Tether Beam linking Agent to Central Singularity
       const beamGeo = new THREE.BufferGeometry().setFromPoints([
@@ -1323,6 +1343,7 @@ export class ThreeSceneManagerService {
     this.workspaceGroup = new THREE.Group();
     this.workspaceGroup.visible = false;
     this.workspaceBotAvatars = [];
+    this.workspaceSprites = [];
 
     // Dedicated Colony Sun & Fill Illumination (Bright, crisp sci-fi base aesthetic from Image 1)
     const sunLight = new THREE.DirectionalLight(0xdbeafe, 2.6);
@@ -1458,16 +1479,7 @@ export class ThreeSceneManagerService {
 
     // 3. 8 Specialist Architectural Modules & Autonomous Bots
     const agentList = this.agents();
-    const stationPositions = [
-      { x: 0, z: -8.8 },
-      { x: 7.6, z: -4.8 },
-      { x: 9.2, z: 2.4 },
-      { x: 4.8, z: 8.8 },
-      { x: -4.8, z: 8.8 },
-      { x: -9.2, z: 2.4 },
-      { x: -7.6, z: -4.8 },
-      { x: 0, z: 9.4 },
-    ];
+    const stationPositions = this.stationPositions;
 
     agentList.forEach((agent, i) => {
       const pos = stationPositions[i % stationPositions.length];
@@ -1713,6 +1725,7 @@ export class ThreeSceneManagerService {
       const sprite = this.createAgentBillboardSprite(agent);
       sprite.position.set(0, 2.5, 0);
       stationGroup.add(sprite);
+      this.workspaceSprites.push(sprite);
 
       // Tactile Invisible Raycast Hit Cylinder (Effortless click detection)
       const hitGeo = new THREE.CylinderGeometry(2.8, 2.8, 5.0, 16);
@@ -2062,20 +2075,56 @@ export class ThreeSceneManagerService {
   }
 
   focusAgent(agent: AgentNode): void {
-    if (!this.isSwarmDeployed()) {
+    if (!this.isSwarmDeployed() && (this.currentMode === 'MAIN_AGENT' || this.currentMode === 'DEFAULT')) {
       this.toggleCoreDeployment();
     }
     this.selectedAgent.set(agent);
     this.playHoloSound('beep');
     this.latestJarvisMessage.set(
-      `Entering 3D Workspace for [${agent.codename}] ${agent.name}. Volumetric Chamber engaged.`
+      `Focused on [${agent.codename}] ${agent.name}. 3D Tactical Chamber engaged.`
     );
+
     const agentList = this.agents();
     const index = agentList.findIndex((a) => a.id === agent.id);
-    const angle = (index >= 0 ? index / agentList.length : 0) * Math.PI * 2;
-    const posX = Math.cos(angle) * 9.8;
-    const posZ = Math.sin(angle) * 9.8;
-    const posY = -5.0;
+
+    if (this.currentMode === 'WORKSPACE') {
+      // Direct cinematic close-up on specialist station in the living colony
+      const pos = this.stationPositions[index % this.stationPositions.length];
+      const stationX = pos.x;
+      const stationY = -4.2;
+      const stationZ = pos.z;
+
+      const norm = new THREE.Vector2(stationX, stationZ).normalize();
+      if (norm.length() === 0) norm.set(0, 1);
+
+      this.targetCameraPos.set(stationX + norm.x * 4.2, stationY + 2.4, stationZ + norm.y * 4.2);
+      this.targetCameraLookAt.set(stationX, stationY + 1.0, stationZ);
+    } else {
+      // MAIN_AGENT / DEFAULT mode:
+      // Frame the selected orbiting agent ball or docking pod
+      const isDeployed = this.isSwarmDeployed();
+      let targetX = 0;
+      let targetY = 0;
+      let targetZ = 0;
+
+      const meshData = this.agentMeshMap.get(agent.id);
+      if (isDeployed && meshData && meshData.group) {
+        targetX = meshData.group.position.x;
+        targetY = meshData.group.position.y;
+        targetZ = meshData.group.position.z;
+      } else {
+        const angle = (index / agentList.length) * Math.PI * 2;
+        targetX = Math.cos(angle) * 9.8;
+        targetY = -5.0;
+        targetZ = Math.sin(angle) * 9.8;
+      }
+
+      const dir = new THREE.Vector3(targetX, 0, targetZ).normalize();
+      if (dir.length() === 0) dir.set(0, 0, 1);
+
+      this.targetCameraPos.set(targetX + dir.x * 3.8, targetY + 1.4, targetZ + dir.z * 3.8);
+      this.targetCameraLookAt.set(targetX, targetY + 0.3, targetZ);
+    }
 
     // Reveal focused agent console and hide others for clean spacious view
     this.floatingConsoles.forEach((fc) => {
@@ -2086,9 +2135,7 @@ export class ThreeSceneManagerService {
       }
     });
 
-    // Glide camera directly in front of the pod looking into the console and quantum ball
-    this.targetCameraPos.set(posX * 0.68, posY + 2.4, posZ * 0.68 + 4.2);
-    this.targetCameraLookAt.set(posX, posY + 1.2, posZ);
+    this.updateBillboardLabelVisibility();
   }
 
   resetCameraFocus(): void {
@@ -2099,8 +2146,8 @@ export class ThreeSceneManagerService {
         fc.mesh.material.opacity = 0.0;
       }
     });
-    this.targetCameraPos.set(0, 11.5, 23.0);
-    this.targetCameraLookAt.set(0, -2.5, 0);
+    this.applyResponsiveCamera();
+    this.updateBillboardLabelVisibility();
   }
 
   focusAgentPerspective(agent: AgentNode): void {
@@ -2363,11 +2410,12 @@ export class ThreeSceneManagerService {
               const ny = oy * invR;
               const nz = oz * invR;
 
-              // Advanced speech vocal harmonics (multi-frequency wave crests)
+              // Pitch-synchronized subtle micro-ripples (gentle, dynamic, small amplitude < 0.13)
+              const pitchFreq = 16.0;
               const vocalWave =
-                Math.sin(time * 24.0 + oy * 3.0) * 0.32 +
-                Math.cos(time * 36.0 + ox * 3.8) * 0.20 +
-                Math.sin(time * 16.0 + oz * 2.5) * 0.14;
+                Math.sin(time * pitchFreq + oy * 2.2) * 0.065 +
+                Math.cos(time * (pitchFreq * 1.5) + ox * 2.8) * 0.040 +
+                Math.sin(time * (pitchFreq * 0.75) + oz * 1.8) * 0.025;
               const r = 3.8 + vocalWave;
 
               positions[i * 3] = nx * r;
@@ -2375,9 +2423,9 @@ export class ThreeSceneManagerService {
               positions[i * 3 + 2] = nz * r;
 
               if (colors && origCol) {
-                const shimmer = Math.max(0, vocalWave * 2.4);
-                colors[i * 3] = Math.min(1.0, origCol[i * 3] + shimmer * 0.6);
-                colors[i * 3 + 1] = Math.min(1.0, origCol[i * 3 + 1] + shimmer * 0.4);
+                const shimmer = Math.max(0, vocalWave * 4.2);
+                colors[i * 3] = Math.min(1.0, origCol[i * 3] + shimmer * 0.4);
+                colors[i * 3 + 1] = Math.min(1.0, origCol[i * 3 + 1] + shimmer * 0.3);
                 colors[i * 3 + 2] = 1.0;
               }
             }
@@ -2637,8 +2685,89 @@ export class ThreeSceneManagerService {
     });
   }
 
+  getBaseCameraForMode(mode: SpatialEnvironmentMode): { pos: THREE.Vector3; lookAt: THREE.Vector3 } {
+    if (mode === 'WORKSPACE') {
+      return {
+        pos: new THREE.Vector3(0, 11.0, 16.5),
+        lookAt: new THREE.Vector3(0, -3.6, 0),
+      };
+    } else if (mode === 'AUTOMATION') {
+      return {
+        pos: new THREE.Vector3(0, 7.5, 19.0),
+        lookAt: new THREE.Vector3(0, 1.2, 0),
+      };
+    } else if (mode === 'MEDIA') {
+      return {
+        pos: new THREE.Vector3(0, 3.5, 16.5),
+        lookAt: new THREE.Vector3(0, 0.8, 0),
+      };
+    } else if (mode === 'INTELLIGENCE') {
+      return {
+        pos: new THREE.Vector3(0, 0, 18),
+        lookAt: new THREE.Vector3(0, 0, 0),
+      };
+    } else if (mode === 'BUSINESS') {
+      return {
+        pos: new THREE.Vector3(0, 1.2, 24),
+        lookAt: new THREE.Vector3(0, 0, 0),
+      };
+    } else {
+      // MAIN_AGENT / DEFAULT (Exact Image 5 centered framing)
+      return {
+        pos: new THREE.Vector3(0, 3.2, 21.0),
+        lookAt: new THREE.Vector3(0, -0.8, 0),
+      };
+    }
+  }
+
+  applyResponsiveCamera(): void {
+    if (this.selectedAgent()) return;
+    const base = this.getBaseCameraForMode(this.currentMode);
+    const offset = base.pos.clone().sub(base.lookAt);
+    offset.multiplyScalar(this.responsiveScaleFactor);
+    this.targetCameraPos.copy(base.lookAt).add(offset);
+    this.targetCameraLookAt.copy(base.lookAt);
+  }
+
+  updateBillboardLabelVisibility(): void {
+    const selected = this.selectedAgent();
+
+    this.orbitalSprites.forEach((sp) => {
+      const isSelected = !!(selected && sp.userData['agentId'] === selected.id);
+      if (selected) {
+        if (sp.material instanceof THREE.SpriteMaterial) {
+          sp.material.opacity = isSelected ? 1.0 : 0.12;
+        }
+        sp.scale.set(isSelected ? 3.8 : 2.2, isSelected ? 0.95 : 0.55, 1);
+      } else {
+        if (sp.material instanceof THREE.SpriteMaterial) {
+          sp.material.opacity = 0.85;
+        }
+        sp.scale.set(3.0, 0.75, 1);
+      }
+    });
+
+    this.workspaceSprites.forEach((sp) => {
+      const isSelected = !!(selected && sp.userData['agentId'] === selected.id);
+      if (selected) {
+        sp.visible = isSelected;
+        if (sp.material instanceof THREE.SpriteMaterial) {
+          sp.material.opacity = isSelected ? 1.0 : 0.0;
+        }
+        sp.scale.set(3.4, 0.85, 1);
+      } else {
+        sp.visible = true;
+        if (sp.material instanceof THREE.SpriteMaterial) {
+          sp.material.opacity = 0.8;
+        }
+        sp.scale.set(2.4, 0.6, 1);
+      }
+    });
+  }
+
   setMode(mode: SpatialEnvironmentMode): void {
     this.currentMode = mode;
+    this.selectedAgent.set(null);
     const isHome = mode === 'MAIN_AGENT' || mode === 'DEFAULT';
 
     // Strictly isolate Main Agent orbital agents & beams to /home only
@@ -2670,27 +2799,8 @@ export class ThreeSceneManagerService {
     }
 
     if (this.camera) {
-      if (mode === 'WORKSPACE') {
-        // High-definition isometric perspective overlooking the living bot colony (Image 1 Style)
-        this.targetCameraPos.set(0, 11.0, 16.5);
-        this.targetCameraLookAt.set(0, -3.6, 0);
-      } else if (mode === 'AUTOMATION') {
-        this.targetCameraPos.set(0, 7.5, 19.0);
-        this.targetCameraLookAt.set(0, 1.2, 0);
-      } else if (mode === 'MEDIA') {
-        this.targetCameraPos.set(0, 3.5, 16.5);
-        this.targetCameraLookAt.set(0, 0.8, 0);
-      } else if (mode === 'INTELLIGENCE') {
-        this.targetCameraPos.set(0, 0, 18);
-        this.targetCameraLookAt.set(0, 0, 0);
-      } else if (mode === 'BUSINESS') {
-        this.targetCameraPos.set(0, 1.2, 24);
-        this.targetCameraLookAt.set(0, 0, 0);
-      } else {
-        // MAIN_AGENT / DEFAULT
-        this.targetCameraPos.set(0, 11.5, 23.0);
-        this.targetCameraLookAt.set(0, -2.5, 0);
-      }
+      this.applyResponsiveCamera();
+      this.updateBillboardLabelVisibility();
     }
   }
 
@@ -2701,7 +2811,23 @@ export class ThreeSceneManagerService {
   onResize(width: number, height: number): void {
     if (!this.camera || !this.renderer) return;
     if (width <= 0 || height <= 0) return;
-    this.camera.aspect = width / height;
+    const aspect = width / height;
+    this.camera.aspect = aspect;
+
+    // Responsive scaling: if aspect ratio is narrower or width is smaller,
+    // zoom out dynamically so objects maintain identical relative proportions
+    // and never look "too big" or clipped on laptops, tablets, or mobile devices
+    let factor = 1.0;
+    if (aspect < 1.75) {
+      factor = Math.max(1.0, 1.75 / Math.max(aspect, 0.55));
+    }
+    if (width < 1366) {
+      const widthFactor = Math.sqrt(1366 / Math.max(width, 480));
+      factor = Math.max(factor, widthFactor);
+    }
+    this.responsiveScaleFactor = Math.min(2.1, factor);
+
+    this.applyResponsiveCamera();
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
   }
@@ -2749,6 +2875,8 @@ export class ThreeSceneManagerService {
       this.bondChatterTimer = null;
     }
     this.agentMeshMap.clear();
+    this.orbitalSprites = [];
+    this.workspaceSprites = [];
     this.volumetricColumns = [];
     this.podHitMeshes = [];
     this.workspaceBotAvatars = [];

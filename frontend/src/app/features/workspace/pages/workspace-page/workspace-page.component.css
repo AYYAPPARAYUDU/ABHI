@@ -166,6 +166,16 @@
   }
 }
 
+@media (max-width: 680px) {
+  .stations-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+  }
+  .station-card {
+    padding: 4px 6px;
+  }
+}
+
 .station-card {
   background: rgba(6, 15, 32, 0.88);
   border: 1px solid rgba(56, 189, 248, 0.2);

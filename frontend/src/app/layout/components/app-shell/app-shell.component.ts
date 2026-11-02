@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -8,6 +8,7 @@ import { ConsentModalComponent } from '../../../features/operator-console/compon
 import { SpatialBackgroundComponent } from '../../../shared/3d/spatial-background/spatial-background.component';
 import { CommandPaletteComponent } from '../../../shared/ui/command-palette/command-palette.component';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
+import { SpatialEnvironmentMode } from '../../../core/models/agent-experience.model';
 
 @Component({
   selector: 'app-shell',
@@ -34,6 +35,30 @@ export class AppShellComponent {
     ),
     { initialValue: this.router.url }
   );
+
+  constructor() {
+    // Automatically synchronize Spatial 3D Mode based on active route
+    effect(() => {
+      const url = this.currentUrl() || '';
+      let targetMode: SpatialEnvironmentMode = 'MAIN_AGENT';
+
+      if (url.startsWith('/workspace')) {
+        targetMode = 'WORKSPACE';
+      } else if (url.startsWith('/automation')) {
+        targetMode = 'AUTOMATION';
+      } else if (url.startsWith('/media')) {
+        targetMode = 'MEDIA';
+      } else if (url.startsWith('/intelligence')) {
+        targetMode = 'INTELLIGENCE';
+      } else if (url.startsWith('/business')) {
+        targetMode = 'BUSINESS';
+      } else {
+        targetMode = 'MAIN_AGENT';
+      }
+
+      this.stateService.setSpatialMode(targetMode);
+    });
+  }
 
   readonly isMainAgent = computed(() => {
     const url = this.currentUrl() || '';

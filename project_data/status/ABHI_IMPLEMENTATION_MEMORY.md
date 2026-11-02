@@ -11,7 +11,30 @@
 
 ---
 
-## Latest Milestone (2026-11-02): M-41 Steady Core Singularity, Quantum Dot Voice Wave Harmonics, Claude/GPT-4-Tier Cognition & 100% Real Live System Telemetry
+## Latest Milestone (2026-11-02): M-42 Image 5 Default Perspective Framing, Dynamic Multi-Screen Viewport Responsiveness, Precise Agent Focus & Refined Pitch-Synchronized Speech Waves
+- **Exact Image 5 Default Camera Framing:**
+  - Configured default camera coordinates to exact Image 5 perspective (`pos: (0, 3.2, 21.0)`, `lookAt: (0, -0.8, 0)`), centering the central white singularity + quantum dot Fibonacci sphere and framing the stepped hexagonal platform and 8 docking pods cleanly beneath it.
+  - Reset camera glide in `resetCameraFocus()` returns seamlessly to this default view with responsive distance scaling.
+- **Dynamic Multi-Screen Viewport Responsiveness:**
+  - Three.js camera distance dynamically adapts using `responsiveScaleFactor = Math.min(2.1, Math.max(1.75 / aspect, Math.sqrt(1366 / width)))` across all screen resolutions (1920x1080 desktop, 1366x768 laptop, 1024x768 tablet, mobile devices).
+  - Ensured 3D objects maintain identical relative proportions without appearing "too big" or cut off on smaller screens.
+  - Streamlined UI HUD overlays (`.main-agent-bottom-console`, `.stations-grid`, `.plain-dock-shell`) with fluid CSS `clamp()`, `rem`, and `vw/vh`.
+- **Precise LLM / Agent Click & Camera Glide:**
+  - Repaired `focusAgent(agent)`: in `/workspace` mode, targets the agent's exact workstation coordinates from `stationPositions` (`y = -4.2`) rather than hardcoded pod approximations, smoothly framing the station, radar/building, and bot avatar.
+  - In `/home` mode, smoothly glides to frame the active orbiting agent or docking pod.
+  - Implemented `updateBillboardLabelVisibility()`: when an agent is selected, non-selected agents' billboard labels fade to opacity 0.12 (or hide in workspace mode), eliminating all 3D label collision and clutter.
+- **Route-Based Spatial Mode Synchronization:**
+  - Added route observer effect in `AppShellComponent` that automatically updates `OperatorStateService.setSpatialMode()` on every route transition (`/home` -> `MAIN_AGENT`, `/workspace` -> `WORKSPACE`, `/automation` -> `AUTOMATION`, etc.), ensuring strict scene isolation with zero visual leakage.
+- **Refined Pitch-Synchronized Speech Waves:**
+  - Reduced speech acoustic wave radial displacement from $0.66$ peak bulge to refined subtle micro-ripples ($\Delta r < 0.13$) with `pitchFreq = 16.0` ($\sin(16t + 2.2y) \cdot 0.065 + \cos(24t + 2.8x) \cdot 0.040 + \sin(12t + 1.8z) \cdot 0.025$).
+  - Produces an elegant, organic, intelligent neural lattice that vibrates harmoniously with speech pitch and returns to calm breathing when silent.
+- **Verification:**
+  - 100% clean production build (`ng build`, 14.6s).
+  - Playwright visual tests verified across 1920x1080, 1366x768, and 1024x768 viewports (`home_default_1080p.png`, `home_default_laptop_1366.png`, `home_default_tablet_1024.png`, `workspace_colony_view.png`, `workspace_station_focused.png`).
+
+---
+
+## Milestone (2026-11-02): M-41 Steady Core Singularity, Quantum Dot Voice Wave Harmonics, Claude/GPT-4-Tier Cognition & 100% Real Live System Telemetry
 - **Reversed Core Motion to Quantum Dot Voice Wave Harmonics:**
   - Removed rigid body vibration/shaking from the central white ball (`innerSingularityMesh` and `coreCoronaMesh`), leaving it serene, steady, and radiant.
   - Implemented dynamic multi-frequency acoustic vocal wave displacement along the radial normals of all 3,200 Fibonacci quantum dots in `quantumDotSphere` when speaking:
