@@ -1021,5 +1021,45 @@ export interface AutomatedStudioResultDTO {
   duration_seconds?: number;
 }
 
+export interface HiggsfieldModelDTO {
+  id: string;
+  name: string;
+  kind: 'image' | 'video' | 'avatar' | 'voice';
+  blurb: string;
+  aspects: string[];
+  resolutions: string[];
+  has_duration?: boolean;
+  has_camera_moves?: boolean;
+  badge?: string;
+}
+
+export interface HiggsfieldGenerationRequestDTO {
+  prompt: string;
+  model_id: string;
+  kind: 'image' | 'video' | 'avatar' | 'audio';
+  aspect_ratio: string;
+  resolution: string;
+  camera_move: string;
+  motion_intensity: number;
+  duration_sec: number;
+  fps?: number;
+  reference_image_base64?: string;
+}
+
+export interface HiggsfieldGenerationResponseDTO {
+  success: boolean;
+  kind: string;
+  media_url: string;
+  media_path: string;
+  model_id: string;
+  aspect_ratio: string;
+  resolution: string;
+  duration_sec: number;
+  fps: number;
+  camera_move: string;
+  provenance: any;
+  created_at: number;
+}
+
 
 

@@ -162,10 +162,60 @@
             {{ getPromptLabel() }}
           </label>
           <div class="auto-engine-tags">
-            <span class="engine-tag">⚡ Automated Local Model Selection</span>
-            <span class="engine-tag">🛡️ Physical WAL Persistence</span>
+            <span class="engine-tag higgsfield-tag">⚡ OPEN-HIGGSFIELD-AI CINEMA STUDIO</span>
+            <span class="engine-tag">🛡️ 100% LOCAL & GPU ACCELERATED</span>
           </div>
         </div>
+
+        <!-- Higgsfield Model & Resolution Row -->
+        @if (automatedCategory() !== 'audio') {
+          <div class="higgsfield-model-bar">
+            <div class="model-picker-wrap">
+              <label class="param-mini-label">AI MODEL:</label>
+              <select class="higgsfield-select" [(ngModel)]="selectedModel">
+                @for (m of getFilteredModels(); track m.id) {
+                  <option [value]="m.id">{{ m.name }} [{{ m.badge || 'PRO' }}]</option>
+                }
+                @if (getFilteredModels().length === 0) {
+                  <option value="nano-banana-pro">Nano Banana Pro [FLAGSHIP]</option>
+                  <option value="kling-3.0">Kling 3.0 Cinema [CINEMA]</option>
+                }
+              </select>
+            </div>
+
+            <div class="res-picker-wrap">
+              <label class="param-mini-label">RESOLUTION:</label>
+              <div class="chip-group">
+                @for (res of resolutionOptions; track res) {
+                  <button
+                    type="button"
+                    (click)="selectedResolution.set(res)"
+                    [class.selected]="selectedResolution() === res"
+                    class="option-chip res-chip"
+                  >
+                    {{ res }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Image-to-Video Reference Image Button -->
+            <div class="reference-upload-wrap">
+              <label class="param-mini-label">REFERENCE IMAGE (I2V / I2I):</label>
+              @if (!referenceImageBase64()) {
+                <label class="ref-upload-btn">
+                  <span>📷 Upload Reference Frame</span>
+                  <input type="file" accept="image/*" (change)="onReferenceImageSelected($event)" style="display:none;" />
+                </label>
+              } @else {
+                <div class="ref-preview-pill">
+                  <span class="ref-name">✓ {{ referenceImageFilename() || 'Reference Attached' }}</span>
+                  <button type="button" class="ref-clear-btn" (click)="clearReferenceImage()">✕</button>
+                </div>
+              }
+            </div>
+          </div>
+        }
 
         <div class="prompt-input-wrapper">
           <textarea
@@ -176,6 +226,64 @@
             class="automated-textarea"
           ></textarea>
         </div>
+
+        <!-- Higgsfield Cinema Camera Motion Bar (When Video Active) -->
+        @if (automatedCategory() === 'video') {
+          <div class="cinema-motion-controls-row">
+            <div class="motion-group">
+              <label class="param-mini-label">CINEMA CAMERA MOVE:</label>
+              <div class="chip-group camera-chips">
+                @for (move of cameraMoves; track move.id) {
+                  <button
+                    type="button"
+                    (click)="selectedCameraMove.set(move.id)"
+                    [class.selected]="selectedCameraMove() === move.id"
+                    class="option-chip camera-chip"
+                  >
+                    {{ move.label }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-label-row">
+                <label class="param-mini-label">MOTION INTENSITY:</label>
+                <span class="intensity-badge">{{ motionIntensity() }}/10</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                [ngModel]="motionIntensity()"
+                (ngModelChange)="motionIntensity.set($event)"
+                class="intensity-slider"
+              />
+            </div>
+
+            <div class="duration-group">
+              <label class="param-mini-label">DURATION:</label>
+              <div class="chip-group">
+                <button
+                  type="button"
+                  (click)="videoDuration.set(5)"
+                  [class.selected]="videoDuration() === 5"
+                  class="option-chip"
+                >
+                  5s
+                </button>
+                <button
+                  type="button"
+                  (click)="videoDuration.set(10)"
+                  [class.selected]="videoDuration() === 10"
+                  class="option-chip"
+                >
+                  10s
+                </button>
+              </div>
+            </div>
+          </div>
+        }
 
         <!-- Minimal 1-Click Controls Bar -->
         <div class="prompt-controls-bar">

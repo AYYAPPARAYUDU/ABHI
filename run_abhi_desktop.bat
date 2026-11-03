@@ -40,3 +40,4 @@ if defined BROWSER_EXE (
 )
 
 exit /b 0
+

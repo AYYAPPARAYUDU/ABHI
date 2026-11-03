@@ -28,6 +28,7 @@ import {
   MediaArtifactDTO,
   MediaWorkflowTemplate,
   MediaVaultItemDTO,
+  HiggsfieldModelDTO,
 } from '../../models/media.model';
 import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
 import { AnimeCounterDirective } from '../../../../shared/directives/anime-counter.directive';
@@ -89,6 +90,31 @@ export class MediaPageComponent implements OnInit {
   selectedAspectRatio = signal<string>('1:1');
   selectedAudioStyle = signal<'SPEECH' | 'MUSIC'>('SPEECH');
   selectedVoice = signal<string>('en-GB-RyanNeural');
+
+  // Open-Higgsfield AI Cinema & Multi-Model State
+  readonly higgsfieldModels = signal<HiggsfieldModelDTO[]>([]);
+  readonly selectedModel = signal<string>('nano-banana-pro');
+  readonly selectedResolution = signal<string>('1K');
+  readonly selectedCameraMove = signal<string>('static');
+  readonly motionIntensity = signal<number>(5);
+  readonly videoDuration = signal<number>(5);
+  readonly referenceImageBase64 = signal<string | null>(null);
+  readonly referenceImageFilename = signal<string | null>(null);
+
+  readonly cameraMoves = [
+    { id: 'static', label: 'Static Lock 🎯' },
+    { id: 'zoom_in', label: 'Zoom In 🔍' },
+    { id: 'zoom_out', label: 'Zoom Out 🔎' },
+    { id: 'pan_left', label: 'Pan Left ⬅️' },
+    { id: 'pan_right', label: 'Pan Right ➡️' },
+    { id: 'orbit_360', label: 'Orbit 360° 🔄' },
+    { id: 'crane_up', label: 'Crane Up ⬆️' },
+    { id: 'tilt_down', label: 'Tilt Down ⬇️' },
+    { id: 'fpv_drone', label: 'FPV Drone 🚁' }
+  ];
+
+  readonly resolutionOptions = ['1K', '2K', '4K'];
+  readonly aspectOptions = ['1:1', '16:9', '9:16', '21:9', '4:3', '3:4'];
 
   // Video VFX Cinema-Grade Presets
   readonly videoVfxPresets = [
@@ -176,6 +202,13 @@ export class MediaPageComponent implements OnInit {
     this.mediaService.fetchTemplates().subscribe();
     this.mediaService.fetchVault().subscribe();
 
+    // Fetch Open-Higgsfield AI Models
+    this.mediaService.fetchHiggsfieldModels().subscribe({
+      next: (models) => {
+        this.higgsfieldModels.set(models);
+      }
+    });
+
     // Auto-select first artifact as default if available
     const arts = this.mediaService.artifacts();
     if (arts.length > 0) {
@@ -185,19 +218,54 @@ export class MediaPageComponent implements OnInit {
   }
 
   // ==========================================
-  // Automated 3-Button Studio Handlers
+  // Open-Higgsfield Cinema Studio Handlers
   // ==========================================
 
   setCategory(cat: 'image' | 'video' | 'audio'): void {
     this.automatedCategory.set(cat);
+    if (cat === 'video') {
+      this.selectedModel.set('kling-3.0');
+      this.selectedAspectRatio.set('16:9');
+    } else if (cat === 'image') {
+      this.selectedModel.set('nano-banana-pro');
+      this.selectedAspectRatio.set('1:1');
+    }
+  }
+
+  onReferenceImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      this.referenceImageFilename.set(file.name);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.referenceImageBase64.set(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  clearReferenceImage(): void {
+    this.referenceImageBase64.set(null);
+    this.referenceImageFilename.set(null);
+  }
+
+  getFilteredModels(): HiggsfieldModelDTO[] {
+    const cat = this.automatedCategory();
+    if (cat === 'image') {
+      return this.higgsfieldModels().filter(m => m.kind === 'image');
+    } else if (cat === 'video') {
+      return this.higgsfieldModels().filter(m => m.kind === 'video' || m.kind === 'avatar');
+    }
+    return [];
   }
 
   getPromptLabel(): string {
     switch (this.automatedCategory()) {
       case 'image':
-        return 'Image Generation Description';
+        return 'Open-Higgsfield Image Description';
       case 'video':
-        return 'Cinematic Video Motion Prompt';
+        return 'Higgsfield Cinema Camera Motion Prompt';
       case 'audio':
         return this.selectedAudioStyle() === 'MUSIC'
           ? 'Melodic Music Composition Prompt'
@@ -222,13 +290,36 @@ export class MediaPageComponent implements OnInit {
     const text = this.promptText.trim();
     if (!text || this.mediaService.isAutomating()) return;
 
+    const cat = this.automatedCategory();
+    if (cat === 'image' || cat === 'video') {
+      this.mediaService.generateHiggsfield({
+        prompt: text,
+        model_id: this.selectedModel(),
+        kind: cat,
+        aspect_ratio: this.selectedAspectRatio(),
+        resolution: this.selectedResolution(),
+        camera_move: this.selectedCameraMove(),
+        motion_intensity: this.motionIntensity(),
+        duration_sec: this.videoDuration(),
+        reference_image_base64: this.referenceImageBase64() || undefined
+      }).subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.promptText = '';
+            this.referenceImageBase64.set(null);
+            this.referenceImageFilename.set(null);
+          }
+        }
+      });
+      return;
+    }
+
     this.mediaService.executeAutomated({
       category: this.automatedCategory(),
       prompt: text,
       aspect_ratio: this.selectedAspectRatio(),
     }).subscribe({
       next: (res) => {
-        // Clear prompt upon successful creation
         if (res.status === 'SUCCESS') {
           this.promptText = '';
         }

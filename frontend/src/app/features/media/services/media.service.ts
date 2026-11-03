@@ -40,6 +40,9 @@ import {
   MediaVaultSummaryDTO,
   AutomatedStudioRequestDTO,
   AutomatedStudioResultDTO,
+  HiggsfieldModelDTO,
+  HiggsfieldGenerationRequestDTO,
+  HiggsfieldGenerationResponseDTO,
 } from '../models/media.model';
 
 
@@ -1077,6 +1080,34 @@ export class MediaService {
         },
         error: (err) => {
           this.vaultError.set(err?.error?.detail || 'Failed to clear media vault');
+        }
+      })
+    );
+  }
+
+  // ============================================================================
+  // Open-Higgsfield-AI Cinema Studio Methods
+  // ============================================================================
+
+  fetchHiggsfieldModels(kind?: string): Observable<HiggsfieldModelDTO[]> {
+    let url = `${this.baseUrl}/higgsfield/models`;
+    if (kind) url += `?kind=${encodeURIComponent(kind)}`;
+    return this.http.get<HiggsfieldModelDTO[]>(url);
+  }
+
+  generateHiggsfield(request: HiggsfieldGenerationRequestDTO): Observable<HiggsfieldGenerationResponseDTO> {
+    this.isAutomating.set(true);
+    this.errorMessage.set(null);
+    return this.http.post<HiggsfieldGenerationResponseDTO>(`${this.baseUrl}/higgsfield/generate`, request).pipe(
+      tap({
+        next: (res) => {
+          this.isAutomating.set(false);
+          this.fetchVault(this.vaultFilterType(), this.vaultSearchQuery()).subscribe();
+          this.refreshAll();
+        },
+        error: (err) => {
+          this.errorMessage.set(err?.error?.detail || 'Higgsfield generation failed');
+          this.isAutomating.set(false);
         }
       })
     );

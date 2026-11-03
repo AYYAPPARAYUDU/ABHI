@@ -113,20 +113,20 @@
 
     <div class="telemetry-cell">
       <span class="cell-label">PASS 1: FRONTAL CONFIDENCE</span>
-      <span class="cell-value cyan-val">{{ pass1Confidence() > 0 ? pass1Confidence() + '%' : '--' }}</span>
+      <span class="cell-value cyan-val">{{ formatPct(pass1Confidence()) }}</span>
       <span class="cell-sub">YuNet Deep Detector</span>
     </div>
 
     <div class="telemetry-cell">
       <span class="cell-label">PASS 2: COSINE MATCH</span>
-      <span class="cell-value green-val">{{ pass2MatchScore() > 0 ? pass2MatchScore() + '%' : '--' }}</span>
+      <span class="cell-value green-val">{{ formatPct(pass2MatchScore()) }}</span>
       <span class="cell-sub">SFace 128-D Euclidean Vector</span>
     </div>
 
     <div class="telemetry-cell">
       <span class="cell-label">SECURITY ATTESTATION</span>
-      <span class="cell-value" [class.verified-val]="scanStage() === 'AUTHENTICATED' || operatorState.biometricStatus().verified">
-        {{ (scanStage() === 'AUTHENTICATED' || operatorState.biometricStatus().verified) ? 'VERIFIED ✓' : 'UNAUTHENTICATED' }}
+      <span class="cell-value" [class.verified-val]="scanStage() === 'AUTHENTICATED' || (operatorState.biometricStatus().verified && scanStage() !== 'FAILED')">
+        {{ (scanStage() === 'AUTHENTICATED' || (operatorState.biometricStatus().verified && scanStage() !== 'FAILED')) ? 'VERIFIED ✓' : 'UNVERIFIED ⚠️' }}
       </span>
       <span class="cell-sub">Local SQLite WAL Encrypted</span>
     </div>

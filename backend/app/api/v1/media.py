@@ -1553,5 +1553,52 @@ async def automated_generate(payload: AutomatedStudioRequest):
         raise HTTPException(status_code=400, detail=f"Unsupported category: {payload.category}")
 
 
+# =============================================================================
+# Open-Higgsfield-AI Cinema Studio Endpoints
+# =============================================================================
+
+from backend.app.media.higgsfield_engine import (
+    higgsfield_engine,
+    HiggsfieldGenerationRequest,
+    HiggsfieldGenerationResponse,
+)
+
+
+@router.get("/higgsfield/models")
+async def list_higgsfield_models(kind: Optional[str] = None):
+    """Retrieve all Open-Higgsfield-AI image and cinema video models."""
+    models = higgsfield_engine.list_models(kind=kind)
+    return [m.model_dump() for m in models]
+
+
+@router.post("/higgsfield/generate", response_model=HiggsfieldGenerationResponse)
+async def generate_higgsfield_media(req: HiggsfieldGenerationRequest):
+    """Execute high-fidelity image or cinema-grade video synthesis with camera motion controls."""
+    try:
+        return higgsfield_engine.generate(req)
+    except Exception as e:
+        logger.error(f"Higgsfield media generation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+
+
+@router.get("/higgsfield/config")
+async def get_higgsfield_config():
+    """Get active Higgsfield API configuration & key status."""
+    cfg = higgsfield_engine._config
+    return {
+        "has_kie_key": bool(cfg.get("kie_key")),
+        "has_muapi_key": bool(cfg.get("muapi_key")),
+        "default_engine": cfg.get("default_engine", "local")
+    }
+
+
+@router.post("/higgsfield/config")
+async def save_higgsfield_config(payload: Dict[str, Any]):
+    """Update Higgsfield API keys or engine selection."""
+    higgsfield_engine.save_config(payload)
+    return {"status": "SUCCESS", "message": "Higgsfield configuration saved."}
+
+
+
 
 

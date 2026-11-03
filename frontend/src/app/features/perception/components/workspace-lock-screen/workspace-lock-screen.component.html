@@ -108,12 +108,12 @@
 
       <div class="tel-item">
         <span class="tel-label">PASS 1: CONFIDENCE</span>
-        <span class="tel-val cyan-val">{{ pass1Confidence() > 0 ? pass1Confidence() + '%' : '--' }}</span>
+        <span class="tel-val cyan-val">{{ formatPct(pass1Confidence()) }}</span>
       </div>
 
       <div class="tel-item">
         <span class="tel-label">PASS 2: COSINE MATCH</span>
-        <span class="tel-val green-val">{{ pass2MatchScore() > 0 ? pass2MatchScore() + '%' : '--' }}</span>
+        <span class="tel-val green-val">{{ formatPct(pass2MatchScore()) }}</span>
       </div>
 
       <div class="tel-item">

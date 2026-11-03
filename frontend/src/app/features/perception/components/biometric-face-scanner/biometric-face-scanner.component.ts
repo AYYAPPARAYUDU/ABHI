@@ -145,6 +145,21 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
     }
   }
 
+  async getReadyFrameBase64(maxAttempts: number = 8): Promise<string | null> {
+    for (let i = 0; i < maxAttempts; i++) {
+      const frame = this.captureCurrentFrameBase64();
+      if (frame) return frame;
+      await new Promise((r) => setTimeout(r, 150));
+    }
+    return null;
+  }
+
+  formatPct(val: number): string {
+    if (val === undefined || val === null || val === 0) return '--';
+    const num = val <= 1.0 ? val * 100 : val;
+    return `${Math.round(num)}%`;
+  }
+
   // --- Real Dual-Pass Neural Authentication Execution ---
 
   async runDualPassScan(): Promise<void> {
@@ -156,15 +171,18 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
       // Stage 1: Frontal Scan & Feature Extraction
       this.scanStage.set('PASS_1_FRONTAL');
       this.statusMessage.set('Stage 1/2: Frontal alignment... Capturing live optical frame.');
+      this.pass1Confidence.set(0);
+      this.pass2MatchScore.set(0);
 
-      await new Promise((r) => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 400));
 
-      const frame1 = this.captureCurrentFrameBase64();
+      const frame1 = await this.getReadyFrameBase64();
       let pass1: any = null;
 
       if (frame1) {
         pass1 = await this.agentApi.verifyBiometricFrame(frame1, this.operatorName());
       } else {
+        // Fallback to hardware device only if browser camera is not capturing
         pass1 = await this.agentApi.getBiometricPresence(0);
       }
 
@@ -186,9 +204,9 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
       this.scanStage.set('PASS_2_VERIFICATION');
       this.statusMessage.set('Stage 2/2: Verifying 128-D biometric signature & 3D pose...');
 
-      await new Promise((r) => setTimeout(r, 700));
+      await new Promise((r) => setTimeout(r, 500));
 
-      const frame2 = this.captureCurrentFrameBase64() || frame1;
+      const frame2 = (await this.getReadyFrameBase64()) || frame1;
       let pass2: any = null;
 
       if (frame2) {

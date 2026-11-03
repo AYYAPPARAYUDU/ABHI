@@ -137,6 +137,21 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
     }
   }
 
+  async getReadyFrameBase64(maxAttempts: number = 8): Promise<string | null> {
+    for (let i = 0; i < maxAttempts; i++) {
+      const frame = this.captureFrameBase64();
+      if (frame) return frame;
+      await new Promise((r) => setTimeout(r, 150));
+    }
+    return null;
+  }
+
+  formatPct(val: number): string {
+    if (val === undefined || val === null || val === 0) return '--';
+    const num = val <= 1.0 ? val * 100 : val;
+    return `${Math.round(num)}%`;
+  }
+
   async runFaceUnlockScan(): Promise<void> {
     if (this.stage() === 'SCANNING_PASS_1' || this.stage() === 'SCANNING_PASS_2' || this.stage() === 'AUTHENTICATED') {
       return;
@@ -146,10 +161,12 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
       // Stage 1: Frontal Detection & Alignment
       this.stage.set('SCANNING_PASS_1');
       this.statusMessage.set('Stage 1/2: Optical Frontal Alignment... Extracting YuNet Neural Vectors.');
+      this.pass1Confidence.set(0);
+      this.pass2MatchScore.set(0);
 
-      await new Promise((r) => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 400));
 
-      const frame1 = this.captureFrameBase64();
+      const frame1 = await this.getReadyFrameBase64();
       let pass1: any = null;
 
       if (frame1) {
@@ -176,9 +193,9 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
       this.stage.set('SCANNING_PASS_2');
       this.statusMessage.set('Stage 2/2: Computing SFace 128-D Cosine Metric against SQLite WAL Database...');
 
-      await new Promise((r) => setTimeout(r, 700));
+      await new Promise((r) => setTimeout(r, 500));
 
-      const frame2 = this.captureFrameBase64() || frame1;
+      const frame2 = (await this.getReadyFrameBase64()) || frame1;
       let pass2: any = null;
 
       if (frame2) {
