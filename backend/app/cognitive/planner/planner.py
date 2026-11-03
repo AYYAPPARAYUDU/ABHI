@@ -370,35 +370,54 @@ class TaskPlanner:
                 status=NodeStatus.PENDING
             )
 
-        elif "youtube" in goal_lower:
-            # Explicit physical YouTube branch
-            query = ""
-            for pat in [
-                r"(?:search|play|find)\s+(?:on\s+youtube\s+)?['\"]?([^'\"]+)['\"]?",
-                r"youtube\s+(?:for\s+|search\s+)?['\"]?([^'\"]+)['\"]?",
-            ]:
-                m = re.search(pat, goal, re.IGNORECASE)
-                if m:
-                    cand = m.group(1).strip()
-                    if cand.lower() not in ["youtube", "video", "videos"]:
-                        query = cand
-                        break
-            if query:
-                yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote_plus(query)}"
-                title = f"Search YouTube: {query[:30]}"
+        elif (
+            goal_lower.startswith("play ")
+            or "play song" in goal_lower
+            or "play music" in goal_lower
+            or "play video" in goal_lower
+            or "play track" in goal_lower
+            or goal_lower.startswith("listen to ")
+            or "listen to " in goal_lower
+            or "youtube" in goal_lower
+            or "spotify" in goal_lower
+        ):
+            # Dedicated Media & Music Playback Router
+            if "spotify" in goal_lower and not any(p in goal_lower for p in ["youtube", "browser", "play "]):
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Launch Spotify Music",
+                    agent_id="os_desktop_agent",
+                    action="launch_application",
+                    params={"app_name": "spotify"},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
             else:
-                yt_url = "https://www.youtube.com"
-                title = "Open YouTube"
+                raw_track = goal
+                for prefix in ["play song", "play music", "play video", "play track", "listen to", "search youtube for", "youtube", "play"]:
+                    if goal_lower.startswith(prefix):
+                        raw_track = goal[len(prefix):].strip()
+                        break
+                    elif prefix in goal_lower:
+                        idx = goal_lower.find(prefix) + len(prefix)
+                        raw_track = goal[idx:].strip()
+                        break
 
-            nodes["step_1"] = DAGNode(
-                node_id="step_1",
-                title=title,
-                agent_id="os_desktop_agent",
-                action="open_url",
-                params={"url": yt_url, "browser": "chrome"},
-                risk_tier="Tier 1",
-                status=NodeStatus.PENDING
-            )
+                clean_track = re.sub(r"^(?:on\s+(?:youtube|spotify|browser)\s+)", "", raw_track, flags=re.IGNORECASE).strip()
+                clean_track = re.sub(r"\s+on\s+youtube$", "", clean_track, flags=re.IGNORECASE).strip()
+                if not clean_track:
+                    clean_track = "trending music"
+
+                yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote_plus(clean_track)}"
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Play Media: {clean_track[:35]}",
+                    agent_id="os_desktop_agent",
+                    action="open_url",
+                    params={"url": yt_url, "browser": "chrome"},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
 
         elif any(k in goal_lower for k in ["camera", "webcam"]):
             nodes["step_1"] = DAGNode(
@@ -407,17 +426,6 @@ class TaskPlanner:
                 agent_id="os_desktop_agent",
                 action="launch_application",
                 params={"app_name": "camera"},
-                risk_tier="Tier 1",
-                status=NodeStatus.PENDING
-            )
-
-        elif "spotify" in goal_lower or ("music" in goal_lower and ("play" in goal_lower or "open" in goal_lower)):
-            nodes["step_1"] = DAGNode(
-                node_id="step_1",
-                title="Launch Spotify Music",
-                agent_id="os_desktop_agent",
-                action="launch_application",
-                params={"app_name": "spotify"},
                 risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )
@@ -456,7 +464,7 @@ class TaskPlanner:
                 status=NodeStatus.PENDING
             )
 
-        elif any(e in goal_lower for e in ["email", "gmail", "mail"]) and any(w in goal_lower for w in ["open", "send", "compose", "write", "check", "draft", "inbox"]):
+        elif any(e in goal_lower for e in ["email", "gmail", "mail", "mails", "inbox"]):
             to = ""
             to_m = re.search(r"(?:to|recipient)\s+([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)", goal)
             if to_m:
@@ -470,10 +478,11 @@ class TaskPlanner:
             if body_m:
                 body = body_m.group(1).strip()
 
-            if not to and not body and subject == "Message from ABHI":
+            is_compose = bool(to or body or any(w in goal_lower for w in ["compose", "write", "send", "draft"]))
+            if not is_compose:
                 nodes["step_1"] = DAGNode(
                     node_id="step_1",
-                    title="Open Gmail Inbox",
+                    title="Open Gmail Inbox in Browser",
                     agent_id="os_desktop_agent",
                     action="open_url",
                     params={"url": "https://mail.google.com", "browser": "chrome"},
@@ -745,36 +754,61 @@ class TaskPlanner:
                 status=NodeStatus.PENDING
             )
 
-        elif any(w in goal_lower for w in ["whatsapp", "personal message", "personal messge", "send mesage", "send message"]):
-            message = "hi and hello this is abhi"
-            msg_match = re.search(r"""(?:saying|message|personal message|personal messge|text|content)\s+['"]?(.+?)['"]?$""", goal, re.IGNORECASE)
-            if msg_match:
-                extracted = msg_match.group(1).strip()
-                extracted = re.split(r"\b(do this|and test|test it|opening any|check all|make it)\b", extracted, flags=re.IGNORECASE)[0].strip()
-                if extracted:
-                    message = extracted
-
+        elif any(w in goal_lower for w in ["whatsapp", "web.whatsapp"]):
+            has_send_intent = any(s in goal_lower for s in ["send", "text", "deliver", "message to"])
             phone = None
             phone_match = re.search(r"(?:to|phone|number)\s+([+]?\d{7,15})", goal)
             if phone_match:
                 phone = phone_match.group(1).strip()
 
+            if not has_send_intent and not phone:
+                # User asked to open/check/read WhatsApp -> Launch WhatsApp Web in browser where user is logged in
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Open WhatsApp Web in Browser",
+                    agent_id="os_desktop_agent",
+                    action="open_url",
+                    params={"url": "https://web.whatsapp.com", "browser": "chrome"},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            else:
+                message = "hi and hello this is abhi"
+                msg_match = re.search(r"""(?:saying|message|personal message|personal messge|text|content)\s+['"]?(.+?)['"]?$""", goal, re.IGNORECASE)
+                if msg_match:
+                    extracted = msg_match.group(1).strip()
+                    extracted = re.split(r"\b(do this|and test|test it|opening any|check all|make it)\b", extracted, flags=re.IGNORECASE)[0].strip()
+                    if extracted:
+                        message = extracted
+
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Open WhatsApp: {phone or 'Personal'}",
+                    agent_id="os_desktop_agent",
+                    action="open_whatsapp",
+                    params={"message": message, "phone": phone},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+                nodes["step_2"] = DAGNode(
+                    node_id="step_2",
+                    title=f"Deliver Message: {message[:30]}",
+                    agent_id="os_desktop_agent",
+                    action="send_whatsapp_message",
+                    params={"message": message, "phone": phone},
+                    dependencies=["step_1"],
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+
+        elif any(m in goal_lower for m in ["messages", "message", "notifications", "notification"]):
+            # General messages / communications check -> open Gmail and communications hub
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
-                title=f"Open WhatsApp: {phone or 'Personal'}",
+                title="Open Gmail & Communications in Browser",
                 agent_id="os_desktop_agent",
-                action="open_whatsapp",
-                params={"message": message, "phone": phone},
-                risk_tier="Tier 1",
-                status=NodeStatus.PENDING
-            )
-            nodes["step_2"] = DAGNode(
-                node_id="step_2",
-                title=f"Deliver Message: {message[:30]}",
-                agent_id="os_desktop_agent",
-                action="send_whatsapp_message",
-                params={"message": message, "phone": phone},
-                dependencies=["step_1"],
+                action="open_url",
+                params={"url": "https://mail.google.com", "browser": "chrome"},
                 risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )

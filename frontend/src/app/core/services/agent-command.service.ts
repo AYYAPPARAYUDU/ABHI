@@ -54,7 +54,8 @@ export class AgentCommandService {
     }
   ]);
 
-  // Bounded Short-Lived Context for Follow-ups (Max 5 mins)
+  // Persistent Multi-turn Thread ID & Bounded Context for Follow-ups
+  readonly activeThreadId = signal<string | null>(null);
   private activeContext: CommandContext = {};
   private contextTimestamp = 0;
 
@@ -137,7 +138,9 @@ export class AgentCommandService {
     }
 
     const commandId = `cmd_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-    const detectedLang = this.detectLanguage(text, language);
+    const activeSelectedLang = this.speechVoice.selectedLanguage();
+    const effectiveLang = language !== 'auto' ? language : activeSelectedLang;
+    const detectedLang = this.detectLanguage(text, effectiveLang);
     const request: AgentCommandRequest = {
       commandId,
       text,
@@ -173,9 +176,10 @@ export class AgentCommandService {
     try {
       this.lifecycle.set('PLANNING');
 
-      // Dispatch to Backend Authoritative Agent Gateway
+      // Dispatch to Backend Authoritative Agent Gateway with Persistent Thread ID
       const response: BackendCommandResponse = await this.agentApi.submitCommand({
         command_id: commandId,
+        thread_id: this.activeThreadId() || undefined,
         text,
         input_mode: inputMode,
         language_hint: detectedLang,
@@ -186,6 +190,10 @@ export class AgentCommandService {
         },
         origin: 'web'
       });
+
+      if (response.thread_id) {
+        this.activeThreadId.set(response.thread_id);
+      }
 
       // Map backend response into UI outcome model
       const result = this.mapBackendResponseToResult(response, commandId, text);
@@ -291,6 +299,8 @@ export class AgentCommandService {
    * Clear the active Stark Comms dialogue stream.
    */
   clearComms(): void {
+    this.activeThreadId.set(null);
+    this.activeContext = {};
     const persona = this.speechVoice.personaMode();
     const callsign = persona === 'JARVIS' ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.';
     this.commsMessages.set([
@@ -578,7 +588,7 @@ export class AgentCommandService {
       commandId,
       type: 'TASK_RESULT',
       title: this.formatCommandTitle(text),
-      summary: `Action planned and verified: "${text}". Processed locally by Central Supervisor with zero cloud dependencies.`,
+      summary: `Understood, ${this.speechVoice.userCallsign()}. Executing ${this.formatCommandTitle(text)} locally on your system.`,
       timestamp: Date.now()
     };
   }

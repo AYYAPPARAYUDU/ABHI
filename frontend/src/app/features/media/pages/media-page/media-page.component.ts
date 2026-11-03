@@ -90,6 +90,71 @@ export class MediaPageComponent implements OnInit {
   selectedAudioStyle = signal<'SPEECH' | 'MUSIC'>('SPEECH');
   selectedVoice = signal<string>('en-GB-RyanNeural');
 
+  // Video VFX Cinema-Grade Presets
+  readonly videoVfxPresets = [
+    {
+      name: '🌐 3D Bot Workspace',
+      prompt: 'create 3d cybernetic workspace colony for video with rotating radar, laser conduits, and specialist bot stations',
+      ratio: '16:9'
+    },
+    {
+      name: '⚛️ Quantum Arc Reactor',
+      prompt: 'quantum arc reactor core holographic singularity with counter-rotating dials and orbiting satellites',
+      ratio: '16:9'
+    },
+    {
+      name: '🧠 Neural Cortex & Synapses',
+      prompt: '3D holographic neural brain with flowing synaptic action potentials and attention waves',
+      ratio: '16:9'
+    },
+    {
+      name: '⚡ Matrix Cyber Stream',
+      prompt: '3D matrix cybernetic stream with cascading code runes and audio oscilloscope',
+      ratio: '16:9'
+    },
+    {
+      name: '🌌 Cosmic Nebula Vortex',
+      prompt: 'deep space cosmic nebula accretion vortex with swirling star sparks and diamond flares',
+      ratio: '16:9'
+    }
+  ];
+
+  applyVideoPreset(preset: { name: string; prompt: string; ratio: string }): void {
+    this.promptText = preset.prompt;
+    this.selectedAspectRatio.set(preset.ratio);
+  }
+
+  deleteItem(item: MediaVaultItemDTO, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (!confirm(`Are you sure you want to delete "${item.filename}" from the Media Vault?`)) {
+      return;
+    }
+    this.mediaService.deleteVaultItem(item.relative_path).subscribe({
+      next: () => {
+        this.copyFeedback.set(`Deleted ${item.filename}`);
+        setTimeout(() => this.copyFeedback.set(null), 2500);
+        if (this.lightboxItem()?.filename === item.filename) {
+          this.closeLightbox();
+        }
+      }
+    });
+  }
+
+  clearAllVault(): void {
+    const count = this.mediaService.vaultSummary()?.total_count || this.mediaService.vaultItems().length;
+    if (count === 0) return;
+    if (!confirm(`Are you sure you want to permanently delete all ${count} files from the Media Vault? This action cannot be undone.`)) {
+      return;
+    }
+    this.mediaService.clearAllVault().subscribe({
+      next: (res) => {
+        this.copyFeedback.set(`Cleared Media Vault: ${res?.deleted_count || 0} files removed`);
+        setTimeout(() => this.copyFeedback.set(null), 3000);
+        this.closeLightbox();
+      }
+    });
+  }
+
   // Animated Media Storage Vault state
   lightboxItem = signal<MediaVaultItemDTO | null>(null);
   copyFeedback = signal<string | null>(null);

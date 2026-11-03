@@ -1054,6 +1054,34 @@ export class MediaService {
     return `${this.baseUrl}/vault/download?path=${encodeURIComponent(relativePath)}`;
   }
 
+  deleteVaultItem(relativePath: string): Observable<any> {
+    const url = `${this.baseUrl}/vault/item?path=${encodeURIComponent(relativePath)}`;
+    return this.http.delete<any>(url).pipe(
+      tap({
+        next: () => {
+          this.fetchVault(this.vaultFilterType(), this.vaultSearchQuery()).subscribe();
+        },
+        error: (err) => {
+          this.vaultError.set(err?.error?.detail || 'Failed to delete media item');
+        }
+      })
+    );
+  }
+
+  clearAllVault(): Observable<any> {
+    const url = `${this.baseUrl}/vault/clear-all`;
+    return this.http.delete<any>(url).pipe(
+      tap({
+        next: () => {
+          this.fetchVault().subscribe();
+        },
+        error: (err) => {
+          this.vaultError.set(err?.error?.detail || 'Failed to clear media vault');
+        }
+      })
+    );
+  }
+
   refreshAll(): void {
     this.fetchModels().subscribe();
     this.fetchEditModels().subscribe();

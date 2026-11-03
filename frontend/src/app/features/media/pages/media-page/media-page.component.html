@@ -212,6 +212,25 @@
             </div>
           }
 
+          <!-- Video VFX Presets -->
+          @if (automatedCategory() === 'video') {
+            <div class="minimal-option-group vfx-presets-group">
+              <span class="option-label">Cinema VFX Styles:</span>
+              <div class="chip-group vfx-chips">
+                @for (preset of videoVfxPresets; track preset.name) {
+                  <button
+                    type="button"
+                    (click)="applyVideoPreset(preset)"
+                    class="option-chip vfx-chip"
+                    [title]="preset.prompt"
+                  >
+                    {{ preset.name }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+
           <!-- Audio Style Selector -->
           @if (automatedCategory() === 'audio') {
             <div class="minimal-option-group">
@@ -476,6 +495,17 @@
           >
             🔄 Scan
           </button>
+
+          <button
+            type="button"
+            appAnimeInteractive
+            (click)="clearAllVault()"
+            class="vault-clear-all-btn"
+            title="Permanently Delete All Files in Media Vault"
+            [disabled]="!mediaService.vaultItems().length"
+          >
+            🗑️ Delete All
+          </button>
         </div>
       </section>
 
@@ -575,6 +605,14 @@
                   >
                     📋
                   </button>
+                  <button
+                    type="button"
+                    (click)="deleteItem(item, $event)"
+                    class="card-action-btn delete-btn"
+                    title="Delete File"
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
 
@@ -627,6 +665,14 @@
                   title="Copy Stream Link"
                 >
                   📋 Copy Link
+                </button>
+                <button
+                  type="button"
+                  (click)="deleteItem(modalItem)"
+                  class="lightbox-btn lightbox-delete-btn"
+                  title="Permanently Delete File"
+                >
+                  🗑️ Delete
                 </button>
                 <button
                   type="button"

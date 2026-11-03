@@ -23,7 +23,7 @@ import { AgentCommandService } from '../../../../core/services/agent-command.ser
 import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
 
 import { ThemeService, AbhiThemeColors } from '../../../../core/services/theme.service';
-import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
+import { SpeechVoiceService, AppLanguage } from '../../../../core/services/speech-voice.service';
 
 import { AnimeAnimationService } from '../../../../core/services/anime-animation.service';
 import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
@@ -103,11 +103,38 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   commandInput = '';
 
-  readonly inputPlaceholder =
-    "Ask ABHI or command your PC (e.g. 'open notepad', 'calc 125 * 48')...";
+  readonly inputPlaceholder = computed(() => {
+    const lang = this.speechVoice.selectedLanguage();
+    if (lang === 'te') {
+      return "ABHI ని అడగండి లేదా PC ని ఆదేశించండి (ఉదా: 'నోట్‌ప్యాడ్ తెరువు', 'కాలిక్యులేటర్')...";
+    }
+    if (lang === 'hi') {
+      return "ABHI से पूछें या अपने PC को कमांड दें (उदा: 'notepad खोलो', 'calculator')...";
+    }
+    if (lang === 'ta') {
+      return "ABHI யிடம் கேளுங்கள் அல்லது உங்கள் PC ஐ இயக்கவும் (எ.கா: 'notepad திற')...";
+    }
+    return "Ask ABHI or command your PC (e.g. 'open notepad', 'calc 125 * 48')...";
+  });
 
   readonly showWorkspaceMenu = signal(false);
   readonly showActionsMenu = signal(false);
+  readonly showDockLangMenu = signal(false);
+
+  toggleDockLangMenu(event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    this.showDockLangMenu.update(v => !v);
+    if (this.showDockLangMenu()) {
+      this.showActionsMenu.set(false);
+      this.showWorkspaceMenu.set(false);
+    }
+  }
+
+  selectDockLanguage(lang: AppLanguage, event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    this.speechVoice.setLanguage(lang);
+    this.showDockLangMenu.set(false);
+  }
 
   readonly showThemeCustomizer = signal(false);
   readonly showNeuralInspector = signal(false);

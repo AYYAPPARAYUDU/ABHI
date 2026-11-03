@@ -50,6 +50,29 @@ async def test_messages_inbox_and_reply_flow():
         inbox_data = res_inbox.json()
         assert inbox_data["success"] is True
         assert "messages" in inbox_data
+
+        if not inbox_data["messages"]:
+            from backend.app.services.memory.database import engine
+            from sqlalchemy import text
+            import time
+            async with engine.begin() as conn:
+                await conn.execute(
+                    text(
+                        """
+                        INSERT OR REPLACE INTO communications_inbox (
+                            message_id, channel, sender, recipient, subject, body, timestamp, reply_status, suggested_replies
+                        ) VALUES (
+                            'test_msg_001', 'WHATSAPP', '+15551234567', 'Me', 'System Test',
+                            'Hey, are we still meeting to review the project architecture?',
+                            :ts, 'UNREAD', '[]'
+                        )
+                        """
+                    ),
+                    {"ts": int(time.time())}
+                )
+            res_inbox = await client.get("/api/v1/assistant/messages/inbox")
+            inbox_data = res_inbox.json()
+
         assert len(inbox_data["messages"]) > 0
 
         first_msg = inbox_data["messages"][0]

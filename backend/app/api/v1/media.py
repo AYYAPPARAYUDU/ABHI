@@ -1293,6 +1293,112 @@ async def download_vault_media(path: str = Query(..., description="Relative path
     )
 
 
+@router.delete("/vault/item")
+async def delete_vault_item(path: str = Query(..., description="Relative path of media file to delete")):
+    """Delete a single physical media file from storage and clean SQLite WAL records."""
+    file_path = _resolve_vault_file(path)
+    clean_p = Path(path.strip().replace("\\", "/").lstrip("/"))
+    filename = clean_p.name
+    stem = clean_p.stem
+
+    if file_path and file_path.exists():
+        filename = file_path.name
+        stem = file_path.stem
+        try:
+            file_path.unlink()
+        except Exception as e:
+            logger.warning(f"Failed to delete file from disk: {e}")
+
+        # Delete any poster / thumbnail companion file
+        for p_candidate in [file_path.parent / f"{stem}_poster.jpg", file_path.parent / f"{stem}_poster.png"]:
+            if p_candidate.exists():
+                try:
+                    p_candidate.unlink()
+                except Exception:
+                    pass
+
+    # Clean from SQLite WAL database
+    root = _resolve_project_root()
+    db_paths = [
+        root / "database" / "relational" / "system.db",
+        root / "backend" / "database" / "relational" / "system.db"
+    ]
+    import sqlite3
+    for db_file in db_paths:
+        if db_file.exists():
+            try:
+                conn = sqlite3.connect(db_file)
+                cur = conn.cursor()
+                cur.execute("DELETE FROM media_artifacts WHERE filename = ? OR artifact_id = ? OR job_id = ?", (filename, stem, stem))
+                cur.execute("DELETE FROM video_artifacts WHERE filename = ? OR artifact_id = ? OR job_id = ?", (filename, stem, stem))
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                logger.debug(f"SQLite delete error: {e}")
+
+    # Remove from in-memory coordinators
+    media_coordinator.delete_artifact(stem)
+    video_coordinator.delete_artifact(stem)
+
+    logger.info(f"Media Vault: Deleted single item {filename}")
+    return {"status": "SUCCESS", "message": f"Successfully deleted {filename}", "deleted_filename": filename}
+
+
+@router.delete("/vault/clear-all")
+async def clear_all_vault():
+    """Delete all physical media files from media storage vault and clean SQLite WAL."""
+    root = _resolve_project_root()
+    media_dirs = _get_media_dirs()
+    deleted_count = 0
+    freed_bytes = 0
+
+    for base_dir in media_dirs:
+        if not base_dir.exists():
+            continue
+        for f in list(base_dir.rglob("*")):
+            if f.is_file() and f.suffix.lower() in VAULT_MIME_MAP:
+                try:
+                    size = f.stat().st_size
+                    f.unlink()
+                    deleted_count += 1
+                    freed_bytes += size
+                except Exception as e:
+                    logger.warning(f"Failed to delete vault file {f.name}: {e}")
+
+    # Clear SQLite tables
+    db_paths = [
+        root / "database" / "relational" / "system.db",
+        root / "backend" / "database" / "relational" / "system.db"
+    ]
+    import sqlite3
+    for db_file in db_paths:
+        if db_file.exists():
+            try:
+                conn = sqlite3.connect(db_file)
+                cur = conn.cursor()
+                cur.execute("DELETE FROM media_artifacts")
+                cur.execute("DELETE FROM video_artifacts")
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                logger.debug(f"SQLite clear error: {e}")
+
+    # Clear coordinators in-memory state
+    with media_coordinator._lock:
+        media_coordinator._artifacts.clear()
+    with video_coordinator._lock:
+        video_coordinator._artifacts.clear()
+
+    logger.info(f"Media Vault: Cleared all files ({deleted_count} files, {freed_bytes} bytes freed)")
+    return {
+        "status": "SUCCESS",
+        "message": f"Cleared media vault: {deleted_count} files removed",
+        "deleted_count": deleted_count,
+        "freed_bytes": freed_bytes,
+        "freed_formatted": _format_size(freed_bytes)
+    }
+
+
 @router.post("/audio/generate", status_code=status.HTTP_201_CREATED)
 async def generate_speech_or_music(payload: AudioGenerateRequest):
     """Dynamically generate speech audio or musical sequence, storing to physical vault storage."""
@@ -1415,7 +1521,7 @@ async def automated_generate(payload: AutomatedStudioRequest):
             "16:9": (576, 320),
             "9:16": (320, 576),
         }
-        w, h = dim_map.get(payload.aspect_ratio or "1:1", (512, 512))
+        w, h = dim_map.get(payload.aspect_ratio or "16:9", (576, 320))
         v_models = video_coordinator.get_models()
         v_model_id = v_models[0].model_id if v_models else "svd-turbo-local"
         from backend.app.media.video_models import VideoGenerationRequest, VideoFormat

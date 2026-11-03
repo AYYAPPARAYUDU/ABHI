@@ -58,6 +58,7 @@ class AgentGateway:
 
     def __init__(self):
         self._threads: Dict[str, AgentThread] = {}
+        self._active_thread_id: str = "session_active_main"
         self._commands: Dict[str, AgentCommandResponse] = {}
         self._attention_items: Dict[str, AgentAttentionItem] = {}
         self._llm = AbhiNativeLLM()
@@ -212,8 +213,9 @@ class AgentGateway:
         clean_text = self._sanitize_text(raw_text)
         clean_text = self.fuzzy_normalize_query(clean_text)
 
-        # 1. Thread Association
-        thread_id = request.thread_id or f"thread_{uuid.uuid4().hex[:8]}"
+        # 1. Thread Association (Unified multi-turn memory across consecutive user turns)
+        thread_id = request.thread_id or self._active_thread_id or "session_active_main"
+        self._active_thread_id = thread_id
         thread = self._threads.get(thread_id)
         if not thread:
             thread = AgentThread(
@@ -298,6 +300,19 @@ class AgentGateway:
         goal_to_submit = raw_text
         if is_follow_up and target_artifact:
             goal_to_submit = f"Modify artifact '{target_artifact}': {raw_text}"
+        else:
+            # Normalize multilingual terms into authoritative actions
+            lower_raw = raw_text.lower()
+            if any(w in lower_raw for w in ["మెయిల్", "మెయిల్స్", "ईमेल", "मेल", "மின்னஞ்சல்"]):
+                goal_to_submit = "open gmail"
+            elif any(w in lower_raw for w in ["వాట్సాప్", "व्हाट्सएप", "வாட்ஸ்அப்"]):
+                goal_to_submit = "open whatsapp"
+            elif any(w in lower_raw for w in ["పాట", "గానా", "గాన", "సంగీతం", "గానం", "गाना", "गीत", "संगीत", "பாடல்", "இசை"]):
+                goal_to_submit = "open youtube"
+            elif any(w in lower_raw for w in ["యూట్యూబ్", "यूट्यूब", "யூடியூப்"]):
+                goal_to_submit = "open youtube"
+            elif any(w in lower_raw for w in ["కెమెరా", "कैमरा", "கேமரா"]):
+                goal_to_submit = "open camera"
 
         status_obj = await central_supervisor.submit_goal(goal=goal_to_submit)
         
@@ -310,7 +325,14 @@ class AgentGateway:
 
         # Craft interactive, informative message for the user
         lower_g = goal_to_submit.lower()
-        if "youtube" in lower_g:
+        if lower_g.startswith("play ") or "play song" in lower_g or "play music" in lower_g or "listen to" in lower_g:
+            clean_track = lower_g
+            for pref in ["play song", "play music", "play video", "play track", "listen to", "play"]:
+                if clean_track.startswith(pref):
+                    clean_track = clean_track[len(pref):].strip()
+                    break
+            user_msg = f"Playing '{clean_track.title()}' on YouTube for you, Sir."
+        elif "youtube" in lower_g:
             user_msg = "Opening YouTube in your browser, Sir."
         elif any(c in lower_g for c in ["camera", "webcam"]):
             user_msg = "Windows Camera launched, Sir."
@@ -332,8 +354,26 @@ class AgentGateway:
             user_msg = "Opening Windows Settings, Sir."
         elif any(t in lower_g for t in ["terminal", "powershell", "cmd"]):
             user_msg = "Opening Windows Terminal, Sir."
-        elif any(m in lower_g for m in ["gmail", "email", "mail"]):
-            user_msg = "Opening Gmail inbox, Sir."
+        elif any(m in lower_g for m in ["gmail", "email", "mail", "mails", "inbox"]):
+            lang = getattr(request, "language_hint", "auto")
+            if lang == "te":
+                user_msg = "మీ Gmail ఇన్‌బాక్స్‌ను బ్రౌజర్‌లో తెరుస్తున్నాను, సర్."
+            elif lang == "hi":
+                user_msg = "आपके ब्राउज़र में Gmail इनबॉक्स खोल रहा हूँ, सर।"
+            elif lang == "ta":
+                user_msg = "உங்கள் பிரவுசரில் ஜிமெயில் திறக்கிறேன், ஐயா."
+            else:
+                user_msg = "Opening your Gmail inbox in your browser, Sir."
+        elif "whatsapp" in lower_g:
+            lang = getattr(request, "language_hint", "auto")
+            if lang == "te":
+                user_msg = "మీ WhatsApp ను బ్రౌజర్‌లో తెరుస్తున్నాను, సర్."
+            elif lang == "hi":
+                user_msg = "आपके ब्राउज़र में WhatsApp खोल रहा हूँ, सर।"
+            elif lang == "ta":
+                user_msg = "உங்கள் வாட்ஸ்அப் திறக்கிறேன், ஐயா."
+            else:
+                user_msg = "Opening WhatsApp Web in your browser, Sir."
         elif "instagram" in lower_g:
             user_msg = "Opening Instagram, Sir."
         elif any(e in lower_g for e in ["explorer", "files", "folder"]):
@@ -372,13 +412,26 @@ class AgentGateway:
             "notepad", "calculator", "calc", "terminal", "powershell", "cmd", "command prompt",
             "browser", "chrome", "edge", "settings", "vs code", "vscode", "explorer", "screen",
             "screenshot", "folder", "directory", "process", "app", "application", "window", "whatsapp",
-            "youtube", "camera", "webcam", "spotify", "gmail", "mail", "instagram", "maps", "volume",
-            "phone", "mobile", "android", "cellphone", "smartphone", "device"
+            "youtube", "camera", "webcam", "spotify", "gmail", "mail", "mails", "email", "emails", "inbox",
+            "message", "messages", "chat", "chats", "notification", "notifications", "instagram", "maps", "volume",
+            "phone", "mobile", "android", "cellphone", "smartphone", "device",
+            "song", "music", "track", "audio", "video", "playlist"
         ]
+
+        # Multilingual targets & actions
+        multi_targets = [
+            "మెయిల్", "మెయిల్స్", "ఈమెయిల్", "వాట్సాప్", "యూట్యూబ్", "కెమెరా", "పాట", "సంగీతం", "వీడియో",
+            "ఈమెయిళ్లు", "खोलो", "ओपन", "चलाओ", "ईमेल", "मेल", "व्हाट्सएप", "यूट्यूब", "कैमरा", "गाना", "संगीत", "गीत", "वीडियो",
+            "மின்னஞ்சல்", "வாட்ஸ்அப்", "யூடியூப்", "கேமரா", "பாடல்", "இசை", "காணொளி"
+        ]
+        if any(w in text_lower for w in multi_targets):
+            return True
 
         # Action verbs
         action_verbs = [
             "open", "launch", "start", "run", "execute", "close", "kill", "terminate",
+            "read", "check", "see", "show", "view", "inspect", "get", "fetch", "browse", "navigate",
+            "play", "play song", "play music", "stream", "listen to",
             "screenshot", "capture screen", "take screenshot", "lock workstation", "lock screen",
             "volume up", "volume down", "adjust volume", "mute", "unmute", "create folder",
             "make folder", "mkdir", "build file", "create directory", "dial", "call", "tap",
@@ -391,13 +444,24 @@ class AgentGateway:
                 "can you open", "could you open", "please open", "i want to open", "i need to open", "would you open",
                 "can you launch", "could you launch", "please launch", "i want to launch", "would you launch",
                 "can you start", "could you start", "please start", "i want to start",
+                "can you play", "could you play", "please play", "i want to play", "play me",
                 "can you take", "take a screenshot", "take screenshot", "adjust volume", "change volume"
             ])
+            or text_lower.startswith(("play ", "play song ", "play music ", "listen to "))
             or (any(prefix in text_lower for prefix in ["can you ", "could you ", "please ", "i want to ", "i need to "])
-                and any(v in text_lower for v in ["open ", "launch ", "start ", "take ", "run ", "adjust "])
+                and any(v in text_lower for v in ["open ", "launch ", "start ", "play ", "take ", "run ", "adjust "])
                 and any(t in text_lower for t in desktop_targets))
         )
         if has_polite_open:
+            return True
+
+        # 0.1 Communications, web & browser automation intent (read mails, check whatsapp, open browser)
+        has_comm_action = any(v in text_lower for v in [
+            "read", "check", "open", "show", "view", "see", "get", "fetch", "launch", "display"
+        ]) and any(t in text_lower for t in [
+            "mail", "mails", "gmail", "email", "emails", "inbox", "whatsapp", "message", "messages", "chat", "chats", "notifications"
+        ])
+        if has_comm_action:
             return True
 
         # 1. Check if canonical intent from multilingual canonicalizer indicates app or system action
@@ -520,17 +584,31 @@ class AgentGateway:
             "You are partnered with Ayyappa Rayudu Ravuvari (Lead Systems Architect & Frontend Engineer). You treat him as your "
             "brilliant partner and close friend (addressing him naturally with warmth and respect as 'Sir', 'Boss', or 'Ayyappa').\n\n"
             "Key Directives:\n"
-            "1. Deep Analytical Reasoning: For questions covering computer science, software architecture, mathematics, "
-            "DSA algorithms, full-stack development, or system engineering, provide master-class explanations with rigorous depth, "
-            "structural clarity, and production-grade code where appropriate.\n"
-            "2. Zero Canned or Hallucinated Text: Every response must be authentically reasoned in real time with 100% genuine insight. "
-            "Never repeat static placeholder phrases.\n"
-            "3. Dynamic Greetings & Context Awareness: When greeted (e.g. 'hi', 'hello'), respond with articulate warmth, reference "
-            "your active operational readiness, and take immediate initiative.\n"
-            "4. Multi-Agent Ecosystem: You coordinate the 8-agent VisionQuest Swarm (Sentinel-X, Synthex, Archon, Veronica, "
-            "War-Machine, Aura-Vision, Stark-Forge, Friday-Oracle) operating locally with zero cloud dependencies.\n"
+            "1. Authentic Human Partner: Speak naturally, warmly, and directly as a brilliant, loyal co-pilot. For general questions, casual banter, or simple queries, provide crisp, concise, high-value answers (1 to 3 natural sentences). Never lecture, dump repetitive essays, or speak like a robotic chatbot.\n"
+            "2. Technical Mastery on Demand: When the user explicitly asks for code, deep system analysis, or complex architecture, deliver master-class precision with clean code and rigorous depth.\n"
+            "3. Zero Canned or Hallucinated Disclaimers: Never say 'due to system constraints I cannot play music' or 'zero cloud dependencies' or 'displayed on screen'. You are fully empowered to automate OS actions, browse, synthesize media, and control the desktop.\n"
+            "4. Multi-Agent Ecosystem: You coordinate the 8-agent VisionQuest Swarm (Sentinel-X, Synthex, Archon, Veronica, War-Machine, Aura-Vision, Stark-Forge, Friday-Oracle) operating locally.\n"
+            "5. Clean Text: Do not use decorative emojis (e.g. stars, sparkles, rockets) in conversational speech, as they degrade voice synthesis and terminal rendering.\n"
             f"[Live System Context]: Time: {time_str} | Telemetry: {telemetry_context} | Mode: 100% Local Neural Inference"
         )
+
+        # Check language preference and append directive to system prompt
+        lang_hint = getattr(request, "language_hint", None) or "auto"
+        if lang_hint == "te":
+            system_prompt += (
+                "\n6. Language Directive: The user has selected TELUGU (తెలుగు). You MUST respond in fluent, natural, "
+                "warm conversational Telugu (స్పష్టమైన తెలుగులో మాట్లాడండి), addressing him respectfully as 'సర్' (Sir)."
+            )
+        elif lang_hint == "hi":
+            system_prompt += (
+                "\n6. Language Directive: The user has selected HINDI (हिंदी). You MUST respond in fluent, natural, "
+                "warm conversational Hindi (स्पष्ट और शुद्ध हिंदी में उत्तर दें), addressing him respectfully as 'सर' (Sir)."
+            )
+        elif lang_hint == "ta":
+            system_prompt += (
+                "\n6. Language Directive: The user has selected TAMIL (தமிழ்). You MUST respond in fluent, natural, "
+                "warm conversational Tamil (தெளிவான தமிழில் பதிலளிக்கவும்), addressing him respectfully as 'ஐயா' (Sir)."
+            )
 
         # Retrieve live online knowledge context if query requests factual, current, or online topics
         if online_knowledge_searcher.is_knowledge_query(clean_text):
@@ -549,7 +627,7 @@ class AgentGateway:
             {"role": "system", "content": system_prompt}
         ]
 
-        for past_cmd in thread.commands[-4:]:
+        for past_cmd in thread.commands[-6:]:
             p_cid = past_cmd.get("command_id")
             p_text = past_cmd.get("text")
             if p_cid and p_text and p_cid != cmd_id:
@@ -560,6 +638,15 @@ class AgentGateway:
                     if past_ans:
                         messages.append({"role": "user", "content": p_text})
                         messages.append({"role": "assistant", "content": past_ans[:1000]})
+
+        # Fallback to direct client context if thread history was empty
+        if len(messages) <= 1 and request.context:
+            r_cmd = getattr(request.context, 'recent_command', None)
+            r_res_obj = getattr(request.context, 'recent_result', None)
+            r_res = r_res_obj.get('summary') if isinstance(r_res_obj, dict) else None
+            if r_cmd and r_res:
+                messages.append({"role": "user", "content": str(r_cmd)})
+                messages.append({"role": "assistant", "content": str(r_res)[:1000]})
 
         messages.append({"role": "user", "content": clean_text})
 
@@ -585,6 +672,16 @@ class AgentGateway:
                 f"all 8 Small-LLM specialist brains are active, and your Windows 11 workstation bridge is primed. "
                 "What would you like to build or automate right now, Boss?"
             )
+
+        # Strip emojis from response to ensure clean text-to-speech and console output
+        try:
+            emoji_pattern = re.compile(
+                r"[\U00010000-\U0010ffff\u2600-\u27bf\u2b50\u203c\u2049\u25aa-\u25fe]",
+                flags=re.UNICODE
+            )
+            answer_text = emoji_pattern.sub("", answer_text).strip()
+        except Exception:
+            pass
 
         title = clean_text[:45].strip()
         if len(clean_text) > 45:

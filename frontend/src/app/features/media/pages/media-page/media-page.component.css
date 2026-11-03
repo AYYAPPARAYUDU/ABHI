@@ -438,6 +438,28 @@
   font-weight: 600;
 }
 
+.vfx-presets-group {
+  flex-wrap: wrap;
+}
+
+.vfx-chips {
+  flex-wrap: wrap;
+}
+
+.vfx-chip {
+  background: rgba(192, 132, 252, 0.08);
+  border-color: rgba(192, 132, 252, 0.25);
+  color: #c084fc;
+}
+
+.vfx-chip:hover {
+  background: rgba(192, 132, 252, 0.2);
+  border-color: #c084fc;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(192, 132, 252, 0.3);
+  transform: translateY(-1px);
+}
+
 /* 1-Click Action Button */
 .create-now-btn {
   display: inline-flex;
@@ -809,6 +831,37 @@
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vault-refresh-btn:hover {
+  border-color: var(--abhi-accent-cyan, #00f2fe);
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+}
+
+.vault-clear-all-btn {
+  padding: 7px 14px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 10px;
+  color: #f87171;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vault-clear-all-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
+}
+
+.vault-clear-all-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Vault Grid */
@@ -972,6 +1025,13 @@
   color: #000;
   border-color: var(--abhi-accent-cyan, #00f2fe);
   transform: scale(1.1);
+}
+
+.card-action-btn.delete-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
 }
 
 .card-body {
@@ -1140,6 +1200,19 @@
 
 .lightbox-btn:hover {
   border-color: var(--abhi-accent-cyan, #00f2fe);
+}
+
+.lightbox-delete-btn {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+.lightbox-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444 !important;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
 }
 
 .lightbox-close-btn {

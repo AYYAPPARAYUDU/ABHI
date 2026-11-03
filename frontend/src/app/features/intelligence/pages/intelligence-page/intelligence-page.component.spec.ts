@@ -26,6 +26,8 @@ describe('IntelligencePageComponent', () => {
   });
 
   it('should render honest training capability notice', () => {
+    component.activeTab.set('EVALUATION');
+    fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('TRAINING RUNTIME CAPABILITY:');
     expect(compiled.textContent).toContain('FULL BACKPROP NOT_AVAILABLE');

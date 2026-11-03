@@ -7,7 +7,7 @@ import { filter, map } from 'rxjs/operators';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
 import { UserExperienceMode } from '../../../core/models/agent-experience.model';
 import { ThemeService } from '../../../core/services/theme.service';
-import { SpeechVoiceService } from '../../../core/services/speech-voice.service';
+import { SpeechVoiceService, AppLanguage } from '../../../core/services/speech-voice.service';
 import { CommunicationsAssistantService } from '../../../core/services/communications-assistant.service';
 import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
 import { AnimeInteractiveDirective } from '../../../shared/directives/anime-interactive.directive';
@@ -179,5 +179,54 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
 
   openConsentModal(): void {
     // Reactive modal automatically bound to safety().consentPending
+  }
+
+  // Universal Multilingual Selector
+  readonly isLangDropdownOpen = signal<boolean>(false);
+
+  toggleLangDropdown(event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    this.isLangDropdownOpen.update(v => !v);
+  }
+
+  closeLangDropdown(): void {
+    this.isLangDropdownOpen.set(false);
+  }
+
+  selectLanguage(lang: AppLanguage, event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+      if (event.currentTarget) {
+        this.animService.tactileClick(event.currentTarget as HTMLElement);
+      }
+    }
+    this.speechVoice.setLanguage(lang);
+    this.isLangDropdownOpen.set(false);
+  }
+
+  getLanguageLabel(lang: AppLanguage): string {
+    const map: Record<AppLanguage, string> = {
+      auto: 'Auto Detect',
+      en: 'English (UK/US)',
+      te: 'తెలుగు (Telugu)',
+      hi: 'हिंदी (Hindi)',
+      ta: 'தமிழ் (Tamil)'
+    };
+    return map[lang] || 'Auto Detect';
+  }
+
+  getLanguageShort(lang: AppLanguage): string {
+    return lang.toUpperCase();
+  }
+
+  getLanguageFlag(lang: AppLanguage): string {
+    const map: Record<AppLanguage, string> = {
+      auto: '🌐',
+      en: '🇬🇧',
+      te: '🇮🇳',
+      hi: '🇮🇳',
+      ta: '🇮🇳'
+    };
+    return map[lang] || '🌐';
   }
 }

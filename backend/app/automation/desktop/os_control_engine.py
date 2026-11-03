@@ -788,25 +788,32 @@ class OSControlEngine:
         err = None
 
         if self.is_windows:
-            try:
-                subprocess.Popen(["powershell", "-Command", f"Start-Process '{proto_url}'"], shell=True)
-                launched = True
-                method_used = "whatsapp_desktop_protocol"
-            except Exception as e:
-                err = str(e)
+            # Prioritize Chrome where user has active logged-in WhatsApp Web session
+            chrome_exe = find_browser_executable("chrome")
+            if chrome_exe and os.path.exists(chrome_exe):
+                try:
+                    clean_exe = chrome_exe.strip('"\'')
+                    subprocess.Popen([clean_exe, web_url])
+                    launched = True
+                    method_used = "chrome_whatsapp_web"
+                except Exception as e:
+                    err = str(e)
 
             if not launched:
                 try:
-                    subprocess.Popen(["chrome.exe", web_url], shell=True)
+                    os.startfile(web_url)
                     launched = True
-                    method_used = "browser_whatsapp_web"
-                except Exception:
-                    try:
-                        os.startfile(web_url)
-                        launched = True
-                        method_used = "default_browser_whatsapp_web"
-                    except Exception as e2:
-                        err = str(e2)
+                    method_used = "default_browser_whatsapp_web"
+                except Exception as e2:
+                    err = str(e2)
+
+            if not launched:
+                try:
+                    subprocess.Popen(["powershell", "-Command", f"Start-Process '{proto_url}'"], shell=True)
+                    launched = True
+                    method_used = "whatsapp_desktop_protocol"
+                except Exception as e:
+                    err = str(e)
         else:
             try:
                 subprocess.Popen(["xdg-open", web_url])

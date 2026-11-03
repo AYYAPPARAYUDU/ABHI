@@ -55,6 +55,7 @@ export interface AgentSatelliteNode {
 })
 export class ThreeSceneManagerService {
   private themeService = inject(ThemeService);
+  private loopStartTime = Date.now();
   private ngZone = inject(NgZone);
   private speechVoice = inject(SpeechVoiceService);
 
@@ -1430,29 +1431,33 @@ export class ThreeSceneManagerService {
     this.nexusAcousticRings = [];
     this.workspaceBotChassisMaterials = [];
 
-    // 1. Dedicated 4-Point Colony Studio Lighting Rig (Balanced shining metallic luster across all 37 tiles & stations)
-    // Key Light 1 (Overhead Specular Sun): Positioned at (0, 24, -22) pointing towards center.
-    // Bounces direct specular sheen forward across horizontal tiles (0,1,0) into camera at (0, 7.5, 21.5)!
-    const specSunLight = new THREE.DirectionalLight(0xfffbf0, 3.2);
-    specSunLight.position.set(0, 24, -22);
-    this.workspaceGroup.add(specSunLight);
-    this.workspaceSpecularSunLight = specSunLight;
+    // 1. Dedicated Studio Lighting Rig for Hexagonal Base Colony
+    // Soft overhead ambient light ensuring all 37 tiles and stations are clearly visible with cybernetic sheen
+    const ambientColonyLight = new THREE.AmbientLight(0x182c4d, 1.8);
+    this.workspaceGroup.add(ambientColonyLight);
 
-    // Key Light 2 (Planetary Sunlight): Warm angled sun from upper right (16, 26, 16)
-    const sunLight = new THREE.DirectionalLight(0xfffaed, 2.4);
-    sunLight.position.set(16, 26, 16);
+    // Key Light 1 (Overhead Sun): Positioned directly above at (0, 26, 0)
+    // Evenly illuminates all 37 hex tiles from top-down so top view is crystal clear and intelligible
+    const topSunLight = new THREE.DirectionalLight(0xfffbf0, 1.5);
+    topSunLight.position.set(0, 26, 0);
+    this.workspaceGroup.add(topSunLight);
+    this.workspaceSpecularSunLight = topSunLight;
+
+    // Key Light 2 (Warm Angled Sun): From upper right (14, 22, 14)
+    const sunLight = new THREE.DirectionalLight(0xfffaed, 1.5);
+    sunLight.position.set(14, 22, 14);
     this.workspaceGroup.add(sunLight);
     this.workspaceSunLight = sunLight;
 
-    // Key Light 3 (Cool Sci-Fi Fill): Cyan fill from upper left (-16, 22, -14)
-    const fillLight = new THREE.DirectionalLight(0x38bdf8, 2.2);
-    fillLight.position.set(-16, 22, -14);
+    // Key Light 3 (Cool Sci-Fi Fill): Cyan fill from upper left (-14, 20, -12)
+    const fillLight = new THREE.DirectionalLight(0x38bdf8, 1.4);
+    fillLight.position.set(-14, 20, -12);
     this.workspaceGroup.add(fillLight);
     this.workspaceFillLight = fillLight;
     this.themeColorLights.push({ light: fillLight, isSecondary: true });
 
-    // Key Light 4 (Atmospheric Hemisphere Light): Bounces ambient cyan glow from sky into terrain
-    const hemiLight = new THREE.HemisphereLight(0x00f0ff, 0x0c1e3d, 1.6);
+    // Key Light 4 (Atmospheric Hemisphere Light): Soft sky-to-ground ambient bounce
+    const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x071529, 1.4);
     this.workspaceGroup.add(hemiLight);
     this.workspaceHemiLight = hemiLight;
 
@@ -1471,16 +1476,16 @@ export class ThreeSceneManagerService {
 
     const baseHexGeo = new THREE.CylinderGeometry(hexRadius * 0.96, hexRadius, hexHeight, 6);
     this.workspaceTileMat = new THREE.MeshStandardMaterial({
-      color: 0x11213b,
-      roughness: 0.28,
-      metalness: 0.58,
-      emissive: 0x06111f,
-      emissiveIntensity: 0.12,
+      color: 0x0f223d,
+      roughness: 0.42,
+      metalness: 0.55,
+      emissive: 0x061426,
+      emissiveIntensity: 0.16,
     });
     this.workspaceHexEdgeMat = new THREE.LineBasicMaterial({
       color: 0x00f0ff,
       transparent: true,
-      opacity: 0.65,
+      opacity: 0.75,
       blending: THREE.AdditiveBlending,
     });
     const standardTileMat = this.workspaceTileMat;
@@ -1806,13 +1811,13 @@ export class ThreeSceneManagerService {
       coreRing.position.y = 0.21;
       stationGroup.add(coreRing);
 
-      // Dedicated Downward Illumination Light (Bright point light with decay 1.2, intensity 3.5)
-      const pLight = new THREE.PointLight(agent.hexColor, 3.5, 7.0, 1.2);
-      pLight.position.set(0, 1.4, 0);
+      // Dedicated Downward Illumination Light (Warm neon point light)
+      const pLight = new THREE.PointLight(agent.hexColor, 2.0, 8.0, 1.4);
+      pLight.position.set(0, 1.5, 0);
       stationGroup.add(pLight);
 
-      // Dedicated Overhead Downward Spotlight casting specular cone on station & bot
-      const overheadLight = new THREE.SpotLight(0xffffff, 3.5, 10.0, Math.PI * 0.38, 0.35, 1.2);
+      // Dedicated Overhead Downward Spotlight casting gentle cone on station & bot
+      const overheadLight = new THREE.SpotLight(0xffffff, 2.0, 9.0, Math.PI * 0.42, 0.55, 1.4);
       overheadLight.position.set(0, 2.8, 0);
       const overheadTarget = new THREE.Object3D();
       overheadTarget.position.set(0, 0, 0);
@@ -2587,7 +2592,7 @@ export class ThreeSceneManagerService {
 
       // Rotate the 3D colony around Y so this station rotates directly to the FRONT of the user's screen!
       // In Three.js, front of screen is +Z (angle = Math.PI / 2)
-      this.targetRotation.y = stationAngle - (Math.PI / 2);
+      this.targetRotation.y = (Math.PI / 2) - stationAngle;
       this.targetRotation.x = 0.08; // Gentle eye-level perspective looking directly into the workstation
 
       // Smoothly zoom camera to frame the front station and animated bot avatar perfectly centered
@@ -2595,8 +2600,14 @@ export class ThreeSceneManagerService {
       this.targetCameraLookAt.set(0, -3.4, 9.0);
     } else {
       // MAIN_AGENT / DEFAULT mode:
-      // Rotate the scene so this agent swings directly to the FRONT-CENTER of the main screen!
-      this.targetRotation.y = agent.angle - (Math.PI / 2);
+      // Real-time orbital angle calculation so agent swings directly to the FRONT-CENTER of the main screen!
+      const meshData = this.agentMeshMap.get(agent.id);
+      let currentAngle = agent.angle;
+      if (meshData) {
+        const time = (Date.now() - this.loopStartTime) / 1000;
+        currentAngle = agent.angle + time * 0.085;
+      }
+      this.targetRotation.y = (Math.PI / 2) - currentAngle;
       this.targetRotation.x = 0.12;
 
       // Frame the agent in front, with the central quantum core behind it
@@ -2843,6 +2854,7 @@ export class ThreeSceneManagerService {
   // --- 60 FPS ANIMATION LOOP ---
   private startAnimationLoop(): void {
     this.ngZone.runOutsideAngular(() => {
+      this.loopStartTime = Date.now();
       let lastTime = performance.now();
       const startTime = lastTime;
 

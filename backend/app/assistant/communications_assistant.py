@@ -381,68 +381,8 @@ async def get_messages_inbox(limit: int = Query(25, ge=1, le=100)):
     except Exception as e:
         logger.error(f"Error querying communications inbox: {e}")
 
-    # 4. If table is empty, seed initial dynamic communications trace
-    if not stored_msgs:
-        seeds = [
-            {
-                "message_id": "comm_seed_wa_1",
-                "channel": "whatsapp",
-                "sender": "Lead Project Engineer",
-                "recipient": "You",
-                "subject": "System Upgrade Milestone",
-                "body": "Hi, did the automated verification loop finish on the Windows workstation? Ready to deploy whenever you approve.",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "reply_status": "pending"
-            },
-            {
-                "message_id": "comm_seed_gm_2",
-                "channel": "gmail",
-                "sender": "ayparayudu@gmail.com",
-                "recipient": "Assistant",
-                "subject": "Weekly Autonomous Telemetry Report Request",
-                "body": "Please provide the latest cybernetic decision trace summary and resource allocation profile.",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "reply_status": "pending"
-            },
-            {
-                "message_id": "comm_seed_sms_3",
-                "channel": "sms",
-                "sender": "+1 (555) 019-2834",
-                "recipient": "Mobile",
-                "subject": "Server Fleet Notification",
-                "body": "Alert: Scheduled hardware maintenance complete. All services operating at nominal efficiency.",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "reply_status": "pending"
-            }
-        ]
-        try:
-            async with engine.begin() as conn:
-                for s in seeds:
-                    await conn.execute(
-                        text(
-                            """
-                            INSERT OR IGNORE INTO communications_inbox (
-                                message_id, channel, sender, recipient, subject, body, timestamp, reply_status, suggested_replies
-                            ) VALUES (
-                                :id, :channel, :sender, :recipient, :subject, :body, :ts, :status, '[]'
-                            );
-                            """
-                        ),
-                        {
-                            "id": s["message_id"],
-                            "channel": s["channel"],
-                            "sender": s["sender"],
-                            "recipient": s["recipient"],
-                            "subject": s["subject"],
-                            "body": s["body"],
-                            "ts": s["timestamp"],
-                            "status": s["reply_status"]
-                        }
-                    )
-            stored_msgs = seeds
-        except Exception as e:
-            logger.warning(f"Error seeding initial communications inbox: {e}")
-
+    # 4. Return live stored messages without synthetic mock seeds.
+    # The user's live browser (Chrome) holds active Gmail and WhatsApp Web sessions.
     return {
         "success": True,
         "count": len(stored_msgs),

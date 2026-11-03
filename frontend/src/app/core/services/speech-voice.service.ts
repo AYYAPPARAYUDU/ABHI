@@ -1,6 +1,8 @@
 import { Injectable, signal } from '@angular/core';
 import { getApiUrl } from '../config/api-config';
 
+export type AppLanguage = 'auto' | 'en' | 'te' | 'hi' | 'ta';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -10,6 +12,9 @@ export class SpeechVoiceService {
   readonly isMuted = signal<boolean>(false);
   readonly lastSpokenText = signal<string>('');
   readonly hasUserInteracted = signal<boolean>(false);
+
+  // Universal Language Selection Signal
+  readonly selectedLanguage = signal<AppLanguage>('auto');
 
   // Tony Stark & J.A.R.V.I.S. Persona & Dynamic Call-signs
   readonly personaMode = signal<'JARVIS' | 'FRIDAY'>('JARVIS');
@@ -30,6 +35,10 @@ export class SpeechVoiceService {
   constructor() {
     // Restore persistent persona preferences
     if (typeof localStorage !== 'undefined') {
+      const savedLang = localStorage.getItem('abhi_selected_language');
+      if (savedLang && ['auto', 'en', 'te', 'hi', 'ta'].includes(savedLang)) {
+        this.selectedLanguage.set(savedLang as AppLanguage);
+      }
       const savedPersona = localStorage.getItem('abhi_persona_mode');
       if (savedPersona === 'JARVIS' || savedPersona === 'FRIDAY') {
         this.personaMode.set(savedPersona);
@@ -69,9 +78,49 @@ export class SpeechVoiceService {
     this.initSpeechRecognition();
   }
 
+  setLanguage(lang: AppLanguage): void {
+    this.selectedLanguage.set(lang);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('abhi_selected_language', lang);
+    }
+    this.updateRecognitionLanguage(lang);
+    const langNames: Record<AppLanguage, string> = {
+      auto: 'Auto Language Detection',
+      en: 'English',
+      te: 'Telugu',
+      hi: 'Hindi',
+      ta: 'Tamil'
+    };
+    if (lang === 'te') {
+      this.speak('భాష తెలుగుకు సెట్ చేయబడింది, సర్.');
+    } else if (lang === 'hi') {
+      this.speak('भाषा हिंदी में सेट कर दी गई है, सर।');
+    } else if (lang === 'ta') {
+      this.speak('மொழி தமிழுக்கு மாற்றப்பட்டது, ஐயா.');
+    } else {
+      this.speak('Language set to ' + langNames[lang] + ', ' + this.userCallsign() + '.');
+    }
+  }
+
+  updateRecognitionLanguage(lang: AppLanguage): void {
+    if (!this.recognition) return;
+    const mapping: Record<AppLanguage, string> = {
+      auto: 'en-US',
+      en: 'en-US',
+      te: 'te-IN',
+      hi: 'hi-IN',
+      ta: 'ta-IN'
+    };
+    this.recognition.lang = mapping[lang] || 'en-US';
+  }
+
   setPersonaMode(mode: 'JARVIS' | 'FRIDAY'): void {
     this.personaMode.set(mode);
     if (typeof localStorage !== 'undefined') {
+      const savedLang = localStorage.getItem('abhi_selected_language');
+      if (savedLang && ['auto', 'en', 'te', 'hi', 'ta'].includes(savedLang)) {
+        this.selectedLanguage.set(savedLang as AppLanguage);
+      }
       localStorage.setItem('abhi_persona_mode', mode);
     }
     const name = mode === 'JARVIS' ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.';
@@ -81,6 +130,10 @@ export class SpeechVoiceService {
   setUserCallsign(callsign: 'Sir' | 'Boss' | 'Tony' | 'Partner'): void {
     this.userCallsign.set(callsign);
     if (typeof localStorage !== 'undefined') {
+      const savedLang = localStorage.getItem('abhi_selected_language');
+      if (savedLang && ['auto', 'en', 'te', 'hi', 'ta'].includes(savedLang)) {
+        this.selectedLanguage.set(savedLang as AppLanguage);
+      }
       localStorage.setItem('abhi_user_callsign', callsign);
     }
     this.speak(`Callsign acknowledged, ${callsign}.`, true);
@@ -90,6 +143,10 @@ export class SpeechVoiceService {
     const clamped = Math.max(0.85, Math.min(1.25, rate));
     this.speechSpeedRate.set(clamped);
     if (typeof localStorage !== 'undefined') {
+      const savedLang = localStorage.getItem('abhi_selected_language');
+      if (savedLang && ['auto', 'en', 'te', 'hi', 'ta'].includes(savedLang)) {
+        this.selectedLanguage.set(savedLang as AppLanguage);
+      }
       localStorage.setItem('abhi_speech_speed', clamped.toString());
     }
   }
@@ -114,6 +171,18 @@ export class SpeechVoiceService {
    */
   private findBestNaturalVoice(isJarvis: boolean): SpeechSynthesisVoice | undefined {
     if (!this.voices || this.voices.length === 0) return undefined;
+
+    const lang = this.selectedLanguage();
+    if (lang === 'te') {
+      const teVoice = this.voices.find(v => v.lang.startsWith('te'));
+      if (teVoice) return teVoice;
+    } else if (lang === 'hi') {
+      const hiVoice = this.voices.find(v => v.lang.startsWith('hi'));
+      if (hiVoice) return hiVoice;
+    } else if (lang === 'ta') {
+      const taVoice = this.voices.find(v => v.lang.startsWith('ta'));
+      if (taVoice) return taVoice;
+    }
 
     if (isJarvis) {
       // Natural male voice preferences with human warmth and British/US conversational tone
@@ -160,7 +229,7 @@ export class SpeechVoiceService {
         this.recognition = new SpeechRecognition();
         this.recognition.continuous = true;
         this.recognition.interimResults = true;
-        this.recognition.lang = 'en-US';
+        this.updateRecognitionLanguage(this.selectedLanguage());
       } catch {
         this.recognition = null;
       }
@@ -193,10 +262,17 @@ export class SpeechVoiceService {
     if (/token context window memory cache/i.test(text)) {
       return ''; // Omit internal memory cache ticker chatter from voice
     }
-    if (/zero dependencies|zero cloud egress/i.test(text)) {
+    if (/zero dependencies|zero cloud/i.test(text)) {
       text = text.replace(/zero cloud egress/gi, 'local inference');
+      text = text.replace(/with zero cloud dependencies/gi, '');
       text = text.replace(/zero dependencies/gi, 'fully independent');
     }
+    text = text.replace(/Action planned and verified:\s*/gi, '');
+    text = text.replace(/Processed locally by Central Supervisor\s*/gi, '');
+    text = text.replace(/dispatching task[s]?/gi, 'executing');
+    text = text.replace(/\[J\.?A\.?R\.?V\.?I\.?S\.?\]:?\s*/gi, '');
+    text = text.replace(/\[F\.?R\.?I\.?D\.?A\.?Y\.?\]:?\s*/gi, '');
+    text = text.replace(/\[[A-Za-z0-9_\-]+\]:?\s*/g, '');
 
     const hasCodeBlock = text.includes('```');
     const isVeryLong = text.length > 200 || (text.match(/\n/g) || []).length > 2;
@@ -244,19 +320,29 @@ export class SpeechVoiceService {
     text = text.replace(/\s+/g, ' ').trim();
 
     if (hasCodeBlock) {
-      if (text.length > 0 && text.length < 140) {
-        return `${text}. I have displayed the complete result on your screen.`;
+      if (text.length > 0 && text.length < 200) {
+        return text;
       }
-      return 'I have executed the directive and displayed the complete solution on your screen.';
+      return 'Here is the implementation, Sir.';
     }
 
     if (isVeryLong) {
-      const firstSentenceMatch = text.match(/^([^.!?]+[.!?])/);
-      if (firstSentenceMatch && firstSentenceMatch[1].length < 160) {
-        return `${firstSentenceMatch[1].trim()} I have displayed the rest on your screen.`;
+      const sentences = text.match(/[^.!?]+[.!?]+/g);
+      if (sentences && sentences.length > 0) {
+        let naturalVoiceText = '';
+        for (const s of sentences) {
+          if ((naturalVoiceText + s).length <= 350) {
+            naturalVoiceText += (naturalVoiceText ? ' ' : '') + s.trim();
+          } else {
+            break;
+          }
+        }
+        if (naturalVoiceText.length > 20) {
+          return naturalVoiceText;
+        }
       }
-      const truncated = text.substring(0, 130).trim();
-      return `${truncated}... I have displayed the complete details on your screen.`;
+      const boundary = text.lastIndexOf(' ', 280);
+      return (boundary > 0 ? text.substring(0, boundary) : text.substring(0, 280)).trim();
     }
 
     return text;
@@ -269,6 +355,13 @@ export class SpeechVoiceService {
   primeAudio(): void {
     if (typeof window === 'undefined') return;
     this.hasUserInteracted.set(true);
+
+    // Synchronously unlock browser HTML5 Audio policy with a silent micro-buffer
+    try {
+      const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+      silentAudio.volume = 0.01;
+      silentAudio.play().catch(() => {});
+    } catch {}
 
     if ('speechSynthesis' in window && window.speechSynthesis) {
       if (window.speechSynthesis.paused) {
@@ -312,8 +405,21 @@ export class SpeechVoiceService {
     this.stop();
 
     const isJarvis = this.personaMode() === 'JARVIS';
-    const voice = isJarvis ? 'en-GB-RyanNeural' : 'en-IE-EmilyNeural';
-    this.selectedVoiceName.set(isJarvis ? 'J.A.R.V.I.S. (Ryan Natural Neural)' : 'F.R.I.D.A.Y. (Emily Natural Neural)');
+    const lang = this.selectedLanguage();
+    let voice = isJarvis ? 'en-GB-RyanNeural' : 'en-IE-EmilyNeural';
+    let voiceDesc = isJarvis ? 'J.A.R.V.I.S. (Ryan Natural Neural)' : 'F.R.I.D.A.Y. (Emily Natural Neural)';
+
+    if (lang === 'te') {
+      voice = isJarvis ? 'te-IN-MohanNeural' : 'te-IN-ShrutiNeural';
+      voiceDesc = isJarvis ? 'J.A.R.V.I.S. (Mohan Telugu Neural)' : 'F.R.I.D.A.Y. (Shruti Telugu Neural)';
+    } else if (lang === 'hi') {
+      voice = isJarvis ? 'hi-IN-MadhurNeural' : 'hi-IN-SwaraNeural';
+      voiceDesc = isJarvis ? 'J.A.R.V.I.S. (Madhur Hindi Neural)' : 'F.R.I.D.A.Y. (Swara Hindi Neural)';
+    } else if (lang === 'ta') {
+      voice = isJarvis ? 'ta-IN-ValluvarNeural' : 'ta-IN-PallaviNeural';
+      voiceDesc = isJarvis ? 'J.A.R.V.I.S. (Valluvar Tamil Neural)' : 'F.R.I.D.A.Y. (Pallavi Tamil Neural)';
+    }
+    this.selectedVoiceName.set(voiceDesc);
 
     // Tokenize into words for Instagram Reel dynamic caption display
     const words = spokenText.trim().split(/\s+/).filter(w => w.length > 0);

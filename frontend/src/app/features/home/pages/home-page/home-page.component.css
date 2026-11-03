@@ -1618,3 +1618,85 @@
   background: rgba(0, 240, 255, 0.35);
   box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
 }
+
+/* Language Selector in Command Dock */
+.dock-lang-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.dock-control-btn.lang-dock-btn {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 217, 255, 0.3);
+  color: var(--abhi-cyan, #00f0ff);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0 4px;
+}
+
+.dock-control-btn.lang-dock-btn:hover,
+.dock-control-btn.lang-dock-btn.active {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: #00f0ff;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+}
+
+.lang-dock-code {
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.dock-lang-popover {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: rgba(8, 14, 28, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 217, 255, 0.35);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 240, 255, 0.2);
+  min-width: 130px;
+  z-index: 1000;
+  animation: langDropdownFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dock-lang-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.dock-lang-opt:hover {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: rgba(0, 240, 255, 0.3);
+  color: #ffffff;
+}
+
+.dock-lang-opt.active {
+  background: rgba(0, 240, 255, 0.22);
+  border-color: var(--abhi-cyan, #00f0ff);
+  color: var(--abhi-cyan, #00f0ff);
+  font-weight: 800;
+}
+
+.dock-lang-opt .opt-flag {
+  font-size: 13px;
+}

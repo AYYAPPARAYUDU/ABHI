@@ -2,6 +2,8 @@
 
 import asyncio
 import os
+import time
+import psutil
 from typing import Any, Dict
 from backend.app.cognitive.registry.base_agent import BaseAgent
 from backend.app.cognitive.registry.models import AgentMetadata, AgentTaskRequest, AgentTaskResult
@@ -737,7 +739,7 @@ class OSDesktopAgent(BaseAgent):
                 agent_id=self.agent_id,
                 action=action,
                 success=True,
-                data=info,
+                data={"active_window": info.get("title", ""), **info},
                 observed_state={"window_title": info.get("title", ""), "is_foreground": True}
             )
 
@@ -1069,24 +1071,6 @@ class OSDesktopAgent(BaseAgent):
                 error_message=err
             )
 
-        if action in ["type_text", "type", "write_text"]:
-            text_val = str(params.get("text") or params.get("content") or "")
-            target_app = str(params.get("app_name") or params.get("window_title") or "notepad")
-            # Ensure window is focused so keystrokes land directly in the active edit control
-            os_control_engine.focus_window(target_app)
-            time.sleep(0.35)
-            ok, err = os_control_engine.type_text(text_val)
-            return AgentTaskResult(
-                task_id=request.task_id,
-                node_id=request.node_id,
-                agent_id=self.agent_id,
-                action=action,
-                success=ok,
-                data={"text": text_val, "target_app": target_app, "characters": len(text_val)},
-                observed_state={"typed": ok, "target_app": target_app, "length": len(text_val)},
-                error_message=err
-            )
-
         # ---------------------------------------------------------------------
         # 6. Unified Application Adapters & Launching
         # ---------------------------------------------------------------------
@@ -1191,7 +1175,7 @@ class OSDesktopAgent(BaseAgent):
 
         session = adapter.create_session(task_id=request.task_id)
 
-        if action in ["type_text", "write_text"]:
+        if action in ["type_text", "write_text", "type"]:
             text_val = params.get("text", "")
             # Try adapter first, and also dispatch via Win32 unicode driver
             res = await adapter.execute_capability(session, "type_text", params, request.node_id)
