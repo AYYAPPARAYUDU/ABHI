@@ -1043,6 +1043,11 @@ export interface HiggsfieldGenerationRequestDTO {
   motion_intensity: number;
   duration_sec: number;
   fps?: number;
+  camera?: string;
+  lens?: string;
+  focal_length?: number;
+  aperture?: string;
+  api_key?: string;
   reference_image_base64?: string;
 }
 

@@ -30,6 +30,15 @@ import {
   MediaVaultItemDTO,
   HiggsfieldModelDTO,
 } from '../../models/media.model';
+import {
+  CAMERA_MAP,
+  LENS_MAP,
+  FOCAL_PERSPECTIVE,
+  APERTURE_EFFECT,
+  CINEMA_ASSET_URLS,
+  QUICK_PROMPTS,
+  buildNanoBananaPrompt
+} from '../../utils/higgsfield-cinema.utils';
 import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-interactive.directive';
 import { AnimeCounterDirective } from '../../../../shared/directives/anime-counter.directive';
 
@@ -100,6 +109,27 @@ export class MediaPageComponent implements OnInit {
   readonly videoDuration = signal<number>(5);
   readonly referenceImageBase64 = signal<string | null>(null);
   readonly referenceImageFilename = signal<string | null>(null);
+
+  // Pro Camera Cinema Controls (from Open-Higgsfield-AI)
+  readonly showProCamera = signal<boolean>(false);
+  readonly selectedCamera = signal<string>('Modular 8K Digital');
+  readonly selectedLens = signal<string>('Creative Tilt Lens');
+  readonly selectedFocal = signal<number>(35);
+  readonly selectedAperture = signal<string>('f/1.4');
+  readonly apiKey = signal<string>(localStorage.getItem('kie_key') || '');
+  readonly showApiKeyModal = signal<boolean>(false);
+
+  readonly cameraMap = CAMERA_MAP;
+  readonly lensMap = LENS_MAP;
+  readonly focalPerspective = FOCAL_PERSPECTIVE;
+  readonly apertureEffect = APERTURE_EFFECT;
+  readonly cinemaAssetUrls = CINEMA_ASSET_URLS;
+  readonly quickPrompts = QUICK_PROMPTS;
+
+  readonly cameraKeys = Object.keys(CAMERA_MAP);
+  readonly lensKeys = Object.keys(LENS_MAP);
+  readonly focalKeys = [8, 14, 24, 35, 50, 85];
+  readonly apertureKeys = ['f/1.4', 'f/4', 'f/11'];
 
   readonly cameraMoves = [
     { id: 'static', label: 'Static Lock 🎯' },
@@ -286,6 +316,32 @@ export class MediaPageComponent implements OnInit {
     }
   }
 
+  toggleProCamera(): void {
+    this.showProCamera.update((v) => !v);
+  }
+
+  applyQuickPrompt(promptText: string): void {
+    this.promptText = promptText;
+  }
+
+  compileCinemaPrompt(): void {
+    if (!this.promptText.trim()) return;
+    this.promptText = buildNanoBananaPrompt(
+      this.promptText.trim(),
+      this.selectedCamera(),
+      this.selectedLens(),
+      this.selectedFocal(),
+      this.selectedAperture()
+    );
+  }
+
+  saveApiKey(key: string): void {
+    const trimmed = key.trim();
+    this.apiKey.set(trimmed);
+    localStorage.setItem('kie_key', trimmed);
+    this.showApiKeyModal.set(false);
+  }
+
   createNow(): void {
     const text = this.promptText.trim();
     if (!text || this.mediaService.isAutomating()) return;
@@ -301,6 +357,11 @@ export class MediaPageComponent implements OnInit {
         camera_move: this.selectedCameraMove(),
         motion_intensity: this.motionIntensity(),
         duration_sec: this.videoDuration(),
+        camera: this.selectedCamera(),
+        lens: this.selectedLens(),
+        focal_length: this.selectedFocal(),
+        aperture: this.selectedAperture(),
+        api_key: this.apiKey() || undefined,
         reference_image_base64: this.referenceImageBase64() || undefined
       }).subscribe({
         next: (res) => {

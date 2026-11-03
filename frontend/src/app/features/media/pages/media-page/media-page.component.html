@@ -162,10 +162,127 @@
             {{ getPromptLabel() }}
           </label>
           <div class="auto-engine-tags">
-            <span class="engine-tag higgsfield-tag">⚡ OPEN-HIGGSFIELD-AI CINEMA STUDIO</span>
-            <span class="engine-tag">🛡️ 100% LOCAL & GPU ACCELERATED</span>
+            <button
+              type="button"
+              class="pro-camera-toggle-btn"
+              [class.active]="showProCamera()"
+              (click)="toggleProCamera()"
+              title="Open Pro Cinema Camera & Lens Controls"
+            >
+              🎥 PRO CAMERA RIG {{ showProCamera() ? '▲' : '▼' }}
+            </button>
+            <button
+              type="button"
+              class="api-key-toggle-btn"
+              (click)="showApiKeyModal.set(true)"
+              title="Muapi / Kie.ai Cloud API Key"
+            >
+              🔑 {{ apiKey() ? 'CLOUD KEY SET' : 'LOCAL ENGINE' }}
+            </button>
+            <span class="engine-tag higgsfield-tag">⚡ OPEN-HIGGSFIELD-AI</span>
+            <span class="engine-tag">🛡️ GPU ACCELERATED</span>
           </div>
         </div>
+
+        <!-- Quick Prompts Toolbar -->
+        <div class="quick-prompts-bar">
+          <span class="quick-prompts-label">QUICK STYLES:</span>
+          <div class="quick-prompts-scroll">
+            @for (qp of quickPrompts; track qp.label) {
+              <button
+                type="button"
+                class="quick-prompt-chip"
+                (click)="applyQuickPrompt(qp.prompt)"
+                [title]="qp.prompt"
+              >
+                {{ qp.label }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Open-Higgsfield-AI Pro Camera Rig Visual Drawer -->
+        @if (showProCamera()) {
+          <div class="pro-camera-rig-panel">
+            <div class="rig-header">
+              <span class="rig-title">CINEMA CAMERA & OPTICAL RIG (OPEN-HIGGSFIELD 2.0)</span>
+              <button type="button" class="compile-prompt-btn" (click)="compileCinemaPrompt()">
+                ⚡ COMPILE TO PROMPT
+              </button>
+            </div>
+
+            <div class="rig-columns-grid">
+              <!-- Column 1: Camera Body -->
+              <div class="rig-col">
+                <span class="rig-col-label">CAMERA BODY:</span>
+                <div class="rig-cards-list">
+                  @for (cam of cameraKeys; track cam) {
+                    <div
+                      class="rig-card"
+                      [class.selected]="selectedCamera() === cam"
+                      (click)="selectedCamera.set(cam)"
+                    >
+                      <img [src]="cinemaAssetUrls[cam]" [alt]="cam" class="rig-card-thumb" onerror="this.style.display='none'" />
+                      <span class="rig-card-name">{{ cam }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Column 2: Cinema Lens -->
+              <div class="rig-col">
+                <span class="rig-col-label">LENS OPTICS:</span>
+                <div class="rig-cards-list">
+                  @for (ln of lensKeys; track ln) {
+                    <div
+                      class="rig-card"
+                      [class.selected]="selectedLens() === ln"
+                      (click)="selectedLens.set(ln)"
+                    >
+                      <img [src]="cinemaAssetUrls[ln]" [alt]="ln" class="rig-card-thumb" onerror="this.style.display='none'" />
+                      <span class="rig-card-name">{{ ln }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Column 3: Focal Length -->
+              <div class="rig-col">
+                <span class="rig-col-label">FOCAL LENGTH:</span>
+                <div class="rig-cards-list focal-list">
+                  @for (f of focalKeys; track f) {
+                    <div
+                      class="rig-card focal-card"
+                      [class.selected]="selectedFocal() === f"
+                      (click)="selectedFocal.set(f)"
+                    >
+                      <span class="focal-mm">{{ f }}mm</span>
+                      <span class="focal-persp">{{ focalPerspective[f] }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Column 4: Aperture -->
+              <div class="rig-col">
+                <span class="rig-col-label">APERTURE:</span>
+                <div class="rig-cards-list">
+                  @for (ap of apertureKeys; track ap) {
+                    <div
+                      class="rig-card"
+                      [class.selected]="selectedAperture() === ap"
+                      (click)="selectedAperture.set(ap)"
+                    >
+                      <img [src]="cinemaAssetUrls[ap]" [alt]="ap" class="rig-card-thumb" onerror="this.style.display='none'" />
+                      <span class="rig-card-name">{{ ap }}</span>
+                      <span class="ap-effect">{{ apertureEffect[ap] }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
 
         <!-- Higgsfield Model & Resolution Row -->
         @if (automatedCategory() !== 'audio') {
@@ -1056,6 +1173,53 @@
           </div>
         </div>
       }
+    </div>
+  }
+
+  <!-- Open-Higgsfield-AI Muapi / Kie.ai API Key Modal -->
+  @if (showApiKeyModal()) {
+    <div class="api-key-modal-overlay" (click)="showApiKeyModal.set(false)">
+      <div class="api-key-modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-row">
+            <span class="neon-key-icon">🔑</span>
+            <h4 class="modal-title">OPEN-HIGGSFIELD-AI CLOUD BRIDGE</h4>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="showApiKeyModal.set(false)">✕</button>
+        </div>
+
+        <p class="modal-desc">
+          Enter your free <a href="https://muapi.ai" target="_blank" class="accent-link">Muapi.ai</a> or <a href="https://kie.ai" target="_blank" class="accent-link">Kie.ai</a> API key to run flagship cloud models (Nano Banana Pro, Kling 3.0, Seedance 2, Veo 2). Leave empty to use ABHI's 100% free local GPU diffusion engine.
+        </p>
+
+        <div class="key-input-wrap">
+          <label class="param-mini-label">API KEY:</label>
+          <input
+            type="password"
+            #keyInput
+            [value]="apiKey()"
+            placeholder="Paste your Kie / Muapi key here..."
+            class="key-text-input"
+          />
+        </div>
+
+        <div class="modal-actions-row">
+          <button
+            type="button"
+            class="action-btn key-clear-btn"
+            (click)="saveApiKey('')"
+          >
+            Clear / Use Local Only
+          </button>
+          <button
+            type="button"
+            class="action-btn key-save-btn"
+            (click)="saveApiKey(keyInput.value)"
+          >
+            Save & Activate
+          </button>
+        </div>
+      </div>
     </div>
   }
 </div>
