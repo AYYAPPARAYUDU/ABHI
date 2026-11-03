@@ -163,4 +163,35 @@ export class AgentApiService {
     });
     return await response.json();
   }
+
+  /**
+   * Verify operator presence via local optical neural models (YuNet + SFace).
+   */
+  async getBiometricPresence(cameraIndex: number = 0): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/biometrics/presence?camera_index=${cameraIndex}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Enroll operator biometrics from current camera frame.
+   */
+  async enrollBiometrics(name: string = 'Ayyappa Rayudu Ravuvari', cameraIndex: number = 0): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/biometrics/enroll?name=${encodeURIComponent(name)}&camera_index=${cameraIndex}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Enrollment failed: ${err}`);
+    }
+    return await response.json();
+  }
 }

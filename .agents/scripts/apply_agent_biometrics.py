@@ -70,3 +70,4 @@ if old_norm in content_norm:
     print("SUCCESS: agent.py updated with biometrics endpoints!")
 else:
     print("ERROR: old_code not found in agent.py!")
+

@@ -678,6 +678,11 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.speechVoice.greetUserOnLaunch();
 
+    // Automatic Optical Face ID Authentication on Launch
+    setTimeout(() => {
+      this.stateService.verifyBiometrics();
+    }, 1500);
+
     this.thoughtIntervalId = setInterval(() => {
       this.activeThoughtIndex.update((idx) => (idx + 1) % this.liveThoughts().length);
     }, 4500);

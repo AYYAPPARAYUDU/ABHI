@@ -209,6 +209,24 @@
         <span class="btn-text">{{ speechVoice.isMuted() ? 'Muted' : (speechVoice.isSpeaking() ? 'Speaking' : 'Voice') }}</span>
       </button>
 
+      <!-- Optical Face ID Biometric Trigger & Badge -->
+      <button
+        type="button"
+        class="biometric-hud-btn"
+        (click)="stateService.verifyBiometrics()"
+        [class.verified]="stateService.biometricStatus().verified"
+        [class.scanning]="stateService.biometricStatus().scanning"
+        [title]="stateService.biometricStatus().message + ' (Click to scan)'"
+      >
+        <span class="biometric-icon">{{ stateService.biometricStatus().scanning ? '⚡' : '👁️' }}</span>
+        <span class="biometric-label">
+          {{ stateService.biometricStatus().scanning ? 'Scanning...' : (stateService.biometricStatus().verified ? 'Face ID: Verified' : 'Face ID: Scan') }}
+        </span>
+        @if (stateService.biometricStatus().verified) {
+          <span class="biometric-dot"></span>
+        }
+      </button>
+
       <!-- Personal Operator Profile Badge (Ayyappa Rayudu) -->
       <a
         class="operator-profile-pill"
