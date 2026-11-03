@@ -31,3 +31,4 @@ if old_norm in content_norm:
     print("SUCCESS: home-page.component.ts updated with auto-biometrics on launch!")
 else:
     print("ERROR: old_code not found in home-page.component.ts!")
+

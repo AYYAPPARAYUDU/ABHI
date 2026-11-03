@@ -213,7 +213,7 @@
       <button
         type="button"
         class="biometric-hud-btn"
-        (click)="stateService.verifyBiometrics()"
+        (click)="showScannerModal.set(true)"
         [class.verified]="stateService.biometricStatus().verified"
         [class.scanning]="stateService.biometricStatus().scanning"
         [title]="stateService.biometricStatus().message + ' (Click to scan)'"
@@ -365,4 +365,16 @@
 
   <!-- Dedicated Standalone Working Environment Component (Universal Access Across All Views) -->
   <app-working-environment></app-working-environment>
+
+  <!-- Interactive 3D Biometric Face Scanner Modal Overlay -->
+  @if (showScannerModal()) {
+    <div class="biometric-modal-backdrop" (click)="showScannerModal.set(false)">
+      <div class="biometric-modal-card" (click)="$event.stopPropagation()">
+        <app-biometric-face-scanner
+          [isModal]="true"
+          (closeRequested)="showScannerModal.set(false)"
+        ></app-biometric-face-scanner>
+      </div>
+    </div>
+  }
 </header>

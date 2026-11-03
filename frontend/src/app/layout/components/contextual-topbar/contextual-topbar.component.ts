@@ -11,16 +11,18 @@ import { SpeechVoiceService, AppLanguage } from '../../../core/services/speech-v
 import { CommunicationsAssistantService } from '../../../core/services/communications-assistant.service';
 import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
 import { AnimeInteractiveDirective } from '../../../shared/directives/anime-interactive.directive';
+import { BiometricFaceScannerComponent } from '../../../features/perception/components/biometric-face-scanner/biometric-face-scanner.component';
 import { WorkingEnvironmentComponent, WORKING_ENVIRONMENTS } from '../working-environment/working-environment.component';
 
 @Component({
   selector: 'app-contextual-topbar',
   standalone: true,
-  imports: [CommonModule, RouterModule, AnimeInteractiveDirective, WorkingEnvironmentComponent],
+  imports: [CommonModule, RouterModule, AnimeInteractiveDirective, WorkingEnvironmentComponent, BiometricFaceScannerComponent],
   templateUrl: './contextual-topbar.component.html',
   styleUrl: './contextual-topbar.component.css'
 })
 export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewInit {
+  readonly showScannerModal = signal<boolean>(false);
   readonly stateService = inject(OperatorStateService);
   readonly themeService = inject(ThemeService);
   readonly speechVoice = inject(SpeechVoiceService);

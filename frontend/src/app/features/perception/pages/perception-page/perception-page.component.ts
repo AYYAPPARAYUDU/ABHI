@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BiometricFaceScannerComponent } from '../../components/biometric-face-scanner/biometric-face-scanner.component';
 import { VoiceStateComponent } from '../../components/voice-state/voice-state.component';
 import { TranscriptionViewComponent } from '../../components/transcription-view/transcription-view.component';
 import { FaceStateComponent } from '../../components/face-state/face-state.component';
@@ -14,6 +15,7 @@ import { TelemetryPanelComponent } from '../../../operator-console/components/te
   standalone: true,
   imports: [
     CommonModule,
+    BiometricFaceScannerComponent,
     VoiceStateComponent,
     TranscriptionViewComponent,
     FaceStateComponent,

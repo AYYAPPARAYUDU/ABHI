@@ -1,0 +1,168 @@
+<div class="biometric-station-container" [class.modal-mode]="isModal">
+  <!-- Station Header -->
+  <div class="station-header">
+    <div class="header-branding">
+      <span class="biometric-pulse-dot" [class.active]="cameraActive()"></span>
+      <h3 class="station-title">OPTICAL NEURAL BIOMETRIC VERIFICATION</h3>
+      <span class="hud-tag">YUNET 2023 · SFACE 128D</span>
+    </div>
+    @if (isModal) {
+      <button type="button" class="close-station-btn" (click)="onDismiss()" title="Close Scanner">✕</button>
+    }
+  </div>
+
+  <!-- Dual Viewports Grid -->
+  <div class="viewports-grid">
+    <!-- Viewport A: Real Hardware Optical Camera Stream with HUD -->
+    <div class="viewport-card camera-viewport">
+      <div class="viewport-header">
+        <span class="viewport-title">LIVE OPTICAL SENSOR (CAMERA 0)</span>
+        <span class="status-pill" [class.live]="cameraActive()">
+          {{ cameraActive() ? 'LIVE 640x480 @ 30FPS' : 'CONNECTING...' }}
+        </span>
+      </div>
+
+      <div class="camera-stage">
+        <video #videoElem autoplay playsinline muted class="raw-camera-video"></video>
+
+        <!-- Stark HUD Reticle Overlay -->
+        <div class="hud-reticle-overlay">
+          <div class="reticle-corner top-left"></div>
+          <div class="reticle-corner top-right"></div>
+          <div class="reticle-corner bottom-left"></div>
+          <div class="reticle-corner bottom-right"></div>
+
+          <!-- Sweeping Laser Scan Line -->
+          @if (scanStage() === 'PASS_1_FRONTAL' || scanStage() === 'PASS_2_VERIFICATION') {
+            <div class="laser-scanline"></div>
+          }
+
+          <!-- Center Targeting Crosshairs -->
+          <div class="center-crosshair"></div>
+
+          <!-- Dynamic Scan Phase Badge -->
+          <div class="reticle-phase-badge" [attr.data-stage]="scanStage()">
+            @switch (scanStage()) {
+              @case ('PASS_1_FRONTAL') {
+                <span>⚡ STAGE 1: FRONTAL EMBEDDING CAPTURE...</span>
+              }
+              @case ('PASS_2_VERIFICATION') {
+                <span>🔍 STAGE 2: 3D POSE & COSINE MATCH...</span>
+              }
+              @case ('AUTHENTICATED') {
+                <span class="text-success">✓ OPERATOR AUTHENTICATED: {{ operatorName() }}</span>
+              }
+              @case ('FAILED') {
+                <span class="text-danger">⚠️ ALIGNMENT FAILED - RETRY</span>
+              }
+              @default {
+                <span>READY FOR DUAL-PASS SCAN</span>
+              }
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="viewport-footer">
+        <span class="mono-meta">FRAME: {{ cameraActive() ? 'RGB_RAW_OK' : 'WAITING_DEVICE' }}</span>
+        <span class="mono-meta">EXPOSURE: AUTO</span>
+        <span class="mono-meta">ALIGNED: YES</span>
+      </div>
+    </div>
+
+    <!-- Viewport B: Interactive Three.js 3D Facial Hologram -->
+    <div class="viewport-card three-viewport">
+      <div class="viewport-header">
+        <span class="viewport-title">3D HOLOGRAPHIC FACIAL RECONSTRUCTION</span>
+        <span class="status-pill hologram-pill">THREE.JS WEBGL</span>
+      </div>
+
+      <div class="three-stage" #threeCanvasContainer>
+        <!-- Real-time 3D Three.js canvas mounts here -->
+        <div class="three-hud-telemetry">
+          <div class="telemetry-chip">
+            <span class="chip-label">YAW:</span>
+            <span class="chip-val">{{ headPoseAngles().yaw.toFixed(1) }}°</span>
+          </div>
+          <div class="telemetry-chip">
+            <span class="chip-label">PITCH:</span>
+            <span class="chip-val">{{ headPoseAngles().pitch.toFixed(1) }}°</span>
+          </div>
+          <div class="telemetry-chip">
+            <span class="chip-label">ROLL:</span>
+            <span class="chip-val">{{ headPoseAngles().roll.toFixed(1) }}°</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="viewport-footer">
+        <span class="mono-meta">NODES: 43 TOPOLOGICAL VECTORS</span>
+        <span class="mono-meta">SPACE: EULER 3D</span>
+        <span class="mono-meta">AXIS: Z-PROJECTION</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Biometric Verification Telemetry Dashboard -->
+  <div class="telemetry-strip">
+    <div class="telemetry-cell">
+      <span class="cell-label">OPERATOR IDENTITY</span>
+      <span class="cell-value operator-highlight">{{ operatorName() }}</span>
+      <span class="cell-sub">Registered System Architect</span>
+    </div>
+
+    <div class="telemetry-cell">
+      <span class="cell-label">PASS 1: FRONTAL CONFIDENCE</span>
+      <span class="cell-value cyan-val">{{ pass1Confidence() > 0 ? pass1Confidence() + '%' : '--' }}</span>
+      <span class="cell-sub">YuNet Deep Detector</span>
+    </div>
+
+    <div class="telemetry-cell">
+      <span class="cell-label">PASS 2: COSINE MATCH</span>
+      <span class="cell-value green-val">{{ pass2MatchScore() > 0 ? pass2MatchScore() + '%' : '--' }}</span>
+      <span class="cell-sub">SFace 128-D Euclidean Vector</span>
+    </div>
+
+    <div class="telemetry-cell">
+      <span class="cell-label">SECURITY ATTESTATION</span>
+      <span class="cell-value" [class.verified-val]="scanStage() === 'AUTHENTICATED' || operatorState.biometricStatus().verified">
+        {{ (scanStage() === 'AUTHENTICATED' || operatorState.biometricStatus().verified) ? 'VERIFIED ✓' : 'UNAUTHENTICATED' }}
+      </span>
+      <span class="cell-sub">Local SQLite WAL Encrypted</span>
+    </div>
+  </div>
+
+  <!-- Status Log Banner -->
+  <div class="status-banner" [class.success]="scanStage() === 'AUTHENTICATED'" [class.scanning]="scanStage() === 'PASS_1_FRONTAL' || scanStage() === 'PASS_2_VERIFICATION'">
+    <span class="status-icon">
+      {{ scanStage() === 'AUTHENTICATED' ? '🛡️' : (scanStage() === 'FAILED' ? '⚠️' : '⚡') }}
+    </span>
+    <span class="status-text">{{ statusMessage() }}</span>
+  </div>
+
+  <!-- Interactive Action Controls -->
+  <div class="scanner-actions">
+    <button
+      type="button"
+      class="action-btn scan-primary-btn"
+      (click)="runDualPassScan()"
+      [disabled]="scanStage() === 'PASS_1_FRONTAL' || scanStage() === 'PASS_2_VERIFICATION'"
+    >
+      <span class="btn-icon">⚡</span>
+      <span>
+        {{ (scanStage() === 'PASS_1_FRONTAL' || scanStage() === 'PASS_2_VERIFICATION') ? 'SCANNING DUAL PASS...' : 'RUN DUAL-PASS REAL SCAN' }}
+      </span>
+    </button>
+
+    <button
+      type="button"
+      class="action-btn enroll-secondary-btn"
+      (click)="reEnrollOperator()"
+      [disabled]="scanStage() === 'PASS_1_FRONTAL' || scanStage() === 'PASS_2_VERIFICATION'"
+      title="Capture current face and enroll fresh 128-D embedding into SQLite WAL"
+    >
+      <span class="btn-icon">📸</span>
+      <span>CAPTURE & RE-ENROLL BIOMETRIC SIGNATURE</span>
+    </button>
+  </div>
+</div>
