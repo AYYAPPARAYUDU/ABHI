@@ -110,3 +110,18 @@ ead my mails -> initiates step_1: Open Gmail Inbox in Browser targeting https://
   - Added dedicated one-click `[ 🔒 Lock ]` button in the master spatial topbar for instantaneous manual lock.
 - **Physical Verification:** Verified in browser via Playwright: `gatekeeper_lock_screen_verified.png` and `workspace_unlocked_verified.png`.
 
+### 12. Unauthorized Intruder Capture & Storage, Auto-Startup on Boot & Desktop Taskbar App (2026-11-03 16:55)
+- **Automatic Intruder Detection & Evidence Capture:**
+  - When YuNet detects a human face whose SFace 128-D cosine match fails the registered operator threshold, the backend marks `status = "UNAUTHORIZED_INTRUDER"`.
+  - Automatically annotates the camera frame with red targeting brackets, timestamp, and a `SECURITY BREACH // UNAUTHORIZED INTRUDER` watermark banner.
+  - Persists evidence image into `project_data/security/intruders/intruder_<timestamp>.jpg` and writes an immutable audit record to SQLite WAL table `security_audit_log`.
+  - UI triggers an audible alarm: *"Security alert: Unauthorized individual detected at console. Biometric snapshot recorded and stored."* and displays the captured intruder snapshot on the lock screen.
+- **Custom Arc Reactor Application Icon:**
+  - Synthesized a multi-resolution 256×256 high-tech icon (`project_data/assets/abhi_app_icon.ico` and `.png`) featuring a cyan-gold Arc Reactor core, concentric radar azimuth ticks, and deep obsidian finish.
+- **Standalone Windows Desktop Application & Taskbar Support:**
+  - Created `run_abhi_desktop.bat` and invisible `launch_abhi_silent.vbs` that starts the servers in the background and opens ABHI in standalone window mode (`--app=http://127.0.0.1:4200` without browser toolbars or address bars).
+  - Created Windows Desktop Shortcut: `C:\Users\AYYAPPA RAYUDU\Desktop\ABHI AI.lnk` with the custom Arc Reactor icon (ready to right-click and pin to taskbar).
+- **Auto-Launch on Laptop Boot:**
+  - Installed Windows Startup Shortcut: `C:\Users\AYYAPPA RAYUDU\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\ABHI_Startup.lnk` so ABHI immediately boots and secures the workstation whenever the laptop is turned on or logged into.
+
+

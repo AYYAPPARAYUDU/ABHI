@@ -43,6 +43,7 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
   readonly showPasscodeInput = signal<boolean>(false);
   passcodeValue: string = '';
   readonly passError = signal<string>('');
+  readonly intruderSnapshotUrl = signal<string | null>(null);
 
   private mediaStream: MediaStream | null = null;
   private autoScanTimeout: any = null;
@@ -218,6 +219,13 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
         setTimeout(() => {
           this.operatorState.unlockWorkspace('BIOMETRIC');
         }, 1200);
+      } else if (pass2?.is_intruder) {
+        this.stage.set('FAILED');
+        this.statusMessage.set(`🚨 SECURITY ALERT: Unauthorized face detected! Match score ${matchPct}%. Security snapshot captured and logged to storage.`);
+        if (pass2.intruder_snapshot_path) {
+          this.intruderSnapshotUrl.set(`/api/v1/agent-gateway/security/snapshot/${pass2.intruder_snapshot_path}`);
+        }
+        this.speechVoice.speak(`Security alert: Unauthorized individual detected at console. Biometric snapshot recorded and stored.`);
       } else {
         this.stage.set('FAILED');
         this.statusMessage.set(`Biometric signature mismatch (Cosine: ${matchPct}%). Access denied.`);

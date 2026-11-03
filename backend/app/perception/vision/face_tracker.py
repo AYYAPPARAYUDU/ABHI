@@ -48,6 +48,8 @@ class OperatorPresenceResult(BaseModel):
     head_pose: HeadPose = Field(default_factory=HeadPose)
     bounding_box: Optional[Dict[str, Any]] = None
     landmarks: Optional[List[List[float]]] = None
+    is_intruder: bool = False
+    intruder_snapshot_path: Optional[str] = None
     status: str = "OPERATOR_AWAY"
     message: str = "No operator detected in camera view."
     timestamp: float = Field(default_factory=time.time)
@@ -64,6 +66,8 @@ class FaceTracker:
         self._recognizer: Optional[Any] = None
         self._enrolled_feature: Optional[np.ndarray] = None
         self._enrolled_name: str = "Ayyappa Rayudu Ravuvari"
+        self._intruders_dir = self._root / "project_data" / "security" / "intruders"
+        self._intruders_dir.mkdir(parents=True, exist_ok=True)
         self._init_models()
         self._load_enrolled_operator()
 
@@ -308,13 +312,22 @@ class FaceTracker:
                 is_verified = True
                 match_score = 1.0
 
-        status_str = "OPERATOR_VERIFIED" if is_verified else "OPERATOR_UNVERIFIED"
-        name_str = target_name if is_verified else "Unverified Operator"
-        msg = (
-            f"Authentication Confirmed: {name_str} (Match: {round(match_score * 100, 1)}%)"
-            if is_verified
-            else f"Face detected ({round(conf * 100, 1)}% confidence), but biometric signature did not match {self._enrolled_name}."
-        )
+        # Check for intruder condition
+        is_intruder = False
+        snapshot_filename = None
+        if not is_verified:
+            is_intruder = True
+            snapshot_filename = self._record_intruder_incident(frame, box, conf, match_score)
+            status_str = "UNAUTHORIZED_INTRUDER"
+            name_str = "Unauthorized Intruder"
+            msg = (
+                f"⚠️ INTRUDER ALERT: Unrecognized face detected ({round(conf * 100, 1)}% confidence, "
+                f"{round(match_score * 100, 1)}% biometric match). Security snapshot recorded to storage."
+            )
+        else:
+            status_str = "OPERATOR_VERIFIED"
+            name_str = target_name
+            msg = f"Authentication Confirmed: {name_str} (Match: {round(match_score * 100, 1)}%)"
 
         return OperatorPresenceResult(
             operator_present=True,
@@ -326,10 +339,117 @@ class FaceTracker:
             head_pose=pose,
             bounding_box=bbox,
             landmarks=landmarks_list,
+            is_intruder=is_intruder,
+            intruder_snapshot_path=snapshot_filename,
             status=status_str,
             message=msg,
             timestamp=time.time()
         )
+
+    def _record_intruder_incident(
+        self, frame: np.ndarray, box: np.ndarray, conf: float, match_score: float
+    ) -> str:
+        """Annotate intruder frame with red HUD markers, persist image to storage, and log to SQLite WAL."""
+        try:
+            annotated = frame.copy()
+            h, w = frame.shape[:2]
+            bx, by, bw, bh = int(box[0]), int(box[1]), int(box[2]), int(box[3])
+
+            # Draw red targeting brackets around intruder face
+            cv2.rectangle(annotated, (bx, by), (bx + bw, by + bh), (0, 0, 255), 2)
+
+            # Security watermark banner
+            cv2.rectangle(annotated, (0, 0), (w, 42), (0, 0, 180), -1)
+            time_str = time.strftime("%Y-%m-%d %H:%M:%S")
+            cv2.putText(
+                annotated,
+                f"SECURITY BREACH // UNAUTHORIZED INTRUDER - {time_str}",
+                (12, 28),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.62,
+                (255, 255, 255),
+                2,
+                cv2.LINE_AA,
+            )
+            cv2.putText(
+                annotated,
+                f"YuNet Conf: {round(conf*100, 1)}% | SFace Match: {round(match_score*100, 1)}%",
+                (bx, max(20, by - 8)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (0, 0, 255),
+                2,
+                cv2.LINE_AA,
+            )
+
+            filename = f"intruder_{int(time.time()*1000)}.jpg"
+            file_path = self._intruders_dir / filename
+            cv2.imwrite(str(file_path), annotated)
+
+            # Log to SQLite WAL
+            db_path = self._root / "database" / "relational" / "system.db"
+            conn = sqlite3.connect(str(db_path))
+            cur = conn.cursor()
+            cur.execute(
+                "CREATE TABLE IF NOT EXISTS security_audit_log ("
+                "id TEXT PRIMARY KEY, incident_type TEXT, timestamp REAL, "
+                "confidence REAL, match_score REAL, snapshot_filename TEXT, notes TEXT)"
+            )
+            incident_id = f"inc_{int(time.time()*1000)}"
+            cur.execute(
+                "INSERT INTO security_audit_log (id, incident_type, timestamp, confidence, match_score, snapshot_filename, notes) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (
+                    incident_id,
+                    "UNAUTHORIZED_INTRUDER",
+                    time.time(),
+                    conf,
+                    match_score,
+                    filename,
+                    f"Unrecognized face attempted access. SFace cosine match: {round(match_score, 3)}",
+                ),
+            )
+            conn.commit()
+            conn.close()
+
+            logger.warning(f"FaceTracker: Unauthorized intruder snapshot recorded: {filename}")
+            return filename
+        except Exception as e:
+            logger.error(f"FaceTracker _record_intruder_incident error: {e}")
+            return ""
+
+    def get_security_incidents(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Retrieve recorded intruder incidents and snapshots from SQLite WAL."""
+        db_path = self._root / "database" / "relational" / "system.db"
+        incidents = []
+        try:
+            conn = sqlite3.connect(str(db_path))
+            cur = conn.cursor()
+            cur.execute(
+                "CREATE TABLE IF NOT EXISTS security_audit_log ("
+                "id TEXT PRIMARY KEY, incident_type TEXT, timestamp REAL, "
+                "confidence REAL, match_score REAL, snapshot_filename TEXT, notes TEXT)"
+            )
+            cur.execute(
+                "SELECT id, incident_type, timestamp, confidence, match_score, snapshot_filename, notes "
+                "FROM security_audit_log ORDER BY timestamp DESC LIMIT ?",
+                (limit,),
+            )
+            for row in cur.fetchall():
+                incidents.append({
+                    "id": row[0],
+                    "incident_type": row[1],
+                    "timestamp": row[2],
+                    "confidence": row[3],
+                    "match_score": row[4],
+                    "snapshot_filename": row[5],
+                    "snapshot_url": f"/api/v1/agent-gateway/security/snapshot/{row[5]}",
+                    "notes": row[6],
+                })
+            conn.close()
+        except Exception as e:
+            logger.error(f"FaceTracker get_security_incidents error: {e}")
+        return incidents
 
     def verify_frame_base64(self, frame_base64: str, operator_name: Optional[str] = None) -> OperatorPresenceResult:
         """Verify operator presence and biometrics from a client-provided base64 JPEG/PNG frame."""

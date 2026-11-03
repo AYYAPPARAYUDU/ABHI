@@ -132,6 +132,24 @@
       <span class="banner-msg">{{ statusMessage() }}</span>
     </div>
 
+    <!-- Intruder Evidence Log Panel -->
+    @if (intruderSnapshotUrl()) {
+      <div class="intruder-evidence-card">
+        <div class="evidence-title">
+          <span class="pulse-alert-dot"></span>
+          <span>🚨 SECURITY BREACH EVIDENCE LOGGED (STORED IN project_data/security/intruders/)</span>
+        </div>
+        <div class="evidence-body">
+          <img [src]="intruderSnapshotUrl()" alt="Intruder Snapshot" class="evidence-snapshot-img" />
+          <div class="evidence-details">
+            <span class="ev-item"><strong>Incident Type:</strong> Unauthorized Physical Access Attempt</span>
+            <span class="ev-item"><strong>Biometric Verification:</strong> FAILED (Cosine Match Rejected)</span>
+            <span class="ev-item"><strong>Local Audit Storage:</strong> SQLite WAL system.db & JPEG Snapshot Saved</span>
+          </div>
+        </div>
+      </div>
+    }
+
     <!-- Actions & Emergency Fallback -->
     <div class="gate-actions">
       <button

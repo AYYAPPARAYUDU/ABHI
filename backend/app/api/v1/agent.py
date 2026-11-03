@@ -506,6 +506,25 @@ async def enroll_biometric_frame(payload: BiometricFramePayload):
     return {"status": "SUCCESS", "message": msg, "details": details, "operator_name": payload.operator_name}
 
 
+@router.get("/security/logs")
+async def get_security_audit_logs(limit: int = 50):
+    """Retrieve audit logs of unauthorized intruder incidents with snapshot URLs."""
+    from backend.app.perception.vision.face_tracker import face_tracker
+    logs = face_tracker.get_security_incidents(limit=limit)
+    return {"incidents": logs, "total": len(logs)}
+
+
+@router.get("/security/snapshot/{filename}")
+async def get_intruder_snapshot(filename: str):
+    """Stream stored unauthorized intruder snapshot JPEG."""
+    from fastapi.responses import FileResponse
+    from backend.app.perception.vision.face_tracker import face_tracker
+    file_path = face_tracker._intruders_dir / filename
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Security snapshot not found.")
+    return FileResponse(str(file_path), media_type="image/jpeg")
+
+
 # Authoritative Gateway Router mirroring all agent routes under /agent-gateway
 gateway_router = APIRouter(prefix="/agent-gateway", tags=["Agent Gateway & Context"])
 for r in router.routes:
