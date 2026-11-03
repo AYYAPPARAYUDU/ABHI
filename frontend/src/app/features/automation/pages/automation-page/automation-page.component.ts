@@ -334,6 +334,12 @@ export class AutomationPageComponent implements OnInit {
       case 'auto_system_audit':
         await this.executeScenario('APPS', 'audit', {}, 'Audit active desktop processes and resource consumption');
         break;
+      case 'auto_task_dag':
+        await this.executeScenario('TASKS', 'plan', { goal: preset.command }, 'Dispatch Multi-Agent Task DAG');
+        break;
+      case 'auto_memory_recall':
+        await this.executeScenario('MEMORY', 'recall', { goal: preset.command }, 'Recall Episodic Semantic Memory');
+        break;
       default:
         await this.executeUniversalCommand(preset.command);
         break;

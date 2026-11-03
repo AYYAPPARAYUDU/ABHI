@@ -3360,12 +3360,14 @@ export class ThreeSceneManagerService {
   updateThemeColors(colors: AbhiThemeColors): void {
     if (!this.scene) return;
     try {
-      // 1. Dynamic Background Fog & Clear Color
+      // 1. Dynamic Background Fog & Clear Color (Harmonized deep space void across all themes)
+      const isLightBg = colors.background.toLowerCase().startsWith('#f') || colors.background.toLowerCase() === '#ffffff';
+      const effective3dBg = isLightBg ? '#040916' : colors.background;
       if (this.scene.fog && this.scene.fog instanceof THREE.FogExp2) {
-        this.scene.fog.color.set(colors.background);
+        this.scene.fog.color.set(effective3dBg);
       }
       if (this.renderer) {
-        this.renderer.setClearColor(new THREE.Color(colors.background), 1);
+        this.renderer.setClearColor(new THREE.Color(effective3dBg), 1);
       }
 
       // 2. Lights Synchronization

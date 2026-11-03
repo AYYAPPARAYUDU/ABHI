@@ -1,0 +1,51 @@
+<div
+  #containerRef
+  class="brain-3d-container"
+  [style.height]="height"
+  (mousedown)="onPointerDown($event)"
+  (touchstart)="onPointerDown($event)"
+  (wheel)="onWheel($event)"
+>
+  <!-- Three.js Real WebGL Living Brain Canvas -->
+  <canvas #brainCanvas class="brain-webgl-canvas"></canvas>
+
+  <!-- Ambient Cortical Vignette -->
+  <div class="brain-glow-backdrop"></div>
+
+  <!-- Realtime Telemetry HUD Ribbon (Top) -->
+  <div class="brain-telemetry-ribbon font-mono">
+    <div class="telemetry-pill">
+      <span class="live-dot"></span>
+      <span>CEREBRAL CORTEX 3D</span>
+    </div>
+    <div class="telemetry-pill">
+      <span class="pill-label">SYNAPTIC LOAD:</span>
+      <span class="pill-val text-cyan">{{ synapticLoadPercent() }}%</span>
+    </div>
+    <div class="telemetry-pill">
+      <span class="pill-label">FREQUENCY:</span>
+      <span class="pill-val text-amethyst">{{ brainFrequencyHz() }} Hz</span>
+    </div>
+    <button type="button" class="btn-reset-view" (click)="resetView()" title="Center 3D View">
+      ⟲
+    </button>
+  </div>
+
+  <!-- Interactive Lobe Inspection Card (Bottom) -->
+  @if (showLobeOverlay && activeLobe(); as lobe) {
+    <div class="lobe-inspection-overlay font-mono">
+      <div class="lobe-header">
+        <span class="lobe-tag">LOBE FOCUS</span>
+        <strong class="lobe-name">{{ lobe.name }}</strong>
+        <span class="lobe-role text-cyan">[{{ lobe.role }}]</span>
+        <span class="lobe-activity text-emerald">{{ lobe.activityPercent }}% ACTIVE</span>
+      </div>
+      <p class="lobe-desc">{{ lobe.cognitiveFunction }}</p>
+    </div>
+  } @else {
+    <div class="lobe-instruction font-mono">
+      <span>Drag to rotate • Scroll to zoom • Hover lobes for cognitive mapping</span>
+    </div>
+  }
+</div>
+

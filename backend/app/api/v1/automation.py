@@ -174,6 +174,26 @@ async def execute_automation(request: AutomationTaskRequest):
     """Execute any automated action across OS, Browser, Mobile, Comms, Screen OCR, or Task DAG."""
     cat = request.category.upper().strip()
     action = request.action.lower().strip()
+
+    # Automatic preset ID normalization
+    PRESET_ROUTING = {
+        "auto_notepad_write": ("APPS", "write"),
+        "auto_calc_compute": ("APPS", "calc"),
+        "auto_volume_up": ("SYSTEM", "volume_up"),
+        "auto_screen_ocr": ("PERCEPTION", "screen_ocr"),
+        "auto_desktop_explorer": ("APPS", "explorer"),
+        "auto_chrome_search": ("BROWSER", "search"),
+        "auto_phone_status": ("MOBILE", "status"),
+        "auto_phone_lock": ("MOBILE", "lock"),
+        "auto_whatsapp_send": ("COMMS", "whatsapp"),
+        "auto_gmail_compose": ("COMMS", "gmail"),
+        "auto_desktop_screenshot": ("APPS", "screenshot"),
+        "auto_system_audit": ("APPS", "audit"),
+        "auto_task_dag": ("TASKS", "plan"),
+        "auto_memory_recall": ("MEMORY", "recall"),
+    }
+    if action in PRESET_ROUTING:
+        cat, action = PRESET_ROUTING[action]
     
     # Merge any extra top-level request fields into params
     params = dict(request.params)
@@ -530,7 +550,17 @@ async def execute_automation(request: AutomationTaskRequest):
                 "summary": f"Semantic memory query dispatched to local vector WAL: \"{goal}\""
             }
 
-        raise HTTPException(status_code=400, detail=f"Unsupported automation request: category='{cat}', action='{action}'")
+        fallback_goal = params.get("goal") or params.get("command") or f"Execute {cat} {action}"
+        status = await central_supervisor.submit_goal(fallback_goal)
+        return {
+            "success": True,
+            "category": cat or "GENERAL",
+            "action": action,
+            "mode": "AUTONOMOUS_SUPERVISOR",
+            "task_id": status.task_id,
+            "state": status.state.value,
+            "summary": f"Dispatched to CentralSupervisor: '{fallback_goal}'"
+        }
 
     except Exception as e:
         logger.error(f"Automation execution failed: {e}")

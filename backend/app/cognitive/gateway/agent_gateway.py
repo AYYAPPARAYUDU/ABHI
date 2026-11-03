@@ -6,6 +6,7 @@ safe deterministic evaluation, multilingual canonicalization, and task dispatch.
 """
 
 import ast
+import asyncio
 from datetime import datetime
 import operator
 import psutil
@@ -31,6 +32,7 @@ from backend.app.core.logging import logger
 from backend.app.perception.audio.canonicalizer import language_canonicalizer
 from backend.app.services.llm.abhi_llm import AbhiNativeLLM
 from backend.app.services.memory.repository import memory_repo
+from backend.app.services.search.online_knowledge import online_knowledge_searcher
 
 
 # Safe AST math evaluator operators
@@ -529,6 +531,18 @@ class AgentGateway:
             "War-Machine, Aura-Vision, Stark-Forge, Friday-Oracle) operating locally with zero cloud dependencies.\n"
             f"[Live System Context]: Time: {time_str} | Telemetry: {telemetry_context} | Mode: 100% Local Neural Inference"
         )
+
+        # Retrieve live online knowledge context if query requests factual, current, or online topics
+        if online_knowledge_searcher.is_knowledge_query(clean_text):
+            try:
+                search_ctx = await asyncio.wait_for(
+                    asyncio.to_thread(online_knowledge_searcher.format_search_context, clean_text),
+                    timeout=3.5
+                )
+                if search_ctx:
+                    system_prompt += f"\n\n{search_ctx}"
+            except Exception as e:
+                logger.debug(f"Online knowledge search skipped: {e}")
 
         # Build multi-turn context from thread history if available
         messages: List[Dict[str, Any]] = [

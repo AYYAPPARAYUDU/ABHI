@@ -2,11 +2,12 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CommunicationsAssistantService, InboxMessage } from '../../../core/services/communications-assistant.service';
+import { Brain3dViewerComponent } from '../../../shared/3d/brain-3d-viewer/brain-3d-viewer.component';
 
 @Component({
   selector: 'app-assistant-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, Brain3dViewerComponent],
   templateUrl: './assistant-modal.component.html',
   styleUrl: './assistant-modal.component.css'
 })
