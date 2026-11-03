@@ -464,6 +464,24 @@ async def get_live_subconscious_thoughts() -> Dict[str, Any]:
     }
 
 
+@router.get("/biometrics/presence")
+async def get_operator_presence(camera_index: int = 0):
+    """Optically verify if the registered operator is present at the workstation camera."""
+    from backend.app.perception.vision.face_tracker import face_tracker
+    res = face_tracker.detect_operator_presence(camera_index=camera_index)
+    return res.model_dump()
+
+
+@router.post("/biometrics/enroll")
+async def enroll_operator_biometrics(name: str = "Ayyappa Rayudu Ravuvari", camera_index: int = 0):
+    """Enroll operator 128-D neural face embedding from current camera view."""
+    from backend.app.perception.vision.face_tracker import face_tracker
+    ok, msg = face_tracker.enroll_operator(name=name, camera_index=camera_index)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"status": "SUCCESS", "message": msg, "operator_name": name}
+
+
 # Authoritative Gateway Router mirroring all agent routes under /agent-gateway
 gateway_router = APIRouter(prefix="/agent-gateway", tags=["Agent Gateway & Context"])
 for r in router.routes:

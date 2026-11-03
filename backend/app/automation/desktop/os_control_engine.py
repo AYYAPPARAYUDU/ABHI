@@ -755,8 +755,9 @@ class OSControlEngine:
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
-            # Give the process a brief moment to create window
-            time.sleep(0.3)
+            # Give the process a brief moment to create window and bring to front
+            time.sleep(0.35)
+            self.bring_to_front_by_keyword(app_name, timeout_sec=1.5)
 
             return True, {
                 "pid": proc.pid,
@@ -844,8 +845,27 @@ class OSControlEngine:
         self.send_hotkey("ENTER")
         return True, {**data, "sent": True, "message": message}, None
 
+    def bring_to_front_by_keyword(self, keyword: str, timeout_sec: float = 2.0) -> bool:
+        """Poll briefly for a window matching keyword and bring it directly to foreground."""
+        if not self.is_windows or not self._user32:
+            return False
+        start = time.time()
+        kw_lower = keyword.lower()
+        while time.time() - start < timeout_sec:
+            windows = self.list_windows()
+            for w in windows:
+                title = w.get("title", "").lower()
+                if kw_lower in title and w.get("visible", False):
+                    hwnd = w.get("hwnd")
+                    if hwnd:
+                        ok, _ = self.focus_window(hwnd)
+                        if ok:
+                            return True
+            time.sleep(0.2)
+        return False
+
     def open_url(self, url: str, browser: str = "default") -> Tuple[bool, Optional[str]]:
-        """Open any URL in specified browser or system default."""
+        """Open any URL in specified browser or system default, ensuring foreground focus."""
         target_url = url if url.startswith(("http://", "https://")) else f"https://{url}"
         b = browser.lower().strip()
         try:
@@ -856,6 +876,8 @@ class OSControlEngine:
                     clean_exe = found.strip('"\'')
                     try:
                         subprocess.Popen([clean_exe, target_url])
+                        time.sleep(0.35)
+                        self.bring_to_front_by_keyword(b, timeout_sec=1.5)
                         return True, None
                     except Exception:
                         pass
@@ -864,14 +886,18 @@ class OSControlEngine:
             if self.is_windows:
                 try:
                     os.startfile(target_url)
-                    return True, None
                 except Exception:
                     try:
                         subprocess.Popen(["powershell", "-NoProfile", "-Command", f"Start-Process '{target_url}'"])
-                        return True, None
                     except Exception:
                         subprocess.Popen(f'start "" "{target_url}"', shell=True)
-                        return True, None
+                
+                # Bring browser or target tab to front
+                time.sleep(0.35)
+                for kw in ["chrome", "edge", "youtube", "gmail", "whatsapp", "browser"]:
+                    if self.bring_to_front_by_keyword(kw, timeout_sec=0.4):
+                        break
+                return True, None
             else:
                 subprocess.Popen(["xdg-open", target_url])
                 return True, None

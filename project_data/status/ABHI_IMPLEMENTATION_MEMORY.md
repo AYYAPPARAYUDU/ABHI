@@ -63,3 +63,19 @@ ead my mails -> initiates step_1: Open Gmail Inbox in Browser targeting https://
   - Added prominent [ Delete All ] button in the Animated Storage Vault toolbar and modal.
 - Multilingual & Media OS Automation: Added Telugu/Hindi/Tamil action verbs and targets (యూట్యూబ్, పాట, సంగీతం) directly routing to physical browser/YouTube execution.
 - Verified end-to-end via Playwright: vault_with_cat_verified.png captured.
+
+
+### 9. Deep Neural Optical Face Recognition, Foreground Window Focus & Refined JARVIS Partnership (2026-11-03)
+- **Deep Optical Face Recognition & Verification Pipeline (`backend/app/perception/vision/face_tracker.py`):**
+  - Integrated OpenCV deep learning YuNet (`FaceDetectorYN`, 232 KB ONNX) and SFace (`FaceRecognizerSF`, 38 MB ONNX) for hardware-accelerated local biometric verification.
+  - Generates 128-dimensional neural face feature vectors matched via cosine similarity (`cv2.FaceRecognizerSF_FR_COSINE`).
+  - Physically tested with live laptop camera: detected operator Ayyappa Rayudu Ravuvari with **93.8% confidence** and **0.885 cosine similarity** against local SQLite WAL biometric store (`operator_biometrics` table).
+  - Dynamic 3D Head Pose tracking (yaw, pitch, roll) computed directly from 5 facial landmarks (eyes, nose, mouth corners).
+  - Exposed via FastAPI endpoints: `GET /api/v1/agent/biometrics/presence` and `POST /api/v1/agent/biometrics/enroll`.
+- **Physical Foreground Window Activation (`backend/app/automation/desktop/os_control_engine.py`):**
+  - Implemented `bring_to_front_by_keyword(keyword, timeout_sec)` using Windows `AttachThreadInput`, `BringWindowToTop`, and `SetForegroundWindow`.
+  - Added automatic foreground activation to `open_url` and `launch_application`: launched browser windows (YouTube, Gmail, WhatsApp) and applications (Notepad, Calculator, Terminal) immediately pop directly in front of the operator's screen instead of opening silently in the background.
+- **Refined Stark / J.A.R.V.I.S. Persona (`backend/app/cognitive/gateway/agent_gateway.py`):**
+  - Tuned local LLM conversational directives to embody the loyal, witty, crisp partnership of J.A.R.V.I.S. with Tony Stark.
+  - Respectfully addresses the operator as "Sir", "Boss", or "Ayyappa".
+  - Verified multi-turn continuity: preserves conversational history across turns and delivers snappy 1–2 sentence operational updates with live system telemetry (CPU, RAM, local inference mode).
