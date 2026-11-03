@@ -94,3 +94,19 @@ ead my mails -> initiates step_1: Open Gmail Inbox in Browser targeting https://
   - **Universal Access & Modal Trigger:**
     - Accessible directly at `/perception` and via a one-click modal overlay from the topbar `[ 👁️ Face ID ]` button anywhere in the workspace.
     - Verified live via Playwright: `verified_3d_biometric_scanner.png` and `verified_biometric_modal_overlay.png`.
+
+### 11. Optical Biometric Gatekeeper, Direct Frame Transmission & 5-Minute Presence Lock (2026-11-03 16:38)
+- **Resolved Windows Hardware Camera Contention:**
+  - Diagnosed and solved Windows USB webcam exclusive device lock: Chrome/Edge holding Camera 0 prevents Python's `cv2.VideoCapture(0)` from reading simultaneously.
+  - Implemented direct client-to-backend frame streaming (`POST /api/v1/agent-gateway/biometrics/verify-frame` and `/enroll-frame`). The browser extracts the live optical frame directly from `<video>` via an off-screen `<canvas>` at full resolution and transmits base64 JPEG to Python.
+  - Backend decodes image bytes via `cv2.imdecode` and runs YuNet + SFace directly on in-memory tensors with zero hardware device locking issues.
+- **Full-Viewport Workspace Biometric Lock Screen (`WorkspaceLockScreenComponent`):**
+  - High-tech Obsidian Cyan Gatekeeper modal covering the UI on boot and upon lock.
+  - Features real-time optical camera feed, targeting HUD reticles, sweeping laser scanlines, and a living 3D Three.js wireframe facial reconstruction with live Euler telemetry.
+  - **Auto-Scan on Boot:** Automatically detects operator presence within 900ms of loading and verifies against the SQLite WAL 128-D facial vector.
+  - **Operator Fail-Safe Passcode Override:** Emergency tactile bypass input (PIN `1234` or `abhi`) to prevent lockout under dark conditions or camera issues.
+- **Automated 5-Minute Periodic Presence Guard (`OperatorStateService`):**
+  - Automatically verifies operator presence every 5 minutes (300 seconds). If absent or mismatching, locks the workstation UI immediately.
+  - Added dedicated one-click `[ 🔒 Lock ]` button in the master spatial topbar for instantaneous manual lock.
+- **Physical Verification:** Verified in browser via Playwright: `gatekeeper_lock_screen_verified.png` and `workspace_unlocked_verified.png`.
+

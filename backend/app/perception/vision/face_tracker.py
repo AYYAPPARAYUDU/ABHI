@@ -12,6 +12,7 @@ import os
 import time
 import json
 import math
+import base64
 import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -45,6 +46,8 @@ class OperatorPresenceResult(BaseModel):
     is_verified: bool = False
     match_score: float = 0.0
     head_pose: HeadPose = Field(default_factory=HeadPose)
+    bounding_box: Optional[Dict[str, Any]] = None
+    landmarks: Optional[List[List[float]]] = None
     status: str = "OPERATOR_AWAY"
     message: str = "No operator detected in camera view."
     timestamp: float = Field(default_factory=time.time)
@@ -212,6 +215,167 @@ class FaceTracker:
             blendshapes={"smile": 0.2, "eye_blink_left": 0.0, "eye_blink_right": 0.0},
             normalized_bounding_box={"x_min": 0.35, "y_min": 0.20, "width": 0.30, "height": 0.45}
         )
+
+    def _decode_base64_image(self, image_base64: str) -> Optional[np.ndarray]:
+        """Decode base64 encoded image string (JPEG or PNG) into BGR OpenCV ndarray."""
+        try:
+            if "," in image_base64:
+                image_base64 = image_base64.split(",", 1)[1]
+            raw_bytes = base64.b64decode(image_base64)
+            nparr = np.frombuffer(raw_bytes, np.uint8)
+            frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            return frame
+        except Exception as e:
+            logger.error(f"FaceTracker _decode_base64_image failed: {e}")
+            return None
+
+    def process_frame_image(self, frame: np.ndarray, operator_name: Optional[str] = None) -> OperatorPresenceResult:
+        """Run deep neural YuNet detection and SFace 128D biometric recognition directly on an in-memory frame."""
+        if frame is None or frame.size == 0:
+            return OperatorPresenceResult(
+                operator_present=False,
+                face_detected=False,
+                status="FRAME_INVALID",
+                message="Invalid or empty image frame provided."
+            )
+
+        h, w = frame.shape[:2]
+        if self._detector is None or self._recognizer is None:
+            self._init_models()
+
+        if self._detector is None:
+            return OperatorPresenceResult(
+                operator_present=False,
+                face_detected=False,
+                status="MODEL_UNAVAILABLE",
+                message="Face detector neural model not initialized."
+            )
+
+        self._detector.setInputSize((w, h))
+        _, faces = self._detector.detect(frame)
+
+        if faces is None or len(faces) == 0:
+            return OperatorPresenceResult(
+                operator_present=False,
+                face_detected=False,
+                status="NO_FACE_DETECTED",
+                message="No face detected in video frame. Please look directly into the camera."
+            )
+
+        face = faces[0]
+        box = face[0:4]
+        conf = float(face[-1])
+        raw_landmarks = face[4:14]
+        pose = self._calculate_head_pose(raw_landmarks, w, h)
+
+        # 5 facial landmark coordinate pairs: [right_eye, left_eye, nose, mouth_r, mouth_l]
+        landmarks_list = []
+        for i in range(0, 10, 2):
+            landmarks_list.append([round(float(raw_landmarks[i]), 1), round(float(raw_landmarks[i+1]), 1)])
+
+        bbox = {
+            "x": int(box[0]),
+            "y": int(box[1]),
+            "width": int(box[2]),
+            "height": int(box[3]),
+            "norm_x": round(float(box[0] / w), 4),
+            "norm_y": round(float(box[1] / h), 4),
+            "norm_w": round(float(box[2] / w), 4),
+            "norm_h": round(float(box[3] / h), 4),
+        }
+
+        # Deep Biometric Verification via SFace
+        is_verified = False
+        match_score = 0.0
+        target_name = operator_name or self._enrolled_name
+
+        if self._recognizer is not None:
+            aligned = self._recognizer.alignCrop(frame, face)
+            current_feature = self._recognizer.feature(aligned)
+
+            if self._enrolled_feature is not None:
+                raw_match = float(self._recognizer.match(
+                    self._enrolled_feature, current_feature, cv2.FaceRecognizerSF_FR_COSINE
+                ))
+                # For SFace, cosine similarity >= 0.35 indicates authentic identity match
+                match_score = max(0.0, min(1.0, raw_match))
+                is_verified = raw_match >= 0.35
+            else:
+                # Auto-enroll operator on first live optical verification
+                self._enrolled_feature = current_feature
+                self._enrolled_name = target_name
+                self._persist_enrolled_feature(target_name, current_feature)
+                is_verified = True
+                match_score = 1.0
+
+        status_str = "OPERATOR_VERIFIED" if is_verified else "OPERATOR_UNVERIFIED"
+        name_str = target_name if is_verified else "Unverified Operator"
+        msg = (
+            f"Authentication Confirmed: {name_str} (Match: {round(match_score * 100, 1)}%)"
+            if is_verified
+            else f"Face detected ({round(conf * 100, 1)}% confidence), but biometric signature did not match {self._enrolled_name}."
+        )
+
+        return OperatorPresenceResult(
+            operator_present=True,
+            face_detected=True,
+            operator_name=name_str,
+            confidence=round(conf, 4),
+            is_verified=is_verified,
+            match_score=round(match_score, 4),
+            head_pose=pose,
+            bounding_box=bbox,
+            landmarks=landmarks_list,
+            status=status_str,
+            message=msg,
+            timestamp=time.time()
+        )
+
+    def verify_frame_base64(self, frame_base64: str, operator_name: Optional[str] = None) -> OperatorPresenceResult:
+        """Verify operator presence and biometrics from a client-provided base64 JPEG/PNG frame."""
+        frame = self._decode_base64_image(frame_base64)
+        if frame is None:
+            return OperatorPresenceResult(
+                operator_present=False,
+                face_detected=False,
+                status="DECODE_ERROR",
+                message="Failed to decode base64 optical frame."
+            )
+        return self.process_frame_image(frame, operator_name)
+
+    def enroll_frame_base64(self, frame_base64: str, operator_name: str = "Ayyappa Rayudu Ravuvari") -> Tuple[bool, str, Dict[str, Any]]:
+        """Enroll operator biometric 128-D embedding from client-provided base64 frame into SQLite WAL."""
+        frame = self._decode_base64_image(frame_base64)
+        if frame is None:
+            return False, "Failed to decode base64 optical frame.", {}
+
+        h, w = frame.shape[:2]
+        if self._detector is None or self._recognizer is None:
+            self._init_models()
+
+        if self._detector is None or self._recognizer is None:
+            return False, "Face detection/recognition neural models not loaded.", {}
+
+        self._detector.setInputSize((w, h))
+        _, faces = self._detector.detect(frame)
+
+        if faces is None or len(faces) == 0:
+            return False, "No face found in camera view. Please face the camera directly.", {}
+
+        face = faces[0]
+        conf = float(face[-1])
+        aligned = self._recognizer.alignCrop(frame, face)
+        feature = self._recognizer.feature(aligned)
+
+        self._enrolled_name = operator_name
+        self._enrolled_feature = feature
+        self._persist_enrolled_feature(operator_name, feature)
+
+        logger.info(f"FaceTracker: Operator '{operator_name}' biometrics enrolled successfully from live frame.")
+        return True, f"Operator '{operator_name}' enrolled successfully with 128-D neural face embedding.", {
+            "confidence": round(conf, 4),
+            "operator_name": operator_name
+        }
 
     def detect_operator_presence(self, camera_index: int = 0) -> OperatorPresenceResult:
         """Physically verify if the operator is present in front of the laptop camera."""

@@ -194,4 +194,36 @@ export class AgentApiService {
     }
     return await response.json();
   }
+
+  /**
+   * Verify operator biometrics directly from client-captured video frame.
+   */
+  async verifyBiometricFrame(frameBase64: string, operatorName: string = 'Ayyappa Rayudu Ravuvari'): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/biometrics/verify-frame`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ frame_base64: frameBase64, operator_name: operatorName })
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Verification failed: ${err}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Enroll operator biometrics directly from client-captured video frame.
+   */
+  async enrollBiometricFrame(frameBase64: string, operatorName: string = 'Ayyappa Rayudu Ravuvari'): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/biometrics/enroll-frame`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ frame_base64: frameBase64, operator_name: operatorName })
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Enrollment failed: ${err}`);
+    }
+    return await response.json();
+  }
 }

@@ -1,0 +1,180 @@
+<div class="lock-screen-backdrop">
+  <!-- Glowing Spatial Ambient Rings -->
+  <div class="ambient-glow-circle"></div>
+
+  <!-- Central High-Tech Gatekeeper Console -->
+  <div class="gatekeeper-console">
+    <!-- Console Header -->
+    <div class="console-header">
+      <div class="security-badge">
+        <span class="pulsing-shield-icon">🛡️</span>
+        <span class="lock-title">SYSTEM LOCKED // BIOMETRIC GATEKEEPER</span>
+      </div>
+      <div class="engine-badge">
+        <span>YUNET DEEP ONNX · SFACE 128D</span>
+      </div>
+    </div>
+
+    <!-- Security Lock Advisory -->
+    <div class="lock-advisory">
+      <span class="advisory-icon">⚠️</span>
+      <span class="advisory-text">{{ operatorState.lockReason() }}</span>
+    </div>
+
+    <!-- Dual Sensor Viewports -->
+    <div class="viewports-row">
+      <!-- Viewport 1: Live Hardware Video Feed with Stark HUD -->
+      <div class="viewport-box video-box">
+        <div class="box-topbar">
+          <span class="topbar-title">OPTICAL HARDWARE SENSOR (CAM 0)</span>
+          <span class="live-indicator" [class.active]="cameraActive()">
+            {{ cameraActive() ? 'LIVE 640x480' : 'INITIALIZING...' }}
+          </span>
+        </div>
+
+        <div class="video-container">
+          <video #lockVideoElem autoplay playsinline muted class="camera-feed"></video>
+
+          <!-- Targeting HUD Reticle -->
+          <div class="targeting-reticle">
+            <div class="corner c-tl"></div>
+            <div class="corner c-tr"></div>
+            <div class="corner c-bl"></div>
+            <div class="corner c-br"></div>
+
+            <!-- Sweeping Blue Laser Scanline -->
+            @if (stage() === 'SCANNING_PASS_1' || stage() === 'SCANNING_PASS_2') {
+              <div class="laser-scanner"></div>
+            }
+
+            <div class="center-crosshair"></div>
+
+            <div class="stage-badge" [attr.data-stage]="stage()">
+              @switch (stage()) {
+                @case ('SCANNING_PASS_1') {
+                  <span>⚡ STAGE 1: NEURAL FACE ALIGNMENT...</span>
+                }
+                @case ('SCANNING_PASS_2') {
+                  <span>🔍 STAGE 2: SFACE 128-D COSINE MATCH...</span>
+                }
+                @case ('AUTHENTICATED') {
+                  <span class="success-text">✓ VERIFIED: {{ operatorName() }}</span>
+                }
+                @case ('FAILED') {
+                  <span class="fail-text">⚠️ ALIGNMENT MISMATCH - RETRY</span>
+                }
+                @default {
+                  <span>READY FOR BIOMETRIC SCAN</span>
+                }
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="box-footer">
+          <span class="mono-stat">DEVICE: CAMERA_0_ONLINE</span>
+          <span class="mono-stat">FPS: 30</span>
+        </div>
+      </div>
+
+      <!-- Viewport 2: 3D Holographic Facial Mesh -->
+      <div class="viewport-box three-box">
+        <div class="box-topbar">
+          <span class="topbar-title">3D HOLOGRAPHIC RECONSTRUCTION</span>
+          <span class="three-tag">THREE.JS WEBGL</span>
+        </div>
+
+        <div class="three-container" #threeLockCanvas>
+          <div class="euler-telemetry">
+            <span class="euler-chip">Y: {{ headPoseAngles().yaw.toFixed(1) }}°</span>
+            <span class="euler-chip">P: {{ headPoseAngles().pitch.toFixed(1) }}°</span>
+            <span class="euler-chip">R: {{ headPoseAngles().roll.toFixed(1) }}°</span>
+          </div>
+        </div>
+
+        <div class="box-footer">
+          <span class="mono-stat">TOPOLOGY: 22 VECTORS</span>
+          <span class="mono-stat">PROJECTION: EULER 3D</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Telemetry Status Strip -->
+    <div class="telemetry-grid">
+      <div class="tel-item">
+        <span class="tel-label">REGISTERED OPERATOR</span>
+        <span class="tel-val op-val">{{ operatorName() }}</span>
+      </div>
+
+      <div class="tel-item">
+        <span class="tel-label">PASS 1: CONFIDENCE</span>
+        <span class="tel-val cyan-val">{{ pass1Confidence() > 0 ? pass1Confidence() + '%' : '--' }}</span>
+      </div>
+
+      <div class="tel-item">
+        <span class="tel-label">PASS 2: COSINE MATCH</span>
+        <span class="tel-val green-val">{{ pass2MatchScore() > 0 ? pass2MatchScore() + '%' : '--' }}</span>
+      </div>
+
+      <div class="tel-item">
+        <span class="tel-label">GATE STATUS</span>
+        <span class="tel-val" [class.unlocked-val]="stage() === 'AUTHENTICATED'">
+          {{ stage() === 'AUTHENTICATED' ? 'ACCESS GRANTED' : 'LOCKED' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Status Banner -->
+    <div class="gate-status-banner" [class.success]="stage() === 'AUTHENTICATED'" [class.error]="stage() === 'FAILED'">
+      <span class="banner-icon">
+        {{ stage() === 'AUTHENTICATED' ? '✓' : (stage() === 'FAILED' ? '⚠️' : '⚡') }}
+      </span>
+      <span class="banner-msg">{{ statusMessage() }}</span>
+    </div>
+
+    <!-- Actions & Emergency Fallback -->
+    <div class="gate-actions">
+      <button
+        type="button"
+        class="gate-btn scan-btn"
+        (click)="runFaceUnlockScan()"
+        [disabled]="stage() === 'SCANNING_PASS_1' || stage() === 'SCANNING_PASS_2' || stage() === 'AUTHENTICATED'"
+      >
+        <span class="btn-icon">⚡</span>
+        <span>{{ (stage() === 'SCANNING_PASS_1' || stage() === 'SCANNING_PASS_2') ? 'SCANNING FACE...' : 'SCAN FACE TO UNLOCK' }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="gate-btn override-toggle-btn"
+        (click)="togglePasscodeInput()"
+      >
+        <span class="btn-icon">🔑</span>
+        <span>{{ showPasscodeInput() ? 'HIDE PASSCODE' : 'OPERATOR PASSCODE OVERRIDE' }}</span>
+      </button>
+    </div>
+
+    <!-- Emergency Passcode Input Box (Never locked out) -->
+    @if (showPasscodeInput()) {
+      <div class="passcode-container">
+        <div class="passcode-input-wrap">
+          <input
+            type="password"
+            class="passcode-input"
+            [(ngModel)]="passcodeValue"
+            (keyup.enter)="submitPasscode()"
+            placeholder="Enter Operator PIN or Passcode (e.g., 1234 or abhi)"
+            autocomplete="off"
+          />
+          <button type="button" class="passcode-submit-btn" (click)="submitPasscode()">
+            UNLOCK WORKSPACE
+          </button>
+        </div>
+        @if (passError()) {
+          <span class="passcode-error">{{ passError() }}</span>
+        }
+      </div>
+    }
+  </div>
+</div>
+

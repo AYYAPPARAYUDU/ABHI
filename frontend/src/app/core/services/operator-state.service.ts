@@ -165,14 +165,44 @@ export class OperatorStateService {
     message: string;
     timestamp: number;
   }>({
-    verified: true, // Baseline verified
+    verified: false,
     scanning: false,
-    confidence: 0.94,
-    matchScore: 0.88,
+    confidence: 0,
+    matchScore: 0,
     operatorName: 'Ayyappa Rayudu Ravuvari',
-    message: 'Welcome back, Sir. Identity verified at workstation.',
+    message: 'Biometric verification required to unlock workstation.',
     timestamp: Date.now()
   });
+
+  // Workspace Biometric Gatekeeper State
+  readonly isWorkspaceLocked = signal<boolean>(true);
+  readonly lockReason = signal<string>('Biometric Identity Verification Required to Access Workstation');
+  readonly lastVerifiedTimestamp = signal<number>(0);
+  private presenceTimerId: any = null;
+
+  lockWorkspace(reason: string = 'Security Protocol: Operator Absent or Verification Expired'): void {
+    this.lockReason.set(reason);
+    this.isWorkspaceLocked.set(true);
+  }
+
+  unlockWorkspace(method: 'BIOMETRIC' | 'OVERRIDE' = 'BIOMETRIC'): void {
+    this.isWorkspaceLocked.set(false);
+    this.lastVerifiedTimestamp.set(Date.now());
+    this.startPeriodicPresenceGuard();
+  }
+
+  startPeriodicPresenceGuard(): void {
+    if (this.presenceTimerId) {
+      clearInterval(this.presenceTimerId);
+    }
+    // 5-minute periodic re-verification interval (5 * 60 * 1000 ms)
+    this.presenceTimerId = setInterval(() => {
+      const elapsed = Date.now() - this.lastVerifiedTimestamp();
+      if (elapsed >= 5 * 60 * 1000 && !this.isWorkspaceLocked()) {
+        this.lockWorkspace('5-Minute Security Timeout: Periodic Biometric Re-Authentication Required.');
+      }
+    }, 15 * 1000); // Periodic check every 15s
+  }
 
   async verifyBiometrics(cameraIndex: number = 0): Promise<void> {
     this.biometricStatus.update(s => ({ ...s, scanning: true, message: 'Scanning optical biometrics...' }));

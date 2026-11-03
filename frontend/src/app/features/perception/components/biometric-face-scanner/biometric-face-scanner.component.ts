@@ -67,8 +67,8 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
     const current = this.operatorState.biometricStatus();
     if (current.verified) {
       this.operatorName.set(current.operatorName);
-      this.pass1Confidence.set(current.confidence);
-      this.pass2MatchScore.set(current.matchScore);
+      this.pass1Confidence.set(Math.round(current.confidence <= 1 ? current.confidence * 100 : current.confidence));
+      this.pass2MatchScore.set(Math.round(current.matchScore <= 1 ? current.matchScore * 100 : current.matchScore));
     }
   }
 
@@ -126,6 +126,25 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
     this.cameraActive.set(false);
   }
 
+  captureCurrentFrameBase64(): string | null {
+    const video = this.videoRef?.nativeElement;
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      return null;
+    }
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/jpeg', 0.90);
+    } catch (err) {
+      console.warn('Failed to capture frame from video canvas:', err);
+      return null;
+    }
+  }
+
   // --- Real Dual-Pass Neural Authentication Execution ---
 
   async runDualPassScan(): Promise<void> {
@@ -136,19 +155,28 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
     try {
       // Stage 1: Frontal Scan & Feature Extraction
       this.scanStage.set('PASS_1_FRONTAL');
-      this.statusMessage.set('Stage 1/2: Frontal alignment... Extracting 128-D neural face vector.');
+      this.statusMessage.set('Stage 1/2: Frontal alignment... Capturing live optical frame.');
 
-      await new Promise((r) => setTimeout(r, 1200));
+      await new Promise((r) => setTimeout(r, 600));
 
-      const pass1 = await this.agentApi.getBiometricPresence(0);
+      const frame1 = this.captureCurrentFrameBase64();
+      let pass1: any = null;
+
+      if (frame1) {
+        pass1 = await this.agentApi.verifyBiometricFrame(frame1, this.operatorName());
+      } else {
+        pass1 = await this.agentApi.getBiometricPresence(0);
+      }
 
       if (!pass1 || !pass1.face_detected) {
         this.scanStage.set('FAILED');
-        this.statusMessage.set('Face alignment failed. Please look directly into the camera.');
+        this.statusMessage.set(pass1?.message || 'Face alignment failed. Please look directly into the camera.');
         return;
       }
 
-      this.pass1Confidence.set(Math.round(pass1.confidence * 100));
+      const confPct = Math.round(pass1.confidence <= 1.0 ? pass1.confidence * 100 : pass1.confidence);
+      this.pass1Confidence.set(confPct);
+
       if (pass1.head_pose) {
         this.headPoseAngles.set(pass1.head_pose);
         this.rotate3DFace(pass1.head_pose.yaw, pass1.head_pose.pitch, pass1.head_pose.roll);
@@ -156,17 +184,25 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
 
       // Stage 2: Verification & Cosine Match
       this.scanStage.set('PASS_2_VERIFICATION');
-      this.statusMessage.set('Stage 2/2: Verifying biometric authenticity & 3D pose vector...');
+      this.statusMessage.set('Stage 2/2: Verifying 128-D biometric signature & 3D pose...');
 
-      await new Promise((r) => setTimeout(r, 1400));
+      await new Promise((r) => setTimeout(r, 700));
 
-      const pass2 = await this.agentApi.getBiometricPresence(0);
+      const frame2 = this.captureCurrentFrameBase64() || frame1;
+      let pass2: any = null;
 
-      const isVerified = pass2?.is_verified ?? true;
-      const matchScore = pass2?.match_score ?? 0.88;
-      const verifiedName = pass2?.operator_name || 'Ayyappa Rayudu Ravuvari';
+      if (frame2) {
+        pass2 = await this.agentApi.verifyBiometricFrame(frame2, this.operatorName());
+      } else {
+        pass2 = await this.agentApi.getBiometricPresence(0);
+      }
 
-      this.pass2MatchScore.set(Math.round(matchScore * 100));
+      const isVerified = pass2?.is_verified ?? false;
+      const rawMatch = pass2?.match_score ?? 0;
+      const matchPct = Math.round(rawMatch <= 1.0 ? rawMatch * 100 : rawMatch);
+      const verifiedName = pass2?.operator_name || this.operatorName();
+
+      this.pass2MatchScore.set(matchPct);
       this.operatorName.set(verifiedName);
 
       if (pass2?.head_pose) {
@@ -174,21 +210,29 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
         this.rotate3DFace(pass2.head_pose.yaw, pass2.head_pose.pitch, pass2.head_pose.roll);
       }
 
-      this.scanStage.set('AUTHENTICATED');
-      this.statusMessage.set(`Authentication Confirmed: ${verifiedName} (Match: ${Math.round(matchScore * 100)}%)`);
+      if (isVerified) {
+        this.scanStage.set('AUTHENTICATED');
+        this.statusMessage.set(`Authentication Confirmed: ${verifiedName} (Match: ${matchPct}%)`);
 
-      // Update global operator state
-      this.operatorState.biometricStatus.set({
-        verified: true,
-        scanning: false,
-        confidence: pass1.confidence,
-        matchScore: matchScore,
-        operatorName: verifiedName,
-        message: `Operator ${verifiedName} authenticated at workstation.`,
-        timestamp: Date.now()
-      });
+        // Update global operator state
+        this.operatorState.biometricStatus.set({
+          verified: true,
+          scanning: false,
+          confidence: pass1.confidence,
+          matchScore: rawMatch,
+          operatorName: verifiedName,
+          message: `Operator ${verifiedName} authenticated at workstation.`,
+          timestamp: Date.now()
+        });
 
-      this.speechVoice.speak(`Biometric authentication confirmed, Sir. Welcome.`);
+        // Unlock workspace Gatekeeper
+        this.operatorState.unlockWorkspace('BIOMETRIC');
+
+        this.speechVoice.speak(`Biometric authentication confirmed, Sir. Welcome.`);
+      } else {
+        this.scanStage.set('FAILED');
+        this.statusMessage.set(`Face detected (${confPct}% confidence), but signature did not match ${this.operatorName()} (${matchPct}%). Please re-align or re-enroll.`);
+      }
     } catch (err: any) {
       console.error('Scan error:', err);
       this.scanStage.set('FAILED');
@@ -199,7 +243,13 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
   async reEnrollOperator(): Promise<void> {
     this.statusMessage.set('Capturing fresh enrollment embedding into SQLite WAL...');
     try {
-      const res = await this.agentApi.enrollBiometrics(this.operatorName(), 0);
+      const frame = this.captureCurrentFrameBase64();
+      let res: any;
+      if (frame) {
+        res = await this.agentApi.enrollBiometricFrame(frame, this.operatorName());
+      } else {
+        res = await this.agentApi.enrollBiometrics(this.operatorName(), 0);
+      }
       this.statusMessage.set(res?.message || 'Biometrics enrolled successfully.');
       await this.runDualPassScan();
     } catch (err: any) {
@@ -395,3 +445,4 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
     this.closeRequested.emit();
   }
 }
+

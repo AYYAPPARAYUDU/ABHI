@@ -40,3 +40,4 @@ if old_norm in content_norm:
     print("SUCCESS: contextual-topbar.component.html updated with modal trigger!")
 else:
     print("ERROR: old_code not found in contextual-topbar.component.html!")
+

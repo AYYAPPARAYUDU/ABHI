@@ -4,6 +4,7 @@ import os
 import time
 import psutil
 from typing import Any, Dict, List, Optional
+from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, status
 
 from backend.app.automation.desktop.os_control_engine import os_control_engine
@@ -480,6 +481,29 @@ async def enroll_operator_biometrics(name: str = "Ayyappa Rayudu Ravuvari", came
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
     return {"status": "SUCCESS", "message": msg, "operator_name": name}
+
+
+class BiometricFramePayload(BaseModel):
+    frame_base64: str
+    operator_name: Optional[str] = "Ayyappa Rayudu Ravuvari"
+
+
+@router.post("/biometrics/verify-frame")
+async def verify_biometric_frame(payload: BiometricFramePayload):
+    """Verify operator presence and biometrics directly from client-sent video frame."""
+    from backend.app.perception.vision.face_tracker import face_tracker
+    res = face_tracker.verify_frame_base64(payload.frame_base64, payload.operator_name)
+    return res.model_dump()
+
+
+@router.post("/biometrics/enroll-frame")
+async def enroll_biometric_frame(payload: BiometricFramePayload):
+    """Enroll operator biometric 128-D embedding into SQLite WAL directly from client frame."""
+    from backend.app.perception.vision.face_tracker import face_tracker
+    ok, msg, details = face_tracker.enroll_frame_base64(payload.frame_base64, payload.operator_name or "Ayyappa Rayudu Ravuvari")
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"status": "SUCCESS", "message": msg, "details": details, "operator_name": payload.operator_name}
 
 
 # Authoritative Gateway Router mirroring all agent routes under /agent-gateway

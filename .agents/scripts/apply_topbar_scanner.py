@@ -38,3 +38,4 @@ if old_norm in content_norm:
     print("SUCCESS: contextual-topbar.component.ts updated!")
 else:
     print("ERROR: old_code not found in contextual-topbar.component.ts!")
+

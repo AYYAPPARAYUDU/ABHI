@@ -227,6 +227,17 @@
         }
       </button>
 
+      <!-- Quick Lock Station Button -->
+      <button
+        type="button"
+        class="topbar-tool-btn lock-station-btn"
+        (click)="stateService.lockWorkspace('Manual Operator Lock Engaged')"
+        title="Lock Workspace Console (Requires Face ID to Unlock)"
+      >
+        <span class="btn-icon">🔒</span>
+        <span class="btn-text">Lock</span>
+      </button>
+
       <!-- Personal Operator Profile Badge (Ayyappa Rayudu) -->
       <a
         class="operator-profile-pill"

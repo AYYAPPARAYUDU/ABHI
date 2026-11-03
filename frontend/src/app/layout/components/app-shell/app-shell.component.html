@@ -30,4 +30,9 @@
 
   <!-- Human-Brain & Autonomous Communications Assistant Modal -->
   <app-assistant-modal></app-assistant-modal>
+
+  <!-- Biometric Gatekeeper Lock Screen -->
+  @if (stateService.isWorkspaceLocked()) {
+    <app-workspace-lock-screen></app-workspace-lock-screen>
+  }
 </div>

@@ -8,6 +8,7 @@ import { ConsentModalComponent } from '../../../features/operator-console/compon
 import { SpatialBackgroundComponent } from '../../../shared/3d/spatial-background/spatial-background.component';
 import { CommandPaletteComponent } from '../../../shared/ui/command-palette/command-palette.component';
 import { AssistantModalComponent } from '../assistant-modal/assistant-modal.component';
+import { WorkspaceLockScreenComponent } from '../../../features/perception/components/workspace-lock-screen/workspace-lock-screen.component';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
 import { SpatialEnvironmentMode } from '../../../core/models/agent-experience.model';
 
@@ -21,7 +22,8 @@ import { SpatialEnvironmentMode } from '../../../core/models/agent-experience.mo
     ConsentModalComponent,
     SpatialBackgroundComponent,
     CommandPaletteComponent,
-    AssistantModalComponent
+    AssistantModalComponent,
+    WorkspaceLockScreenComponent
   ],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.css'
