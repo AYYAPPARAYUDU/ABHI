@@ -112,3 +112,4 @@ export function buildNanoBananaPrompt(
 
   return parts.filter((p) => p && p.trim() !== '').join(', ');
 }
+

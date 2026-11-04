@@ -166,6 +166,20 @@ ead my mails -> initiates step_1: Open Gmail Inbox in Browser targeting https://
   - Generated 120-frame Orbit 360° MP4 video (`cinema_kling-3.0_orbit_360_20261103_174856.mp4`).
   - Verified live UI via Playwright screenshots: `verified_higgsfield_pro_rig_open.png` and `verified_higgsfield_vault_golden_car.png`.
 
+### 16. Authoritative System Architecture, Neural Models & Swarm Specification Document (2026-11-04)
+- **Delivered Deliverable:** `ABHI_SYSTEM_ARCHITECTURE_AND_MODELS.md` in repository root.
+- **Accurate Model & Latency Matrix:**
+  - Formatted comprehensive table covering all 9 neural & symbolic models (`abhi:latest` Qwen 8.2B, Standalone Symbolic Engine, YuNet, SFace, Edge-TTS, Web Speech API, Silero VAD, Faster-Whisper, Open-Higgsfield-AI).
+  - Accurate parameter counts, quantization formats, RAM/VRAM memory budgets, and inference latencies.
+- **12-Agent Swarm Roster Table:**
+  - Enumerated all 12 autonomous agents (`CentralSupervisor`, `TaskPlanner`, `OSDesktopAgent`, `CodingAgent`, `MediaStudioAgent`, `PerceptionAgent`, `MobileDeviceAgent`, `BrowserAgent`, `EvaluationAgent`, `BusinessAgent`, `CommunicationsAssistant`, `SecurityGatekeeper`).
+  - Documented specific tools, underlying technologies, and operational responsibilities for each agent.
+- **End-to-End System Execution & Technology Matrix:**
+  - Sequence diagram and step-by-step description of user command lifecycle from audio/text intake to 3D reactive rendering.
+  - Full-stack library breakdown (Python 3.14, FastAPI, Angular 22, Three.js, OpenCV, SQLite WAL, Edge-TTS, Playwright, Win32 UIA, ADB).
+  - Hardware specifications (Minimum vs. Recommended CPU/GPU/RAM/Sensor requirements).
+
+
 
 
 
