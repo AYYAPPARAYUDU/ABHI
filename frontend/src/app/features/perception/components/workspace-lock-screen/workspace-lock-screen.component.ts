@@ -44,9 +44,14 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
   passcodeValue: string = '';
   readonly passError = signal<string>('');
   readonly intruderSnapshotUrl = signal<string | null>(null);
+  failedPasswordAttempts: number = 0;
+  intruderSnapshotCaptured: boolean = false;
+  private noPasswordTimer: any = null;
 
   private mediaStream: MediaStream | null = null;
   private autoScanTimeout: any = null;
+  private presenceIntervalId: any = null;
+  private isScanningNow: boolean = false;
 
   // Three.js 3D Hologram
   private scene!: THREE.Scene;
@@ -71,6 +76,10 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
     this.stopCameraStream();
     if (this.autoScanTimeout) {
       clearTimeout(this.autoScanTimeout);
+    }
+    if (this.presenceIntervalId) {
+      clearInterval(this.presenceIntervalId);
+      this.presenceIntervalId = null;
     }
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
@@ -98,10 +107,11 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
       this.stage.set('STANDBY');
       this.statusMessage.set('Sensors ready. Analyzing optical presence...');
 
-      // Trigger automatic face verification after 900ms
+      // Trigger initial scan after camera stabilizes and start continuous passive verification loop
       this.autoScanTimeout = setTimeout(() => {
         this.runFaceUnlockScan();
-      }, 900);
+        this.startContinuousFaceScan();
+      }, 700);
     } catch (err: any) {
       console.warn('Camera sensor error on lock screen:', err);
       this.cameraActive.set(false);
@@ -152,6 +162,25 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
     return `${Math.round(num)}%`;
   }
 
+  startContinuousFaceScan(): void {
+    if (this.presenceIntervalId) {
+      clearInterval(this.presenceIntervalId);
+    }
+    this.presenceIntervalId = setInterval(async () => {
+      if (this.stage() === 'AUTHENTICATED' || this.isScanningNow || !this.cameraActive()) {
+        return;
+      }
+      this.isScanningNow = true;
+      try {
+        await this.runFaceUnlockScan();
+      } catch (err) {
+        console.debug('Continuous face scan tick handled:', err);
+      } finally {
+        this.isScanningNow = false;
+      }
+    }, 1800);
+  }
+
   async runFaceUnlockScan(): Promise<void> {
     if (this.stage() === 'SCANNING_PASS_1' || this.stage() === 'SCANNING_PASS_2' || this.stage() === 'AUTHENTICATED') {
       return;
@@ -176,8 +205,8 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
       }
 
       if (!pass1 || !pass1.face_detected) {
-        this.stage.set('FAILED');
-        this.statusMessage.set(pass1?.message || 'No face detected. Please position face directly in camera reticle.');
+        this.stage.set('STANDBY');
+        this.statusMessage.set('Sensors active. Position face directly in camera reticle to unlock.');
         return;
       }
 
@@ -218,6 +247,15 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
       }
 
       if (isVerified) {
+        if (this.presenceIntervalId) {
+          clearInterval(this.presenceIntervalId);
+          this.presenceIntervalId = null;
+        }
+        if (this.noPasswordTimer) {
+          clearTimeout(this.noPasswordTimer);
+          this.noPasswordTimer = null;
+        }
+        this.failedPasswordAttempts = 0;
         this.stage.set('AUTHENTICATED');
         this.statusMessage.set(`IDENTITY VERIFIED: Welcome back, ${verifiedName}. Unlocking workspace.`);
 
@@ -235,17 +273,29 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
 
         setTimeout(() => {
           this.operatorState.unlockWorkspace('BIOMETRIC');
-        }, 1200);
-      } else if (pass2?.is_intruder) {
-        this.stage.set('FAILED');
-        this.statusMessage.set(`🚨 SECURITY ALERT: Unauthorized face detected! Match score ${matchPct}%. Security snapshot captured and logged to storage.`);
-        if (pass2.intruder_snapshot_path) {
-          this.intruderSnapshotUrl.set(`/api/v1/agent-gateway/security/snapshot/${pass2.intruder_snapshot_path}`);
-        }
-        this.speechVoice.speak(`Security alert: Unauthorized individual detected at console. Biometric snapshot recorded and stored.`);
+        }, 800);
       } else {
-        this.stage.set('FAILED');
-        this.statusMessage.set(`Biometric signature mismatch (Cosine: ${matchPct}%). Access denied.`);
+        // Face does not match: Directly ask for Master Password (143)
+        // Do NOT capture photos on regular failed matches!
+        this.stage.set('STANDBY');
+        this.showPasscodeInput.set(true);
+        this.statusMessage.set(`Biometric signature not recognized (${matchPct}% match). Please enter Master Password (143) to unlock.`);
+
+        // If unknown person lingers for 20s without entering password, capture exactly 1 snapshot
+        if (!this.noPasswordTimer && !this.intruderSnapshotCaptured) {
+          this.noPasswordTimer = setTimeout(async () => {
+            if (this.stage() !== 'AUTHENTICATED' && !this.intruderSnapshotCaptured) {
+              const snapFrame = this.captureFrameBase64();
+              if (snapFrame) {
+                const res = await this.agentApi.recordIntruder(snapFrame, 'Unrecognized face lingered without entering password');
+                this.intruderSnapshotCaptured = true;
+                if (res?.snapshot_filename) {
+                  this.intruderSnapshotUrl.set(`/api/v1/agent-gateway/security/snapshot/${res.snapshot_filename}`);
+                }
+              }
+            }
+          }, 20000);
+        }
       }
     } catch (err: any) {
       console.error('Lock screen scan error:', err);
@@ -263,18 +313,42 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
 
   submitPasscode(): void {
     const code = this.passcodeValue.trim().toLowerCase();
-    // Authorized emergency unlock codes
-    if (code === '1234' || code === 'abhi' || code === 'jarvis' || code === 'admin' || code === 'system') {
+    // Master Password '143' plus trusted system overrides
+    if (code === '143' || code === '1234' || code === 'abhi' || code === 'jarvis' || code === 'admin' || code === 'system') {
+      if (this.noPasswordTimer) {
+        clearTimeout(this.noPasswordTimer);
+        this.noPasswordTimer = null;
+      }
+      this.failedPasswordAttempts = 0;
       this.stage.set('AUTHENTICATED');
-      this.statusMessage.set('Operator override authenticated. Unlocking workspace...');
+      this.statusMessage.set('Master Password accepted. Unlocking workspace...');
       this.passError.set('');
-      this.speechVoice.speak('Manual operator override accepted, Sir.');
+      this.speechVoice.speak('Master Password accepted. Welcome, Sir.');
 
       setTimeout(() => {
         this.operatorState.unlockWorkspace('OVERRIDE');
-      }, 800);
+      }, 600);
     } else {
-      this.passError.set('Invalid operator PIN or passcode.');
+      this.failedPasswordAttempts++;
+      // Only capture 1 intruder picture on wrong password attempts
+      if (!this.intruderSnapshotCaptured) {
+        const snapFrame = this.captureFrameBase64();
+        if (snapFrame) {
+          this.agentApi.recordIntruder(snapFrame, `Wrong password attempt (${this.failedPasswordAttempts}): '${code}'`).then((res: any) => {
+            this.intruderSnapshotCaptured = true;
+            if (res?.snapshot_filename) {
+              this.intruderSnapshotUrl.set(`/api/v1/agent-gateway/security/snapshot/${res.snapshot_filename}`);
+            }
+          }).catch(() => {});
+        }
+      }
+
+      if (this.failedPasswordAttempts >= 2) {
+        this.passError.set(`Invalid Master Password (Attempt ${this.failedPasswordAttempts}). Security snapshot logged.`);
+        this.statusMessage.set('🚨 Security incident logged: Incorrect Master Password entered.');
+      } else {
+        this.passError.set('Invalid Master Password. Master Password is 143.');
+      }
     }
   }
 

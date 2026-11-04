@@ -150,46 +150,55 @@
         </div>
 
         <div class="quick-action-chips-dock actions-grid" role="group" aria-label="Quick Actions">
-          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Open notepad')">
-            <span class="chip-emoji">📝</span>
-            <span>Notepad</span>
+          <!-- 1. Swarm Chat History -->
+          <button type="button" class="quick-chip-btn swarm-dialogue-chip highlight-chip" (click)="stateService.openSwarmDialogue(); closeActionsMenu()">
+            <span class="chip-emoji">🤝</span>
+            <span>Swarm Chat</span>
           </button>
-          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Open calculator and calculate 125 * 48')">
-            <span class="chip-emoji">🧮</span>
-            <span>Calculator</span>
-          </button>
-          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Open Chrome browser')">
-            <span class="chip-emoji">🌐</span>
-            <span>Browser</span>
-          </button>
-          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Take a screenshot')">
-            <span class="chip-emoji">📸</span>
-            <span>Screenshot</span>
-          </button>
-          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Check phone battery and status')">
-            <span class="chip-emoji">🔋</span>
-            <span>Phone Battery</span>
-          </button>
-          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Lock my phone')">
-            <span class="chip-emoji">📱</span>
-            <span>Lock Phone</span>
-          </button>
-          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Take screenshot on phone')">
-            <span class="chip-emoji">📲</span>
-            <span>Phone Screen</span>
-          </button>
-          <button type="button" class="quick-chip-btn" appAnimeInteractive [appAnimeType]="'button'" (click)="executeActionFromMenu('Open WhatsApp on mobile')">
-            <span class="chip-emoji">💬</span>
-            <span>WhatsApp</span>
-          </button>
-          <button type="button" class="quick-chip-btn swarm-toggle-chip" (click)="toggleCoreDeployment(); closeActionsMenu()">
+
+          <!-- 2. Autonomous Health & System Audit -->
+          <button type="button" class="quick-chip-btn" (click)="executeActionFromMenu('Run full autonomous system diagnostics and health audit')">
             <span class="chip-emoji">⚡</span>
+            <span>System Audit</span>
+          </button>
+
+          <!-- 3. Synthesize Media Asset -->
+          <button type="button" class="quick-chip-btn" (click)="executeActionFromMenu('Generate an ultra-realistic cinematic image of a quantum AI core in neon obsidian')">
+            <span class="chip-emoji">🎨</span>
+            <span>Generate Media</span>
+          </button>
+
+          <!-- 4. Screen Perception & Analysis -->
+          <button type="button" class="quick-chip-btn" (click)="executeActionFromMenu('Take a screenshot of my current screen and analyze it')">
+            <span class="chip-emoji">📸</span>
+            <span>Analyze Screen</span>
+          </button>
+
+          <!-- 5. Optical Biometric Scan -->
+          <button type="button" class="quick-chip-btn" (click)="stateService.openBiometricScanner(); closeActionsMenu()">
+            <span class="chip-emoji">👁️</span>
+            <span>Biometric Scan</span>
+          </button>
+
+          <!-- 6. Lock Console -->
+          <button type="button" class="quick-chip-btn" (click)="stateService.lockWorkspace('Manual Operator Lock Engaged'); closeActionsMenu()">
+            <span class="chip-emoji">🔒</span>
+            <span>Lock Console</span>
+          </button>
+
+          <!-- 7. Deploy / Retract 3D Swarm -->
+          <button type="button" class="quick-chip-btn swarm-toggle-chip" (click)="toggleCoreDeployment(); closeActionsMenu()">
+            <span class="chip-emoji">🛰️</span>
             <span>{{ isSwarmDeployed() ? 'Retract Swarm' : 'Deploy Swarm' }}</span>
           </button>
-          <button type="button" class="quick-chip-btn swarm-dialogue-chip" (click)="openSwarmDialogueModal(); closeActionsMenu()">
-            <span class="chip-emoji">🤝</span>
-            <span>Swarm Dialogue</span>
+
+          <!-- 8. Voice Speech Companion -->
+          <button type="button" class="quick-chip-btn" (click)="toggleAlexaMode(); closeActionsMenu()">
+            <span class="chip-emoji">🎙️</span>
+            <span>{{ speechVoice.isAlexaConversationMode() ? 'Exit J.A.R.V.I.S.' : 'J.A.R.V.I.S. Voice' }}</span>
           </button>
+
+          <!-- 9. Ask ABHI AI -->
           <button type="button" class="quick-chip-btn ai-chat-chip" (click)="executeActionFromMenu('Who are you and what are your capabilities?')">
             <span class="chip-emoji">🤖</span>
             <span>Ask ABHI</span>

@@ -119,23 +119,15 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   readonly showWorkspaceMenu = signal(false);
   readonly showActionsMenu = signal(false);
-  readonly showSwarmDialogueModal = signal(false);
-  readonly swarmDialogueList = signal<any[]>([]);
+  readonly showSwarmDialogueModal = this.stateService.showSwarmDialogueModal;
+  readonly swarmDialogueList = this.stateService.swarmDialogueList;
 
   async openSwarmDialogueModal(): Promise<void> {
-    try {
-      const data = await this.agentApi.getLiveSwarmDialogue(30);
-      if (data && Array.isArray(data.dialogue)) {
-        this.swarmDialogueList.set(data.dialogue);
-      }
-    } catch {
-      // fallback
-    }
-    this.showSwarmDialogueModal.set(true);
+    this.stateService.openSwarmDialogue();
   }
 
   closeSwarmDialogueModal(): void {
-    this.showSwarmDialogueModal.set(false);
+    this.stateService.closeSwarmDialogue();
   }
   readonly showDockLangMenu = signal(false);
 

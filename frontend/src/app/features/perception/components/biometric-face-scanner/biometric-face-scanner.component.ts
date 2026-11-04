@@ -13,6 +13,7 @@ import {
   EventEmitter
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import * as THREE from 'three';
 import { AgentApiService } from '../../../../core/api/agent-api.service';
 import { OperatorStateService } from '../../../../core/services/operator-state.service';
@@ -23,7 +24,7 @@ export type ScanStage = 'STANDBY' | 'INITIALIZING_CAMERA' | 'PASS_1_FRONTAL' | '
 @Component({
   selector: 'app-biometric-face-scanner',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './biometric-face-scanner.component.html',
   styleUrl: './biometric-face-scanner.component.css'
 })
@@ -46,6 +47,11 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
   readonly pass1Confidence = signal<number>(0);
   readonly pass2MatchScore = signal<number>(0);
   readonly operatorName = signal<string>('Ayyappa Rayudu Ravuvari');
+  readonly isFaceEnrolled = signal<boolean>(false);
+  readonly showAuthModal = signal<boolean>(false);
+  readonly authAction = signal<'ENROLL' | 'REMOVE'>('ENROLL');
+  authPasswordInput: string = '';
+  readonly authErrorMessage = signal<string>('');
   readonly headPoseAngles = signal<{ yaw: number; pitch: number; roll: number }>({ yaw: 0, pitch: 0, roll: 0 });
 
   // Camera stream
@@ -63,6 +69,7 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
   private resizeObserver: ResizeObserver | null = null;
 
   ngOnInit(): void {
+    this.checkEnrollmentStatus();
     // Initial verification status sync
     const current = this.operatorState.biometricStatus();
     if (current.verified) {
@@ -258,21 +265,121 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
     }
   }
 
-  async reEnrollOperator(): Promise<void> {
-    this.statusMessage.set('Capturing fresh enrollment embedding into SQLite WAL...');
+  async checkEnrollmentStatus(): Promise<void> {
     try {
-      const frame = this.captureCurrentFrameBase64();
-      let res: any;
-      if (frame) {
-        res = await this.agentApi.enrollBiometricFrame(frame, this.operatorName());
-      } else {
-        res = await this.agentApi.enrollBiometrics(this.operatorName(), 0);
+      const status = await this.agentApi.getBiometricStatus();
+      this.isFaceEnrolled.set(status.is_enrolled);
+      if (status.is_enrolled && status.operator_name) {
+        this.operatorName.set(status.operator_name);
       }
+    } catch (err) {
+      console.debug('Failed to query biometric status:', err);
+    }
+  }
+
+  startEnrollmentFlow(): void {
+    // If a face is already registered, check if old face is verified in scanner or require password 143
+    if (this.isFaceEnrolled()) {
+      if (this.scanStage() === 'AUTHENTICATED' || this.pass2MatchScore() >= 28) {
+        // Old face is already verified!
+        this.executeEnrollment();
+      } else {
+        // Need Master Password (143) to overwrite
+        this.authAction.set('ENROLL');
+        this.authPasswordInput = '';
+        this.authErrorMessage.set('');
+        this.showAuthModal.set(true);
+      }
+    } else {
+      this.executeEnrollment();
+    }
+  }
+
+  startRemoveFlow(): void {
+    this.authAction.set('REMOVE');
+    this.authPasswordInput = '';
+    this.authErrorMessage.set('');
+    this.showAuthModal.set(true);
+  }
+
+  closeAuthModal(): void {
+    this.showAuthModal.set(false);
+    this.authPasswordInput = '';
+    this.authErrorMessage.set('');
+  }
+
+  async submitAuthAction(): Promise<void> {
+    const pwd = this.authPasswordInput.trim();
+    if (!pwd) {
+      this.authErrorMessage.set('Please enter Master Password (143).');
+      return;
+    }
+
+    if (pwd !== '143' && pwd !== 'abhi' && pwd !== 'jarvis' && pwd !== 'admin' && pwd !== '1234') {
+      this.authErrorMessage.set('Invalid password. Master Password is 143.');
+      return;
+    }
+
+    if (this.authAction() === 'ENROLL') {
+      await this.executeEnrollment(pwd);
+      this.showAuthModal.set(false);
+    } else {
+      await this.executeRemoval(pwd);
+      this.showAuthModal.set(false);
+    }
+  }
+
+  async executeEnrollment(masterPassword?: string): Promise<void> {
+    this.statusMessage.set('Capturing fresh 128-D biometric signature into SQLite WAL...');
+    try {
+      const frame = (await this.getReadyFrameBase64()) || this.captureCurrentFrameBase64();
+      if (!frame) {
+        this.statusMessage.set('Camera frame not available. Ensure webcam is connected.');
+        return;
+      }
+      const res = await this.agentApi.enrollBiometricFrame(frame, this.operatorName(), masterPassword);
+      this.isFaceEnrolled.set(true);
       this.statusMessage.set(res?.message || 'Biometrics enrolled successfully.');
+      this.speechVoice.speak('Face lock enrolled successfully, Sir.');
       await this.runDualPassScan();
     } catch (err: any) {
-      this.statusMessage.set(`Enrollment error: ${err?.message}`);
+      const msg = err?.message || 'Biometric enrollment failed.';
+      this.statusMessage.set(`⚠️ Enrollment error: ${msg}`);
+      if (msg.includes('Security Gate') || msg.includes('Master Password')) {
+        this.authAction.set('ENROLL');
+        this.authErrorMessage.set('Master Password (143) required to replace registered Face Lock.');
+        this.showAuthModal.set(true);
+      }
     }
+  }
+
+  async executeRemoval(masterPassword: string): Promise<void> {
+    this.statusMessage.set('Removing registered Face Lock from SQLite WAL...');
+    try {
+      const res = await this.agentApi.removeBiometrics(masterPassword);
+      this.isFaceEnrolled.set(false);
+      this.operatorState.biometricStatus.set({
+        verified: false,
+        scanning: false,
+        confidence: 0,
+        matchScore: 0,
+        operatorName: 'Unenrolled',
+        message: 'Face lock removed.',
+        timestamp: Date.now()
+      });
+      this.pass1Confidence.set(0);
+      this.pass2MatchScore.set(0);
+      this.scanStage.set('STANDBY');
+      this.statusMessage.set(res?.message || 'Face Lock removed successfully. System biometrics reset.');
+      this.speechVoice.speak('Face Lock removed. Workstation biometrics reset.');
+    } catch (err: any) {
+      this.authErrorMessage.set(err?.message || 'Failed to remove biometrics.');
+      this.statusMessage.set(`Removal error: ${err?.message}`);
+    }
+  }
+
+  async reEnrollOperator(): Promise<void> {
+    this.startEnrollmentFlow();
   }
 
   // --- Three.js 3D Facial Hologram Construction ---

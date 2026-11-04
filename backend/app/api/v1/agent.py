@@ -113,6 +113,30 @@ async def get_live_swarm_dialogue(limit: int = 25):
     }
 
 
+@router.post("/swarm/trigger-deliberation")
+async def trigger_swarm_deliberation(payload: Optional[Dict[str, Any]] = None):
+    """Trigger a live collaborative multi-agent family negotiation with all 8 Small-LLMs."""
+    from backend.app.cognitive.swarm.family_negotiation import family_swarm
+    goal = (payload or {}).get("goal") or "Autonomous collaborative system health and optimization audit."
+    user_name = (payload or {}).get("user_name") or "Sir"
+    session = await family_swarm.execute_family_negotiation(goal=goal, user_name=user_name)
+    return {
+        "status": "SUCCESS",
+        "session_id": session.session_id,
+        "consensus_score": session.consensus_score,
+        "dialogue_count": len(session.dialogue),
+        "lead_agent": session.lead_agent_name
+    }
+
+
+@router.post("/swarm/clear-dialogue")
+async def clear_swarm_dialogue():
+    """Clear multi-agent chat history from memory."""
+    from backend.app.cognitive.swarm.family_negotiation import family_swarm
+    family_swarm.clear_chat_history()
+    return {"status": "SUCCESS", "message": "Swarm dialogue cleared."}
+
+
 @router.post("/command", response_model=AgentCommandResponse)
 @router.post("/commands", response_model=AgentCommandResponse)
 async def submit_command(request: AgentCommandRequest) -> AgentCommandResponse:
@@ -500,6 +524,27 @@ async def enroll_operator_biometrics(name: str = "Ayyappa Rayudu Ravuvari", came
 class BiometricFramePayload(BaseModel):
     frame_base64: str
     operator_name: Optional[str] = "Ayyappa Rayudu Ravuvari"
+    master_password: Optional[str] = None
+
+
+class RemoveBiometricsPayload(BaseModel):
+    master_password: Optional[str] = "143"
+
+
+class RecordIntruderPayload(BaseModel):
+    frame_base64: str
+    reason: Optional[str] = "Unauthorized access attempt"
+
+
+@router.get("/biometrics/status")
+async def get_biometric_status():
+    """Get current Face Lock enrollment status and registered operator identity."""
+    from backend.app.perception.vision.face_tracker import face_tracker
+    return {
+        "is_enrolled": face_tracker.is_enrolled,
+        "operator_name": face_tracker._enrolled_name if face_tracker.is_enrolled else None,
+        "enrolled_name": face_tracker._enrolled_name
+    }
 
 
 @router.post("/biometrics/verify-frame")
@@ -514,10 +559,32 @@ async def verify_biometric_frame(payload: BiometricFramePayload):
 async def enroll_biometric_frame(payload: BiometricFramePayload):
     """Enroll operator biometric 128-D embedding into SQLite WAL directly from client frame."""
     from backend.app.perception.vision.face_tracker import face_tracker
-    ok, msg, details = face_tracker.enroll_frame_base64(payload.frame_base64, payload.operator_name or "Ayyappa Rayudu Ravuvari")
+    ok, msg, details = face_tracker.enroll_frame_base64(
+        payload.frame_base64,
+        payload.operator_name or "Ayyappa Rayudu Ravuvari",
+        payload.master_password
+    )
     if not ok:
-        raise HTTPException(status_code=400, detail=msg)
+        raise HTTPException(status_code=400, detail={"message": msg, "details": details})
     return {"status": "SUCCESS", "message": msg, "details": details, "operator_name": payload.operator_name}
+
+
+@router.post("/biometrics/remove")
+async def remove_operator_biometrics(payload: RemoveBiometricsPayload):
+    """Remove registered face lock from SQLite WAL using Master Password (143)."""
+    from backend.app.perception.vision.face_tracker import face_tracker
+    ok, msg = face_tracker.remove_enrolled_biometrics(payload.master_password)
+    if not ok:
+        raise HTTPException(status_code=400, detail={"message": msg})
+    return {"status": "SUCCESS", "message": msg}
+
+
+@router.post("/biometrics/record-intruder")
+async def record_intruder_incident(payload: RecordIntruderPayload):
+    """Record a single authorized security intruder snapshot to storage and SQLite audit log."""
+    from backend.app.perception.vision.face_tracker import face_tracker
+    filename = face_tracker.record_intruder_incident_from_frame(payload.frame_base64, payload.reason or "Unauthorized access attempt")
+    return {"status": "RECORDED", "snapshot_filename": filename, "snapshot_url": f"/api/v1/agent-gateway/security/snapshot/{filename}" if filename else None}
 
 
 @router.get("/security/logs")

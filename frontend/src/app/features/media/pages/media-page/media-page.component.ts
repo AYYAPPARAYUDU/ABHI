@@ -1,4 +1,5 @@
 import { Component, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
@@ -89,6 +90,7 @@ export class MediaPageComponent implements OnInit {
 
   readonly mediaService = inject(MediaService);
   private readonly threeScene = inject(ThreeSceneManagerService);
+  private readonly route = inject(ActivatedRoute);
 
   // Active workspace navigation tab
   activeTab = signal<MediaTab>('studio');
@@ -230,7 +232,15 @@ export class MediaPageComponent implements OnInit {
     this.threeScene.setMode('MEDIA');
     this.mediaService.refreshAll();
     this.mediaService.fetchTemplates().subscribe();
-    this.mediaService.fetchVault().subscribe();
+    this.mediaService.fetchVault('all').subscribe();
+
+    this.route.queryParams.subscribe((params: any) => {
+      const tab = params['tab'];
+      if (tab === 'vault' || tab === 'gallery') {
+        this.openVaultTab();
+        this.filterVault('all');
+      }
+    });
 
     // Fetch Open-Higgsfield AI Models
     this.mediaService.fetchHiggsfieldModels().subscribe({

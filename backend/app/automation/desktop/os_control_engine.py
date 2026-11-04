@@ -205,6 +205,7 @@ class OSControlEngine:
                 "class_name": class_name,
                 "process_id": pid.value,
                 "is_visible": is_visible,
+                "visible": is_visible,
                 "rect": {
                     "left": rect.left,
                     "top": rect.top,
@@ -322,19 +323,25 @@ class OSControlEngine:
             else:
                 self._user32.ShowWindow(hwnd, SW_SHOW)
 
-            # Bring to front with thread-input attach trick for reliable Windows focus
+            # Bring to front with thread-input attach and simulated ALT unlock
             fore_hwnd = self._user32.GetForegroundWindow()
             if fore_hwnd != hwnd:
                 cur_thread = self._kernel32.GetCurrentThreadId()
                 fore_thread = self._user32.GetWindowThreadProcessId(fore_hwnd, None)
                 if cur_thread != fore_thread:
                     self._user32.AttachThreadInput(cur_thread, fore_thread, True)
+                    # Simulated ALT press to bypass Windows SetForegroundWindow lock
+                    self._user32.keybd_event(0x12, 0, 0, 0)
+                    self._user32.keybd_event(0x12, 0, 2, 0)
                     self._user32.BringWindowToTop(hwnd)
                     self._user32.SetForegroundWindow(hwnd)
                     self._user32.AttachThreadInput(cur_thread, fore_thread, False)
                 else:
+                    self._user32.keybd_event(0x12, 0, 0, 0)
+                    self._user32.keybd_event(0x12, 0, 2, 0)
                     self._user32.BringWindowToTop(hwnd)
                     self._user32.SetForegroundWindow(hwnd)
+            time.sleep(0.06)
             return True, None
         except Exception as e:
             return False, f"Failed to focus window {hwnd}: {str(e)}"
@@ -879,13 +886,14 @@ class OSControlEngine:
             windows = self.list_windows()
             for w in windows:
                 title = w.get("title", "").lower()
-                if kw_lower in title and w.get("visible", False):
+                if kw_lower in title and (w.get("is_visible", False) or w.get("visible", False)):
                     hwnd = w.get("hwnd")
                     if hwnd:
                         ok, _ = self.focus_window(hwnd)
                         if ok:
+                            time.sleep(0.08)
                             return True
-            time.sleep(0.2)
+            time.sleep(0.15)
         return False
 
     def open_url(self, url: str, browser: str = "default") -> Tuple[bool, Optional[str]]:

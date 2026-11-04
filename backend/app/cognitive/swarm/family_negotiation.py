@@ -233,6 +233,63 @@ class FamilySwarmEngine:
                 recent_thoughts=s["thoughts"]
             )
 
+        # Seed rich initial synchronization dialogue across 8 Small-LLM brains
+        init_ts = time.time() - 45
+        self._chat_history = [
+            FamilyChatExchange(
+                sender_id="vision_core",
+                sender_name="VISION CORE",
+                recipient="ALL",
+                message="Central Intelligence Core initialized. All 8 Small-LLM specialist brains online.",
+                sentiment="RATIFIED",
+                timestamp=init_ts
+            ),
+            FamilyChatExchange(
+                sender_id="agent-sentinel",
+                sender_name="SENTINEL-X",
+                recipient="VISION CORE",
+                message="Perimeter defense active. Win32 memory isolation confirmed. Zero security alerts.",
+                sentiment="COLLABORATIVE",
+                timestamp=init_ts + 6
+            ),
+            FamilyChatExchange(
+                sender_id="agent-archon",
+                sender_name="ARCHON-NEXUS",
+                recipient="ALL",
+                message="Kahn topological DAG scheduler calibrated. Ready for multi-phase goal decomposition.",
+                sentiment="PROPOSAL",
+                timestamp=init_ts + 12
+            ),
+            FamilyChatExchange(
+                sender_id="agent-synthex",
+                sender_name="SYNTHEX",
+                recipient="ALL",
+                message="Polyglot AST synthesis and self-growth engine synchronized with local abhi:latest.",
+                sentiment="COLLABORATIVE",
+                timestamp=init_ts + 18
+            ),
+            FamilyChatExchange(
+                sender_id="agent-aegis",
+                sender_name="AEGIS-SENTRY",
+                recipient="ALL",
+                message="Dual-state physical verifier online. Physical state verification primed for all operations.",
+                sentiment="RATIFIED",
+                timestamp=init_ts + 24
+            ),
+            FamilyChatExchange(
+                sender_id="agent-nexus",
+                sender_name="NEXUS-STARK",
+                recipient="ALL",
+                message="Voice synthesis and Stark companion protocols synchronized. Standing by for Sir.",
+                sentiment="COLLABORATIVE",
+                timestamp=init_ts + 30
+            ),
+        ]
+
+    def clear_chat_history(self) -> None:
+        """Clear all chat exchanges from the live dialogue stream."""
+        self._chat_history.clear()
+
     def list_brains(self) -> List[SmallLLMBrainInfo]:
         """Return all 8 Small-LLM specialist brains."""
         return list(self._brains.values())

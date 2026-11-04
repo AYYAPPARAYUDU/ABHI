@@ -2037,3 +2037,16 @@
   line-height: 1.5;
   font-style: italic;
 }
+
+.quick-chip-btn.highlight-chip {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.18), rgba(168, 85, 247, 0.22));
+  border-color: rgba(0, 240, 255, 0.45);
+  color: #38bdf8;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.15);
+}
+.quick-chip-btn.highlight-chip:hover {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.32), rgba(168, 85, 247, 0.38));
+  border-color: #00f0ff;
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.35);
+}

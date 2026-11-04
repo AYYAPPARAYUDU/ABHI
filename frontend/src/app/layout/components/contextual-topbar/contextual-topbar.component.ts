@@ -14,6 +14,7 @@ import { AnimeAnimationService } from '../../../core/services/anime-animation.se
 import { AnimeInteractiveDirective } from '../../../shared/directives/anime-interactive.directive';
 import { BiometricFaceScannerComponent } from '../../../features/perception/components/biometric-face-scanner/biometric-face-scanner.component';
 import { WORKING_ENVIRONMENTS } from '../working-environment/working-environment.component';
+import { MediaService } from '../../../features/media/services/media.service';
 
 @Component({
   selector: 'app-contextual-topbar',
@@ -27,6 +28,8 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
   readonly stateService = inject(OperatorStateService);
   readonly themeService = inject(ThemeService);
   readonly speechVoice = inject(SpeechVoiceService);
+  readonly mediaService = inject(MediaService);
+  readonly mediaVaultCount = computed(() => this.mediaService.vaultSummary()?.total_count || 0);
   readonly assistantService = inject(CommunicationsAssistantService);
   readonly agentCommand = inject(AgentCommandService);
   readonly animService = inject(AnimeAnimationService);
@@ -137,6 +140,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
   ngOnInit(): void {
     this.fetchMobileStatus();
     this.mobilePollInterval = setInterval(() => this.fetchMobileStatus(), 6000);
+    this.mediaService.fetchVault().subscribe({ error: () => {} });
   }
 
   ngOnDestroy(): void {

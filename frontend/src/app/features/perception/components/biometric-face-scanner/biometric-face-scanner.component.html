@@ -157,13 +157,69 @@
     <button
       type="button"
       class="action-btn enroll-secondary-btn"
-      (click)="reEnrollOperator()"
+      (click)="startEnrollmentFlow()"
       [disabled]="scanStage() === 'PASS_1_FRONTAL' || scanStage() === 'PASS_2_VERIFICATION'"
       title="Capture current face and enroll fresh 128-D embedding into SQLite WAL"
     >
       <span class="btn-icon">📸</span>
       <span>CAPTURE & RE-ENROLL BIOMETRIC SIGNATURE</span>
     </button>
+
+    <button
+      type="button"
+      class="action-btn remove-face-btn"
+      (click)="startRemoveFlow()"
+      [disabled]="scanStage() === 'PASS_1_FRONTAL' || scanStage() === 'PASS_2_VERIFICATION'"
+      title="Remove enrolled face lock using Master Password (143)"
+    >
+      <span class="btn-icon">🗑️</span>
+      <span>REMOVE FACE LOCK</span>
+    </button>
   </div>
+
+  <!-- Master Password 143 Security Gate Modal -->
+  @if (showAuthModal()) {
+    <div class="auth-modal-backdrop">
+      <div class="auth-modal-box">
+        <div class="auth-modal-header">
+          <div class="auth-modal-title-wrap">
+            <span class="auth-modal-icon">🔐</span>
+            <span class="auth-modal-title">
+              {{ authAction() === 'ENROLL' ? 'AUTHORIZE NEW FACE ENROLLMENT' : 'REMOVE ENROLLED FACE LOCK' }}
+            </span>
+          </div>
+          <button type="button" class="auth-close-btn" (click)="closeAuthModal()">✕</button>
+        </div>
+
+        <p class="auth-modal-desc">
+          {{ authAction() === 'ENROLL'
+            ? 'An existing Face Lock is registered. To replace with a new face, the registered operator must be recognized or Master Password (143) entered.'
+            : 'Enter Master Password (143) to remove Face Lock biometrics and reset system authentication.' }}
+        </p>
+
+        <div class="auth-input-group">
+          <input
+            type="password"
+            class="auth-password-input"
+            [(ngModel)]="authPasswordInput"
+            (keyup.enter)="submitAuthAction()"
+            placeholder="Enter Master Password (143)"
+            autocomplete="off"
+            autofocus
+          />
+          <button type="button" class="auth-confirm-btn" (click)="submitAuthAction()">
+            AUTHORIZE (143)
+          </button>
+        </div>
+
+        @if (authErrorMessage()) {
+          <div class="auth-error-banner">
+            <span>⚠️</span>
+            <span>{{ authErrorMessage() }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
 </div>
 

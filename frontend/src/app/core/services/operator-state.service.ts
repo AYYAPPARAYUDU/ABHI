@@ -234,6 +234,65 @@ export class OperatorStateService {
     }
   }
 
+  // Biometric Face Scanner Modal State (Accessible universally)
+  readonly showScannerModal = signal<boolean>(false);
+
+  openBiometricScanner(): void {
+    this.showScannerModal.set(true);
+  }
+
+  closeBiometricScanner(): void {
+    this.showScannerModal.set(false);
+  }
+
+  // Multi-Agent Swarm Live Dialogue & Chat History (Accessible universally)
+  readonly showSwarmDialogueModal = signal<boolean>(false);
+  readonly swarmDialogueList = signal<any[]>([]);
+  readonly swarmStatus = signal<string>('ONLINE');
+  readonly swarmActiveNegotiations = signal<any[]>([]);
+
+  openSwarmDialogue(): void {
+    this.showSwarmDialogueModal.set(true);
+    this.refreshSwarmDialogue();
+  }
+
+  closeSwarmDialogue(): void {
+    this.showSwarmDialogueModal.set(false);
+  }
+
+  async refreshSwarmDialogue(): Promise<void> {
+    try {
+      const res = await this.agentApi.getLiveSwarmDialogue(40);
+      if (res) {
+        if (Array.isArray(res.dialogue)) {
+          this.swarmDialogueList.set(res.dialogue);
+        }
+        this.swarmStatus.set(res.status || 'ONLINE');
+        this.swarmActiveNegotiations.set(res.active_negotiations || []);
+      }
+    } catch (e) {
+      console.warn('Failed to refresh swarm dialogue:', e);
+    }
+  }
+
+  async triggerSwarmDeliberation(goal?: string): Promise<void> {
+    try {
+      await this.agentApi.triggerSwarmDeliberation(goal || 'Collaborative system health and optimization audit');
+      await this.refreshSwarmDialogue();
+    } catch (e) {
+      console.warn('Failed to trigger deliberation:', e);
+    }
+  }
+
+  async clearSwarmDialogue(): Promise<void> {
+    try {
+      await this.agentApi.clearSwarmDialogue();
+      this.swarmDialogueList.set([]);
+    } catch (e) {
+      this.swarmDialogueList.set([]);
+    }
+  }
+
   // Viewport Content Zoom Level (For compact view with user zoom)
   readonly pageZoomLevel = signal<number>(100);
 

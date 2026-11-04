@@ -86,7 +86,7 @@
       <button
         type="button"
         class="clean-nav-btn scan-nav-btn ribbon-btn"
-        (click)="showScannerModal.set(true)"
+        (click)="stateService.openBiometricScanner()"
         [class.verified]="stateService.biometricStatus().verified"
         [class.scanning]="stateService.biometricStatus().scanning"
         title="Optical Neural Biometric Face Scanner (YuNet + SFace 128D)"
@@ -134,22 +134,51 @@
           <span class="brain-alert-dot" title="Setup Required">!</span>
         }
       </button>
+
+      <!-- 7. Swarm Chat History -->
+      <button
+        type="button"
+        class="clean-nav-btn swarm-nav-btn ribbon-btn"
+        (click)="stateService.openSwarmDialogue()"
+        title="Multi-Agent Swarm Live Chat & Conversation History"
+      >
+        <span class="nav-btn-icon">🤝</span>
+        <span class="nav-btn-text">Swarm Chat</span>
+        @if (stateService.swarmDialogueList().length > 0) {
+          <span class="swarm-count-pip">{{ stateService.swarmDialogueList().length }}</span>
+        }
+      </button>
+
+      <!-- 8. Gallery -->
+      <a
+        routerLink="/media"
+        [queryParams]="{ tab: 'vault' }"
+        class="clean-nav-btn gallery-nav-btn ribbon-btn"
+        [class.active]="isActive('/media')"
+        title="Media & Security Vault Gallery (Generated Images, Videos & Intruder Snapshots)"
+      >
+        <span class="nav-btn-icon">🖼️</span>
+        <span class="nav-btn-text">Gallery</span>
+        @if (mediaVaultCount() > 0) {
+          <span class="vault-count-pip font-monospace">{{ mediaVaultCount() }}</span>
+        }
+      </a>
     </nav>
 
     <!-- Right: Companion Controls (Alexa, Voice Audio, Language, E-STOP) -->
     <div class="bar-right">
-      <!-- Alexa / Direct Hands-Free Voice Dialogue Toggle -->
+      <!-- J.A.R.V.I.S. Direct Hands-Free Voice Dialogue Toggle -->
       <button
         type="button"
-        class="topbar-tool-btn alexa-speak-btn"
+        class="topbar-tool-btn jarvis-speak-btn alexa-speak-btn"
         appAnimeInteractive
         [appAnimeType]="'button'"
         [class.active]="speechVoice.isAlexaConversationMode()"
         (click)="toggleAlexaMode()"
-        [title]="speechVoice.isAlexaConversationMode() ? 'Alexa Conversation Mode ACTIVE (Click to switch to Text Chat)' : 'Activate Alexa Hands-Free Voice Dialogue'"
+        [title]="speechVoice.isAlexaConversationMode() ? 'J.A.R.V.I.S. Live Conversation Mode ACTIVE (Click to switch to Text Chat)' : 'Activate J.A.R.V.I.S. Hands-Free Voice Dialogue'"
       >
         <span class="btn-icon">🎙️</span>
-        <span class="btn-text">{{ speechVoice.isAlexaConversationMode() ? 'Direct Speak' : 'Alexa Speak' }}</span>
+        <span class="btn-text">{{ speechVoice.isAlexaConversationMode() ? 'J.A.R.V.I.S. Live' : 'J.A.R.V.I.S. Voice' }}</span>
         @if (speechVoice.isAlexaConversationMode()) {
           <span class="topbar-pulse-dot"></span>
         }
@@ -291,13 +320,90 @@
   </div>
 
   <!-- Interactive 3D Biometric Face Scanner Modal Overlay -->
-  @if (showScannerModal()) {
-    <div class="biometric-modal-backdrop" (click)="showScannerModal.set(false)">
+  @if (stateService.showScannerModal()) {
+    <div class="biometric-modal-backdrop" (click)="stateService.closeBiometricScanner()">
       <div class="biometric-modal-card" (click)="$event.stopPropagation()">
         <app-biometric-face-scanner
           [isModal]="true"
-          (closeRequested)="showScannerModal.set(false)"
+          (closeRequested)="stateService.closeBiometricScanner()"
         ></app-biometric-face-scanner>
+      </div>
+    </div>
+  }
+
+  <!-- Interactive Multi-LLM Swarm Dialogue & Inter-Agent Chat History Modal Overlay -->
+  @if (stateService.showSwarmDialogueModal()) {
+    <div class="swarm-dialogue-backdrop" (click)="stateService.closeSwarmDialogue()">
+      <div class="swarm-dialogue-panel" (click)="$event.stopPropagation()" role="dialog" aria-label="Swarm Dialogue">
+        <div class="dialogue-header">
+          <div class="dialogue-title-group">
+            <span class="dialogue-icon">⚡</span>
+            <div>
+              <div class="dialogue-title-line">
+                <h2 class="dialogue-title">MULTI-AGENT SWARM LIVE CHAT & CONVERSATION HISTORY</h2>
+                <span class="swarm-status-badge">● {{ stateService.swarmStatus() }} · 8 SPECIALIST BRAINS</span>
+              </div>
+              <p class="dialogue-sub">Live Inter-Agent Thought Stream · Non-Blocking Deliberations · Silent Collaboration</p>
+            </div>
+          </div>
+          <div class="dialogue-header-actions">
+            <button
+              type="button"
+              class="dialogue-action-btn trigger-btn"
+              (click)="stateService.triggerSwarmDeliberation()"
+              title="Trigger a live multi-agent family negotiation"
+            >
+              ⚡ Deliberate
+            </button>
+            <button
+              type="button"
+              class="dialogue-action-btn refresh-btn"
+              (click)="stateService.refreshSwarmDialogue()"
+              title="Refresh conversation stream"
+            >
+              🔄 Refresh
+            </button>
+            <button
+              type="button"
+              class="dialogue-action-btn clear-btn"
+              (click)="stateService.clearSwarmDialogue()"
+              title="Clear dialogue transcript"
+            >
+              🗑️ Clear
+            </button>
+            <button
+              type="button"
+              class="dialogue-close-btn"
+              (click)="stateService.closeSwarmDialogue()"
+              title="Close Swarm Chat"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        <div class="dialogue-body">
+          @if (stateService.swarmDialogueList().length === 0) {
+            <div class="dialogue-empty">
+              <span>🤝 All 8 Small-LLM Specialist Brains are synchronized with abhi:latest. Submit any goal or prompt to view real-time inter-agent deliberation.</span>
+              <button type="button" class="empty-trigger-btn" (click)="stateService.triggerSwarmDeliberation()">⚡ Trigger Test Deliberation</button>
+            </div>
+          } @else {
+            <div class="dialogue-list">
+              @for (item of stateService.swarmDialogueList(); track item.id || $index) {
+                <div class="dialogue-item" [attr.data-sender]="item.sender_id">
+                  <div class="dialogue-item-header">
+                    <span class="agent-badge">{{ item.sender_name }}</span>
+                    <span class="arrow-sym">➔</span>
+                    <span class="recipient-badge">{{ item.recipient }}</span>
+                    <span class="dialogue-sentiment font-monospace">{{ item.sentiment }}</span>
+                  </div>
+                  <div class="dialogue-message">"{{ item.message }}"</div>
+                </div>
+              }
+            </div>
+          }
+        </div>
       </div>
     </div>
   }

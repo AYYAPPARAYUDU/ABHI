@@ -212,19 +212,79 @@ export class AgentApiService {
   }
 
   /**
-   * Enroll operator biometrics directly from client-captured video frame.
+   * Get Face Lock enrollment status and registered operator name.
    */
-  async enrollBiometricFrame(frameBase64: string, operatorName: string = 'Ayyappa Rayudu Ravuvari'): Promise<any> {
+  async getBiometricStatus(): Promise<{ is_enrolled: boolean; operator_name: string | null; enrolled_name: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/biometrics/status`);
+      if (!response.ok) return { is_enrolled: false, operator_name: null, enrolled_name: 'Unenrolled' };
+      return await response.json();
+    } catch {
+      return { is_enrolled: false, operator_name: null, enrolled_name: 'Unenrolled' };
+    }
+  }
+
+  /**
+   * Enroll operator biometrics directly from client-captured video frame with optional master password authentication.
+   */
+  async enrollBiometricFrame(
+    frameBase64: string,
+    operatorName: string = 'Ayyappa Rayudu Ravuvari',
+    masterPassword?: string
+  ): Promise<any> {
+    const payload: any = { frame_base64: frameBase64, operator_name: operatorName };
+    if (masterPassword) {
+      payload.master_password = masterPassword;
+    }
     const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/biometrics/enroll-frame`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ frame_base64: frameBase64, operator_name: operatorName })
+      body: JSON.stringify(payload)
     });
     if (!response.ok) {
       const err = await response.text();
-      throw new Error(`Enrollment failed: ${err}`);
+      let parsedErr: any;
+      try { parsedErr = JSON.parse(err); } catch {}
+      const msg = parsedErr?.detail?.message || parsedErr?.detail || err;
+      throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
     }
     return await response.json();
+  }
+
+  /**
+   * Remove registered Face Lock from SQLite WAL using Master Password (143).
+   */
+  async removeBiometrics(masterPassword: string = '143'): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/biometrics/remove`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ master_password: masterPassword })
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      let parsedErr: any;
+      try { parsedErr = JSON.parse(err); } catch {}
+      const msg = parsedErr?.detail?.message || parsedErr?.detail || err;
+      throw new Error(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    }
+    return await response.json();
+  }
+
+  /**
+   * Record a single unauthorized intruder security incident snapshot.
+   */
+  async recordIntruder(frameBase64: string, reason: string = 'Unauthorized access attempt'): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/biometrics/record-intruder`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ frame_base64: frameBase64, reason })
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -233,6 +293,38 @@ export class AgentApiService {
   async getLiveSwarmDialogue(limit: number = 25): Promise<any> {
     try {
       const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/swarm/live-dialogue?limit=${limit}`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Trigger a live collaborative multi-agent negotiation stream.
+   */
+  async triggerSwarmDeliberation(goal?: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/swarm/trigger-deliberation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal: goal || 'Autonomous collaborative system health and optimization audit.' }),
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Clear live swarm dialogue transcripts from memory.
+   */
+  async clearSwarmDialogue(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/swarm/clear-dialogue`, {
+        method: 'POST',
+      });
       if (!response.ok) return null;
       return await response.json();
     } catch {
