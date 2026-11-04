@@ -194,6 +194,23 @@
         }
       </div>
 
+      <!-- Alexa / Direct Hands-Free Voice Dialogue Toggle -->
+      <button
+        type="button"
+        class="topbar-tool-btn alexa-speak-btn"
+        appAnimeInteractive
+        [appAnimeType]="'button'"
+        [class.active]="speechVoice.isAlexaConversationMode()"
+        (click)="toggleAlexaMode()"
+        [title]="speechVoice.isAlexaConversationMode() ? 'Alexa Conversation Mode ACTIVE (Click to switch to Text Chat)' : 'Activate Alexa Hands-Free Voice Dialogue'"
+      >
+        <span class="btn-icon">🎙️</span>
+        <span class="btn-text">{{ speechVoice.isAlexaConversationMode() ? 'Direct Speak' : 'Alexa Speak' }}</span>
+        @if (speechVoice.isAlexaConversationMode()) {
+          <span class="topbar-pulse-dot"></span>
+        }
+      </button>
+
       <!-- Voice Audio Speech Synthesis Toggle -->
       <button
         type="button"

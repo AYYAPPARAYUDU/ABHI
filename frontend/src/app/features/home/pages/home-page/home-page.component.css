@@ -1700,3 +1700,43 @@
 .dock-lang-opt .opt-flag {
   font-size: 13px;
 }
+
+
+/* Alexa Direct Hands-Free Conversation Button */
+.dock-control-btn.alexa-dock-btn {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  color: #38bdf8;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 10px;
+  width: auto;
+  border-radius: 12px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  transition: all 0.25s ease;
+}
+
+.dock-control-btn.alexa-dock-btn.active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.35), rgba(168, 85, 247, 0.35));
+  border-color: #00f0ff;
+  color: #ffffff;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.5);
+  animation: alexaPulse 2s infinite alternate;
+}
+
+.live-pulse-ring {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00f0ff;
+  box-shadow: 0 0 8px #00f0ff;
+  animation: pulseDot 1s infinite alternate;
+}
+
+@keyframes alexaPulse {
+  0% { box-shadow: 0 0 10px rgba(0, 240, 255, 0.3); }
+  100% { box-shadow: 0 0 22px rgba(0, 240, 255, 0.7); }
+}

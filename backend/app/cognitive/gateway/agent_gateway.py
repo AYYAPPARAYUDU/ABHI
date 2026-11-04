@@ -102,6 +102,8 @@ class AgentGateway:
             ("devices", "action:device"),
             ("screen", "action:screen"),
             ("desktop", "action:desktop"),
+            ("antigravity", "app:antigravity"),
+            ("ide", "app:antigravity"),
         ]:
             self._fuzzy_matcher.insert(term, payload)
 
@@ -325,13 +327,23 @@ class AgentGateway:
 
         # Craft interactive, informative message for the user
         lower_g = goal_to_submit.lower()
-        if lower_g.startswith("play ") or "play song" in lower_g or "play music" in lower_g or "listen to" in lower_g:
+        if "antigravity" in lower_g:
+            user_msg = "Antigravity IDE is now open, Sir."
+        elif lower_g.startswith("play ") or "play song" in lower_g or "play music" in lower_g or "listen to" in lower_g or ("youtube" in lower_g and any(s in lower_g for s in ["play", "song", "music", "telugu", "hindi", "tamil"])):
             clean_track = lower_g
-            for pref in ["play song", "play music", "play video", "play track", "listen to", "play"]:
+            for pref in ["open youtube and play", "play song", "play music", "play video", "play track", "listen to", "search youtube for", "play"]:
                 if clean_track.startswith(pref):
                     clean_track = clean_track[len(pref):].strip()
                     break
-            user_msg = f"Playing '{clean_track.title()}' on YouTube for you, Sir."
+                elif pref in clean_track:
+                    idx = clean_track.find(pref) + len(pref)
+                    clean_track = clean_track[idx:].strip()
+                    break
+            clean_track = re.sub(r"^(?:on\s+(?:youtube|spotify|browser)\s+)", "", clean_track, flags=re.IGNORECASE).strip()
+            clean_track = re.sub(r"\s+on\s+youtube$", "", clean_track, flags=re.IGNORECASE).strip()
+            if not clean_track:
+                clean_track = "trending music"
+            user_msg = f"Directly playing '{clean_track.title()}' on YouTube for you, Sir."
         elif "youtube" in lower_g:
             user_msg = "Opening YouTube in your browser, Sir."
         elif any(c in lower_g for c in ["camera", "webcam"]):
@@ -340,12 +352,21 @@ class AgentGateway:
             user_msg = "Opening Google Chrome, Sir."
         elif "spotify" in lower_g:
             user_msg = "Launching Spotify, Sir."
-        elif "whatsapp" in lower_g:
-            user_msg = "Launching WhatsApp, Sir."
+        elif "whatsapp" in lower_g or "whats app" in lower_g or "watsapp" in lower_g:
+            if any(w in lower_g for w in ["send", "message", "text", "saying", "to"]):
+                user_msg = "Opening WhatsApp and preparing your message, Sir."
+            else:
+                user_msg = "WhatsApp is open, Sir. Would you like me to send a message or read your recent messages?"
         elif "screenshot" in lower_g:
             user_msg = "Capturing screen display, Sir."
-        elif "volume" in lower_g:
-            user_msg = "Adjusting master volume, Sir."
+        elif "volume" in lower_g or "sound" in lower_g:
+            m_pct = re.search(r"(\d+)\s*%", lower_g) or re.search(r"(?:to|at|level)\s+(\d+)", lower_g)
+            if m_pct:
+                user_msg = f"Master volume set to {m_pct.group(1)}%, Sir."
+            elif any(w in lower_g for w in ["mute", "silence"]):
+                user_msg = "Master audio muted, Sir."
+            else:
+                user_msg = "Adjusting master volume, Sir."
         elif any(c in lower_g for c in ["calc", "calculator"]):
             user_msg = "Launching Windows Calculator, Sir."
         elif "notepad" in lower_g:
@@ -409,7 +430,7 @@ class AgentGateway:
 
         # Known desktop target keywords
         desktop_targets = [
-            "notepad", "calculator", "calc", "terminal", "powershell", "cmd", "command prompt",
+            "antigravity", "ide", "notepad", "calculator", "calc", "terminal", "powershell", "cmd", "command prompt",
             "browser", "chrome", "edge", "settings", "vs code", "vscode", "explorer", "screen",
             "screenshot", "folder", "directory", "process", "app", "application", "window", "whatsapp",
             "youtube", "camera", "webcam", "spotify", "gmail", "mail", "mails", "email", "emails", "inbox",

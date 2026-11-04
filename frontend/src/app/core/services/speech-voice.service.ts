@@ -9,6 +9,8 @@ export type AppLanguage = 'auto' | 'en' | 'te' | 'hi' | 'ta';
 export class SpeechVoiceService {
   readonly isSpeaking = signal<boolean>(false);
   readonly isListening = signal<boolean>(false);
+  readonly isAlexaConversationMode = signal<boolean>(false);
+  private alexaCommandCallback: ((text: string) => void) | null = null;
   readonly isMuted = signal<boolean>(false);
   readonly lastSpokenText = signal<string>('');
   readonly hasUserInteracted = signal<boolean>(false);
@@ -461,6 +463,7 @@ export class SpeechVoiceService {
         this.activeWordIndex.set(-1);
         this.activeWord.set('');
         this.currentAudio = null;
+        this.notifySpeechFinished();
       };
 
       audio.onerror = () => {
@@ -528,6 +531,7 @@ export class SpeechVoiceService {
         this.isSpeaking.set(false);
         this.activeWordIndex.set(-1);
         this.activeWord.set('');
+        this.notifySpeechFinished();
       };
 
       utterance.onerror = () => {
@@ -587,6 +591,37 @@ export class SpeechVoiceService {
   /**
    * Toggle mute state for text-to-speech.
    */
+  notifySpeechFinished(): void {
+    if (this.isAlexaConversationMode() && this.alexaCommandCallback) {
+      setTimeout(() => {
+        if (this.isAlexaConversationMode() && !this.isSpeaking() && !this.isListening()) {
+          this.startVoiceListening((txt) => {
+            if (this.alexaCommandCallback) this.alexaCommandCallback(txt);
+          });
+        }
+      }, 450);
+    }
+  }
+
+  toggleAlexaMode(onCommand: (text: string) => void): boolean {
+    const next = !this.isAlexaConversationMode();
+    this.isAlexaConversationMode.set(next);
+    if (next) {
+      this.primeAudio();
+      this.alexaCommandCallback = onCommand;
+      this.speak('Direct conversation mode active. I am listening, Sir.');
+    } else {
+      this.stopVoiceListening();
+      this.alexaCommandCallback = null;
+      this.speak('Conversation mode paused.');
+    }
+    return next;
+  }
+
+  setAlexaCallback(cb: ((text: string) => void) | null): void {
+    this.alexaCommandCallback = cb;
+  }
+
   toggleMute(): boolean {
     const muted = !this.isMuted();
     this.isMuted.set(muted);

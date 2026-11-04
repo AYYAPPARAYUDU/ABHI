@@ -76,16 +76,6 @@ export const WORKING_ENVIRONMENTS: WorkingEnvironmentItem[] = [
     shortcut: '5'
   },
   {
-    id: 'media',
-    route: '/media',
-    label: 'Media Studio',
-    icon: '✦',
-    category: 'INTELLIGENCE',
-    description: '3D Spatial generative media studio, creative pipeline & C2PA provenance',
-    badge: '3D',
-    shortcut: '6'
-  },
-  {
     id: 'system',
     route: '/system',
     label: 'Diagnostics',
@@ -93,7 +83,7 @@ export const WORKING_ENVIRONMENTS: WorkingEnvironmentItem[] = [
     category: 'SYSTEM',
     description: 'Hardware sensors, ADB mobile bridge, GPU/CPU thermals & self-healing health',
     badge: 'HW',
-    shortcut: '7'
+    shortcut: '6'
   }
 ];
 

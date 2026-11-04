@@ -9,6 +9,7 @@ import { UserExperienceMode } from '../../../core/models/agent-experience.model'
 import { ThemeService } from '../../../core/services/theme.service';
 import { SpeechVoiceService, AppLanguage } from '../../../core/services/speech-voice.service';
 import { CommunicationsAssistantService } from '../../../core/services/communications-assistant.service';
+import { AgentCommandService } from '../../../core/services/agent-command.service';
 import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
 import { AnimeInteractiveDirective } from '../../../shared/directives/anime-interactive.directive';
 import { BiometricFaceScannerComponent } from '../../../features/perception/components/biometric-face-scanner/biometric-face-scanner.component';
@@ -27,6 +28,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
   readonly themeService = inject(ThemeService);
   readonly speechVoice = inject(SpeechVoiceService);
   readonly assistantService = inject(CommunicationsAssistantService);
+  readonly agentCommand = inject(AgentCommandService);
   readonly animService = inject(AnimeAnimationService);
   private readonly router = inject(Router);
   private readonly hostEl = inject(ElementRef);
@@ -173,6 +175,14 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
 
   setMode(mode: UserExperienceMode): void {
     this.stateService.setUserMode(mode);
+  }
+
+  toggleAlexaMode(): void {
+    this.speechVoice.toggleAlexaMode((spokenText: string) => {
+      if (spokenText && spokenText.trim()) {
+        this.agentCommand.submitCommand(spokenText, 'VOICE');
+      }
+    });
   }
 
   toggleVoiceAudio(): void {

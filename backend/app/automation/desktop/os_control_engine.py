@@ -714,6 +714,30 @@ class OSControlEngine:
             return "taskmgr.exe", [], False
         if "vscode" in n or "code" in n:
             return "code.cmd", [], False
+        if "antigravity" in n:
+            ag_paths = [
+                os.path.expandvars(r"%LOCALAPPDATA%\Programs\Antigravity IDE\Antigravity IDE.exe"),
+                os.path.expandvars(r"%LOCALAPPDATA%\Programs\Antigravity IDE\bin\antigravity-ide.cmd"),
+                r"C:\Users\AYYAPPA RAYUDU\AppData\Local\Programs\Antigravity IDE\Antigravity IDE.exe",
+            ]
+            for p in ag_paths:
+                if os.path.exists(p):
+                    return f'"{p}"', [], False
+            return "antigravity-ide.cmd", [], False
+
+        # Dynamic Windows installed application resolution
+        try:
+            local_progs = os.path.expandvars(r"%LOCALAPPDATA%\Programs")
+            if os.path.isdir(local_progs):
+                for entry in os.listdir(local_progs):
+                    if n in entry.lower():
+                        entry_dir = os.path.join(local_progs, entry)
+                        if os.path.isdir(entry_dir):
+                            for fn in os.listdir(entry_dir):
+                                if fn.lower().endswith(".exe") and not any(skip in fn.lower() for skip in ["uninstall", "update", "crash"]):
+                                    return f'"{os.path.join(entry_dir, fn)}"', [], False
+        except Exception:
+            pass
 
         # Default: preserve as provided with .exe if no extension
         if not os.path.splitext(n)[1] and not any(ch in n for ch in [":", "/", "\\"]):
@@ -930,6 +954,40 @@ class OSControlEngine:
         ok, err = self.open_url(target_url, browser="chrome")
         return ok, {"method": method, "to": to, "subject": subject, "dispatched": ok}, err
 
+    def set_volume_percentage(self, percent: int) -> Tuple[bool, Optional[str]]:
+        """Set Windows master volume to an exact percentage (0-100%)."""
+        if not self.is_windows or not self._user32:
+            return True, None
+        try:
+            pct = max(0, min(100, int(percent)))
+            # Reset volume to 0 by pressing VOLUME_DOWN 50 times (each step is 2%)
+            for _ in range(50):
+                self._user32.keybd_event(0xAE, 0, 0, 0)
+                self._user32.keybd_event(0xAE, 0, KEYEVENTF_KEYUP, 0)
+            # Step up to target percentage
+            steps = pct // 2
+            for _ in range(steps):
+                self._user32.keybd_event(0xAF, 0, 0, 0)
+                self._user32.keybd_event(0xAF, 0, KEYEVENTF_KEYUP, 0)
+            return True, None
+        except Exception as e:
+            return False, str(e)
+
+    def change_volume_by(self, delta: int) -> Tuple[bool, Optional[str]]:
+        """Adjust volume by delta percentage (positive for increase, negative for decrease)."""
+        if not self.is_windows or not self._user32:
+            return True, None
+        try:
+            vk = 0xAF if delta > 0 else 0xAE
+            steps = max(1, abs(delta) // 2)
+            for _ in range(steps):
+                self._user32.keybd_event(vk, 0, 0, 0)
+                self._user32.keybd_event(vk, 0, KEYEVENTF_KEYUP, 0)
+                time.sleep(0.005)
+            return True, None
+        except Exception as e:
+            return False, str(e)
+
     def adjust_volume(self, direction: str = "up", steps: int = 2) -> Tuple[bool, Optional[str]]:
         """Adjust system master volume up, down, or toggle mute."""
         if not self.is_windows or not self._user32:
@@ -943,6 +1001,40 @@ class OSControlEngine:
             return True, None
         except Exception as e:
             return False, str(e)
+
+    def play_youtube_song(self, query: str) -> Tuple[bool, Dict[str, Any], Optional[str]]:
+        """Directly search and play a YouTube video/song by resolving its top videoId."""
+        import urllib.request
+        import urllib.parse
+        clean_q = query.strip()
+        search_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(clean_q)}"
+        video_id = None
+        try:
+            req = urllib.request.Request(
+                search_url,
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0"}
+            )
+            with urllib.request.urlopen(req, timeout=3.5) as resp:
+                html = resp.read().decode("utf-8", errors="ignore")
+                matches = re.findall(r'watch\?v=([a-zA-Z0-9_-]{11})', html)
+                if matches:
+                    for m in matches:
+                        if m not in ("results", "shorts"):
+                            video_id = m
+                            break
+        except Exception as e:
+            logger.warning(f"Could not resolve direct YouTube video ID: {e}")
+
+        if video_id:
+            direct_play_url = f"https://www.youtube.com/watch?v={video_id}&autoplay=1"
+        else:
+            direct_play_url = search_url
+
+        ok, details, err = self.launch_application(direct_play_url)
+        details["video_id"] = video_id
+        details["play_url"] = direct_play_url
+        details["query"] = clean_q
+        return ok, details, err
 
     def lock_workstation(self) -> Tuple[bool, Optional[str]]:
         """Lock Windows desktop workstation."""

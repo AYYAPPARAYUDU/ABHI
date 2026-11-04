@@ -289,6 +289,22 @@
                 </div>
                 <button
                   type="button"
+                  class="dock-control-btn alexa-dock-btn"
+                  appAnimeInteractive [appAnimeType]="'button'"
+                  [class.active]="speechVoice.isAlexaConversationMode()"
+                  (click)="toggleAlexaMode()"
+                  [title]="speechVoice.isAlexaConversationMode() ? 'Alexa Conversation Mode ACTIVE (Click to switch to Text Chat)' : 'Activate Alexa Hands-Free Voice Dialogue'"
+                  aria-label="Toggle Alexa Direct Dialogue"
+                >
+                  <span class="alexa-icon">🎙️</span>
+                  <span class="alexa-label">{{ speechVoice.isAlexaConversationMode() ? 'TALKING' : 'ALEXA' }}</span>
+                  @if (speechVoice.isAlexaConversationMode()) {
+                    <span class="live-pulse-ring"></span>
+                  }
+                </button>
+
+                <button
+                  type="button"
                   class="dock-control-btn voice-btn" appAnimeInteractive [appAnimeType]="'button'"
                   [class.listening]="isListening()"
                   (click)="toggleVoiceInput()"

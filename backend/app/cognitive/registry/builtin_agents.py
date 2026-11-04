@@ -668,6 +668,34 @@ class OSDesktopAgent(BaseAgent):
                 error_message=err
             )
 
+        if action in ["play_media", "play_youtube", "play_song", "play_music"]:
+            query = str(params.get("query") or params.get("song") or "trending music")
+            ok, pdata, err = os_control_engine.play_youtube_song(query=query)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data=pdata,
+                observed_state={"playing": ok, "song": query, "url": pdata.get("play_url")},
+                error_message=err
+            )
+
+        if action in ["set_volume", "set_volume_percent", "volume_percent"]:
+            percent = int(params.get("percent") or params.get("volume") or 50)
+            ok, err = os_control_engine.set_volume_percentage(percent=percent)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"percent": percent, "adjusted": ok},
+                observed_state={"volume_percent": percent},
+                error_message=err
+            )
+
         if action in ["open_url", "browse_url", "navigate_url"]:
             url = str(params.get("url") or "https://www.google.com")
             browser = str(params.get("browser") or "default")

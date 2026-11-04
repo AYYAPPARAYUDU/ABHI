@@ -408,13 +408,12 @@ class TaskPlanner:
                 if not clean_track:
                     clean_track = "trending music"
 
-                yt_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote_plus(clean_track)}"
                 nodes["step_1"] = DAGNode(
                     node_id="step_1",
-                    title=f"Play Media: {clean_track[:35]}",
+                    title=f"Direct Play: {clean_track[:35]}",
                     agent_id="os_desktop_agent",
-                    action="open_url",
-                    params={"url": yt_url, "browser": "chrome"},
+                    action="play_media",
+                    params={"query": clean_track},
                     risk_tier="Tier 1",
                     status=NodeStatus.PENDING
                 )
@@ -431,24 +430,67 @@ class TaskPlanner:
             )
 
         elif any(v in goal_lower for v in ["volume", "sound", "mute", "unmute"]):
-            direction = "up"
-            steps = 2
-            if "down" in goal_lower or "lower" in goal_lower or "decrease" in goal_lower:
-                direction = "down"
-            elif "mute" in goal_lower:
-                direction = "mute"
-            m_steps = re.search(r"(\d+)", goal)
-            if m_steps:
-                try:
-                    steps = min(20, max(1, int(m_steps.group(1))))
-                except Exception:
-                    pass
+            m_pct = re.search(r"(\d+)\s*%", goal) or re.search(r"(?:to|at|level)\s+(\d+)", goal)
+            if m_pct and not ("up by" in goal_lower or "down by" in goal_lower or "increase by" in goal_lower or "decrease by" in goal_lower):
+                target_pct = min(100, max(0, int(m_pct.group(1))))
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Set System Volume to {target_pct}%",
+                    agent_id="os_desktop_agent",
+                    action="set_volume",
+                    params={"percent": target_pct},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            else:
+                direction = "up"
+                steps = 2
+                if "down" in goal_lower or "lower" in goal_lower or "decrease" in goal_lower:
+                    direction = "down"
+                elif "mute" in goal_lower:
+                    direction = "mute"
+                m_steps = re.search(r"(\d+)", goal)
+                if m_steps:
+                    try:
+                        steps = min(50, max(1, int(m_steps.group(1)) // 2))
+                    except Exception:
+                        pass
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Adjust System Volume ({direction.upper()})",
+                    agent_id="os_desktop_agent",
+                    action="adjust_volume",
+                    params={"direction": direction, "steps": steps},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+
+        elif "antigravity" in goal_lower:
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
-                title=f"Adjust System Volume ({direction.upper()})",
+                title="Launch Antigravity IDE",
                 agent_id="os_desktop_agent",
-                action="adjust_volume",
-                params={"direction": direction, "steps": steps},
+                action="launch_application",
+                params={"app_name": "antigravity"},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif ("whatsapp" in goal_lower or "whats app" in goal_lower or "watsapp" in goal_lower) and not any(m in goal_lower for m in ["phone", "mobile", "adb"]):
+            phone = None
+            phone_m = re.search(r"(?:to|phone|number)\s+([+]?\d{7,15})", goal)
+            if phone_m:
+                phone = phone_m.group(1).strip()
+            msg = None
+            msg_m = re.search(r"(?:saying|message|text)\s+['\"]?(.+?)['\"]?$", goal, re.IGNORECASE)
+            if msg_m:
+                msg = msg_m.group(1).strip()
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title="Open WhatsApp & Prepare Conversation",
+                agent_id="os_desktop_agent",
+                action="open_whatsapp",
+                params={"phone": phone, "message": msg},
                 risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )

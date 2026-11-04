@@ -979,6 +979,20 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.executeScenario(scenario);
   }
 
+  toggleAlexaMode(): void {
+    const isNowActive = this.speechVoice.toggleAlexaMode((spokenText: string) => {
+      if (spokenText && spokenText.trim() && spokenText !== 'Listening for voice command...') {
+        this.commandInput = spokenText;
+        this.onSubmitCommand();
+      }
+    });
+    if (isNowActive) {
+      this.commandInput = '🎙️ Alexa Conversation Active...';
+    } else {
+      this.commandInput = '';
+    }
+  }
+
   toggleVoiceInput(): void {
     if (this.isListening()) {
       this.speechVoice.stopVoiceListening();

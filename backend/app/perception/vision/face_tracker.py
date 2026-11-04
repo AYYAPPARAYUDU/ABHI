@@ -83,7 +83,7 @@ class FaceTracker:
         try:
             if self._det_model_path.exists() and hasattr(cv2, "FaceDetectorYN_create"):
                 self._detector = cv2.FaceDetectorYN_create(
-                    str(self._det_model_path), "", (640, 480), score_threshold=0.6, nms_threshold=0.3
+                    str(self._det_model_path), "", (640, 480), score_threshold=0.45, nms_threshold=0.3
                 )
                 logger.info("FaceTracker: OpenCV YuNet Face Detector initialized.")
         except Exception as e:
@@ -114,7 +114,7 @@ class FaceTracker:
             )
             conn.commit()
 
-            cur.execute("SELECT name, embedding_json FROM operator_biometrics ORDER BY enrolled_at DESC LIMIT 1")
+            cur.execute("SELECT name, embedding_json FROM operator_biometrics WHERE name != 'Unauthorized Intruder' ORDER BY (operator_id = 'operator_primary') DESC, enrolled_at DESC LIMIT 1")
             row = cur.fetchone()
             if row:
                 self._enrolled_name = row[0]
@@ -257,6 +257,17 @@ class FaceTracker:
 
         self._detector.setInputSize((w, h))
         _, faces = self._detector.detect(frame)
+
+        # CLAHE shadow and contrast adaptation fallback if face is backlit
+        if (faces is None or len(faces) == 0) and frame is not None:
+            try:
+                lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+                l, a, b = cv2.split(lab)
+                clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+                enhanced = cv2.cvtColor(cv2.merge((clahe.apply(l), a, b)), cv2.COLOR_LAB2BGR)
+                _, faces = self._detector.detect(enhanced)
+            except Exception:
+                pass
 
         if faces is None or len(faces) == 0:
             return OperatorPresenceResult(
@@ -478,6 +489,17 @@ class FaceTracker:
 
         self._detector.setInputSize((w, h))
         _, faces = self._detector.detect(frame)
+
+        # CLAHE shadow and contrast adaptation fallback if face is backlit
+        if (faces is None or len(faces) == 0) and frame is not None:
+            try:
+                lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
+                l, a, b = cv2.split(lab)
+                clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+                enhanced = cv2.cvtColor(cv2.merge((clahe.apply(l), a, b)), cv2.COLOR_LAB2BGR)
+                _, faces = self._detector.detect(enhanced)
+            except Exception:
+                pass
 
         if faces is None or len(faces) == 0:
             return False, "No face found in camera view. Please face the camera directly.", {}
