@@ -99,6 +99,20 @@ async def get_swarm_negotiations():
     return state.get("active_negotiations", [])
 
 
+@router.get("/swarm/live-dialogue")
+async def get_live_swarm_dialogue(limit: int = 25):
+    """Retrieve real-time multi-agent inter-LLM conversation transcripts and thought packets."""
+    from backend.app.cognitive.swarm.family_negotiation import family_swarm
+    history = family_swarm._chat_history[-limit:]
+    recent_negs = family_swarm.get_recent_negotiations(limit=5)
+    return {
+        "status": "ONLINE",
+        "dialogue": [h.model_dump() for h in history],
+        "active_negotiations": [n.model_dump() for n in recent_negs],
+        "brains_count": len(family_swarm.list_brains())
+    }
+
+
 @router.post("/command", response_model=AgentCommandResponse)
 @router.post("/commands", response_model=AgentCommandResponse)
 async def submit_command(request: AgentCommandRequest) -> AgentCommandResponse:

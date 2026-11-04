@@ -676,6 +676,14 @@
           >
             🎙️ Audio ({{ mediaService.vaultSummary()?.audio_count || 0 }})
           </button>
+          <button
+            type="button"
+            (click)="filterVault('intruder')"
+            [class.active]="vaultFilterType() === 'intruder'"
+            class="filter-pill intruder-tab-pill"
+          >
+            ⚠️ Intruders ({{ mediaService.vaultSummary()?.intruder_count || 0 }})
+          </button>
         </div>
 
         <div class="vault-search-sort-group">
@@ -760,15 +768,18 @@
             <article class="vault-card" (click)="openLightbox(item)">
               <!-- Media Visual Preview Container -->
               <div class="card-visual-wrapper">
-                <!-- Image Preview -->
-                @if (item.media_type === 'image') {
+                <!-- Image & Intruder Preview -->
+                @if (item.media_type === 'image' || item.media_type === 'intruder') {
                   <img
                     [src]="mediaService.getVaultStreamUrl(item.relative_path)"
                     [alt]="item.prompt || item.filename"
                     loading="lazy"
                     class="vault-thumbnail"
+                    [class.intruder-red-border]="item.media_type === 'intruder'"
                   />
-                  <span class="type-pill image-pill">IMAGE</span>
+                  <span class="type-pill" [class.intruder-pill-badge]="item.media_type === 'intruder'" [class.image-pill]="item.media_type === 'image'">
+                    {{ item.media_type === 'intruder' ? '⚠️ INTRUDER' : 'IMAGE' }}
+                  </span>
                 }
 
                 <!-- Video Preview -->
@@ -912,11 +923,12 @@
 
             <!-- Lightbox Main Stage -->
             <div class="lightbox-stage">
-              @if (modalItem.media_type === 'image') {
+              @if (modalItem.media_type === 'image' || modalItem.media_type === 'intruder') {
                 <img
                   [src]="mediaService.getVaultStreamUrl(modalItem.relative_path)"
                   [alt]="modalItem.filename"
                   class="lightbox-full-image"
+                  [class.intruder-red-border]="modalItem.media_type === 'intruder'"
                 />
               }
 

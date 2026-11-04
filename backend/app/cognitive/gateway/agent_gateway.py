@@ -282,6 +282,84 @@ class AgentGateway:
             self._commands[cmd_id] = response
             return response
 
+        # 4.5 Check for automated image/video media synthesis intent
+        lower_t = clean_text.lower()
+        is_media_synthesis = (
+            any(k in lower_t for k in [
+                "generate image", "generate an image", "create an image", "create image",
+                "draw an image", "draw image", "make an image", "synthesize image",
+                "generate a photo", "generate photo", "generate picture", "generate a picture",
+                "paint an image", "render an image", "generate video", "create video", "make video"
+            ])
+            or (any(v in lower_t for v in ["generate", "create", "make", "draw", "render", "paint"])
+                and any(n in lower_t for n in ["image of", "picture of", "photo of", "artwork of", "video of"]))
+        )
+
+        if is_media_synthesis:
+            clean_prompt = clean_text
+            for prefix in [
+                "generate an image of", "generate image of", "generate an image", "generate image",
+                "create an image of", "create image of", "create an image", "create image",
+                "draw an image of", "draw image of", "draw an image", "draw image",
+                "make an image of", "make image of", "make an image", "make image",
+                "generate a photo of", "generate photo of", "generate a picture of", "generate picture of",
+                "synthesize an image of", "synthesize image of", "paint an image of", "render an image of",
+                "generate a video of", "generate video of", "create a video of", "create video of", "make a video of"
+            ]:
+                if clean_prompt.lower().startswith(prefix):
+                    clean_prompt = clean_prompt[len(prefix):].strip()
+                    break
+                elif prefix in clean_prompt.lower():
+                    idx = clean_prompt.lower().find(prefix) + len(prefix)
+                    clean_prompt = clean_prompt[idx:].strip()
+                    break
+
+            is_video = "video" in lower_t
+            media_kind = "video" if is_video else "image"
+
+            try:
+                from backend.app.media.higgsfield_engine import higgsfield_engine, HiggsfieldGenerationRequest
+                h_req = HiggsfieldGenerationRequest(
+                    prompt=clean_prompt or clean_text,
+                    media_type=media_kind,
+                    aspect_ratio="1:1"
+                )
+                gen_res = higgsfield_engine.generate(h_req)
+                user_msg = f"Photorealistic {media_kind} for '{clean_prompt.title()}' has been synthesized and stored in your Media Vault, Sir."
+
+                response = AgentCommandResponse(
+                    command_id=cmd_id,
+                    task_id=f"media_{uuid.uuid4().hex[:8]}",
+                    thread_id=thread_id,
+                    status=CommandLifecycleState.COMPLETED,
+                    accepted=True,
+                    message=user_msg,
+                    result={
+                        "result_type": "MEDIA_RESULT",
+                        "title": f"Synthesized {media_kind.title()}: {clean_prompt[:35]}",
+                        "summary": user_msg,
+                        "data": {
+                            "media_type": media_kind,
+                            "image_url": gen_res.media_url,
+                            "media_url": gen_res.media_url,
+                            "media_path": gen_res.media_path,
+                            "prompt": clean_prompt,
+                            "aspect_ratio": gen_res.aspect_ratio
+                        }
+                    },
+                    context_reference=ResultReference(
+                        result_id=f"res_{uuid.uuid4().hex[:8]}",
+                        type="MEDIA_RESULT",
+                        summary=user_msg
+                    ),
+                    created_at=now_ts
+                )
+                self._record_thread_activity(thread, request, response)
+                self._commands[cmd_id] = response
+                return response
+            except Exception as e:
+                logger.error(f"Automated media generation failed: {e}")
+
         # 5. Route: Autonomous OS Automation vs Direct LLM Intelligence & Q&A
         is_automation = (is_follow_up and target_artifact) or self._is_os_automation_request(
             raw_text, canonical.canonical_intent
@@ -317,6 +395,13 @@ class AgentGateway:
                 goal_to_submit = "open camera"
 
         status_obj = await central_supervisor.submit_goal(goal=goal_to_submit)
+
+        # Trigger concurrent Small-LLM multi-agent swarm deliberation in background silently
+        try:
+            from backend.app.cognitive.swarm.family_negotiation import family_swarm
+            asyncio.create_task(family_swarm.execute_family_negotiation(goal=goal_to_submit, user_name="Sir"))
+        except Exception as e:
+            logger.debug(f"Swarm negotiation background dispatch: {e}")
         
         res_ref = ResultReference(
             result_id=f"res_{uuid.uuid4().hex[:8]}",
@@ -436,7 +521,7 @@ class AgentGateway:
             "youtube", "camera", "webcam", "spotify", "gmail", "mail", "mails", "email", "emails", "inbox",
             "message", "messages", "chat", "chats", "notification", "notifications", "instagram", "maps", "volume",
             "phone", "mobile", "android", "cellphone", "smartphone", "device",
-            "song", "music", "track", "audio", "video", "playlist"
+            "song", "music", "track", "audio", "video", "playlist", "image", "photo", "picture", "artwork"
         ]
 
         # Multilingual targets & actions

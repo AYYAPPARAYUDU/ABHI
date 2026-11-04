@@ -30,9 +30,9 @@
     </div>
   }
 
-  <!-- Main System & Tools Row -->
+  <!-- Main System & Clean Navigation Row -->
   <div class="bar-main-row">
-    <!-- Left: Brand Identity, Quantum Orb & Breadcrumb -->
+    <!-- Left: Brand Identity & Status -->
     <div class="bar-left">
       <!-- High-Tech Brand Pill (VisionOS Spatial Design) -->
       <a routerLink="/home" class="hud-brand-pill" title="Return to Central AI Workspace">
@@ -50,51 +50,124 @@
         <span class="pulse-dot"></span>
         <span class="status-label">{{ systemStatusLabel() }}</span>
       </div>
-
-      <!-- Current Route Breadcrumb -->
-      <div class="page-title-wrap">
-        <span class="page-symbol">◈</span>
-        <h1 class="page-title">{{ currentRouteTitle() }}</h1>
-      </div>
-
-      <!-- Active Task Indicator (When busy) -->
-      @if (stateService.isBusy()) {
-        <div class="active-task-pill" title="Active background agent operation">
-          <span class="pulse-indicator"></span>
-          <span class="pill-text">{{ stateService.currentTask()?.currentStep || 'Working…' }}</span>
-        </div>
-      }
     </div>
 
-    <!-- Right: Voice Audio, Operator Profile, Command Palette, Theme, Mode, Health, E-STOP -->
-    <div class="bar-right">
-      <!-- Dynamic Mobile Device Status Pill -->
+    <!-- Center: Clean Primary Navbar with Only Core Actions -->
+    <nav class="clean-main-navbar bar-nav-ribbon" role="navigation" aria-label="Main System Navigation">
+      <!-- 1. Core -->
+      <a
+        routerLink="/home"
+        class="clean-nav-btn ribbon-btn"
+        [class.active]="isActive('/home')"
+        title="Living 3D Intelligence Core & AI Assistant"
+      >
+        <span class="nav-btn-icon">🌐</span>
+        <span class="nav-btn-text">Core</span>
+        @if (isActive('/home')) {
+          <span class="nav-active-pip"></span>
+        }
+      </a>
+
+      <!-- 2. Workspace -->
+      <a
+        routerLink="/workspace"
+        class="clean-nav-btn ribbon-btn"
+        [class.active]="isActive('/workspace')"
+        title="3D Autonomous Spatial Workspace"
+      >
+        <span class="nav-btn-icon">◈</span>
+        <span class="nav-btn-text">Workspace</span>
+        @if (isActive('/workspace')) {
+          <span class="nav-active-pip"></span>
+        }
+      </a>
+
+      <!-- 3. Scanning -->
       <button
         type="button"
-        class="topbar-tool-btn mobile-status-btn"
-        appAnimeInteractive
-        [appAnimeType]="'button'"
-        [class.connected]="isMobileConnected()"
-        [title]="mobileTooltip()"
+        class="clean-nav-btn scan-nav-btn ribbon-btn"
+        (click)="showScannerModal.set(true)"
+        [class.verified]="stateService.biometricStatus().verified"
+        [class.scanning]="stateService.biometricStatus().scanning"
+        title="Optical Neural Biometric Face Scanner (YuNet + SFace 128D)"
       >
-        <span class="btn-icon">{{ isMobileConnected() ? '📱' : '📲' }}</span>
-        <span class="btn-text">{{ mobileLabel() }}</span>
+        <span class="nav-btn-icon">{{ stateService.biometricStatus().scanning ? '⚡' : '👁️' }}</span>
+        <span class="nav-btn-text">{{ stateService.biometricStatus().scanning ? 'Scanning...' : 'Scanning' }}</span>
+        @if (stateService.biometricStatus().verified) {
+          <span class="nav-active-pip green-pip" title="Biometrically Verified"></span>
+        }
       </button>
 
-      <!-- Human-Brain & Autonomous Communications Hub -->
+      <!-- 4. Lock -->
       <button
         type="button"
-        class="topbar-tool-btn brain-comms-btn"
+        class="clean-nav-btn lock-nav-btn ribbon-btn"
+        (click)="stateService.lockWorkspace('Manual Operator Lock Engaged')"
+        title="Lock Workspace Console (Requires Face ID to Unlock)"
+      >
+        <span class="nav-btn-icon">🔒</span>
+        <span class="nav-btn-text">Lock</span>
+      </button>
+
+      <!-- 5. Theme Changer -->
+      <button
+        type="button"
+        class="clean-nav-btn theme-nav-btn ribbon-btn"
+        (click)="cycleTheme($event)"
+        [title]="'Cycle Theme: ' + themeService.activeTheme().label + ' (Click to Switch)'"
+      >
+        <span class="nav-btn-icon">🎨</span>
+        <span class="nav-btn-text">Theme</span>
+        <span class="theme-tag font-monospace">{{ themeService.activeTheme().label }}</span>
+      </button>
+
+      <!-- 6. Brain -->
+      <button
+        type="button"
+        class="clean-nav-btn brain-nav-btn ribbon-btn"
+        (click)="assistantService.openModal()"
+        [title]="'3D Holographic Brain & Communications Assistant: ' + (assistantService.brainStatus()?.version || 'Ready')"
+      >
+        <span class="nav-btn-icon">🧠</span>
+        <span class="nav-btn-text">Brain</span>
+        @if (!assistantService.isConfigured()) {
+          <span class="brain-alert-dot" title="Setup Required">!</span>
+        }
+      </button>
+    </nav>
+
+    <!-- Right: Companion Controls (Alexa, Voice Audio, Language, E-STOP) -->
+    <div class="bar-right">
+      <!-- Alexa / Direct Hands-Free Voice Dialogue Toggle -->
+      <button
+        type="button"
+        class="topbar-tool-btn alexa-speak-btn"
         appAnimeInteractive
         [appAnimeType]="'button'"
-        (click)="assistantService.openModal()"
-        [title]="'Human-Brain & Autonomous Comms: ' + (assistantService.brainStatus()?.version || 'Ready') + (assistantService.isConfigured() ? ' (Connected)' : ' (Setup Required)')"
+        [class.active]="speechVoice.isAlexaConversationMode()"
+        (click)="toggleAlexaMode()"
+        [title]="speechVoice.isAlexaConversationMode() ? 'Alexa Conversation Mode ACTIVE (Click to switch to Text Chat)' : 'Activate Alexa Hands-Free Voice Dialogue'"
       >
-        <span class="btn-icon">🧠</span>
-        <span class="btn-text">{{ assistantService.brainStatus()?.version || 'Brain Comms' }}</span>
-        @if (!assistantService.isConfigured()) {
-          <span class="setup-dot-alert" title="Connect Email & Phone">!</span>
+        <span class="btn-icon">🎙️</span>
+        <span class="btn-text">{{ speechVoice.isAlexaConversationMode() ? 'Direct Speak' : 'Alexa Speak' }}</span>
+        @if (speechVoice.isAlexaConversationMode()) {
+          <span class="topbar-pulse-dot"></span>
         }
+      </button>
+
+      <!-- Voice Audio Speech Synthesis Toggle -->
+      <button
+        type="button"
+        class="topbar-tool-btn voice-audio-btn"
+        appAnimeInteractive
+        [appAnimeType]="'button'"
+        [class.muted]="speechVoice.isMuted()"
+        [class.speaking]="speechVoice.isSpeaking()"
+        (click)="toggleVoiceAudio()"
+        [title]="speechVoice.isMuted() ? 'Voice Audio Muted (Click to Unmute)' : 'Voice Audio Active (Click to Mute)'"
+      >
+        <span class="btn-icon">{{ speechVoice.isMuted() ? '🔇' : (speechVoice.isSpeaking() ? '🗣️' : '🔊') }}</span>
+        <span class="btn-text">{{ speechVoice.isMuted() ? 'Muted' : (speechVoice.isSpeaking() ? 'Speaking' : 'Voice') }}</span>
       </button>
 
       <!-- Universal Language Selector Dropdown -->
@@ -194,180 +267,6 @@
         }
       </div>
 
-      <!-- Alexa / Direct Hands-Free Voice Dialogue Toggle -->
-      <button
-        type="button"
-        class="topbar-tool-btn alexa-speak-btn"
-        appAnimeInteractive
-        [appAnimeType]="'button'"
-        [class.active]="speechVoice.isAlexaConversationMode()"
-        (click)="toggleAlexaMode()"
-        [title]="speechVoice.isAlexaConversationMode() ? 'Alexa Conversation Mode ACTIVE (Click to switch to Text Chat)' : 'Activate Alexa Hands-Free Voice Dialogue'"
-      >
-        <span class="btn-icon">🎙️</span>
-        <span class="btn-text">{{ speechVoice.isAlexaConversationMode() ? 'Direct Speak' : 'Alexa Speak' }}</span>
-        @if (speechVoice.isAlexaConversationMode()) {
-          <span class="topbar-pulse-dot"></span>
-        }
-      </button>
-
-      <!-- Voice Audio Speech Synthesis Toggle -->
-      <button
-        type="button"
-        class="topbar-tool-btn voice-audio-btn"
-        appAnimeInteractive
-        [appAnimeType]="'button'"
-        [class.muted]="speechVoice.isMuted()"
-        [class.speaking]="speechVoice.isSpeaking()"
-        (click)="toggleVoiceAudio()"
-        [title]="speechVoice.isMuted() ? 'Voice Audio Muted (Click to Unmute)' : 'Voice Audio Active (Click to Mute)'"
-      >
-        <span class="btn-icon">{{ speechVoice.isMuted() ? '🔇' : (speechVoice.isSpeaking() ? '🗣️' : '🔊') }}</span>
-        <span class="btn-text">{{ speechVoice.isMuted() ? 'Muted' : (speechVoice.isSpeaking() ? 'Speaking' : 'Voice') }}</span>
-      </button>
-
-      <!-- Optical Face ID Biometric Trigger & Badge -->
-      <button
-        type="button"
-        class="biometric-hud-btn"
-        (click)="showScannerModal.set(true)"
-        [class.verified]="stateService.biometricStatus().verified"
-        [class.scanning]="stateService.biometricStatus().scanning"
-        [title]="stateService.biometricStatus().message + ' (Click to scan)'"
-      >
-        <span class="biometric-icon">{{ stateService.biometricStatus().scanning ? '⚡' : '👁️' }}</span>
-        <span class="biometric-label">
-          {{ stateService.biometricStatus().scanning ? 'Scanning...' : (stateService.biometricStatus().verified ? 'Face ID: Verified' : 'Face ID: Scan') }}
-        </span>
-        @if (stateService.biometricStatus().verified) {
-          <span class="biometric-dot"></span>
-        }
-      </button>
-
-      <!-- Quick Lock Station Button -->
-      <button
-        type="button"
-        class="topbar-tool-btn lock-station-btn"
-        (click)="stateService.lockWorkspace('Manual Operator Lock Engaged')"
-        title="Lock Workspace Console (Requires Face ID to Unlock)"
-      >
-        <span class="btn-icon">🔒</span>
-        <span class="btn-text">Lock</span>
-      </button>
-
-      <!-- Personal Operator Profile Badge (Ayyappa Rayudu) -->
-      <a
-        class="operator-profile-pill"
-        routerLink="/business"
-        [title]="stateService.personalProfile().name + ' (' + stateService.personalProfile().handle + ')'"
-      >
-        <img
-          [src]="stateService.personalProfile().avatarUrl"
-          alt="Ayyappa Rayudu"
-          class="operator-avatar-img"
-          (error)="handleAvatarFallback($event)"
-        />
-        <div class="operator-meta-group">
-          <span class="operator-title-text">{{ stateService.personalProfile().name }}</span>
-          <span class="operator-handle-sub">{{ stateService.personalProfile().handle }}</span>
-        </div>
-        <span class="verified-indicator" title="Personalized Local AI Verified">✓</span>
-      </a>
-
-      <!-- Master Command Palette / Center Trigger -->
-      <button
-        type="button"
-        class="command-trigger-btn"
-        appAnimeInteractive
-        [appAnimeType]="'button'"
-        (click)="stateService.toggleCommandPalette(true)"
-        title="Open Master Command Center (Ctrl+K or ⌘K)"
-      >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <span class="trigger-label">Cmd</span>
-        <kbd class="shortcut-badge">⌘K</kbd>
-      </button>
-
-      <!-- View Zoom Controls (Allows user to zoom in/out on secondary pages) -->
-      @if (!isActive('/home') && !isActive('/workspace')) {
-        <div class="zoom-controls-group" title="Viewport Zoom">
-          <button
-            type="button"
-            class="zoom-btn"
-            (click)="stateService.zoomOut()"
-            title="Zoom Out (Compact)"
-            [disabled]="stateService.pageZoomLevel() <= 70"
-          >
-            -
-          </button>
-          <span class="zoom-level-text font-monospace" (click)="stateService.resetZoom()" title="Click to Reset 100%">
-            {{ stateService.pageZoomLevel() }}%
-          </span>
-          <button
-            type="button"
-            class="zoom-btn"
-            (click)="stateService.zoomIn()"
-            title="Zoom In (Enlarge)"
-            [disabled]="stateService.pageZoomLevel() >= 150"
-          >
-            +
-          </button>
-        </div>
-      }
-
-      <!-- Theme Quick Cycler -->
-      <button
-        type="button"
-        class="theme-quick-btn"
-        appAnimeInteractive
-        [appAnimeType]="'button'"
-        (click)="cycleTheme($event)"
-        [title]="'Active Theme: ' + themeService.activeTheme().label + ' (Click to Switch)'"
-      >
-        <span class="theme-icon">🎨</span>
-        <span class="theme-name">{{ themeService.activeTheme().label }}</span>
-      </button>
-
-      <!-- Experience Mode Switcher -->
-      <div class="mode-switcher" role="radiogroup" aria-label="Experience Mode">
-        <button
-          type="button"
-          class="mode-btn"
-          [class.active]="stateService.userMode() === 'USER'"
-          (click)="setMode('USER')"
-          title="User Mode"
-        >
-          User
-        </button>
-        <button
-          type="button"
-          class="mode-btn"
-          [class.active]="stateService.userMode() === 'ADVANCED'"
-          (click)="setMode('ADVANCED')"
-          title="Advanced Mode"
-        >
-          Adv
-        </button>
-        <button
-          type="button"
-          class="mode-btn"
-          [class.active]="stateService.userMode() === 'DEVELOPER'"
-          (click)="setMode('DEVELOPER')"
-          title="Developer Mode"
-        >
-          Dev
-        </button>
-      </div>
-
-      <!-- Health Indicator -->
-      <div class="health-pill" [attr.data-health]="healthStatus()" [title]="'System Status: ' + healthStatus()">
-        <span class="health-dot"></span>
-        <span class="health-label">{{ healthStatus() }}</span>
-      </div>
-
       <!-- Immediate Emergency Stop Trigger -->
       @if (stateService.safety().emergencyStopped) {
         <button
@@ -390,9 +289,6 @@
       }
     </div>
   </div>
-
-  <!-- Dedicated Standalone Working Environment Component (Universal Access Across All Views) -->
-  <app-working-environment></app-working-environment>
 
   <!-- Interactive 3D Biometric Face Scanner Modal Overlay -->
   @if (showScannerModal()) {

@@ -226,4 +226,17 @@ export class AgentApiService {
     }
     return await response.json();
   }
+
+  /**
+   * Retrieve real-time multi-agent swarm dialogue & inter-LLM thoughts.
+   */
+  async getLiveSwarmDialogue(limit: number = 25): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/swarm/live-dialogue?limit=${limit}`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
 }

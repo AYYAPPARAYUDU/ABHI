@@ -1960,3 +1960,30 @@
   background: #e6ff33;
 }
 
+
+/* Intruder Snapshot Styling in Media Vault */
+.intruder-tab-pill {
+  border-color: rgba(255, 68, 68, 0.4) !important;
+  color: #ff6666 !important;
+}
+
+.intruder-tab-pill.active {
+  background: rgba(255, 50, 50, 0.2) !important;
+  border-color: #ff3333 !important;
+  color: #ff3333 !important;
+  box-shadow: 0 0 16px rgba(255, 50, 50, 0.35) !important;
+}
+
+.intruder-pill-badge {
+  background: rgba(255, 0, 0, 0.85);
+  color: #fff;
+  border: 1px solid #ff3333;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.intruder-red-border {
+  border: 2px solid rgba(255, 50, 50, 0.8) !important;
+  box-shadow: 0 0 18px rgba(255, 0, 0, 0.3) !important;
+}

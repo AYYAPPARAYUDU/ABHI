@@ -978,7 +978,7 @@ export interface MediaAnalysisJobDTO {
 export interface MediaVaultItemDTO {
   id: string;
   filename: string;
-  media_type: 'image' | 'video' | 'audio';
+  media_type: 'image' | 'video' | 'audio' | 'intruder';
   extension: string;
   size_bytes: number;
   size_formatted: string;
@@ -998,6 +998,7 @@ export interface MediaVaultSummaryDTO {
   image_count: number;
   video_count: number;
   audio_count: number;
+  intruder_count?: number;
   total_bytes: number;
   total_size_formatted: string;
   items: MediaVaultItemDTO[];

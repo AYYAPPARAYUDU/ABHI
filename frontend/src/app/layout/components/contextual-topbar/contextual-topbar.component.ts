@@ -13,12 +13,12 @@ import { AgentCommandService } from '../../../core/services/agent-command.servic
 import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
 import { AnimeInteractiveDirective } from '../../../shared/directives/anime-interactive.directive';
 import { BiometricFaceScannerComponent } from '../../../features/perception/components/biometric-face-scanner/biometric-face-scanner.component';
-import { WorkingEnvironmentComponent, WORKING_ENVIRONMENTS } from '../working-environment/working-environment.component';
+import { WORKING_ENVIRONMENTS } from '../working-environment/working-environment.component';
 
 @Component({
   selector: 'app-contextual-topbar',
   standalone: true,
-  imports: [CommonModule, RouterModule, AnimeInteractiveDirective, WorkingEnvironmentComponent, BiometricFaceScannerComponent],
+  imports: [CommonModule, RouterModule, AnimeInteractiveDirective, BiometricFaceScannerComponent],
   templateUrl: './contextual-topbar.component.html',
   styleUrl: './contextual-topbar.component.css'
 })

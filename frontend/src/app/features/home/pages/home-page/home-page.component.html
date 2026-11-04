@@ -1,8 +1,8 @@
 <div class="main-agent-spatial-container" role="region" aria-label="Main Agent Spatial Intelligence Workspace">
   <!-- CENTER: ARC REACTOR 3D INTELLIGENCE CORE -->
   <main class="main-agent-center-viewport" role="main" aria-label="Main Agent Intelligence Core">
-    <!-- Minimalist Subconscious Thought Stream Ticker (Discreet, Clean, Spacious) -->
-    <section class="subconscious-thought-bar" aria-label="Subconscious Cognitive Stream">
+    <!-- Minimalist Subconscious Thought Stream Ticker (Clickable to view full Swarm Dialogue) -->
+    <section class="subconscious-thought-bar clickable" (click)="openSwarmDialogueModal()" title="Click to view real-time Multi-LLM Swarm Dialogue" aria-label="Subconscious Cognitive Stream">
       <div class="thought-pulse-indicator">
         <span class="beacon-ring"></span>
         <span class="beacon-core"></span>
@@ -186,12 +186,38 @@
             <span class="chip-emoji">⚡</span>
             <span>{{ isSwarmDeployed() ? 'Retract Swarm' : 'Deploy Swarm' }}</span>
           </button>
+          <button type="button" class="quick-chip-btn swarm-dialogue-chip" (click)="openSwarmDialogueModal(); closeActionsMenu()">
+            <span class="chip-emoji">🤝</span>
+            <span>Swarm Dialogue</span>
+          </button>
           <button type="button" class="quick-chip-btn ai-chat-chip" (click)="executeActionFromMenu('Who are you and what are your capabilities?')">
             <span class="chip-emoji">🤖</span>
             <span>Ask ABHI</span>
           </button>
         </div>
       </div>
+
+      <!-- Real-time Generated Media Preview Card -->
+      @if (commandService.activeResult(); as res) {
+        @if (res.mediaPreviewUrl) {
+          <div class="floating-media-result-card">
+            <div class="media-result-header">
+              <div class="media-title-wrap">
+                <span class="media-sparkle">✦</span>
+                <span class="media-title">{{ res.title }}</span>
+              </div>
+              <button type="button" class="media-close-btn" (click)="commandService.dismissResult()" title="Close Preview">✕</button>
+            </div>
+            <div class="media-preview-container">
+              <img [src]="res.mediaPreviewUrl" [alt]="res.title" class="media-preview-img" />
+            </div>
+            <div class="media-result-footer">
+              <span class="media-summary-text">{{ res.summary }}</span>
+              <a routerLink="/media" class="open-vault-link">View in Media Vault ↗</a>
+            </div>
+          </div>
+        }
+      }
 
       <!-- Bottom Centered Plain Neumorphic Command Dock -->
       <footer class="neumorphic-dock-container" role="region" aria-label="Command Dock">
@@ -363,6 +389,46 @@
 
     </div>
   </main>
+  <!-- 5. Interactive Swarm Dialogue & Inter-LLM Comms Modal -->
+  @if (showSwarmDialogueModal()) {
+    <div class="swarm-dialogue-backdrop" (click)="closeSwarmDialogueModal()">
+      <div class="swarm-dialogue-panel" (click)="$event.stopPropagation()" role="dialog" aria-label="Swarm Dialogue">
+        <div class="dialogue-header">
+          <div class="dialogue-title-group">
+            <span class="dialogue-icon">⚡</span>
+            <div>
+              <h2 class="dialogue-title">MULTI-LLM SWARM DIALOGUE & CONVERSATION</h2>
+              <p class="dialogue-sub">Live Inter-Agent Thought Stream · Multi-LLM Consensus · Silent Collaboration</p>
+            </div>
+          </div>
+          <button type="button" class="dialogue-close-btn" (click)="closeSwarmDialogueModal()">✕</button>
+        </div>
+
+        <div class="dialogue-body">
+          @if (swarmDialogueList().length === 0) {
+            <div class="dialogue-empty">
+              <span>🤝 All 8 Small-LLM Specialist Brains are synchronized with abhi:latest. Submit any goal or prompt to view real-time inter-agent deliberation.</span>
+            </div>
+          } @else {
+            <div class="dialogue-list">
+              @for (item of swarmDialogueList(); track item.id || $index) {
+                <div class="dialogue-item">
+                  <div class="dialogue-item-header">
+                    <span class="agent-badge">{{ item.sender_name }}</span>
+                    <span class="arrow-sym">➔</span>
+                    <span class="recipient-badge">{{ item.recipient }}</span>
+                    <span class="dialogue-sentiment font-monospace">{{ item.sentiment }}</span>
+                  </div>
+                  <div class="dialogue-message">"{{ item.message }}"</div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
 
 
 

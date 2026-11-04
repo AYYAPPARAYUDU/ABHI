@@ -1030,6 +1030,7 @@ class MediaVaultSummary(BaseModel):
     image_count: int
     video_count: int
     audio_count: int
+    intruder_count: int = 0
     total_bytes: int
     total_size_formatted: str
     items: List[MediaVaultItem]
@@ -1084,8 +1085,10 @@ def _get_media_dirs() -> List[Path]:
         (root / "project_data" / "media").resolve(),
         (root / "media").resolve(),
         (root / "database" / "media").resolve(),
+        (root / "project_data" / "security" / "intruders").resolve(),
     ]
     (root / "project_data" / "media").mkdir(parents=True, exist_ok=True)
+    (root / "project_data" / "security" / "intruders").mkdir(parents=True, exist_ok=True)
     return [d for d in dirs if d.exists()]
 
 
@@ -1171,7 +1174,7 @@ async def get_media_vault(
     # 2. Dynamic Disk Scan
     raw_items = []
     seen_hashes = set()
-    total_counts = {"image": 0, "video": 0, "audio": 0}
+    total_counts = {"image": 0, "video": 0, "audio": 0, "intruder": 0}
     total_bytes = 0
 
     for base_dir in media_dirs:
@@ -1184,7 +1187,10 @@ async def get_media_vault(
             if ext not in VAULT_MIME_MAP:
                 continue
 
-            m_type = "image" if ext in (".png", ".jpg", ".jpeg", ".webp") else ("video" if ext in (".mp4", ".webm", ".mov") else "audio")
+            if "intruder" in f.name.lower() or "intruders" in str(f).lower():
+                m_type = "intruder"
+            else:
+                m_type = "image" if ext in (".png", ".jpg", ".jpeg", ".webp") else ("video" if ext in (".mp4", ".webm", ".mov") else "audio")
             try:
                 st = f.stat()
             except OSError:
@@ -1208,7 +1214,11 @@ async def get_media_vault(
             meta = db_meta.get(f.name, {})
             prompt_val = meta.get("prompt")
             if not prompt_val:
-                prompt_val = f.name.replace(".png", "").replace(".mp4", "").replace(".wav", "").replace("_", " ")
+                if m_type == "intruder":
+                    prompt_val = "⚠️ Security Audit: Unauthorized Intruder Detected (YuNet + SFace)"
+                else:
+                    prompt_val = f.name.replace(".png", "").replace(".mp4", "").replace(".wav", "").replace("_", " ")
+            model_val = meta.get("model") or ("OpenCV YuNet + SFace" if m_type == "intruder" else None)
 
             raw_items.append({
                 "id": f.stem,
@@ -1223,18 +1233,18 @@ async def get_media_vault(
                 "stream_url": f"/api/v1/media/vault/stream?path={rel}",
                 "download_url": f"/api/v1/media/vault/download?path={rel}",
                 "prompt": prompt_val,
-                "model_id": meta.get("model"),
+                "model_id": model_val,
                 "dimensions": meta.get("dims"),
                 "sha256": meta.get("sha256")
             })
 
     # Filter by type
-    if type and type.lower() != "all":
+    if isinstance(type, str) and type.lower() != "all":
         target = type.lower()
         raw_items = [it for it in raw_items if it["media_type"] == target]
 
     # Filter by search
-    if search:
+    if isinstance(search, str) and search.strip():
         q = search.lower()
         raw_items = [
             it for it in raw_items
@@ -1242,20 +1252,24 @@ async def get_media_vault(
         ]
 
     # Sort
-    if sort == "oldest":
+    sort_val = sort if isinstance(sort, str) else "newest"
+    if sort_val == "oldest":
         raw_items.sort(key=lambda x: x["created_at"])
-    elif sort == "size":
+    elif sort_val == "size":
         raw_items.sort(key=lambda x: x["size_bytes"], reverse=True)
     else:  # newest
         raw_items.sort(key=lambda x: x["created_at"], reverse=True)
 
-    paginated = raw_items[offset : offset + limit]
+    int_offset = offset if isinstance(offset, int) else 0
+    int_limit = limit if isinstance(limit, int) else 100
+    paginated = raw_items[int_offset : int_offset + int_limit]
 
     return MediaVaultSummary(
         total_count=len(raw_items),
         image_count=total_counts["image"],
         video_count=total_counts["video"],
         audio_count=total_counts["audio"],
+        intruder_count=total_counts["intruder"],
         total_bytes=total_bytes,
         total_size_formatted=_format_size(total_bytes),
         items=[MediaVaultItem(**it) for it in paginated]
@@ -1331,6 +1345,7 @@ async def delete_vault_item(path: str = Query(..., description="Relative path of
                 cur = conn.cursor()
                 cur.execute("DELETE FROM media_artifacts WHERE filename = ? OR artifact_id = ? OR job_id = ?", (filename, stem, stem))
                 cur.execute("DELETE FROM video_artifacts WHERE filename = ? OR artifact_id = ? OR job_id = ?", (filename, stem, stem))
+                cur.execute("DELETE FROM security_audit_log WHERE snapshot_filename = ? OR snapshot_filename LIKE ?", (filename, f"%{filename}%"))
                 conn.commit()
                 conn.close()
             except Exception as e:
