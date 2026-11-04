@@ -822,7 +822,7 @@ class OSControlEngine:
         phone: Optional[str] = None,
         message: Optional[str] = None
     ) -> Tuple[bool, Dict[str, Any], Optional[str]]:
-        """Open WhatsApp Desktop app or Web with optional recipient and prefilled message."""
+        """Open native WhatsApp Desktop application or Web with optional recipient and prefilled message."""
         import urllib.parse
         encoded_msg = urllib.parse.quote(message) if message else ""
 
@@ -835,21 +835,28 @@ class OSControlEngine:
             web_url = f"https://web.whatsapp.com/send?text={encoded_msg}" if encoded_msg else "https://web.whatsapp.com"
 
         launched = False
-        method_used = "protocol"
+        method_used = "whatsapp_desktop_native"
         err = None
 
         if self.is_windows:
-            # Prioritize Chrome where user has active logged-in WhatsApp Web session
-            chrome_exe = find_browser_executable("chrome")
-            if chrome_exe and os.path.exists(chrome_exe):
-                try:
-                    clean_exe = chrome_exe.strip('"\'')
-                    subprocess.Popen([clean_exe, web_url])
-                    launched = True
-                    method_used = "chrome_whatsapp_web"
-                except Exception as e:
-                    err = str(e)
+            # 1. Primary priority: Native WhatsApp Desktop App via protocol URI
+            try:
+                os.startfile(proto_url)
+                launched = True
+                method_used = "whatsapp_desktop_protocol"
+            except Exception as e_proto:
+                logger.debug(f"WhatsApp protocol launch failed: {e_proto}")
 
+            # 2. Secondary priority: Native WhatsApp Desktop App via Windows UWP shell shortcut
+            if not launched:
+                try:
+                    subprocess.Popen("explorer.exe shell:AppsFolder\\5319275A.WhatsAppDesktop_cv1g1gvanyjgm!App", shell=True)
+                    launched = True
+                    method_used = "whatsapp_desktop_uwp"
+                except Exception as e_app:
+                    logger.debug(f"WhatsApp UWP shell launch failed: {e_app}")
+
+            # 3. Tertiary priority: Fallback to WhatsApp Web in default browser via ShellExecute
             if not launched:
                 try:
                     os.startfile(web_url)
@@ -858,13 +865,8 @@ class OSControlEngine:
                 except Exception as e2:
                     err = str(e2)
 
-            if not launched:
-                try:
-                    subprocess.Popen(["powershell", "-Command", f"Start-Process '{proto_url}'"], shell=True)
-                    launched = True
-                    method_used = "whatsapp_desktop_protocol"
-                except Exception as e:
-                    err = str(e)
+            time.sleep(0.4)
+            self.bring_to_front_by_keyword("whatsapp", timeout_sec=2.0)
         else:
             try:
                 subprocess.Popen(["xdg-open", web_url])
@@ -934,37 +936,47 @@ class OSControlEngine:
         return False
 
     def open_url(self, url: str, browser: str = "default") -> Tuple[bool, Optional[str]]:
-        """Open any URL in specified browser or system default, ensuring foreground focus."""
+        """Open any URL in system default browser or specified browser reliably via ShellExecute."""
         target_url = url if url.startswith(("http://", "https://")) else f"https://{url}"
         b = browser.lower().strip()
         try:
-            # 1. If explicit browser requested, try direct executable launch without shell quoting issues
-            if b in ("chrome", "edge", "firefox", "brave"):
-                found = find_browser_executable(b)
-                if found:
-                    clean_exe = found.strip('"\'')
-                    try:
-                        subprocess.Popen([clean_exe, target_url])
-                        time.sleep(0.35)
-                        self.bring_to_front_by_keyword(b, timeout_sec=1.5)
-                        return True, None
-                    except Exception:
-                        pass
-
-            # 2. Windows native URL activation (opens target in user's default browser reliably)
             if self.is_windows:
+                launched = False
+                # 1. Primary: Windows ShellExecute directly activates default browser tab without ProcessSingleton lock
                 try:
                     os.startfile(target_url)
-                except Exception:
+                    launched = True
+                except Exception as e_start:
+                    logger.debug(f"os.startfile failed: {e_start}")
+
+                # 2. Secondary: If explicit browser requested, use --single-argument or cmd start
+                if not launched and b in ("chrome", "edge", "firefox", "brave"):
+                    found = find_browser_executable(b)
+                    if found and os.path.exists(found.strip('"\'')):
+                        clean_exe = found.strip('"\'')
+                        try:
+                            subprocess.Popen([clean_exe, "--single-argument", target_url])
+                            launched = True
+                        except Exception:
+                            try:
+                                subprocess.Popen(f'cmd.exe /c start "" "{clean_exe}" "{target_url}"', shell=True)
+                                launched = True
+                            except Exception:
+                                pass
+
+                # 3. Universal shell fallback
+                if not launched:
                     try:
-                        subprocess.Popen(["powershell", "-NoProfile", "-Command", f"Start-Process '{target_url}'"])
+                        subprocess.Popen(f'cmd.exe /c start "" "{target_url}"', shell=True)
+                        launched = True
                     except Exception:
-                        subprocess.Popen(f'start "" "{target_url}"', shell=True)
-                
+                        subprocess.Popen(["powershell", "-NoProfile", "-Command", f"Start-Process '{target_url}'"])
+                        launched = True
+
                 # Bring browser or target tab to front
-                time.sleep(0.35)
-                for kw in ["chrome", "edge", "youtube", "gmail", "whatsapp", "browser"]:
-                    if self.bring_to_front_by_keyword(kw, timeout_sec=0.4):
+                time.sleep(0.4)
+                for kw in ["youtube", "whatsapp", "gmail", "chrome", "edge", "browser"]:
+                    if self.bring_to_front_by_keyword(kw, timeout_sec=0.5):
                         break
                 return True, None
             else:
@@ -1075,7 +1087,7 @@ class OSControlEngine:
         else:
             direct_play_url = search_url
 
-        ok, err = self.open_url(direct_play_url, browser="chrome")
+        ok, err = self.open_url(direct_play_url, browser="default")
         details = {
             "target": direct_play_url,
             "is_uri": True,

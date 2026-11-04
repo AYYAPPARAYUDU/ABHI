@@ -400,7 +400,7 @@ class TaskPlanner:
                     title="Open YouTube Home",
                     agent_id="os_desktop_agent",
                     action="open_url",
-                    params={"url": "https://www.youtube.com", "browser": "chrome"},
+                    params={"url": "https://www.youtube.com", "browser": "default"},
                     risk_tier="Tier 1",
                     status=NodeStatus.PENDING
                 )
@@ -822,13 +822,13 @@ class TaskPlanner:
                 phone = phone_match.group(1).strip()
 
             if not has_send_intent and not phone:
-                # User asked to open/check/read WhatsApp -> Launch WhatsApp Web in browser where user is logged in
+                # User asked to open/check/read WhatsApp -> Launch Native WhatsApp Desktop application
                 nodes["step_1"] = DAGNode(
                     node_id="step_1",
-                    title="Open WhatsApp Web in Browser",
+                    title="Open WhatsApp Desktop Application",
                     agent_id="os_desktop_agent",
-                    action="open_url",
-                    params={"url": "https://web.whatsapp.com", "browser": "chrome"},
+                    action="open_whatsapp",
+                    params={"phone": None, "message": None},
                     risk_tier="Tier 1",
                     status=NodeStatus.PENDING
                 )
