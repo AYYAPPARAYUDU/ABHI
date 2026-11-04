@@ -328,11 +328,11 @@
                   appAnimeInteractive [appAnimeType]="'button'"
                   [class.active]="speechVoice.isAlexaConversationMode()"
                   (click)="toggleAlexaMode()"
-                  [title]="speechVoice.isAlexaConversationMode() ? 'Alexa Conversation Mode ACTIVE (Click to switch to Text Chat)' : 'Activate Alexa Hands-Free Voice Dialogue'"
-                  aria-label="Toggle Alexa Direct Dialogue"
+                  [title]="speechVoice.isAlexaConversationMode() ? 'J.A.R.V.I.S. Conversation Mode ACTIVE (Click to switch to Text Chat)' : 'Activate J.A.R.V.I.S. Hands-Free Voice Dialogue'"
+                  aria-label="Toggle J.A.R.V.I.S. Direct Dialogue"
                 >
                   <span class="alexa-icon">🎙️</span>
-                  <span class="alexa-label">{{ speechVoice.isAlexaConversationMode() ? 'TALKING' : 'ALEXA' }}</span>
+                  <span class="alexa-label">{{ speechVoice.isAlexaConversationMode() ? 'TALKING' : 'J.A.R.V.I.S.' }}</span>
                   @if (speechVoice.isAlexaConversationMode()) {
                     <span class="live-pulse-ring"></span>
                   }

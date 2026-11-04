@@ -778,22 +778,41 @@ class OSControlEngine:
                 return True, {"target": target, "is_uri": True, "launched": True}, None
 
             # Subprocess executable launch
-            cmd = [target] + combined_args
-            proc = subprocess.Popen(
-                cmd,
-                cwd=cwd,
-                shell=True,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+            clean_target = target.strip('"\'')
+            if clean_target.startswith(("http://", "https://")):
+                ok, err = self.open_url(clean_target, browser="chrome")
+                return ok, {"target": clean_target, "is_uri": True, "launched": ok}, err
+
+            # Windows-native interactive application launch
+            proc_pid = None
+            if self.is_windows:
+                # For notepad and system utilities, os.startfile guarantees interactive desktop session window
+                if app_name.lower() in ("notepad", "calc", "calculator", "explorer", "settings"):
+                    try:
+                        os.startfile(clean_target)
+                    except Exception:
+                        subprocess.Popen(f'powershell -NoProfile -Command "Start-Process \\"{clean_target}\\""', shell=True)
+                else:
+                    try:
+                        p = subprocess.Popen([clean_target] + combined_args)
+                        proc_pid = p.pid
+                    except Exception:
+                        try:
+                            os.startfile(clean_target)
+                        except Exception:
+                            subprocess.Popen(f'powershell -NoProfile -Command "Start-Process \\"{clean_target}\\""', shell=True)
+            else:
+                p = subprocess.Popen([clean_target] + combined_args)
+                proc_pid = p.pid
+
             # Give the process a brief moment to create window and bring to front
-            time.sleep(0.35)
-            self.bring_to_front_by_keyword(app_name, timeout_sec=1.5)
+            time.sleep(0.4)
+            self.bring_to_front_by_keyword(app_name, timeout_sec=2.0)
 
             return True, {
-                "pid": proc.pid,
-                "executable": target,
-                "is_alive": proc.poll() is None
+                "pid": proc_pid,
+                "executable": clean_target,
+                "is_alive": True
             }, None
         except Exception as e:
             return False, {"target": target}, f"Launch error: {str(e)}"
@@ -886,7 +905,25 @@ class OSControlEngine:
             windows = self.list_windows()
             for w in windows:
                 title = w.get("title", "").lower()
-                if kw_lower in title and (w.get("is_visible", False) or w.get("visible", False)):
+                title_lower = title.lower()
+                is_vis = w.get("is_visible", False) or w.get("visible", False)
+                if not is_vis:
+                    continue
+
+                # Disambiguation guard: If searching for a dedicated app, DO NOT match IDE / Code Editor tabs!
+                is_ide = any(ide in title_lower for ide in ["antigravity ide", "visual studio code", "vscode"])
+                if is_ide and kw_lower not in ("antigravity", "ide", "vscode", "code"):
+                    continue
+
+                matched = False
+                if kw_lower in title_lower:
+                    matched = True
+                elif kw_lower == "youtube" and ("google chrome" in title_lower or "edge" in title_lower or "browser" in title_lower):
+                    matched = True
+                elif kw_lower in ("calc", "calculator") and "calculator" in title_lower:
+                    matched = True
+
+                if matched:
                     hwnd = w.get("hwnd")
                     if hwnd:
                         ok, _ = self.focus_window(hwnd)
@@ -1038,10 +1075,15 @@ class OSControlEngine:
         else:
             direct_play_url = search_url
 
-        ok, details, err = self.launch_application(direct_play_url)
-        details["video_id"] = video_id
-        details["play_url"] = direct_play_url
-        details["query"] = clean_q
+        ok, err = self.open_url(direct_play_url, browser="chrome")
+        details = {
+            "target": direct_play_url,
+            "is_uri": True,
+            "launched": ok,
+            "video_id": video_id,
+            "play_url": direct_play_url,
+            "query": clean_q
+        }
         return ok, details, err
 
     def lock_workstation(self) -> Tuple[bool, Optional[str]]:

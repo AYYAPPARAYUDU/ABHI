@@ -644,6 +644,15 @@ class AgentGateway:
         if is_canonical_action:
             return True
 
+        # Check volume commands (e.g. "increase volume to 50%", "volume to 80%", "mute")
+        if any(w in text_lower for w in ["volume", "sound", "mute", "unmute"]):
+            if any(k in text_lower for k in ["increase", "decrease", "raise", "lower", "set", "adjust", "to", "%", "percent", "up", "down", "mute", "unmute"]) or re.search(r"\d+", text_lower):
+                return True
+
+        # Check standalone app launches
+        if text_lower in ("notepad", "calculator", "calc", "youtube", "browser", "chrome", "edge", "whatsapp", "whats app", "camera", "terminal", "powershell", "spotify", "antigravity"):
+            return True
+
         # 6. Explicit OS & Mobile Action keywords & targets
         if any(w in text_lower for w in [
             "screenshot", "whatsapp", "volume up", "volume down", "adjust volume", "lock screen",

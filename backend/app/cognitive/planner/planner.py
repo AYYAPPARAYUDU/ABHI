@@ -223,6 +223,7 @@ class TaskPlanner:
             if not text_to_type:
                 text_to_type = f"ABHI Execution Output: {goal}"
 
+            is_just_open = goal_lower in ("open notepad", "launch notepad", "start notepad", "open notepad for me", "notepad", "open note pad")
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
                 title="Launch Notepad Editor",
@@ -232,16 +233,17 @@ class TaskPlanner:
                 risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )
-            nodes["step_2"] = DAGNode(
-                node_id="step_2",
-                title="Type Text into Notepad Buffer",
-                agent_id="os_desktop_agent",
-                action="type_text",
-                params={"app_name": "notepad", "text": text_to_type},
-                dependencies=["step_1"],
-                risk_tier="Tier 2",
-                status=NodeStatus.PENDING
-            )
+            if not is_just_open:
+                nodes["step_2"] = DAGNode(
+                    node_id="step_2",
+                    title="Type Text into Notepad Buffer",
+                    agent_id="os_desktop_agent",
+                    action="type_text",
+                    params={"app_name": "notepad", "text": text_to_type},
+                    dependencies=["step_1"],
+                    risk_tier="Tier 2",
+                    status=NodeStatus.PENDING
+                )
 
         elif any(k in goal_lower for k in ["terminal", "powershell", "cmd", "whoami", "ipconfig", "hostname", "systeminfo"]):
             cmd_to_run = "hostname"
@@ -392,9 +394,24 @@ class TaskPlanner:
                     risk_tier="Tier 1",
                     status=NodeStatus.PENDING
                 )
+            elif goal_lower in ("open youtube", "launch youtube", "start youtube", "open youtube for me", "youtube"):
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Open YouTube Home",
+                    agent_id="os_desktop_agent",
+                    action="open_url",
+                    params={"url": "https://www.youtube.com", "browser": "chrome"},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
             else:
                 raw_track = goal
-                for prefix in ["play song", "play music", "play video", "play track", "listen to", "search youtube for", "youtube", "play"]:
+                # Prioritize long compound prefixes first
+                for prefix in [
+                    "open youtube and play", "open youtube to play", "open youtube and search",
+                    "search youtube for", "open youtube", "play song", "play music",
+                    "play video", "play track", "listen to", "and play", "play me", "play"
+                ]:
                     if goal_lower.startswith(prefix):
                         raw_track = goal[len(prefix):].strip()
                         break
@@ -405,6 +422,7 @@ class TaskPlanner:
 
                 clean_track = re.sub(r"^(?:on\s+(?:youtube|spotify|browser)\s+)", "", raw_track, flags=re.IGNORECASE).strip()
                 clean_track = re.sub(r"\s+on\s+youtube$", "", clean_track, flags=re.IGNORECASE).strip()
+                clean_track = re.sub(r"for\s+me", "", clean_track, flags=re.IGNORECASE).strip()
                 if not clean_track:
                     clean_track = "trending music"
 
