@@ -43,6 +43,10 @@ class ExecutionJournal:
         if self.db_path != ":memory:":
             conn.execute("PRAGMA journal_mode=WAL;")
             conn.execute("PRAGMA synchronous=NORMAL;")
+            conn.execute("PRAGMA cache_size=-64000;")
+            conn.execute("PRAGMA temp_store=MEMORY;")
+            conn.execute("PRAGMA mmap_size=268435456;")
+            conn.execute("PRAGMA busy_timeout=10000;")
         return conn
 
     def _init_db(self) -> None:
@@ -105,8 +109,12 @@ class ExecutionJournal:
                 );
 
                 CREATE INDEX IF NOT EXISTS idx_tasks_state ON tasks(state);
+                CREATE INDEX IF NOT EXISTS idx_tasks_state_created ON tasks(state, created_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_tasks_exec_id ON tasks(execution_id);
                 CREATE INDEX IF NOT EXISTS idx_audit_task_id ON audit_records(task_id);
+                CREATE INDEX IF NOT EXISTS idx_audit_task_ts ON audit_records(task_id, timestamp DESC);
                 CREATE INDEX IF NOT EXISTS idx_actions_task_id ON actions(task_id);
+                CREATE INDEX IF NOT EXISTS idx_actions_task_status ON actions(task_id, status);
             """)
 
     def persist_task(self, task: OrchestrationTaskResult) -> None:

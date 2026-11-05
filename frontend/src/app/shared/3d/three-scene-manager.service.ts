@@ -295,16 +295,17 @@ export class ThreeSceneManagerService {
   private groundRadarMesh: THREE.LineSegments | null = null;
   private agentBots: { group: THREE.Group; baseY: number; phase: number }[] = [];
 
-  // 8 Specialist Architectural Station Coordinates across the Hexagonal Colony
+  // 9 Specialist Architectural Station Coordinates across the Spatial Hexagonal Colony
   readonly stationPositions = [
-    { x: 0, z: -8.8 },
-    { x: 7.6, z: -4.8 },
-    { x: 9.2, z: 2.4 },
-    { x: 4.8, z: 8.8 },
-    { x: -4.8, z: 8.8 },
-    { x: -9.2, z: 2.4 },
-    { x: -7.6, z: -4.8 },
-    { x: 0, z: 9.4 },
+    { x: 0, z: -9.2 },
+    { x: 5.9, z: -7.0 },
+    { x: 9.1, z: -1.6 },
+    { x: 8.0, z: 4.6 },
+    { x: 3.2, z: 8.6 },
+    { x: -3.2, z: 8.6 },
+    { x: -8.0, z: 4.6 },
+    { x: -9.1, z: -1.6 },
+    { x: -5.9, z: -7.0 },
   ];
 
   // Billboard nameplates tracking for anti-overlap and focused highlight
@@ -2602,7 +2603,8 @@ export class ThreeSceneManagerService {
 
     if (this.currentMode === 'WORKSPACE') {
       // In WORKSPACE colony:
-      const pos = this.stationPositions[index % this.stationPositions.length];
+      const safeIndex = index >= 0 ? index : 0;
+      const pos = this.stationPositions[safeIndex % this.stationPositions.length];
       const stationX = pos.x;
       const stationZ = pos.z;
 

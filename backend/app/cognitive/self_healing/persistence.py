@@ -24,6 +24,11 @@ class SelfHealingRepository:
             return
         async with aiosqlite.connect(self.db_path) as db:
             await db.execute("PRAGMA journal_mode=WAL;")
+            await db.execute("PRAGMA synchronous=NORMAL;")
+            await db.execute("PRAGMA cache_size=-64000;")
+            await db.execute("PRAGMA temp_store=MEMORY;")
+            await db.execute("PRAGMA mmap_size=268435456;")
+            await db.execute("PRAGMA busy_timeout=10000;")
             await db.execute("""
                 CREATE TABLE IF NOT EXISTS repair_records (
                     repair_id TEXT PRIMARY KEY,
@@ -41,6 +46,9 @@ class SelfHealingRepository:
                     error_message TEXT
                 );
             """)
+            await db.execute("CREATE INDEX IF NOT EXISTS idx_repair_records_created ON repair_records (created_at DESC);")
+            await db.execute("CREATE INDEX IF NOT EXISTS idx_repair_records_status ON repair_records (status);")
+            await db.execute("CREATE INDEX IF NOT EXISTS idx_repair_records_defect ON repair_records (defect_id);")
             await db.commit()
         self._initialized = True
         logger.info(f"Initialized Self-Healing DB at {self.db_path}")

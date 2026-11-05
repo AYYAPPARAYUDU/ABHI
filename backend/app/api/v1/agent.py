@@ -4,13 +4,20 @@ import asyncio
 import os
 import time
 import psutil
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException, status
 
 from backend.app.automation.desktop.os_control_engine import os_control_engine
 from backend.app.automation.mobile.adb_controller import adb_controller
 from backend.app.services.llm.abhi_llm import get_live_thoughts
+from backend.app.db.sqlite_wal import LRUCache, SlidingWindowBuffer
+
+# High-speed in-memory LRU and sliding-window caches (sub-millisecond O(1) response)
+_live_thoughts_cache: LRUCache[str, Dict[str, Any]] = LRUCache(capacity=8, default_ttl_seconds=0.75)
+_live_thoughts_sliding_buffer: SlidingWindowBuffer[str] = SlidingWindowBuffer(maxlen=50)
+_biometrics_status_cache: LRUCache[str, Dict[str, Any]] = LRUCache(capacity=8, default_ttl_seconds=3.0)
+_squad_channel_cache: LRUCache[Tuple[str, int], Dict[str, Any]] = LRUCache(capacity=128, default_ttl_seconds=1.5)
 
 from backend.app.cognitive.gateway.agent_gateway import agent_gateway
 from backend.app.cognitive.gateway.models import (
@@ -498,7 +505,11 @@ async def get_evolution_status() -> Dict[str, Any]:
 
 @router.get("/live-thoughts")
 async def get_live_subconscious_thoughts() -> Dict[str, Any]:
-    """Retrieve dynamic real-time subconscious thoughts, OS state, and mobile status."""
+    """Retrieve dynamic real-time subconscious thoughts, OS state, and mobile status with fast LRU caching."""
+    cached_payload = _live_thoughts_cache.get("live_thoughts")
+    if cached_payload is not None:
+        return cached_payload
+
     try:
         active_win = os_control_engine.get_active_window()
     except Exception:
@@ -541,7 +552,8 @@ async def get_live_subconscious_thoughts() -> Dict[str, Any]:
         if ct not in dynamic_items:
             dynamic_items.append(ct)
 
-    return {
+    _live_thoughts_sliding_buffer.extend(dynamic_items)
+    result = {
         "status": "synchronized",
         "thoughts": dynamic_items,
         "active_window": active_win,
@@ -557,6 +569,8 @@ async def get_live_subconscious_thoughts() -> Dict[str, Any]:
             "timestamp": int(time.time() * 1000)
         }
     }
+    _live_thoughts_cache.put("live_thoughts", result, ttl_seconds=0.75)
+    return result
 
 
 @router.get("/multi-agent/personas")
@@ -625,6 +639,7 @@ async def enroll_operator_biometrics(name: str = "Ayyappa Rayudu Ravuvari", came
     ok, msg = face_tracker.enroll_operator(name=name, camera_index=camera_index)
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
+    _biometrics_status_cache.clear()
     return {"status": "SUCCESS", "message": msg, "operator_name": name}
 
 
@@ -645,13 +660,19 @@ class RecordIntruderPayload(BaseModel):
 
 @router.get("/biometrics/status")
 async def get_biometric_status():
-    """Get current Face Lock enrollment status and registered operator identity."""
+    """Get current Face Lock enrollment status and registered operator identity with fast LRU caching."""
+    cached = _biometrics_status_cache.get("status")
+    if cached is not None:
+        return cached
+
     from backend.app.perception.vision.face_tracker import face_tracker
-    return {
+    res = {
         "is_enrolled": face_tracker.is_enrolled,
         "operator_name": face_tracker._enrolled_name if face_tracker.is_enrolled else None,
         "enrolled_name": face_tracker._enrolled_name
     }
+    _biometrics_status_cache.put("status", res, ttl_seconds=3.0)
+    return res
 
 
 @router.post("/biometrics/verify-frame")
@@ -673,6 +694,7 @@ async def enroll_biometric_frame(payload: BiometricFramePayload):
     )
     if not ok:
         raise HTTPException(status_code=400, detail={"message": msg, "details": details})
+    _biometrics_status_cache.clear()
     return {"status": "SUCCESS", "message": msg, "details": details, "operator_name": payload.operator_name}
 
 
@@ -683,6 +705,7 @@ async def remove_operator_biometrics(payload: RemoveBiometricsPayload):
     ok, msg = face_tracker.remove_enrolled_biometrics(payload.master_password)
     if not ok:
         raise HTTPException(status_code=400, detail={"message": msg})
+    _biometrics_status_cache.clear()
     return {"status": "SUCCESS", "message": msg}
 
 
@@ -726,14 +749,22 @@ async def get_live_code_stream(limit: int = 20):
 
 @router.get("/live-chat/channels/{channel_name}")
 async def get_squad_channel_messages(channel_name: str, limit: int = 50):
-    """Retrieve live inter-agent multi-channel messages (#squad-command, #squad-frontend, etc.)."""
+    """Retrieve live inter-agent multi-channel messages with LRU caching and sliding window buffer."""
+    clean_channel = channel_name.replace("#", "").strip()
+    cache_key = (clean_channel, limit)
+    cached = _squad_channel_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
     msgs = daily_evolution_service.get_channel_messages(channel_name, limit=limit)
-    return {
+    res = {
         "channel": channel_name,
         "count": len(msgs),
         "messages": msgs,
     }
+    _squad_channel_cache.put(cache_key, res, ttl_seconds=1.5)
+    return res
 
 
 class ChannelPostPayload(BaseModel):
@@ -766,6 +797,7 @@ async def post_squad_channel_message(payload: ChannelPostPayload):
     elif "evolution" in clean_ch:
         reply_persona = "agent_6_ml"
         
+    _squad_channel_cache.clear()
     asyncio.create_task(_reply_to_channel(clean_ch, reply_persona, payload.message))
     return {"status": "POSTED", "message": posted}
 
@@ -785,6 +817,7 @@ async def _reply_to_channel(channel: str, agent_id: str, prompt: str):
         message=text,
         voice_transcript=text,
     )
+    _squad_channel_cache.clear()
 
 
 @router.post("/evolve/daily-cycle")

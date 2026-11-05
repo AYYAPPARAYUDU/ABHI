@@ -124,7 +124,10 @@ async def ensure_assistant_tables() -> None:
             upgrade_rationale TEXT NOT NULL,
             created_at TEXT NOT NULL
         );
-        """
+        """,
+        "CREATE INDEX IF NOT EXISTS idx_comm_inbox_ch_ts ON communications_inbox (channel, timestamp DESC);",
+        "CREATE INDEX IF NOT EXISTS idx_comm_inbox_reply_status ON communications_inbox (reply_status);",
+        "CREATE INDEX IF NOT EXISTS idx_brain_upgrade_ts ON brain_upgrade_history (created_at DESC);"
     ]
     try:
         async with engine.begin() as conn:

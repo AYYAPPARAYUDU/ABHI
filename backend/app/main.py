@@ -87,8 +87,30 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Agent registration error during startup: {e}")
 
+    # 5. Start Daily Evolution & Autonomous Knowledge Auto-Upgrade Loop
+    evolution_task = None
+    try:
+        from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
+
+        async def run_evolution_scheduler():
+            await asyncio.sleep(5)
+            await daily_evolution_service.execute_daily_evolution_cycle()
+            while True:
+                await asyncio.sleep(86400)
+                try:
+                    await daily_evolution_service.execute_daily_evolution_cycle()
+                except Exception as ex:
+                    logger.error(f"Error during daily evolution cycle: {ex}")
+
+        evolution_task = asyncio.create_task(run_evolution_scheduler())
+        logger.info("Autonomous Daily Evolution background loop started.")
+    except Exception as e:
+        logger.error(f"Failed to start daily evolution scheduler: {e}")
+
     logger.info("Backend Gateway & Cognitive Core startup complete.")
     yield
+    if evolution_task and not evolution_task.done():
+        evolution_task.cancel()
     logger.info("Shutting down Backend Gateway...")
 
 

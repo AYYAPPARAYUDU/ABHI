@@ -1,5 +1,5 @@
 import { AgentApiService } from '../../../core/api/agent-api.service';
-import { Component, inject, computed, AfterViewInit, ElementRef, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, AfterViewInit, ElementRef, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -13,7 +13,6 @@ import { AgentCommandService } from '../../../core/services/agent-command.servic
 import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
 import { AnimeInteractiveDirective } from '../../../shared/directives/anime-interactive.directive';
 import { BiometricFaceScannerComponent } from '../../../features/perception/components/biometric-face-scanner/biometric-face-scanner.component';
-import { WORKING_ENVIRONMENTS } from '../working-environment/working-environment.component';
 import { MediaService } from '../../../features/media/services/media.service';
 
 @Component({
@@ -21,10 +20,10 @@ import { MediaService } from '../../../features/media/services/media.service';
   standalone: true,
   imports: [CommonModule, RouterModule, AnimeInteractiveDirective, BiometricFaceScannerComponent],
   templateUrl: './contextual-topbar.component.html',
-  styleUrl: './contextual-topbar.component.css'
+  styleUrl: './contextual-topbar.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewInit {
-  readonly showScannerModal = signal<boolean>(false);
   readonly stateService = inject(OperatorStateService);
   readonly themeService = inject(ThemeService);
   readonly speechVoice = inject(SpeechVoiceService);
@@ -70,23 +69,12 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
     { initialValue: this.router.url }
   );
 
-  navItems = [
-    { route: '/home', label: '3D Core', icon: '🌐' },
-    { route: '/decision-pipeline', label: 'Decisions', icon: '⚡' },
-    { route: '/business', label: 'Sectors', icon: '⛃' },
-    { route: '/intelligence', label: 'Neural Lab', icon: '🧠' },
-    { route: '/applications', label: 'Apps', icon: '💻' },
-    { route: '/browser', label: 'Browser', icon: '🌍' },
-    { route: '/media', label: 'Media', icon: '✦' },
-    { route: '/memory', label: 'Memory', icon: '◌' },
-    { route: '/tasks', label: 'Tasks', icon: '◈' },
-    { route: '/network', label: 'Network', icon: '☊' },
-    { route: '/system', label: 'Diagnostics', icon: '⚙' },
-  ];
-
-  currentRouteTitle = computed(() => {
-    const url = this.currentUrl() || this.router.url;
-    if (url.startsWith('/home')) return 'Personal AI Space';
+  readonly currentRouteTitle = computed(() => {
+    const url = this.currentUrl() || this.router.url || '';
+    if (url.startsWith('/home') || url === '/') return 'Personal AI Space';
+    if (url.startsWith('/workspace')) return '3D Workspace Colony';
+    if (url.startsWith('/live-console')) return 'Antigravity Live Console';
+    if (url.startsWith('/automation')) return 'Physical OS Automation';
     if (url.startsWith('/decision-pipeline')) return 'Decision Pipeline';
     if (url.startsWith('/business')) return 'Business Sectors';
     if (url.startsWith('/intelligence')) return 'Neural & Intelligence';
@@ -100,13 +88,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
     if (url.startsWith('/resources')) return 'Resource Governance';
     if (url.startsWith('/system')) return 'System Diagnostics';
     if (url.startsWith('/knowledge')) return 'Knowledge & Ontology';
-    return 'ABHI AI';
-  });
-
-  healthStatus = computed(() => {
-    if (this.stateService.safety().emergencyStopped) return 'STOPPED';
-    if (this.stateService.isBusy()) return 'BUSY';
-    return this.stateService.health().overall;
+    return 'CENTRAL INTELLIGENCE';
   });
 
   ngAfterViewInit(): void {
@@ -126,7 +108,10 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   isActive(route: string): boolean {
-    const url = this.currentUrl() || this.router.url;
+    const url = this.currentUrl() || this.router.url || '';
+    if (route === '/home') {
+      return url === '/' || url === '/home' || url.startsWith('/home?');
+    }
     return url.startsWith(route);
   }
 
@@ -139,7 +124,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
 
   ngOnInit(): void {
     this.fetchMobileStatus();
-    this.mobilePollInterval = setInterval(() => this.fetchMobileStatus(), 6000);
+    this.mobilePollInterval = setInterval(() => this.fetchMobileStatus(), 8000);
     this.mediaService.fetchVault().subscribe({ error: () => {} });
   }
 

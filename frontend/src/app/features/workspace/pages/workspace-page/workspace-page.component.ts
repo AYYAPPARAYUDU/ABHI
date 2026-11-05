@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThreeSceneManagerService, AgentNode } from '../../../../shared/3d/three-scene-manager.service';
@@ -47,7 +47,8 @@ interface ChannelMessage {
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './workspace-page.component.html',
-  styleUrl: './workspace-page.component.css'
+  styleUrl: './workspace-page.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class WorkspacePageComponent implements OnInit, OnDestroy {
   readonly threeScene = inject(ThreeSceneManagerService);
@@ -98,10 +99,11 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
     this.fetchFamilyStatus();
     this.fetchChannelMessages();
 
+    // Poll at 4.5s cadence with memoized comparisons to prevent redundant change detection
     this.syncTimer = setInterval(() => {
       this.fetchFamilyStatus();
       this.fetchChannelMessages();
-    }, 3500);
+    }, 4500);
   }
 
   ngOnDestroy(): void {
@@ -125,7 +127,10 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
             time: new Date(c.timestamp * 1000).toLocaleTimeString(),
             sentiment: c.sentiment
           }));
-          this.familyDialogue.set(mapped);
+          const current = this.familyDialogue();
+          if (this.hasListChanged(current, mapped, (m) => m.id)) {
+            this.familyDialogue.set(mapped);
+          }
         }
       }
     } catch {
@@ -140,7 +145,10 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data.messages)) {
-          this.channelMessages.set(data.messages);
+          const current = this.channelMessages();
+          if (this.hasListChanged(current, data.messages, (m) => m.id)) {
+            this.channelMessages.set(data.messages);
+          }
         }
       }
     } catch {
@@ -149,8 +157,10 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
   }
 
   selectChannel(channel: string): void {
-    this.activeChannel.set(channel);
-    this.fetchChannelMessages();
+    if (this.activeChannel() !== channel) {
+      this.activeChannel.set(channel);
+      this.fetchChannelMessages();
+    }
   }
 
   async postToActiveChannel(): Promise<void> {
@@ -169,7 +179,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
         })
       });
       this.channelInputText = '';
-      setTimeout(() => this.fetchChannelMessages(), 600);
+      setTimeout(() => this.fetchChannelMessages(), 500);
     } catch (e) {
       console.warn('Channel post error:', e);
     } finally {
@@ -295,7 +305,6 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
         body: JSON.stringify({ text: `Calibrate neural synapse for ${agent.name} specialist node.` })
       });
       if (res.ok) {
-        const data = await res.json();
         this.stationActionStatus.set(`✓ ${agent.name} Calibrated: 100% Neural Fidelity`);
         if (this.voiceStreamEnabled()) {
           this.speechVoice.speak(`${agent.name} synapses recalibrated successfully.`);
@@ -344,5 +353,11 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
     if (this.voiceStreamEnabled()) {
       this.speechVoice.speak(status);
     }
+  }
+
+  private hasListChanged<T>(prev: T[], next: T[], keyFn: (item: T) => any): boolean {
+    if (prev.length !== next.length) return true;
+    if (prev.length === 0) return false;
+    return keyFn(prev[prev.length - 1]) !== keyFn(next[next.length - 1]);
   }
 }

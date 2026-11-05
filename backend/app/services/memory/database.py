@@ -36,6 +36,10 @@ async def init_db() -> None:
             # Enable SQLite WAL mode for high concurrent read/write throughput
             await conn.execute(text("PRAGMA journal_mode=WAL;"))
             await conn.execute(text("PRAGMA synchronous=NORMAL;"))
+            await conn.execute(text("PRAGMA cache_size=-64000;"))
+            await conn.execute(text("PRAGMA temp_store=MEMORY;"))
+            await conn.execute(text("PRAGMA mmap_size=268435456;"))
+            await conn.execute(text("PRAGMA busy_timeout=10000;"))
             await conn.execute(text("PRAGMA foreign_keys=ON;"))
             await conn.run_sync(Base.metadata.create_all)
         logger.info("SQLite relational database initialized successfully with WAL mode enabled.")
