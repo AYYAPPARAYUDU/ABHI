@@ -378,21 +378,7 @@ export class AgentCommandService {
             this.activePollTimer = null;
           }
           this.lifecycle.set('COMPLETED');
-          let finalSummary = `Done, ${this.speechVoice.userCallsign()}. Action completed.`;
-          const lowerG = rawText.toLowerCase();
-          if (lowerG.includes('youtube') || lowerG.includes('yt')) {
-            finalSummary = `I've opened YouTube for you, ${this.speechVoice.userCallsign()}.`;
-          } else if (lowerG.includes('calc') || lowerG.includes('calculator')) {
-            finalSummary = `Calculator is open and ready.`;
-          } else if (lowerG.includes('notepad')) {
-            finalSummary = `I've opened Notepad for you.`;
-          } else if (lowerG.includes('camera') || lowerG.includes('webcam')) {
-            finalSummary = `Windows Camera is open, ${this.speechVoice.userCallsign()}.`;
-          } else if (lowerG.includes('volume')) {
-            finalSummary = `Volume adjusted as requested.`;
-          } else {
-            finalSummary = `Done, ${this.speechVoice.userCallsign()}. ${this.formatCommandTitle(rawText)} completed.`;
-          }
+          const finalSummary = taskStatus.summary || `Done, ${this.speechVoice.userCallsign()}. ${this.formatCommandTitle(rawText)} verified and completed.`;
           const updatedResult: AgentCommandResult = {
             ...initialResult,
             title: `Execution Completed: ${this.formatCommandTitle(rawText)}`,
@@ -415,6 +401,8 @@ export class AgentCommandService {
             timestamp: Date.now()
           };
           this.activeResult.set(updatedResult);
+          this.speechVoice.speak(`Execution note: ${errorMsg}`);
+        }
         } else if (state === 'WAITING_FOR_APPROVAL') {
           this.lifecycle.set('WAITING_FOR_APPROVAL');
         }

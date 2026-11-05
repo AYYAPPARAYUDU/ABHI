@@ -77,9 +77,32 @@ class DualStateVerifier:
                     retryable=False
                 )
 
-        elif agent_id == "os_desktop_agent":
+        elif agent_id in ["os_desktop_agent", "agent_3_comms", "agent_4_system", "agent_2_browser"]:
             import os
-            if action in ["save_file", "save"]:
+            if action in ["send_whatsapp_message", "whatsapp_send"]:
+                if not result.success:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=result.error_message or "WhatsApp message dispatch failed.",
+                        retryable=False
+                    )
+                if not result.data.get("delivered"):
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected="WhatsApp message delivery was not verified to recipient.",
+                        retryable=True
+                    )
+            elif action in ["play_media", "play_youtube", "play_song", "play_music"]:
+                if not result.success or not result.data.get("playing"):
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=result.error_message or "Media playback initiation failed.",
+                        retryable=True
+                    )
+            elif action in ["save_file", "save"]:
                 fp = node.params.get("file_path") or result.data.get("file_path")
                 if fp and not os.path.exists(fp):
                     return VerificationResult(

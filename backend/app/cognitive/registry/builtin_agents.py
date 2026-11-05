@@ -643,32 +643,34 @@ class OSDesktopAgent(BaseAgent):
         # 0. WhatsApp, Web Browsing & Hardware Controls
         # ---------------------------------------------------------------------
         if action in ["open_whatsapp", "launch_whatsapp"]:
-            phone = params.get("phone")
+            recipient = params.get("recipient") or params.get("contact") or params.get("phone")
+            phone = params.get("phone") if (params.get("phone") and re.match(r"^[+]?[\d\s-]{7,16}$", str(params.get("phone")))) else None
             message = params.get("message")
-            ok, pdata, err = os_control_engine.open_whatsapp(phone=phone, message=message)
+            ok, pdata, err = os_control_engine.open_whatsapp(phone=phone, recipient=recipient, message=message)
             return AgentTaskResult(
                 task_id=request.task_id,
                 node_id=request.node_id,
                 agent_id=self.agent_id,
                 action=action,
                 success=ok,
-                data=pdata,
-                observed_state={"opened": ok, "method": pdata.get("method"), "message": message},
+                data=pdata or {},
+                observed_state={"opened": ok, "method": (pdata or {}).get("method"), "message": message, "recipient": recipient},
                 error_message=err
             )
 
         if action in ["send_whatsapp_message", "whatsapp_send", "send_message"]:
             message = str(params.get("message") or "hi and hello this is abhi")
-            phone = params.get("phone")
-            ok, sdata, err = os_control_engine.send_whatsapp_message(message=message, phone=phone)
+            recipient = params.get("recipient") or params.get("contact") or params.get("phone")
+            phone = params.get("phone") if (params.get("phone") and re.match(r"^[+]?[\d\s-]{7,16}$", str(params.get("phone")))) else None
+            ok, sdata, err = os_control_engine.send_whatsapp_message(message=message, phone=phone, recipient=recipient)
             return AgentTaskResult(
                 task_id=request.task_id,
                 node_id=request.node_id,
                 agent_id=self.agent_id,
                 action=action,
                 success=ok,
-                data=sdata,
-                observed_state={"dispatched": ok, "sent": True, "message": message},
+                data=sdata or {},
+                observed_state={"dispatched": ok, "sent": ok, "delivered": ok, "message": message, "recipient": recipient},
                 error_message=err
             )
 

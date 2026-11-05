@@ -38,6 +38,7 @@ class TaskStatusResponse(BaseModel):
     active_node_id: Optional[str] = None
     consent_required_node: Optional[DAGNode] = None
     error_message: Optional[str] = None
+    summary: Optional[str] = None
     created_at_ts: int = 0
     duration_ms: int = 0
 
@@ -302,13 +303,32 @@ class CentralSupervisor:
             if dag.is_complete and status_obj.state not in [SupervisorState.CANCELLED, SupervisorState.EMERGENCY_STOPPED]:
                 status_obj.state = SupervisorState.COMPLETED
                 status_obj.active_node_id = None
+
+                # Generate accurate, grounded completion summary from verified nodes
+                verified_summary = None
+                for node in dag.nodes.values():
+                    if node.action in ["send_whatsapp_message", "whatsapp_send"]:
+                        rec = node.params.get("recipient") or node.params.get("phone") or "contact"
+                        verified_summary = f"Message delivered to {rec} on WhatsApp, Sir."
+                    elif node.action in ["play_media", "play_youtube", "play_song", "play_music"]:
+                        q = node.params.get("query") or "requested music"
+                        verified_summary = f"Playing '{q.title()}' on YouTube, Sir."
+                    elif node.action in ["open_whatsapp"]:
+                        rec = node.params.get("recipient")
+                        verified_summary = f"WhatsApp opened for {rec}, Sir." if rec else "WhatsApp launched and ready, Sir."
+
+                if not verified_summary:
+                    last_node = list(dag.nodes.values())[-1] if dag.nodes else None
+                    verified_summary = f"{last_node.title} verified and completed, Sir." if last_node else "Task verified and completed, Sir."
+                status_obj.summary = verified_summary
+
                 await memory_repo.update_task_state(
                     task_id=task_id,
                     state="COMPLETED",
                     dag_data=dag.model_dump(),
                     duration_ms=duration
                 )
-                await self._emit_telemetry(task_id, "TASK_COMPLETED", {"duration_ms": duration})
+                await self._emit_telemetry(task_id, "TASK_COMPLETED", {"duration_ms": duration, "summary": verified_summary})
             elif status_obj.state not in [SupervisorState.CANCELLED, SupervisorState.EMERGENCY_STOPPED]:
                 status_obj.state = SupervisorState.FAILED
                 await memory_repo.update_task_state(

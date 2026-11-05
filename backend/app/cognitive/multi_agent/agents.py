@@ -104,31 +104,33 @@ class CommsAgent(BaseAgent):
 
         if action in ["send_whatsapp_message", "send_message"]:
             msg = str(params.get("message") or "Message from ABHI Autonomous System")
-            phone = params.get("phone")
-            ok, sdata, err = os_control_engine.send_whatsapp_message(message=msg, phone=phone)
+            recipient = params.get("recipient") or params.get("contact") or params.get("phone")
+            phone = params.get("phone") if (params.get("phone") and re.match(r"^[+]?[\d\s-]{7,16}$", str(params.get("phone")))) else None
+            ok, sdata, err = os_control_engine.send_whatsapp_message(message=msg, phone=phone, recipient=recipient)
             return AgentTaskResult(
                 task_id=request.task_id,
                 node_id=request.node_id,
                 agent_id=self.agent_id,
                 action=action,
                 success=ok,
-                data=sdata,
-                observed_state={"dispatched": ok, "sent": True, "message": msg},
+                data=sdata or {},
+                observed_state={"dispatched": ok, "sent": ok, "delivered": ok, "recipient": recipient, "message": msg},
                 error_message=err
             )
         else:
             # Default: open_whatsapp native desktop client
-            phone = params.get("phone")
+            recipient = params.get("recipient") or params.get("contact") or params.get("phone")
+            phone = params.get("phone") if (params.get("phone") and re.match(r"^[+]?[\d\s-]{7,16}$", str(params.get("phone")))) else None
             msg = params.get("message")
-            ok, pdata, err = os_control_engine.open_whatsapp(phone=phone, message=msg)
+            ok, pdata, err = os_control_engine.open_whatsapp(phone=phone, recipient=recipient, message=msg)
             return AgentTaskResult(
                 task_id=request.task_id,
                 node_id=request.node_id,
                 agent_id=self.agent_id,
                 action=action,
                 success=ok,
-                data=pdata,
-                observed_state={"opened": ok, "method": pdata.get("method")},
+                data=pdata or {},
+                observed_state={"opened": ok, "method": (pdata or {}).get("method"), "recipient": recipient},
                 error_message=err
             )
 

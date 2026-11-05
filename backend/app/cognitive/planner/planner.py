@@ -523,35 +523,49 @@ class TaskPlanner:
             )
 
         elif ("whatsapp" in goal_lower or "whats app" in goal_lower or "watsapp" in goal_lower) and not any(m in goal_lower for m in ["phone", "mobile", "adb"]):
+            recipient = None
+            rec_m = re.search(r"(?:to|contact|person)\s+([a-zA-Z0-9_\s+]+?)(?:\s+(?:saying|message|mesage|text|content)|$)", goal, re.IGNORECASE)
+            if rec_m:
+                recipient = rec_m.group(1).strip()
+
             phone = None
-            phone_m = re.search(r"(?:to|phone|number)\s+([+]?\d{7,15})", goal)
-            if phone_m:
-                phone = phone_m.group(1).strip()
+            if recipient and re.match(r"^[+]?[\d\s-]{7,16}$", recipient):
+                phone = re.sub(r"[^\d+]", "", recipient)
+            else:
+                phone_m = re.search(r"(?:to|phone|number)\s+([+]?\d{7,15})", goal)
+                if phone_m:
+                    phone = phone_m.group(1).strip()
+                    if not recipient:
+                        recipient = phone
+
             msg = None
-            msg_m = re.search(r"(?:saying|message|mesage|text)\s+['\"]?(.+?)['\"]?$", goal, re.IGNORECASE)
+            msg_m = (
+                re.search(r"(?:saying|is the message)[:\s]+(.+)", goal, re.IGNORECASE)
+                or re.search(r"(?:content|text|message|mesage)[:\s]+(.+)", goal, re.IGNORECASE)
+            )
             if msg_m:
-                msg = msg_m.group(1).strip()
+                msg = msg_m.group(1).strip().strip('"\'')
             if not msg and any(m in goal_lower for m in ["hi and hello", "personal messge", "personal message"]):
                 msg = "hi and hello this is abhi"
 
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
-                title="Open WhatsApp & Prepare Conversation",
+                title=f"Open WhatsApp & Prepare Chat: {recipient or 'Active'}",
                 agent_id="os_desktop_agent",
                 action="open_whatsapp",
-                params={"phone": phone, "message": msg},
+                params={"phone": phone, "recipient": recipient, "message": msg},
                 risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )
 
-            has_send = any(s in goal_lower for s in ["send", "deliver", "text", "message to", "mesage"])
+            has_send = any(s in goal_lower for s in ["send", "deliver", "text", "message to", "mesage", "saying"])
             if has_send or msg:
                 nodes["step_2"] = DAGNode(
                     node_id="step_2",
-                    title="Deliver Message to WhatsApp Conversation",
+                    title=f"Deliver WhatsApp Message to {recipient or 'Contact'}",
                     agent_id="os_desktop_agent",
                     action="send_whatsapp_message",
-                    params={"phone": phone, "message": msg or "Hello"},
+                    params={"phone": phone, "recipient": recipient, "message": msg or "Hello"},
                     dependencies=["step_1"],
                     risk_tier="Tier 1",
                     status=NodeStatus.PENDING
