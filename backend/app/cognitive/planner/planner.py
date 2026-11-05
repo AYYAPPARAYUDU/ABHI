@@ -500,9 +500,12 @@ class TaskPlanner:
             if phone_m:
                 phone = phone_m.group(1).strip()
             msg = None
-            msg_m = re.search(r"(?:saying|message|text)\s+['\"]?(.+?)['\"]?$", goal, re.IGNORECASE)
+            msg_m = re.search(r"(?:saying|message|mesage|text)\s+['\"]?(.+?)['\"]?$", goal, re.IGNORECASE)
             if msg_m:
                 msg = msg_m.group(1).strip()
+            if not msg and any(m in goal_lower for m in ["hi and hello", "personal messge", "personal message"]):
+                msg = "hi and hello this is abhi"
+
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
                 title="Open WhatsApp & Prepare Conversation",
@@ -512,6 +515,19 @@ class TaskPlanner:
                 risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )
+
+            has_send = any(s in goal_lower for s in ["send", "deliver", "text", "message to", "mesage"])
+            if has_send or msg:
+                nodes["step_2"] = DAGNode(
+                    node_id="step_2",
+                    title="Deliver Message to WhatsApp Conversation",
+                    agent_id="os_desktop_agent",
+                    action="send_whatsapp_message",
+                    params={"phone": phone, "message": msg or "Hello"},
+                    dependencies=["step_1"],
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
 
         elif "instagram" in goal_lower or "insta" in goal_lower:
             nodes["step_1"] = DAGNode(

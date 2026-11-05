@@ -341,147 +341,94 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   readonly specialistAgents: SpatialNodeData[] = [
     {
-      id: 'supervisor',
-
-      name: 'Central Command Core',
-
-      role: 'Master Task Decomposition & Iron Man Protocol Orchestrator',
-
+      id: 'agent_1_commander',
+      name: 'Commander & Orchestrator',
+      role: 'Lead Architect, Task Decomposer & Multi-Agent Arbitrator',
       status: 'ACTIVE',
-
-      capabilities: ['House Party Protocol', 'Plan Validation', 'Safety Gate'],
-
+      capabilities: ['Goal Intake', 'Task Decomposition', 'Squad Routing', 'Conflict Arbitration', 'Gatekeeper Sign-Off'],
       riskTier: 'CRITICAL',
-
       protocolCode: 'PROTOCOL-01 // COMMAND',
-
       suitMark: 'MARK 85',
     },
-
     {
-      id: 'vision',
-
-      name: 'Mark VII Vision HUD',
-
-      role: 'Multi-Spectrum Screen Perception & Real-Time OCR',
-
+      id: 'agent_2_browser',
+      name: 'Browser & Web Specialist',
+      role: 'Live Web Automation, DOM Tree Inspection & Session State',
       status: 'ACTIVE',
-
-      capabilities: ['Thermal Scan', 'Optical OCR', 'Target Locking'],
-
-      riskTier: 'STANDARD',
-
-      protocolCode: 'PROTOCOL-02 // OPTICS',
-
-      suitMark: 'MARK VII',
-    },
-
-    {
-      id: 'desktop',
-
-      name: 'Kinetic Servos (Win32)',
-
-      role: 'Physical UI Automation, Mouse Gestures & Keystroke Relay',
-
-      status: 'ACTIVE',
-
-      capabilities: ['UIAutomation', 'Mouse/Keyboard', 'Window Focus'],
-
+      capabilities: ['DOM Inspection', 'Playwright CDP', 'Network Intercept', 'Session/Cookies', 'Zero Guessing'],
       riskTier: 'ELEVATED',
-
-      protocolCode: 'PROTOCOL-03 // KINETICS',
-
-      suitMark: 'MARK XLII',
-    },
-
-    {
-      id: 'browser',
-
-      name: 'Orbital Recon (Playwright)',
-
-      role: 'Global Web Automation & DOM Intelligence Infiltration',
-
-      status: 'ACTIVE',
-
-      capabilities: ['Playwright', 'DOM Tree Parsing', 'Session State'],
-
-      riskTier: 'ELEVATED',
-
-      protocolCode: 'PROTOCOL-04 // RECON',
-
+      protocolCode: 'PROTOCOL-02 // RECON',
       suitMark: 'MARK L',
     },
-
     {
-      id: 'coder',
-
-      name: 'CAD Forge (Self-Healing)',
-
-      role: 'Syntactic AST Repair, Nanotech Patching & Code Synthesis',
-
+      id: 'agent_3_comms',
+      name: 'Comms & WhatsApp Officer',
+      role: 'External Channel Dispatch (WhatsApp Native / Alerts / Webhooks)',
       status: 'ACTIVE',
-
-      capabilities: ['TypeScript', 'Python', 'AST Repair'],
-
+      capabilities: ['WhatsApp Desktop', 'Recipient Verification', 'Message Sanitization', 'Delivery Confirmation', 'Rate Limiting'],
+      riskTier: 'ELEVATED',
+      protocolCode: 'PROTOCOL-03 // COMMS',
+      suitMark: 'MARK XLII',
+    },
+    {
+      id: 'agent_4_system',
+      name: 'OS, Shell & Code Engineer',
+      role: 'Terminal Execution, File System I/O & Surgical AST Code Synthesis',
+      status: 'ACTIVE',
+      capabilities: ['PowerShell/CMD', 'Surgical Edits', 'Preserve Integrity', 'Exit Code Audit', 'Process Monitor'],
       riskTier: 'HIGH',
-
-      protocolCode: 'PROTOCOL-05 // FORGE',
-
+      protocolCode: 'PROTOCOL-04 // FORGE',
       suitMark: 'MARK VI',
     },
-
     {
-      id: 'terminal',
-
-      name: 'Repulsor Terminal',
-
-      role: 'Sandboxed PowerShell Execution & Process Control',
-
+      id: 'agent_5_researcher',
+      name: 'Deep Researcher & Miner',
+      role: 'Codebase Scanning, Documentation Mining & Fact Extraction',
       status: 'ACTIVE',
-
-      capabilities: ['PowerShell', 'Exit Code Audit', 'Process Monitor'],
-
-      riskTier: 'CRITICAL',
-
-      protocolCode: 'PROTOCOL-06 // REPULSOR',
-
-      suitMark: 'WAR MACHINE',
-    },
-
-    {
-      id: 'memory',
-
-      name: 'Holo-Vault Memory',
-
-      role: 'SQLite WAL & Persistent Holographic RAG Graph',
-
-      status: 'ACTIVE',
-
-      capabilities: ['Vector Search', 'WAL Commit', 'History Index'],
-
+      capabilities: ['Hybrid RAG', 'AST Grep', 'Doc Mining', 'Exact Citations', 'Signal Extraction'],
       riskTier: 'STANDARD',
-
-      protocolCode: 'PROTOCOL-07 // VAULT',
-
-      suitMark: 'HOLOGRAPHIC',
+      protocolCode: 'PROTOCOL-05 // RESEARCH',
+      suitMark: 'MARK VII',
     },
-
     {
-      id: 'safety',
-
-      name: 'Veronica Safety Gate',
-
-      role: 'Dual-State Physical Verification & Emergency Killswitch',
-
+      id: 'agent_6_ml',
+      name: 'ML & Pipeline Specialist',
+      role: 'Model Selection, Hyperparameter Tuning, Loss Tracking & Schema Integrity',
       status: 'ACTIVE',
-
-      capabilities: ['State Verification', 'Killswitch', 'Pre-flight Check'],
-
+      capabilities: ['Pipeline Design', 'Model Evaluation', 'Loss Monitoring', 'Metric Audit', 'Leakage Prevention'],
+      riskTier: 'STANDARD',
+      protocolCode: 'PROTOCOL-06 // NEURAL',
+      suitMark: 'MARK XXI',
+    },
+    {
+      id: 'agent_7_strategist',
+      name: 'Task Strategist & Decomposer',
+      role: 'DAG Dependency Mapping, Tree-of-Thought & Rollback Safeguards',
+      status: 'ACTIVE',
+      capabilities: ['Tree of Thought', 'DAG Mapping', 'Rollback Plans', 'Kahn Topological Verification', 'Token Efficiency'],
+      riskTier: 'STANDARD',
+      protocolCode: 'PROTOCOL-07 // STRATEGY',
+      suitMark: 'MARK XVII',
+    },
+    {
+      id: 'agent_8_qa_critic',
+      name: 'Verification & QA Auditor',
+      role: 'The Critic: Adversarial Verification & Quality Gate Sign-Off',
+      status: 'ACTIVE',
+      capabilities: ['Physical Proof Audit', 'Edge Case Hunter', 'Boundary Testing', 'VERIFIED: PASS', 'Rejection Diagnostics'],
+      riskTier: 'STANDARD',
+      protocolCode: 'PROTOCOL-08 // CRITIC',
+      suitMark: 'MARK VII',
+    },
+    {
+      id: 'agent_9_security',
+      name: 'Security & Guardrails Controller',
+      role: 'Credential Shielding, Destructive Action Interception & Sandbox Fencing',
+      status: 'ACTIVE',
+      capabilities: ['Credential Shield', 'Destructive Command Block', 'Privilege Audit', 'Sandbox Defense', 'Prompt Injection Guard'],
       riskTier: 'CRITICAL',
-
-      protocolCode: 'PROTOCOL-08 // VERONICA',
-
-      suitMark: 'HULKBUSTER',
+      protocolCode: 'PROTOCOL-09 // SECURITY',
+      suitMark: 'MARK I',
     },
   ];
 

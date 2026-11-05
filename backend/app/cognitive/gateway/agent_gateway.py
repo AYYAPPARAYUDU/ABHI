@@ -793,7 +793,7 @@ class AgentGateway:
                 )
             answer_text = llm_resp.response.strip()
             if not answer_text:
-                answer_text = f"Greetings Ayyappa. Neural core is online and ready at {time_str}. How may I assist you?"
+                answer_text = f"Greetings Ayyappa. I am ABHI, your sovereign neural core, online and ready at {time_str}. How may I assist you?"
         except Exception as e:
             logger.error(f"Error querying local LLM: {str(e)}")
             answer_text = (
