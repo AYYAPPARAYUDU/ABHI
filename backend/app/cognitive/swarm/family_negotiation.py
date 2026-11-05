@@ -319,7 +319,25 @@ class FamilySwarmEngine:
             "war-machine": "agent-nexus",
             "stark-forge": "agent-synthex",
             "friday": "agent-synapse",
-            "friday-oracle": "agent-synapse"
+            "friday-oracle": "agent-synapse",
+            "agent_1_commander": "agent-nexus",
+            "agent_2_browser": "agent-chronos",
+            "agent_3_comms": "agent-friday",
+            "agent_4_system": "agent-synthex",
+            "agent_5_researcher": "agent-aura",
+            "agent_6_ml": "agent-synapse",
+            "agent_7_strategist": "agent-archon",
+            "agent_8_qa_critic": "agent-aegis",
+            "agent_9_security": "agent-sentinel",
+            "agent_1": "agent-nexus",
+            "agent_2": "agent-chronos",
+            "agent_3": "agent-friday",
+            "agent_4": "agent-synthex",
+            "agent_5": "agent-aura",
+            "agent_6": "agent-synapse",
+            "agent_7": "agent-archon",
+            "agent_8": "agent-aegis",
+            "agent_9": "agent-sentinel"
         }
         resolved = alias_map.get(id_norm)
         if resolved and resolved in self._brains:

@@ -5,14 +5,25 @@
       <span class="hud-brand-symbol">◈</span>
       <div>
         <h1 class="hud-title">3D LIVING BOT WORKSPACE</h1>
-        <p class="hud-subtitle">8 Small-LLM Specialist Brains Active on Hexagonal Colony Base // Zero-Cloud Local Inference</p>
+        <p class="hud-subtitle">9 Specialized Agent Brains Active on Hexagonal Spatial Base // Zero-Cloud Local Inference</p>
       </div>
     </div>
 
     <div class="hud-actions-group">
+      <!-- Voice Listening Toggle -->
+      <button
+        type="button"
+        class="council-toggle-btn"
+        [class.active]="voiceStreamEnabled()"
+        (click)="toggleVoiceStream()"
+        title="Toggle Real-Time Voice Audio Stream"
+      >
+        <span>{{ voiceStreamEnabled() ? '🔊 VOICE LIVE' : '🔇 VOICE MUTED' }}</span>
+      </button>
+
       <div class="consensus-badge">
         <span class="pulse-dot"></span>
-        <span class="consensus-label">FAMILY CONSENSUS:</span>
+        <span class="consensus-label">CONSENSUS:</span>
         <span class="consensus-val">{{ consensusScore() }}% RATIFIED</span>
       </div>
 
@@ -22,25 +33,25 @@
         (click)="triggerFamilyDeliberation()"
         [disabled]="isDeliberating()"
       >
-        <span>{{ isDeliberating() ? 'DELIBERATING...' : '⚡ SWARM COUNCIL DEBATE' }}</span>
+        <span>{{ isDeliberating() ? 'DELIBERATING...' : '⚡ SQUAD COUNCIL DEBATE' }}</span>
       </button>
 
       <button
         type="button"
         class="council-toggle-btn"
         (click)="showFamilyCouncil.set(!showFamilyCouncil())"
-        title="Toggle Family Dialogue Log"
+        title="Toggle Squad Channels & Logs"
       >
-        <span>💬 LOGS ({{ familyDialogue().length }})</span>
+        <span>💬 LIVE CHAT CHANNELS</span>
       </button>
     </div>
   </header>
 
-  <!-- Interactive 8-Bot Stations Dock (Bottom Dock overlooking the 3D Colony) -->
+  <!-- Interactive 9-Bot Stations Dock -->
   <footer class="stations-dock-container" [class.expanded]="dockExpanded()">
     <div class="stations-dock-header-bar">
       <div class="stations-dock-title">
-        <span>AUTONOMOUS SPECIALIST STATIONS // CLICK TO ROTATE 3D WORKSTATION TO FRONT</span>
+        <span>AUTONOMOUS SPECIALIST STATIONS // 9 SUIT HUBS // CLICK TO FOCUS</span>
       </div>
       <button
         type="button"
@@ -53,7 +64,7 @@
     </div>
 
     @if (!dockExpanded()) {
-      <!-- Sleek Compact Floating Pill Bar: Zero occlusion of the 3D colony -->
+      <!-- Sleek Compact Floating Pill Bar -->
       <div class="stations-compact-bar">
         @for (agent of agents(); track agent.id) {
           <button
@@ -73,7 +84,7 @@
         }
       </div>
     } @else {
-      <!-- Full Expanded 8-Station Grid -->
+      <!-- Full Expanded Grid -->
       <div class="stations-grid">
         @for (agent of agents(); track agent.id) {
           <div
@@ -123,17 +134,55 @@
       </div>
 
       <div class="drawer-body">
-        <!-- Small-LLM Brain Specs -->
+        <!-- Action Feedback -->
+        @if (stationActionStatus()) {
+          <div class="station-action-status-banner">
+            {{ stationActionStatus() }}
+          </div>
+        }
+
+        <!-- Functional Station Action Controls -->
+        <div class="drawer-section">
+          <h3 class="section-title">✦ AUTONOMOUS STATION CONTROLS</h3>
+          <div class="station-actions-row">
+            <button
+              type="button"
+              class="station-act-btn recalibrate"
+              (click)="recalibrateStation(current)"
+              title="Calibrate local neural synapse weights"
+            >
+              ⚡ Recalibrate
+            </button>
+            <button
+              type="button"
+              class="station-act-btn synthesize"
+              (click)="synthesizeSkill(current)"
+              title="Trigger daily knowledge upgrade cycle"
+            >
+              🧬 Synthesize Skill
+            </button>
+            <button
+              type="button"
+              class="station-act-btn diagnostics"
+              (click)="runDiagnostics(current)"
+              title="Run real hardware & memory audit"
+            >
+              🩺 Diagnostics
+            </button>
+          </div>
+        </div>
+
+        <!-- Specialist Brain Specs -->
         <div class="drawer-section">
           <h3 class="section-title">✦ SPECIALIST BRAIN SPECIFICATIONS</h3>
           <div class="spec-grid">
             <div class="spec-tile">
               <span class="spec-label">Model Architecture</span>
-              <span class="spec-val">abhi:small-specialist@8b</span>
+              <span class="spec-val">abhi:specialist@8b</span>
             </div>
             <div class="spec-tile">
               <span class="spec-label">Context Memory</span>
-              <span class="spec-val">4,096 Tokens</span>
+              <span class="spec-val">8,192 Tokens</span>
             </div>
             <div class="spec-tile">
               <span class="spec-label">Inference Mode</span>
@@ -156,7 +205,7 @@
           </div>
         </div>
 
-        <!-- Direct Small-LLM Brain Chat -->
+        <!-- Direct Synaptic Chat -->
         <div class="drawer-section">
           <h3 class="section-title">✦ DIRECT SYNAPTIC CHAT WITH {{ current.name }}</h3>
           <div class="brain-chat-box">
@@ -209,48 +258,76 @@
     </aside>
   }
 
-  <!-- Family Council Dialogue Modal -->
+  <!-- Multi-Channel Squad Live Chat Modal -->
   @if (showFamilyCouncil()) {
-    <div class="family-council-modal" role="dialog" aria-label="Family Council Dialogue">
+    <div class="family-council-modal" role="dialog" aria-label="Squad Multi-Channel Live Chat">
       <div class="council-modal-header">
         <div class="council-title-wrap">
-          <span class="council-icon">🤝</span>
+          <span class="council-icon">🌐</span>
           <div>
-            <h2 class="council-title">SWARM FAMILY COUNCIL DELIBERATION</h2>
-            <div class="council-sub">Inter-Agent Bidding, Critique, and Autonomous Consensus</div>
+            <h2 class="council-title">MULTI-AGENT SQUAD CHANNELS & LIVE NEGOTIATION</h2>
+            <div class="council-sub">Direct Live Stream Between Specialist Squads // Real-Time Voice Audio</div>
           </div>
         </div>
         <button type="button" class="council-close-btn" (click)="showFamilyCouncil.set(false)">✕</button>
       </div>
 
       <div class="council-modal-body">
-        <div class="council-consensus-bar">
-          <span>Consensus Gauge:</span>
-          <div class="consensus-track">
-            <div class="consensus-fill" [style.width.%]="consensusScore()"></div>
-          </div>
-          <span class="consensus-val-text">{{ consensusScore() }}%</span>
+        <!-- Squad Channel Tabs -->
+        <div class="squad-channel-tabs">
+          @for (ch of squadChannels; track ch) {
+            <button
+              type="button"
+              class="squad-tab-btn"
+              [class.active]="activeChannel() === ch"
+              (click)="selectChannel(ch)"
+            >
+              {{ ch }}
+            </button>
+          }
         </div>
 
+        <!-- Channel Message List -->
         <div class="dialogue-feed">
-          @for (d of familyDialogue(); track d.id) {
-            <div class="dialogue-card" [class.ratified]="d.sentiment === 'RATIFIED'">
+          @for (m of channelMessages(); track m.id) {
+            <div class="dialogue-card" [class.ratified]="m.sentiment === 'RATIFIED'">
               <div class="dialogue-meta">
-                <span class="dialogue-sender">{{ d.sender }}</span>
-                <span class="dialogue-sentiment">[{{ d.sentiment }}]</span>
-                <span class="dialogue-time">{{ d.time }}</span>
+                <span class="dialogue-sender">{{ m.sender_name }} ({{ m.suit_mark }})</span>
+                <span class="dialogue-sentiment">[{{ m.role }}]</span>
+                <span class="dialogue-time">{{ m.timestamp * 1000 | date:'shortTime' }}</span>
               </div>
-              <p class="dialogue-msg">{{ d.message }}</p>
+              <p class="dialogue-msg">{{ m.message }}</p>
+              @if (m.code_snippet) {
+                <pre class="dialogue-code"><code>{{ m.code_snippet }}</code></pre>
+              }
             </div>
           }
-          @if (familyDialogue().length === 0) {
+          @if (channelMessages().length === 0) {
             <div class="dialogue-empty">
-              No recent deliberation. Click "SWARM COUNCIL DEBATE" above to initiate autonomous 3-round family negotiation.
+              No recent chatter on {{ activeChannel() }}. Post an instruction below to trigger squad collaboration.
             </div>
           }
         </div>
+
+        <!-- Post to Channel Input Form -->
+        <form class="channel-post-form" (ngSubmit)="postToActiveChannel()">
+          <input
+            type="text"
+            class="channel-post-input"
+            [(ngModel)]="channelInputText"
+            name="channelInput"
+            [placeholder]="'Broadcast message or code directive to ' + activeChannel() + '...'"
+            [disabled]="isPostingChannel()"
+          />
+          <button
+            type="submit"
+            class="channel-post-btn"
+            [disabled]="!channelInputText.trim() || isPostingChannel()"
+          >
+            {{ isPostingChannel() ? 'DISPATCHING...' : 'DISPATCH' }}
+          </button>
+        </form>
       </div>
     </div>
   }
 </div>
-

@@ -68,14 +68,16 @@ async def negotiate_swarm_task(payload: Dict[str, Any]):
 
 @router.get("/swarm/family-status")
 async def get_family_swarm_status():
-    """Retrieve real-time status of all 8 Small-LLM specialist brains."""
+    """Retrieve real-time status of all 8 Small-LLM specialist brains and live chat history."""
     from backend.app.cognitive.swarm.family_negotiation import family_swarm
     brains = family_swarm.list_brains()
+    history = family_swarm._chat_history[-25:]
     return {
         "status": "ONLINE",
         "family_name": "ABHI Multi-Agent Small-LLM Swarm",
         "total_brains": len(brains),
         "brains": [b.model_dump() for b in brains],
+        "chat_history": [h.model_dump() for h in history],
         "recent_negotiations": [n.model_dump() for n in family_swarm.get_recent_negotiations(5)]
     }
 
@@ -710,6 +712,89 @@ async def get_intruder_snapshot(filename: str):
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Security snapshot not found.")
     return FileResponse(str(file_path), media_type="image/jpeg")
+
+
+# Multi-channel Live Chat, Code Stream, and Daily Evolution Endpoints
+@router.get("/live-code-stream")
+async def get_live_code_stream(limit: int = 20):
+    """Retrieve real-time code modifications and workspace evolution updates."""
+    from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
+    return {
+        "status": "STREAMING",
+        "updates": daily_evolution_service.get_recent_code_updates(limit=limit),
+    }
+
+
+@router.get("/live-chat/channels/{channel_name}")
+async def get_squad_channel_messages(channel_name: str, limit: int = 50):
+    """Retrieve live inter-agent multi-channel messages (#squad-command, #squad-frontend, etc.)."""
+    from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
+    msgs = daily_evolution_service.get_channel_messages(channel_name, limit=limit)
+    return {
+        "channel": channel_name,
+        "count": len(msgs),
+        "messages": msgs,
+    }
+
+
+class ChannelPostPayload(BaseModel):
+    channel: str = "squad-command"
+    sender_id: str = "operator"
+    message: str
+    code_snippet: Optional[str] = None
+
+
+@router.post("/live-chat/send")
+async def post_squad_channel_message(payload: ChannelPostPayload):
+    """Post message to squad channel and trigger neural response."""
+    from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
+    
+    posted = daily_evolution_service.add_channel_message(
+        channel=payload.channel,
+        sender_id=payload.sender_id,
+        message=payload.message,
+        code_snippet=payload.code_snippet,
+    )
+    
+    clean_ch = payload.channel.replace("#", "")
+    reply_persona = "agent_1_commander"
+    if "frontend" in clean_ch:
+        reply_persona = "agent_2_browser"
+    elif "backend" in clean_ch:
+        reply_persona = "agent_4_system"
+    elif "testing" in clean_ch or "qa" in clean_ch:
+        reply_persona = "agent_8_qa_critic"
+    elif "evolution" in clean_ch:
+        reply_persona = "agent_6_ml"
+        
+    asyncio.create_task(_reply_to_channel(clean_ch, reply_persona, payload.message))
+    return {"status": "POSTED", "message": posted}
+
+
+async def _reply_to_channel(channel: str, agent_id: str, prompt: str):
+    await asyncio.sleep(0.5)
+    from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
+    from backend.app.services.llm.abhi_llm import abhi_llm
+    try:
+        res = await abhi_llm.generate(f"As specialist {agent_id}, provide a concise 1-2 sentence engineering reply or confirmation to: '{prompt}'")
+        text = res.text.strip()
+    except Exception:
+        text = f"Specialist {agent_id} synchronized on #{channel}. Operational parameters confirmed."
+    daily_evolution_service.add_channel_message(
+        channel=channel,
+        sender_id=agent_id,
+        message=text,
+        voice_transcript=text,
+    )
+
+
+@router.post("/evolve/daily-cycle")
+@router.get("/evolve/daily-cycle")
+async def trigger_daily_evolution_cycle():
+    """Trigger automated daily knowledge upgrade and LLM skill assimilation."""
+    from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
+    report = await daily_evolution_service.execute_daily_evolution_cycle()
+    return report.model_dump()
 
 
 # Authoritative Gateway Router mirroring all agent routes under /agent-gateway
