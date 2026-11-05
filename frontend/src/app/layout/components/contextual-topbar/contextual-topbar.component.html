@@ -82,6 +82,20 @@
         }
       </a>
 
+      <!-- 2.5 Live Console -->
+      <a
+        routerLink="/live-console"
+        class="clean-nav-btn ribbon-btn live-console-btn"
+        [class.active]="isActive('/live-console')"
+        title="Antigravity Live Swarm, Code Stream & Daily Evolution Console"
+      >
+        <span class="nav-btn-icon">⚡</span>
+        <span class="nav-btn-text">Live Console</span>
+        @if (isActive('/live-console')) {
+          <span class="nav-active-pip"></span>
+        }
+      </a>
+
       <!-- 3. Scanning -->
       <button
         type="button"

@@ -21,6 +21,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'live-console',
+    loadComponent: () =>
+      import('./features/live-console/pages/live-console-page/live-console-page.component').then(
+        (m) => m.LiveConsolePageComponent
+      )
+  },
+  {
     path: 'automation',
     loadComponent: () =>
       import('./features/automation/pages/automation-page/automation-page.component').then(

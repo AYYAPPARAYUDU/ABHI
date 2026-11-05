@@ -1,5 +1,6 @@
 """FastAPI Router for Agent Gateway & Context (Phase 9 Stage 3)."""
 
+import asyncio
 import os
 import time
 import psutil
@@ -465,7 +466,8 @@ async def trigger_agent_evolution(req: EvolutionActionRequest) -> Dict[str, Any]
 @router.get("/evolve/status")
 async def get_evolution_status() -> Dict[str, Any]:
     """Retrieve sovereign self-evolution status, active capabilities, and codebase health."""
-    import os
+    import asyncio
+import os
     import time
     from backend.app.cognitive.registry.registry import agent_registry
     from backend.app.services.llm.abhi_llm import abhi_llm

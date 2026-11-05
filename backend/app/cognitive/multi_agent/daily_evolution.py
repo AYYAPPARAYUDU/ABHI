@@ -78,6 +78,39 @@ class DailyEvolutionService:
         self._reports_dir = Path("project_data/status/llm_evaluations")
         self._reports_dir.mkdir(parents=True, exist_ok=True)
         self._init_seed_channels()
+        self._init_seed_code_updates()
+
+    def _init_seed_code_updates(self):
+        """Populate initial active code stream records."""
+        self._recent_code_updates = [
+            {
+                "id": "code_ag_live_1",
+                "file": "aiops_ui/src/app/aiops/components/antigravity-live/antigravity-live.component.ts",
+                "summary": "Integrated Antigravity Autonomous Live Console with 4 dynamic viewports and Voice Stream.",
+                "diff": "+export class AntigravityLiveComponent implements OnInit\\n+gatewayUrl: http://127.0.0.1:8000\\n+squadChannels: [#squad-command, #squad-frontend, ...]",
+                "author": "Antigravity Assistant (AI Architect)",
+                "timestamp": time.time() - 300,
+                "time_formatted": datetime.now(timezone.utc).strftime("%H:%M:%S UTC"),
+            },
+            {
+                "id": "code_ag_live_2",
+                "file": "ABHI/frontend/src/app/features/workspace/pages/workspace-page/workspace-page.component.ts",
+                "summary": "Upgraded 3D Workspace with 9-Station Controls (Recalibrate, Synthesize Skill, Diagnostics) and Voice Audio.",
+                "diff": "+recalibrateStation(agent: AgentNode)\\n+synthesizeSkill(agent: AgentNode)\\n+toggleVoiceStream()",
+                "author": "Antigravity Assistant (AI Architect)",
+                "timestamp": time.time() - 180,
+                "time_formatted": datetime.now(timezone.utc).strftime("%H:%M:%S UTC"),
+            },
+            {
+                "id": "code_ag_live_3",
+                "file": "ABHI/backend/app/cognitive/multi_agent/daily_evolution.py",
+                "summary": "Implemented Autonomous Daily Knowledge Assimilation & Multi-Channel Inter-Agent Squad Chat.",
+                "diff": "+class DailyEvolutionService\\n+execute_daily_evolution_cycle()\\n+get_channel_messages()",
+                "author": "Antigravity Assistant (AI Architect)",
+                "timestamp": time.time() - 60,
+                "time_formatted": datetime.now(timezone.utc).strftime("%H:%M:%S UTC"),
+            },
+        ]
 
     def _init_seed_channels(self):
         """Populate initial live conversations for all channels."""

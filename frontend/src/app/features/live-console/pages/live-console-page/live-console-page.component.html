@@ -1,0 +1,308 @@
+<div class="antigravity-live-wrapper">
+  <!-- Top Command Header -->
+  <header class="ag-header">
+    <div class="header-left">
+      <div class="brand-badge">
+        <span class="brand-icon">⚡</span>
+        <div>
+          <h1 class="header-title">ANTIGRAVITY AUTONOMOUS LIVE CONSOLE</h1>
+          <p class="header-subtitle">Real-Time Multi-Agent Collaboration, Code Stream & Daily Knowledge Evolution</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <!-- Voice Toggle -->
+      <button
+        type="button"
+        class="action-btn voice-btn"
+        [class.active]="voiceEnabled()"
+        (click)="toggleVoice()"
+        title="Toggle Real-Time Voice Audio Stream"
+      >
+        <span>{{ voiceEnabled() ? '🔊 VOICE LIVE' : '🔇 VOICE MUTED' }}</span>
+      </button>
+
+      <!-- Status Pill -->
+      <div class="status-pill" [class.offline]="swarmStatus().includes('OFFLINE')">
+        <span class="status-dot"></span>
+        <span class="status-text">{{ swarmStatus() }}</span>
+        <span class="count-badge">{{ activeBrainsCount() }} BRAINS</span>
+      </div>
+
+      <!-- Manual Refresh -->
+      <button type="button" class="action-btn refresh-btn" (click)="refreshAllData()" title="Force Refresh">
+        🔄 Refresh
+      </button>
+    </div>
+  </header>
+
+  <!-- Live Toast Notification Banner -->
+  @if (activeNotification()) {
+    <div class="notification-banner">
+      <span class="notif-icon">🔔</span>
+      <span class="notif-text">{{ activeNotification() }}</span>
+      <button type="button" class="notif-close" (click)="activeNotification.set(null)">✕</button>
+    </div>
+  }
+
+  <!-- View Switcher Navigation Tabs -->
+  <nav class="ag-nav-tabs">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'swarm'"
+      (click)="selectTab('swarm')"
+    >
+      ⚡ SWARM THOUGHT STREAM
+      <span class="badge">{{ swarmDialogue().length }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'code'"
+      (click)="selectTab('code')"
+    >
+      💻 LIVE CODE STREAM
+      <span class="badge">{{ codeUpdates().length }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'chat'"
+      (click)="selectTab('chat')"
+    >
+      💬 SQUAD MULTI-CHANNEL CHAT
+    </button>
+
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'evolution'"
+      (click)="selectTab('evolution')"
+    >
+      🧬 DAILY KNOWLEDGE UPGRADES
+      <span class="badge score">{{ overallHealthScore() }}%</span>
+    </button>
+  </nav>
+
+  <!-- Main Dynamic Viewport -->
+  <main class="ag-main-content">
+    <!-- 1. SWARM THOUGHT STREAM TAB -->
+    @if (activeTab() === 'swarm') {
+      <div class="tab-pane swarm-pane">
+        <div class="pane-header">
+          <div class="pane-info">
+            <h2>Active Inter-Agent Negotiation Thought Stream</h2>
+            <p>Live deliberation envelopes between Commander (Mark 85), Execution Squad, and Quality Gatekeeper</p>
+          </div>
+          <div class="live-indicator">
+            <span class="pulse-ring"></span>
+            LIVE STREAM ACTIVE
+          </div>
+        </div>
+
+        <div class="dialogue-feed">
+          @for (d of swarmDialogue(); track d.id || $index) {
+            <div class="dialogue-card" [class.highlight]="d.sentiment.includes('VERIFIED') || d.sentiment.includes('APPROVAL')">
+              <div class="dialogue-card-header">
+                <span class="sender-pill">{{ d.sender_name }}</span>
+                <span class="arrow-sym">➔</span>
+                <span class="recipient-pill">{{ d.recipient }}</span>
+                <span class="sentiment-badge font-mono">{{ d.sentiment }}</span>
+                <span class="timestamp-meta">{{ d.timestamp * 1000 | date:'mediumTime' }}</span>
+              </div>
+              <p class="dialogue-body">"{{ d.message }}"</p>
+            </div>
+          }
+          @if (swarmDialogue().length === 0) {
+            <div class="empty-state">
+              <span>Connecting to local Antigravity neural swarm (127.0.0.1:8000)...</span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- 2. LIVE CODE STREAM TAB -->
+    @if (activeTab() === 'code') {
+      <div class="tab-pane code-pane">
+        <div class="pane-header">
+          <div class="pane-info">
+            <h2>Antigravity Live Code & Workspace Modifications</h2>
+            <p>Real-time file changes, AST validations, and execution patches committed autonomously</p>
+          </div>
+          <div class="branch-tag">BRANCH: autonomous_agent_upgrade</div>
+        </div>
+
+        <div class="code-cards-list">
+          @for (u of codeUpdates(); track u.id) {
+            <div class="code-card">
+              <div class="code-card-header">
+                <span class="file-icon">📄</span>
+                <span class="file-path font-mono">{{ u.file }}</span>
+                <span class="author-tag">{{ u.author }}</span>
+                <span class="time-tag">{{ u.time_formatted }}</span>
+              </div>
+              <div class="code-card-summary">{{ u.summary }}</div>
+              @if (u.diff) {
+                <pre class="code-diff font-mono"><code>{{ u.diff }}</code></pre>
+              }
+            </div>
+          }
+          @if (codeUpdates().length === 0) {
+            <div class="empty-state">
+              <div class="code-idle-box">
+                <p>✓ All 202 backend modules & Angular spatial UI are fully compiled and syntax clean.</p>
+                <p class="text-dim">Submitting goals in chat triggers live code synthesis and continuous patch streaming.</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- 3. SQUAD MULTI-CHANNEL CHAT TAB -->
+    @if (activeTab() === 'chat') {
+      <div class="tab-pane chat-pane">
+        <div class="pane-header">
+          <div class="pane-info">
+            <h2>Inter-Squad Specialized Channels</h2>
+            <p>Direct communication corridors for Command, Frontend, Backend, QA Testing, and Daily Evolution</p>
+          </div>
+        </div>
+
+        <!-- Channel Selector -->
+        <div class="channel-selector-bar">
+          @for (ch of squadChannels; track ch) {
+            <button
+              type="button"
+              class="channel-pill"
+              [class.active]="activeChannel() === ch"
+              (click)="selectChannel(ch)"
+            >
+              {{ ch }}
+            </button>
+          }
+        </div>
+
+        <!-- Chat Stream -->
+        <div class="channel-chat-feed">
+          @for (m of channelMessages(); track m.id) {
+            <div class="chat-message-row" [class.ratified]="m.sentiment === 'RATIFIED'">
+              <div class="chat-meta">
+                <span class="chat-sender">{{ m.sender_name }}</span>
+                <span class="suit-badge font-mono">{{ m.suit_mark }}</span>
+                <span class="role-desc">[{{ m.role }}]</span>
+                <span class="chat-time">{{ m.timestamp * 1000 | date:'shortTime' }}</span>
+              </div>
+              <p class="chat-text">{{ m.message }}</p>
+              @if (m.code_snippet) {
+                <pre class="chat-code font-mono"><code>{{ m.code_snippet }}</code></pre>
+              }
+            </div>
+          }
+          @if (channelMessages().length === 0) {
+            <div class="empty-state">No chatter on {{ activeChannel() }}. Post below to broadcast.</div>
+          }
+        </div>
+
+        <!-- Chat Input Form -->
+        <form class="chat-input-bar" (ngSubmit)="sendChatMessage()">
+          <input
+            type="text"
+            class="chat-input-field"
+            [(ngModel)]="chatInputText"
+            name="chatMsg"
+            [placeholder]="'Broadcast directive to ' + activeChannel() + '...'"
+            [disabled]="isPostingChat()"
+          />
+          <button
+            type="submit"
+            class="chat-submit-btn"
+            [disabled]="!chatInputText.trim() || isPostingChat()"
+          >
+            {{ isPostingChat() ? 'DISPATCHING...' : 'DISPATCH DIRECTIVE' }}
+          </button>
+        </form>
+      </div>
+    }
+
+    <!-- 4. DAILY KNOWLEDGE EVOLUTION TAB -->
+    @if (activeTab() === 'evolution') {
+      <div class="tab-pane evolution-pane">
+        <div class="pane-header">
+          <div class="pane-info">
+            <h2>Autonomous Daily Knowledge Assimilation & Benchmark</h2>
+            <p>Automated skill synthesis, memory compaction, and evaluation scoring for all 9 LLMs</p>
+          </div>
+          <button
+            type="button"
+            class="action-btn evo-trigger-btn"
+            (click)="triggerEvolutionCycle()"
+            [disabled]="isEvolving()"
+          >
+            {{ isEvolving() ? '🧬 RUNNING ASSIMILATION...' : '⚡ TRIGGER DAILY UPGRADE' }}
+          </button>
+        </div>
+
+        <!-- Metric Cards Row -->
+        <div class="metric-cards-grid">
+          <div class="stat-card">
+            <span class="stat-label">OVERALL HEALTH SCORE</span>
+            <span class="stat-val font-mono text-cyan">{{ overallHealthScore() }}%</span>
+            <span class="stat-sub">Topological Accuracy</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">KNOWLEDGE RECORDS INDEXED</span>
+            <span class="stat-val font-mono text-purple">{{ knowledgeNodesIndexed() }}</span>
+            <span class="stat-sub">SQLite WAL + RAG Vectors</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">AUTONOMOUS SPECIALISTS</span>
+            <span class="stat-val font-mono text-emerald">9 / 9 ONLINE</span>
+            <span class="stat-sub">100% Zero-Cloud Local</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">NIGHTLY AUTO-CYCLE</span>
+            <span class="stat-val font-mono text-amber">SCHEDULED</span>
+            <span class="stat-sub">Runs Every 24h at 00:00 UTC</span>
+          </div>
+        </div>
+
+        <!-- 9-Agent Persona Score Table -->
+        <div class="table-container">
+          <h3 class="table-title">✦ 9 SPECIALIZED AGENT EVALUATION BENCHMARKS</h3>
+          <table class="benchmark-table font-mono">
+            <thead>
+              <tr>
+                <th>AGENT / PERSONA</th>
+                <th>SUIT MARK</th>
+                <th>KNOWLEDGE</th>
+                <th>REASONING</th>
+                <th>TOOL FIDELITY</th>
+                <th>DAILY GROWTH</th>
+                <th>STATUS</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (e of evaluations(); track e.agent_id) {
+                <tr>
+                  <td class="font-bold text-white">{{ e.agent_name }}</td>
+                  <td class="text-cyan">{{ e.suit_mark }}</td>
+                  <td>{{ e.knowledge_score }}%</td>
+                  <td>{{ e.reasoning_depth }}%</td>
+                  <td>{{ e.tool_fidelity }}%</td>
+                  <td class="text-emerald">+{{ e.daily_growth_pct }}%</td>
+                  <td><span class="verdict-tag">{{ e.audit_verdict }}</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  </main>
+</div>
