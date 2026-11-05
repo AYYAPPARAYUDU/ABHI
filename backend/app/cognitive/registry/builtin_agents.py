@@ -604,7 +604,11 @@ class OSDesktopAgent(BaseAgent):
                     "send_whatsapp_message",
                     "open_url",
                     "adjust_volume",
-                    "lock_workstation"
+                    "lock_workstation",
+                    "system_restart",
+                    "system_shutdown",
+                    "cancel_system_shutdown",
+                    "system_power"
                 ],
                 risk_tier="Tier 2",
                 execution_boundary="subprocess_worker",
@@ -753,6 +757,49 @@ class OSDesktopAgent(BaseAgent):
                 success=ok,
                 data={"locked": ok},
                 observed_state={"locked": ok},
+                error_message=err
+            )
+
+        if action in ["system_restart", "restart_system", "reboot", "restart_laptop", "restart_pc", "reboot_system"]:
+            timeout_sec = int(params.get("timeout_sec") or params.get("timeout") or 30)
+            msg = str(params.get("message") or "ABHI automated system restart")
+            ok, err = os_control_engine.system_restart(timeout_sec=timeout_sec, message=msg)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"action": "system_restart", "timeout_sec": timeout_sec, "initiated": ok, "message": msg},
+                observed_state={"restarting": ok, "countdown_seconds": timeout_sec},
+                error_message=err
+            )
+
+        if action in ["system_shutdown", "shutdown_system", "power_off", "shutdown_laptop", "shutdown_pc", "power_off_pc"]:
+            timeout_sec = int(params.get("timeout_sec") or params.get("timeout") or 30)
+            msg = str(params.get("message") or "ABHI automated system shutdown")
+            ok, err = os_control_engine.system_shutdown(timeout_sec=timeout_sec, message=msg)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"action": "system_shutdown", "timeout_sec": timeout_sec, "initiated": ok, "message": msg},
+                observed_state={"shutting_down": ok, "countdown_seconds": timeout_sec},
+                error_message=err
+            )
+
+        if action in ["cancel_system_shutdown", "cancel_shutdown", "abort_shutdown", "abort_restart"]:
+            ok, err = os_control_engine.cancel_system_shutdown()
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"action": "cancel_system_shutdown", "aborted": ok},
+                observed_state={"shutdown_cancelled": ok},
                 error_message=err
             )
 

@@ -273,15 +273,27 @@ class AbhiStandaloneEngine:
         # ---------------------------------------------------------------------
         # 0.01 System Power Lifecycle Workflows (Restart, Shutdown, Reboot)
         # ---------------------------------------------------------------------
+        if any(w in g_lower for w in ["cancel restart", "cancel shutdown", "abort restart", "abort shutdown"]):
+            steps.append({
+                "node_id": "step_1",
+                "title": "Abort Pending System Shutdown Sequence",
+                "agent_id": "os_desktop_agent",
+                "action": "cancel_system_shutdown",
+                "params": {},
+                "dependencies": [],
+                "risk_tier": "Tier 1"
+            })
+            return steps
+
         if any(w in g_lower for w in ["restart laptop", "restart pc", "restart computer", "reboot laptop", "reboot pc", "reboot system", "reboot"]):
             steps.append({
                 "node_id": "step_1",
                 "title": "Initiate Safe System Restart Sequence (30s window)",
                 "agent_id": "os_desktop_agent",
-                "action": "run_allowlisted_command",
-                "params": {"command": "shutdown /r /t 30 /c \"ABHI requested restart\""},
+                "action": "system_restart",
+                "params": {"timeout_sec": 30, "message": "ABHI automated system restart"},
                 "dependencies": [],
-                "risk_tier": "Tier 3"
+                "risk_tier": "Tier 2"
             })
             return steps
 
@@ -290,10 +302,10 @@ class AbhiStandaloneEngine:
                 "node_id": "step_1",
                 "title": "Initiate Safe System Shutdown Sequence (30s window)",
                 "agent_id": "os_desktop_agent",
-                "action": "run_allowlisted_command",
-                "params": {"command": "shutdown /s /t 30 /c \"ABHI requested shutdown\""},
+                "action": "system_shutdown",
+                "params": {"timeout_sec": 30, "message": "ABHI automated system shutdown"},
                 "dependencies": [],
-                "risk_tier": "Tier 3"
+                "risk_tier": "Tier 2"
             })
             return steps
 

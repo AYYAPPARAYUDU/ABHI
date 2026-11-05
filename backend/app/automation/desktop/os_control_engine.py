@@ -1108,6 +1108,61 @@ class OSControlEngine:
         except Exception as e:
             return False, str(e)
 
+    def system_restart(self, timeout_sec: int = 30, message: str = "ABHI automated system restart") -> Tuple[bool, Optional[str]]:
+        """Initiate safe Windows system restart sequence with a cancellation window."""
+        if not self.is_windows:
+            logger.info("system_restart simulated on non-Windows host.")
+            return True, None
+        try:
+            sec = max(5, int(timeout_sec))
+            cmd = f'shutdown.exe /r /t {sec} /c "{message}"'
+            proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=5)
+            if proc.returncode == 0:
+                logger.info(f"Safe Windows system restart sequence initiated ({sec}s countdown)")
+                return True, None
+            else:
+                err = proc.stderr.strip() or f"shutdown.exe returned {proc.returncode}"
+                logger.warning(f"system_restart warning: {err}")
+                return False, err
+        except Exception as e:
+            logger.error(f"Failed to initiate system restart: {e}")
+            return False, str(e)
+
+    def system_shutdown(self, timeout_sec: int = 30, message: str = "ABHI automated system shutdown") -> Tuple[bool, Optional[str]]:
+        """Initiate safe Windows system shutdown sequence with a cancellation window."""
+        if not self.is_windows:
+            logger.info("system_shutdown simulated on non-Windows host.")
+            return True, None
+        try:
+            sec = max(5, int(timeout_sec))
+            cmd = f'shutdown.exe /s /t {sec} /c "{message}"'
+            proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=5)
+            if proc.returncode == 0:
+                logger.info(f"Safe Windows system shutdown sequence initiated ({sec}s countdown)")
+                return True, None
+            else:
+                err = proc.stderr.strip() or f"shutdown.exe returned {proc.returncode}"
+                logger.warning(f"system_shutdown warning: {err}")
+                return False, err
+        except Exception as e:
+            logger.error(f"Failed to initiate system shutdown: {e}")
+            return False, str(e)
+
+    def cancel_system_shutdown(self) -> Tuple[bool, Optional[str]]:
+        """Cancel any pending Windows system restart or shutdown countdown."""
+        if not self.is_windows:
+            return True, None
+        try:
+            proc = subprocess.run("shutdown.exe /a", shell=True, capture_output=True, text=True, timeout=5)
+            if proc.returncode == 0:
+                logger.info("Pending Windows restart/shutdown sequence aborted successfully.")
+                return True, None
+            else:
+                err = proc.stderr.strip() or f"shutdown.exe /a returned {proc.returncode}"
+                return False, err
+        except Exception as e:
+            return False, str(e)
+
     def list_processes(self, limit: int = 50, sort_by: str = "memory") -> List[Dict[str, Any]]:
         """List running processes with PID, name, memory, and CPU usage."""
         procs = []

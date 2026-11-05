@@ -428,86 +428,27 @@ class AgentGateway:
             summary=f"Task initiated: {goal_to_submit}",
         )
 
-        # Craft interactive, informative message for the user
-        lower_g = goal_to_submit.lower()
-        if any(r in lower_g for r in ["restart laptop", "restart pc", "restart computer", "reboot"]):
-            user_msg = "Initiating safe Windows system restart sequence (30-second cancellation window), Sir."
-        elif any(s in lower_g for s in ["shutdown laptop", "shutdown pc", "shutdown computer", "power off"]):
-            user_msg = "Initiating safe Windows system shutdown sequence (30-second cancellation window), Sir."
-        elif "antigravity" in lower_g:
-            user_msg = "Antigravity IDE is now open, Sir."
-        elif lower_g.startswith("play ") or "play song" in lower_g or "play music" in lower_g or "listen to" in lower_g or ("youtube" in lower_g and any(s in lower_g for s in ["play", "song", "music", "telugu", "hindi", "tamil"])):
-            clean_track = lower_g
-            for pref in ["open youtube and play", "play song", "play music", "play video", "play track", "listen to", "search youtube for", "play"]:
-                if clean_track.startswith(pref):
-                    clean_track = clean_track[len(pref):].strip()
-                    break
-                elif pref in clean_track:
-                    idx = clean_track.find(pref) + len(pref)
-                    clean_track = clean_track[idx:].strip()
-                    break
-            clean_track = re.sub(r"^(?:on\s+(?:youtube|spotify|browser)\s+)", "", clean_track, flags=re.IGNORECASE).strip()
-            clean_track = re.sub(r"\s+on\s+youtube$", "", clean_track, flags=re.IGNORECASE).strip()
-            if not clean_track:
-                clean_track = "trending music"
-            user_msg = f"Directly playing '{clean_track.title()}' on YouTube for you, Sir."
-        elif "youtube" in lower_g:
-            user_msg = "Opening YouTube in your browser, Sir."
-        elif any(c in lower_g for c in ["camera", "webcam"]):
-            user_msg = "Windows Camera launched, Sir."
-        elif "chrome" in lower_g or "browser" in lower_g:
-            user_msg = "Opening Google Chrome, Sir."
-        elif "spotify" in lower_g:
-            user_msg = "Launching Spotify, Sir."
-        elif "whatsapp" in lower_g or "whats app" in lower_g or "watsapp" in lower_g:
-            if any(w in lower_g for w in ["send", "message", "text", "saying", "to"]):
-                user_msg = "Opening WhatsApp and preparing your message, Sir."
-            else:
-                user_msg = "WhatsApp is open, Sir. Would you like me to send a message or read your recent messages?"
-        elif "screenshot" in lower_g:
-            user_msg = "Capturing screen display, Sir."
-        elif "volume" in lower_g or "sound" in lower_g:
-            m_pct = re.search(r"(\d+)\s*%", lower_g) or re.search(r"(?:to|at|level)\s+(\d+)", lower_g)
-            if m_pct:
-                user_msg = f"Master volume set to {m_pct.group(1)}%, Sir."
-            elif any(w in lower_g for w in ["mute", "silence"]):
-                user_msg = "Master audio muted, Sir."
-            else:
-                user_msg = "Adjusting master volume, Sir."
-        elif any(c in lower_g for c in ["calc", "calculator"]):
-            user_msg = "Launching Windows Calculator, Sir."
-        elif "notepad" in lower_g:
-            user_msg = "Opening Notepad editor, Sir."
-        elif "settings" in lower_g:
-            user_msg = "Opening Windows Settings, Sir."
-        elif any(t in lower_g for t in ["terminal", "powershell", "cmd"]):
-            user_msg = "Opening Windows Terminal, Sir."
-        elif any(m in lower_g for m in ["gmail", "email", "mail", "mails", "inbox"]):
-            lang = getattr(request, "language_hint", "auto")
-            if lang == "te":
-                user_msg = "మీ Gmail ఇన్‌బాక్స్‌ను బ్రౌజర్‌లో తెరుస్తున్నాను, సర్."
-            elif lang == "hi":
-                user_msg = "आपके ब्राउज़र में Gmail इनबॉक्स खोल रहा हूँ, सर।"
-            elif lang == "ta":
-                user_msg = "உங்கள் பிரவுசரில் ஜிமெயில் திறக்கிறேன், ஐயா."
-            else:
-                user_msg = "Opening your Gmail inbox in your browser, Sir."
-        elif "whatsapp" in lower_g:
-            lang = getattr(request, "language_hint", "auto")
-            if lang == "te":
-                user_msg = "మీ WhatsApp ను బ్రౌజర్‌లో తెరుస్తున్నాను, సర్."
-            elif lang == "hi":
-                user_msg = "आपके ब्राउज़र में WhatsApp खोल रहा हूँ, सर।"
-            elif lang == "ta":
-                user_msg = "உங்கள் வாட்ஸ்அப் திறக்கிறேன், ஐயா."
-            else:
-                user_msg = "Opening WhatsApp Web in your browser, Sir."
-        elif "instagram" in lower_g:
-            user_msg = "Opening Instagram, Sir."
-        elif any(e in lower_g for e in ["explorer", "files", "folder"]):
-            user_msg = "Opening File Explorer, Sir."
-        else:
-            user_msg = f"Executing {goal_to_submit}, Sir."
+        # Dynamically synthesize tailored J.A.R.V.I.S. response and coordinate with inter-agent squad channels
+        lang_hint = getattr(request, "language_hint", "auto")
+        user_msg = self._synthesize_dynamic_task_response(goal=goal_to_submit, language_hint=lang_hint)
+
+        # Broadcast live multi-agent squad coordination to Live Console
+        try:
+            from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
+            daily_evolution_service.add_channel_message(
+                channel="squad-command",
+                sender_id="agent_1_commander",
+                message=f"Directive received: '{goal_to_submit}'. Deconstructed execution parameters, dispatching to specialist agents.",
+                voice_transcript=user_msg
+            )
+            daily_evolution_service.add_channel_message(
+                channel="squad-backend",
+                sender_id="agent_4_system",
+                message=f"Executing task pipeline: {goal_to_submit}",
+                voice_transcript=None
+            )
+        except Exception as ex:
+            logger.debug(f"Inter-agent squad chatter dispatch: {ex}")
 
         response = AgentCommandResponse(
             command_id=cmd_id,
@@ -529,6 +470,125 @@ class AgentGateway:
         self._record_thread_activity(thread, request, response)
         self._commands[cmd_id] = response
         return response
+
+    def _synthesize_dynamic_task_response(self, goal: str, language_hint: str = "auto") -> str:
+        """Dynamically generate a warm, natural, and respectful J.A.R.V.I.S. acknowledgment without rigid hardcoding."""
+        lower_g = goal.lower().strip()
+        lang = language_hint or "auto"
+
+        # 1. System Power Actions
+        if any(r in lower_g for r in ["restart laptop", "restart pc", "restart computer", "reboot laptop", "reboot pc", "reboot system", "reboot"]):
+            if lang == "te":
+                return "సిస్టమ్ రీస్టార్ట్ ప్రక్రియ ప్రారంభించబడింది (30 సెకన్ల విరామం), సర్."
+            elif lang == "hi":
+                return "सिस्टम रीस्टार्ट प्रक्रिया शुरू की जा रही है (30 सेकंड का रद्दीकरण समय), सर।"
+            elif lang == "ta":
+                return "கணினி மறுதொடக்க வரிசை தொடங்கப்படுகிறது (30 வினாடிகள் ரத்து சாளரம்), ஐயா."
+            return "Initiating safe Windows system restart sequence (30-second cancellation window), Sir."
+
+        if any(s in lower_g for s in ["shutdown laptop", "shutdown pc", "shutdown computer", "power off laptop", "power off pc", "power off computer", "turn off computer", "turn off laptop", "power off"]):
+            if lang == "te":
+                return "సిస్టమ్ షట్‌డౌన్ ప్రక్రియ ప్రారంభించబడింది (30 సెకన్ల విరామం), సర్."
+            elif lang == "hi":
+                return "सिस्टम शटडाउन प्रक्रिया शुरू की जा रही है (30 सेकंड का रद्दीकरण समय), सर।"
+            elif lang == "ta":
+                return "கணினி பணிநிறுத்த வரிசை தொடங்கப்படுகிறது (30 வினாடிகள் ரத்து சாளரம்), ஐயா."
+            return "Initiating safe Windows system shutdown sequence (30-second cancellation window), Sir."
+
+        if any(c in lower_g for c in ["cancel restart", "cancel shutdown", "abort restart", "abort shutdown"]):
+            return "System shutdown and restart sequences have been cancelled, Sir."
+
+        # 2. Antigravity IDE
+        if "antigravity" in lower_g:
+            return "Antigravity IDE is now launching for you, Sir."
+
+        # 3. Dynamic Music & Media Playback
+        if lower_g.startswith("play ") or "play song" in lower_g or "play music" in lower_g or "listen to" in lower_g or ("youtube" in lower_g and any(s in lower_g for s in ["play", "song", "music", "telugu", "hindi", "tamil"])):
+            clean_track = lower_g
+            for pref in ["open youtube and play", "play song", "play music", "play video", "play track", "listen to", "search youtube for", "and play", "play"]:
+                if clean_track.startswith(pref):
+                    clean_track = clean_track[len(pref):].strip()
+                    break
+                elif pref in clean_track:
+                    idx = clean_track.find(pref) + len(pref)
+                    clean_track = clean_track[idx:].strip()
+                    break
+            clean_track = re.sub(r"^(?:on\s+(?:youtube|spotify|browser)\s+)", "", clean_track, flags=re.IGNORECASE).strip()
+            clean_track = re.sub(r"\s+on\s+youtube$", "", clean_track, flags=re.IGNORECASE).strip()
+            clean_track = re.sub(r" for\s+me", "", clean_track, flags=re.IGNORECASE).strip()
+            if not clean_track:
+                clean_track = "trending music"
+            return f"Directly playing '{clean_track.title()}' on YouTube for you, Sir."
+
+        # 4. Applications and Tools
+        if any(c in lower_g for c in ["camera", "webcam"]):
+            return "Windows Camera launched, Sir."
+        if "chrome" in lower_g or "google chrome" in lower_g:
+            return "Opening Google Chrome, Sir."
+        if "spotify" in lower_g:
+            return "Launching Spotify, Sir."
+        if "instagram" in lower_g or "insta" in lower_g:
+            return "Opening Instagram, Sir."
+        if any(c in lower_g for c in ["calc", "calculator"]):
+            return "Launching Windows Calculator, Sir."
+        if "notepad" in lower_g:
+            return "Opening Notepad editor, Sir."
+        if "settings" in lower_g:
+            return "Opening Windows Settings, Sir."
+        if any(t in lower_g for t in ["terminal", "powershell", "cmd"]):
+            return "Opening Windows Terminal, Sir."
+        if any(e in lower_g for e in ["explorer", "files", "folder", "directory"]):
+            return "Opening File Explorer, Sir."
+        if "screenshot" in lower_g:
+            return "Capturing screen display, Sir."
+
+        # 5. Dynamic Volume Extraction
+        if "volume" in lower_g or "sound" in lower_g:
+            m_pct = re.search(r"(\d+)\s*%", lower_g) or re.search(r"(?:to|at|level)\s+(\d+)", lower_g)
+            if m_pct:
+                return f"Master volume set to {m_pct.group(1)}%, Sir."
+            elif any(w in lower_g for w in ["mute", "silence"]):
+                return "Master audio muted, Sir."
+            else:
+                return "Adjusting master volume, Sir."
+
+        # 6. Messaging (WhatsApp, Email)
+        if any(m in lower_g for m in ["gmail", "email", "mail", "mails", "inbox"]):
+            if lang == "te":
+                return "మీ Gmail ఇన్‌బాక్స్‌ను బ్రౌజర్‌లో తెరుస్తున్నాను, సర్."
+            elif lang == "hi":
+                return "आपके ब्राउज़र में Gmail इनबॉक्स खोल रहा हूँ, सर।"
+            elif lang == "ta":
+                return "உங்கள் பிரவுசரில் ஜிமெயில் திறக்கிறேன், ஐயா."
+            return "Opening your Gmail inbox in your browser, Sir."
+
+        if "whatsapp" in lower_g or "whats app" in lower_g or "watsapp" in lower_g:
+            if any(w in lower_g for w in ["send", "message", "text", "saying", "to"]):
+                return "Opening WhatsApp and preparing your message, Sir."
+            if lang == "te":
+                return "మీ WhatsApp ను బ్రౌజర్‌లో తెరుస్తున్నాను, సర్."
+            elif lang == "hi":
+                return "आपके ब्राउज़र में WhatsApp खोल रहा हूँ, सर।"
+            elif lang == "ta":
+                return "உங்கள் வாட்ஸ்அப் திறக்கிறேன், ஐயா."
+            return "Opening WhatsApp Web in your browser, Sir."
+
+        # 7. Generic Dynamic Open/Launch Action Extraction
+        m_launch = re.search(r"(?:open|launch|start|run|execute)\s+(?:the\s+)?([a-zA-Z0-9_\-\.\s]{2,25})", lower_g)
+        if m_launch:
+            app_cand = m_launch.group(1).strip()
+            if not any(stop in app_cand for stop in ["and", "to", "with", "for", "please"]):
+                return f"Opening {app_cand.title()} for you, Sir."
+
+        # 8. Natural Fallback for any newly phrased command
+        clean_goal = re.sub(r"^(?:please\s+|can you\s+|could you\s+|i want you to\s+|abhi\s+)", "", goal, flags=re.IGNORECASE).strip()
+        if lang == "te":
+            return f"సర్, '{clean_goal}' ఆదేశంపై పని ప్రారంభిస్తున్నాను."
+        elif lang == "hi":
+            return f"सर, '{clean_goal}' आदेश पर कार्य शुरू किया जा रहा है।"
+        elif lang == "ta":
+            return f"ஐயா, '{clean_goal}' பணிக்கான செயல்பாடுகள் தொடங்கப்பட்டுள்ளன."
+        return f"Executing {clean_goal}, Sir."
 
     def _is_os_automation_request(self, raw_text: str, canonical_intent: str) -> bool:
         """Determine if a user utterance requests explicit Windows OS automation or LLM Q&A/cognition."""
@@ -707,11 +767,18 @@ class AgentGateway:
             return True
 
         # 6. Explicit OS & Mobile Action keywords & targets
+        if any(text_lower.startswith(prefix) for prefix in [
+            "restart", "reboot", "shutdown", "power off", "turn off", "cancel restart", "cancel shutdown", "abort restart", "abort shutdown"
+        ]):
+            return True
+
         if any(w in text_lower for w in [
             "screenshot", "whatsapp", "volume up", "volume down", "adjust volume", "lock screen",
             "lock workstation", "mute", "unmute", "lock phone", "lock mobile", "unlock phone",
             "unlock mobile", "phone battery", "mobile battery", "check battery", "mobile screen",
-            "take screenshot", "open camera", "open youtube", "open spotify", "open chrome", "restart laptop", "restart pc", "restart computer", "reboot", "shutdown laptop", "shutdown pc", "power off"
+            "take screenshot", "open camera", "open youtube", "open spotify", "open chrome",
+            "restart laptop", "restart pc", "restart computer", "reboot",
+            "shutdown laptop", "shutdown pc", "shutdown computer", "power off computer", "power off laptop", "turn off computer", "turn off laptop"
         ]):
             return True
 

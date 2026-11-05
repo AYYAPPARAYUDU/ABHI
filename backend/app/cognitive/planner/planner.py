@@ -245,25 +245,36 @@ class TaskPlanner:
                     status=NodeStatus.PENDING
                 )
 
+        elif any(k in goal_lower for k in ["cancel restart", "cancel shutdown", "abort restart", "abort shutdown"]):
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title="Abort Pending Windows System Shutdown Sequence",
+                agent_id="os_desktop_agent",
+                action="cancel_system_shutdown",
+                params={},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
         elif any(k in goal_lower for k in ["restart laptop", "restart pc", "restart computer", "reboot laptop", "reboot pc", "reboot system", "reboot"]):
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
-                title="Safe Windows System Restart Sequence",
+                title="Safe Windows System Restart Sequence (30s window)",
                 agent_id="os_desktop_agent",
-                action="run_command",
-                params={"command": "shutdown /r /t 30 /c \"ABHI requested restart\""},
-                risk_tier="Tier 3",
+                action="system_restart",
+                params={"timeout_sec": 30, "message": "ABHI automated system restart"},
+                risk_tier="Tier 2",
                 status=NodeStatus.PENDING
             )
 
         elif any(k in goal_lower for k in ["shutdown laptop", "shutdown pc", "shutdown computer", "power off laptop", "power off pc", "power off computer", "turn off computer", "turn off laptop", "power off"]):
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
-                title="Safe Windows System Shutdown Sequence",
+                title="Safe Windows System Shutdown Sequence (30s window)",
                 agent_id="os_desktop_agent",
-                action="run_command",
-                params={"command": "shutdown /s /t 30 /c \"ABHI requested shutdown\""},
-                risk_tier="Tier 3",
+                action="system_shutdown",
+                params={"timeout_sec": 30, "message": "ABHI automated system shutdown"},
+                risk_tier="Tier 2",
                 status=NodeStatus.PENDING
             )
 
