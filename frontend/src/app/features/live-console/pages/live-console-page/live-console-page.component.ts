@@ -270,3 +270,4 @@ export class LiveConsolePageComponent implements OnInit, OnDestroy {
     }, 4500);
   }
 }
+
