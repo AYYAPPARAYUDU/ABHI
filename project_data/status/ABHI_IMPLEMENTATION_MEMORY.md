@@ -266,3 +266,22 @@ pm run build: 0 TypeScript errors).
   - Production build (`npm --prefix frontend run build`): PASSED (code 0).
   - Backend test suites: 100% pass across all tests (`test_database.py`, `test_agent_caching_and_wal.py`, `test_agent_gateway_and_context.py`).
   - Live server running on `http://127.0.0.1:8000` with all endpoints operational.
+
+
+### 9. Dynamic Prompt Intent Classification, Nexus Multi-Architecture Fusion & Windows Power Lifecycle (2026-11-05)
+- **Problem**: When user submitted long cognitive/architectural requests (e.g. asking to do research, read documentaries, look up git repos, mix AI architectures, make prompt understanding dynamic) or asked to restart the laptop, prompts were either misclassified as physical desktop clicks in `agent_gateway.py` or intercepted as ambiguous media artifact edits in `_resolve_follow_up`, or timed out and fell back to a 5ms dummy `memory_agent.recall_recent` in `TaskPlanner`.
+- **Root Cause & Fix**:
+  1. `_is_os_automation_request`: Added cognitive/architectural keyword guards so long research, architectural, and dynamic prompt requests route to authentic LLM cognition (`_answer_with_llm`).
+  2. `_resolve_follow_up`: Restricted follow-up phrases from loose `"make it"` to explicit visual/media modification attributes (`"darker"`, `"brighter"`, `"sepia"`, `"contrast"`, etc.), preventing ordinary English ("make it dynamic", "make it perfect") from triggering `APPROVAL_REQUEST` blocks.
+  3. System Power Lifecycle: Added dedicated handlers for `"restart laptop"`, `"reboot"`, `"shutdown pc"`, and `"power off"` across `agent_gateway.py`, `standalone_engine.py`, and `planner.py` executing safe Windows commands (`shutdown /r /t 30 /c "ABHI requested restart"`) with a 30-second cancellation window and informative user feedback.
+  4. TaskPlanner Semantic Fallback: Replaced the dummy `memory_agent.recall_recent` fallback with dynamic decomposition via `abhi_standalone_engine._decompose_goal()`, guaranteeing that unlisted goals produce meaningful, ordered execution steps.
+  5. Nexus Multi-Architecture Fusion: Upgraded the LLM system prompt and standalone conversational engine to synthesize Anthropic Computer Use, OpenAI Swarm & Function Calling, LangGraph cyclic state machines, AutoGen/CrewAI collaborative squads, DSPy prompt optimization, and MetaGPT Standard Operating Procedures.
+  6. Multi-Agent Swarm Dynamic Dialogue: Replaced static `"Subsystem nominal, Sir"` in `family_negotiation.py` with dynamic domain reflection incorporating the user's prompt, lead specialist specialization, and real-time CPU/RAM telemetry.
+- **Physical Verification**:
+  - Live query testing with user's exact prompt (`still its not able to understand user prompts maek it dynamci not static...`) returned HTTP 200 `COMPLETED`, `task_id: None`, `result_type: TEXT_RESULT`, and articulate Nexus multi-architecture synthesis.
+  - Live query testing with `"restart laptop"` returned HTTP 200 `PLANNING`, `user_msg: "Initiating safe Windows system restart sequence (30-second cancellation window), Sir."`, and generated a valid `shutdown /r /t 30` DAGNode.
+  - All 6/6 tests in `test_agent_gateway_and_context.py` passed in 47.54s.
+  - All 3/3 tests in `test_database.py` passed in 0.21s.
+  - All 7/7 tests in `test_agent_registry.py` and `test_llm_evaluation_evolution.py` passed in 6.19s.
+  - Frontend production build (`npm --prefix frontend run build`): completed with 0 errors in 7.68s.
+  - Live running backend on `http://127.0.0.1:8000` and frontend on `http://127.0.0.1:4200` verified and operational.

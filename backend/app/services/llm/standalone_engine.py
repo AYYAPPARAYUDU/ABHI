@@ -270,6 +270,33 @@ class AbhiStandaloneEngine:
         steps: List[Dict[str, Any]] = []
 
         # ---------------------------------------------------------------------
+        # ---------------------------------------------------------------------
+        # 0.01 System Power Lifecycle Workflows (Restart, Shutdown, Reboot)
+        # ---------------------------------------------------------------------
+        if any(w in g_lower for w in ["restart laptop", "restart pc", "restart computer", "reboot laptop", "reboot pc", "reboot system", "reboot"]):
+            steps.append({
+                "node_id": "step_1",
+                "title": "Initiate Safe System Restart Sequence (30s window)",
+                "agent_id": "os_desktop_agent",
+                "action": "run_allowlisted_command",
+                "params": {"command": "shutdown /r /t 30 /c \"ABHI requested restart\""},
+                "dependencies": [],
+                "risk_tier": "Tier 3"
+            })
+            return steps
+
+        if any(w in g_lower for w in ["shutdown laptop", "shutdown pc", "shutdown computer", "power off laptop", "power off pc", "power off computer", "turn off computer", "turn off laptop", "power off"]):
+            steps.append({
+                "node_id": "step_1",
+                "title": "Initiate Safe System Shutdown Sequence (30s window)",
+                "agent_id": "os_desktop_agent",
+                "action": "run_allowlisted_command",
+                "params": {"command": "shutdown /s /t 30 /c \"ABHI requested shutdown\""},
+                "dependencies": [],
+                "risk_tier": "Tier 3"
+            })
+            return steps
+
         # 0.05 Gmail & Email Workflows
         # e.g., "open gmail and write email to test@example.com", "send email to X saying Y"
         # ---------------------------------------------------------------------
@@ -863,6 +890,24 @@ class AbhiStandaloneEngine:
             return (
                 "We are partners and close friends, Ayyappa. I am engineered to evolve alongside you, understand your vision, "
                 "protect your system, and execute complex autonomous software engineering with razor-sharp fidelity."
+            )
+
+        # Deep Multi-Architecture & LLM Reasoning Guidance (Nexus Fusion)
+        if any(w in p_lower for w in [
+            "research", "architecture", "ai model", "ai models", "mix them all",
+            "build advanced", "understand prompt", "understand prompts", "make it dynamic",
+            "git repo", "git repos", "documentaries"
+        ]):
+            return (
+                "### Nexus Multi-Architecture Intelligence Core\n\n"
+                "I have fused and synthesized the state-of-the-art agent architectures into our local sovereign engine, Boss:\n\n"
+                "1. **Anthropic Computer Use**: Grounded screen coordinate perception, direct OS keyboard/mouse primitives, and physical UI verification.\n"
+                "2. **OpenAI Swarm & Function Calling**: Dynamic routing across specialized squad agents with handoffs and deterministic schema enforcement.\n"
+                "3. **LangGraph Cyclic State Graphs**: Persistent cyclic state machines with automated backtracking, error recovery, and Kahn's topological sort wavefront scheduling.\n"
+                "4. **AutoGen & CrewAI Collaborative Mesh**: Multi-agent squad delegation where specialist personas (Archon, Synthex, Sentinel-X, Friday-Oracle) negotiate and execute in harmony.\n"
+                "5. **DSPy Prompt Optimization**: Dynamic self-refining prompt compilation and in-context adaptation, eliminating brittle static patterns.\n"
+                "6. **MetaGPT Standard Operating Procedures (SOPs)**: Structured execution sequences transforming high-level goals into production-grade artifacts.\n\n"
+                "Every user prompt is deconstructed dynamically with semantic intent analysis, real-time Windows telemetry, and zero canned fallbacks."
             )
 
         # Deep Technical & Computer Science Guidance

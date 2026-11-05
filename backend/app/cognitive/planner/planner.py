@@ -64,7 +64,7 @@ class TaskPlanner:
             dag = None
             try:
                 import asyncio
-                dag = await asyncio.wait_for(self._plan_with_llm(dag_id, task_id, goal, now_ts), timeout=18.0)
+                dag = await asyncio.wait_for(self._plan_with_llm(dag_id, task_id, goal, now_ts), timeout=35.0)
                 if dag and dag.nodes:
                     logger.info(f"Generated dynamic neural LLM DAG plan with {len(dag.nodes)} steps for task '{task_id}' using abhi:latest")
             except Exception as e:
@@ -244,6 +244,28 @@ class TaskPlanner:
                     risk_tier="Tier 2",
                     status=NodeStatus.PENDING
                 )
+
+        elif any(k in goal_lower for k in ["restart laptop", "restart pc", "restart computer", "reboot laptop", "reboot pc", "reboot system", "reboot"]):
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title="Safe Windows System Restart Sequence",
+                agent_id="os_desktop_agent",
+                action="run_command",
+                params={"command": "shutdown /r /t 30 /c \"ABHI requested restart\""},
+                risk_tier="Tier 3",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["shutdown laptop", "shutdown pc", "shutdown computer", "power off laptop", "power off pc", "power off computer", "turn off computer", "turn off laptop", "power off"]):
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title="Safe Windows System Shutdown Sequence",
+                agent_id="os_desktop_agent",
+                action="run_command",
+                params={"command": "shutdown /s /t 30 /c \"ABHI requested shutdown\""},
+                risk_tier="Tier 3",
+                status=NodeStatus.PENDING
+            )
 
         elif any(k in goal_lower for k in ["terminal", "powershell", "cmd", "whoami", "ipconfig", "hostname", "systeminfo"]):
             cmd_to_run = "hostname"
@@ -905,16 +927,32 @@ class TaskPlanner:
                 status=NodeStatus.PENDING
             )
         else:
-            # Dynamic memory analysis for general goals
-            nodes["step_1"] = DAGNode(
-                node_id="step_1",
-                title=f"Analyze Goal: {goal[:30]}",
-                agent_id="memory_agent",
-                action="recall_recent",
-                params={"limit": 3},
-                risk_tier="Tier 1",
-                status=NodeStatus.PENDING
-            )
+            # Dynamic semantic goal decomposition via abhi_standalone_engine
+            from backend.app.services.llm.standalone_engine import abhi_standalone_engine
+            raw_steps = abhi_standalone_engine._decompose_goal(goal)
+            if raw_steps:
+                for idx, step in enumerate(raw_steps, start=1):
+                    nid = str(step.get("node_id", f"step_{idx}"))
+                    nodes[nid] = DAGNode(
+                        node_id=nid,
+                        title=step.get("title", f"Execute {step.get('action', 'task')}"),
+                        agent_id=step.get("agent_id", "os_desktop_agent"),
+                        action=step.get("action", "run_allowlisted_command"),
+                        params=step.get("params", {}),
+                        dependencies=[str(d) for d in step.get("dependencies", []) if str(d) != nid],
+                        risk_tier=step.get("risk_tier", "Tier 1"),
+                        status=NodeStatus.PENDING
+                    )
+            else:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Execute: {goal[:35]}",
+                    agent_id="os_desktop_agent",
+                    action="run_allowlisted_command",
+                    params={"command": goal},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
 
         return TaskDAG(
             dag_id=dag_id,

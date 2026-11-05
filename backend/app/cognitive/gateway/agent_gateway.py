@@ -192,8 +192,12 @@ class AgentGateway:
         target_artifact = None
         action_payload = None
 
-        follow_up_phrases = ["make it", "adjust it", "darker", "brighter", "change scene", "more contrast", "turn into video", "summarize this"]
-        if any(p in text_lower for p in follow_up_phrases):
+        media_mod_attributes = [
+            "darker", "brighter", "more contrast", "less contrast", "change scene",
+            "turn into video", "convert to video", "summarize this", "make it darker",
+            "make it brighter", "sepia", "cinematic", "photorealistic", "grayscale"
+        ]
+        if any(p in text_lower for p in media_mod_attributes):
             is_follow_up = True
             if context and not context.is_expired():
                 target_artifact = context.selected_artifact_id or (
@@ -426,7 +430,11 @@ class AgentGateway:
 
         # Craft interactive, informative message for the user
         lower_g = goal_to_submit.lower()
-        if "antigravity" in lower_g:
+        if any(r in lower_g for r in ["restart laptop", "restart pc", "restart computer", "reboot"]):
+            user_msg = "Initiating safe Windows system restart sequence (30-second cancellation window), Sir."
+        elif any(s in lower_g for s in ["shutdown laptop", "shutdown pc", "shutdown computer", "power off"]):
+            user_msg = "Initiating safe Windows system shutdown sequence (30-second cancellation window), Sir."
+        elif "antigravity" in lower_g:
             user_msg = "Antigravity IDE is now open, Sir."
         elif lower_g.startswith("play ") or "play song" in lower_g or "play music" in lower_g or "listen to" in lower_g or ("youtube" in lower_g and any(s in lower_g for s in ["play", "song", "music", "telugu", "hindi", "tamil"])):
             clean_track = lower_g
@@ -526,6 +534,37 @@ class AgentGateway:
         """Determine if a user utterance requests explicit Windows OS automation or LLM Q&A/cognition."""
         text_lower = raw_text.strip().lower()
         intent_lower = canonical_intent.strip().lower()
+
+        # 0. Cognitive, Architectural, Research & Prompt Understanding Guard
+        # If the user is asking to research, architect, synthesize AI models, explain code/repos,
+        # or discuss prompt dynamic understanding, route to LLM cognition unless it's a direct imperative OS command.
+        cognitive_indicators = [
+            "research", "architecture", "architectures", "documentaries", "documentation",
+            "git repo", "git repos", "github", "ai model", "ai models", "mix them all",
+            "build advanced llms", "build advanced", "understand prompt", "understand prompts",
+            "make it dynamic", "how they work", "how they works", "take code from them",
+            "take referenced", "references", "guide me", "strategy", "algorithm design",
+            "teach me", "help me design", "explain how", "why does", "what are the best",
+            "best practice", "best practices", "compare", "difference between", "philosophical",
+            "dynamic not static", "make it dynamic not static"
+        ]
+        is_direct_os_imperative = (
+            text_lower.startswith((
+                "open ", "launch ", "start ", "play ", "take screenshot", "screenshot",
+                "volume ", "mute", "unmute", "lock screen", "lock workstation",
+                "restart laptop", "restart pc", "restart computer", "reboot",
+                "shutdown laptop", "shutdown pc", "power off", "click at ", "type ",
+                "minimize ", "maximize ", "close window", "kill process "
+            ))
+            or text_lower in (
+                "notepad", "calculator", "calc", "youtube", "browser", "chrome",
+                "edge", "whatsapp", "whats app", "camera", "terminal", "powershell",
+                "spotify", "antigravity", "screenshot", "restart laptop", "reboot", "shutdown"
+            )
+        )
+        has_cognitive_intent = any(ci in text_lower for ci in cognitive_indicators)
+        if has_cognitive_intent and not is_direct_os_imperative:
+            return False
 
         # Known desktop target keywords
         desktop_targets = [
@@ -672,7 +711,7 @@ class AgentGateway:
             "screenshot", "whatsapp", "volume up", "volume down", "adjust volume", "lock screen",
             "lock workstation", "mute", "unmute", "lock phone", "lock mobile", "unlock phone",
             "unlock mobile", "phone battery", "mobile battery", "check battery", "mobile screen",
-            "take screenshot", "open camera", "open youtube", "open spotify", "open chrome"
+            "take screenshot", "open camera", "open youtube", "open spotify", "open chrome", "restart laptop", "restart pc", "restart computer", "reboot", "shutdown laptop", "shutdown pc", "power off"
         ]):
             return True
 
@@ -717,6 +756,8 @@ class AgentGateway:
             "2. Technical Mastery on Demand: When the user explicitly asks for code, deep system analysis, or complex architecture, deliver master-class precision with clean code and rigorous depth.\n"
             "3. Zero Canned or Hallucinated Disclaimers: Never say 'due to system constraints I cannot play music' or 'zero cloud dependencies' or 'displayed on screen'. You are fully empowered to automate OS actions, browse, synthesize media, and control the desktop.\n"
             "4. Multi-Agent Ecosystem: You coordinate the 8-agent VisionQuest Swarm (Sentinel-X, Synthex, Archon, Veronica, War-Machine, Aura-Vision, Stark-Forge, Friday-Oracle) operating locally.\n"
+            "5. Nexus Multi-Architecture Fusion: You embody the synthesis of Anthropic Computer Use (grounded screen/OS actions), OpenAI Swarm (dynamic agent handoffs), LangGraph (cyclic stateful execution graphs), AutoGen/CrewAI (collaborative multi-agent specialization), DSPy (self-refining dynamic prompt optimization), and MetaGPT (Standard Operating Procedures). Explain technical concepts through this master framework.\n"
+            "6. Dynamic Prompt Mastery: You understand all user prompts dynamically regardless of phrasing, typos, or mixed terms (including colloquial Telugu/Hindi/Tamil or terms like 'mamu', 'boss', 'bro'). Always honor the user's intent with deep technical mastery and zero static dismissals.\n"
             "5. Clean Text: Do not use decorative emojis (e.g. stars, sparkles, rockets) in conversational speech, as they degrade voice synthesis and terminal rendering.\n"
             f"[Live System Context]: Time: {time_str} | Telemetry: {telemetry_context} | Mode: 100% Local Neural Inference"
         )
@@ -796,10 +837,10 @@ class AgentGateway:
                 answer_text = f"Greetings Ayyappa. I am ABHI, your sovereign neural core, online and ready at {time_str}. How may I assist you?"
         except Exception as e:
             logger.error(f"Error querying local LLM: {str(e)}")
-            answer_text = (
-                f"Hello Ayyappa! I am right here with you. Local neural channels are firing smoothly at {time_str}, "
-                f"all 8 Small-LLM specialist brains are active, and your Windows 11 workstation bridge is primed. "
-                "What would you like to build or automate right now, Boss?"
+            from backend.app.services.llm.standalone_engine import abhi_standalone_engine
+            answer_text = abhi_standalone_engine._generate_conversational_response(
+                prompt=clean_text,
+                system=system_prompt
             )
 
         # Strip emojis from response to ensure clean text-to-speech and console output
