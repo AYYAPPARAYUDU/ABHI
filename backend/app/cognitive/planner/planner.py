@@ -51,27 +51,22 @@ class TaskPlanner:
                 created_at_ts=now_ts
             )
 
-        # 2. Check deterministic heuristic fast-path for direct OS commands
-        heuristic_dag = self._plan_with_heuristics(dag_id, task_id, goal, now_ts)
-        has_specific_heuristic = any(
-            n.agent_id != "memory_agent" or n.action != "recall_recent"
-            for n in heuristic_dag.nodes.values()
-        )
-        if has_specific_heuristic:
-            dag = heuristic_dag
+        # 1. System Power & Critical Safety Controls (Direct O(1) Fast-Path)
+        if any(k in norm_goal for k in ["restart laptop", "restart pc", "reboot", "shutdown laptop", "shutdown pc", "power off", "cancel restart", "cancel shutdown"]):
+            dag = self._plan_with_heuristics(dag_id, task_id, goal, now_ts)
         else:
-            # 3. Authentic LLM decomposition (with 18.0s window for real local 8.2B neural model)
+            # 2. Authentic LLM Master Neural Planner (Dynamic DAG Synthesis)
             dag = None
             try:
                 import asyncio
-                dag = await asyncio.wait_for(self._plan_with_llm(dag_id, task_id, goal, now_ts), timeout=35.0)
+                dag = await asyncio.wait_for(self._plan_with_llm(dag_id, task_id, goal, now_ts), timeout=18.0)
                 if dag and dag.nodes:
                     logger.info(f"Generated dynamic neural LLM DAG plan with {len(dag.nodes)} steps for task '{task_id}' using abhi:latest")
             except Exception as e:
-                logger.warning(f"LLM planner bypassed or timed out: {str(e)}; falling back to heuristic planner.")
+                logger.info(f"LLM planner dynamic fallback: {e}")
 
             if not dag or not dag.nodes:
-                dag = heuristic_dag
+                dag = self._plan_with_heuristics(dag_id, task_id, goal, now_ts)
 
         # 4. Kahn's Algorithm: Topological Sort & Cycle Detection Verification O(V + E)
         is_valid, parallel_levels, cycle_nodes = KahnTopologicalSort.analyze_dag(dag.nodes)
@@ -609,36 +604,65 @@ class TaskPlanner:
                     status=NodeStatus.PENDING
                 )
 
-        elif any(b in goal_lower for b in ["chrome", "edge", "firefox", "browser", "web"]) and any(s in goal_lower for s in ["search", "google", "find", "open", "browse", "lookup", "look up", "navigate"]):
-            # Extract search query
-            q = ""
-            for pat in [
-                r"(?:search|google|find|query|lookup|look up)\s+(?:for\s+)?['\"]?([^'\"]+)['\"]?",
-                r"(?:search|google)\s+(.*)",
-                r"(?:browse|open\s+chrome\s+and\s+search)\s+(.*)"
-            ]:
-                m = re.search(pat, goal, re.IGNORECASE)
-                if m:
-                    cand = m.group(1).strip()
-                    if cand.lower() not in ["chrome", "browser", "google", "web"]:
-                        q = cand
-                        break
-            if q:
-                search_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(q)}"
-                step_title = f"Open Chrome & Search: {q[:35]}"
+        elif any(b in goal_lower for b in ["chrome", "edge", "firefox", "browser", "web"]) and any(s in goal_lower for s in ["search", "google", "find", "open", "browse", "lookup", "look up", "navigate", "analyze", "analyse"]):
+            url_match = re.search(r"(https?://\S+|www\.\S+|\b[a-zA-Z0-9\.\-_]+\.(?:com|org|net|io|edu|gov)\b\S*)", goal)
+            has_analyze_intent = any(a in goal_lower for a in ["analyze", "analyse", "description", "summary", "inspect", "read"])
+
+            if url_match:
+                target_url = url_match.group(1).strip()
+                if not target_url.startswith("http"):
+                    target_url = "https://" + target_url
             else:
-                search_url = "https://www.google.com"
-                step_title = "Open Chrome Browser"
+                # Extract search query
+                q = ""
+                for pat in [
+                    r"(?:search|google|find|query|lookup|look up)\s+(?:for\s+)?['\"]?([^'\"]+)['\"]?",
+                    r"(?:search|google)\s+(.*)",
+                    r"(?:browse|open\s+chrome\s+and\s+search)\s+(.*)"
+                ]:
+                    m = re.search(pat, goal, re.IGNORECASE)
+                    if m:
+                        cand = m.group(1).strip()
+                        if cand.lower() not in ["chrome", "browser", "google", "web"]:
+                            q = cand
+                            break
+                if q:
+                    target_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(q)}"
+                else:
+                    target_url = "https://www.google.com"
 
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
-                title=step_title,
-                agent_id="os_desktop_agent",
+                title=f"Open Web Target: {target_url[:40]}",
+                agent_id="browser_agent",
                 action="open_url",
-                params={"url": search_url, "browser": "chrome"},
+                params={"url": target_url, "browser": "chrome"},
                 risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )
+
+            # If multi-phase analysis requested, generate downstream processing and synthesis nodes
+            if has_analyze_intent:
+                nodes["step_2"] = DAGNode(
+                    node_id="step_2",
+                    title="Extract DOM Text & Visual Content",
+                    agent_id="browser_agent",
+                    action="read_page",
+                    params={"url": target_url},
+                    dependencies=["step_1"],
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+                nodes["step_3"] = DAGNode(
+                    node_id="step_3",
+                    title="Analyze Website Structure & Synthesize Description",
+                    agent_id="rag_agent",
+                    action="analyze_content",
+                    params={"url": target_url, "instruction": goal},
+                    dependencies=["step_2"],
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
 
         elif "search" in goal_lower or "find" in goal_lower or "lookup" in goal_lower:
             nodes["step_1"] = DAGNode(

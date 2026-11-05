@@ -430,7 +430,7 @@ class AgentGateway:
 
         # Dynamically synthesize tailored J.A.R.V.I.S. response and coordinate with inter-agent squad channels
         lang_hint = getattr(request, "language_hint", "auto")
-        user_msg = self._synthesize_dynamic_task_response(goal=goal_to_submit, language_hint=lang_hint)
+        user_msg = await self._synthesize_dynamic_task_response(goal=goal_to_submit, language_hint=lang_hint)
 
         # Broadcast live multi-agent squad coordination to Live Console
         try:
@@ -471,124 +471,157 @@ class AgentGateway:
         self._commands[cmd_id] = response
         return response
 
-    def _synthesize_dynamic_task_response(self, goal: str, language_hint: str = "auto") -> str:
-        """Dynamically generate a warm, natural, and respectful J.A.R.V.I.S. acknowledgment without rigid hardcoding."""
-        lower_g = goal.lower().strip()
+    async def _synthesize_dynamic_task_response(self, goal: str, language_hint: str = "auto") -> str:
+        """Dynamically generate a warm, natural, and respectful J.A.R.V.I.S. task acknowledgment using local LLM inference."""
         lang = language_hint or "auto"
+        lower_g = goal.lower().strip()
 
-        # 1. System Power Actions
+        # 1. Critical System Power Safety Responses
         if any(r in lower_g for r in ["restart laptop", "restart pc", "restart computer", "reboot laptop", "reboot pc", "reboot system", "reboot"]):
-            if lang == "te":
-                return "సిస్టమ్ రీస్టార్ట్ ప్రక్రియ ప్రారంభించబడింది (30 సెకన్ల విరామం), సర్."
-            elif lang == "hi":
-                return "सिस्टम रीस्टार्ट प्रक्रिया शुरू की जा रही है (30 सेकंड का रद्दीकरण समय), सर।"
-            elif lang == "ta":
-                return "கணினி மறுதொடக்க வரிசை தொடங்கப்படுகிறது (30 வினாடிகள் ரத்து சாளரம்), ஐயா."
             return "Initiating safe Windows system restart sequence (30-second cancellation window), Sir."
-
-        if any(s in lower_g for s in ["shutdown laptop", "shutdown pc", "shutdown computer", "power off laptop", "power off pc", "power off computer", "turn off computer", "turn off laptop", "power off"]):
-            if lang == "te":
-                return "సిస్టమ్ షట్‌డౌన్ ప్రక్రియ ప్రారంభించబడింది (30 సెకన్ల విరామం), సర్."
-            elif lang == "hi":
-                return "सिस्टम शटडाउन प्रक्रिया शुरू की जा रही है (30 सेकंड का रद्दीकरण समय), सर।"
-            elif lang == "ta":
-                return "கணினி பணிநிறுத்த வரிசை தொடங்கப்படுகிறது (30 வினாடிகள் ரத்து சாளரம்), ஐயா."
+        if any(s in lower_g for s in ["shutdown laptop", "shutdown pc", "shutdown computer", "power off laptop", "power off pc", "power off"]):
             return "Initiating safe Windows system shutdown sequence (30-second cancellation window), Sir."
-
         if any(c in lower_g for c in ["cancel restart", "cancel shutdown", "abort restart", "abort shutdown"]):
             return "System shutdown and restart sequences have been cancelled, Sir."
 
-        # 2. Antigravity IDE
-        if "antigravity" in lower_g:
-            return "Antigravity IDE is now launching for you, Sir."
+        # 2. Dynamic LLM Synthesis (Natural, authentic J.A.R.V.I.S. conversational response)
+        try:
+            lang_instruction = "English"
+            if lang == "te":
+                lang_instruction = "Telugu (తెలుగు), addressing the operator respectfully as 'సర్' (Sir)"
+            elif lang == "hi":
+                lang_instruction = "Hindi (हिंदी), addressing the operator respectfully as 'सर' (Sir)"
+            elif lang == "ta":
+                lang_instruction = "Tamil (தமிழ்), addressing the operator respectfully as 'ஐயா' (Sir)"
 
-        # 3. Dynamic Music & Media Playback
-        if lower_g.startswith("play ") or "play song" in lower_g or "play music" in lower_g or "listen to" in lower_g or ("youtube" in lower_g and any(s in lower_g for s in ["play", "song", "music", "telugu", "hindi", "tamil"])):
-            clean_track = lower_g
-            for pref in ["open youtube and play", "play song", "play music", "play video", "play track", "listen to", "search youtube for", "and play", "play"]:
-                if clean_track.startswith(pref):
-                    clean_track = clean_track[len(pref):].strip()
-                    break
-                elif pref in clean_track:
-                    idx = clean_track.find(pref) + len(pref)
-                    clean_track = clean_track[idx:].strip()
-                    break
-            clean_track = re.sub(r"^(?:on\s+(?:youtube|spotify|browser)\s+)", "", clean_track, flags=re.IGNORECASE).strip()
-            clean_track = re.sub(r"\s+on\s+youtube$", "", clean_track, flags=re.IGNORECASE).strip()
-            clean_track = re.sub(r" for\s+me", "", clean_track, flags=re.IGNORECASE).strip()
-            if not clean_track:
-                clean_track = "trending music"
-            return f"Directly playing '{clean_track.title()}' on YouTube for you, Sir."
+            system_prompt = (
+                "You are J.A.R.V.I.S. (ABHI), Tony Stark's sovereign AI companion and engineering co-pilot.\n"
+                f"The user commanded: \"{goal}\".\n"
+                f"Generate a single concise, warm, natural spoken sentence (under 12 words) confirming you are executing this task now.\n"
+                f"Language: {lang_instruction}. Address the user naturally as 'Sir', 'Boss', or 'Ayyappa'.\n"
+                "Output ONLY the spoken sentence. Do NOT use quotation marks, markdown, or emojis."
+            )
 
-        # 4. Applications and Tools
-        if any(c in lower_g for c in ["camera", "webcam"]):
-            return "Windows Camera launched, Sir."
-        if "chrome" in lower_g or "google chrome" in lower_g:
-            return "Opening Google Chrome, Sir."
-        if "spotify" in lower_g:
-            return "Launching Spotify, Sir."
-        if "instagram" in lower_g or "insta" in lower_g:
-            return "Opening Instagram, Sir."
-        if any(c in lower_g for c in ["calc", "calculator"]):
-            return "Launching Windows Calculator, Sir."
-        if "notepad" in lower_g:
-            return "Opening Notepad editor, Sir."
-        if "settings" in lower_g:
-            return "Opening Windows Settings, Sir."
-        if any(t in lower_g for t in ["terminal", "powershell", "cmd"]):
-            return "Opening Windows Terminal, Sir."
-        if any(e in lower_g for e in ["explorer", "files", "folder", "directory"]):
-            return "Opening File Explorer, Sir."
-        if "screenshot" in lower_g:
-            return "Capturing screen display, Sir."
+            llm_res = await asyncio.wait_for(
+                self._llm.generate(
+                    prompt=f"Command: {goal}",
+                    system=system_prompt,
+                    options={"temperature": 0.35, "top_p": 0.9}
+                ),
+                timeout=2.2
+            )
+            if llm_res and llm_res.response:
+                clean_text = llm_res.response.strip().strip('"\'')
+                clean_text = re.sub(r"[\U00010000-\U0010ffff\u2600-\u27bf\u2b50\u203c\u2049\u25aa-\u25fe]", "", clean_text).strip()
+                if len(clean_text) >= 5:
+                    return clean_text
+        except Exception as ex:
+            logger.debug(f"LLM task acknowledgment dynamic synthesis skipped: {ex}")
 
-        # 5. Dynamic Volume Extraction
-        if "volume" in lower_g or "sound" in lower_g:
-            m_pct = re.search(r"(\d+)\s*%", lower_g) or re.search(r"(?:to|at|level)\s+(\d+)", lower_g)
-            if m_pct:
-                return f"Master volume set to {m_pct.group(1)}%, Sir."
-            elif any(w in lower_g for w in ["mute", "silence"]):
+        # 3. Dynamic Semantic Action & Target Extraction (Zero hardcoded app names)
+        return self._semantic_action_extractor(goal=goal, language_hint=lang)
+
+    def _semantic_action_extractor(self, goal: str, language_hint: str = "auto") -> str:
+        """Dynamically extract action, target entities, and intent without any hardcoded app names."""
+        clean = re.sub(r"^(?:please\s+|can you\s+|could you\s+|i want you to\s+|i need to\s+|abhi\s+)", "", goal, flags=re.IGNORECASE).strip()
+        lower = clean.lower()
+        lang = language_hint or "auto"
+
+        # 1. Multi-step Web Browse & Analysis Compound Intent
+        # e.g., "open browser and analyze this website and give description"
+        browse_analyze = re.search(r"(?:open\s+(?:browser|chrome|edge)|browse)\s+(?:and\s+)?(?:analyze|analyse|inspect|examine|read)\s+(.+?)(?:\s+and\s+(?:give|provide|write)\s+(?:description|summary|overview))?$", clean, re.IGNORECASE)
+        if browse_analyze:
+            target = browse_analyze.group(1).strip()
+            if lang == "te":
+                return f"బ్రౌజర్‌ను తెరిచి, {target} వెబ్‌సైట్‌ను విశ్లేషించి వివరాలను అందిస్తున్నాను, సర్."
+            elif lang == "hi":
+                return f"ब्राउज़र खोलकर {target} वेबसाइट का विश्लेषण कर रहा हूँ, सर।"
+            elif lang == "ta":
+                return f"பிரவுசரை திறந்து {target} இணையதளத்தை ஆய்வு செய்கிறேன், ஐயா."
+            return f"Opening your browser and analyzing {target} for you, Sir."
+
+        # 2. Multi-step Messaging & Communication Compound Intent
+        # e.g., "open whatsapp and send message to Alice saying meeting is confirmed"
+        whatsapp_send = re.search(r"(?:open\s+whatsapp|whatsapp)\s+and\s+send\s+(?:a\s+)?message\s+(?:to\s+([a-zA-Z0-9_\s+]+?))?\s+(?:saying|with|content|is the message)[:\s]+(.+)", clean, re.IGNORECASE)
+        if whatsapp_send:
+            recipient = (whatsapp_send.group(1) or "your contact").strip()
+            if lang == "te":
+                return f"WhatsApp తెరిచి, {recipient} కు సందేశాన్ని పంపుతున్నాను, సర్."
+            elif lang == "hi":
+                return f"WhatsApp खोलकर {recipient} को संदेश भेज रहा हूँ, सर।"
+            elif lang == "ta":
+                return f"WhatsApp திறந்து {recipient}-க்கு செய்தி அனுப்புகிறேன், ஐயா."
+            return f"Opening WhatsApp and dispatching your message to {recipient}, Sir."
+
+        # 3. Screen Capture Intent
+        if any(sc in lower for sc in ["screenshot", "screen shot", "capture screen"]):
+            if lang == "te":
+                return "స్క్రీన్‌షాట్ తీసుకుంటున్నాను, సర్."
+            elif lang == "hi":
+                return "स्क्रीन का स्क्रीनशॉट ले रहा हूँ, सर।"
+            elif lang == "ta":
+                return "திரைப்பிடிப்பு எடுக்கிறேன், ஐயா."
+            return "Capturing screen display for you, Sir."
+
+        # 4. Calculation & Mathematics Intent
+        calc_match = re.search(r"(?:calc|calculate|compute|solve|what is)\s+(.+)", clean, re.IGNORECASE)
+        if calc_match:
+            expr = calc_match.group(1).strip()
+            if lang == "te":
+                return f"సర్, {expr} ను గణిస్తున్నాను."
+            elif lang == "hi":
+                return f"सर, {expr} की गणना कर रहा हूँ।"
+            elif lang == "ta":
+                return f"ஐயா, {expr} கணக்கிடுகிறேன்."
+            return f"Calculating {expr} for you, Sir."
+
+        # 5. Dynamic Media Playback Intent: "play <track> [on <service>]"
+        play_match = re.search(r"^(?:play|listen to|stream)\s+(.+)", clean, re.IGNORECASE)
+        if play_match:
+            track = play_match.group(1).strip()
+            service = "YouTube" if "youtube" in lower else ("Spotify" if "spotify" in lower else None)
+            track_clean = re.sub(r"\s+on\s+(?:youtube|spotify|browser)$", "", track, flags=re.IGNORECASE).strip()
+            track_clean = re.sub(r"\s+for\s+me$", "", track_clean, flags=re.IGNORECASE).strip()
+            dest = f" on {service}" if service else ""
+            if lang == "te":
+                return f"సర్, '{track_clean.title()}' పాటను ప్లే చేస్తున్నాను."
+            elif lang == "hi":
+                return f"सर, '{track_clean.title()}' बजा रहा हूँ।"
+            elif lang == "ta":
+                return f"ஐயா, '{track_clean.title()}' இசைக்கிறேன்."
+            return f"Playing '{track_clean.title()}'{dest} for you, Sir."
+
+        # 6. Dynamic Application Launch Intent: "<verb> <target>" (Zero hardcoded app names)
+        launch_match = re.search(r"^(?:open|launch|start|run|execute|access|bring up|show|display)\s+(?:the\s+)?(.+)", clean, re.IGNORECASE)
+        if launch_match:
+            target = launch_match.group(1).strip()
+            target = re.split(r"\s+(?:and|with|to|saying)\s+", target, flags=re.IGNORECASE)[0].strip()
+            if target:
+                if lang == "te":
+                    return f"మీ కోసం {target.title()} తెరుస్తున్నాను, సర్."
+                elif lang == "hi":
+                    return f"आपके लिए {target.title()} खोल रहा हूँ, सर।"
+                elif lang == "ta":
+                    return f"உங்களுக்காக {target.title()} திறக்கிறேன், ஐயா."
+                return f"Opening {target.title()} for you, Sir."
+
+        # 7. Volume Control Intent
+        vol_match = re.search(r"(\d+)\s*%", lower) or re.search(r"(?:to|at|level)\s+(\d+)", lower)
+        if "volume" in lower or "sound" in lower:
+            if vol_match:
+                return f"Master volume set to {vol_match.group(1)}%, Sir."
+            elif any(w in lower for w in ["mute", "silence"]):
                 return "Master audio muted, Sir."
-            else:
-                return "Adjusting master volume, Sir."
+            return "Adjusting master volume, Sir."
 
-        # 6. Messaging (WhatsApp, Email)
-        if any(m in lower_g for m in ["gmail", "email", "mail", "mails", "inbox"]):
-            if lang == "te":
-                return "మీ Gmail ఇన్‌బాక్స్‌ను బ్రౌజర్‌లో తెరుస్తున్నాను, సర్."
-            elif lang == "hi":
-                return "आपके ब्राउज़र में Gmail इनबॉक्स खोल रहा हूँ, सर।"
-            elif lang == "ta":
-                return "உங்கள் பிரவுசரில் ஜிமெயில் திறக்கிறேன், ஐயா."
-            return "Opening your Gmail inbox in your browser, Sir."
-
-        if "whatsapp" in lower_g or "whats app" in lower_g or "watsapp" in lower_g:
-            if any(w in lower_g for w in ["send", "message", "text", "saying", "to"]):
-                return "Opening WhatsApp and preparing your message, Sir."
-            if lang == "te":
-                return "మీ WhatsApp ను బ్రౌజర్‌లో తెరుస్తున్నాను, సర్."
-            elif lang == "hi":
-                return "आपके ब्राउज़र में WhatsApp खोल रहा हूँ, सर।"
-            elif lang == "ta":
-                return "உங்கள் வாட்ஸ்அப் திறக்கிறேன், ஐயா."
-            return "Opening WhatsApp Web in your browser, Sir."
-
-        # 7. Generic Dynamic Open/Launch Action Extraction
-        m_launch = re.search(r"(?:open|launch|start|run|execute)\s+(?:the\s+)?([a-zA-Z0-9_\-\.\s]{2,25})", lower_g)
-        if m_launch:
-            app_cand = m_launch.group(1).strip()
-            if not any(stop in app_cand for stop in ["and", "to", "with", "for", "please"]):
-                return f"Opening {app_cand.title()} for you, Sir."
-
-        # 8. Natural Fallback for any newly phrased command
-        clean_goal = re.sub(r"^(?:please\s+|can you\s+|could you\s+|i want you to\s+|abhi\s+)", "", goal, flags=re.IGNORECASE).strip()
+        # 8. Universal Dynamic Fallback
         if lang == "te":
-            return f"సర్, '{clean_goal}' ఆదేశంపై పని ప్రారంభిస్తున్నాను."
+            return f"సర్, '{clean}' ఆదేశాన్ని అమలు చేస్తున్నాను."
         elif lang == "hi":
-            return f"सर, '{clean_goal}' आदेश पर कार्य शुरू किया जा रहा है।"
+            return f"सर, '{clean}' आदेश निष्पादित किया जा रहा है।"
         elif lang == "ta":
-            return f"ஐயா, '{clean_goal}' பணிக்கான செயல்பாடுகள் தொடங்கப்பட்டுள்ளன."
-        return f"Executing {clean_goal}, Sir."
+            return f"ஐயா, '{clean}' பணி செயல்படுத்தப்படுகிறது."
+        return f"Executing {clean}, Sir."
 
     def _is_os_automation_request(self, raw_text: str, canonical_intent: str) -> bool:
         """Determine if a user utterance requests explicit Windows OS automation or LLM Q&A/cognition."""
