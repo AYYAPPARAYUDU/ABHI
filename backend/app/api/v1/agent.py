@@ -99,41 +99,96 @@ async def get_swarm_negotiations():
     return state.get("active_negotiations", [])
 
 
+AGENT_DISPLAY_NAMES = {
+    "agent_1_commander": "Mark 85 (Commander)",
+    "agent_2_browser": "Mark L (Browser Specialist)",
+    "agent_3_comms": "Mark XLII (Comms Officer)",
+    "agent_4_system": "Mark VI (OS & Code Engineer)",
+    "agent_5_researcher": "Mark VII (Data Miner)",
+    "agent_6_ml": "Mark XXI (ML Specialist)",
+    "agent_7_strategist": "Mark XVII (Task Strategist)",
+    "agent_8_qa_critic": "The Critic (QA Auditor)",
+    "agent_9_security": "Mark I (Security & Guardrail)",
+    "user": "Ayyappa Rayudu (Operator)",
+}
+
+
 @router.get("/swarm/live-dialogue")
 async def get_live_swarm_dialogue(limit: int = 25):
-    """Retrieve real-time multi-agent inter-LLM conversation transcripts and thought packets."""
+    """Retrieve real-time multi-agent inter-LLM conversation transcripts, envelopes, and thought packets."""
     from backend.app.cognitive.swarm.family_negotiation import family_swarm
-    history = family_swarm._chat_history[-limit:]
-    recent_negs = family_swarm.get_recent_negotiations(limit=5)
+    from backend.app.cognitive.multi_agent.orchestrator import multi_agent_orchestrator
+    
+    dialogue_items = [h.model_dump() for h in family_swarm._chat_history[-limit:]]
+    recent_negs = [n.model_dump() for n in family_swarm.get_recent_negotiations(limit=5)]
+    
+    # Blend 9-agent persona envelopes so Swarm Dialogue shows real-time multi-agent negotiation
+    envelopes = multi_agent_orchestrator.get_negotiation_history(limit=limit)
+    for env in envelopes:
+        sender_id = env.get("from", "agent")
+        target_id = env.get("to", "all")
+        payload = env.get("payload") or {}
+        summary = payload.get("summary") or "Inter-agent proposal dispatched."
+        next_act = env.get("next_required_action")
+        msg = f"{summary} [Next: {next_act}]" if next_act else summary
+        
+        dialogue_items.append({
+            "id": f"env_{env.get('task_id', 't')}_{env.get('timestamp', int(time.time()*1000))}",
+            "sender_id": sender_id,
+            "sender_name": AGENT_DISPLAY_NAMES.get(sender_id, sender_id),
+            "recipient": AGENT_DISPLAY_NAMES.get(target_id, target_id),
+            "sentiment": f"[{env.get('type', 'MSG')}] {env.get('status', 'OK')}",
+            "message": msg,
+            "timestamp": env.get("timestamp") or int(time.time() * 1000)
+        })
+    
+    # Sort dialogue items by timestamp ascending
+    dialogue_items.sort(key=lambda x: x.get("timestamp", 0))
+
     return {
         "status": "ONLINE",
-        "dialogue": [h.model_dump() for h in history],
-        "active_negotiations": [n.model_dump() for n in recent_negs],
-        "brains_count": len(family_swarm.list_brains())
+        "dialogue": dialogue_items[-limit:],
+        "active_negotiations": recent_negs,
+        "multi_agent_envelopes": envelopes[-limit:],
+        "brains_count": len(family_swarm.list_brains()) + 9
     }
 
 
 @router.post("/swarm/trigger-deliberation")
 async def trigger_swarm_deliberation(payload: Optional[Dict[str, Any]] = None):
-    """Trigger a live collaborative multi-agent family negotiation with all 8 Small-LLMs."""
+    """Trigger a live collaborative multi-agent negotiation across all 9 specialized personas & swarm."""
     from backend.app.cognitive.swarm.family_negotiation import family_swarm
+    from backend.app.cognitive.multi_agent.orchestrator import multi_agent_orchestrator
+    
     goal = (payload or {}).get("goal") or "Autonomous collaborative system health and optimization audit."
     user_name = (payload or {}).get("user_name") or "Sir"
+    
+    # 1. Family swarm negotiation
     session = await family_swarm.execute_family_negotiation(goal=goal, user_name=user_name)
+    
+    # 2. Autonomous 9-agent loop execution
+    task_id = f"delib_{uuid.uuid4().hex[:8]}"
+    root_goal, constraints, sec_ok, sec_err = await multi_agent_orchestrator.phase_1_deconstruct_intent(task_id, goal)
+    if sec_ok:
+        await multi_agent_orchestrator.phase_2_decompose_task(task_id, root_goal, constraints)
+    
     return {
         "status": "SUCCESS",
         "session_id": session.session_id,
         "consensus_score": session.consensus_score,
         "dialogue_count": len(session.dialogue),
-        "lead_agent": session.lead_agent_name
+        "lead_agent": session.lead_agent_name,
+        "multi_agent_envelopes_count": len(multi_agent_orchestrator.get_negotiation_history(10))
     }
 
 
 @router.post("/swarm/clear-dialogue")
 async def clear_swarm_dialogue():
-    """Clear multi-agent chat history from memory."""
+    """Clear multi-agent chat history and negotiation envelopes from memory."""
     from backend.app.cognitive.swarm.family_negotiation import family_swarm
+    from backend.app.cognitive.multi_agent.orchestrator import multi_agent_orchestrator
     family_swarm.clear_chat_history()
+    multi_agent_orchestrator.clear_history()
     return {"status": "SUCCESS", "message": "Swarm dialogue cleared."}
 
 
@@ -500,6 +555,57 @@ async def get_live_subconscious_thoughts() -> Dict[str, Any]:
             "ram_percent": ram,
             "timestamp": int(time.time() * 1000)
         }
+    }
+
+
+@router.get("/multi-agent/personas")
+async def get_multi_agent_personas():
+    """Retrieve canonical specifications and system prompts for all 9 specialized agents."""
+    from backend.app.cognitive.multi_agent.prompts import list_all_personas, MASTER_AGENTIC_OPERATING_FRAMEWORK
+    personas = list_all_personas()
+    return {
+        "status": "ONLINE",
+        "total_agents": len(personas),
+        "squads": ["COMMAND", "EXECUTION", "INTELLIGENCE", "QUALITY_GOVERNANCE"],
+        "agents": [p.model_dump() for p in personas],
+        "master_framework": MASTER_AGENTIC_OPERATING_FRAMEWORK
+    }
+
+
+@router.get("/multi-agent/negotiation-history")
+async def get_multi_agent_negotiation_history(limit: int = 50):
+    """Retrieve recent inter-agent negotiation envelopes and quality audit records."""
+    from backend.app.cognitive.multi_agent.orchestrator import multi_agent_orchestrator
+    history = multi_agent_orchestrator.get_negotiation_history(limit=limit)
+    return {
+        "status": "OK",
+        "total_envelopes": len(history),
+        "envelopes": history
+    }
+
+
+@router.post("/multi-agent/negotiate")
+async def execute_multi_agent_negotiation(payload: Dict[str, Any]):
+    """Execute dynamic multi-agent negotiation, capability bidding, and consensus protocol across the 9 agents."""
+    from backend.app.cognitive.multi_agent.orchestrator import multi_agent_orchestrator
+    goal = payload.get("goal") or payload.get("text") or "Execute collaborative system directives."
+    task_id = payload.get("task_id") or f"task_neg_{uuid.uuid4().hex[:8]}"
+
+    # Execute intent deconstruction & task decomposition
+    root_goal, constraints, sec_ok, sec_err = await multi_agent_orchestrator.phase_1_deconstruct_intent(task_id, goal)
+    if not sec_ok:
+        return {"status": "BLOCKED", "task_id": task_id, "error": sec_err}
+
+    steps = await multi_agent_orchestrator.phase_2_decompose_task(task_id, root_goal, constraints)
+    envelopes = multi_agent_orchestrator.get_negotiation_history(10)
+    return {
+        "status": "CONSENSUS_REACHED",
+        "task_id": task_id,
+        "root_goal": root_goal,
+        "constraints": constraints,
+        "assigned_squads": [s["role"] for s in steps],
+        "steps": steps,
+        "recent_envelopes": envelopes
     }
 
 

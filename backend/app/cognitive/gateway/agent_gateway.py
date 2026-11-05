@@ -402,6 +402,20 @@ class AgentGateway:
             asyncio.create_task(family_swarm.execute_family_negotiation(goal=goal_to_submit, user_name="Sir"))
         except Exception as e:
             logger.debug(f"Swarm negotiation background dispatch: {e}")
+
+        # Trigger 9-Agent Persona Autonomous Execution Loop (Intent Deconstruction & Squad Decomposition)
+        try:
+            from backend.app.cognitive.multi_agent.orchestrator import multi_agent_orchestrator
+            async def run_multi_agent_cycle(g_text: str, t_id: str):
+                try:
+                    r_goal, constraints, sec_ok, sec_err = await multi_agent_orchestrator.phase_1_deconstruct_intent(t_id, g_text)
+                    if sec_ok:
+                        await multi_agent_orchestrator.phase_2_decompose_task(t_id, r_goal, constraints)
+                except Exception as ex:
+                    logger.debug(f"Multi-agent autonomous cycle error: {ex}")
+            asyncio.create_task(run_multi_agent_cycle(goal_to_submit, status_obj.task_id))
+        except Exception as e:
+            logger.debug(f"Multi-agent loop dispatch: {e}")
         
         res_ref = ResultReference(
             result_id=f"res_{uuid.uuid4().hex[:8]}",

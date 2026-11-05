@@ -2345,6 +2345,28 @@ def register_builtin_agents():
     agent_registry.register(BusinessAgent())
     agent_registry.register(MobileDeviceAgent())
 
+    # Register 9 Specialized Autonomous Squad Personas
+    from backend.app.cognitive.multi_agent.agents import (
+        CommanderAgent,
+        BrowserAgent,
+        CommsAgent,
+        SystemCodeAgent,
+        ResearcherAgent,
+        MLSpecialistAgent,
+        StrategistAgent,
+        QACriticAgent,
+        SecurityAgent,
+    )
+    agent_registry.register(CommanderAgent())
+    agent_registry.register(BrowserAgent())
+    agent_registry.register(CommsAgent())
+    agent_registry.register(SystemCodeAgent())
+    agent_registry.register(ResearcherAgent())
+    agent_registry.register(MLSpecialistAgent())
+    agent_registry.register(StrategistAgent())
+    agent_registry.register(QACriticAgent())
+    agent_registry.register(SecurityAgent())
+
 
 # Auto-register on module import
 register_builtin_agents()
