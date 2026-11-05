@@ -402,7 +402,6 @@ export class AgentCommandService {
           };
           this.activeResult.set(updatedResult);
           this.speechVoice.speak(`Execution note: ${errorMsg}`);
-        }
         } else if (state === 'WAITING_FOR_APPROVAL') {
           this.lifecycle.set('WAITING_FOR_APPROVAL');
         }
