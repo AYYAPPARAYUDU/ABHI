@@ -9,6 +9,7 @@
 // 7. Ambient Micro-Starfield (1,200 stars) + Accretion Vortex (700 sparks) + Curved Horizon Disc + Atmospheric Fog
 
 import { Injectable, NgZone, inject, signal } from '@angular/core';
+import { Subject } from 'rxjs';
 import * as THREE from 'three';
 import { SpatialEnvironmentMode } from '../../core/models/agent-experience.model';
 import { ThemeService, AbhiThemeColors } from '../../core/services/theme.service';
@@ -63,6 +64,7 @@ export class ThreeSceneManagerService {
   readonly isSwarmDeployed = signal<boolean>(true);
   readonly soundEnabled = signal<boolean>(true);
   readonly selectedAgent = signal<AgentNode | null>(null);
+  readonly agentFocused$ = new Subject<AgentNode>();
   readonly hoveredAgent = signal<AgentNode | null>(null);
   readonly latestJarvisMessage = signal<string | null>(
     'Systems online, Commander. The Quantum Dot Sphere is stable. Click the core sphere to erupt autonomous sub-agents with inter-linked synaptic laser arrays.'
@@ -310,6 +312,8 @@ export class ThreeSceneManagerService {
   private swarmArchitectureGroup: THREE.Group | null = null;
   private volumetricColumns: { mesh: THREE.Mesh; baseOpacity: number; phase: number }[] = [];
   private podHitMeshes: THREE.Mesh[] = [];
+  private homePodHitMeshes: THREE.Mesh[] = [];
+  private workspaceStationHitMeshes: THREE.Mesh[] = [];
   private floatingConsoles: { mesh: THREE.Mesh; baseY: number; phase: number }[] = [];
   private groundRadarMesh: THREE.LineSegments | null = null;
   private agentBots: { group: THREE.Group; baseY: number; phase: number }[] = [];
@@ -1083,6 +1087,7 @@ export class ThreeSceneManagerService {
     if (!this.scene) return;
     this.swarmArchitectureGroup = new THREE.Group();
     this.podHitMeshes = [];
+    this.homePodHitMeshes = [];
     this.floatingConsoles = [];
 
     // Dedicated 4-Point Colony Studio Lighting Rig for 3D Core Space (Matching Workspace metallic luster)
@@ -1304,6 +1309,7 @@ export class ThreeSceneManagerService {
       hitPod.userData = { agentId: agent.id, agent };
       podGroup.add(hitPod);
       this.podHitMeshes.push(hitPod);
+      this.homePodHitMeshes.push(hitPod);
 
       // 3 Sleek Architectural Pylons around pod
       for (let p = 0; p < 3; p++) {
@@ -1469,6 +1475,7 @@ export class ThreeSceneManagerService {
     this.stationMarkers = [];
     this.rovingCourierBots = [];
     this.nexusAcousticRings = [];
+    this.workspaceStationHitMeshes = [];
     this.workspaceBotChassisMaterials = [];
 
     // 1. Dedicated Studio Lighting Rig for Hexagonal Base Colony
@@ -2208,6 +2215,7 @@ export class ThreeSceneManagerService {
       stationGroup.add(hitMesh);
       stationGroup.userData = { agentId: agent.id, agent };
       this.podHitMeshes.push(hitMesh);
+      this.workspaceStationHitMeshes.push(hitMesh);
 
       this.workspaceGroup?.add(stationGroup);
     });
@@ -2499,6 +2507,7 @@ export class ThreeSceneManagerService {
 
     // RAYCAST CLICK HANDLER (Direct clicks on the Central Core, Orbiting Agents, or Colony Stations)
     canvas.addEventListener('click', (e) => {
+      console.log('>>> ThreeScene canvas clicked at clientX=', e.clientX, 'clientY=', e.clientY, 'mode=', this.currentMode);
       if (!this.camera || !this.raycaster) return;
 
       const rect = canvas.getBoundingClientRect();
@@ -2535,10 +2544,10 @@ export class ThreeSceneManagerService {
           }
         }
       } else if (this.currentMode === 'WORKSPACE') {
-        // 1. Check direct hits on pod hit meshes and stations (effortless click detection)
-        const podHits = this.raycaster.intersectObjects(this.podHitMeshes, true);
-        if (podHits.length > 0) {
-          const hitObj = podHits[0].object;
+        // 1. High-precision click detection on dedicated workspace station hit meshes
+        const stationHits = this.raycaster.intersectObjects(this.workspaceStationHitMeshes, true);
+        if (stationHits.length > 0) {
+          const hitObj = stationHits[0].object;
           const agent = hitObj.userData?.['agent'] || this.agents().find((a) => a.id === hitObj.userData?.['agentId']);
           if (agent) {
             this.ngZone.run(() => this.focusAgent(agent));
@@ -2596,7 +2605,7 @@ export class ThreeSceneManagerService {
           testObjects.push(this.coreHitSphere);
         }
       } else if (this.currentMode === 'WORKSPACE') {
-        testObjects.push(...this.podHitMeshes);
+        testObjects.push(...this.workspaceStationHitMeshes);
       }
 
       const hits = this.raycaster.intersectObjects(testObjects, true);
@@ -2661,7 +2670,11 @@ export class ThreeSceneManagerService {
     if (!this.isSwarmDeployed() && (this.currentMode === 'MAIN_AGENT' || this.currentMode === 'DEFAULT')) {
       this.toggleCoreDeployment();
     }
+    const prev = this.selectedAgent();
     this.selectedAgent.set(agent);
+    if (prev?.id !== agent.id) {
+      this.agentFocused$.next(agent);
+    }
     this.playHoloSound('beep');
     this.latestJarvisMessage.set(
       `Active focus: ${agent.name}. Workstation synchronized.`
@@ -3389,6 +3402,7 @@ export class ThreeSceneManagerService {
   }
 
   setMode(mode: SpatialEnvironmentMode): void {
+    if (this.currentMode === mode) return;
     this.currentMode = mode;
     this.selectedAgent.set(null);
     if (mode === 'WORKSPACE') {
@@ -3648,6 +3662,7 @@ export class ThreeSceneManagerService {
     this.orbitalMarkers = [];
     this.rovingCourierBots = [];
     this.nexusAcousticRings = [];
+    this.workspaceStationHitMeshes = [];
     this.workspaceBotChassisMaterials = [];
     this.voiceRippleRings = [];
     this.volumetricColumns = [];

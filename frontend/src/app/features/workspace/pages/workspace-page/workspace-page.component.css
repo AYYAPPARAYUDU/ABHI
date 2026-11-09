@@ -181,30 +181,38 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(4px, 0.6vw, 8px);
-  flex-wrap: wrap;
-  padding: 4px 8px;
+  gap: clamp(3px, 0.5vw, 7px);
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  max-width: 96vw;
+  padding: 4px 10px;
   border-radius: 9999px;
   background: var(--abhi-surface-raised, rgba(5, 14, 30, 0.88));
   backdrop-filter: blur(20px);
   border: 1px solid var(--abhi-border, rgba(56, 189, 248, 0.25));
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
   margin: 0 auto;
-  max-width: fit-content;
+  scrollbar-width: none;
+}
+
+.stations-compact-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .compact-station-pill {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 10px;
+  padding: 4px 8px;
   border-radius: 9999px;
   background: var(--abhi-surface-inset, rgba(10, 22, 44, 0.75));
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #e2e8f0;
   font-family: 'JetBrains Mono', monospace;
-  font-size: clamp(9px, 0.85vw, 10.5px);
+  font-size: clamp(8.5px, 0.8vw, 10px);
   font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }

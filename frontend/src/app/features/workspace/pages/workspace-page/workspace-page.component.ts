@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, signal, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, signal, effect, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 import { ThreeSceneManagerService, AgentNode } from '../../../../shared/3d/three-scene-manager.service';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { AgentCommandService } from '../../../../core/services/agent-command.service';
@@ -54,6 +55,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
   readonly threeScene = inject(ThreeSceneManagerService);
   readonly speechVoice = inject(SpeechVoiceService);
   readonly commandService = inject(AgentCommandService);
+  readonly cdr = inject(ChangeDetectorRef);
 
   readonly agents = this.threeScene.agents;
   readonly selectedAgent = this.threeScene.selectedAgent;
@@ -98,26 +100,21 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
 
   private syncTimer: any = null;
   private telemetryRefreshTimer: any = null;
+  private agentFocusSub: Subscription | null = null;
 
-  constructor() {
-    let lastLoadedId: string | null = null;
-    effect(() => {
-      const agent = this.selectedAgent();
-      if (agent && agent.id !== lastLoadedId) {
-        lastLoadedId = agent.id;
-        this.selectStation(agent);
-      } else if (!agent) {
-        lastLoadedId = null;
-        this.currentAgentDetails.set(null);
-      }
-    });
-  }
+  constructor() {}
 
   ngOnInit(): void {
     this.threeScene.setMode('WORKSPACE');
     this.threeScene.resetCameraFocus();
     this.fetchFamilyStatus();
     this.fetchChannelMessages();
+
+    // Directly bind to 3D station click & focus events from ThreeScene
+    this.agentFocusSub = this.threeScene.agentFocused$.subscribe((agent) => {
+      this.selectStation(agent, false);
+      this.cdr.markForCheck();
+    });
 
     // Poll at 4.5s cadence with memoized comparisons to prevent redundant change detection
     this.syncTimer = setInterval(() => {
@@ -127,6 +124,10 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.agentFocusSub) {
+      this.agentFocusSub.unsubscribe();
+      this.agentFocusSub = null;
+    }
     if (this.syncTimer) {
       clearInterval(this.syncTimer);
       this.syncTimer = null;
@@ -148,6 +149,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
           if (json.data) {
             this.currentAgentDetails.set(json.data);
             this.detailsLruCache.set(agentId, { data: json.data, expiry: Date.now() + 4000 });
+            this.cdr.markForCheck();
           }
         }
       } catch {}
@@ -235,20 +237,28 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
     }
   }
 
-  async selectStation(agent: AgentNode): Promise<void> {
+  async selectStation(agent: AgentNode, triggerSceneFocus: boolean = true): Promise<void> {
+    if (this.activeStation()?.id === agent.id && this.currentAgentDetails()) {
+      return;
+    }
     // Acoustic barge-in: immediately cut off any ongoing speech audio
     this.speechVoice.stop();
     this.activeStation.set(agent);
-    this.threeScene.focusAgent(agent);
+    if (triggerSceneFocus) {
+      this.threeScene.focusAgent(agent);
+    }
     this.stationActionStatus.set(null);
+    this.cdr.markForCheck();
 
     // O(1) LRU Cache check for instantaneous zero-stutter popup display
     const cached = this.detailsLruCache.get(agent.id);
     if (cached && cached.expiry > Date.now()) {
       this.currentAgentDetails.set(cached.data);
       this.isLoadingDetails.set(false);
+      this.cdr.markForCheck();
     } else {
       this.isLoadingDetails.set(true);
+      this.cdr.markForCheck();
     }
 
     this.startTelemetryTimer(agent.id);
@@ -268,6 +278,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
         const details = json.data;
         this.currentAgentDetails.set(details);
         this.detailsLruCache.set(agent.id, { data: details, expiry: Date.now() + 4000 });
+        this.cdr.markForCheck();
 
         // Vocal self-explanation from the agent
         if (this.voiceStreamEnabled() && details.spoken_explanation) {
@@ -290,6 +301,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
       }
     } finally {
       this.isLoadingDetails.set(false);
+      this.cdr.markForCheck();
     }
   }
 
@@ -316,6 +328,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
     this.threeScene.resetCameraFocus();
     this.threeScene.selectedAgent.set(null);
     this.stationActionStatus.set(null);
+    this.cdr.markForCheck();
   }
 
   async triggerFamilyDeliberation(): Promise<void> {
