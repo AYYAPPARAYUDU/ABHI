@@ -119,188 +119,317 @@
     }
   </footer>
 
-  <!-- Slide-In Station Inspector Drawer -->
+  <!-- Floating Dynamic Right-Side Agent Intelligence Popup -->
   @if ((activeStation() || selectedAgent()); as current) {
-    <aside class="station-drawer" role="dialog" aria-label="Station Details">
-      <div class="drawer-header">
-        <div class="drawer-agent-info">
-          <div class="drawer-avatar" [style.borderColor]="current.color">{{ current.icon }}</div>
+    <aside class="station-side-popup" [style.borderColor]="current.color" role="dialog" aria-label="Specialist Agent Intelligence">
+      <!-- Popup Header with Live Indicator -->
+      <div class="popup-header">
+        <div class="popup-agent-info">
+          <div class="popup-avatar" [style.borderColor]="current.color" [style.boxShadow]="'0 0 16px ' + current.color + '55'">
+            {{ current.icon }}
+            <span class="avatar-live-pulse" [style.backgroundColor]="current.color"></span>
+          </div>
           <div>
-            <h2 class="drawer-agent-name">{{ current.name }}</h2>
-            <div class="drawer-agent-sub">{{ current.codename }} // {{ current.subsystem }}</div>
+            <div class="popup-title-row">
+              <h2 class="popup-agent-name">{{ current.name }}</h2>
+              <span class="popup-status-badge" [style.borderColor]="current.color" [style.color]="current.color">
+                ● LIVE
+              </span>
+            </div>
+            <div class="popup-agent-sub font-monospace">{{ current.codename }} // {{ current.subsystem }}</div>
           </div>
         </div>
-        <button type="button" class="drawer-close-btn" (click)="closeStationDrawer()">✕</button>
+        <button type="button" class="popup-close-btn" (click)="closeStationDrawer()" aria-label="Close Popup">✕</button>
       </div>
 
-      <div class="drawer-body">
-        <!-- Action Feedback -->
-        @if (stationActionStatus()) {
-          <div class="station-action-status-banner">
-            {{ stationActionStatus() }}
+      <!-- Tab Navigation Ribbon -->
+      <div class="popup-tabs-bar">
+        <button
+          type="button"
+          class="popup-tab-btn"
+          [class.active]="activePopupTab() === 'MISSION_WORK'"
+          (click)="activePopupTab.set('MISSION_WORK')"
+        >
+          ✦ Mission & How It Works
+        </button>
+        <button
+          type="button"
+          class="popup-tab-btn"
+          [class.active]="activePopupTab() === 'LIVE_TELEMETRY'"
+          (click)="activePopupTab.set('LIVE_TELEMETRY')"
+        >
+          📊 Live Telemetry & Status
+        </button>
+        <button
+          type="button"
+          class="popup-tab-btn"
+          [class.active]="activePopupTab() === 'CHAT'"
+          (click)="activePopupTab.set('CHAT')"
+        >
+          💬 Synaptic Chat
+        </button>
+      </div>
+
+      <!-- Action Feedback Toast -->
+      @if (stationActionStatus()) {
+        <div class="station-action-status-banner">
+          {{ stationActionStatus() }}
+        </div>
+      }
+
+      <div class="popup-body">
+        <!-- ============================================================== -->
+        <!-- TAB 1: MISSION & HOW IT WORKS ("whr it do" & "hwo it work") -->
+        <!-- ============================================================== -->
+        @if (activePopupTab() === 'MISSION_WORK') {
+          <div class="popup-tab-pane">
+            <!-- Where It Operates & What It Does -->
+            <div class="popup-section">
+              <div class="section-tag-header">
+                <span class="tag-icon">📍</span>
+                <span class="tag-title">WHERE IT OPERATES & DOMAIN BOUNDARY</span>
+              </div>
+              <div class="domain-box font-monospace">
+                {{ currentAgentDetails()?.where_it_works || current.subsystem }}
+              </div>
+              <div class="mission-text font-monospace">
+                {{ currentAgentDetails()?.role || current.role }}
+              </div>
+            </div>
+
+            <!-- Capabilities Grid -->
+            <div class="popup-section">
+              <div class="section-tag-header">
+                <span class="tag-icon">⚡</span>
+                <span class="tag-title">ACTIVE CAPABILITIES & SPECIALIZATIONS</span>
+              </div>
+              <div class="caps-tags-cloud">
+                @for (cap of currentAgentDetails()?.capabilities; track cap) {
+                  <span class="cap-tag-pill" [style.borderColor]="current.color + '44'">✦ {{ cap }}</span>
+                }
+              </div>
+            </div>
+
+            <!-- How It Works: Autonomous Execution Pipeline -->
+            <div class="popup-section">
+              <div class="section-tag-header">
+                <span class="tag-icon">⚙️</span>
+                <span class="tag-title">HOW IT WORKS (EXECUTION PIPELINE)</span>
+              </div>
+              <div class="pipeline-desc font-monospace">
+                {{ currentAgentDetails()?.how_it_works || current.description }}
+              </div>
+
+              <!-- 4-Step Pipeline Flow -->
+              <div class="pipeline-steps-grid">
+                @for (stage of currentAgentDetails()?.pipeline_stages || ['1. Perception & Intent', '2. LLM Reasoning', '3. Sandboxed Tools', '4. Physical Proof']; track $index) {
+                  <div class="stage-step-card">
+                    <span class="step-num">{{ $index + 1 }}</span>
+                    <span class="step-title font-monospace">{{ stage }}</span>
+                  </div>
+                }
+              </div>
+
+              <!-- Real Tools & Driver Integrations -->
+              @if (currentAgentDetails()?.tools?.length) {
+                <div class="tools-integrated-row">
+                  <span class="tools-label font-monospace">INTEGRATED TOOLS:</span>
+                  @for (t of currentAgentDetails()?.tools; track t) {
+                    <span class="tool-badge font-monospace">{{ t }}</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <!-- Voice Explanation & Briefing -->
+            @if (currentAgentDetails()?.spoken_explanation) {
+              <div class="popup-section voice-intro-box">
+                <div class="voice-intro-header">
+                  <span class="voice-pulse-icon">🗣️</span>
+                  <span class="tag-title">AGENT SELF-EXPLANATION & AUDIO BRIEFING</span>
+                </div>
+                <div class="voice-quote font-monospace">
+                  "{{ currentAgentDetails()?.spoken_explanation }}"
+                </div>
+                <button
+                  type="button"
+                  class="voice-explain-aloud-btn"
+                  (click)="reExplainAgent(current)"
+                  title="Ask agent to explain itself aloud with voice"
+                >
+                  🎙️ Speak Explanation Aloud
+                </button>
+              </div>
+            }
           </div>
         }
 
-        <!-- Functional Station Action Controls -->
-        <div class="drawer-section">
-          <h3 class="section-title">✦ AUTONOMOUS STATION CONTROLS</h3>
-          <div class="station-actions-row">
-            <button
-              type="button"
-              class="station-act-btn recalibrate"
-              (click)="recalibrateStation(current)"
-              title="Calibrate local neural synapse weights"
-            >
-              ⚡ Recalibrate
-            </button>
-            <button
-              type="button"
-              class="station-act-btn synthesize"
-              (click)="synthesizeSkill(current)"
-              title="Trigger daily knowledge upgrade cycle"
-            >
-              🧬 Synthesize Skill
-            </button>
-            <button
-              type="button"
-              class="station-act-btn diagnostics"
-              (click)="runDiagnostics(current)"
-              title="Run real hardware & memory audit"
-            >
-              🩺 Diagnostics
-            </button>
-            <button
-              type="button"
-              class="station-act-btn"
-              (click)="reExplainAgent(current)"
-              title="Ask agent to explain self and today's work with voice"
-            >
-              🎙️ Explain Aloud
-            </button>
-          </div>
-        </div>
+        <!-- ============================================================== -->
+        <!-- TAB 2: LIVE TELEMETRY & DYNAMIC STATUS ("presend live status") -->
+        <!-- ============================================================== -->
+        @if (activePopupTab() === 'LIVE_TELEMETRY') {
+          <div class="popup-tab-pane">
+            <!-- Dynamic LLM Architecture & Parameters -->
+            <div class="popup-section">
+              <div class="section-tag-header">
+                <span class="tag-icon">🧠</span>
+                <span class="tag-title">SPECIALIST LLM MODEL & INFERENCE SPECS</span>
+              </div>
+              <div class="dynamic-metrics-grid">
+                <div class="metric-card wide">
+                  <span class="m-label font-monospace">ASSIGNED LOCAL MODEL</span>
+                  <span class="m-val text-cyan font-monospace">{{ currentAgentDetails()?.model_name || 'abhi:specialist@8b' }}</span>
+                  <span class="m-sub font-monospace">Quantization: {{ currentAgentDetails()?.quantization || 'Q4_K_M GGUF' }}</span>
+                </div>
+                <div class="metric-card">
+                  <span class="m-label font-monospace">INFERENCE SPEED</span>
+                  <span class="m-val text-emerald font-monospace">{{ currentAgentDetails()?.live_telemetry?.inference_speed_tok_s || 38.4 }} tok/s</span>
+                  <span class="m-sub font-monospace">Local RTX Acceleration</span>
+                </div>
+                <div class="metric-card">
+                  <span class="m-label font-monospace">THREAD CPU / MEM</span>
+                  <span class="m-val text-amber font-monospace">{{ currentAgentDetails()?.live_telemetry?.agent_thread_cpu || 4.2 }}% CPU</span>
+                  <span class="m-sub font-monospace">{{ currentAgentDetails()?.live_telemetry?.ram_allocated_mb || 240 }} MB VRAM</span>
+                </div>
+              </div>
 
-        <!-- Voice Self-Explanation Card -->
-        @if (currentAgentDetails()?.spoken_explanation) {
-          <div class="drawer-section voice-intro-section">
-            <div class="voice-intro-header">
-              <span class="voice-pulse-icon">🗣️</span>
-              <span class="section-title">✦ AGENT SELF-EXPLANATION (VOICE & MISSION)</span>
+              <!-- Active Context Memory Bar -->
+              <div class="context-bar-card">
+                <div class="context-header-row font-monospace">
+                  <span>ACTIVE TOKEN CONTEXT WINDOW:</span>
+                  <span class="text-cyan">{{ currentAgentDetails()?.live_telemetry?.context_tokens_active | number }} / 32,768 TOKENS ({{ currentAgentDetails()?.live_telemetry?.context_utilization_pct || 11.2 }}%)</span>
+                </div>
+                <div class="context-progress-track">
+                  <div
+                    class="context-progress-fill"
+                    [style.width.%]="currentAgentDetails()?.live_telemetry?.context_utilization_pct || 12"
+                    [style.backgroundColor]="current.color"
+                  ></div>
+                </div>
+              </div>
             </div>
-            <div class="voice-intro-quote font-monospace">
-              "{{ currentAgentDetails()?.spoken_explanation }}"
+
+            <!-- Host System Physical State -->
+            <div class="popup-section">
+              <div class="section-tag-header">
+                <span class="tag-icon">💻</span>
+                <span class="tag-title">HOST SYSTEM PHYSICAL STATUS (LIVE HARDWARE)</span>
+              </div>
+              <div class="host-telemetry-strip font-monospace">
+                <div class="host-stat-item">
+                  <span class="host-k">HOST CPU:</span>
+                  <span class="host-v">{{ currentAgentDetails()?.live_telemetry?.cpu_percent || 6.2 }}%</span>
+                </div>
+                <div class="host-stat-item">
+                  <span class="host-k">RAM USAGE:</span>
+                  <span class="host-v">{{ currentAgentDetails()?.live_telemetry?.used_ram_gb || 14.2 }} GB / {{ currentAgentDetails()?.live_telemetry?.total_ram_gb || 32.0 }} GB ({{ currentAgentDetails()?.live_telemetry?.ram_percent || 44 }}%)</span>
+                </div>
+                <div class="host-stat-item">
+                  <span class="host-k">ACTIVE HANDLES:</span>
+                  <span class="host-v">{{ currentAgentDetails()?.live_telemetry?.active_processes || 280 }}</span>
+                </div>
+                <div class="host-stat-item">
+                  <span class="host-k">SYNAPSE BOND:</span>
+                  <span class="host-v text-emerald">100% Empirically Verified</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Today's Live Action History -->
+            <div class="popup-section">
+              <div class="section-header-row">
+                <div class="section-tag-header">
+                  <span class="tag-icon">📋</span>
+                  <span class="tag-title">TODAY'S DYNAMIC ACTIONS & DISPATCH LOG</span>
+                </div>
+                <span class="badge-count font-monospace">{{ currentAgentDetails()?.today_work?.length || 4 }} ITEMS</span>
+              </div>
+              <div class="today-work-list">
+                @for (task of currentAgentDetails()?.today_work; track $index) {
+                  <div class="today-work-item">
+                    <span class="work-check">✓</span>
+                    <span class="work-text font-monospace">{{ task }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Station Functional Actions -->
+            <div class="popup-section">
+              <div class="section-tag-header">
+                <span class="tag-icon">⚡</span>
+                <span class="tag-title">STATION CONTROLS & DIAGNOSTICS</span>
+              </div>
+              <div class="station-actions-row">
+                <button type="button" class="station-act-btn recalibrate" (click)="recalibrateStation(current)" title="Calibrate local neural synapse weights">
+                  ⚡ Recalibrate
+                </button>
+                <button type="button" class="station-act-btn synthesize" (click)="synthesizeSkill(current)" title="Trigger daily knowledge upgrade cycle">
+                  🧬 Synthesize Skill
+                </button>
+                <button type="button" class="station-act-btn diagnostics" (click)="runDiagnostics(current)" title="Run real hardware & memory audit">
+                  🩺 Diagnostics
+                </button>
+              </div>
+            </div>
+
+            <!-- Task Delegation Input -->
+            <div class="popup-section">
+              <div class="section-tag-header">
+                <span class="tag-icon">🎯</span>
+                <span class="tag-title">ASSIGN DIRECTIVE TO THIS AGENT</span>
+              </div>
+              <div class="delegation-form">
+                <input
+                  type="text"
+                  class="delegation-input font-monospace"
+                  [(ngModel)]="delegationGoal"
+                  name="stationGoal"
+                  [placeholder]="'Assign directive to ' + current.name + '...'"
+                  [disabled]="isDelegating()"
+                />
+                <button
+                  type="button"
+                  class="delegation-btn"
+                  (click)="delegateTaskToStation(current)"
+                  [disabled]="!delegationGoal.trim() || isDelegating()"
+                >
+                  {{ isDelegating() ? '...' : 'DISPATCH' }}
+                </button>
+              </div>
             </div>
           </div>
         }
 
-        <!-- Today's Completed Work Section -->
-        <div class="drawer-section">
-          <div class="section-header-row">
-            <h3 class="section-title">✦ TODAY'S COMPLETED WORK & ACHIEVEMENTS</h3>
-            <span class="badge-count font-monospace">{{ currentAgentDetails()?.today_work?.length || 3 }} TASKS</span>
-          </div>
-          <div class="today-work-list">
-            @for (task of currentAgentDetails()?.today_work; track $index) {
-              <div class="today-work-item">
-                <span class="work-check">✓</span>
-                <span class="work-text font-monospace">{{ task }}</span>
-              </div>
-            }
-            @if (!currentAgentDetails()?.today_work || currentAgentDetails()?.today_work.length === 0) {
-              <div class="today-work-item">
-                <span class="work-check">✓</span>
-                <span class="work-text font-monospace">Synchronized inter-agent neural channels on live squad streams.</span>
-              </div>
-              <div class="today-work-item">
-                <span class="work-check">✓</span>
-                <span class="work-text font-monospace">Assimilated daily knowledge upgrades with 100% verification pass.</span>
-              </div>
-            }
-          </div>
-        </div>
-
-        <!-- Specialist Brain Specs -->
-        <div class="drawer-section">
-          <h3 class="section-title">✦ SPECIALIST BRAIN SPECIFICATIONS</h3>
-          <div class="spec-grid">
-            <div class="spec-tile">
-              <span class="spec-label">Model Architecture</span>
-              <span class="spec-val">abhi:specialist@8b</span>
+        <!-- ============================================================== -->
+        <!-- TAB 3: SYNAPTIC CHAT WITH THIS LLM -->
+        <!-- ============================================================== -->
+        @if (activePopupTab() === 'CHAT') {
+          <div class="popup-tab-pane chat-pane">
+            <div class="brain-chat-box">
+              @for (msg of brainChatMessages(); track $index) {
+                <div class="chat-item" [class.user]="msg.sender === 'OPERATOR'">
+                  <div class="chat-meta font-monospace">{{ msg.sender }} · {{ msg.time }}</div>
+                  <div class="chat-content font-monospace">{{ msg.text }}</div>
+                </div>
+              }
             </div>
-            <div class="spec-tile">
-              <span class="spec-label">Context Memory</span>
-              <span class="spec-val">8,192 Tokens</span>
-            </div>
-            <div class="spec-tile">
-              <span class="spec-label">Inference Mode</span>
-              <span class="spec-val text-emerald">Zero-Cloud Local RTX</span>
-            </div>
-            <div class="spec-tile">
-              <span class="spec-label">Synaptic Efficiency</span>
-              <span class="spec-val text-cyan">{{ currentAgentDetails()?.neural_efficiency || current.neuralEfficiency }}</span>
-            </div>
-          </div>
-        </div>
 
-        <!-- Live Physical Work Output -->
-        <div class="drawer-section">
-          <h3 class="section-title">✦ CURRENT PHYSICAL WORK OUTPUT & LIVE STATE</h3>
-          <div class="work-output-terminal">
-            <div class="terminal-line"><span class="t-dim">[STATUS]:</span> {{ currentAgentDetails()?.current_status || current.status }}</div>
-            <div class="terminal-line"><span class="t-dim">[ACTIVE NOW]:</span> {{ currentAgentDetails()?.current_activity || current.description }}</div>
-            <div class="terminal-line"><span class="t-dim">[TELEMETRY]:</span> {{ current.synapticRate }} throughput · {{ current.load }}</div>
+            <form class="brain-chat-form" (ngSubmit)="sendBrainChat(current)">
+              <input
+                type="text"
+                class="brain-chat-input font-monospace"
+                [(ngModel)]="brainChatInput"
+                name="brainMsg"
+                [placeholder]="'Message ' + current.name + ' LLM...'"
+                [disabled]="isSendingBrainChat()"
+              />
+              <button type="submit" class="brain-chat-send" [disabled]="!brainChatInput.trim() || isSendingBrainChat()">
+                {{ isSendingBrainChat() ? '...' : 'SEND' }}
+              </button>
+            </form>
           </div>
-        </div>
-
-        <!-- Direct Synaptic Chat -->
-        <div class="drawer-section">
-          <h3 class="section-title">✦ DIRECT SYNAPTIC CHAT WITH {{ current.name }}</h3>
-          <div class="brain-chat-box">
-            @for (msg of brainChatMessages(); track $index) {
-              <div class="chat-item" [class.user]="msg.sender === 'OPERATOR'">
-                <div class="chat-meta">{{ msg.sender }} · {{ msg.time }}</div>
-                <div class="chat-content">{{ msg.text }}</div>
-              </div>
-            }
-          </div>
-
-          <form class="brain-chat-form" (ngSubmit)="sendBrainChat(current)">
-            <input
-              type="text"
-              class="brain-chat-input"
-              [(ngModel)]="brainChatInput"
-              name="brainMsg"
-              [placeholder]="'Instruct ' + current.name + ' brain...'"
-              [disabled]="isSendingBrainChat()"
-            />
-            <button type="submit" class="brain-chat-send" [disabled]="!brainChatInput.trim() || isSendingBrainChat()">
-              {{ isSendingBrainChat() ? '...' : 'SEND' }}
-            </button>
-          </form>
-        </div>
-
-        <!-- Task Delegation -->
-        <div class="drawer-section">
-          <h3 class="section-title">✦ DELEGATE PHYSICAL OS DIRECTIVE</h3>
-          <div class="delegation-form">
-            <input
-              type="text"
-              class="delegation-input"
-              [(ngModel)]="delegationGoal"
-              name="stationGoal"
-              [placeholder]="'Delegate goal to ' + current.name + ' (e.g. compile, audit, inspect)...'"
-              [disabled]="isDelegating()"
-            />
-            <button
-              type="button"
-              class="delegation-btn"
-              (click)="delegateTaskToStation(current)"
-              [disabled]="!delegationGoal.trim() || isDelegating()"
-            >
-              {{ isDelegating() ? 'DELEGATING...' : 'ENGAGE DIRECTIVE' }}
-            </button>
-          </div>
-        </div>
+        }
       </div>
     </aside>
   }

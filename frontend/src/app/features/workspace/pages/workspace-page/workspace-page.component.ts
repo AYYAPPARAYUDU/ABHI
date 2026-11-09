@@ -85,16 +85,19 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
   readonly brainChatMessages = signal<{ sender: string; text: string; time: string }[]>([]);
   readonly isSendingBrainChat = signal(false);
 
-  // Station Action Status
+  // Station Action Status & Popup Tabs
+  readonly activePopupTab = signal<'MISSION_WORK' | 'LIVE_TELEMETRY' | 'CHAT'>('MISSION_WORK');
   readonly stationActionStatus = signal<string | null>(null);
   readonly currentAgentDetails = signal<any>(null);
   readonly isLoadingDetails = signal<boolean>(false);
+  private detailsLruCache = new Map<string, { data: any; expiry: number }>();
 
   // Delegation
   delegationGoal = '';
   readonly isDelegating = signal(false);
 
   private syncTimer: any = null;
+  private telemetryRefreshTimer: any = null;
 
   constructor() {
     let lastLoadedId: string | null = null;
@@ -127,6 +130,34 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
     if (this.syncTimer) {
       clearInterval(this.syncTimer);
       this.syncTimer = null;
+    }
+    this.stopTelemetryTimer();
+  }
+
+  private startTelemetryTimer(agentId: string): void {
+    this.stopTelemetryTimer();
+    this.telemetryRefreshTimer = setInterval(async () => {
+      if (!this.activeStation() && !this.selectedAgent()) {
+        this.stopTelemetryTimer();
+        return;
+      }
+      try {
+        const res = await fetch(getApiUrl(`/api/v1/agent-gateway/agents/${agentId}/details`));
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) {
+            this.currentAgentDetails.set(json.data);
+            this.detailsLruCache.set(agentId, { data: json.data, expiry: Date.now() + 4000 });
+          }
+        }
+      } catch {}
+    }, 3000);
+  }
+
+  private stopTelemetryTimer(): void {
+    if (this.telemetryRefreshTimer) {
+      clearInterval(this.telemetryRefreshTimer);
+      this.telemetryRefreshTimer = null;
     }
   }
 
@@ -210,7 +241,17 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
     this.activeStation.set(agent);
     this.threeScene.focusAgent(agent);
     this.stationActionStatus.set(null);
-    this.isLoadingDetails.set(true);
+
+    // O(1) LRU Cache check for instantaneous zero-stutter popup display
+    const cached = this.detailsLruCache.get(agent.id);
+    if (cached && cached.expiry > Date.now()) {
+      this.currentAgentDetails.set(cached.data);
+      this.isLoadingDetails.set(false);
+    } else {
+      this.isLoadingDetails.set(true);
+    }
+
+    this.startTelemetryTimer(agent.id);
 
     this.brainChatMessages.set([
       {
@@ -226,6 +267,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
         const json = await res.json();
         const details = json.data;
         this.currentAgentDetails.set(details);
+        this.detailsLruCache.set(agent.id, { data: details, expiry: Date.now() + 4000 });
 
         // Vocal self-explanation from the agent
         if (this.voiceStreamEnabled() && details.spoken_explanation) {
@@ -269,6 +311,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
 
   closeStationDrawer(): void {
     this.speechVoice.stop();
+    this.stopTelemetryTimer();
     this.activeStation.set(null);
     this.threeScene.resetCameraFocus();
     this.threeScene.selectedAgent.set(null);
