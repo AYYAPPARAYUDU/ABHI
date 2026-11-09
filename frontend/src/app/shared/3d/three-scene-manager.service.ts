@@ -67,7 +67,7 @@ export class ThreeSceneManagerService {
   readonly agentFocused$ = new Subject<AgentNode>();
   readonly hoveredAgent = signal<AgentNode | null>(null);
   readonly latestJarvisMessage = signal<string | null>(
-    'Systems online, Commander. The Quantum Dot Sphere is stable. Click the core sphere to erupt autonomous sub-agents with inter-linked synaptic laser arrays.'
+    'Quantum Core online. Synchronizing situational perception...'
   );
 
   // 8 Advanced Autonomous Sub-Agents (Concealed in Nucleus until Unpacked)
@@ -3073,7 +3073,9 @@ export class ThreeSceneManagerService {
           const data = this.agentMeshMap.get(agent.id);
           if (!data) return;
 
-          const targetRadius = isDeployed ? agent.orbitRadius : 0;
+          // Dual-Shell Orbital Staggering to prevent adjacent visual crowding
+          const shellMultiplier = (index % 2 === 0) ? 1.06 : 0.94;
+          const targetRadius = isDeployed ? (agent.orbitRadius * shellMultiplier) : 0;
           const targetScale = isDeployed ? 1 : 0.001;
 
           // Smooth kinematic interpolation
@@ -3087,7 +3089,8 @@ export class ThreeSceneManagerService {
           const currentAngle = agent.angle + time * sharedOrbitalSpeed;
           const posX = Math.cos(currentAngle) * data.currentRadius;
           const posZ = Math.sin(currentAngle) * data.currentRadius;
-          const posY = Math.sin(time * 0.6 + index) * 0.25 + agent.elevation;
+          const elevationOffset = (index % 2 === 0) ? 0.75 : -0.75;
+          const posY = Math.sin(time * 0.6 + index) * 0.25 + agent.elevation + elevationOffset;
 
           // Realistic Speech Acoustic Vibration on Agent when Speaking or Selected
           const isSelected = this.selectedAgent()?.id === agent.id;
@@ -3118,20 +3121,57 @@ export class ThreeSceneManagerService {
             data.innerNucleus.rotation.x += 0.012;
             data.innerNucleus.rotation.y += 0.016;
           }
-
-          // In-place buffer mutation: zero GC overhead
-          if (data.beam && data.beam.geometry) {
-            const attr = data.beam.geometry.attributes['position'] as THREE.BufferAttribute;
-            if (attr) {
-              const arr = attr.array as Float32Array;
-              arr[3] = posX;
-              arr[4] = posY;
-              arr[5] = posZ;
-              attr.needsUpdate = true;
-            }
-            (data.beam.material as THREE.LineBasicMaterial).opacity = isDeployed ? data.currentScale * 0.45 : 0;
-          }
         });
+
+        // 7b. N-Body Pairwise Collision Avoidance Solver (Strict Physical Separation)
+        if (isDeployed && agentCount >= 2) {
+          const minClearance = 4.0;
+          const minClearanceSq = minClearance * minClearance;
+          for (let i = 0; i < agentCount; i++) {
+            for (let j = i + 1; j < agentCount; j++) {
+              const vA = this.cachedAgentVectors[i];
+              const vB = this.cachedAgentVectors[j];
+              const dx = vA.x - vB.x;
+              const dy = vA.y - vB.y;
+              const dz = vA.z - vB.z;
+              const dSq = dx * dx + dy * dy + dz * dz;
+              if (dSq < minClearanceSq && dSq > 0.0001) {
+                const dist = Math.sqrt(dSq);
+                const halfOverlap = (minClearance - dist) * 0.5;
+                const invDist = 1.0 / dist;
+                const nx = dx * invDist;
+                const ny = dy * invDist;
+                const nz = dz * invDist;
+                vA.x += nx * halfOverlap;
+                vA.y += ny * halfOverlap;
+                vA.z += nz * halfOverlap;
+                vB.x -= nx * halfOverlap;
+                vB.y -= ny * halfOverlap;
+                vB.z -= nz * halfOverlap;
+              }
+            }
+          }
+
+          // Apply resolved non-colliding positions and update tether laser beams
+          this.agents().forEach((agent, index) => {
+            const data = this.agentMeshMap.get(agent.id);
+            if (!data) return;
+            const pos = this.cachedAgentVectors[index];
+            data.group.position.copy(pos);
+
+            if (data.beam && data.beam.geometry) {
+              const attr = data.beam.geometry.attributes['position'] as THREE.BufferAttribute;
+              if (attr) {
+                const arr = attr.array as Float32Array;
+                arr[3] = pos.x;
+                arr[4] = pos.y;
+                arr[5] = pos.z;
+                attr.needsUpdate = true;
+              }
+              (data.beam.material as THREE.LineBasicMaterial).opacity = isDeployed ? data.currentScale * 0.45 : 0;
+            }
+          });
+        }
 
         // 8. Dynamically re-link Inter-Agent Synaptic Laser Mesh (Zero allocation in-place buffer mutation)
         if (this.interAgentMeshLines && agentCount >= 2) {

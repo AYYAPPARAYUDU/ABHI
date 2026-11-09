@@ -630,10 +630,12 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  readonly situationalBriefing = signal<any>(null);
+
   ngOnInit(): void {
     this.threeScene.setMode('MAIN_AGENT');
 
-    this.speechVoice.greetUserOnLaunch();
+    this.fetchSituationalBriefing();
 
     // Automatic Optical Face ID Authentication on Launch
     setTimeout(() => {
@@ -647,6 +649,26 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.fetchLiveThoughts();
 
     this.thoughtFetchIntervalId = setInterval(() => this.fetchLiveThoughts(), 5000);
+  }
+
+  private async fetchSituationalBriefing(): Promise<void> {
+    try {
+      const res = await fetch(getApiUrl('/api/v1/agent-gateway/core/situational-briefing'));
+      if (res.ok) {
+        const data = await res.json();
+        this.situationalBriefing.set(data);
+        if (data.hud_message) {
+          this.threeScene.latestJarvisMessage.set(data.hud_message);
+        }
+        if (data.greeting) {
+          this.speechVoice.greetUserOnLaunch(data.greeting);
+          return;
+        }
+      }
+    } catch {
+      // Fallback to default greeting
+    }
+    this.speechVoice.greetUserOnLaunch();
   }
 
   private async fetchLiveThoughts(): Promise<void> {

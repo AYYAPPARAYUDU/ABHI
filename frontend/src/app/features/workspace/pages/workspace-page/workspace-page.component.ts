@@ -280,9 +280,15 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
         this.detailsLruCache.set(agent.id, { data: details, expiry: Date.now() + 4000 });
         this.cdr.markForCheck();
 
-        // Vocal self-explanation from the agent
+        // Vocal self-explanation from the agent with negotiated acoustic floor
         if (this.voiceStreamEnabled() && details.spoken_explanation) {
-          this.speechVoice.speak(details.spoken_explanation);
+          this.speechVoice.speak(
+            details.spoken_explanation,
+            false,
+            agent.id,
+            agent.name,
+            'SPECIALIST_REPORT'
+          );
         }
 
         this.brainChatMessages.set([
@@ -297,7 +303,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
       // Fallback local description
       const fallbackSpeech = `Greetings Sir. I am ${agent.name}, ${agent.codename}. My role is ${agent.role}. Standing by at ${agent.subsystem}.`;
       if (this.voiceStreamEnabled()) {
-        this.speechVoice.speak(fallbackSpeech);
+        this.speechVoice.speak(fallbackSpeech, false, agent.id, agent.name, 'SPECIALIST_REPORT');
       }
     } finally {
       this.isLoadingDetails.set(false);
@@ -308,7 +314,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
   reExplainAgent(agent: AgentNode): void {
     const details = this.currentAgentDetails();
     const explanation = details?.spoken_explanation || `Greetings Sir. I am ${agent.name}, ${agent.codename}. My role is ${agent.role}. Active at ${agent.subsystem}.`;
-    this.speechVoice.speak(explanation);
+    this.speechVoice.speak(explanation, false, agent.id, agent.name, 'SPECIALIST_REPORT');
   }
 
   onPillHover(agent: AgentNode): void {

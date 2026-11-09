@@ -241,6 +241,58 @@
               }
             </div>
 
+            <!-- 5 Human-Like Perceptive Senses -->
+            @if (currentAgentDetails()?.human_senses; as senses) {
+              <div class="popup-section senses-card">
+                <div class="section-tag-header">
+                  <span class="tag-icon">🧬</span>
+                  <span class="tag-title">5 HUMAN-LIKE PERCEPTIVE SENSES</span>
+                </div>
+                <div class="senses-grid">
+                  <div class="sense-item">
+                    <span class="sense-icon">👁️</span>
+                    <div class="sense-body">
+                      <span class="sense-title font-monospace">SIGHT (VISUAL)</span>
+                      <span class="sense-val font-monospace">{{ senses.sight?.focus || senses.sight?.channel }}</span>
+                      <span class="sense-sub font-monospace">{{ senses.sight?.status || senses.sight?.screen_state }}</span>
+                    </div>
+                  </div>
+                  <div class="sense-item">
+                    <span class="sense-icon">👂</span>
+                    <div class="sense-body">
+                      <span class="sense-title font-monospace">HEARING (AUDITORY)</span>
+                      <span class="sense-val font-monospace">{{ senses.hearing?.speech_floor || senses.hearing?.floor_arbitration }}</span>
+                      <span class="sense-sub font-monospace">{{ senses.hearing?.status || 'Turn-Taking Acoustic Floor Active' }}</span>
+                    </div>
+                  </div>
+                  <div class="sense-item">
+                    <span class="sense-icon">⚡</span>
+                    <div class="sense-body">
+                      <span class="sense-title font-monospace">PHYSICAL (PROPRIOCEPTION)</span>
+                      <span class="sense-val font-monospace">CPU {{ senses.physical?.thread_cpu || senses.physical?.cpu_load }} // Thermals {{ senses.physical?.thermals }}</span>
+                      <span class="sense-sub font-monospace">VRAM {{ senses.physical?.vram || senses.physical?.ram_usage }}</span>
+                    </div>
+                  </div>
+                  <div class="sense-item">
+                    <span class="sense-icon">⏳</span>
+                    <div class="sense-body">
+                      <span class="sense-title font-monospace">TEMPORAL (CIRCADIAN)</span>
+                      <span class="sense-val font-monospace">{{ senses.temporal?.status || senses.temporal?.circadian_rhythm }}</span>
+                      <span class="sense-sub font-monospace">Tick: {{ senses.temporal?.local_time || senses.temporal?.cycle_rate }}</span>
+                    </div>
+                  </div>
+                  <div class="sense-item wide">
+                    <span class="sense-icon">🤝</span>
+                    <div class="sense-body">
+                      <span class="sense-title font-monospace">SOCIAL (SQUAD BOND & NEGOTIATION)</span>
+                      <span class="sense-val font-monospace">{{ senses.social?.negotiation_protocol || senses.social?.floor_policy }}</span>
+                      <span class="sense-sub font-monospace">{{ senses.social?.relationship || ('Consensus ' + senses.social?.consensus_score) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
             <!-- Voice Explanation & Briefing -->
             @if (currentAgentDetails()?.spoken_explanation) {
               <div class="popup-section voice-intro-box">

@@ -833,6 +833,14 @@ async def trigger_daily_evolution_cycle():
     return report.model_dump()
 
 
+@router.get("/core/situational-briefing")
+async def get_core_situational_briefing():
+    """Retrieve dynamic, context-aware Core situational perception briefing with human senses."""
+    from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
+    briefing = daily_evolution_service.get_core_situational_briefing()
+    return briefing
+
+
 @router.get("/agents/{agent_id}/details")
 async def get_agent_station_details(agent_id: str):
     """Retrieve detailed agent identity, completed work today, active telemetry, and spoken self-explanation."""

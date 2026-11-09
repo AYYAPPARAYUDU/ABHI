@@ -2,6 +2,23 @@ import { Injectable, signal } from '@angular/core';
 import { getApiUrl } from '../config/api-config';
 
 export type AppLanguage = 'auto' | 'en' | 'te' | 'hi' | 'ta';
+export type SpeechPriority = 'EMERGENCY' | 'DIRECTIVE' | 'SPECIALIST_REPORT' | 'AMBIENT';
+
+export interface SpeechNegotiationRequest {
+  id?: string;
+  speakerId: string;
+  speakerName: string;
+  text: string;
+  priority?: SpeechPriority;
+  force?: boolean;
+}
+
+export interface ActiveSpeakerInfo {
+  speakerId: string;
+  speakerName: string;
+  priority: SpeechPriority;
+  startedAt: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +31,12 @@ export class SpeechVoiceService {
   readonly isMuted = signal<boolean>(false);
   readonly lastSpokenText = signal<string>('');
   readonly hasUserInteracted = signal<boolean>(false);
+
+  // Acoustic Turn-Taking Arbiter & Floor Negotiation Signals
+  readonly activeSpeaker = signal<ActiveSpeakerInfo | null>(null);
+  readonly speechFloorState = signal<'IDLE' | 'SPEAKING' | 'NEGOTIATING' | 'YIELDING'>('IDLE');
+  private speechNegotiationQueue: SpeechNegotiationRequest[] = [];
+  private turnTakingTimer: any = null;
 
   // Universal Language Selection Signal
   readonly selectedLanguage = signal<AppLanguage>('auto');
@@ -387,51 +410,154 @@ export class SpeechVoiceService {
   private currentAudio: HTMLAudioElement | null = null;
 
   /**
-   * Speak text aloud using authentic neural human voice streaming from backend Edge-TTS,
-   * with automatic fallback to high-fidelity Web Speech API synthesis.
-   * Real-time word boundary and progress tracking for Instagram Reel subtitles.
+   * Universal speech entry point with acoustic floor turn negotiation.
    */
-  speak(text: string, force = false): void {
-    if (this.isMuted() && !force) return;
-    if (!text.trim()) return;
+  speak(
+    text: string,
+    force = false,
+    speakerId = 'JARVIS',
+    speakerName = 'J.A.R.V.I.S.',
+    priority: SpeechPriority = 'DIRECTIVE'
+  ): void {
+    this.speakNegotiated({
+      speakerId,
+      speakerName,
+      text,
+      priority,
+      force,
+    });
+  }
 
-    // Unpause speech synthesis if currently paused by browser
+  /**
+   * Acoustic Turn-Taking Arbiter:
+   * Prevents simultaneous LLM speech collisions. Manages conversational floor handoff,
+   * priority preemption for emergency directives, and distinct personality pitches.
+   */
+  speakNegotiated(req: SpeechNegotiationRequest): void {
+    if (this.isMuted() && !req.force) return;
+    if (!req.text || !req.text.trim()) return;
+
+    const priority: SpeechPriority = req.priority || 'SPECIALIST_REPORT';
+    const spokenText = this.sanitizeAndSummarizeForSpeech(req.text);
+    if (!spokenText.trim()) return;
+
+    // Check if floor is currently occupied
+    if (this.isSpeaking()) {
+      const current = this.activeSpeaker();
+
+      // High-priority barge-in (EMERGENCY pre-empts all; DIRECTIVE pre-empts reports)
+      const canPreempt =
+        priority === 'EMERGENCY' ||
+        (priority === 'DIRECTIVE' && current?.priority !== 'EMERGENCY');
+
+      if (canPreempt) {
+        this.stop();
+        this.executeSpeech({ ...req, text: spokenText, priority });
+        return;
+      }
+
+      // Respectful floor queueing: wait for active speaker to yield the floor
+      this.enqueueNegotiatedRequest({ ...req, text: spokenText, priority });
+      this.speechFloorState.set('NEGOTIATING');
+      return;
+    }
+
+    // Floor is free: claim floor immediately
+    this.executeSpeech({ ...req, text: spokenText, priority });
+  }
+
+  private enqueueNegotiatedRequest(req: SpeechNegotiationRequest): void {
+    const priorityWeight: Record<SpeechPriority, number> = {
+      EMERGENCY: 4,
+      DIRECTIVE: 3,
+      SPECIALIST_REPORT: 2,
+      AMBIENT: 1,
+    };
+
+    const targetWeight = priorityWeight[req.priority || 'SPECIALIST_REPORT'];
+    const insertIdx = this.speechNegotiationQueue.findIndex(
+      (item) => priorityWeight[item.priority || 'SPECIALIST_REPORT'] < targetWeight
+    );
+
+    if (insertIdx === -1) {
+      this.speechNegotiationQueue.push(req);
+    } else {
+      this.speechNegotiationQueue.splice(insertIdx, 0, req);
+    }
+  }
+
+  private handleSpeechEnded(): void {
+    this.isSpeaking.set(false);
+    this.activeWordIndex.set(-1);
+    this.activeWord.set('');
+    this.currentAudio = null;
+    this.notifySpeechFinished();
+
+    this.activeSpeaker.set(null);
+
+    // Turn-Taking Handoff: 350ms natural conversational pause before next agent takes the floor
+    if (this.speechNegotiationQueue.length > 0) {
+      this.speechFloorState.set('YIELDING');
+      if (this.turnTakingTimer) {
+        clearTimeout(this.turnTakingTimer);
+      }
+      this.turnTakingTimer = setTimeout(() => {
+        const nextReq = this.speechNegotiationQueue.shift();
+        if (nextReq) {
+          this.executeSpeech(nextReq);
+        } else {
+          this.speechFloorState.set('IDLE');
+        }
+      }, 350);
+    } else {
+      this.speechFloorState.set('IDLE');
+    }
+  }
+
+  /**
+   * Executes acoustic synthesis for an approved speaker with personalized voice modulation.
+   */
+  private executeSpeech(req: SpeechNegotiationRequest): void {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
     }
 
-    const spokenText = this.sanitizeAndSummarizeForSpeech(text);
-    if (!spokenText.trim()) return;
+    this.activeSpeaker.set({
+      speakerId: req.speakerId,
+      speakerName: req.speakerName,
+      priority: req.priority || 'SPECIALIST_REPORT',
+      startedAt: Date.now(),
+    });
+    this.speechFloorState.set('SPEAKING');
 
-    // 1. Stop any currently active speech audio
-    this.stop();
-
-    const isJarvis = this.personaMode() === 'JARVIS';
+    const spokenText = req.text;
+    const isJarvis = req.speakerId === 'JARVIS' || this.personaMode() === 'JARVIS';
     const lang = this.selectedLanguage();
+
     let voice = isJarvis ? 'en-GB-RyanNeural' : 'en-IE-EmilyNeural';
-    let voiceDesc = isJarvis ? 'J.A.R.V.I.S. (Ryan Natural Neural)' : 'F.R.I.D.A.Y. (Emily Natural Neural)';
+    let voiceDesc = `${req.speakerName} (Acoustic Floor)`;
 
     if (lang === 'te') {
       voice = isJarvis ? 'te-IN-MohanNeural' : 'te-IN-ShrutiNeural';
-      voiceDesc = isJarvis ? 'J.A.R.V.I.S. (Mohan Telugu Neural)' : 'F.R.I.D.A.Y. (Shruti Telugu Neural)';
     } else if (lang === 'hi') {
       voice = isJarvis ? 'hi-IN-MadhurNeural' : 'hi-IN-SwaraNeural';
-      voiceDesc = isJarvis ? 'J.A.R.V.I.S. (Madhur Hindi Neural)' : 'F.R.I.D.A.Y. (Swara Hindi Neural)';
     } else if (lang === 'ta') {
       voice = isJarvis ? 'ta-IN-ValluvarNeural' : 'ta-IN-PallaviNeural';
-      voiceDesc = isJarvis ? 'J.A.R.V.I.S. (Valluvar Tamil Neural)' : 'F.R.I.D.A.Y. (Pallavi Tamil Neural)';
     }
     this.selectedVoiceName.set(voiceDesc);
 
-    // Tokenize into words for Instagram Reel dynamic caption display
-    const words = spokenText.trim().split(/\s+/).filter(w => w.length > 0);
+    // Tokenize words for subtitle HUD
+    const words = spokenText.trim().split(/\s+/).filter((w) => w.length > 0);
     this.spokenWords.set(words);
     this.activeWordIndex.set(0);
     this.activeWord.set(words[0] || '');
 
-    // 2. Stream authentic human audio from backend perception service
     const userSpeed = this.speechSpeedRate();
-    const streamUrl = getApiUrl(`/api/v1/perception/tts/stream?text=${encodeURIComponent(spokenText)}&voice=${encodeURIComponent(voice)}&rate=${userSpeed}`);
+    const streamUrl = getApiUrl(
+      `/api/v1/perception/tts/stream?text=${encodeURIComponent(spokenText)}&voice=${encodeURIComponent(
+        voice
+      )}&rate=${userSpeed}`
+    );
 
     try {
       const audio = new Audio(streamUrl);
@@ -441,7 +567,7 @@ export class SpeechVoiceService {
       const triggerFallback = () => {
         if (fallbackTriggered) return;
         fallbackTriggered = true;
-        this.fallbackSpeechSynthesis(spokenText, isJarvis, words);
+        this.fallbackSpeechSynthesis(spokenText, req, words);
       };
 
       audio.onplay = () => {
@@ -459,33 +585,32 @@ export class SpeechVoiceService {
       };
 
       audio.onended = () => {
-        this.isSpeaking.set(false);
-        this.activeWordIndex.set(-1);
-        this.activeWord.set('');
-        this.currentAudio = null;
-        this.notifySpeechFinished();
+        this.handleSpeechEnded();
       };
 
       audio.onerror = () => {
-        // Fallback to browser SpeechSynthesis if backend audio stream fails
         triggerFallback();
       };
 
       audio.play().catch(() => {
-        // Browser autoplay restriction or connection error fallback
         triggerFallback();
       });
     } catch {
-      this.fallbackSpeechSynthesis(spokenText, isJarvis, words);
+      this.fallbackSpeechSynthesis(spokenText, req, words);
     }
   }
 
   /**
-   * Browser SpeechSynthesis fallback when backend audio stream is unavailable.
+   * Browser SpeechSynthesis fallback with distinctive vocal persona tuning.
    */
-  private fallbackSpeechSynthesis(spokenText: string, isJarvis: boolean, words: string[]): void {
+  private fallbackSpeechSynthesis(
+    spokenText: string,
+    req: SpeechNegotiationRequest,
+    words: string[]
+  ): void {
     if (!this.synth) {
       this.isSpeaking.set(false);
+      this.handleSpeechEnded();
       return;
     }
 
@@ -501,10 +626,29 @@ export class SpeechVoiceService {
 
       const utterance = new SpeechSynthesisUtterance(spokenText.trim());
       const userSpeed = this.speechSpeedRate();
-      utterance.rate = isJarvis ? (0.98 * userSpeed) : (1.02 * userSpeed);
-      utterance.pitch = isJarvis ? 0.96 : 1.02;
+
+      // Agent-specific pitch and cadence profile for authentic human distinction
+      const agentVoiceTuning: Record<string, { pitch: number; rate: number }> = {
+        agent_1_commander: { pitch: 0.94, rate: 0.98 },
+        agent_2_browser: { pitch: 1.05, rate: 1.04 },
+        agent_3_comms: { pitch: 1.0, rate: 1.02 },
+        agent_4_system: { pitch: 0.88, rate: 0.98 },
+        agent_5_researcher: { pitch: 1.02, rate: 0.96 },
+        agent_6_ml: { pitch: 0.96, rate: 1.04 },
+        agent_7_strategist: { pitch: 0.95, rate: 0.96 },
+        agent_8_qa_critic: { pitch: 1.08, rate: 1.02 },
+        agent_9_security: { pitch: 0.86, rate: 0.94 },
+        agent_10_mobile: { pitch: 1.04, rate: 1.06 },
+        JARVIS: { pitch: 0.96, rate: 0.98 },
+        FRIDAY: { pitch: 1.02, rate: 1.02 },
+      };
+
+      const tuning = agentVoiceTuning[req.speakerId] || { pitch: 0.98, rate: 1.0 };
+      utterance.pitch = tuning.pitch;
+      utterance.rate = tuning.rate * userSpeed;
       utterance.volume = 1.0;
 
+      const isJarvis = req.speakerId === 'JARVIS' || this.personaMode() === 'JARVIS';
       const preferredVoice = this.findBestNaturalVoice(isJarvis);
       if (preferredVoice) {
         utterance.voice = preferredVoice;
@@ -528,16 +672,11 @@ export class SpeechVoiceService {
       };
 
       utterance.onend = () => {
-        this.isSpeaking.set(false);
-        this.activeWordIndex.set(-1);
-        this.activeWord.set('');
-        this.notifySpeechFinished();
+        this.handleSpeechEnded();
       };
 
       utterance.onerror = () => {
-        this.isSpeaking.set(false);
-        this.activeWordIndex.set(-1);
-        this.activeWord.set('');
+        this.handleSpeechEnded();
       };
 
       if (this.synth.paused) {
@@ -548,7 +687,7 @@ export class SpeechVoiceService {
         this.synth.resume();
       }
     } catch {
-      this.isSpeaking.set(false);
+      this.handleSpeechEnded();
     }
   }
 
@@ -573,18 +712,19 @@ export class SpeechVoiceService {
 
 
   /**
-   * Initial spoken welcome greeting on app launch tailored to Stark & JARVIS.
+   * Spoken welcome greeting on app launch with dynamic situational awareness.
    */
-  greetUserOnLaunch(): void {
+  greetUserOnLaunch(customGreeting?: string): void {
     const callsign = this.userCallsign();
     const isJarvis = this.personaMode() === 'JARVIS';
-    const greeting = isJarvis
-      ? `Good day, ${callsign}. J.A.R.V.I.S. protocol is active. All arc reactors online, telemetry locked, and at your complete service. What are we engineering today, ${callsign}?`
+    const fallback = isJarvis
+      ? `Good day, ${callsign}. J.A.R.V.I.S. protocol is active. All arc reactors online, telemetry locked, and at your complete service.`
       : `${callsign}, F.R.I.D.A.Y. is online and synced. Diagnostics clean, cognitive pipelines ready. Standing by for your directive.`;
+    const greeting = customGreeting || fallback;
 
     // Small delay to allow audio context to initialize
     setTimeout(() => {
-      this.speak(greeting);
+      this.speak(greeting, false, 'JARVIS', 'J.A.R.V.I.S.', 'DIRECTIVE');
     }, 600);
   }
 
