@@ -325,7 +325,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
 
       if (res.ok) {
         const data = await res.json();
-        const reply = data.reply || `${agent.name} Specialist Brain acknowledged.`;
+        const reply = data.reply || data.message || data.text || `${agent.name} Specialist Brain acknowledged.`;
         this.brainChatMessages.update((msgs) => [...msgs, { sender: agent.name, text: reply, time: new Date().toLocaleTimeString() }]);
         if (this.voiceStreamEnabled()) {
           this.speechVoice.speak(reply);

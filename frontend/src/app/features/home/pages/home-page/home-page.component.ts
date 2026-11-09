@@ -1115,7 +1115,7 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
       this.threeScene.latestJarvisMessage.set(
         `[VISION QUEST]: Initiating multi-agent negotiation with ${agent.name} across all 8 nodes...`
       );
-      const res = await fetch(getApiUrl('/api/v1/agent/swarm/negotiate'), {
+      const res = await fetch(getApiUrl('/api/v1/agent-gateway/swarm/negotiate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ goal: `Collaborative execution of ${agent.role} under ${agent.codename}` })
@@ -1123,7 +1123,7 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
       if (res.ok) {
         const data = await res.json();
         const consensus = data.consensus_score || 98.4;
-        const msg = `[CONSENSUS ${consensus}%]: ${agent.name} ratified as operational lead. 8-agent swarm synchronized.`;
+        const msg = `[CONSENSUS ${consensus}%]: ${agent.name} ratified as operational lead. 10-agent swarm synchronized.`;
         this.threeScene.latestJarvisMessage.set(msg);
         this.speechVoice.speak(msg);
       }
@@ -1148,15 +1148,18 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.agentChatInput = '';
 
     try {
-      const res = await fetch(getApiUrl('/api/v1/agent/swarm/family-chat'), {
+      const res = await fetch(getApiUrl('/api/v1/agent-gateway/swarm/family-chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ agent_id: agent.id, message: text })
       });
       if (res.ok) {
         const data = await res.json();
-        const reply = data.reply || `${agent.name} brain synchronized. Directive acknowledged.`;
+        const reply = data.reply || data.message || data.text || `${agent.name} brain synchronized. Directive acknowledged.`;
         this.agentChatHistory.update((h) => [...h, { sender: agent.name, text: reply, time: new Date().toLocaleTimeString() }]);
+        if (this.threeScene.soundEnabled()) {
+          this.speechVoice.speak(reply);
+        }
       } else {
         this.agentChatHistory.update((h) => [...h, { sender: agent.name, text: `[Brain ACK]: Synaptic link active. Ready for directive.`, time: now }]);
       }

@@ -1,7 +1,7 @@
 """Main FastAPI Application Entry Point."""
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.api.v1.health import router as health_router
 from backend.app.api.v1.models import router as models_router
@@ -157,6 +157,22 @@ app.include_router(resources_router, prefix="/api/v1")
 app.include_router(media_router, prefix="/api/v1")
 app.include_router(agent_router, prefix="/api/v1")
 app.include_router(gateway_router, prefix="/api/v1")
+
+# Support both /api/v1/agent-gateway and /api/v1/agent legacy compatibility
+agent_compat_router = APIRouter(prefix="/api/v1/agent", tags=["Agent Compatibility"])
+for r in agent_router.routes:
+    sub = r.path[len(agent_router.prefix):] if r.path.startswith(agent_router.prefix) else r.path
+    agent_compat_router.add_api_route(
+        sub,
+        r.endpoint,
+        methods=r.methods,
+        response_model=getattr(r, "response_model", None),
+        status_code=getattr(r, "status_code", None),
+        tags=getattr(r, "tags", None),
+        summary=getattr(r, "summary", None),
+        description=getattr(r, "description", None),
+    )
+app.include_router(agent_compat_router)
 app.include_router(business_router, prefix="/api/v1")
 app.include_router(decisions_router, prefix="/api/v1")
 app.include_router(devices_router, prefix="/api/v1")

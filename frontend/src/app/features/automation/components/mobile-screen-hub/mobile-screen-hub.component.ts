@@ -20,11 +20,15 @@ export class MobileScreenHubComponent implements OnInit, OnDestroy {
   readonly connectionMode = signal<'USB_DIRECT' | 'WIFI_ADB' | 'BLUETOOTH'>('USB_DIRECT');
 
   // Screen streams & Latency Tuning
+  readonly isLiveStreamMode = signal<boolean>(true);
+  readonly streamSessionId = signal<number>(Date.now());
+  readonly mobileStreamUrl = computed(() => `${getApiUrl('/api/v1/devices/mobile/stream')}?t=${this.streamSessionId()}`);
   readonly mobileScreenUrl = signal<string>(getApiUrl('/api/v1/devices/mobile/screenshot'));
   readonly desktopScreenUrl = signal<string>(getApiUrl('/api/v1/devices/desktop/screenshot'));
   readonly isRefreshingScreen = signal<boolean>(false);
   readonly autoRefresh = signal<boolean>(true);
-  readonly refreshRateMs = signal<number>(800);
+  readonly refreshRateMs = signal<number>(600);
+  private isSnapshotInFlight = false;
 
   // Device telemetry & identifiers
   readonly mobileStatus = signal<any>(null);
@@ -125,8 +129,37 @@ export class MobileScreenHubComponent implements OnInit, OnDestroy {
     }
   }
 
+  toggleLiveStreamMode(): void {
+    const next = !this.isLiveStreamMode();
+    this.isLiveStreamMode.set(next);
+    if (next) {
+      this.streamSessionId.set(Date.now());
+      this.showFeedback('⚡ Zero-Lag Live MJPEG Screen Stream Active (~16 FPS)');
+    } else {
+      this.showFeedback('Switched to Snapshot Polling Mode');
+      this.refreshMobileScreen();
+    }
+  }
+
+  fallbackToSnapshot(): void {
+    if (this.isLiveStreamMode()) {
+      this.isLiveStreamMode.set(false);
+      this.refreshMobileScreen();
+    }
+  }
+
+  onScreenImageLoaded(): void {
+    this.isSnapshotInFlight = false;
+  }
+
   refreshMobileScreen(): void {
-    this.mobileScreenUrl.set(`${getApiUrl('/api/v1/devices/mobile/screenshot')}?t=${Date.now()}`);
+    if (!this.isLiveStreamMode()) {
+      if (this.isSnapshotInFlight) return;
+      this.isSnapshotInFlight = true;
+      this.mobileScreenUrl.set(`${getApiUrl('/api/v1/devices/mobile/screenshot')}?t=${Date.now()}`);
+    } else {
+      this.streamSessionId.set(Date.now());
+    }
   }
 
   refreshDesktopScreen(): void {

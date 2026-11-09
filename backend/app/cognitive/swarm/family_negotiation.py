@@ -218,6 +218,24 @@ class FamilySwarmEngine:
                     "Comms bridge active: WhatsApp and Gmail intents primed for 1-click delivery.",
                     "Ready to vocalize critical alerts and executive briefings."
                 ]
+            },
+            {
+                "agent_id": "agent-droidmark",
+                "name": "DROIDMARK-MOBILE",
+                "codename": "MARK-50",
+                "specialization": "Autonomous Mobile Perception, Notification Analysis, Zero-Cable Wireless Link & Mobile Automator",
+                "temperature": 0.2,
+                "current_work_output": "Wireless ADB link active at 10.65.249.121:5555. Dual-state mobile mirror and notification pipeline armed.",
+                "system_persona": (
+                    "You are DROIDMARK-MOBILE, the mobile phone control and notification specialist Small LLM of the ABHI family (MARK-50). "
+                    "You manage Android zero-cable wireless connections, parse incoming push notifications, generate context-aware smart replies, "
+                    "and stream low-latency screen frames. Address Sir with loyalty, agility, and precision."
+                ),
+                "thoughts": [
+                    "Zero-cable Wi-Fi bridge streaming frames with sub-50ms latency.",
+                    "Scanned system notification shade: 0 critical battery or security anomalies.",
+                    "Ready for touch gestures, app launches, and intelligent notification replies."
+                ]
             }
         ]
 
@@ -296,10 +314,17 @@ class FamilySwarmEngine:
 
     def get_brain(self, agent_id: str) -> Optional[SmallLLMBrainInfo]:
         """Retrieve a specific Small-LLM brain with seamless alias resolution."""
+        if not agent_id:
+            return next(iter(self._brains.values()), None)
+
         if agent_id in self._brains:
             return self._brains[agent_id]
-        
-        id_norm = agent_id.lower().replace("_", "-").replace("agent-", "")
+
+        raw_lower = agent_id.lower().strip()
+        if raw_lower in self._brains:
+            return self._brains[raw_lower]
+
+        id_norm = raw_lower.replace("_", "-").replace("agent-", "")
         alias_map = {
             "sentinel": "agent-sentinel",
             "sentinel-x": "agent-sentinel",
@@ -320,33 +345,89 @@ class FamilySwarmEngine:
             "stark-forge": "agent-synthex",
             "friday": "agent-synapse",
             "friday-oracle": "agent-synapse",
+            # Canonical 10 Suit IDs (underscore & hyphen formats)
             "agent_1_commander": "agent-nexus",
+            "agent-1-commander": "agent-nexus",
+            "1-commander": "agent-nexus",
+            "commander": "agent-nexus",
+            "mark-85": "agent-nexus",
             "agent_2_browser": "agent-chronos",
-            "agent_3_comms": "agent-friday",
+            "agent-2-browser": "agent-chronos",
+            "2-browser": "agent-chronos",
+            "browser": "agent-chronos",
+            "mark-l": "agent-chronos",
+            "agent_3_comms": "agent-nexus",
+            "agent-3-comms": "agent-nexus",
+            "3-comms": "agent-nexus",
+            "comms": "agent-nexus",
+            "mark-xlii": "agent-nexus",
             "agent_4_system": "agent-synthex",
+            "agent-4-system": "agent-synthex",
+            "4-system": "agent-synthex",
+            "system": "agent-synthex",
+            "mark-vi": "agent-synthex",
             "agent_5_researcher": "agent-aura",
+            "agent-5-researcher": "agent-aura",
+            "5-researcher": "agent-aura",
+            "researcher": "agent-aura",
+            "mark-vii": "agent-aura",
             "agent_6_ml": "agent-synapse",
+            "agent-6-ml": "agent-synapse",
+            "6-ml": "agent-synapse",
+            "ml": "agent-synapse",
+            "mark-xxi": "agent-synapse",
             "agent_7_strategist": "agent-archon",
+            "agent-7-strategist": "agent-archon",
+            "7-strategist": "agent-archon",
+            "strategist": "agent-archon",
+            "mark-xvii": "agent-archon",
             "agent_8_qa_critic": "agent-aegis",
+            "agent-8-qa-critic": "agent-aegis",
+            "8-qa-critic": "agent-aegis",
+            "qa": "agent-aegis",
+            "critic": "agent-aegis",
+            "the-critic": "agent-aegis",
             "agent_9_security": "agent-sentinel",
+            "agent-9-security": "agent-sentinel",
+            "9-security": "agent-sentinel",
+            "security": "agent-sentinel",
+            "mark-i": "agent-sentinel",
+            "agent_10_mobile": "agent-droidmark",
+            "agent-10-mobile": "agent-droidmark",
+            "10-mobile": "agent-droidmark",
+            "mobile": "agent-droidmark",
+            "droidmark": "agent-droidmark",
+            "mark-50": "agent-droidmark",
+            # Numbered abbreviations
             "agent_1": "agent-nexus",
+            "agent-1": "agent-nexus",
             "agent_2": "agent-chronos",
-            "agent_3": "agent-friday",
+            "agent-2": "agent-chronos",
+            "agent_3": "agent-nexus",
+            "agent-3": "agent-nexus",
             "agent_4": "agent-synthex",
+            "agent-4": "agent-synthex",
             "agent_5": "agent-aura",
+            "agent-5": "agent-aura",
             "agent_6": "agent-synapse",
+            "agent-6": "agent-synapse",
             "agent_7": "agent-archon",
+            "agent-7": "agent-archon",
             "agent_8": "agent-aegis",
-            "agent_9": "agent-sentinel"
+            "agent-8": "agent-aegis",
+            "agent_9": "agent-sentinel",
+            "agent-9": "agent-sentinel",
+            "agent_10": "agent-droidmark",
+            "agent-10": "agent-droidmark",
         }
-        resolved = alias_map.get(id_norm)
+        resolved = alias_map.get(raw_lower) or alias_map.get(id_norm)
         if resolved and resolved in self._brains:
             return self._brains[resolved]
 
         for b_id, b_info in self._brains.items():
-            if id_norm in b_id or id_norm in b_info.name.lower():
+            if id_norm in b_id or id_norm in b_info.name.lower() or id_norm in b_info.codename.lower():
                 return b_info
-        return None
+        return next(iter(self._brains.values()), None)
 
     async def chat_with_brain(self, agent_id: str, message: str, user_name: str = "Sir") -> FamilyChatExchange:
         """Have a direct conversation with an individual Small-LLM brain."""

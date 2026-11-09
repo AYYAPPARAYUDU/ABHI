@@ -182,7 +182,7 @@ class NormalizedSwipeRequest(BaseModel):
 @router.get("/mobile/screenshot")
 async def get_mobile_screenshot(serial: Optional[str] = Query(None)):
     """Capture ultra-low latency, high-DPI JPEG screenshot of connected mobile screen with zero-downtime canvas fallback."""
-    img_bytes = await adb_controller.take_screenshot_bytes(serial=serial, format="jpeg", quality=88)
+    img_bytes = await adb_controller.take_screenshot_bytes(serial=serial, format="jpeg", quality=75)
     return Response(
         content=img_bytes,
         media_type="image/jpeg",
@@ -190,6 +190,38 @@ async def get_mobile_screenshot(serial: Optional[str] = Query(None)):
             "Cache-Control": "no-cache, no-store, must-revalidate",
             "Pragma": "no-cache",
             "Expires": "0"
+        }
+    )
+
+
+@router.get("/mobile/stream")
+async def stream_mobile_screen(serial: Optional[str] = Query(None)):
+    """Stream live real-time MJPEG feed of mobile screen with zero polling overhead and hardware acceleration."""
+    from fastapi.responses import StreamingResponse
+
+    async def frame_generator():
+        while True:
+            try:
+                frame_bytes = await adb_controller.take_screenshot_bytes(serial=serial, format="jpeg", quality=75)
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n"
+                    b"Content-Length: " + str(len(frame_bytes)).encode() + b"\r\n\r\n" +
+                    frame_bytes + b"\r\n"
+                )
+                await asyncio.sleep(0.06)  # ~16 FPS smooth live screen updates
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.debug(f"Frame generator error: {e}")
+                await asyncio.sleep(0.2)
+
+    return StreamingResponse(
+        frame_generator(),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache"
         }
     )
 

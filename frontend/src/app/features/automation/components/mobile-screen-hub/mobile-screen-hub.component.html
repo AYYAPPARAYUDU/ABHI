@@ -37,18 +37,29 @@
       </div>
 
       <div class="nav-actions">
-        <!-- Latency Mode Selector -->
-        <div class="latency-modes">
+        <!-- Zero-Lag Stream Mode Switcher -->
+        <button
+          type="button"
+          class="latency-pill"
+          [class.active]="isLiveStreamMode()"
+          (click)="toggleLiveStreamMode()"
+          title="Toggle Zero-Lag Continuous MJPEG Live Video Stream vs Snapshot mode"
+        >
+          {{ isLiveStreamMode() ? '🔴 LIVE STREAM (0 Lag)' : '📸 SNAPSHOT MODE' }}
+        </button>
+
+        <!-- Latency Mode Selector (Snapshot mode) -->
+        <div class="latency-modes" *ngIf="!isLiveStreamMode()">
           <button class="latency-pill" [class.active]="refreshRateMs() === 400" (click)="setRefreshRate(400)" title="Turbo 400ms Ultra-Low Latency">⚡ 400ms</button>
           <button class="latency-pill" [class.active]="refreshRateMs() === 800" (click)="setRefreshRate(800)" title="Smooth 800ms Low Latency">🚀 800ms</button>
           <button class="latency-pill" [class.active]="refreshRateMs() === 2000" (click)="setRefreshRate(2000)" title="Eco 2000ms Normal">🌱 2s</button>
         </div>
 
         <button class="auto-refresh-btn" [class.active]="autoRefresh()" (click)="toggleAutoRefresh()" title="Toggle live frame auto-refresh">
-          {{ autoRefresh() ? '🟢 LIVE' : '⏸ PAUSED' }}
+          {{ autoRefresh() ? '🟢 ACTIVE' : '⏸ PAUSED' }}
         </button>
         <button class="action-btn" (click)="refreshMobileScreen()" title="Capture screen snapshot now">
-          🔄 Snapshot
+          🔄 Refresh
         </button>
       </div>
     </div>
@@ -116,7 +127,20 @@
               (pointerup)="onScreenPointerUp($event)"
               title="Touch or Drag directly on screen to tap, scroll, and swipe on your mobile"
             >
-              <img [src]="mobileScreenUrl()" alt="Mobile Live Screen" class="screen-render-img" />
+              <img
+                *ngIf="isLiveStreamMode()"
+                [src]="mobileStreamUrl()"
+                (error)="fallbackToSnapshot()"
+                alt="Mobile Live Screen Stream"
+                class="screen-render-img"
+              />
+              <img
+                *ngIf="!isLiveStreamMode()"
+                [src]="mobileScreenUrl()"
+                (load)="onScreenImageLoaded()"
+                alt="Mobile Live Screen Snapshot"
+                class="screen-render-img"
+              />
 
               <!-- Live Visual Touch Ripple / Swipe Trail Marker -->
               <div

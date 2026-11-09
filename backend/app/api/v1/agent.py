@@ -99,7 +99,10 @@ async def chat_with_family_member(payload: Dict[str, Any]):
     message = payload.get("message") or payload.get("text") or "Status report, team."
     user_name = payload.get("user_name") or "Sir"
     exchange = await family_swarm.chat_with_brain(agent_id=agent_id, message=message, user_name=user_name)
-    return exchange.model_dump()
+    dump = exchange.model_dump()
+    dump["reply"] = dump.get("message", "")
+    dump["text"] = dump.get("message", "")
+    return dump
 
 
 @router.get("/swarm/negotiations")
