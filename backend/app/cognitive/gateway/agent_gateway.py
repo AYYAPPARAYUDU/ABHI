@@ -66,6 +66,13 @@ class AgentGateway:
         # O(L) Trie & Levenshtein DP matcher for robust command disambiguation
         self._fuzzy_matcher = TrieFuzzyMatcher()
         for term, payload in [
+            ("mamu", "persona:mamu"),
+            ("abhi", "persona:abhi"),
+            ("jarvis", "persona:jarvis"),
+            ("friday", "persona:friday"),
+            ("tony", "persona:tony"),
+            ("boss", "persona:boss"),
+            ("sir", "persona:sir"),
             ("notepad", "app:notepad"),
             ("calculator", "app:calculator"),
             ("calc", "app:calculator"),
@@ -80,6 +87,10 @@ class AgentGateway:
             ("screenshot", "action:screenshot"),
             ("volume", "action:volume"),
             ("lock", "action:lock"),
+            ("mobile", "device:mobile"),
+            ("phone", "device:phone"),
+            ("imei", "device:imei"),
+            ("bluetooth", "device:bluetooth"),
             ("unlock", "action:unlock"),
             ("battery", "mobile:battery"),
             ("phone", "mobile:phone"),
@@ -116,8 +127,9 @@ class AgentGateway:
             punct = '.,!?:;"\'()[]{}'
             clean_token = token.lower().strip(punct)
             if len(clean_token) >= 4 and not self._fuzzy_matcher.search_exact(clean_token):
-                # Search nearest match with edit distance <= 2
-                match = self._fuzzy_matcher.find_nearest_match(clean_token, max_distance=2)
+                # Adaptive edit distance: 1 for 4-letter words, 2 for longer words
+                max_d = 1 if len(clean_token) <= 4 else 2
+                match = self._fuzzy_matcher.find_nearest_match(clean_token, max_distance=max_d)
                 if match and match[2] > 0:
                     corrected_word = match[0]
                     # Preserve original punctuation
@@ -279,6 +291,51 @@ class AgentGateway:
                     "result_type": "APPROVAL_REQUEST",
                     "title": "Context Ambiguous",
                     "summary": "Please select the active image or project to apply this change.",
+                },
+                created_at=now_ts,
+            )
+            self._record_thread_activity(thread, request, response)
+            self._commands[cmd_id] = response
+            return response
+
+        # 4.3 Check for pure Wake-Word ('Hey Mamu') or Sleep-Word ('Ok Bye Mamu') Voice Trigger
+        from backend.app.runtime.wake_word import wake_word_detector, VoiceTriggerType
+        v_trig, v_phrase, _ = wake_word_detector.detect_phrase_intent(clean_text)
+        is_pure_trigger = (
+            len(clean_text.split()) <= 4
+            or clean_text.lower().strip() in [p.lower() for p in wake_word_detector.WAKE_PHRASES + wake_word_detector.SLEEP_PHRASES]
+        )
+        if v_trig != VoiceTriggerType.NONE and is_pure_trigger:
+            lang_h = getattr(request, "language_hint", "auto") or "auto"
+            if v_trig == VoiceTriggerType.WAKE:
+                msg = "Yes Sir, I am listening and ready for your directive."
+                if lang_h == "te":
+                    msg = "చెప్పండి సర్, నేను వింటున్నాను."
+                elif lang_h == "hi":
+                    msg = "हाँ सर, मैं सुन रहा हूँ।"
+                elif lang_h == "ta":
+                    msg = "சொல்லுங்கள் ஐயா, நான் கேட்கிறேன்."
+            else:
+                msg = "Standing by, Sir. Conversation mode paused."
+                if lang_h == "te":
+                    msg = "సరే సర్, స్టాండ్‌బై లో ఉంటున్నాను. సెలవు."
+                elif lang_h == "hi":
+                    msg = "ठीक है सर, स्टैंडबाय पर जा रहा हूँ।"
+                elif lang_h == "ta":
+                    msg = "சரி ஐயா, காத்திருப்பில் இருக்கிறேன்."
+
+            response = AgentCommandResponse(
+                command_id=cmd_id,
+                thread_id=thread_id,
+                status=CommandLifecycleState.COMPLETED,
+                accepted=True,
+                message=msg,
+                result={
+                    "result_type": "VOICE_TRIGGER",
+                    "title": f"Voice Trigger: {v_trig.value}",
+                    "summary": msg,
+                    "trigger_type": v_trig.value,
+                    "matched_phrase": v_phrase
                 },
                 created_at=now_ts,
             )
@@ -484,6 +541,26 @@ class AgentGateway:
         if any(c in lower_g for c in ["cancel restart", "cancel shutdown", "abort restart", "abort shutdown"]):
             return "System shutdown and restart sequences have been cancelled, Sir."
 
+        # 1.5 Instant Wake-Word ('Hey Mamu') & Sleep-Word ('Ok Bye Mamu') Response
+        from backend.app.runtime.wake_word import wake_word_detector, VoiceTriggerType
+        v_trig, _, _ = wake_word_detector.detect_phrase_intent(goal)
+        if v_trig == VoiceTriggerType.WAKE:
+            if lang == "te":
+                return "చెప్పండి సర్, నేను వింటున్నాను."
+            elif lang == "hi":
+                return "हाँ सर, मैं सुन रहा हूँ।"
+            elif lang == "ta":
+                return "சொல்லுங்கள் ஐயா, நான் கேட்கிறேன்."
+            return "Yes Sir, I am listening and ready for your directive."
+        elif v_trig == VoiceTriggerType.SLEEP:
+            if lang == "te":
+                return "సరే సర్, స్టాండ్‌బై లో ఉంటున్నాను. సెలవు."
+            elif lang == "hi":
+                return "ठीक है सर, स्टैंडबाय पर जा रहा हूँ। अलविदा।"
+            elif lang == "ta":
+                return "சரி ஐயா, காத்திருப்பில் இருக்கிறேன்."
+            return "Standing by, Sir. Conversation mode paused."
+
         # 2. Dynamic LLM Synthesis (Natural, authentic J.A.R.V.I.S. conversational response)
         try:
             lang_instruction = "English"
@@ -526,6 +603,53 @@ class AgentGateway:
         clean = re.sub(r"^(?:please\s+|can you\s+|could you\s+|i want you to\s+|i need to\s+|abhi\s+)", "", goal, flags=re.IGNORECASE).strip()
         lower = clean.lower()
         lang = language_hint or "auto"
+
+        # 0. Wake-Word & Sleep-Word Conversation Intent
+        if any(w in lower for w in ["hey mamu", "hay mamu", "he mamu", "హే మామూ", "हे मामू", "ஹே மாமு"]):
+            if lang == "te":
+                return "చెప్పండి సర్, నేను వింటున్నాను."
+            elif lang == "hi":
+                return "हाँ सर, मैं सुन रहा हूँ।"
+            elif lang == "ta":
+                return "சொல்லுங்கள் ஐயா, நான் கேட்கிறேன்."
+            return "Yes Sir, I am listening and ready for your directive."
+
+        if any(s in lower for s in ["ok bye mamu", "bye mamu", "stop mamu", "sleep mamu", "సరే బై మామూ", "బై మామూ", "ओके बाय मामू", "பாய் மாமு"]):
+            if lang == "te":
+                return "సరే సర్, స్టాండ్‌బై లో ఉంటున్నాను. సెలవు."
+            elif lang == "hi":
+                return "ठीक है सर, स्टैंडबाय पर जा रहा हूँ। अलविदा।"
+            elif lang == "ta":
+                return "சரி ஐயா, காத்திருப்பில் இருக்கிறேன்."
+            return "Standing by, Sir. Conversation mode paused."
+
+        # 0.5 Mobile Device Control, Hardware & IMEI Intent
+        if any(m in lower for m in ["imei", "serial number", "phone id", "device id"]):
+            if lang == "te":
+                return "మీ మొబైల్ IMEI నంబర్ మరియు హార్డ్‌వేర్ వివరాలను సేకరిస్తున్నాను, సర్."
+            elif lang == "hi":
+                return "आपके मोबाइल का IMEI नंबर और हार्डवेयर विवरण निकाल रहा हूँ, सर।"
+            elif lang == "ta":
+                return "உங்கள் மொபைல் IMEI எண் விவரங்களை எடுக்கிறேன், ஐயா."
+            return "Retrieving mobile IMEI number and hardware diagnostics for you, Sir."
+
+        if any(p in lower for p in ["mobile settings", "phone settings", "phone brightness", "phone volume", "mobile volume", "mobile brightness"]):
+            if lang == "te":
+                return "మీ ఫోన్ సెట్టింగ్‌లను నేరుగా ల్యాప్‌టాప్ నుండి నియంత్రిస్తున్నాను, సర్."
+            elif lang == "hi":
+                return "लैपटॉप से सीधे आपके फोन की सेटिंग्स नियंत्रित कर रहा हूँ, सर।"
+            elif lang == "ta":
+                return "உங்கள் போன் அமைப்புகளை லேப்டாப்பில் இருந்து கட்டுப்படுத்துகிறேன், ஐயா."
+            return "Accessing phone settings and synchronizing parameters from your laptop, Sir."
+
+        if any(b in lower for b in ["bluetooth", "connect mobile", "connect phone", "pair phone", "mobile bridge"]):
+            if lang == "te":
+                return "బ్లూటూత్ ద్వారా మీ మొబైల్‌ను నేరుగా అనుసంధానిస్తున్నాను, సర్."
+            elif lang == "hi":
+                return "ब्लूटूथ के माध्यम से मोबाइल से सीधा कनेक्शन स्थापित कर रहा हूँ, सर।"
+            elif lang == "ta":
+                return "புளூடூத் மூலம் மொபைலை நேரடியாக இணைக்கிறேன், ஐயா."
+            return "Establishing direct Bluetooth connection to your mobile device, Sir."
 
         # 1. Multi-step Web Browse & Analysis Compound Intent
         # e.g., "open browser and analyze this website and give description"
@@ -666,7 +790,7 @@ class AgentGateway:
             "screenshot", "folder", "directory", "process", "app", "application", "window", "whatsapp",
             "youtube", "camera", "webcam", "spotify", "gmail", "mail", "mails", "email", "emails", "inbox",
             "message", "messages", "chat", "chats", "notification", "notifications", "instagram", "maps", "volume",
-            "phone", "mobile", "android", "cellphone", "smartphone", "device",
+            "phone", "mobile", "android", "cellphone", "smartphone", "device", "imei", "bluetooth",
             "song", "music", "track", "audio", "video", "playlist", "image", "photo", "picture", "artwork"
         ]
 

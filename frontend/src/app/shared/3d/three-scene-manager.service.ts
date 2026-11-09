@@ -2155,6 +2155,7 @@ export class ThreeSceneManagerService {
       hitMesh.position.y = 2.2;
       hitMesh.userData = { agentId: agent.id, agent };
       stationGroup.add(hitMesh);
+      stationGroup.userData = { agentId: agent.id, agent };
       this.podHitMeshes.push(hitMesh);
 
       this.workspaceGroup?.add(stationGroup);
@@ -2483,31 +2484,48 @@ export class ThreeSceneManagerService {
           }
         }
       } else if (this.currentMode === 'WORKSPACE') {
-        // Check click on 3D Volumetric Pods, Avatars & Hexagonal Base Stations
-        const workspaceTargets = [
-          ...this.podHitMeshes,
-          ...(this.workspaceGroup ? [this.workspaceGroup] : [])
-        ];
-        const podHits = this.raycaster.intersectObjects(workspaceTargets, true);
+        // 1. Check direct hits on pod hit meshes and stations (effortless click detection)
+        const podHits = this.raycaster.intersectObjects(this.podHitMeshes, true);
         if (podHits.length > 0) {
-          let hitObj: THREE.Object3D | null = podHits[0].object;
-          while (hitObj && !hitObj.userData?.['agent'] && !hitObj.userData?.['agentId'] && hitObj.parent) {
-            hitObj = hitObj.parent;
-          }
-          const agent = hitObj?.userData?.['agent'] || this.agents().find((a) => a.id === hitObj?.userData?.['agentId']);
+          const hitObj = podHits[0].object;
+          const agent = hitObj.userData?.['agent'] || this.agents().find((a) => a.id === hitObj.userData?.['agentId']);
           if (agent) {
             this.ngZone.run(() => this.focusAgent(agent));
             return;
           }
         }
+
+        // 2. Fallback check across all workspace station children, ignoring flat ground tiles
+        if (this.workspaceGroup) {
+          const allHits = this.raycaster.intersectObjects(this.workspaceGroup.children, true);
+          for (const hit of allHits) {
+            let cur: THREE.Object3D | null = hit.object;
+            while (cur && cur !== this.workspaceGroup) {
+              if (cur.userData?.['agent']) {
+                this.ngZone.run(() => this.focusAgent(cur!.userData['agent']));
+                return;
+              }
+              if (cur.userData?.['agentId']) {
+                const found = this.agents().find((a) => a.id === cur!.userData['agentId']);
+                if (found) {
+                  this.ngZone.run(() => this.focusAgent(found));
+                  return;
+                }
+              }
+              cur = cur.parent;
+            }
+          }
+        }
       }
 
-      // Clicked in empty outside space: smoothly deselect without triggering accidental actions
-      this.ngZone.run(() => {
-        if (this.selectedAgent()) {
-          this.resetCameraFocus();
-        }
-      });
+      // Clicked in empty outside space: smoothly deselect in MAIN_AGENT mode (preserve WORKSPACE station focus)
+      if (this.currentMode !== 'WORKSPACE') {
+        this.ngZone.run(() => {
+          if (this.selectedAgent()) {
+            this.resetCameraFocus();
+          }
+        });
+      }
     });
 
     // POINTER HOVER FEEDBACK (Cursor changes to pointer over tactile 3D nodes & pods + Dynamic Hover HUD)

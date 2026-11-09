@@ -1414,3 +1414,40 @@
   color: #ffffff;
   box-shadow: 0 0 16px rgba(0, 240, 255, 0.45);
 }
+
+
+/* Mobile Screen Hub & Voice Center Tool Buttons */
+.mobile-hub-btn {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #38bdf8;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.mobile-hub-btn:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #e0f2fe;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
+.mobile-hub-btn.connected {
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+
+.voice-center-btn {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  color: #c084fc;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.voice-center-btn:hover {
+  background: rgba(168, 85, 247, 0.2);
+  border-color: #c084fc;
+  color: #f3e8ff;
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.35);
+}

@@ -945,3 +945,80 @@
   color: #10b981;
   box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
 }
+
+/* Voice Intro & Self-Explanation Card */
+.voice-intro-section {
+  background: rgba(0, 240, 255, 0.05);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.voice-intro-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.voice-pulse-icon {
+  font-size: 14px;
+  animation: voicePulse 1.4s ease-in-out infinite;
+}
+
+@keyframes voicePulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+.voice-intro-quote {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #e2e8f0;
+  font-style: italic;
+}
+
+/* Today's Completed Work */
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.badge-count {
+  font-size: 9.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.today-work-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.today-work-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.work-check {
+  color: #10b981;
+  font-weight: 900;
+  font-size: 11px;
+  margin-top: 1px;
+}
+
+.work-text {
+  font-size: 10.5px;
+  color: #cbd5e1;
+  line-height: 1.4;
+}

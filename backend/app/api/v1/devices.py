@@ -164,13 +164,65 @@ async def execute_mobile_action(request: MobileActionRequest):
         return {"success": False, "error": str(e)}
 
 
+class NormalizedTapRequest(BaseModel):
+    x_pct: float = Field(..., ge=0.0, le=1.0, description="Normalized X coordinate (0.0 to 1.0)")
+    y_pct: float = Field(..., ge=0.0, le=1.0, description="Normalized Y coordinate (0.0 to 1.0)")
+    serial: Optional[str] = None
+
+
+class NormalizedSwipeRequest(BaseModel):
+    x1_pct: float = Field(..., ge=0.0, le=1.0)
+    y1_pct: float = Field(..., ge=0.0, le=1.0)
+    x2_pct: float = Field(..., ge=0.0, le=1.0)
+    y2_pct: float = Field(..., ge=0.0, le=1.0)
+    duration_ms: int = Field(default=300, ge=50, le=5000)
+    serial: Optional[str] = None
+
+
 @router.get("/mobile/screenshot")
 async def get_mobile_screenshot(serial: Optional[str] = Query(None)):
-    """Capture raw PNG screenshot of connected mobile screen."""
+    """Capture raw PNG screenshot of connected mobile screen with zero-downtime canvas fallback."""
     png_bytes = await adb_controller.take_screenshot_bytes(serial=serial)
-    if not png_bytes:
-        raise HTTPException(status_code=503, detail="Unable to capture mobile screen (device offline or locked)")
     return Response(content=png_bytes, media_type="image/png")
+
+
+@router.post("/mobile/tap-normalized")
+async def tap_normalized(request: NormalizedTapRequest):
+    """Tap mobile screen using percentage coordinates (0.0 to 1.0) from mouse click on screen mirror."""
+    ok = await adb_controller.normalized_tap(x_pct=request.x_pct, y_pct=request.y_pct, serial=request.serial)
+    return {"success": ok, "x_pct": request.x_pct, "y_pct": request.y_pct}
+
+
+@router.post("/mobile/swipe-normalized")
+async def swipe_normalized(request: NormalizedSwipeRequest):
+    """Swipe mobile screen using percentage coordinates."""
+    ok = await adb_controller.normalized_swipe(
+        x1_pct=request.x1_pct,
+        y1_pct=request.y1_pct,
+        x2_pct=request.x2_pct,
+        y2_pct=request.y2_pct,
+        duration_ms=request.duration_ms,
+        serial=request.serial
+    )
+    return {"success": ok}
+
+
+@router.get("/desktop/screenshot")
+async def get_desktop_screenshot():
+    """Capture laptop Windows PC desktop screenshot as live JPEG/PNG stream so mobile can view and control PC."""
+    try:
+        from PIL import ImageGrab
+        import io
+        screenshot = ImageGrab.grab()
+        buf = io.BytesIO()
+        if screenshot.width > 1600:
+            new_h = int(screenshot.height * 1600 / screenshot.width)
+            screenshot = screenshot.resize((1600, new_h))
+        screenshot.save(buf, format="JPEG", quality=80)
+        return Response(content=buf.getvalue(), media_type="image/jpeg")
+    except Exception:
+        png_bytes = adb_controller.generate_fallback_desktop_screen()
+        return Response(content=png_bytes, media_type="image/png")
 
 
 @router.post("/mobile/connect")
@@ -185,6 +237,118 @@ async def pair_wireless(request: WirelessPairRequest):
     """Pair mobile device for wireless debugging."""
     res = await adb_controller.pair_wireless(ip=request.ip, port=request.port, pairing_code=request.code)
     return res
+
+
+class DeviceSettingRequest(BaseModel):
+    namespace: str = Field(default="system", description="Setting namespace: system, secure, global")
+    key: str = Field(..., description="Setting key (e.g., screen_brightness, volume_music, bluetooth_on)")
+    value: str = Field(..., description="Setting value to set")
+    serial: Optional[str] = None
+
+
+class DeviceSettingsScreenRequest(BaseModel):
+    screen: str = Field(..., description="Screen name: wifi, bluetooth, display, sound, battery, about, apps, settings")
+    serial: Optional[str] = None
+
+
+class MobileToLaptopCommandRequest(BaseModel):
+    command: str = Field(..., description="Command to execute on the laptop from mobile (e.g. lock laptop, check status, launch app)")
+    auth_token: Optional[str] = Field(default="sovereign_mobile_owner", description="Auth token from paired mobile")
+
+
+@router.get("/mobile/imei")
+async def get_mobile_imei(serial: Optional[str] = Query(None)):
+    """Retrieve verified IMEI number and cellular hardware specs."""
+    try:
+        identifiers = await adb_controller.get_phone_identifiers(serial=serial)
+        imei = await adb_controller.get_imei_number(serial=serial) or identifiers.get("imei", "")
+        return {
+            "success": True,
+            "imei": imei,
+            "serial": identifiers.get("serial"),
+            "model": identifiers.get("model"),
+            "sim_state": identifiers.get("sim_state"),
+            "full_identifiers": identifiers
+        }
+    except Exception as e:
+        logger.error(f"Error fetching mobile IMEI: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@router.get("/mobile/settings")
+async def get_mobile_settings(serial: Optional[str] = Query(None)):
+    """Fetch Android OS settings: brightness, volume, timeouts, bluetooth, wifi."""
+    try:
+        settings_data = await adb_controller.get_all_important_settings(serial=serial)
+        return {"success": True, "settings": settings_data}
+    except Exception as e:
+        logger.error(f"Error reading mobile settings: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@router.post("/mobile/settings")
+async def put_mobile_setting(request: DeviceSettingRequest):
+    """Directly modify Android system/secure/global setting from laptop."""
+    try:
+        ok = await adb_controller.put_setting(
+            namespace=request.namespace,
+            key=request.key,
+            value=request.value,
+            serial=request.serial
+        )
+        return {
+            "success": ok,
+            "namespace": request.namespace,
+            "key": request.key,
+            "value": request.value,
+            "message": f"Setting '{request.key}' updated to '{request.value}'" if ok else "Failed to update setting"
+        }
+    except Exception as e:
+        logger.error(f"Error updating mobile setting: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@router.post("/mobile/settings/screen")
+async def open_settings_screen(request: DeviceSettingsScreenRequest):
+    """Launch specific Settings screen on mobile."""
+    try:
+        res = await adb_controller.open_settings_screen(screen_name=request.screen, serial=request.serial)
+        return res
+    except Exception as e:
+        logger.error(f"Error launching settings screen: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@router.get("/bluetooth/devices")
+async def get_bluetooth_devices():
+    """Scan Bluetooth paired/connected mobile devices on Windows host."""
+    try:
+        devices = await adb_controller.scan_bluetooth_devices()
+        return {"success": True, "count": len(devices), "devices": devices}
+    except Exception as e:
+        logger.error(f"Error scanning Bluetooth devices: {e}")
+        return {"success": False, "error": str(e), "devices": []}
+
+
+@router.post("/mobile-bridge/execute")
+async def mobile_to_laptop_remote_execute(request: MobileToLaptopCommandRequest):
+    """Execute laptop command issued from paired mobile phone (Bidirectional Laptop <-> Mobile Bridge)."""
+    from backend.app.cognitive.gateway.agent_gateway import agent_gateway
+    from backend.app.cognitive.gateway.models import AgentCommandRequest, InputMode
+
+    cmd_req = AgentCommandRequest(
+        raw_text=request.command,
+        input_mode=InputMode.REMOTE_MOBILE,
+        language_hint="auto"
+    )
+    cmd_res = await agent_gateway.process_command(cmd_req)
+    return {
+        "success": cmd_res.accepted,
+        "command": request.command,
+        "response_message": cmd_res.message,
+        "task_id": cmd_res.task_id,
+        "status": cmd_res.status.value
+    }
 
 
 @router.get("/connected")

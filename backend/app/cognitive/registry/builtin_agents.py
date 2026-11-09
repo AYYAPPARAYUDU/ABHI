@@ -2186,7 +2186,12 @@ class MobileDeviceAgent(BaseAgent):
                     "tap_screen",
                     "swipe_screen",
                     "type_text",
-                    "connect_wireless"
+                    "connect_wireless",
+                    "get_imei",
+                    "get_setting",
+                    "put_setting",
+                    "open_settings_screen",
+                    "scan_bluetooth"
                 ],
                 risk_tier="Tier 1",
                 description="Controls mobile devices via ADB: lock/unlock, battery, WhatsApp, calls, apps, screen capture."
@@ -2354,6 +2359,85 @@ class MobileDeviceAgent(BaseAgent):
                 success=ok,
                 data={"text": text},
                 observed_state={"typed": text}
+            )
+
+        elif action in ["get_imei", "imei_number", "device_imei"]:
+            imei = await adb_controller.get_imei_number(serial=serial)
+            idents = await adb_controller.get_phone_identifiers(serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"imei": imei or idents.get("imei"), "identifiers": idents},
+                observed_state={"imei_retrieved": True}
+            )
+
+        elif action in ["get_setting", "get_settings", "mobile_settings"]:
+            ns = params.get("namespace", "system")
+            key = params.get("key")
+            if key:
+                val = await adb_controller.get_setting(ns, key, serial=serial)
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=True,
+                    data={"namespace": ns, "key": key, "value": val},
+                    observed_state={"setting_read": key}
+                )
+            else:
+                all_s = await adb_controller.get_all_important_settings(serial=serial)
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=True,
+                    data={"settings": all_s},
+                    observed_state={"settings_count": len(all_s)}
+                )
+
+        elif action in ["put_setting", "set_setting", "change_setting"]:
+            ns = params.get("namespace", "system")
+            key = params.get("key", "screen_brightness")
+            val = str(params.get("value", "150"))
+            ok = await adb_controller.put_setting(ns, key, val, serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"namespace": ns, "key": key, "value": val},
+                observed_state={"setting_modified": key}
+            )
+
+        elif action in ["open_settings_screen", "open_settings", "mobile_settings_screen"]:
+            screen = params.get("screen", "settings")
+            res = await adb_controller.open_settings_screen(screen, serial=serial)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=res.get("success", False),
+                data=res,
+                observed_state={"settings_screen_opened": screen}
+            )
+
+        elif action in ["scan_bluetooth", "bluetooth_scan", "bluetooth_devices"]:
+            devs = await adb_controller.scan_bluetooth_devices()
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data={"devices": devs, "count": len(devs)},
+                observed_state={"bluetooth_devices_found": len(devs)}
             )
 
         elif action in ["connect_wireless", "connect_wifi"]:

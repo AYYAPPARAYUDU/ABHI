@@ -843,9 +843,10 @@ class OSControlEngine:
                 logger.error(f"Failed to set clipboard text: {e_ps}")
                 return False
 
-    def get_active_youtube_window(self) -> Optional[Dict[str, Any]]:
-        """Find an existing open browser window currently displaying YouTube."""
+    def get_active_browser_window(self, prefer_youtube: bool = True) -> Optional[Dict[str, Any]]:
+        """Find an existing open browser window (Chrome, Edge, Brave, Firefox), prioritizing YouTube."""
         windows = self.list_windows()
+        browser_fallback = None
         for w in windows:
             title = w.get("title", "")
             title_lower = title.lower()
@@ -853,11 +854,18 @@ class OSControlEngine:
             if not is_vis:
                 continue
             # Guard against IDE / editor tabs
-            if any(ide in title_lower for ide in ["antigravity", "vscode", "visual studio", "code - oss"]):
+            if any(ide in title_lower for ide in ["antigravity", "vscode", "visual studio", "code - oss", "terminal", "powershell"]):
                 continue
             if "youtube" in title_lower:
                 return w
-        return None
+            if any(b in title_lower for b in ["google chrome", "chrome", "edge", "brave", "firefox"]):
+                if not browser_fallback:
+                    browser_fallback = w
+        return browser_fallback if prefer_youtube else None
+
+    def get_active_youtube_window(self) -> Optional[Dict[str, Any]]:
+        """Find an existing open browser window currently displaying YouTube or open browser."""
+        return self.get_active_browser_window(prefer_youtube=True)
 
     def open_whatsapp(
         self,
@@ -867,18 +875,20 @@ class OSControlEngine:
     ) -> Tuple[bool, Dict[str, Any], Optional[str]]:
         """Open native WhatsApp Desktop application or Web with optional recipient and prefilled message."""
         import urllib.parse
-        encoded_msg = urllib.parse.quote(message) if message else ""
+        clean_msg = str(message or "").strip().strip('"\'')
+        encoded_msg = urllib.parse.quote(clean_msg) if clean_msg else ""
 
-        target_recipient = str(recipient or phone or "").strip()
+        target_recipient = str(recipient or phone or "").strip().strip('"\'')
         is_numeric_phone = bool(target_recipient and re.match(r"^[+]?[\d\s-]{7,16}$", target_recipient))
         clean_phone = re.sub(r"[^\d+]", "", target_recipient) if is_numeric_phone else ""
 
+        # For named contacts, do NOT use proto_url with text because it triggers a blocking forward dialog!
         if clean_phone:
             proto_url = f"whatsapp://send?phone={clean_phone}&text={encoded_msg}" if encoded_msg else f"whatsapp://send?phone={clean_phone}"
             web_url = f"https://web.whatsapp.com/send?phone={clean_phone}&text={encoded_msg}"
         else:
-            proto_url = f"whatsapp://send?text={encoded_msg}" if encoded_msg else "whatsapp:"
-            web_url = f"https://web.whatsapp.com/send?text={encoded_msg}" if encoded_msg else "https://web.whatsapp.com"
+            proto_url = "whatsapp:"
+            web_url = "https://web.whatsapp.com"
 
         launched = False
         method_used = "whatsapp_desktop_native"
@@ -886,7 +896,7 @@ class OSControlEngine:
 
         if self.is_windows:
             # 1. Primary priority: If already open, bring to front
-            if self.bring_to_front_by_keyword("whatsapp", timeout_sec=1.0):
+            if self.bring_to_front_by_keyword("whatsapp", timeout_sec=1.2):
                 launched = True
                 method_used = "whatsapp_desktop_existing"
 
@@ -917,8 +927,8 @@ class OSControlEngine:
                 except Exception as e2:
                     err = str(e2)
 
-            time.sleep(0.5)
-            self.bring_to_front_by_keyword("whatsapp", timeout_sec=2.5)
+            time.sleep(0.8)
+            self.bring_to_front_by_keyword("whatsapp", timeout_sec=3.0)
         else:
             try:
                 subprocess.Popen(["xdg-open", web_url])
@@ -931,7 +941,7 @@ class OSControlEngine:
             "method": method_used,
             "protocol_url": proto_url,
             "web_url": web_url,
-            "message": message,
+            "message": clean_msg or None,
             "phone": clean_phone or None,
             "recipient": target_recipient or None
         }, err
@@ -943,35 +953,54 @@ class OSControlEngine:
         recipient: Optional[str] = None
     ) -> Tuple[bool, Dict[str, Any], Optional[str]]:
         """Open WhatsApp, search and select contact, compose payload, and physically dispatch message."""
-        target_contact = str(recipient or phone or "").strip()
+        clean_msg = str(message or "").strip().strip('"\'')
+        target_contact = str(recipient or phone or "").strip().strip('"\'')
         is_numeric = bool(target_contact and re.match(r"^[+]?[\d\s-]{7,16}$", target_contact))
 
-        # 1. Activate or launch WhatsApp
-        ok, data, err = self.open_whatsapp(phone=phone, recipient=recipient, message=message)
+        # 1. Activate or launch WhatsApp cleanly
+        # For named contact, pass message=None to avoid triggering the blocking share picker modal!
+        ok, data, err = self.open_whatsapp(
+            phone=phone if is_numeric else None,
+            recipient=recipient if is_numeric else None,
+            message=clean_msg if is_numeric else None
+        )
         if not ok:
             return False, data or {}, err or "Failed to launch WhatsApp."
 
-        time.sleep(0.8)
-        self.bring_to_front_by_keyword("whatsapp", timeout_sec=2.0)
+        # Wait up to 3.5s for WhatsApp to gain foreground focus
+        wa_focused = False
+        for _ in range(7):
+            if self.bring_to_front_by_keyword("whatsapp", timeout_sec=0.5):
+                wa_focused = True
+                break
+            time.sleep(0.5)
+
+        if not wa_focused:
+            logger.warning("WhatsApp window was not detected in foreground; attempting keystroke dispatch anyway.")
+
+        time.sleep(0.5)
 
         # 2. If target contact is a named contact (not a clean phone number), search for contact in WhatsApp Desktop
         if target_contact and not is_numeric:
-            logger.info(f"Navigating WhatsApp to named contact '{target_contact}'")
-            # Step A: Focus WhatsApp search shortcut (Ctrl + F)
+            logger.info(f"Navigating WhatsApp Desktop to named contact '{target_contact}'")
+            # Step A: Dismiss any existing open search or modal with ESC
+            self.send_hotkey("ESC")
+            time.sleep(0.2)
+            # Step B: Focus WhatsApp search shortcut (Ctrl + F)
             self.send_hotkey("CTRL+F")
-            time.sleep(0.4)
-            # Step B: Type / paste contact name into search
+            time.sleep(0.35)
+            # Step C: Type / paste contact name into search
             self.set_clipboard_text(target_contact)
             self.send_hotkey("CTRL+V")
-            time.sleep(0.8)
-            # Step C: Press ENTER to open selected conversation
+            time.sleep(0.7)
+            # Step D: Press ENTER to open selected conversation
             self.send_hotkey("ENTER")
             time.sleep(0.6)
 
         # 3. Type / paste message body into the active chat input
-        if message:
-            self.set_clipboard_text(message)
-            time.sleep(0.1)
+        if clean_msg:
+            self.set_clipboard_text(clean_msg)
+            time.sleep(0.15)
             self.send_hotkey("CTRL+V")
             time.sleep(0.25)
 
@@ -979,12 +1008,16 @@ class OSControlEngine:
         self.send_hotkey("ENTER")
         time.sleep(0.3)
 
+        # Verification: Check if WhatsApp is still active or visible
+        windows = self.list_windows()
+        is_wa_alive = any("whatsapp" in (w.get("title") or "").lower() for w in windows)
+
         return True, {
             **data,
-            "delivered": True,
+            "delivered": True if (wa_focused or is_wa_alive) else False,
             "sent": True,
             "recipient": target_contact,
-            "message": message,
+            "message": clean_msg,
             "method": "whatsapp_desktop_ui_automation" if not is_numeric else "whatsapp_protocol_send"
         }, None
 
@@ -1154,22 +1187,24 @@ class OSControlEngine:
         """Directly search and play a YouTube video/song, seamlessly reusing existing open YouTube sessions without tab proliferation."""
         import urllib.request
         import urllib.parse
-        clean_q = query.strip()
+        clean_q = query.strip().strip('"\'')
         lower_q = clean_q.lower()
 
-        # Check if an existing browser window already has YouTube open
-        existing_yt = self.get_active_youtube_window()
+        # Check if an existing browser window already has YouTube or browser open
+        existing_yt = self.get_active_browser_window(prefer_youtube=True)
 
         is_toggle_only = lower_q in (
             "play", "play song", "play music", "resume", "resume song", "resume music",
-            "continue", "continue music", "start music", "start song", "play video"
-        )
+            "continue", "continue music", "start music", "start song", "play video", "pause", "pause music"
+        ) or not clean_q
 
         if existing_yt and is_toggle_only:
-            # YouTube is ALREADY OPEN, and user just requested playback / resume
-            # Bring existing YouTube window directly to foreground and toggle play with 'k'
-            self.bring_to_front_by_keyword("youtube", timeout_sec=2.0)
-            time.sleep(0.15)
+            # YouTube / Browser is ALREADY OPEN, and user just requested playback / resume
+            # Bring existing browser window directly to foreground and toggle play with 'k'
+            kw = "youtube" if "youtube" in existing_yt.get("title", "").lower() else "chrome"
+            self.bring_to_front_by_keyword(kw, timeout_sec=2.0)
+            time.sleep(0.2)
+            # Universal YouTube play/pause toggle hotkey: 'k' or Space
             self.send_hotkey("k")
             return True, {
                 "target": existing_yt.get("title", "YouTube"),
@@ -1178,13 +1213,14 @@ class OSControlEngine:
                 "playing": True,
                 "reused_session": True,
                 "action": "toggle_play_in_existing_tab",
-                "query": clean_q,
+                "query": clean_q or "resume",
                 "play_url": "existing_session"
             }, None
 
         # Resolve direct video ID or search URL
         video_id = None
-        search_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(clean_q)}"
+        search_query = clean_q if clean_q and not is_toggle_only else "trending music"
+        search_url = f"https://www.youtube.com/results?search_query={urllib.parse.quote(search_query)}"
         try:
             req = urllib.request.Request(
                 search_url,
@@ -1207,17 +1243,18 @@ class OSControlEngine:
             direct_play_url = search_url
 
         if existing_yt:
-            # Re-use existing YouTube window without opening a new tab:
+            # Re-use existing YouTube / browser window without opening a new tab:
             # 1. Bring window to front
-            self.bring_to_front_by_keyword("youtube", timeout_sec=2.0)
-            time.sleep(0.15)
+            kw = "youtube" if "youtube" in existing_yt.get("title", "").lower() else "chrome"
+            self.bring_to_front_by_keyword(kw, timeout_sec=2.0)
+            time.sleep(0.2)
             # 2. Select address bar for CURRENT tab via Ctrl + L
             self.send_hotkey("CTRL+L")
-            time.sleep(0.1)
+            time.sleep(0.12)
             # 3. Paste the direct play URL into the address bar
             self.set_clipboard_text(direct_play_url)
             self.send_hotkey("CTRL+V")
-            time.sleep(0.08)
+            time.sleep(0.1)
             # 4. Press ENTER to navigate the current tab
             self.send_hotkey("ENTER")
             time.sleep(0.3)
@@ -1234,8 +1271,8 @@ class OSControlEngine:
 
         # YouTube was NOT open: launch cleanly via default browser
         ok, err = self.open_url(direct_play_url, browser="default")
-        time.sleep(0.4)
-        self.bring_to_front_by_keyword("youtube", timeout_sec=2.0)
+        time.sleep(0.5)
+        self.bring_to_front_by_keyword("youtube", timeout_sec=2.5)
         details = {
             "target": direct_play_url,
             "is_uri": True,

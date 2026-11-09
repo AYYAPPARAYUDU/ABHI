@@ -603,17 +603,64 @@ export class SpeechVoiceService {
     }
   }
 
-  toggleAlexaMode(onCommand: (text: string) => void): boolean {
+  private readonly WAKE_TRIGGERS = [
+    'hey mamu', 'hay mamu', 'he mamu', 'hi mamu', 'hello mamu', 'mamu',
+    'hey abhi', 'hay abhi', 'abhi', 'wake up mamu', 'wake up abhi',
+    'హే మామూ', 'హాయ్ మామూ', 'మామూ', 'హే అభి', 'లే మామూ',
+    'हे मामू', 'हाय मामू', 'मामू', 'सुनो मामू', 'अभि', 'जागो मामू',
+    'ஹே மாமு', 'ஹாய் மாமு', 'மாமு', 'அபி'
+  ];
+
+  private readonly SLEEP_TRIGGERS = [
+    'ok bye mamu', 'okay bye mamu', 'bye mamu', 'goodbye mamu', 'bye bye mamu',
+    'stop mamu', 'sleep mamu', 'close mamu', 'standby mamu',
+    'ok bye', 'okay bye', 'goodbye abhi', 'bye abhi', 'sleep abhi', 'close abhi',
+    'సరే బై మామూ', 'ఓకే బై మామూ', 'బై మామూ', 'ఆపు మామూ', 'నిద్రపో మామూ', 'సెలవు మామూ',
+    'ओके बाय मामू', 'बाय मामू', 'अलविदा मामू', 'बंद करो मामू', 'सो जाओ मामू',
+    'பாய் மாமு', 'நிறுத்து மாமு', 'தூங்கு மாமு'
+  ];
+
+  /**
+   * Check if an utterance contains wake activation or sleep deactivation intent.
+   */
+  checkVoiceTrigger(text: string): 'WAKE' | 'SLEEP' | 'NONE' {
+    if (!text) return 'NONE';
+    const lower = text.toLowerCase().trim();
+
+    // Check sleep triggers first
+    for (const sleep of this.SLEEP_TRIGGERS) {
+      if (lower.includes(sleep)) {
+        return 'SLEEP';
+      }
+    }
+
+    // Check wake triggers with word boundaries or direct includes
+    for (const wake of this.WAKE_TRIGGERS) {
+      const regex = new RegExp(`(?:^|\\s)${wake.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&')}(?:$|\\s)`, 'i');
+      if (regex.test(lower) || lower.includes(wake)) {
+        return 'WAKE';
+      }
+    }
+
+    return 'NONE';
+  }
+
+  toggleAlexaMode(onCommand?: (text: string) => void): boolean {
     const next = !this.isAlexaConversationMode();
     this.isAlexaConversationMode.set(next);
     if (next) {
       this.primeAudio();
-      this.alexaCommandCallback = onCommand;
+      if (onCommand) this.alexaCommandCallback = onCommand;
       this.speak('Direct conversation mode active. I am listening, Sir.');
+      this.startVoiceListening((txt, isFinal) => {
+        if (isFinal && txt.trim() && this.alexaCommandCallback) {
+          this.alexaCommandCallback(txt.trim());
+        }
+      });
     } else {
       this.stopVoiceListening();
       this.alexaCommandCallback = null;
-      this.speak('Conversation mode paused.');
+      this.speak('Standing by, Sir. Conversation mode paused.');
     }
     return next;
   }
@@ -636,9 +683,10 @@ export class SpeechVoiceService {
   private silenceTimer: any = null;
 
   /**
-   * Start listening to voice input from microphone with callback for transcribed text and natural turn-taking silence detection.
+   * Start listening to voice input from microphone with callback for transcribed text,
+   * automatic barge-in voice interruption, and 'Hey Mamu'/'Ok Bye Mamu' detection.
    */
-  startVoiceListening(onResult: (text: string) => void, onEnd?: () => void): boolean {
+  startVoiceListening(onResult: (text: string, isFinal?: boolean) => void, onEnd?: () => void): boolean {
     if (!this.recognition) return false;
 
     try {
@@ -655,27 +703,86 @@ export class SpeechVoiceService {
           }
         }
         const currentText = (finalTranscript + ' ' + interimTranscript).trim();
+
+        // 1. BARGE-IN VOICE INTERRUPTION:
+        // If ABHI or an Agent is currently speaking and user speaks in between, stop speaking immediately!
+        if (this.isSpeaking() && currentText.length > 1) {
+          this.stop();
+        }
+
+        // 2. WAKE & SLEEP PHRASE RECOGNITION
+        const trigger = this.checkVoiceTrigger(currentText);
+        if (trigger === 'SLEEP') {
+          this.speak('Standing by, Sir. Closing conversation mode.');
+          this.isAlexaConversationMode.set(false);
+          this.stopVoiceListening();
+          if (onEnd) onEnd();
+          return;
+        } else if (trigger === 'WAKE') {
+          if (!this.isAlexaConversationMode()) {
+            this.isAlexaConversationMode.set(true);
+            this.speak('Yes Sir, I am listening.');
+          }
+          // Strip the wake word so clean command passes through
+          const cleanedText = currentText.replace(/^(?:hey|hay|he|hi|hello)?\s*(?:mamu|abhi)\s*/i, '').trim();
+          if (cleanedText) {
+            onResult(cleanedText, true);
+          }
+          return;
+        }
+
         if (currentText) {
-          onResult(currentText);
+          onResult(currentText, false);
         }
 
         if (this.silenceTimer) clearTimeout(this.silenceTimer);
         this.silenceTimer = setTimeout(() => {
           if (this.isListening() && finalTranscript.trim()) {
-            this.stopVoiceListening();
-            if (onEnd) onEnd();
+            const dispatchText = finalTranscript.trim();
+            finalTranscript = '';
+            onResult(dispatchText, true);
+
+            // In single-shot mode, close listening; in continuous mode, keep microphone active!
+            if (!this.isAlexaConversationMode()) {
+              this.stopVoiceListening();
+              if (onEnd) onEnd();
+            }
           }
-        }, 1800);
+        }, 1600);
       };
 
       this.recognition.onerror = () => {
         this.isListening.set(false);
-        if (onEnd) onEnd();
+        // If continuous conversation mode is active, attempt soft restart after delay
+        if (this.isAlexaConversationMode()) {
+          setTimeout(() => {
+            if (this.isAlexaConversationMode() && !this.isListening()) {
+              try {
+                this.recognition?.start();
+                this.isListening.set(true);
+              } catch {}
+            }
+          }, 800);
+        } else if (onEnd) {
+          onEnd();
+        }
       };
 
       this.recognition.onend = () => {
         this.isListening.set(false);
-        if (onEnd) onEnd();
+        // If continuous conversation mode is active, restart microphone loop automatically
+        if (this.isAlexaConversationMode()) {
+          setTimeout(() => {
+            if (this.isAlexaConversationMode() && !this.isListening()) {
+              try {
+                this.recognition?.start();
+                this.isListening.set(true);
+              } catch {}
+            }
+          }, 300);
+        } else if (onEnd) {
+          onEnd();
+        }
       };
 
       this.recognition.start();

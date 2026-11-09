@@ -13,6 +13,7 @@ class InputMode(str, Enum):
     VOICE = "VOICE"
     SYSTEM_EVENT = "SYSTEM_EVENT"
     FOLLOW_UP = "FOLLOW_UP"
+    REMOTE_MOBILE = "REMOTE_MOBILE"
 
 
 class CommandLifecycleState(str, Enum):

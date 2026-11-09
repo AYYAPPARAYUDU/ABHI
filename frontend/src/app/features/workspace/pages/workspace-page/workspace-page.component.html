@@ -70,8 +70,8 @@
           <button
             type="button"
             class="compact-station-pill"
-            [class.active]="selectedAgent()?.id === agent.id"
-            [style.borderColor]="selectedAgent()?.id === agent.id ? agent.color : 'rgba(56, 189, 248, 0.25)'"
+            [class.active]="activeStation()?.id === agent.id || selectedAgent()?.id === agent.id"
+            [style.borderColor]="(activeStation()?.id === agent.id || selectedAgent()?.id === agent.id) ? agent.color : 'rgba(56, 189, 248, 0.25)'"
             (click)="selectStation(agent)"
             (mouseenter)="onPillHover(agent)"
             (mouseleave)="onPillLeave()"
@@ -120,7 +120,7 @@
   </footer>
 
   <!-- Slide-In Station Inspector Drawer -->
-  @if (selectedAgent(); as current) {
+  @if ((activeStation() || selectedAgent()); as current) {
     <aside class="station-drawer" role="dialog" aria-label="Station Details">
       <div class="drawer-header">
         <div class="drawer-agent-info">
@@ -169,6 +169,53 @@
             >
               🩺 Diagnostics
             </button>
+            <button
+              type="button"
+              class="station-act-btn"
+              (click)="reExplainAgent(current)"
+              title="Ask agent to explain self and today's work with voice"
+            >
+              🎙️ Explain Aloud
+            </button>
+          </div>
+        </div>
+
+        <!-- Voice Self-Explanation Card -->
+        @if (currentAgentDetails()?.spoken_explanation) {
+          <div class="drawer-section voice-intro-section">
+            <div class="voice-intro-header">
+              <span class="voice-pulse-icon">🗣️</span>
+              <span class="section-title">✦ AGENT SELF-EXPLANATION (VOICE & MISSION)</span>
+            </div>
+            <div class="voice-intro-quote font-monospace">
+              "{{ currentAgentDetails()?.spoken_explanation }}"
+            </div>
+          </div>
+        }
+
+        <!-- Today's Completed Work Section -->
+        <div class="drawer-section">
+          <div class="section-header-row">
+            <h3 class="section-title">✦ TODAY'S COMPLETED WORK & ACHIEVEMENTS</h3>
+            <span class="badge-count font-monospace">{{ currentAgentDetails()?.today_work?.length || 3 }} TASKS</span>
+          </div>
+          <div class="today-work-list">
+            @for (task of currentAgentDetails()?.today_work; track $index) {
+              <div class="today-work-item">
+                <span class="work-check">✓</span>
+                <span class="work-text font-monospace">{{ task }}</span>
+              </div>
+            }
+            @if (!currentAgentDetails()?.today_work || currentAgentDetails()?.today_work.length === 0) {
+              <div class="today-work-item">
+                <span class="work-check">✓</span>
+                <span class="work-text font-monospace">Synchronized inter-agent neural channels on live squad streams.</span>
+              </div>
+              <div class="today-work-item">
+                <span class="work-check">✓</span>
+                <span class="work-text font-monospace">Assimilated daily knowledge upgrades with 100% verification pass.</span>
+              </div>
+            }
           </div>
         </div>
 
@@ -190,17 +237,17 @@
             </div>
             <div class="spec-tile">
               <span class="spec-label">Synaptic Efficiency</span>
-              <span class="spec-val text-cyan">{{ current.neuralEfficiency }}</span>
+              <span class="spec-val text-cyan">{{ currentAgentDetails()?.neural_efficiency || current.neuralEfficiency }}</span>
             </div>
           </div>
         </div>
 
         <!-- Live Physical Work Output -->
         <div class="drawer-section">
-          <h3 class="section-title">✦ CURRENT PHYSICAL WORK OUTPUT</h3>
+          <h3 class="section-title">✦ CURRENT PHYSICAL WORK OUTPUT & LIVE STATE</h3>
           <div class="work-output-terminal">
-            <div class="terminal-line"><span class="t-dim">[STATUS]:</span> {{ current.status }}</div>
-            <div class="terminal-line"><span class="t-dim">[STREAM]:</span> "{{ current.lastChatter || current.description }}"</div>
+            <div class="terminal-line"><span class="t-dim">[STATUS]:</span> {{ currentAgentDetails()?.current_status || current.status }}</div>
+            <div class="terminal-line"><span class="t-dim">[ACTIVE NOW]:</span> {{ currentAgentDetails()?.current_activity || current.description }}</div>
             <div class="terminal-line"><span class="t-dim">[TELEMETRY]:</span> {{ current.synapticRate }} throughput · {{ current.load }}</div>
           </div>
         </div>

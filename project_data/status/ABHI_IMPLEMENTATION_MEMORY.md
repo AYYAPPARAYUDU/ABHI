@@ -300,3 +300,73 @@ pm run build: 0 TypeScript errors).
   - `backend/tests/test_dynamic_power_and_coordination.py`: 3 passed in 0.44s.
   - Live API verification: `POST /api/v1/agent-gateway/command` with `{"text": "restart laptop"}` successfully planned `step_1` (`action="system_restart"`), executed in 105ms, and returned `state="COMPLETED"`.
   - Backend running live on `http://127.0.0.1:8000`, frontend running on `http://127.0.0.1:4200`.
+
+### 11. 3D Workspace Click Raycast Auto-Sync, Mobile Live Screen Mirroring & Dedicated Voice/Biometrics Command Center (2026-11-09)
+- **3D Workspace Raycast Click Fix & Reactive Auto-Sync**:
+  - **Raycast Priority Over Ground Disk**: In `ThreeSceneManagerService`, previously `workspaceTargets` included the entire `workspaceGroup`, causing raycast clicks to intersect ground terrain tiles and deselect agents. Fixed to prioritize `podHitMeshes` and recursively traverse station parent trees while ignoring flat ground geometry.
+  - **Station Group Identity Tagging**: Set `stationGroup.userData = { agentId: agent.id, agent }` so clicking any part of the station (the bot avatar, beacon, consoles, or base) immediately identifies the target agent.
+  - **Angular Effect Auto-Sync**: Added an Angular `effect()` in `WorkspacePageComponent` constructor observing `this.selectedAgent()`. Whenever any agent is selected in 3D WebGL space or in the dock, `selectStation(agent)` triggers automatically: loading live identity details, fetching today's work accomplishments, and delivering spoken vocal self-explanation aloud.
+- **Complete Mobile Device & Screen Mirroring Command Center (`MobileScreenHubComponent`)**:
+  - **Where to Connect & Control**: Prominently surfaced via the topbar `[ 📱 Mobile Ready ]` button and master layout.
+  - **Interactive Screen Mirroring (Control Mobile from Laptop)**:
+    - Real-time mobile screen mirror with live streaming (`/api/v1/devices/mobile/screenshot`).
+    - **Click-to-Tap**: Clicking directly on the mirrored screen sends normalized $(x\%, y\%)$ to `POST /api/v1/devices/mobile/tap-normalized`, automatically scaling to physical resolution ($1080 \times 2400$) and executing `adb shell input tap`.
+    - **Physical Keys Bar**: Back (◀), Home (⌂), Recent Apps (▢), Screen Lock (⏻), Volume Up/Down, Notifications, Camera.
+    - **Quick Text Input**: Type text or URLs on laptop keyboard and dispatch directly to phone keyboard via `adb shell input text`.
+    - **1-Click App Launcher**: WhatsApp, YouTube, Chrome, Camera, Settings, Spotify, Instagram, Calculator.
+  - **Reverse Screen Mirroring (See Laptop Screen on Phone)**:
+    - Live laptop desktop screen stream (`/api/v1/devices/desktop/screenshot`).
+    - Remote command execution from mobile bridge (`/api/v1/devices/mobile-bridge/execute`) for locking PC, controlling volume, launching apps.
+  - **Hardware Identifiers & Settings Sliders**:
+    - Displays primary IMEI, device model, serial number, and LTE/5G network state.
+    - Screen brightness slider ($0-255$) and media volume slider ($0-15$).
+    - 1-click Android Settings screen launchers (Display, Sound, Bluetooth, Wi-Fi, Battery, Apps).
+    - Windows Bluetooth scanner displaying host adapters (`Realtek Wireless Bluetooth Adapter`).
+- **Comprehensive Voice & Biometrics Center (`VoiceSettingsCenterComponent`)**:
+  - **Missing Buttons Restored**: Surfaced via `[ ⚙️ Voice Hub ]` in contextual topbar.
+  - **Interactive Validation Buttons**:
+    1. `[ 🎙️ Start/Stop "Hey Mamu" Hands-Free ]`: Toggles continuous listening from anywhere.
+    2. `[ 🧪 Test "Hey Mamu" (English) ]`: Validates English wake trigger.
+    3. `[ 🧪 Test "హే మామూ" (Telugu) ]`: Validates Telugu wake trigger.
+    4. `[ 🧪 Test "हे मामू" (Hindi) ]`: Validates Hindi wake trigger.
+    5. `[ 🧪 Test "ஹே மாமு" (Tamil) ]`: Validates Tamil wake trigger.
+    6. `[ 🛑 Test "Ok Bye Mamu" (Sleep) ]`: Validates sleep word deactivation.
+    7. `[ ⚡ Test Barge-In Voice Interruption ]`: Auditions speaking phrase that immediately cancels when user speaks.
+    8. `[ 🔒 Verify Voice Biometrics Now ]`: Authenticates sovereign operator (**Ayyappa Rayudu**) against 16-D acoustic signature vector.
+    9. `[ 🧬 Re-Enroll Owner Voice Signature ]`: Calibrates audio and saves profile to SQLite WAL.
+    10. `[ 🗣️ Audition Selected Neural Voice Aloud ]`: Auditions Ryan/Emily/Mohan/Shruti/Madhur voices.
+    11. Persona (J.A.R.V.I.S. vs F.R.I.D.A.Y.), Callsign (Sir, Boss, Tony, Partner), Language, and Speed ($0.85x-1.25x$) controls.
+- **Verification & Invariant Compliance**:
+  - Strict user rule strictly followed: ZERO shutdown or restart commands executed during tests.
+  - Frontend production build (`npm --prefix frontend run build`): **PASSED** (0 errors, code 0).
+  - Integration test suite (`backend/tests/test_mobile_voice_workspace_safe.py`): **5/5 PASSED (100%)** in 2.20s.
+  - Both backend (`http://127.0.0.1:8000`) and frontend (`http://127.0.0.1:4200`) running live and healthy.
+- **Direct Mobile Hardware Control & Bidirectional Bridge**:
+  - **Direct Connection First**: Implemented direct ADB USB/tethered mobile controller without external Wi-Fi dependence, with Bluetooth and wireless ADB as secondary tiers.
+  - **IMEI & Device Identifiers**: Implemented `get_imei_number()` in `backend/app/automation/mobile/adb_controller.py` with 4-tier fallback extraction (`service call iphonesubinfo 1`, `getprop ro.ril.oem.imei`, `dumpsys iphonesubinfo`, and `cmd phone get-device-id`) returning dual-SIM IMEI1, IMEI2, and serial.
+  - **Direct Settings Control**: Added `get_setting()`, `put_setting()`, and `open_settings_screen()` for direct Android OS system/secure/global settings manipulation (screen brightness, sound volume, airplane mode, Bluetooth, Wi-Fi) from the laptop.
+  - **Host-to-Phone & Phone-to-Host Bridge**: Exposed `/api/v1/devices/mobile/imei`, `/api/v1/devices/mobile/settings`, `/api/v1/devices/bluetooth/devices`, and `/api/v1/devices/mobile-bridge/execute` for bidirectional control.
+- **Multilingual Hands-Free Wake-Word & Sleep-Word Engine**:
+  - **Wake Activation**: Spotting "Hey Mamu", "Hay Mamu", "Mamu", "హే మామూ", "హాయ్ మామూ", "हे मामू", "ஹே மாமு" across English, Telugu, Hindi, and Tamil with debouncing.
+  - **Sleep Deactivation**: Spotting "Ok Bye Mamu", "Bye Mamu", "Stop Mamu", "సరే బై మామూ", "ओके बाय मामू", "பாய் மாமு" to immediately pause conversation mode and return to standby.
+  - **Barge-In Voice Interruption**: Integrated in `SpeechVoiceService.startVoiceListening`: if ABHI or any agent is actively speaking (TTS stream or synthesis active) and the user speaks into the microphone, `this.stop()` immediately interrupts audio playback so the user is never spoken over.
+  - **Continuous Hands-Free Loop**: Auto-restarts recognition on browser timeouts when conversation mode is active without dropping connection.
+- **Voice Biometrics & Sovereign Owner Verification**:
+  - Built `backend/app/perception/audio/voice_biometrics.py`: extracts 16-D normalized acoustic feature vectors (RMS energy, zero-crossing rate, harmonic spectral centroid, spectral energy bands, variance) to verify the sovereign owner ("Ayyappa Rayudu") with cosine similarity matching and reject unauthorized voices.
+  - Exposed `/api/v1/perception/voice-biometrics/verify` and `/api/v1/perception/voice-biometrics/enroll`.
+- **3D Spatial Workspace Interactive Agent Stations**:
+  - When the operator clicks any of the 9 agent stations in `/workspace`, Three.js smoothly moves the camera forward to focus on that agent.
+  - The station immediately displays:
+    1. Agent identity, Mark suit designation, and squad division.
+    2. Spoken vocal self-explanation via `speechVoice.speak(...)` explaining role, mission, and live status.
+    3. Complete list of today's work accomplishments and dispatches.
+    4. Active physical subsystem telemetry and real-time execution health.
+  - Includes interactive "🎙️ Explain Aloud" button and immediate barge-in voice interruption when the user speaks.
+- **Dynamic Semantic Intent & Fast-Path Routing**:
+  - Registered `"mamu"`, `"abhi"`, and hardware terms in Trie fuzzy vocabulary with edit distance safeguards to prevent false collisions.
+  - Added sub-5ms fast-path routing in `TaskPlanner` for mobile and settings control, bypassing lengthy LLM generation timeouts.
+- **Verification & Invariant Compliance**:
+  - Strict user rule strictly followed: ZERO shutdown or restart commands executed during tests.
+  - Frontend production build (`npm --prefix frontend run build`): **PASSED** (0 errors, code 0).
+  - Integration test suite (`backend/tests/test_mobile_voice_workspace_safe.py`): **5/5 PASSED (100%)** in 1.88s.
+  - Both backend (`http://127.0.0.1:8000`) and frontend (`http://127.0.0.1:4200`) running live and healthy.

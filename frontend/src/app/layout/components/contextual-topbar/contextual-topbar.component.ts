@@ -1,5 +1,5 @@
 import { AgentApiService } from '../../../core/api/agent-api.service';
-import { Component, ChangeDetectionStrategy, inject, computed, AfterViewInit, ElementRef, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, computed, AfterViewInit, ElementRef, OnInit, OnDestroy, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -14,16 +14,28 @@ import { AnimeAnimationService } from '../../../core/services/anime-animation.se
 import { AnimeInteractiveDirective } from '../../../shared/directives/anime-interactive.directive';
 import { BiometricFaceScannerComponent } from '../../../features/perception/components/biometric-face-scanner/biometric-face-scanner.component';
 import { MediaService } from '../../../features/media/services/media.service';
+import { MobileScreenHubComponent } from '../../../features/automation/components/mobile-screen-hub/mobile-screen-hub.component';
+import { VoiceSettingsCenterComponent } from '../../../shared/ui/voice-settings-center/voice-settings-center.component';
 
 @Component({
   selector: 'app-contextual-topbar',
   standalone: true,
-  imports: [CommonModule, RouterModule, AnimeInteractiveDirective, BiometricFaceScannerComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    AnimeInteractiveDirective,
+    BiometricFaceScannerComponent,
+    MobileScreenHubComponent,
+    VoiceSettingsCenterComponent
+  ],
   templateUrl: './contextual-topbar.component.html',
   styleUrl: './contextual-topbar.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('mobileHub') mobileHub?: MobileScreenHubComponent;
+  @ViewChild('voiceCenter') voiceCenter?: VoiceSettingsCenterComponent;
+
   readonly stateService = inject(OperatorStateService);
   readonly themeService = inject(ThemeService);
   readonly speechVoice = inject(SpeechVoiceService);
@@ -164,6 +176,14 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
 
   setMode(mode: UserExperienceMode): void {
     this.stateService.setUserMode(mode);
+  }
+
+  openMobileHub(): void {
+    this.mobileHub?.open();
+  }
+
+  openVoiceCenter(): void {
+    this.voiceCenter?.open();
   }
 
   toggleAlexaMode(): void {

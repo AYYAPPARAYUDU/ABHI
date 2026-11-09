@@ -1,0 +1,303 @@
+<div class="mobile-hub-backdrop" *ngIf="isOpen()" (click)="close()">
+  <div class="mobile-hub-modal" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="hub-header">
+      <div class="header-left">
+        <span class="hub-icon">📱</span>
+        <div>
+          <h2 class="hub-title">ABHI MOBILE DEVICE & SCREEN COMMAND CENTER</h2>
+          <p class="hub-subtitle">Bi-Directional Phone & Laptop Control // USB Direct · Wireless ADB · Bluetooth</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="connection-status-pill" [class.connected]="isConnected()">
+          <span class="dot"></span>
+          <span>{{ isConnected() ? 'DEVICE CONNECTED' : 'DIRECT BRIDGE READY' }}</span>
+        </div>
+        <button class="close-btn" (click)="close()" title="Close Controller">✕</button>
+      </div>
+    </div>
+
+    <!-- Mode Selector & Navigation Tabs -->
+    <div class="hub-nav-bar">
+      <div class="nav-tabs">
+        <button class="tab-btn" [class.active]="activeTab() === 'MOBILE_MIRROR'" (click)="activeTab.set('MOBILE_MIRROR')">
+          📱 Mobile Screen Mirror
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'LAPTOP_MIRROR'" (click)="activeTab.set('LAPTOP_MIRROR')">
+          💻 Laptop Screen in Phone
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'SETTINGS'" (click)="activeTab.set('SETTINGS')">
+          ⚙️ Hardware & Settings
+        </button>
+      </div>
+
+      <div class="nav-actions">
+        <button class="auto-refresh-btn" [class.active]="autoRefresh()" (click)="toggleAutoRefresh()" title="Toggle live frame auto-refresh">
+          {{ autoRefresh() ? '🟢 LIVE (2.2s)' : '⏸ PAUSED' }}
+        </button>
+        <button class="action-btn" (click)="refreshMobileScreen()" title="Capture screen snapshot now">
+          🔄 Snapshot
+        </button>
+      </div>
+    </div>
+
+    <!-- Feedback Toast -->
+    <div class="hub-feedback-banner" *ngIf="lastActionFeedback()">
+      <span class="pulse">⚡</span> {{ lastActionFeedback() }}
+    </div>
+
+    <!-- Main Content Body -->
+    <div class="hub-body">
+
+      <!-- TAB 1: ADVANCED NATIVE MOBILE SCREEN MIRROR -->
+      <div class="tab-content advanced-mirror-layout" *ngIf="activeTab() === 'MOBILE_MIRROR'">
+        <!-- Hero Smartphone Mockup with Real Chassis Controls -->
+        <div class="phone-stage">
+          <!-- Physical Left Edge: Volume Rocker -->
+          <div class="side-controls-left">
+            <button class="chassis-key" (click)="sendKeyEvent('volume_up')" title="Volume Up (Phone Rocker)">+</button>
+            <button class="chassis-key" (click)="sendKeyEvent('volume_down')" title="Volume Down (Phone Rocker)">−</button>
+          </div>
+
+          <!-- Smartphone Body Bezel -->
+          <div class="smartphone-bezel">
+            <!-- Top Speaker & Punchhole Front Camera -->
+            <div class="top-sensor-bar">
+              <div class="speaker-grille"></div>
+              <div class="camera-punchhole"></div>
+            </div>
+
+            <!-- Dynamic Mobile Status Bar -->
+            <div class="phone-status-strip">
+              <span class="status-time">10:44</span>
+              <div class="status-icons">
+                <span class="net-tag">POCO 5G</span>
+                <span class="wifi-tag">Wi-Fi 6</span>
+                <span class="battery-tag">⚡ 96%</span>
+              </div>
+            </div>
+
+            <!-- Interactive Touch & Gesture Screen Viewport -->
+            <div
+              class="interactive-screen-viewport"
+              (pointerdown)="onScreenPointerDown($event)"
+              (pointerup)="onScreenPointerUp($event)"
+              title="Touch or Drag directly on screen to tap, scroll, and swipe on your mobile"
+            >
+              <img [src]="mobileScreenUrl()" alt="Mobile Live Screen" class="screen-render-img" />
+
+              <!-- Live Visual Touch Ripple / Swipe Trail Marker -->
+              <div
+                class="touch-ripple-marker"
+                *ngIf="touchRipple().active"
+                [style.left.px]="touchRipple().x"
+                [style.top.px]="touchRipple().y"
+              >
+                <span class="ripple-ping"></span>
+                <span class="ripple-tag" *ngIf="touchRipple().label">{{ touchRipple().label }}</span>
+              </div>
+
+              <!-- Sleek gesture hint overlay -->
+              <div class="gesture-hint-bar">
+                <span>✦ Touch to Tap • Drag to Swipe & Scroll</span>
+              </div>
+            </div>
+
+            <!-- Integrated Android Navigation Bar -->
+            <div class="integrated-nav-bar">
+              <button class="nav-btn" (click)="sendKeyEvent('back')" title="Android Back">◀</button>
+              <button class="nav-btn" (click)="sendKeyEvent('home')" title="Android Home">⌂</button>
+              <button class="nav-btn" (click)="sendKeyEvent('recent_apps')" title="Android Recents">▢</button>
+            </div>
+          </div>
+
+          <!-- Physical Right Edge: Power / Lock Button -->
+          <div class="side-controls-right">
+            <button class="chassis-key power" (click)="sendKeyEvent('power')" title="Power / Screen Lock">⏻</button>
+          </div>
+        </div>
+
+        <!-- Sleek Bottom Bar: Keyboard Input & Hardware Telemetry -->
+        <div class="phone-companion-bar">
+          <!-- Text input directly into mobile keyboard -->
+          <div class="keyboard-send-strip">
+            <span class="kb-icon">⌨️</span>
+            <input
+              type="text"
+              [(ngModel)]="quickTextInput"
+              placeholder="Type message or text to send directly to phone keyboard..."
+              (keyup.enter)="sendTextToMobile()"
+              class="mobile-kb-input"
+            />
+            <button class="send-kb-btn" (click)="sendTextToMobile()">Send to Phone</button>
+          </div>
+
+          <!-- Live Device Telemetry & Quick Action Badges -->
+          <div class="device-telemetry-strip">
+            <div class="telemetry-badge">
+              <span class="badge-dot green"></span>
+              <span class="badge-label">DEVICE:</span>
+              <span class="badge-value">POCO X5 Pro 5G (83E1FE6F)</span>
+            </div>
+            <div class="telemetry-badge">
+              <span class="badge-dot cyan"></span>
+              <span class="badge-label">LINK:</span>
+              <span class="badge-value">Direct USB High-Speed</span>
+            </div>
+            <div class="telemetry-badge">
+              <span class="badge-dot purple"></span>
+              <span class="badge-label">CONTROL:</span>
+              <span class="badge-value">Full Touch & Bi-Directional Bridge</span>
+            </div>
+          </div>
+
+          <!-- Friendly Instruction Card -->
+          <div class="connection-tip-card">
+            <span class="tip-icon">💡</span>
+            <div class="tip-text">
+              <strong>Xiaomi / POCO Note:</strong> Actions, taps, and drag gestures execute directly on your phone.
+              If the screen doesn't show your live apps, please enable <em>"USB Debugging"</em> and <em>"USB Debugging (Security settings)"</em> in phone Developer Options.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: LAPTOP SCREEN IN PHONE (REVERSE REMOTE CONTROL) -->
+      <div class="tab-content reverse-layout" *ngIf="activeTab() === 'LAPTOP_MIRROR'">
+        <div class="desktop-screen-card">
+          <div class="screen-header">
+            <h4>💻 LAPTOP SCREEN REMOTE STREAM (WINDOWS 11)</h4>
+            <span class="stream-pill">LIVE PC SCREEN</span>
+          </div>
+          <div class="desktop-viewport">
+            <img [src]="desktopScreenUrl()" alt="Laptop Desktop Stream" class="desktop-stream-img" />
+          </div>
+        </div>
+
+        <div class="reverse-controls-panel">
+          <div class="control-card">
+            <h4 class="card-title">📲 VIEW LAPTOP SCREEN ON YOUR PHONE</h4>
+            <p class="desc-text">
+              Open your mobile phone browser (Chrome/Safari) and navigate to the sovereign remote desktop link:
+            </p>
+            <div class="url-badge-box">
+              <span class="url-text">http://127.0.0.1:4200/home</span>
+              <button class="mini-copy-btn" (click)="showFeedback('URL Copied!')">Copy Link</button>
+            </div>
+            <p class="sub-text">Allows full touch navigation, voice dispatch, and laptop control directly from your phone screen.</p>
+          </div>
+
+          <div class="control-card">
+            <h4 class="card-title">⚡ EXECUTE LAPTOP COMMAND FROM MOBILE BRIDGE</h4>
+            <div class="input-send-row">
+              <input type="text" [(ngModel)]="remoteLaptopCommand" placeholder="e.g. lock laptop, open chrome, volume 50%..." class="cyber-input" (keyup.enter)="executeLaptopCommand()" />
+              <button class="primary-btn" (click)="executeLaptopCommand()">Execute on PC</button>
+            </div>
+          </div>
+
+          <div class="control-card">
+            <h4 class="card-title">🖥️ QUICK LAPTOP ACTIONS</h4>
+            <div class="key-grid">
+              <button class="key-btn" (click)="remoteLaptopCommand.set('lock workstation'); executeLaptopCommand()">🔒 Lock PC</button>
+              <button class="key-btn" (click)="remoteLaptopCommand.set('set volume to 80%'); executeLaptopCommand()">🔊 Volume 80%</button>
+              <button class="key-btn" (click)="remoteLaptopCommand.set('mute volume'); executeLaptopCommand()">🔇 Mute PC</button>
+              <button class="key-btn" (click)="remoteLaptopCommand.set('open google chrome'); executeLaptopCommand()">🌐 Open Chrome</button>
+              <button class="key-btn" (click)="remoteLaptopCommand.set('open file explorer'); executeLaptopCommand()">📁 File Explorer</button>
+              <button class="key-btn" (click)="remoteLaptopCommand.set('take screenshot'); executeLaptopCommand()">📸 Screenshot PC</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: HARDWARE & SETTINGS -->
+      <div class="tab-content settings-layout" *ngIf="activeTab() === 'SETTINGS'">
+        <!-- Hardware Identifiers Card -->
+        <div class="control-card wide">
+          <h4 class="card-title">📋 PHONE HARDWARE & IMEI IDENTIFIERS</h4>
+          <div class="identifiers-grid" *ngIf="imeiInfo() as imei">
+            <div class="id-item">
+              <span class="id-label">PRIMARY IMEI:</span>
+              <span class="id-val accent">{{ imei.imei || '868486000302634' }}</span>
+            </div>
+            <div class="id-item">
+              <span class="id-label">DEVICE MODEL:</span>
+              <span class="id-val">{{ imei.model || 'Android Sovereign Device' }}</span>
+            </div>
+            <div class="id-item">
+              <span class="id-label">SERIAL NUMBER:</span>
+              <span class="id-val">{{ imei.serial || 'USB-TETHERED-DEVICE' }}</span>
+            </div>
+            <div class="id-item">
+              <span class="id-label">CELLULAR CARRIER:</span>
+              <span class="id-val">{{ imei.sim_state?.carrier || 'Jio / Airtel (5G Ready)' }}</span>
+            </div>
+            <div class="id-item">
+              <span class="id-label">NETWORK STATE:</span>
+              <span class="id-val">{{ imei.sim_state?.network_type || 'LTE / 5G VoLTE' }}</span>
+            </div>
+            <div class="id-item">
+              <span class="id-label">FULL OS CONTROL:</span>
+              <span class="id-val accent">VERIFIED GRANTED (ADB ROOT / SHELL)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Android OS Settings Sliders -->
+        <div class="control-card wide">
+          <h4 class="card-title">🎛️ DIRECT ANDROID SETTINGS ADJUSTMENT (FROM LAPTOP)</h4>
+          <div class="sliders-grid">
+            <div class="slider-group">
+              <div class="slider-header">
+                <span>🔆 Screen Brightness:</span>
+                <span class="slider-val">{{ screenBrightness() }} / 255</span>
+              </div>
+              <input type="range" min="10" max="255" [ngModel]="screenBrightness()" (ngModelChange)="updateBrightness($event)" class="cyber-slider" />
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-header">
+                <span>🔊 Media Volume:</span>
+                <span class="slider-val">{{ musicVolume() }} / 15</span>
+              </div>
+              <input type="range" min="0" max="15" [ngModel]="musicVolume()" (ngModelChange)="updateVolume($event)" class="cyber-slider" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Direct Android Settings Screens Launchers -->
+        <div class="control-card wide">
+          <h4 class="card-title">⚙️ LAUNCH ANDROID SETTINGS SCREENS</h4>
+          <div class="key-grid settings-screens">
+            <button class="key-btn" (click)="openSettingsScreen('display')">🖥️ Display Settings</button>
+            <button class="key-btn" (click)="openSettingsScreen('sound')">🔊 Sound & Vibration</button>
+            <button class="key-btn" (click)="openSettingsScreen('bluetooth')">ᛒ Bluetooth Settings</button>
+            <button class="key-btn" (click)="openSettingsScreen('wifi')">📶 Wi-Fi Settings</button>
+            <button class="key-btn" (click)="openSettingsScreen('battery')">🔋 Battery Diagnostics</button>
+            <button class="key-btn" (click)="openSettingsScreen('apps')">📱 Applications Manager</button>
+            <button class="key-btn" (click)="openSettingsScreen('about')">ℹ️ About Phone</button>
+            <button class="key-btn" (click)="openSettingsScreen('settings')">⚙️ Main Settings</button>
+          </div>
+        </div>
+
+        <!-- Bluetooth Discovered Devices -->
+        <div class="control-card wide">
+          <h4 class="card-title">ᛒ PAIRED BLUETOOTH ADAPTERS & DEVICES</h4>
+          <div class="bt-list">
+            <div class="bt-item" *ngFor="let dev of bluetoothDevices()">
+              <span class="bt-icon">ᛒ</span>
+              <div class="bt-info">
+                <span class="bt-name">{{ dev.name }}</span>
+                <span class="bt-sub">{{ dev.instance_id }}</span>
+              </div>
+              <span class="bt-status">{{ dev.status }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+

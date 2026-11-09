@@ -3,6 +3,7 @@
 import asyncio
 import os
 import time
+import uuid
 import psutil
 from typing import Any, Dict, List, Optional, Tuple
 from pydantic import BaseModel
@@ -827,6 +828,17 @@ async def trigger_daily_evolution_cycle():
     from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
     report = await daily_evolution_service.execute_daily_evolution_cycle()
     return report.model_dump()
+
+
+@router.get("/agents/{agent_id}/details")
+async def get_agent_station_details(agent_id: str):
+    """Retrieve detailed agent identity, completed work today, active telemetry, and spoken self-explanation."""
+    from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
+    status_info = daily_evolution_service.get_agent_detailed_status(agent_id)
+    return {
+        "success": True,
+        "data": status_info
+    }
 
 
 # Authoritative Gateway Router mirroring all agent routes under /agent-gateway

@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThreeSceneManagerService, AgentNode } from '../../../../shared/3d/three-scene-manager.service';
@@ -57,6 +57,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
 
   readonly agents = this.threeScene.agents;
   readonly selectedAgent = this.threeScene.selectedAgent;
+  readonly activeStation = signal<AgentNode | null>(null);
 
   // Deliberation state
   readonly isDeliberating = signal(false);
@@ -86,12 +87,28 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
 
   // Station Action Status
   readonly stationActionStatus = signal<string | null>(null);
+  readonly currentAgentDetails = signal<any>(null);
+  readonly isLoadingDetails = signal<boolean>(false);
 
   // Delegation
   delegationGoal = '';
   readonly isDelegating = signal(false);
 
   private syncTimer: any = null;
+
+  constructor() {
+    let lastLoadedId: string | null = null;
+    effect(() => {
+      const agent = this.selectedAgent();
+      if (agent && agent.id !== lastLoadedId) {
+        lastLoadedId = agent.id;
+        this.selectStation(agent);
+      } else if (!agent) {
+        lastLoadedId = null;
+        this.currentAgentDetails.set(null);
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.threeScene.setMode('WORKSPACE');
@@ -187,16 +204,57 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
     }
   }
 
-  selectStation(agent: AgentNode): void {
+  async selectStation(agent: AgentNode): Promise<void> {
+    // Acoustic barge-in: immediately cut off any ongoing speech audio
+    this.speechVoice.stop();
+    this.activeStation.set(agent);
     this.threeScene.focusAgent(agent);
     this.stationActionStatus.set(null);
+    this.isLoadingDetails.set(true);
+
     this.brainChatMessages.set([
       {
         sender: agent.name,
-        text: `Specialist Brain (${agent.codename}) online at ${agent.subsystem}. Ready for autonomous local execution.`,
+        text: `Specialist Brain (${agent.codename}) online at ${agent.subsystem}. Bringing node forward.`,
         time: new Date().toLocaleTimeString()
       }
     ]);
+
+    try {
+      const res = await fetch(getApiUrl(`/api/v1/agent-gateway/agents/${agent.id}/details`));
+      if (res.ok) {
+        const json = await res.json();
+        const details = json.data;
+        this.currentAgentDetails.set(details);
+
+        // Vocal self-explanation from the agent
+        if (this.voiceStreamEnabled() && details.spoken_explanation) {
+          this.speechVoice.speak(details.spoken_explanation);
+        }
+
+        this.brainChatMessages.set([
+          {
+            sender: agent.name,
+            text: details.spoken_explanation || `Specialist Brain (${agent.codename}) online at ${agent.subsystem}. Ready for autonomous local execution.`,
+            time: new Date().toLocaleTimeString()
+          }
+        ]);
+      }
+    } catch {
+      // Fallback local description
+      const fallbackSpeech = `Greetings Sir. I am ${agent.name}, ${agent.codename}. My role is ${agent.role}. Standing by at ${agent.subsystem}.`;
+      if (this.voiceStreamEnabled()) {
+        this.speechVoice.speak(fallbackSpeech);
+      }
+    } finally {
+      this.isLoadingDetails.set(false);
+    }
+  }
+
+  reExplainAgent(agent: AgentNode): void {
+    const details = this.currentAgentDetails();
+    const explanation = details?.spoken_explanation || `Greetings Sir. I am ${agent.name}, ${agent.codename}. My role is ${agent.role}. Active at ${agent.subsystem}.`;
+    this.speechVoice.speak(explanation);
   }
 
   onPillHover(agent: AgentNode): void {
@@ -210,7 +268,10 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
   }
 
   closeStationDrawer(): void {
+    this.speechVoice.stop();
+    this.activeStation.set(null);
     this.threeScene.resetCameraFocus();
+    this.threeScene.selectedAgent.set(null);
     this.stationActionStatus.set(null);
   }
 

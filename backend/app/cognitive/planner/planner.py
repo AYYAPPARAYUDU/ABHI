@@ -51,15 +51,19 @@ class TaskPlanner:
                 created_at_ts=now_ts
             )
 
-        # 1. System Power & Critical Safety Controls (Direct O(1) Fast-Path)
-        if any(k in norm_goal for k in ["restart laptop", "restart pc", "reboot", "shutdown laptop", "shutdown pc", "power off", "cancel restart", "cancel shutdown"]):
+        # 1. Direct O(1) Fast-Path for Power, Hardware/IMEI, and Immediate Device Controls
+        fast_keywords = [
+            "restart laptop", "restart pc", "reboot", "shutdown laptop", "shutdown pc", "power off",
+            "cancel restart", "cancel shutdown", "imei", "mobile", "phone", "calc", "calculate", "brightness"
+        ]
+        if any(k in norm_goal for k in fast_keywords):
             dag = self._plan_with_heuristics(dag_id, task_id, goal, now_ts)
         else:
             # 2. Authentic LLM Master Neural Planner (Dynamic DAG Synthesis)
             dag = None
             try:
                 import asyncio
-                dag = await asyncio.wait_for(self._plan_with_llm(dag_id, task_id, goal, now_ts), timeout=18.0)
+                dag = await asyncio.wait_for(self._plan_with_llm(dag_id, task_id, goal, now_ts), timeout=4.5)
                 if dag and dag.nodes:
                     logger.info(f"Generated dynamic neural LLM DAG plan with {len(dag.nodes)} steps for task '{task_id}' using abhi:latest")
             except Exception as e:
@@ -698,8 +702,51 @@ class TaskPlanner:
                 risk_tier="Tier 1",
                 status=NodeStatus.PENDING
             )
-        elif any(k in goal_lower for k in ["mobile", "phone", "android", "cellphone", "smartphone", "adb"]):
-            if "battery" in goal_lower:
+        elif any(k in goal_lower for k in ["mobile", "phone", "android", "cellphone", "smartphone", "adb", "imei"]):
+            if any(i in goal_lower for i in ["imei", "serial number", "phone id", "device id"]):
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title="Retrieve Mobile IMEI & Hardware Specs",
+                    agent_id="mobile_device_agent",
+                    action="get_imei",
+                    params={},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            elif any(s in goal_lower for s in ["settings", "brightness", "bluetooth", "volume"]):
+                if "brightness" in goal_lower:
+                    m_br = re.search(r"(\d+)", goal_lower)
+                    br_val = int(m_br.group(1)) if m_br else 150
+                    nodes["step_1"] = DAGNode(
+                        node_id="step_1",
+                        title=f"Adjust Mobile Screen Brightness to {br_val}",
+                        agent_id="mobile_device_agent",
+                        action="put_setting",
+                        params={"namespace": "system", "key": "screen_brightness", "value": str(br_val)},
+                        risk_tier="Tier 1",
+                        status=NodeStatus.PENDING
+                    )
+                elif "bluetooth" in goal_lower:
+                    nodes["step_1"] = DAGNode(
+                        node_id="step_1",
+                        title="Scan & Manage Direct Bluetooth Connection to Mobile",
+                        agent_id="mobile_device_agent",
+                        action="scan_bluetooth",
+                        params={},
+                        risk_tier="Tier 1",
+                        status=NodeStatus.PENDING
+                    )
+                else:
+                    nodes["step_1"] = DAGNode(
+                        node_id="step_1",
+                        title="Fetch Android OS System Settings",
+                        agent_id="mobile_device_agent",
+                        action="get_setting",
+                        params={},
+                        risk_tier="Tier 1",
+                        status=NodeStatus.PENDING
+                    )
+            elif "battery" in goal_lower:
                 nodes["step_1"] = DAGNode(
                     node_id="step_1",
                     title="Check Mobile Battery & Power Diagnostics",

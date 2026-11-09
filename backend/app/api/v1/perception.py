@@ -8,6 +8,8 @@ from backend.app.perception.audio.vad import VoiceActivityDetector, AudioVADStat
 from backend.app.perception.audio.stt import speech_to_text, TranscriptionResult
 from backend.app.perception.audio.tts import text_to_speech, SpeechSynthesisResult
 from backend.app.perception.audio.canonicalizer import language_canonicalizer, CanonicalCommand
+from backend.app.perception.audio.voice_biometrics import voice_biometrics, VoiceVerificationResult
+from backend.app.runtime.wake_word import wake_word_detector, VoiceTriggerType
 from backend.app.perception.vision.face_tracker import face_tracker, FaceLandmarksResult
 from backend.app.perception.vision.hand_tracker import hand_tracker, HandLandmarksResult
 from backend.app.perception.vision.screen_ocr import screen_ocr, ScreenOCRResult, DetectedUIElement
@@ -155,6 +157,9 @@ async def get_perception_status() -> Dict[str, Any]:
             "stt_engine": "Faster-Whisper (Local Int8/FP16)",
             "tts_engine": "Piper TTS / EdgeTTS (Local)",
             "canonicalizer_supported_languages": ["en", "te", "hi", "ta", "es", "auto"],
+            "wake_word_support": ["Hey Mamu", "Abhi", "హే మామూ", "हे मामू", "ஹே மாமு"],
+            "sleep_word_support": ["Ok Bye Mamu", "Bye Mamu", "Stop Mamu", "సరే బై మామూ", "ओके बाय मामू"],
+            "voice_biometrics_enrolled": len(voice_biometrics.get_enrolled_profiles()),
         },
         "vision": {
             "face_tracking": True,
@@ -168,3 +173,70 @@ async def get_perception_status() -> Dict[str, Any]:
         },
         "status": "OPERATIONAL",
     }
+
+
+class WakePhraseCheckRequest(BaseModel):
+    text: str
+
+
+class VoiceVerifyRequest(BaseModel):
+    audio_base64: Optional[str] = None
+    sample_features: Optional[List[float]] = None
+    user_id: str = "owner"
+    min_threshold: Optional[float] = 0.70
+
+
+class VoiceEnrollRequest(BaseModel):
+    user_id: str
+    user_name: str
+    audio_base64: Optional[str] = None
+
+
+@router.post("/wake-word/detect")
+async def detect_wake_word(request: WakePhraseCheckRequest) -> Dict[str, Any]:
+    """Detect whether spoken text contains 'Hey Mamu' wake activation or 'Ok Bye Mamu' sleep deactivation."""
+    intent_type, matched_phrase, conf = wake_word_detector.detect_phrase_intent(request.text)
+    return {
+        "text": request.text,
+        "intent_type": intent_type.value,
+        "matched_phrase": matched_phrase,
+        "confidence": conf,
+        "action": (
+            "ACTIVATE_LISTENING"
+            if intent_type == VoiceTriggerType.WAKE
+            else ("DEACTIVATE_LISTENING" if intent_type == VoiceTriggerType.SLEEP else "IGNORE")
+        ),
+        "spoken_reply": (
+            "Yes Sir, I am listening."
+            if intent_type == VoiceTriggerType.WAKE
+            else ("Standing by, Sir. Conversation paused." if intent_type == VoiceTriggerType.SLEEP else None)
+        ),
+    }
+
+
+@router.post("/voice-biometrics/verify")
+async def verify_speaker_voice(request: VoiceVerifyRequest) -> Dict[str, Any]:
+    """Verify speaker voice biometric identity against operator profile."""
+    import base64
+    if request.sample_features:
+        result = voice_biometrics.verify_voice(request.sample_features, user_id=request.user_id, min_threshold=request.min_threshold)
+    else:
+        audio_bytes = base64.b64decode(request.audio_base64) if request.audio_base64 else None
+        result = voice_biometrics.verify_voice(audio_bytes, user_id=request.user_id, min_threshold=request.min_threshold)
+    return result.model_dump()
+
+
+@router.post("/voice-biometrics/enroll")
+async def enroll_speaker_voice(request: VoiceEnrollRequest) -> Dict[str, Any]:
+    """Enroll or adapt operator voice profile."""
+    import base64
+    audio_bytes = base64.b64decode(request.audio_base64) if request.audio_base64 else None
+    profile = voice_biometrics.enroll_voice(user_id=request.user_id, user_name=request.user_name, samples_or_bytes=audio_bytes)
+    return profile.model_dump()
+
+
+@router.get("/voice-biometrics/profiles")
+async def get_voice_profiles() -> List[Dict[str, Any]]:
+    """List enrolled voice biometric profiles."""
+    return voice_biometrics.get_enrolled_profiles()
+

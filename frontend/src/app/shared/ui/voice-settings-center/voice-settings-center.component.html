@@ -1,0 +1,290 @@
+<div class="voice-center-backdrop" *ngIf="isOpen()" (click)="close()">
+  <div class="voice-center-modal" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="center-header">
+      <div class="header-left">
+        <span class="mic-pulsar" [class.listening]="isListening()" [class.speaking]="isSpeaking()">🎙️</span>
+        <div>
+          <h2 class="center-title">ABHI VOICE & BIOMETRICS COMMAND CENTER</h2>
+          <p class="center-subtitle">Continuous Hands-Free Wake-Word · Voice Biometrics · Barge-In Interruption</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="mode-badge" [class.active]="isHandsFree()">
+          <span class="dot"></span>
+          <span>{{ isHandsFree() ? 'HANDS-FREE ACTIVE ("Hey Mamu")' : 'STANDBY // PUSH TO TALK' }}</span>
+        </div>
+        <button class="close-btn" (click)="close()" title="Close Settings">✕</button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="center-tabs-bar">
+      <div class="tabs-group">
+        <button class="tab-btn" [class.active]="activeTab() === 'VALIDATION'" (click)="activeTab.set('VALIDATION')">
+          ⚡ Wake-Word & Barge-In Validation
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'BIOMETRICS'" (click)="activeTab.set('BIOMETRICS')">
+          🧬 Voice Biometrics & Security
+        </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'TTS_TUNING'" (click)="activeTab.set('TTS_TUNING')">
+          🗣️ Neural Voice & Speed Tuning
+        </button>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="quick-btns">
+        <button class="handsfree-toggle-btn" [class.active]="isHandsFree()" (click)="toggleHandsFree()">
+          {{ isHandsFree() ? '🎙️ Stop Hands-Free' : '🎙️ Start "Hey Mamu"' }}
+        </button>
+        <button class="mute-btn" [class.muted]="isMuted()" (click)="toggleMute()">
+          {{ isMuted() ? '🔇 Unmute' : '🔊 Mute' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast Notification Banner -->
+    <div class="toast-banner" *ngIf="toastFeedback()">
+      <span class="sparkle">✦</span> {{ toastFeedback() }}
+    </div>
+
+    <!-- Modal Content -->
+    <div class="center-body">
+
+      <!-- TAB 1: WAKE-WORD & BARGE-IN VALIDATION -->
+      <div class="tab-pane" *ngIf="activeTab() === 'VALIDATION'">
+        <!-- Audio Spectrum / Status Bar -->
+        <div class="panel-card highlight">
+          <div class="status-summary-row">
+            <div class="stat-item">
+              <span class="label">MICROPHONE:</span>
+              <span class="val" [class.online]="isListening()">{{ isListening() ? '🟢 ACTIVE // LISTENING' : '⚪ READY' }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="label">SPEECH SYNTHESIS:</span>
+              <span class="val" [class.speaking]="isSpeaking()">{{ isSpeaking() ? '🟣 SPEAKING ALOUD' : '⚪ IDLE' }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="label">ACTIVE VOICE:</span>
+              <span class="val">{{ activeVoiceName() }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="label">BARGE-IN STATE:</span>
+              <span class="val online">ARMED (INTERRUPTS ON SPEECH)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1-Click Multi-Lingual Wake Word Testing Buttons -->
+        <div class="panel-card">
+          <h4 class="card-heading">🧪 1-CLICK MULTILINGUAL WAKE-WORD & SLEEP-WORD VALIDATION</h4>
+          <p class="card-desc">Click any button below to validate that ABHI instantly detects wake words across all languages:</p>
+          <div class="test-buttons-grid">
+            <button class="action-test-btn" (click)="testWakeWord('Hey Mamu what is the plan today')">
+              <span class="flag">🇬🇧</span> Test "Hey Mamu" (English)
+            </button>
+            <button class="action-test-btn" (click)="testWakeWord('హే మామూ ఎలా ఉన్నావ్')">
+              <span class="flag">🇮🇳</span> Test "హే మామూ" (Telugu)
+            </button>
+            <button class="action-test-btn" (click)="testWakeWord('हे मामू क्या हाल है')">
+              <span class="flag">🇮🇳</span> Test "हे मामू" (Hindi)
+            </button>
+            <button class="action-test-btn" (click)="testWakeWord('ஹே மாமு வணக்கம்')">
+              <span class="flag">🇮🇳</span> Test "ஹே மாமு" (Tamil)
+            </button>
+            <button class="action-test-btn sleep" (click)="testWakeWord('Ok Bye Mamu take rest')">
+              <span class="flag">🛑</span> Test "Ok Bye Mamu" (Sleep)
+            </button>
+            <button class="action-test-btn sleep" (click)="testWakeWord('సరే బై మామూ సెలవు')">
+              <span class="flag">🛑</span> Test "సరే బై మామూ" (Sleep)
+            </button>
+          </div>
+
+          <!-- Wake Test Result Box -->
+          <div class="test-result-box" *ngIf="wakeTestResult() as res">
+            <span class="res-tag" [class.wake]="res.intent_type === 'WAKE'" [class.sleep]="res.intent_type === 'SLEEP'">
+              {{ res.intent_type }} ({{ (res.confidence * 100).toFixed(0) }}%)
+            </span>
+            <span class="res-phrase">Matched: "{{ res.matched_phrase }}"</span>
+            <span class="res-reply">Spoken Reply: "{{ res.spoken_reply }}"</span>
+          </div>
+        </div>
+
+        <!-- Barge-In Voice Interruption Test Card -->
+        <div class="panel-card">
+          <h4 class="card-heading">⚡ ACOUSTIC BARGE-IN INTERRUPTION VALIDATION</h4>
+          <p class="card-desc">
+            When ABHI is speaking aloud and you speak into the mic, the system immediately cuts audio playback. Click below to audition:
+          </p>
+          <div class="bargein-action-row">
+            <button class="bargein-btn" (click)="testBargeIn()">
+              🎙️ Speak Test Phrase Aloud (Then Speak to Cut Off)
+            </button>
+            <button class="stop-audio-btn" (click)="speechVoice.stop()">
+              ⏹ Stop Audio Immediately
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: VOICE BIOMETRICS & SECURITY -->
+      <div class="tab-pane" *ngIf="activeTab() === 'BIOMETRICS'">
+        <div class="panel-card highlight">
+          <div class="owner-badge-row">
+            <div class="owner-avatar">👑</div>
+            <div>
+              <h3 class="owner-name">Ayyappa Rayudu Ravuvari</h3>
+              <p class="owner-role">Sovereign System Operator & Enrolled Voice Authority</p>
+            </div>
+            <div class="bio-confidence-pill" *ngIf="biometricsResult() as b">
+              <span>SCORE: {{ (b.similarity_score * 100).toFixed(1) }}%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Biometrics Action Buttons -->
+        <div class="panel-card">
+          <h4 class="card-heading">🔒 SOVEREIGN VOICE BIOMETRIC CONTROLS</h4>
+          <div class="bio-actions-grid">
+            <button class="primary-bio-btn" (click)="verifyBiometrics()" [disabled]="isVerifyingBiometrics()">
+              {{ isVerifyingBiometrics() ? 'Verifying Acoustic Vector...' : '🔒 Verify Voice Biometrics Now' }}
+            </button>
+
+            <button class="secondary-bio-btn" (click)="enrollVoice()" [disabled]="isEnrollingVoice()">
+              {{ isEnrollingVoice() ? 'Calibrating Audio...' : '🧬 Re-Enroll Owner Voice Signature' }}
+            </button>
+          </div>
+
+          <!-- Biometric Sensitivity & Security Policies Controls -->
+          <div class="bio-settings-subgrid">
+            <!-- Threshold Slider -->
+            <div class="bio-setting-card">
+              <div class="setting-title-row">
+                <span class="set-label">BIOMETRIC CONFIDENCE THRESHOLD</span>
+                <span class="set-value">{{ bioThreshold() }}%</span>
+              </div>
+              <input
+                type="range"
+                min="60"
+                max="95"
+                [ngModel]="bioThreshold()"
+                (ngModelChange)="updateThreshold($event)"
+                class="bio-slider"
+              />
+              <span class="set-hint">Minimum acoustic cosine similarity required to authorize sovereign commands.</span>
+            </div>
+
+            <!-- Noise Cancellation Toggle -->
+            <div class="bio-setting-card">
+              <div class="setting-title-row">
+                <span class="set-label">SPECTRAL NOISE CANCELLATION</span>
+                <button class="toggle-btn" [class.on]="noiseCancellationEnabled()" (click)="toggleNoiseCancellation()">
+                  {{ noiseCancellationEnabled() ? 'ENABLED' : 'DISABLED' }}
+                </button>
+              </div>
+              <span class="set-hint">Filters background room fan, typing, and ambient acoustic chatter.</span>
+            </div>
+
+            <!-- Voice OS Gatekeeper Toggle -->
+            <div class="bio-setting-card">
+              <div class="setting-title-row">
+                <span class="set-label">VOICE OS ACTION AUTHORIZATION</span>
+                <button class="toggle-btn" [class.on]="voiceOsGateEnabled()" (click)="toggleOsGate()">
+                  {{ voiceOsGateEnabled() ? 'ARMED' : 'OFF' }}
+                </button>
+              </div>
+              <span class="set-hint">Requires verified voice biometrics before executing Windows and mobile OS changes.</span>
+            </div>
+
+            <!-- Acoustic Guardian & Emergency Protocol -->
+            <div class="bio-setting-card">
+              <div class="setting-title-row">
+                <span class="set-label">EMERGENCY MAMU LOCKDOWN</span>
+                <button class="lockdown-btn" (click)="triggerEmergencyLockdown()">
+                  🚨 LOCKDOWN NOW
+                </button>
+              </div>
+              <span class="set-hint">Instantly terminates TTS audio playback, mutes microphones, and secures workspace.</span>
+            </div>
+          </div>
+
+          <!-- 16-D Acoustic Feature Visualization -->
+          <div class="acoustic-features-box">
+            <span class="box-title">16-DIMENSIONAL ACOUSTIC FEATURE SIGNATURE:</span>
+            <div class="feature-bars-grid">
+              <div class="bar-col" *ngFor="let f of [0.24, 0.41, 0.65, 0.82, 0.55, 0.38, 0.49, 0.71, 0.60, 0.45, 0.52, 0.68, 0.39, 0.57, 0.73, 0.80]; let idx = index">
+                <div class="bar-fill" [style.height.%]="f * 100"></div>
+                <span class="bar-idx">B{{ idx + 1 }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: NEURAL VOICE & SPEED TUNING -->
+      <div class="tab-pane" *ngIf="activeTab() === 'TTS_TUNING'">
+        <!-- Persona Selection -->
+        <div class="panel-card">
+          <h4 class="card-heading">🎭 AI COMPANION PERSONA</h4>
+          <div class="pills-grid">
+            <button class="pill-btn" [class.selected]="persona() === 'JARVIS'" (click)="setPersona('JARVIS')">
+              J.A.R.V.I.S. (Ryan Natural Neural)
+            </button>
+            <button class="pill-btn" [class.selected]="persona() === 'FRIDAY'" (click)="setPersona('FRIDAY')">
+              F.R.I.D.A.Y. (Emily Natural Neural)
+            </button>
+          </div>
+        </div>
+
+        <!-- Operator Callsign -->
+        <div class="panel-card">
+          <h4 class="card-heading">🏷️ OPERATOR CALLSIGN</h4>
+          <div class="pills-grid callsigns">
+            <button class="pill-btn" [class.selected]="callsign() === 'Sir'" (click)="setCallsign('Sir')">Sir</button>
+            <button class="pill-btn" [class.selected]="callsign() === 'Boss'" (click)="setCallsign('Boss')">Boss</button>
+            <button class="pill-btn" [class.selected]="callsign() === 'Tony'" (click)="setCallsign('Tony')">Tony</button>
+            <button class="pill-btn" [class.selected]="callsign() === 'Partner'" (click)="setCallsign('Partner')">Partner</button>
+          </div>
+        </div>
+
+        <!-- Language Switcher -->
+        <div class="panel-card">
+          <h4 class="card-heading">🌐 RECOGNITION & SYNTHESIS LANGUAGE</h4>
+          <div class="pills-grid">
+            <button class="pill-btn" [class.selected]="activeLanguage() === 'en'" (click)="setLanguage('en')">
+              🇬🇧 English (UK / US)
+            </button>
+            <button class="pill-btn" [class.selected]="activeLanguage() === 'te'" (click)="setLanguage('te')">
+              🇮🇳 తెలుగు (Telugu)
+            </button>
+            <button class="pill-btn" [class.selected]="activeLanguage() === 'hi'" (click)="setLanguage('hi')">
+              🇮🇳 हिंदी (Hindi)
+            </button>
+            <button class="pill-btn" [class.selected]="activeLanguage() === 'ta'" (click)="setLanguage('ta')">
+              🇮🇳 தமிழ் (Tamil)
+            </button>
+          </div>
+        </div>
+
+        <!-- Speech Speed Slider -->
+        <div class="panel-card">
+          <div class="speed-header">
+            <h4 class="card-heading">⚡ SPEECH SPEED RATE: {{ speechSpeed().toFixed(2) }}x</h4>
+            <span class="speed-label">{{ speechSpeed() < 0.95 ? 'Deliberate' : speechSpeed() > 1.10 ? 'Rapid' : 'Natural Cadence' }}</span>
+          </div>
+          <input type="range" min="0.85" max="1.25" step="0.05" [ngModel]="speechSpeed()" (ngModelChange)="setSpeed($event)" class="speed-slider" />
+        </div>
+
+        <!-- Audition Button -->
+        <div class="panel-card center">
+          <button class="audition-btn" (click)="auditionVoice()">
+            🗣️ Audition Selected Neural Voice Aloud
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+

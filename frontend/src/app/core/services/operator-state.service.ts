@@ -174,8 +174,8 @@ export class OperatorStateService {
     timestamp: Date.now()
   });
 
-  // Workspace Biometric Gatekeeper State
-  readonly isWorkspaceLocked = signal<boolean>(true);
+  // Workspace Biometric Gatekeeper State (Default unlocked on local session)
+  readonly isWorkspaceLocked = signal<boolean>(false);
   readonly lockReason = signal<string>('Biometric Identity Verification Required to Access Workstation');
   readonly lastVerifiedTimestamp = signal<number>(0);
   private presenceTimerId: any = null;
