@@ -16,6 +16,7 @@ class SquadType(str, Enum):
     EXECUTION = "EXECUTION"                     # Browser, Comms, OS & Code
     INTELLIGENCE = "INTELLIGENCE"               # Researcher, ML Specialist, Strategist
     QUALITY_GOVERNANCE = "QUALITY_GOVERNANCE"   # QA Auditor (Critic) & Security Guard
+    MOBILE = "MOBILE"                           # Mobile Device, Notification Intelligence & Wireless Automator
 
 
 class EnvelopeType(str, Enum):

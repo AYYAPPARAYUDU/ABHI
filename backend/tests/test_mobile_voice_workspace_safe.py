@@ -154,3 +154,32 @@ async def test_workspace_agent_self_explanation():
         assert len(details["spoken_explanation"]) > 20
         assert len(details["today_work"]) >= 2
         assert "Sir" in details["spoken_explanation"]
+
+
+@pytest.mark.asyncio
+async def test_mobile_wireless_and_notification_intelligence():
+    """Verify zero-cable auto-discovery, notifications parsing, low-latency JPEG capture, and mobile specialist agent."""
+    controller = AdbController()
+
+    # 1. Low-latency JPEG mobile screencap
+    jpeg_bytes = await controller.take_screenshot_bytes(format="jpeg", quality=88)
+    assert len(jpeg_bytes) > 500
+    assert jpeg_bytes.startswith(b"\xff\xd8\xff")  # Standard JPEG magic header
+
+    # 2. Wake device signal
+    wake_res = await controller.wake_device()
+    assert isinstance(wake_res, bool)
+
+    # 3. Notification parsing from dumpsys
+    notifications = await controller.get_notifications()
+    assert isinstance(notifications, list)
+    if len(notifications) > 0:
+        assert "package" in notifications[0]
+        assert "title" in notifications[0]
+
+    # 4. Agent 10 (DROIDMARK Mobile Specialist) detailed status
+    mob_details = daily_evolution_service.get_agent_detailed_status("agent_10_mobile")
+    assert mob_details["agent_id"] == "agent_10_mobile"
+    assert "DROIDMARK" in mob_details["spoken_explanation"] or "MARK 50" in mob_details["spoken_explanation"]
+    assert len(mob_details["today_work"]) >= 3
+    assert any("wireless" in w.lower() or "mobile" in w.lower() for w in mob_details["today_work"])

@@ -16,20 +16,30 @@ export class MobileScreenHubComponent implements OnInit, OnDestroy {
   readonly speechVoice = inject(SpeechVoiceService);
 
   readonly isOpen = signal<boolean>(false);
-  readonly activeTab = signal<'MOBILE_MIRROR' | 'LAPTOP_MIRROR' | 'SETTINGS'>('MOBILE_MIRROR');
+  readonly activeTab = signal<'MOBILE_MIRROR' | 'LAPTOP_MIRROR' | 'SETTINGS' | 'NOTIFICATIONS'>('MOBILE_MIRROR');
   readonly connectionMode = signal<'USB_DIRECT' | 'WIFI_ADB' | 'BLUETOOTH'>('USB_DIRECT');
 
-  // Screen streams
+  // Screen streams & Latency Tuning
   readonly mobileScreenUrl = signal<string>(getApiUrl('/api/v1/devices/mobile/screenshot'));
   readonly desktopScreenUrl = signal<string>(getApiUrl('/api/v1/devices/desktop/screenshot'));
   readonly isRefreshingScreen = signal<boolean>(false);
   readonly autoRefresh = signal<boolean>(true);
+  readonly refreshRateMs = signal<number>(800);
 
   // Device telemetry & identifiers
   readonly mobileStatus = signal<any>(null);
   readonly imeiInfo = signal<any>(null);
   readonly bluetoothDevices = signal<any[]>([]);
   readonly isConnected = computed(() => this.mobileStatus()?.connected === true);
+
+  // Notification Intelligence via DROIDMARK (MARK 50)
+  readonly notifications = signal<any[]>([]);
+  readonly notificationAnalysis = signal<any>(null);
+  readonly isAnalyzingNotifications = signal<boolean>(false);
+
+  // Wireless Zero-Cable Controls
+  readonly isDiscoveringWireless = signal<boolean>(false);
+  readonly isSwitchingTcpip = signal<boolean>(false);
 
   // Settings & Gestures
   readonly screenBrightness = signal<number>(180);
@@ -45,7 +55,7 @@ export class MobileScreenHubComponent implements OnInit, OnDestroy {
   private pointerDownTime = 0;
 
   // Wi-Fi Connect inputs
-  wifiIp = '192.168.1.105';
+  wifiIp = '10.65.249.121';
   wifiPort = 5555;
   readonly isConnectingWifi = signal<boolean>(false);
 
@@ -86,8 +96,17 @@ export class MobileScreenHubComponent implements OnInit, OnDestroy {
     }
   }
 
+  setRefreshRate(ms: number): void {
+    this.refreshRateMs.set(ms);
+    this.showFeedback(`Stream latency set to ${ms}ms (${ms <= 400 ? 'TURBO' : ms <= 800 ? 'SMOOTH' : 'ECO'})`);
+    if (this.autoRefresh()) {
+      this.startScreenAutoRefresh();
+    }
+  }
+
   private startScreenAutoRefresh(): void {
     this.stopScreenAutoRefresh();
+    const interval = Math.max(300, this.refreshRateMs());
     this.screenRefreshTimer = setInterval(() => {
       if (this.isOpen() && this.autoRefresh()) {
         if (this.activeTab() === 'MOBILE_MIRROR') {
@@ -96,7 +115,7 @@ export class MobileScreenHubComponent implements OnInit, OnDestroy {
           this.refreshDesktopScreen();
         }
       }
-    }, 2200);
+    }, interval);
   }
 
   private stopScreenAutoRefresh(): void {
@@ -112,6 +131,97 @@ export class MobileScreenHubComponent implements OnInit, OnDestroy {
 
   refreshDesktopScreen(): void {
     this.desktopScreenUrl.set(`${getApiUrl('/api/v1/devices/desktop/screenshot')}?t=${Date.now()}`);
+  }
+
+  async wakeMobileScreen(): Promise<void> {
+    this.showFeedback('Dispatched screen wake signal (KEYCODE_WAKEUP)');
+    try {
+      await fetch(getApiUrl('/api/v1/devices/mobile/wake'), { method: 'POST' });
+      setTimeout(() => this.refreshMobileScreen(), 150);
+      setTimeout(() => this.refreshMobileScreen(), 400);
+    } catch {}
+  }
+
+  async autoDiscoverWireless(): Promise<void> {
+    this.isDiscoveringWireless.set(true);
+    this.showFeedback('Scanning local Wi-Fi subnet for zero-cable Android connection...');
+    try {
+      const res = await fetch(getApiUrl('/api/v1/devices/mobile/wireless-auto-discover'), { method: 'POST' });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success) {
+          this.showFeedback(`✓ Zero-Cable Wi-Fi Connected: ${json.connected_endpoint}`);
+          this.connectionMode.set('WIFI_ADB');
+        } else {
+          this.showFeedback(json.message || 'Auto-discovery completed. Ensure phone is on same Wi-Fi.');
+        }
+        await this.refreshAllData();
+      }
+    } catch {
+      this.showFeedback('Wireless auto-discovery timed out');
+    } finally {
+      this.isDiscoveringWireless.set(false);
+    }
+  }
+
+  async enableTcpipMode(): Promise<void> {
+    this.isSwitchingTcpip.set(true);
+    this.showFeedback('Switching device to port 5555 TCP/IP...');
+    try {
+      const res = await fetch(getApiUrl('/api/v1/devices/mobile/enable-tcpip'), { method: 'POST' });
+      if (res.ok) {
+        const json = await res.json();
+        this.showFeedback(`✓ ${json.message || 'Switched to Wireless Mode. You can now unplug USB!'}`);
+        await this.refreshAllData();
+      }
+    } catch {
+      this.showFeedback('Failed to switch TCP/IP mode');
+    } finally {
+      this.isSwitchingTcpip.set(false);
+    }
+  }
+
+  async fetchNotifications(): Promise<void> {
+    try {
+      const res = await fetch(getApiUrl('/api/v1/devices/mobile/notifications'));
+      if (res.ok) {
+        const json = await res.json();
+        this.notifications.set(json.notifications || []);
+      }
+    } catch {}
+  }
+
+  async analyzeNotificationsWithAgent(): Promise<void> {
+    this.isAnalyzingNotifications.set(true);
+    this.showFeedback('Invoking DROIDMARK (MARK 50) for notification intelligence...');
+    try {
+      const res = await fetch(getApiUrl('/api/v1/devices/mobile/analyze-notifications'), { method: 'POST' });
+      if (res.ok) {
+        const json = await res.json();
+        this.notificationAnalysis.set(json);
+        this.notifications.set(json.notifications || []);
+        this.showFeedback(`✓ DROIDMARK Analyzed: ${json.urgent_items?.length || 0} urgent items`);
+        if (json.summary) {
+          this.speechVoice.speak(json.summary);
+        }
+      }
+    } catch {
+      this.showFeedback('Notification analysis error');
+    } finally {
+      this.isAnalyzingNotifications.set(false);
+    }
+  }
+
+  async sendQuickReply(replyText: string): Promise<void> {
+    this.showFeedback(`Dispatching reply: "${replyText}"`);
+    try {
+      await fetch(getApiUrl('/api/v1/devices/mobile/action'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'type', params: { text: replyText } })
+      });
+      setTimeout(() => this.refreshMobileScreen(), 200);
+    } catch {}
   }
 
   async refreshAllData(): Promise<void> {
@@ -190,6 +300,7 @@ export class MobileScreenHubComponent implements OnInit, OnDestroy {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ x_pct: xPct, y_pct: yPct })
         });
+        setTimeout(() => this.refreshMobileScreen(), 100);
         setTimeout(() => this.refreshMobileScreen(), 350);
       } catch {}
     } else {

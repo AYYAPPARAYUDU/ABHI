@@ -192,13 +192,19 @@
             <span>{{ isSwarmDeployed() ? 'Retract Swarm' : 'Deploy Swarm' }}</span>
           </button>
 
-          <!-- 8. Voice Speech Companion -->
+          <!-- 8. Mobile Wireless Sync -->
+          <button type="button" class="quick-chip-btn" (click)="executeActionFromMenu('Discover wireless mobile phone on Wi-Fi and establish direct ADB zero-cable link')">
+            <span class="chip-emoji">📱</span>
+            <span>Wireless Mobile</span>
+          </button>
+
+          <!-- 9. Voice Speech Companion -->
           <button type="button" class="quick-chip-btn" (click)="toggleAlexaMode(); closeActionsMenu()">
             <span class="chip-emoji">🎙️</span>
             <span>{{ speechVoice.isAlexaConversationMode() ? 'Exit J.A.R.V.I.S.' : 'J.A.R.V.I.S. Voice' }}</span>
           </button>
 
-          <!-- 9. Ask ABHI AI -->
+          <!-- 10. Ask ABHI AI -->
           <button type="button" class="quick-chip-btn ai-chat-chip" (click)="executeActionFromMenu('Who are you and what are your capabilities?')">
             <span class="chip-emoji">🤖</span>
             <span>Ask ABHI</span>

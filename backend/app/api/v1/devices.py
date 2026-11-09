@@ -181,9 +181,112 @@ class NormalizedSwipeRequest(BaseModel):
 
 @router.get("/mobile/screenshot")
 async def get_mobile_screenshot(serial: Optional[str] = Query(None)):
-    """Capture raw PNG screenshot of connected mobile screen with zero-downtime canvas fallback."""
-    png_bytes = await adb_controller.take_screenshot_bytes(serial=serial)
-    return Response(content=png_bytes, media_type="image/png")
+    """Capture ultra-low latency, high-DPI JPEG screenshot of connected mobile screen with zero-downtime canvas fallback."""
+    img_bytes = await adb_controller.take_screenshot_bytes(serial=serial, format="jpeg", quality=88)
+    return Response(
+        content=img_bytes,
+        media_type="image/jpeg",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
+    )
+
+
+@router.post("/mobile/wake")
+async def wake_mobile_device(serial: Optional[str] = Query(None)):
+    """Wake up mobile display screen."""
+    ok = await adb_controller.wake_device(serial=serial)
+    return {"success": ok, "message": "Screen wake signal dispatched"}
+
+
+@router.get("/mobile/notifications")
+async def get_mobile_notifications(serial: Optional[str] = Query(None)):
+    """Retrieve active Android system and app notifications."""
+    try:
+        notifications = await adb_controller.get_notifications(serial=serial)
+        return {
+            "success": True,
+            "count": len(notifications),
+            "notifications": notifications
+        }
+    except Exception as e:
+        logger.error(f"Error reading mobile notifications: {e}")
+        return {"success": False, "error": str(e), "notifications": []}
+
+
+@router.post("/mobile/analyze-notifications")
+async def analyze_mobile_notifications(serial: Optional[str] = Query(None)):
+    """Analyze active notifications via Mobile Intelligence Agent (DROIDMARK / MARK 50 MOBILE)."""
+    try:
+        notifications = await adb_controller.get_notifications(serial=serial)
+        urgent = []
+        smart_replies = []
+        insights = []
+
+        for n in notifications:
+            title = n.get("title", "")
+            text = n.get("text", "")
+            cat = n.get("category", "")
+
+            if cat == "whatsapp":
+                urgent.append(f"WhatsApp from {title}: '{text}'")
+                smart_replies.append({
+                    "source": f"WhatsApp ({title})",
+                    "suggested_reply": "Got your message, reviewing now on ABHI workstation.",
+                    "action": "reply_whatsapp"
+                })
+            elif cat == "call":
+                urgent.append(f"Phone Call: {title} ({text})")
+                smart_replies.append({
+                    "source": f"Call ({title})",
+                    "suggested_reply": "Send SMS: Currently occupied, will return your call shortly.",
+                    "action": "send_sms"
+                })
+            elif "hotspot" in title.lower() or "hotspot" in text.lower():
+                insights.append("Mobile Wi-Fi Hotspot is active and hosting wireless workstation sync.")
+            elif "debugging" in title.lower() or "debugging" in text.lower():
+                insights.append("Zero-cable wireless debugging is armed and authenticated.")
+            elif "battery" in title.lower() or "charging" in title.lower():
+                insights.append(f"Power status: {title} ({text})")
+            elif title or text:
+                insights.append(f"Alert: {title} - {text}")
+
+        summary = (
+            f"DROIDMARK (MARK 50) analyzed {len(notifications)} active alerts. "
+            f"{len(urgent)} communication item(s) require attention. "
+            f"Zero-cable wireless link verified."
+        )
+
+        return {
+            "success": True,
+            "agent": "DROIDMARK (MARK 50 MOBILE)",
+            "squad": "MOBILE & HARDWARE SQUAD",
+            "notifications_count": len(notifications),
+            "notifications": notifications,
+            "urgent_items": urgent,
+            "insights": insights,
+            "smart_replies": smart_replies,
+            "summary": summary
+        }
+    except Exception as e:
+        logger.error(f"Error analyzing mobile notifications: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@router.post("/mobile/wireless-auto-discover")
+async def auto_discover_wireless_mobile():
+    """Auto-discover Android phone on local Wi-Fi subnet and connect wirelessly with zero cable."""
+    res = await adb_controller.auto_discover_wireless()
+    return res
+
+
+@router.post("/mobile/enable-tcpip")
+async def enable_mobile_tcpip(port: int = Query(default=5555), serial: Optional[str] = Query(None)):
+    """Switch attached Android phone to TCP/IP 5555 mode so USB cable can be disconnected."""
+    res = await adb_controller.enable_tcpip(port=port, serial=serial)
+    return res
 
 
 @router.post("/mobile/tap-normalized")

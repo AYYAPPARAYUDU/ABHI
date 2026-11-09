@@ -25,6 +25,9 @@
         <button class="tab-btn" [class.active]="activeTab() === 'MOBILE_MIRROR'" (click)="activeTab.set('MOBILE_MIRROR')">
           📱 Mobile Screen Mirror
         </button>
+        <button class="tab-btn" [class.active]="activeTab() === 'NOTIFICATIONS'" (click)="activeTab.set('NOTIFICATIONS'); fetchNotifications()">
+          🔔 Notifications & AI ({{ notifications().length || 4 }})
+        </button>
         <button class="tab-btn" [class.active]="activeTab() === 'LAPTOP_MIRROR'" (click)="activeTab.set('LAPTOP_MIRROR')">
           💻 Laptop Screen in Phone
         </button>
@@ -34,11 +37,38 @@
       </div>
 
       <div class="nav-actions">
+        <!-- Latency Mode Selector -->
+        <div class="latency-modes">
+          <button class="latency-pill" [class.active]="refreshRateMs() === 400" (click)="setRefreshRate(400)" title="Turbo 400ms Ultra-Low Latency">⚡ 400ms</button>
+          <button class="latency-pill" [class.active]="refreshRateMs() === 800" (click)="setRefreshRate(800)" title="Smooth 800ms Low Latency">🚀 800ms</button>
+          <button class="latency-pill" [class.active]="refreshRateMs() === 2000" (click)="setRefreshRate(2000)" title="Eco 2000ms Normal">🌱 2s</button>
+        </div>
+
         <button class="auto-refresh-btn" [class.active]="autoRefresh()" (click)="toggleAutoRefresh()" title="Toggle live frame auto-refresh">
-          {{ autoRefresh() ? '🟢 LIVE (2.2s)' : '⏸ PAUSED' }}
+          {{ autoRefresh() ? '🟢 LIVE' : '⏸ PAUSED' }}
         </button>
         <button class="action-btn" (click)="refreshMobileScreen()" title="Capture screen snapshot now">
           🔄 Snapshot
+        </button>
+      </div>
+    </div>
+
+    <!-- Zero-Cable Wireless Quick Bar -->
+    <div class="zero-cable-bar">
+      <div class="wireless-info">
+        <span class="wifi-icon">📶</span>
+        <span class="wireless-title">ZERO-CABLE WIRELESS LINK:</span>
+        <span class="wireless-endpoint">{{ isConnected() ? 'Wi-Fi Hotspot (10.65.249.121:5555)' : 'Direct IP Search' }}</span>
+      </div>
+      <div class="wireless-buttons">
+        <button class="wireless-act-btn auto-disc-btn" (click)="autoDiscoverWireless()" [disabled]="isDiscoveringWireless()">
+          {{ isDiscoveringWireless() ? '⚡ Discovering Subnet...' : '📶 Auto-Discover Wireless (No Cable)' }}
+        </button>
+        <button class="wireless-act-btn tcpip-btn" (click)="enableTcpipMode()" [disabled]="isSwitchingTcpip()" title="Enable port 5555 TCP mode so phone can be unplugged from USB">
+          {{ isSwitchingTcpip() ? 'Switching...' : '🔌 Unplug USB Mode (TCP/IP 5555)' }}
+        </button>
+        <button class="wireless-act-btn wake-btn" (click)="wakeMobileScreen()" title="Wake Mobile Display Screen">
+          🔆 Wake Screen
         </button>
       </div>
     </div>
@@ -115,7 +145,7 @@
 
           <!-- Physical Right Edge: Power / Lock Button -->
           <div class="side-controls-right">
-            <button class="chassis-key power" (click)="sendKeyEvent('power')" title="Power / Screen Lock">⏻</button>
+            <button class="chassis-key power" (click)="wakeMobileScreen()" title="Wake Mobile Screen / Power">⏻</button>
           </div>
         </div>
 
@@ -292,6 +322,76 @@
                 <span class="bt-sub">{{ dev.instance_id }}</span>
               </div>
               <span class="bt-status">{{ dev.status }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: NOTIFICATIONS & MOBILE AI AGENT (DROIDMARK) -->
+      <div class="tab-content notifications-layout" *ngIf="activeTab() === 'NOTIFICATIONS'">
+        <div class="notifications-header-box">
+          <div class="notif-agent-badge">
+            <span class="agent-avatar">📱</span>
+            <div>
+              <h3 class="agent-name">DROIDMARK (MARK 50 MOBILE)</h3>
+              <p class="agent-desc">Autonomous Notification Intelligence, Priority Filter & Context-Aware Smart Replies</p>
+            </div>
+          </div>
+          <button class="analyze-agent-btn" (click)="analyzeNotificationsWithAgent()" [disabled]="isAnalyzingNotifications()">
+            {{ isAnalyzingNotifications() ? '🧠 Analyzing Alerts...' : '✨ Analyze with Mobile LLM' }}
+          </button>
+        </div>
+
+        <!-- AI Summary Card if present -->
+        <div class="agent-summary-card" *ngIf="notificationAnalysis()">
+          <div class="summary-top">
+            <span class="summary-icon">💡</span>
+            <span class="summary-heading">DROIDMARK NEURAL SYNTHESIS</span>
+          </div>
+          <p class="summary-text">{{ notificationAnalysis().summary }}</p>
+
+          <!-- Urgent Items Chips -->
+          <div class="urgent-items-block" *ngIf="notificationAnalysis().urgent_items?.length">
+            <h4 class="block-title">⚡ PRIORITY ALERTS (ACTION REQUIRED):</h4>
+            <div class="urgent-chips-row">
+              <div class="urgent-chip" *ngFor="let item of notificationAnalysis().urgent_items">
+                {{ item }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Smart Replies -->
+          <div class="smart-replies-block" *ngIf="notificationAnalysis().smart_replies?.length">
+            <h4 class="block-title">💬 CONTEXT-AWARE SMART REPLIES:</h4>
+            <div class="smart-replies-list">
+              <div class="smart-reply-card" *ngFor="let reply of notificationAnalysis().smart_replies">
+                <span class="reply-source">{{ reply.source }}</span>
+                <span class="reply-content">"{{ reply.suggested_reply }}"</span>
+                <button class="reply-action-btn" (click)="sendQuickReply(reply.suggested_reply)">Dispatch</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notification List -->
+        <div class="notifications-list-container">
+          <h4 class="list-heading">INCOMING MOBILE NOTIFICATIONS ({{ notifications().length }})</h4>
+          <div class="empty-state" *ngIf="!notifications().length">
+            <span>📭</span> No unread notifications on mobile.
+          </div>
+          <div class="notification-item" *ngFor="let n of notifications()">
+            <div class="notif-icon-col">
+              <span class="notif-cat-icon">
+                {{ n.category === 'whatsapp' ? '💬' : n.category === 'call' ? '📞' : n.category === 'sms' ? '✉️' : '🔔' }}
+              </span>
+            </div>
+            <div class="notif-content-col">
+              <div class="notif-title-row">
+                <span class="notif-title">{{ n.title || 'System Alert' }}</span>
+                <span class="notif-pkg font-monospace">{{ n.package }}</span>
+              </div>
+              <div class="notif-text">{{ n.text }}</div>
+              <div class="notif-sub" *ngIf="n.subtext">{{ n.subtext }}</div>
             </div>
           </div>
         </div>

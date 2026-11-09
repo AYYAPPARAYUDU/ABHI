@@ -231,7 +231,7 @@ export class ThreeSceneManagerService {
       color: '#ef4444',
       hexColor: 0xef4444,
       icon: '🔒',
-      angle: (Math.PI * 2 / 9) * 8,
+      angle: (Math.PI * 2 / 10) * 8,
       elevation: 0.18,
       speed: 0.85,
       orbitRadius: 9.2,
@@ -240,6 +240,25 @@ export class ThreeSceneManagerService {
       load: 'SHIELDS ONLINE',
       synapticRate: '16.4 TB/s',
       neuralEfficiency: '99.9%',
+    },
+    {
+      id: 'agent_10_mobile',
+      name: 'DROIDMARK-MOBILE',
+      codename: 'MARK-50',
+      role: 'Mobile & Notification Intelligence Specialist',
+      status: 'DORMANT',
+      color: '#38bdf8',
+      hexColor: 0x38bdf8,
+      icon: '📱',
+      angle: (Math.PI * 2 / 10) * 9,
+      elevation: -0.18,
+      speed: 0.85,
+      orbitRadius: 9.2,
+      description: 'Autonomous zero-cable mobile synchronization, 1080x2400 FHD+ display mirroring, notification intelligence, and smart-reply synthesis.',
+      subsystem: 'MOBILE & HARDWARE SQUAD',
+      load: 'WIRELESS 5555 ACTIVE',
+      synapticRate: '35.4 TB/s',
+      neuralEfficiency: '99.8%',
     },
   ]);
 
@@ -295,17 +314,18 @@ export class ThreeSceneManagerService {
   private groundRadarMesh: THREE.LineSegments | null = null;
   private agentBots: { group: THREE.Group; baseY: number; phase: number }[] = [];
 
-  // 9 Specialist Architectural Station Coordinates across the Spatial Hexagonal Colony
+  // 10 Specialist Architectural Station Coordinates across the Spatial Hexagonal Colony
   readonly stationPositions = [
     { x: 0, z: -9.2 },
-    { x: 5.9, z: -7.0 },
-    { x: 9.1, z: -1.6 },
-    { x: 8.0, z: 4.6 },
-    { x: 3.2, z: 8.6 },
-    { x: -3.2, z: 8.6 },
-    { x: -8.0, z: 4.6 },
-    { x: -9.1, z: -1.6 },
-    { x: -5.9, z: -7.0 },
+    { x: 5.4, z: -7.4 },
+    { x: 8.7, z: -2.8 },
+    { x: 8.7, z: 2.8 },
+    { x: 5.4, z: 7.4 },
+    { x: 0, z: 9.2 },
+    { x: -5.4, z: 7.4 },
+    { x: -8.7, z: 2.8 },
+    { x: -8.7, z: -2.8 },
+    { x: -5.4, z: -7.4 },
   ];
 
   // Billboard nameplates tracking for anti-overlap and focused highlight
@@ -2002,6 +2022,37 @@ export class ThreeSceneManagerService {
         scanSheet.position.set(0, 0.65, 0);
         buildingGroup.add(scanSheet);
         this.verificationScanSheet = scanSheet;
+      } else if (i === 9) {
+        // DROIDMARK-MOBILE: 5G Cellular Tower & Zero-Cable Wireless Sync Beacon with Holographic Mobile Frame
+        const towerGeo = new THREE.CylinderGeometry(0.08, 0.25, 2.2, 8);
+        const towerMat = new THREE.MeshStandardMaterial({ color: 0x082f49, metalness: 0.95, roughness: 0.15 });
+        const tower = new THREE.Mesh(towerGeo, towerMat);
+        tower.position.y = 1.1;
+        buildingGroup.add(tower);
+
+        // Holographic Smartphone Display Screen
+        const phoneHoloGeo = new THREE.BoxGeometry(0.8, 1.4, 0.05);
+        const phoneHoloMat = new THREE.MeshBasicMaterial({
+          color: agent.hexColor,
+          wireframe: true,
+          transparent: true,
+          opacity: 0.85
+        });
+        const phoneHolo = new THREE.Mesh(phoneHoloGeo, phoneHoloMat);
+        phoneHolo.position.set(0, 1.6, 0.3);
+        phoneHolo.rotation.y = Math.PI * 0.15;
+        buildingGroup.add(phoneHolo);
+
+        // 5G Signal Emitting Wave Rings
+        for (let w = 0; w < 3; w++) {
+          const wRing = new THREE.Mesh(
+            new THREE.TorusGeometry(0.35 + w * 0.2, 0.02, 8, 24),
+            new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending })
+          );
+          wRing.rotation.x = Math.PI * 0.5;
+          wRing.position.y = 1.8 + w * 0.15;
+          buildingGroup.add(wRing);
+        }
       } else {
         // NEXUS-STARK: Resonance Comms Spire with Expanding Acoustic Shockwave Rings
         const spire = new THREE.Mesh(new THREE.ConeGeometry(0.35, 2.0, 8), new THREE.MeshStandardMaterial({ color: 0x091b38, metalness: 0.9 }));

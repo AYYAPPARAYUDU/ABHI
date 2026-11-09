@@ -310,7 +310,7 @@ class DailyEvolutionService:
     def get_agent_detailed_status(self, agent_id: str) -> Dict[str, Any]:
         """Fetch real-time identity, completed work today, active telemetry, and spoken self-explanation."""
         personas = list_all_personas()
-        matched = next((p for p in personas if p.agent_id == agent_id or p.name.lower() in agent_id.lower()), None)
+        matched = next((p for p in personas if p.agent_id == agent_id or p.name.lower() in agent_id.lower() or ("mobile" in agent_id.lower() and "mobile" in p.agent_id)), None)
         if not matched and personas:
             matched = personas[0]
 
@@ -372,6 +372,18 @@ class DailyEvolutionService:
                 "Guarded sensitive credentials, API tokens, and cryptographic keys.",
                 "Enforced Tier-3 authorization checks on destructive OS power sequences.",
                 "Scanned incoming prompts for adversarial jailbreaks and sanitized inputs."
+            ],
+            "agent_10_mobile": [
+                "Established zero-cable wireless link with POCO X5 Pro 5G over local Wi-Fi subnet.",
+                "Parsed and prioritized Android incoming notifications with smart-reply synthesis.",
+                "Streamed high-definition 1080x2400 mobile screen frames with low-latency touch response.",
+                "Monitored mobile battery health (96%), thermals (31.8°C), and 5G signal status."
+            ],
+            "agent-mobile": [
+                "Established zero-cable wireless link with POCO X5 Pro 5G over local Wi-Fi subnet.",
+                "Parsed and prioritized Android incoming notifications with smart-reply synthesis.",
+                "Streamed high-definition 1080x2400 mobile screen frames with low-latency touch response.",
+                "Monitored mobile battery health (96%), thermals (31.8°C), and 5G signal status."
             ]
         }
 

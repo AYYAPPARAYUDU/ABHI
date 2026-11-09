@@ -96,34 +96,7 @@
         }
       </a>
 
-      <!-- 3. Scanning -->
-      <button
-        type="button"
-        class="clean-nav-btn scan-nav-btn ribbon-btn"
-        (click)="stateService.openBiometricScanner()"
-        [class.verified]="stateService.biometricStatus().verified"
-        [class.scanning]="stateService.biometricStatus().scanning"
-        title="Optical Neural Biometric Face Scanner (YuNet + SFace 128D)"
-      >
-        <span class="nav-btn-icon">{{ stateService.biometricStatus().scanning ? '⚡' : '👁️' }}</span>
-        <span class="nav-btn-text">{{ stateService.biometricStatus().scanning ? 'Scanning...' : 'Scanning' }}</span>
-        @if (stateService.biometricStatus().verified) {
-          <span class="nav-active-pip green-pip" title="Biometrically Verified"></span>
-        }
-      </button>
-
-      <!-- 4. Lock -->
-      <button
-        type="button"
-        class="clean-nav-btn lock-nav-btn ribbon-btn"
-        (click)="stateService.lockWorkspace('Manual Operator Lock Engaged')"
-        title="Lock Workspace Console (Requires Face ID to Unlock)"
-      >
-        <span class="nav-btn-icon">🔒</span>
-        <span class="nav-btn-text">Lock</span>
-      </button>
-
-      <!-- 5. Theme Changer -->
+      <!-- 3. Theme Changer -->
       <button
         type="button"
         class="clean-nav-btn theme-nav-btn ribbon-btn"
@@ -135,7 +108,7 @@
         <span class="theme-tag font-monospace">{{ themeService.activeTheme().label }}</span>
       </button>
 
-      <!-- 6. Brain -->
+      <!-- 4. Brain -->
       <button
         type="button"
         class="clean-nav-btn brain-nav-btn ribbon-btn"
@@ -149,21 +122,7 @@
         }
       </button>
 
-      <!-- 7. Swarm Chat History -->
-      <button
-        type="button"
-        class="clean-nav-btn swarm-nav-btn ribbon-btn"
-        (click)="stateService.openSwarmDialogue()"
-        title="Multi-Agent Swarm Live Chat & Conversation History"
-      >
-        <span class="nav-btn-icon">🤝</span>
-        <span class="nav-btn-text">Swarm Chat</span>
-        @if (stateService.swarmDialogueList().length > 0) {
-          <span class="swarm-count-pip">{{ stateService.swarmDialogueList().length }}</span>
-        }
-      </button>
-
-      <!-- 8. Gallery -->
+      <!-- 5. Gallery -->
       <a
         routerLink="/media"
         [queryParams]="{ tab: 'vault' }"
@@ -211,22 +170,7 @@
         <span class="btn-text">Voice Hub</span>
       </button>
 
-      <!-- J.A.R.V.I.S. Direct Hands-Free Voice Dialogue Toggle -->
-      <button
-        type="button"
-        class="topbar-tool-btn jarvis-speak-btn alexa-speak-btn"
-        appAnimeInteractive
-        [appAnimeType]="'button'"
-        [class.active]="speechVoice.isAlexaConversationMode()"
-        (click)="toggleAlexaMode()"
-        [title]="speechVoice.isAlexaConversationMode() ? 'J.A.R.V.I.S. Live Conversation Mode ACTIVE (Click to switch to Text Chat)' : 'Activate J.A.R.V.I.S. Hands-Free Voice Dialogue'"
-      >
-        <span class="btn-icon">🎙️</span>
-        <span class="btn-text">{{ speechVoice.isAlexaConversationMode() ? 'J.A.R.V.I.S. Live' : 'J.A.R.V.I.S. Voice' }}</span>
-        @if (speechVoice.isAlexaConversationMode()) {
-          <span class="topbar-pulse-dot"></span>
-        }
-      </button>
+
 
       <!-- Voice Audio Speech Synthesis Toggle -->
       <button

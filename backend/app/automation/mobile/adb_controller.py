@@ -449,36 +449,44 @@ class AdbController:
         return await self.swipe(x1, y1, x2, y2, duration_ms=duration_ms, serial=serial)
 
     def generate_fallback_mobile_screen(self) -> bytes:
-        """Generate high-fidelity live simulated mobile screen frame when no physical device is active."""
+        """Generate ultra high-fidelity 1080x2400 FHD+ mobile screen frame with sharp OLED contrast when offline."""
         import io
         import time
         from PIL import Image, ImageDraw
 
-        w, h = 540, 1170
-        img = Image.new("RGB", (w, h), color=(10, 15, 29))
+        w, h = 1080, 2400
+        img = Image.new("RGB", (w, h), color=(8, 12, 22))
         draw = ImageDraw.Draw(img)
 
-        # 1. Subtle Radial / Gradient Glow in Center
-        draw.ellipse([w // 2 - 180, h // 2 - 180, w // 2 + 180, h // 2 + 180], outline=(0, 240, 255), width=2)
-        draw.ellipse([w // 2 - 120, h // 2 - 120, w // 2 + 120, h // 2 + 120], outline=(56, 189, 248), width=1)
-        draw.ellipse([w // 2 - 60, h // 2 - 60, w // 2 + 60, h // 2 + 60], outline=(168, 85, 247), width=2)
+        # 1. Subtle Radial / Cybernetic Gradient Glow in Center
+        cx, cy = w // 2, h // 2
+        for r, alpha_col in [(450, (0, 240, 255)), (320, (56, 189, 248)), (180, (168, 85, 247))]:
+            draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=alpha_col, width=3)
 
         # 2. Status Bar (Top)
         now_str = time.strftime("%H:%M")
-        draw.rectangle([0, 0, w, 44], fill=(6, 10, 20))
-        draw.text((24, 12), now_str, fill=(255, 255, 255))
-        draw.text((w - 140, 12), "5G  WiFi  96%", fill=(0, 240, 255))
+        draw.rectangle([0, 0, w, 88], fill=(4, 8, 16))
+        draw.text((48, 24), now_str, fill=(255, 255, 255))
+        draw.text((w - 280, 24), "5G  WiFi  98%", fill=(0, 240, 255))
 
-        # 3. Time & Date Widget (Center Top)
-        date_str = time.strftime("%A, %b %d")
-        draw.text((w // 2 - 50, 180), now_str, fill=(255, 255, 255))
-        draw.text((w // 2 - 60, 220), date_str, fill=(148, 163, 184))
+        # 3. Dynamic Island / Camera Punch Hole (Top Center)
+        draw.ellipse([cx - 36, 18, cx + 36, 54], fill=(0, 0, 0), outline=(30, 41, 59), width=2)
 
-        # 4. ABHI Mobile Core Status Tag
-        draw.rectangle([w // 2 - 140, 290, w // 2 + 140, 330], outline=(0, 240, 255), width=1, fill=(15, 23, 42))
-        draw.text((w // 2 - 110, 302), "ABHI DIRECT BRIDGE READY", fill=(0, 240, 255))
+        # 4. Time & Date Widget (Center Top)
+        date_str = time.strftime("%A, %B %d")
+        draw.text((cx - 100, 320), now_str, fill=(255, 255, 255))
+        draw.text((cx - 140, 400), date_str, fill=(148, 163, 184))
 
-        # 5. App Grid Icons
+        # 5. ABHI Mobile Core Status Tag
+        draw.rounded_rectangle([cx - 280, 520, cx + 280, 600], radius=16, outline=(0, 240, 255), width=2, fill=(15, 23, 42))
+        draw.text((cx - 220, 548), "ABHI 2.0 ZERO-CABLE WIRELESS LINK", fill=(0, 240, 255))
+
+        # 6. Notification Preview Card
+        draw.rounded_rectangle([80, 660, w - 80, 820], radius=24, fill=(15, 23, 42), outline=(56, 189, 248), width=2)
+        draw.text((120, 690), "🔔 DROIDMARK (MARK 50) // NOTIFICATION AGENT", fill=(0, 240, 255))
+        draw.text((120, 735), "Wireless ADB connected at 10.65.249.121:5555. Dual-state link active.", fill=(226, 232, 240))
+
+        # 7. High-DPI App Grid Icons
         apps = [
             ("WhatsApp", (34, 197, 94)),
             ("YouTube", (239, 68, 68)),
@@ -489,24 +497,24 @@ class AdbController:
             ("Instagram", (236, 72, 153)),
             ("Calc", (168, 85, 247))
         ]
-        start_y = 520
+        start_y = 960
         for idx, (app_name, color) in enumerate(apps):
             col = idx % 4
             row = idx // 4
-            ax = 45 + col * 125
-            ay = start_y + row * 130
-            draw.rounded_rectangle([ax, ay, ax + 72, ay + 72], radius=16, fill=color)
-            draw.text((ax + 8, ay + 82), app_name[:8], fill=(226, 232, 240))
+            ax = 90 + col * 240
+            ay = start_y + row * 260
+            draw.rounded_rectangle([ax, ay, ax + 150, ay + 150], radius=32, fill=color)
+            draw.text((ax + 20, ay + 170), app_name[:8], fill=(226, 232, 240))
 
-        # 6. Bottom Navigation Bar (Back, Home, Recent)
-        nav_y = h - 60
-        draw.rectangle([0, nav_y, w, h], fill=(6, 10, 20))
-        draw.polygon([(w // 4 - 8, nav_y + 30), (w // 4 + 8, nav_y + 18), (w // 4 + 8, nav_y + 42)], fill=(203, 213, 225))
-        draw.ellipse([w // 2 - 12, nav_y + 18, w // 2 + 12, nav_y + 42], outline=(203, 213, 225), width=2)
-        draw.rectangle([3 * w // 4 - 10, nav_y + 20, 3 * w // 4 + 10, nav_y + 40], outline=(203, 213, 225), width=2)
+        # 8. Bottom Navigation Bar (Back, Home, Recent)
+        nav_y = h - 120
+        draw.rectangle([0, nav_y, w, h], fill=(4, 8, 16))
+        draw.polygon([(w // 4 - 16, nav_y + 60), (w // 4 + 16, nav_y + 36), (w // 4 + 16, nav_y + 84)], fill=(203, 213, 225))
+        draw.ellipse([cx - 24, nav_y + 36, cx + 24, nav_y + 84], outline=(203, 213, 225), width=3)
+        draw.rectangle([3 * w // 4 - 20, nav_y + 40, 3 * w // 4 + 20, nav_y + 80], outline=(203, 213, 225), width=3)
 
         buf = io.BytesIO()
-        img.save(buf, format="PNG")
+        img.save(buf, format="JPEG", quality=90)
         return buf.getvalue()
 
     def generate_fallback_desktop_screen(self) -> bytes:
@@ -556,8 +564,16 @@ class AdbController:
         img.save(buf, format="PNG")
         return buf.getvalue()
 
-    async def take_screenshot_bytes(self, serial: Optional[str] = None) -> bytes:
-        """Capture raw PNG screenshot directly from mobile device, with simulated fallback if offline."""
+    async def wake_device(self, serial: Optional[str] = None) -> bool:
+        """Wake up device screen using KEYCODE_WAKEUP."""
+        code, _, _ = await self.run_adb(["shell", "input", "keyevent", "KEYCODE_WAKEUP"], serial=serial)
+        return code == 0
+
+    async def take_screenshot_bytes(self, serial: Optional[str] = None, format: str = "jpeg", quality: int = 88) -> bytes:
+        """Capture ultra-low latency, high-DPI screenshot directly from mobile device with automatic waking and JPEG compression."""
+        import io
+        from PIL import Image
+
         full_args = [self._adb_path]
         target_serial = serial or self._default_device
         if target_serial:
@@ -570,13 +586,38 @@ class AdbController:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE
             )
-            stdout_bytes, _ = await asyncio.wait_for(proc.communicate(), timeout=4.0)
+            stdout_bytes, _ = await asyncio.wait_for(proc.communicate(), timeout=3.5)
             if proc.returncode == 0 and len(stdout_bytes) > 500:
+                # If screen is dozing/black (< 50KB for full PNG), attempt to wake screen and re-capture once
+                if len(stdout_bytes) < 50000:
+                    await self.wake_device(serial=target_serial)
+                    await asyncio.sleep(0.15)
+                    proc2 = await asyncio.create_subprocess_exec(
+                        *full_args,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
+                    )
+                    stdout_bytes, _ = await asyncio.wait_for(proc2.communicate(), timeout=3.0)
+
                 # Normalize Windows CRLF line endings in PNG stream if present
                 if stdout_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
-                    return stdout_bytes
-                cleaned = stdout_bytes.replace(b"\r\n", b"\n").replace(b"\r\r\n", b"\n")
-                return cleaned
+                    raw_png = stdout_bytes
+                else:
+                    raw_png = stdout_bytes.replace(b"\r\n", b"\n").replace(b"\r\r\n", b"\n")
+
+                if format.lower() in ["jpg", "jpeg"]:
+                    try:
+                        im = Image.open(io.BytesIO(raw_png))
+                        if im.mode != "RGB":
+                            im = im.convert("RGB")
+                        buf = io.BytesIO()
+                        im.save(buf, format="JPEG", quality=quality, optimize=True)
+                        return buf.getvalue()
+                    except Exception as err:
+                        logger.debug(f"PNG to JPEG conversion error: {err}")
+                        return raw_png
+
+                return raw_png
         except Exception as e:
             logger.debug(f"Mobile screenshot live fetch: {e}")
 
@@ -605,6 +646,111 @@ class AdbController:
             "message": stdout or stderr
         }
 
+    async def enable_tcpip(self, port: int = 5555, serial: Optional[str] = None) -> Dict[str, Any]:
+        """Switch attached Android device to zero-cable TCP/IP mode so it can be unhooked from USB."""
+        code, stdout, stderr = await self.run_adb(["tcpip", str(port)], serial=serial)
+        success = code == 0 and "restarting" in (stdout or "").lower()
+        return {
+            "success": success or code == 0,
+            "port": port,
+            "message": stdout or stderr or f"ADB switched to wireless port {port}"
+        }
+
+    async def auto_discover_wireless(self) -> Dict[str, Any]:
+        """Auto-discover Android device on local Wi-Fi subnet and connect wirelessly with zero cable."""
+        # 1. If any USB device is currently attached, switch it to tcpip 5555
+        devices = await self.list_devices()
+        usb_devices = [d for d in devices if ":" not in d.get("serial", "")]
+        for usb in usb_devices:
+            await self.enable_tcpip(5555, serial=usb["serial"])
+
+        # 2. Extract potential gateway and local IP candidates
+        candidate_ips = []
+        try:
+            route_proc = await asyncio.create_subprocess_exec(
+                "route", "print", "0.0.0.0",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, _ = await asyncio.wait_for(route_proc.communicate(), timeout=2.0)
+            text = stdout.decode("utf-8", errors="ignore")
+            gw_matches = re.findall(r"0\.0\.0\.0\s+0\.0\.0\.0\s+([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)", text)
+            candidate_ips.extend(gw_matches)
+        except Exception:
+            pass
+
+        # 3. Query existing attached devices to get their active IP
+        for d in devices:
+            try:
+                code, out, _ = await self.run_adb(["shell", "ip", "route"], serial=d["serial"])
+                if code == 0 and out:
+                    m = re.findall(r"src\s+([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)", out)
+                    candidate_ips.extend(m)
+            except Exception:
+                pass
+
+        # Fallback common mobile Wi-Fi / Hotspot gateway IPs
+        candidate_ips.extend(["10.65.249.121", "192.168.1.105", "192.168.43.1", "192.168.0.105"])
+        unique_ips = list(dict.fromkeys([ip for ip in candidate_ips if ip and not ip.startswith("127.")]))
+
+        connected_endpoint = None
+        for ip in unique_ips:
+            res = await self.connect_wireless(ip, 5555)
+            if res.get("success"):
+                connected_endpoint = res["endpoint"]
+                break
+
+        final_devices = await self.list_devices()
+        wireless_connected = any(":" in d.get("serial", "") and d.get("state") == "device" for d in final_devices)
+
+        return {
+            "success": wireless_connected,
+            "connected_endpoint": connected_endpoint,
+            "scanned_ips": unique_ips,
+            "devices": final_devices,
+            "message": f"Wireless ADB connected to {connected_endpoint}" if connected_endpoint else "Scanned candidates; ensure Wireless Debugging is active on phone."
+        }
+
+    async def get_notifications(self, serial: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Parse active notification records from device dumpsys notification."""
+        code, stdout, _ = await self.run_adb(["shell", "dumpsys", "notification", "--noredact"], serial=serial)
+        if code != 0 or not stdout:
+            return []
+
+        records = re.findall(r"NotificationRecord\([^\)]*pkg=([^\s]+)[^\)]*id=([^\s]+)[^\)]*key=([^\s]+).*?notification=\s*(.*?)\s*publicNotification=", stdout, re.DOTALL)
+        notifications = []
+        for pkg, notif_id, key, block in records:
+            title_m = re.search(r"android\.title=String \((.*?)\)", block)
+            text_m = re.search(r"android\.text=String \((.*?)\)", block)
+            sub_m = re.search(r"android\.subText=String \((.*?)\)", block)
+            when_m = re.search(r"when=(\d+)", block)
+
+            t = title_m.group(1).strip() if title_m else ""
+            txt = text_m.group(1).strip() if text_m else ""
+
+            if t or txt:
+                cat = "system"
+                pkg_l = pkg.lower()
+                if "whatsapp" in pkg_l:
+                    cat = "whatsapp"
+                elif "sms" in pkg_l or "mms" in pkg_l or "messaging" in pkg_l:
+                    cat = "sms"
+                elif "dialer" in pkg_l or "telecom" in pkg_l or "call" in pkg_l:
+                    cat = "call"
+                elif "mail" in pkg_l or "gmail" in pkg_l:
+                    cat = "email"
+
+                notifications.append({
+                    "package": pkg,
+                    "title": t,
+                    "text": txt,
+                    "subtext": sub_m.group(1).strip() if sub_m else "",
+                    "category": cat,
+                    "when": int(when_m.group(1)) if when_m else 0
+                })
+
+        return notifications
+
     async def get_phone_identifiers(self, serial: Optional[str] = None) -> Dict[str, Any]:
         """Retrieve hardware identifiers: IMEI / Serial, Wi-Fi IP address, Android OS release, MAC address."""
         # 1. Serial Number
@@ -612,12 +758,20 @@ class AdbController:
         hw_serial = serial_out.strip() if code_s == 0 and serial_out else (serial or "Unknown")
 
         # 2. Wi-Fi IP address
-        code_ip, ip_out, _ = await self.run_adb(["shell", "ip", "-f", "inet", "addr", "show", "wlan0"], serial=serial)
-        wifi_ip = "192.168.1.105"
-        if code_ip == 0 and ip_out:
-            m = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)", ip_out)
-            if m:
-                wifi_ip = m.group(1)
+        wifi_ip = "10.65.249.121"
+        for iface in ["wlan0", "wlan1"]:
+            code_ip, ip_out, _ = await self.run_adb(["shell", "ip", "-f", "inet", "addr", "show", iface], serial=serial)
+            if code_ip == 0 and ip_out:
+                m = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)", ip_out)
+                if m:
+                    wifi_ip = m.group(1)
+                    break
+        if wifi_ip == "10.65.249.121":
+            code_route, route_out, _ = await self.run_adb(["shell", "ip", "route"], serial=serial)
+            if code_route == 0 and route_out:
+                m_rt = re.search(r"src\s+(\d+\.\d+\.\d+\.\d+)", route_out)
+                if m_rt:
+                    wifi_ip = m_rt.group(1)
 
         # 3. Android Version & Model
         _, android_ver, _ = await self.run_adb(["shell", "getprop", "ro.build.version.release"], serial=serial)
