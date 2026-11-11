@@ -816,15 +816,8 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.speechVoice.setPersonaMode(mode);
   }
 
-  setCallsign(callsign: string): void {
-    if (
-      callsign === 'Sir' ||
-      callsign === 'Boss' ||
-      callsign === 'Tony' ||
-      callsign === 'Partner'
-    ) {
-      this.speechVoice.setUserCallsign(callsign);
-    }
+  setCallsign(callsign: string = 'Mamu'): void {
+    this.speechVoice.setUserCallsign('Mamu');
   }
 
   setSpeechSpeed(speed: number): void {

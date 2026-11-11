@@ -153,7 +153,7 @@ async def test_workspace_agent_self_explanation():
         assert details["agent_id"] == aid
         assert len(details["spoken_explanation"]) > 20
         assert len(details["today_work"]) >= 2
-        assert "Sir" in details["spoken_explanation"]
+        assert "Mamu" in details["spoken_explanation"]
 
 
 @pytest.mark.asyncio

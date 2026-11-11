@@ -21,8 +21,8 @@ async def test_dynamic_system_restart_response_and_plan():
     )
     assert len(plan.nodes) > 0
     first_node = list(plan.nodes.values())[0]
-    assert first_node.action == "system_restart"
-    assert first_node.risk_tier == "Tier 2"
+    assert first_node.action == "system_power_shield_check"
+    assert first_node.risk_tier == "Tier 0"
     assert first_node.agent_id == "os_desktop_agent"
 
 
@@ -42,8 +42,8 @@ async def test_dynamic_system_shutdown_response_and_plan():
     )
     assert len(plan.nodes) > 0
     first_node = list(plan.nodes.values())[0]
-    assert first_node.action == "system_shutdown"
-    assert first_node.risk_tier == "Tier 2"
+    assert first_node.action == "system_power_shield_check"
+    assert first_node.risk_tier == "Tier 0"
     assert first_node.agent_id == "os_desktop_agent"
 
 

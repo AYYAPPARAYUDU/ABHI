@@ -852,6 +852,54 @@ async def get_agent_station_details(agent_id: str):
     }
 
 
+@router.get("/core/hardware-state")
+async def get_laptop_hardware_state():
+    """Direct, unrestricted perception of local laptop physical hardware for Mamu."""
+    from backend.app.cognitive.capability_synthesizer import capability_synthesizer
+    return capability_synthesizer.get_laptop_hardware_state()
+
+
+@router.post("/self-repair/analyze-and-heal")
+async def trigger_self_repair_swarm(payload: Dict[str, Any]):
+    """Convene the autonomous 10-agent self-repair swarm to diagnose and heal code issues."""
+    from backend.app.cognitive.multi_agent.self_repair_swarm import self_repair_swarm
+    err_msg = payload.get("error_message", "Unknown operational error")
+    trace = payload.get("stack_trace")
+    comp = payload.get("source_component", "Core/Workspace")
+    ctx = payload.get("context_data")
+    res = self_repair_swarm.convene_swarm_to_heal(
+        error_message=err_msg,
+        stack_trace=trace,
+        source_component=comp,
+        context_data=ctx
+    )
+    return {"success": True, "data": res}
+
+
+@router.get("/self-repair/history")
+async def get_self_repair_history():
+    """Retrieve history of autonomous swarm code repairs and evolutions."""
+    from backend.app.cognitive.multi_agent.self_repair_swarm import self_repair_swarm
+    return {"success": True, "repairs": self_repair_swarm.get_recent_repairs()}
+
+
+@router.post("/empathy/analyze")
+async def analyze_mamu_emotional_state(payload: Dict[str, Any]):
+    """Analyze Operator Mamu's emotional state, fatigue, or stress, providing warm empathetic companionship."""
+    from backend.app.cognitive.empathy.empathy_engine import empathy_engine
+    text = payload.get("text", "")
+    lang = payload.get("language", "en")
+    state, intensity, ctx = empathy_engine.analyze_emotional_state(text)
+    preamble = empathy_engine.get_empathy_preamble(state, lang=lang)
+    return {
+        "success": True,
+        "emotional_state": state.value,
+        "intensity": intensity,
+        "empathy_preamble": preamble,
+        "context": ctx
+    }
+
+
 # Authoritative Gateway Router mirroring all agent routes under /agent-gateway
 gateway_router = APIRouter(prefix="/agent-gateway", tags=["Agent Gateway & Context"])
 for r in router.routes:

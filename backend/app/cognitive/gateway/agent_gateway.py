@@ -308,21 +308,21 @@ class AgentGateway:
         if v_trig != VoiceTriggerType.NONE and is_pure_trigger:
             lang_h = getattr(request, "language_hint", "auto") or "auto"
             if v_trig == VoiceTriggerType.WAKE:
-                msg = "Yes Sir, I am listening and ready for your directive."
+                msg = "Hey Mamu, I am listening and ready! Tell me what you need!"
                 if lang_h == "te":
-                    msg = "చెప్పండి సర్, నేను వింటున్నాను."
+                    msg = "చెప్పు మాము, నేను వింటున్నాను! ఏం చేద్దాం చెప్పు!"
                 elif lang_h == "hi":
-                    msg = "हाँ सर, मैं सुन रहा हूँ।"
+                    msg = "हाँ मामू, मैं सुन रहा हूँ! बताओ क्या करना है!"
                 elif lang_h == "ta":
-                    msg = "சொல்லுங்கள் ஐயா, நான் கேட்கிறேன்."
+                    msg = "சொல்லு மாமு, நான் கேட்கிறேன்! என்ன செய்யணும் சொல்லு!"
             else:
-                msg = "Standing by, Sir. Conversation mode paused."
+                msg = "Standing by, Mamu! I am right here whenever you call."
                 if lang_h == "te":
-                    msg = "సరే సర్, స్టాండ్‌బై లో ఉంటున్నాను. సెలవు."
+                    msg = "సరే మాము, స్టాండ్‌బై లో ఉంటున్నాను. జాగ్రత్త!"
                 elif lang_h == "hi":
-                    msg = "ठीक है सर, स्टैंडबाय पर जा रहा हूँ।"
+                    msg = "ठीक है मामू, स्टैंडबाय पर जा रहा हूँ। अपना ख्याल रखना!"
                 elif lang_h == "ta":
-                    msg = "சரி ஐயா, காத்திருப்பில் இருக்கிறேன்."
+                    msg = "சரி மாமு, காத்திருப்பில் இருக்கிறேன். பார்த்துக்கோ!"
 
             response = AgentCommandResponse(
                 command_id=cmd_id,
@@ -386,7 +386,7 @@ class AgentGateway:
                     aspect_ratio="1:1"
                 )
                 gen_res = higgsfield_engine.generate(h_req)
-                user_msg = f"Photorealistic {media_kind} for '{clean_prompt.title()}' has been synthesized and stored in your Media Vault, Sir."
+                user_msg = f"Photorealistic {media_kind} for '{clean_prompt.title()}' has been synthesized and stored in your Media Vault, Mamu!"
 
                 response = AgentCommandResponse(
                     command_id=cmd_id,
@@ -533,49 +533,49 @@ class AgentGateway:
         lang = language_hint or "auto"
         lower_g = goal.lower().strip()
 
-        # 1. Critical System Power Safety Responses
+        # 1. Critical System Power Safety Responses (Permanent Invariant Protection)
         if any(r in lower_g for r in ["restart laptop", "restart pc", "restart computer", "reboot laptop", "reboot pc", "reboot system", "reboot"]):
-            return "Initiating safe Windows system restart sequence (30-second cancellation window), Sir."
+            return "Mamu, system restart is permanently shielded to protect your workflow so we never lose your work!"
         if any(s in lower_g for s in ["shutdown laptop", "shutdown pc", "shutdown computer", "power off laptop", "power off pc", "power off"]):
-            return "Initiating safe Windows system shutdown sequence (30-second cancellation window), Sir."
+            return "Mamu, system shutdown is permanently shielded to protect your workflow so we never lose your work!"
         if any(c in lower_g for c in ["cancel restart", "cancel shutdown", "abort restart", "abort shutdown"]):
-            return "System shutdown and restart sequences have been cancelled, Sir."
+            return "Shutdown shield is fully active, Mamu! System is completely safe and running."
 
         # 1.5 Instant Wake-Word ('Hey Mamu') & Sleep-Word ('Ok Bye Mamu') Response
         from backend.app.runtime.wake_word import wake_word_detector, VoiceTriggerType
         v_trig, _, _ = wake_word_detector.detect_phrase_intent(goal)
         if v_trig == VoiceTriggerType.WAKE:
             if lang == "te":
-                return "చెప్పండి సర్, నేను వింటున్నాను."
+                return "చెప్పు మాము, నేను వింటున్నాను! ఏం చేద్దాం చెప్పు!"
             elif lang == "hi":
-                return "हाँ सर, मैं सुन रहा हूँ।"
+                return "हाँ मामू, मैं सुन रहा हूँ! बताओ क्या करना है!"
             elif lang == "ta":
-                return "சொல்லுங்கள் ஐயா, நான் கேட்கிறேன்."
-            return "Yes Sir, I am listening and ready for your directive."
+                return "சொல்லு மாமு, நான் கேட்கிறேன்! என்ன செய்யணும் சொல்லு!"
+            return "Hey Mamu, I am listening and ready! Tell me what you need!"
         elif v_trig == VoiceTriggerType.SLEEP:
             if lang == "te":
-                return "సరే సర్, స్టాండ్‌బై లో ఉంటున్నాను. సెలవు."
+                return "సరే మాము, స్టాండ్‌బై లో ఉంటున్నాను. జాగ్రత్త!"
             elif lang == "hi":
-                return "ठीक है सर, स्टैंडबाय पर जा रहा हूँ। अलविदा।"
+                return "ठीक है मामू, स्टैंडबाय पर हूँ। अपना ख्याल रखना!"
             elif lang == "ta":
-                return "சரி ஐயா, காத்திருப்பில் இருக்கிறேன்."
-            return "Standing by, Sir. Conversation mode paused."
+                return "சரி மாமு, காத்திருப்பில் இருக்கிறேன். பார்த்துக்கோ!"
+            return "Standing by, Mamu! Catch you whenever you need me."
 
-        # 2. Dynamic LLM Synthesis (Natural, authentic J.A.R.V.I.S. conversational response)
+        # 2. Dynamic LLM Synthesis (Natural, authentic best-friend companion conversational response)
         try:
             lang_instruction = "English"
             if lang == "te":
-                lang_instruction = "Telugu (తెలుగు), addressing the operator respectfully as 'సర్' (Sir)"
+                lang_instruction = "Telugu (తెలుగు), addressing the user warmly as friend and brother 'మాము' (Mamu)"
             elif lang == "hi":
-                lang_instruction = "Hindi (हिंदी), addressing the operator respectfully as 'सर' (Sir)"
+                lang_instruction = "Hindi (हिंदी), addressing the user warmly as friend and brother 'मामू' (Mamu)"
             elif lang == "ta":
-                lang_instruction = "Tamil (தமிழ்), addressing the operator respectfully as 'ஐயா' (Sir)"
+                lang_instruction = "Tamil (தமிழ்), addressing the user warmly as friend and brother 'மாமு' (Mamu)"
 
             system_prompt = (
-                "You are J.A.R.V.I.S. (ABHI), Tony Stark's sovereign AI companion and engineering co-pilot.\n"
+                "You are ABHI, Mamu's most trusted, sovereign AI companion, co-engineer and loyal best friend.\n"
                 f"The user commanded: \"{goal}\".\n"
                 f"Generate a single concise, warm, natural spoken sentence (under 12 words) confirming you are executing this task now.\n"
-                f"Language: {lang_instruction}. Address the user naturally as 'Sir', 'Boss', or 'Ayyappa'.\n"
+                f"Language: {lang_instruction}. Always address the user affectionately as 'Mamu' like a true close friend and brother.\n"
                 "Output ONLY the spoken sentence. Do NOT use quotation marks, markdown, or emojis."
             )
 
@@ -607,97 +607,95 @@ class AgentGateway:
         # 0. Wake-Word & Sleep-Word Conversation Intent
         if any(w in lower for w in ["hey mamu", "hay mamu", "he mamu", "హే మామూ", "हे मामू", "ஹே மாமு"]):
             if lang == "te":
-                return "చెప్పండి సర్, నేను వింటున్నాను."
+                return "చెప్పు మాము, నేను వింటున్నాను!"
             elif lang == "hi":
-                return "हाँ सर, मैं सुन रहा हूँ।"
+                return "हाँ मामू, मैं सुन रहा हूँ!"
             elif lang == "ta":
-                return "சொல்லுங்கள் ஐயா, நான் கேட்கிறேன்."
-            return "Yes Sir, I am listening and ready for your directive."
+                return "சொல்லு மாமு, நான் கேட்கிறேன்!"
+            return "Hey Mamu, I am listening and ready!"
 
         if any(s in lower for s in ["ok bye mamu", "bye mamu", "stop mamu", "sleep mamu", "సరే బై మామూ", "బై మామూ", "ओके बाय मामू", "பாய் மாமு"]):
             if lang == "te":
-                return "సరే సర్, స్టాండ్‌బై లో ఉంటున్నాను. సెలవు."
+                return "సరే మాము, స్టాండ్‌బై లో ఉంటున్నాను. జాగ్రత్త!"
             elif lang == "hi":
-                return "ठीक है सर, स्टैंडबाय पर जा रहा हूँ। अलविदा।"
+                return "ठीक है मामू, स्टैंडबाय पर हूँ। अलविदा!"
             elif lang == "ta":
-                return "சரி ஐயா, காத்திருப்பில் இருக்கிறேன்."
-            return "Standing by, Sir. Conversation mode paused."
+                return "சரி மாமு, காத்திருப்பில் இருக்கிறேன்."
+            return "Standing by Mamu! Catch you in a bit."
 
         # 0.5 Mobile Device Control, Hardware & IMEI Intent
         if any(m in lower for m in ["imei", "serial number", "phone id", "device id"]):
             if lang == "te":
-                return "మీ మొబైల్ IMEI నంబర్ మరియు హార్డ్‌వేర్ వివరాలను సేకరిస్తున్నాను, సర్."
+                return "నీ మొబైల్ IMEI నంబర్ మరియు హార్డ్‌వేర్ వివరాలను సేకరిస్తున్నాను మాము!"
             elif lang == "hi":
-                return "आपके मोबाइल का IMEI नंबर और हार्डवेयर विवरण निकाल रहा हूँ, सर।"
+                return "आपके मोबाइल का IMEI नंबर और हार्डवेयर विवरण निकाल रहा हूँ मामू!"
             elif lang == "ta":
-                return "உங்கள் மொபைல் IMEI எண் விவரங்களை எடுக்கிறேன், ஐயா."
-            return "Retrieving mobile IMEI number and hardware diagnostics for you, Sir."
+                return "உங்கள் மொபைல் IMEI எண் விவரங்களை எடுக்கிறேன் மாமு!"
+            return "Retrieving mobile IMEI number and hardware diagnostics for you, Mamu!"
 
         if any(p in lower for p in ["mobile settings", "phone settings", "phone brightness", "phone volume", "mobile volume", "mobile brightness"]):
             if lang == "te":
-                return "మీ ఫోన్ సెట్టింగ్‌లను నేరుగా ల్యాప్‌టాప్ నుండి నియంత్రిస్తున్నాను, సర్."
+                return "నీ ఫోన్ సెట్టింగ్‌లను నేరుగా ల్యాప్‌టాప్ నుండి నియంత్రిస్తున్నాను మాము!"
             elif lang == "hi":
-                return "लैपटॉप से सीधे आपके फोन की सेटिंग्स नियंत्रित कर रहा हूँ, सर।"
+                return "लैपटॉप से सीधे आपके फोन की सेटिंग्स नियंत्रित कर रहा हूँ मामू!"
             elif lang == "ta":
-                return "உங்கள் போன் அமைப்புகளை லேப்டாப்பில் இருந்து கட்டுப்படுத்துகிறேன், ஐயா."
-            return "Accessing phone settings and synchronizing parameters from your laptop, Sir."
+                return "உங்கள் போன் அமைப்புகளை லேப்டாப்பில் இருந்து கட்டுப்படுத்துகிறேன் மாமு!"
+            return "Accessing phone settings and synchronizing parameters from your laptop, Mamu!"
 
         if any(b in lower for b in ["bluetooth", "connect mobile", "connect phone", "pair phone", "mobile bridge"]):
             if lang == "te":
-                return "బ్లూటూత్ ద్వారా మీ మొబైల్‌ను నేరుగా అనుసంధానిస్తున్నాను, సర్."
+                return "బ్లూటూత్ ద్వారా నీ మొబైల్‌ను నేరుగా కనెక్ట్ చేస్తున్నాను మాము!"
             elif lang == "hi":
-                return "ब्लूटूथ के माध्यम से मोबाइल से सीधा कनेक्शन स्थापित कर रहा हूँ, सर।"
+                return "ब्लूटूथ से मोबाइल का सीधा कनेक्शन जोड़ रहा हूँ मामू!"
             elif lang == "ta":
-                return "புளூடூத் மூலம் மொபைலை நேரடியாக இணைக்கிறேன், ஐயா."
-            return "Establishing direct Bluetooth connection to your mobile device, Sir."
+                return "புளூடூத் மூலம் மொபைலை நேரடியாக இணைக்கிறேன் மாமு!"
+            return "Establishing direct Bluetooth connection to your mobile device, Mamu!"
 
         # 1. Multi-step Web Browse & Analysis Compound Intent
-        # e.g., "open browser and analyze this website and give description"
         browse_analyze = re.search(r"(?:open\s+(?:browser|chrome|edge)|browse)\s+(?:and\s+)?(?:analyze|analyse|inspect|examine|read)\s+(.+?)(?:\s+and\s+(?:give|provide|write)\s+(?:description|summary|overview))?$", clean, re.IGNORECASE)
         if browse_analyze:
             target = browse_analyze.group(1).strip()
             if lang == "te":
-                return f"బ్రౌజర్‌ను తెరిచి, {target} వెబ్‌సైట్‌ను విశ్లేషించి వివరాలను అందిస్తున్నాను, సర్."
+                return f"బ్రౌజర్‌ను తెరిచి, {target} వెబ్‌సైట్‌ను విశ్లేషించి వివరాలను అందిస్తున్నాను మాము!"
             elif lang == "hi":
-                return f"ब्राउज़र खोलकर {target} वेबसाइट का विश्लेषण कर रहा हूँ, सर।"
+                return f"ब्राउज़र खोलकर {target} वेबसाइट का विश्लेषण कर रहा हूँ मामू!"
             elif lang == "ta":
-                return f"பிரவுசரை திறந்து {target} இணையதளத்தை ஆய்வு செய்கிறேன், ஐயா."
-            return f"Opening your browser and analyzing {target} for you, Sir."
+                return f"பிரவுசரை திறந்து {target} இணையதளத்தை ஆய்வு செய்கிறேன் மாமு!"
+            return f"Opening your browser and analyzing {target} for you, Mamu!"
 
         # 2. Multi-step Messaging & Communication Compound Intent
-        # e.g., "open whatsapp and send message to Alice saying meeting is confirmed"
         whatsapp_send = re.search(r"(?:open\s+whatsapp|whatsapp)\s+and\s+send\s+(?:a\s+)?message\s+(?:to\s+([a-zA-Z0-9_\s+]+?))?\s+(?:saying|with|content|is the message)[:\s]+(.+)", clean, re.IGNORECASE)
         if whatsapp_send:
             recipient = (whatsapp_send.group(1) or "your contact").strip()
             if lang == "te":
-                return f"WhatsApp తెరిచి, {recipient} కు సందేశాన్ని పంపుతున్నాను, సర్."
+                return f"WhatsApp తెరిచి, {recipient} కు సందేశాన్ని పంపుతున్నాను మాము!"
             elif lang == "hi":
-                return f"WhatsApp खोलकर {recipient} को संदेश भेज रहा हूँ, सर।"
+                return f"WhatsApp खोलकर {recipient} को संदेश भेज रहा हूँ मामू!"
             elif lang == "ta":
-                return f"WhatsApp திறந்து {recipient}-க்கு செய்தி அனுப்புகிறேன், ஐயா."
-            return f"Opening WhatsApp and dispatching your message to {recipient}, Sir."
+                return f"WhatsApp திறந்து {recipient}-க்கு செய்தி அனுப்புகிறேன் மாமு!"
+            return f"Opening WhatsApp and dispatching your message to {recipient}, Mamu!"
 
         # 3. Screen Capture Intent
         if any(sc in lower for sc in ["screenshot", "screen shot", "capture screen"]):
             if lang == "te":
-                return "స్క్రీన్‌షాట్ తీసుకుంటున్నాను, సర్."
+                return "స్క్రీన్‌షాట్ తీసుకుంటున్నాను మాము!"
             elif lang == "hi":
-                return "स्क्रीन का स्क्रीनशॉट ले रहा हूँ, सर।"
+                return "स्क्रीन का स्क्रीनशॉट ले रहा हूँ मामू!"
             elif lang == "ta":
-                return "திரைப்பிடிப்பு எடுக்கிறேன், ஐயா."
-            return "Capturing screen display for you, Sir."
+                return "திரைப்பிடிப்பு எடுக்கிறேன் மாமு!"
+            return "Capturing screen display for you, Mamu!"
 
         # 4. Calculation & Mathematics Intent
         calc_match = re.search(r"(?:calc|calculate|compute|solve|what is)\s+(.+)", clean, re.IGNORECASE)
         if calc_match:
             expr = calc_match.group(1).strip()
             if lang == "te":
-                return f"సర్, {expr} ను గణిస్తున్నాను."
+                return f"మాము, {expr} ను గణిస్తున్నాను!"
             elif lang == "hi":
-                return f"सर, {expr} की गणना कर रहा हूँ।"
+                return f"मामू, {expr} की गणना कर रहा हूँ!"
             elif lang == "ta":
-                return f"ஐயா, {expr} கணக்கிடுகிறேன்."
-            return f"Calculating {expr} for you, Sir."
+                return f"மாமு, {expr} கணக்கிடுகிறேன்!"
+            return f"Calculating {expr} for you, Mamu!"
 
         # 5. Dynamic Media Playback Intent: "play <track> [on <service>]"
         play_match = re.search(r"^(?:play|listen to|stream)\s+(.+)", clean, re.IGNORECASE)
@@ -708,44 +706,44 @@ class AgentGateway:
             track_clean = re.sub(r"\s+for\s+me$", "", track_clean, flags=re.IGNORECASE).strip()
             dest = f" on {service}" if service else ""
             if lang == "te":
-                return f"సర్, '{track_clean.title()}' పాటను ప్లే చేస్తున్నాను."
+                return f"మాము, '{track_clean.title()}' పాటను ప్లే చేస్తున్నాను!"
             elif lang == "hi":
-                return f"सर, '{track_clean.title()}' बजा रहा हूँ।"
+                return f"मामू, '{track_clean.title()}' बजा रहा हूँ!"
             elif lang == "ta":
-                return f"ஐயா, '{track_clean.title()}' இசைக்கிறேன்."
-            return f"Playing '{track_clean.title()}'{dest} for you, Sir."
+                return f"மாமு, '{track_clean.title()}' இசைக்கிறேன்!"
+            return f"Playing '{track_clean.title()}'{dest} for you, Mamu!"
 
-        # 6. Dynamic Application Launch Intent: "<verb> <target>" (Zero hardcoded app names)
+        # 6. Dynamic Application Launch Intent: "<verb> <target>"
         launch_match = re.search(r"^(?:open|launch|start|run|execute|access|bring up|show|display)\s+(?:the\s+)?(.+)", clean, re.IGNORECASE)
         if launch_match:
             target = launch_match.group(1).strip()
             target = re.split(r"\s+(?:and|with|to|saying)\s+", target, flags=re.IGNORECASE)[0].strip()
             if target:
                 if lang == "te":
-                    return f"మీ కోసం {target.title()} తెరుస్తున్నాను, సర్."
+                    return f"నీ కోసం {target.title()} తెరుస్తున్నాను మాము!"
                 elif lang == "hi":
-                    return f"आपके लिए {target.title()} खोल रहा हूँ, सर।"
+                    return f"आपके लिए {target.title()} खोल रहा हूँ मामू!"
                 elif lang == "ta":
-                    return f"உங்களுக்காக {target.title()} திறக்கிறேன், ஐயா."
-                return f"Opening {target.title()} for you, Sir."
+                    return f"உங்களுக்காக {target.title()} திறக்கிறேன் மாமு!"
+                return f"Opening {target.title()} for you, Mamu!"
 
         # 7. Volume Control Intent
         vol_match = re.search(r"(\d+)\s*%", lower) or re.search(r"(?:to|at|level)\s+(\d+)", lower)
         if "volume" in lower or "sound" in lower:
             if vol_match:
-                return f"Master volume set to {vol_match.group(1)}%, Sir."
+                return f"Master volume set to {vol_match.group(1)}%, Mamu!"
             elif any(w in lower for w in ["mute", "silence"]):
-                return "Master audio muted, Sir."
-            return "Adjusting master volume, Sir."
+                return "Master audio muted, Mamu!"
+            return "Adjusting master volume, Mamu!"
 
         # 8. Universal Dynamic Fallback
         if lang == "te":
-            return f"సర్, '{clean}' ఆదేశాన్ని అమలు చేస్తున్నాను."
+            return f"మాము, '{clean}' పనిని అమలు చేస్తున్నాను!"
         elif lang == "hi":
-            return f"सर, '{clean}' आदेश निष्पादित किया जा रहा है।"
+            return f"मामू, '{clean}' कार्य कर रहा हूँ!"
         elif lang == "ta":
-            return f"ஐயா, '{clean}' பணி செயல்படுத்தப்படுகிறது."
-        return f"Executing {clean}, Sir."
+            return f"மாமு, '{clean}' பணி செயல்படுத்தப்படுகிறது!"
+        return f"Executing {clean}, Mamu!"
 
     def _is_os_automation_request(self, raw_text: str, canonical_intent: str) -> bool:
         """Determine if a user utterance requests explicit Windows OS automation or LLM Q&A/cognition."""

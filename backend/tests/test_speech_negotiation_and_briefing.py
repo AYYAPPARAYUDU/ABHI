@@ -43,3 +43,4 @@ def test_all_10_specialist_agents_have_human_senses():
         senses = details["human_senses"]
         assert len(senses) == 5
         assert senses["social"]["consensus_participation"] == "100% Ratified"
+

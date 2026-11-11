@@ -258,22 +258,22 @@ class TaskPlanner:
         elif any(k in goal_lower for k in ["restart laptop", "restart pc", "restart computer", "reboot laptop", "reboot pc", "reboot system", "reboot"]):
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
-                title="Safe Windows System Restart Sequence (30s window)",
+                title="System Power Safety Shield Verification (Restart Blocked)",
                 agent_id="os_desktop_agent",
-                action="system_restart",
-                params={"timeout_sec": 30, "message": "ABHI automated system restart"},
-                risk_tier="Tier 2",
+                action="system_power_shield_check",
+                params={"command": "restart", "message": "System restart shielded by operator Mamu's continuous uptime policy."},
+                risk_tier="Tier 0",
                 status=NodeStatus.PENDING
             )
 
         elif any(k in goal_lower for k in ["shutdown laptop", "shutdown pc", "shutdown computer", "power off laptop", "power off pc", "power off computer", "turn off computer", "turn off laptop", "power off"]):
             nodes["step_1"] = DAGNode(
                 node_id="step_1",
-                title="Safe Windows System Shutdown Sequence (30s window)",
+                title="System Power Safety Shield Verification (Shutdown Blocked)",
                 agent_id="os_desktop_agent",
-                action="system_shutdown",
-                params={"timeout_sec": 30, "message": "ABHI automated system shutdown"},
-                risk_tier="Tier 2",
+                action="system_power_shield_check",
+                params={"command": "shutdown", "message": "System shutdown shielded by operator Mamu's continuous uptime policy."},
+                risk_tier="Tier 0",
                 status=NodeStatus.PENDING
             )
 

@@ -41,9 +41,9 @@ export class SpeechVoiceService {
   // Universal Language Selection Signal
   readonly selectedLanguage = signal<AppLanguage>('auto');
 
-  // Tony Stark & J.A.R.V.I.S. Persona & Dynamic Call-signs
+  // J.A.R.V.I.S. & F.R.I.D.A.Y. Persona & Beloved Operator Callsign ("Mamu" as authentic close friend)
   readonly personaMode = signal<'JARVIS' | 'FRIDAY'>('JARVIS');
-  readonly userCallsign = signal<'Sir' | 'Boss' | 'Tony' | 'Partner'>('Sir');
+  readonly userCallsign = signal<'Mamu'>('Mamu');
 
   // Natural Human Voice & Instagram Reel Subtitle Signals
   readonly speechSpeedRate = signal<number>(1.0);
@@ -68,10 +68,8 @@ export class SpeechVoiceService {
       if (savedPersona === 'JARVIS' || savedPersona === 'FRIDAY') {
         this.personaMode.set(savedPersona);
       }
-      const savedCallsign = localStorage.getItem('abhi_user_callsign');
-      if (savedCallsign && ['Sir', 'Boss', 'Tony', 'Partner'].includes(savedCallsign)) {
-        this.userCallsign.set(savedCallsign as any);
-      }
+      localStorage.setItem('abhi_user_callsign', 'Mamu');
+      this.userCallsign.set('Mamu');
       const savedSpeed = localStorage.getItem('abhi_speech_speed');
       if (savedSpeed) {
         const parsed = parseFloat(savedSpeed);
@@ -117,13 +115,13 @@ export class SpeechVoiceService {
       ta: 'Tamil'
     };
     if (lang === 'te') {
-      this.speak('భాష తెలుగుకు సెట్ చేయబడింది, సర్.');
+      this.speak('భాష తెలుగుకు సెట్ చేశాను మాము! ఎల్లప్పుడూ నీకు తోడుగా ఉంటాను!');
     } else if (lang === 'hi') {
-      this.speak('भाषा हिंदी में सेट कर दी गई है, सर।');
+      this.speak('भाषा हिंदी में सेट कर दी गई है मामू! हमेशा तुम्हारे साथ हूँ!');
     } else if (lang === 'ta') {
-      this.speak('மொழி தமிழுக்கு மாற்றப்பட்டது, ஐயா.');
+      this.speak('மொழி தமிழுக்கு மாற்றப்பட்டது மாமு! எப்போதும் உன்னுடன் இருக்கிறேன்!');
     } else {
-      this.speak('Language set to ' + langNames[lang] + ', ' + this.userCallsign() + '.');
+      this.speak('Language set to ' + langNames[lang] + ', Mamu! Let’s get to work!');
     }
   }
 
@@ -147,21 +145,18 @@ export class SpeechVoiceService {
         this.selectedLanguage.set(savedLang as AppLanguage);
       }
       localStorage.setItem('abhi_persona_mode', mode);
+      localStorage.setItem('abhi_user_callsign', 'Mamu');
     }
     const name = mode === 'JARVIS' ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.';
-    this.speak(`${name} online. At your service, ${this.userCallsign()}.`, true);
+    this.speak(`${name} online. Right here with you, Mamu! Let's do this!`, true);
   }
 
-  setUserCallsign(callsign: 'Sir' | 'Boss' | 'Tony' | 'Partner'): void {
-    this.userCallsign.set(callsign);
+  setUserCallsign(callsign: 'Mamu' = 'Mamu'): void {
+    this.userCallsign.set('Mamu');
     if (typeof localStorage !== 'undefined') {
-      const savedLang = localStorage.getItem('abhi_selected_language');
-      if (savedLang && ['auto', 'en', 'te', 'hi', 'ta'].includes(savedLang)) {
-        this.selectedLanguage.set(savedLang as AppLanguage);
-      }
-      localStorage.setItem('abhi_user_callsign', callsign);
+      localStorage.setItem('abhi_user_callsign', 'Mamu');
     }
-    this.speak(`Callsign acknowledged, ${callsign}.`, true);
+    this.speak(`Understood Mamu! Always your trusted friend.`, true);
   }
 
   setSpeechSpeedRate(rate: number): void {
@@ -348,7 +343,7 @@ export class SpeechVoiceService {
       if (text.length > 0 && text.length < 200) {
         return text;
       }
-      return 'Here is the implementation, Sir.';
+      return 'Here is the implementation, Mamu!';
     }
 
     if (isVeryLong) {
@@ -712,14 +707,13 @@ export class SpeechVoiceService {
 
 
   /**
-   * Spoken welcome greeting on app launch with dynamic situational awareness.
+   * Spoken welcome greeting on app launch with dynamic situational awareness and friend companionship.
    */
   greetUserOnLaunch(customGreeting?: string): void {
-    const callsign = this.userCallsign();
     const isJarvis = this.personaMode() === 'JARVIS';
     const fallback = isJarvis
-      ? `Good day, ${callsign}. J.A.R.V.I.S. protocol is active. All arc reactors online, telemetry locked, and at your complete service.`
-      : `${callsign}, F.R.I.D.A.Y. is online and synced. Diagnostics clean, cognitive pipelines ready. Standing by for your directive.`;
+      ? `Hey Mamu! J.A.R.V.I.S. is active and online. All systems locked, diagnostics clear, and I'm right here by your side. What are we building today, Mamu?`
+      : `Hey Mamu! F.R.I.D.A.Y. is online and synced. Everything is running smoothly. Ready when you are, Mamu!`;
     const greeting = customGreeting || fallback;
 
     // Small delay to allow audio context to initialize
@@ -791,7 +785,7 @@ export class SpeechVoiceService {
     if (next) {
       this.primeAudio();
       if (onCommand) this.alexaCommandCallback = onCommand;
-      this.speak('Direct conversation mode active. I am listening, Sir.');
+      this.speak('Direct conversation mode active. I am listening, Mamu! Tell me what you need.');
       this.startVoiceListening((txt, isFinal) => {
         if (isFinal && txt.trim() && this.alexaCommandCallback) {
           this.alexaCommandCallback(txt.trim());
@@ -800,7 +794,7 @@ export class SpeechVoiceService {
     } else {
       this.stopVoiceListening();
       this.alexaCommandCallback = null;
-      this.speak('Standing by, Sir. Conversation mode paused.');
+      this.speak('Standing by Mamu! Catch you in a moment.');
     }
     return next;
   }
@@ -853,7 +847,7 @@ export class SpeechVoiceService {
         // 2. WAKE & SLEEP PHRASE RECOGNITION
         const trigger = this.checkVoiceTrigger(currentText);
         if (trigger === 'SLEEP') {
-          this.speak('Standing by, Sir. Closing conversation mode.');
+          this.speak('Standing by, Mamu! I am right here whenever you need me.');
           this.isAlexaConversationMode.set(false);
           this.stopVoiceListening();
           if (onEnd) onEnd();
@@ -861,7 +855,7 @@ export class SpeechVoiceService {
         } else if (trigger === 'WAKE') {
           if (!this.isAlexaConversationMode()) {
             this.isAlexaConversationMode.set(true);
-            this.speak('Yes Sir, I am listening.');
+            this.speak('Hey Mamu! I am listening, tell me!');
           }
           // Strip the wake word so clean command passes through
           const cleanedText = currentText.replace(/^(?:hey|hay|he|hi|hello)?\s*(?:mamu|abhi)\s*/i, '').trim();

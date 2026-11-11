@@ -231,8 +231,8 @@ export class VoiceSettingsCenterComponent implements OnInit {
   }
 
   // Callsign switch
-  setCallsign(c: 'Sir' | 'Boss' | 'Tony' | 'Partner'): void {
-    this.speechVoice.setUserCallsign(c);
+  setCallsign(c: 'Mamu' = 'Mamu'): void {
+    this.speechVoice.setUserCallsign('Mamu');
   }
 
   // Speech Speed

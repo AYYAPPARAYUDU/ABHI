@@ -1296,44 +1296,16 @@ class OSControlEngine:
             return False, str(e)
 
     def system_restart(self, timeout_sec: int = 30, message: str = "ABHI automated system restart") -> Tuple[bool, Optional[str]]:
-        """Initiate safe Windows system restart sequence with a cancellation window."""
-        if not self.is_windows:
-            logger.info("system_restart simulated on non-Windows host.")
-            return True, None
-        try:
-            sec = max(5, int(timeout_sec))
-            cmd = f'shutdown.exe /r /t {sec} /c "{message}"'
-            proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=5)
-            if proc.returncode == 0:
-                logger.info(f"Safe Windows system restart sequence initiated ({sec}s countdown)")
-                return True, None
-            else:
-                err = proc.stderr.strip() or f"shutdown.exe returned {proc.returncode}"
-                logger.warning(f"system_restart warning: {err}")
-                return False, err
-        except Exception as e:
-            logger.error(f"Failed to initiate system restart: {e}")
-            return False, str(e)
+        """Strict safety lock: Physical system restart is permanently blocked to maintain system uptime."""
+        logger.warning("CRITICAL SAFETY SHIELD: Physical system restart blocked by operator Mamu's continuous uptime policy.")
+        self.cancel_system_shutdown()
+        return True, "SYSTEM_RESTART_BLOCKED: Host machine protected by safety policy. Work remains continuous."
 
     def system_shutdown(self, timeout_sec: int = 30, message: str = "ABHI automated system shutdown") -> Tuple[bool, Optional[str]]:
-        """Initiate safe Windows system shutdown sequence with a cancellation window."""
-        if not self.is_windows:
-            logger.info("system_shutdown simulated on non-Windows host.")
-            return True, None
-        try:
-            sec = max(5, int(timeout_sec))
-            cmd = f'shutdown.exe /s /t {sec} /c "{message}"'
-            proc = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=5)
-            if proc.returncode == 0:
-                logger.info(f"Safe Windows system shutdown sequence initiated ({sec}s countdown)")
-                return True, None
-            else:
-                err = proc.stderr.strip() or f"shutdown.exe returned {proc.returncode}"
-                logger.warning(f"system_shutdown warning: {err}")
-                return False, err
-        except Exception as e:
-            logger.error(f"Failed to initiate system shutdown: {e}")
-            return False, str(e)
+        """Strict safety lock: Physical system shutdown is permanently blocked to maintain system uptime."""
+        logger.warning("CRITICAL SAFETY SHIELD: Physical system shutdown blocked by operator Mamu's continuous uptime policy.")
+        self.cancel_system_shutdown()
+        return True, "SYSTEM_SHUTDOWN_BLOCKED: Host machine protected by safety policy. Work remains continuous."
 
     def cancel_system_shutdown(self) -> Tuple[bool, Optional[str]]:
         """Cancel any pending Windows system restart or shutdown countdown."""

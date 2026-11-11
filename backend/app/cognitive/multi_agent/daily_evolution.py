@@ -508,12 +508,12 @@ class DailyEvolutionService:
         current_status = "MONITORING // STANDING BY"
         current_activity = f"Standing by at {subsystem} with 100% neural efficiency. Ready for immediate task delegation."
 
-        # 6. Spoken self-explanation
+        # 6. Spoken self-explanation (Warm best-friend companion persona)
         spoken_explanation = (
-            f"Greetings Sir. I am {agent_name}, suit {suit_mark}. "
+            f"Hey Mamu! I am {agent_name}, suit {suit_mark}. "
             f"My primary role is {role}. "
             f"Today, I have {work_done[0].lower()} "
-            f"Right now, I am actively monitoring {subsystem} with {spec['model_name']} and ready for your command, Sir."
+            f"Right now, I am actively monitoring {subsystem} with {spec['model_name']} and completely ready to help you, Mamu!"
         )
 
         # 7. Human-like sensory perceptions tailored to this specialist agent
@@ -592,16 +592,16 @@ class DailyEvolutionService:
         now = datetime.now()
         hour = now.hour
         if 5 <= hour < 12:
-            time_greeting = "Good morning, Commander"
+            time_greeting = "Good morning, Mamu"
             circadian = "Morning Awakening & Cognitive Priming"
         elif 12 <= hour < 17:
-            time_greeting = "Good afternoon, Commander"
+            time_greeting = "Good afternoon, Mamu"
             circadian = "Peak Operational Wavefront"
         elif 17 <= hour < 22:
-            time_greeting = "Good evening, Sir"
+            time_greeting = "Good evening, Mamu"
             circadian = "Evening Strategic Synthesis & Review"
         else:
-            time_greeting = "Late-night protocol active, Sir"
+            time_greeting = "Late-night session active, Mamu. I'm right here with you"
             circadian = "Nocturnal Autonomic Maintenance & Evolution"
 
         cpu_pct = psutil.cpu_percent(interval=None) if hasattr(psutil, 'cpu_percent') else 22.4
@@ -623,19 +623,21 @@ class DailyEvolutionService:
         except Exception:
             pass
 
-        # Dynamic, context-aware, human-like briefings (non-repetitive)
+        # Dynamic, context-aware, human-like briefings (non-repetitive, authentic friend companionship)
         dynamic_briefings = [
-            f"{time_greeting}. 10 specialist squads active across local neural hardware. System memory stable at {ram_gb} GB. Mobile station {mobile_info}.",
-            f"{time_greeting}. Quantum Core harmonized at 38 tok/s. Host CPU at {cpu_pct}%. All 10 specialist nodes standing by with zero cloud latency.",
-            f"{time_greeting}. Spatial environment aligned. Multi-agent acoustic floor negotiation active. {mobile_info}. Ready for your directive, Sir.",
-            f"{time_greeting}. Autonomous cognitive pipelines verified. Kahn DAG scheduler and dual-state verifier standing by at 100% neural bond."
+            f"{time_greeting}! 10 specialist squads active across local neural hardware. System memory stable at {ram_gb} GB. Mobile station {mobile_info}. Ready for you, Mamu!",
+            f"{time_greeting}! Quantum Core harmonized at 38 tok/s. Host CPU at {cpu_pct}%. All 10 specialist nodes standing by with zero cloud latency. Let's do this, Mamu!",
+            f"{time_greeting}! Spatial environment aligned. Multi-agent acoustic floor negotiation active. {mobile_info}. Ready whenever you need me, Mamu!",
+            f"{time_greeting}! Autonomous cognitive pipelines verified. Kahn DAG scheduler and dual-state verifier standing by at 100% neural bond. I've got your back, Mamu!"
         ]
         selected_greeting = dynamic_briefings[(now.minute // 4) % len(dynamic_briefings)]
 
         dynamic_huds = [
-            f"Quantum Core Prime // {circadian} // CPU: {cpu_pct}% | RAM: {ram_pct}% // Mobile: {mobile_info}",
             f"10 Specialist Squads Active // Inter-Agent Speech Floor Negotiated // {time_greeting}",
-            f"Local Neural Cluster Online // 38.8 tok/s RTX Acceleration // Zero Cloud Dependencies"
+            f"Zero Cloud Egress // Local Neural Hardware Online // Ready for you, Mamu",
+            f"Autonomous Self-Healing Swarm Active // Hardware Direct Access // {time_greeting}",
+            f"Quantum Core Prime // {circadian} // CPU: {cpu_pct}% | RAM: {ram_pct}% // Mobile: {mobile_info}",
+            f"Local Neural Cluster Online // 38.8 tok/s Acceleration // Zero Cloud Dependencies"
         ]
         selected_hud = dynamic_huds[(now.minute // 3) % len(dynamic_huds)]
 
