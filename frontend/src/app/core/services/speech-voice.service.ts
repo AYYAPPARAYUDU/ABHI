@@ -69,6 +69,7 @@ export class SpeechVoiceService {
 
   // Web Audio DSP Nodes (Speech Output Pipeline)
   private ttsAnalyser: AnalyserNode | null = null;
+  private ttsDuckingGainNode: GainNode | null = null;
   private isTtsMonitoring = false;
   private isMicMonitoring = false;
 
@@ -348,8 +349,21 @@ export class SpeechVoiceService {
     text = text.replace(/\bDAG\b/g, 'pipeline');
     text = text.replace(/\bWAL\b/g, 'log');
     text = text.replace(/\bDB\b/g, 'database');
+    text = text.replace(/\bAPI\b/g, 'A P I');
+    text = text.replace(/\bCLI\b/g, 'command line');
+    text = text.replace(/\bTS\b/g, 'TypeScript');
+    text = text.replace(/\bJS\b/g, 'JavaScript');
+    text = text.replace(/\bPY\b/g, 'Python');
+    text = text.replace(/\bDSP\b/g, 'D S P');
+    text = text.replace(/\bVAD\b/g, 'voice activity detection');
+    text = text.replace(/\bThree\.js\b/gi, 'Three J S');
+    text = text.replace(/\bGitHub\b/gi, 'Git Hub');
+    text = text.replace(/\bWhatsApp\b/gi, 'Whats App');
     text = text.replace(/\bcalc\b/gi, 'calculator');
     text = text.replace(/\byoutube\b/gi, 'YouTube');
+
+    // Always address Mamu as a warm friend, purging residual honorifics
+    text = text.replace(/\b(?:Sir|Boss|Partner|Tony)\b/g, 'Mamu');
 
     // Strip remaining robotic filler words
     text = text.replace(/\bdispatching task\b/gi, 'executing');
@@ -964,10 +978,20 @@ export class SpeechVoiceService {
         this.noiseFloorDb.set(Math.round(estDb));
       }
 
-      // Barge-in Voice Interruption:
-      // If ABHI is currently speaking and user speaks firmly with micLevel > 0.20,
-      // stop TTS immediately and give floor to Mamu!
-      if (this.isSpeaking() && normalizedLevel > 0.20) {
+      // Dynamic Acoustic Auto-Ducking:
+      // When user speaks softly (normalizedLevel > 0.08), smoothly duck TTS volume to 25% over 50ms
+      if (this.isSpeaking() && this.ttsDuckingGainNode && this.sharedAudioCtx) {
+        const currentTime = this.sharedAudioCtx.currentTime;
+        if (normalizedLevel > 0.08) {
+          this.ttsDuckingGainNode.gain.setTargetAtTime(0.25, currentTime, 0.05);
+        } else {
+          this.ttsDuckingGainNode.gain.setTargetAtTime(1.0, currentTime, 0.15);
+        }
+      }
+
+      // Firm Barge-in Voice Interruption:
+      // If user speaks firmly with micLevel > 0.22, stop TTS immediately and give floor to Mamu!
+      if (this.isSpeaking() && normalizedLevel > 0.22) {
         this.stop();
       }
 
@@ -978,7 +1002,7 @@ export class SpeechVoiceService {
 
   /**
    * Connects audio element to acoustic warmth & presence mastering DSP pipeline.
-   * Low-shelf boost at 240Hz, air boost at 4500Hz, and mastering peak limiter.
+   * Low-shelf boost at 240Hz, air boost at 4500Hz, mastering peak limiter, and auto-ducking gain.
    */
   private applyTtsOutputDsp(audio: HTMLAudioElement): void {
     if (typeof window === 'undefined') return;
@@ -1016,12 +1040,17 @@ export class SpeechVoiceService {
       limiter.attack.value = 0.002;
       limiter.release.value = 0.15;
 
-      // 4. Output Analyser Node: For real-time visual speech waveform in Three.js
+      // 4. Smooth Auto-Ducking Gain Node
+      const duckingGain = ctx.createGain();
+      duckingGain.gain.value = 1.0;
+      this.ttsDuckingGainNode = duckingGain;
+
+      // 5. Output Analyser Node: For real-time visual speech waveform in Three.js
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 256;
       this.ttsAnalyser = analyser;
 
-      source.connect(warmth).connect(air).connect(limiter).connect(analyser).connect(ctx.destination);
+      source.connect(warmth).connect(air).connect(limiter).connect(duckingGain).connect(analyser).connect(ctx.destination);
       this.startTtsEnvelopeMonitoring();
     } catch {
       // Audio element connects directly to default output on restriction

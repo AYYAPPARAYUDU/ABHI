@@ -3021,8 +3021,11 @@ export class ThreeSceneManagerService {
           this.centralCoreGroup.position.z += (this.targetMouseParallax.z - this.centralCoreGroup.position.z) * 0.04;
         }
 
-        // 2. Steady, Pristine Spherical Quantum Dot Core (Zero Wave Warping)
+        // 2. Steady, Pristine Spherical Quantum Dot Core
         const isSpeaking = this.speechVoice.isSpeaking();
+        const speechLevel = this.speechVoice.speechOutputLevel();
+        const micLevel = this.speechVoice.micAudioLevel();
+
         if (this.quantumDotSphere && this.quantumOriginalPositions) {
           const posAttr = this.quantumDotSphere.geometry.attributes['position'] as THREE.BufferAttribute;
           const positions = posAttr.array as Float32Array;
@@ -3044,8 +3047,9 @@ export class ThreeSceneManagerService {
             }
           }
 
-          // Maintain only gentle smooth rotation
-          this.quantumDotSphere.rotation.y = time * 0.03;
+          // Maintain gentle smooth rotation modulated slightly by speech
+          const rotSpeed = isSpeaking ? (0.03 + speechLevel * 0.04) : 0.03;
+          this.quantumDotSphere.rotation.y = time * rotSpeed;
           this.quantumDotSphere.rotation.x = 0;
         }
 
@@ -3061,15 +3065,19 @@ export class ThreeSceneManagerService {
           });
         }
 
-        // 3. Inner Arc Singularity & Corona (Pristine, Calm, and Steady — Zero Rigid Shaking)
+        // 3. Inner Arc Singularity & Corona (Real Voice Harmonic Coupling)
         if (this.innerSingularityMesh) {
-          const pulse = isSpeaking ? (1.0 + Math.abs(Math.sin(time * 15.0)) * 0.08) : (1 + Math.sin(time * 1.2) * 0.03);
-          this.innerSingularityMesh.scale.set(pulse, pulse, pulse);
+          const livePulse = isSpeaking
+            ? (1.0 + speechLevel * 0.22 + Math.sin(time * 2.5) * 0.02)
+            : (1.0 + micLevel * 0.15 + Math.sin(time * 1.2) * 0.03);
+          this.innerSingularityMesh.scale.set(livePulse, livePulse, livePulse);
         }
         if (this.coreCoronaMesh) {
-          const coronaPulse = isSpeaking ? (1.0 + Math.sin(time * 12.0) * 0.12) : (1 + Math.sin(time * 0.9 + 1) * 0.04);
+          const coronaPulse = isSpeaking
+            ? (1.0 + speechLevel * 0.28 + Math.sin(time * 2.0) * 0.03)
+            : (1.0 + micLevel * 0.18 + Math.sin(time * 0.9 + 1) * 0.04);
           this.coreCoronaMesh.scale.set(coronaPulse, coronaPulse, coronaPulse);
-          this.coreCoronaMesh.rotation.y = -time * (isSpeaking ? 0.04 : 0.015);
+          this.coreCoronaMesh.rotation.y = -time * (isSpeaking ? (0.025 + speechLevel * 0.06) : 0.015);
         }
 
         // 4. Concentric Arcs & Radar Sweep (Voice accelerated when speaking)
@@ -3130,7 +3138,7 @@ export class ThreeSceneManagerService {
 
           // Realistic Speech Acoustic Vibration on Agent when Speaking or Selected
           const isSelected = this.selectedAgent()?.id === agent.id;
-          const agentVibration = (isSpeaking && isSelected) ? Math.sin(time * 42.0) * 0.08 : 0;
+          const agentVibration = (isSpeaking && isSelected) ? (speechLevel * 0.12 + Math.sin(time * 30.0) * 0.03) : 0;
           const finalY = posY + agentVibration;
 
           data.group.position.set(posX, finalY, posZ);
@@ -3139,9 +3147,9 @@ export class ThreeSceneManagerService {
           // Visual culling: completely conceal sub-agents inside core when scale is minimal
           data.group.visible = isDeployed || data.currentScale > 0.05;
 
-          // Vibrate inner nucleus and dot ball when speaking
+          // Vibrate inner nucleus and dot ball with REAL dynamic vocal harmonics!
           if (data.innerNucleus && isSpeaking && isSelected) {
-            const vibScale = 1.0 + Math.sin(time * 36.0) * 0.15;
+            const vibScale = 1.0 + speechLevel * 0.35 + Math.sin(time * 24.0) * 0.04;
             data.innerNucleus.scale.set(vibScale, vibScale, vibScale);
           } else if (data.innerNucleus) {
             data.innerNucleus.scale.set(1, 1, 1);
