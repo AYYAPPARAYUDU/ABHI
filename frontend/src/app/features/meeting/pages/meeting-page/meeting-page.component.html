@@ -1,0 +1,331 @@
+<div class="meeting-viewport-container" role="region" aria-label="Sovereign Multi-LLM Boardroom">
+  <!-- ========================================================================= -->
+  <!-- 1. SOVEREIGN FACE BIOMETRIC ENTRANCE GATE                                 -->
+  <!-- ========================================================================= -->
+  @if (!faceAuthenticated()) {
+    <div class="biometric-gate-overlay">
+      <div class="gate-card-neumorphic">
+        <div class="gate-header">
+          <span class="gate-icon">👁️</span>
+          <div class="gate-title-block">
+            <h1 class="gate-title font-monospace">SOVEREIGN BOARDROOM ACCESS GATE</h1>
+            <span class="gate-sub font-monospace">OPTICAL BIOMETRIC VALIDATION REQUIRED</span>
+          </div>
+        </div>
+
+        <!-- Camera Scanner Simulation Viewport -->
+        <div class="scanner-viewport">
+          <div class="scanner-laser-bar" [class.scanning]="isAuthenticating()"></div>
+          <div class="face-target-reticle">
+            <span class="corner top-left"></span>
+            <span class="corner top-right"></span>
+            <span class="corner bottom-left"></span>
+            <span class="corner bottom-right"></span>
+            <div class="reticle-core-circle">
+              <span class="user-emoji-avatar">👑</span>
+            </div>
+          </div>
+
+          <div class="scanner-hud-telemetry font-monospace">
+            <span>ID: {{ operatorName() }}</span>
+            <span>GMAIL: {{ operatorEmail() }}</span>
+            <span>PHONE: {{ operatorPhone() }}</span>
+            <span class="text-emerald">MATCH: {{ authConfidence() }}%</span>
+          </div>
+        </div>
+
+        <div class="gate-profile-summary">
+          <div class="profile-chip font-monospace">
+            <span class="chip-label">SOVEREIGN OWNER:</span>
+            <span class="chip-val text-cyan">Ayyappa Rayudu Ravuvari (Mamu)</span>
+          </div>
+          <div class="profile-chip font-monospace">
+            <span class="chip-label">ATTENDEES:</span>
+            <span class="chip-val text-emerald">10 Specialist Small-LLM Brains Waiting</span>
+          </div>
+        </div>
+
+        <div class="gate-actions-row">
+          <button
+            type="button"
+            class="gate-auth-btn"
+            [disabled]="isAuthenticating()"
+            (click)="authenticateWithFace()"
+          >
+            {{ isAuthenticating() ? 'SCANNING BIOMETRIC RETINA...' : 'VERIFY FACE & ENTER COUNCIL MEETING' }}
+          </button>
+          <a routerLink="/home" class="gate-cancel-btn">Return to Core</a>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- 2. ZOOM-STYLE MULTI-LLM EXECUTIVE BOARDROOM                               -->
+  <!-- ========================================================================= -->
+  @if (faceAuthenticated()) {
+    <div class="zoom-room-shell">
+      <!-- Meeting Top Header Bar -->
+      <header class="zoom-top-header">
+        <div class="header-left-cluster">
+          <span class="rec-badge font-monospace">
+            <span class="rec-dot"></span> REC ●
+          </span>
+          <div class="meeting-title-block">
+            <h2 class="meeting-title">🏛️ ABHI MULTI-LLM EXECUTIVE BOARDROOM</h2>
+            <span class="meeting-sub font-monospace">HOST: {{ operatorName() }} // 11 ATTENDEES</span>
+          </div>
+        </div>
+
+        <!-- Mode Selector Ribbon -->
+        <div class="mode-selector-ribbon font-monospace">
+          <button
+            type="button"
+            class="mode-btn"
+            [class.active]="activeMeetingMode() === 'COUNCIL_CONSENSUS'"
+            (click)="setMeetingMode('COUNCIL_CONSENSUS')"
+          >
+            🤝 Consensus Mode
+          </button>
+          <button
+            type="button"
+            class="mode-btn"
+            [class.active]="activeMeetingMode() === 'DEBATE'"
+            (click)="setMeetingMode('DEBATE')"
+          >
+            ⚔️ Peer Debate
+          </button>
+          <button
+            type="button"
+            class="mode-btn"
+            [class.active]="activeMeetingMode() === 'DIRECT_BRIEFING'"
+            (click)="setMeetingMode('DIRECT_BRIEFING')"
+          >
+            📋 Direct Briefing
+          </button>
+        </div>
+
+        <div class="header-right-cluster">
+          <span class="encryption-tag font-monospace">🔒 E2E LOCAL AIR-GAPPED</span>
+        </div>
+      </header>
+
+      <!-- Live Closed Caption Subtitle Banner -->
+      @if (activeSpeakerSubtitle(); as sub) {
+        <div class="live-subtitle-banner">
+          <span class="sub-speaker-name font-monospace">🗣️ [{{ activeSpeakerName() }}]:</span>
+          <span class="sub-text font-monospace">"{{ sub }}"</span>
+        </div>
+      }
+
+      <!-- Autonomous Code Surgery Notification Banner -->
+      @if (autonomousSurgeryStatus(); as surgeryMsg) {
+        <div class="surgery-status-banner font-monospace">
+          <span class="surgery-spin">🌀</span> {{ surgeryMsg }}
+        </div>
+      }
+
+      <!-- Meeting Body: Video Gallery Grid + Chat Sidebar -->
+      <div class="zoom-main-body" [class.chat-open]="showChatSidebar()">
+        <!-- Video Grid Container -->
+        <main class="video-grid-gallery" role="main">
+          @for (member of councilMembers(); track member.id) {
+            <div
+              class="video-card-tile"
+              [class.host-tile]="member.isHost"
+              [class.speaking]="member.status === 'SPEAKING' || activeSpeakerId() === member.id"
+              [class.hand-raised]="member.status === 'HAND_RAISED'"
+              [style.borderColor]="(member.status === 'SPEAKING' || activeSpeakerId() === member.id) ? '#10b981' : (member.color + '44')"
+              (click)="spotlightAgent(member)"
+              title="Click to spotlight or listen to direct briefing"
+            >
+              <!-- Card Top Overlay (Role / Badges) -->
+              <div class="tile-top-bar">
+                <span class="tile-badge font-monospace" [style.color]="member.color">
+                  {{ member.codename }}
+                </span>
+                @if (member.isHost) {
+                  <span class="host-pill font-monospace">HOST 👑</span>
+                }
+                @if (member.status === 'HAND_RAISED') {
+                  <span class="hand-raised-badge">✋ HAND RAISED</span>
+                }
+                @if (member.status === 'SPEAKING' || activeSpeakerId() === member.id) {
+                  <span class="speaking-pill font-monospace">● SPEAKING</span>
+                }
+              </div>
+
+              <!-- Center Holographic Avatar / Camera Simulation -->
+              <div class="tile-center-viewport">
+                @if (member.isHost) {
+                  <div class="host-camera-view">
+                    <div class="host-orb-radar">
+                      <span class="host-core-emoji">👑</span>
+                      <div class="audio-ring-wave" [class.active]="isMicActive()"></div>
+                    </div>
+                    <span class="host-live-label font-monospace">Ayyappa Rayudu (Mamu)</span>
+                    <span class="host-channel-label font-monospace">{{ operatorEmail() }}</span>
+                  </div>
+                } @else {
+                  <div class="agent-avatar-view">
+                    <div class="agent-avatar-orb" [style.backgroundColor]="member.color + '22'" [style.borderColor]="member.color">
+                      <span class="agent-icon">{{ member.avatar }}</span>
+                      @if (member.status === 'SPEAKING' || activeSpeakerId() === member.id) {
+                        <div class="audio-pulsing-rings" [style.borderColor]="member.color"></div>
+                      }
+                    </div>
+
+                    <!-- Dynamic Waveform Equalizer -->
+                    <div class="tile-audio-waveform" [class.speaking]="member.status === 'SPEAKING' || activeSpeakerId() === member.id">
+                      <span class="wave-bar"></span>
+                      <span class="wave-bar"></span>
+                      <span class="wave-bar"></span>
+                      <span class="wave-bar"></span>
+                      <span class="wave-bar"></span>
+                    </div>
+
+                    <p class="agent-recent-thought font-monospace">
+                      "{{ member.recentThought }}"
+                    </p>
+                  </div>
+                }
+              </div>
+
+              <!-- Card Bottom Info Overlay -->
+              <div class="tile-bottom-bar">
+                <div class="member-meta-block">
+                  <span class="member-name">{{ member.name }}</span>
+                  <span class="member-subsystem font-monospace">{{ member.role }}</span>
+                </div>
+                <div class="member-status-pip" [class.speaking]="member.status === 'SPEAKING' || activeSpeakerId() === member.id">
+                  <span class="mic-icon">{{ (member.isHost && !isMicActive()) ? '🔇' : '🎙️' }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        </main>
+
+        <!-- Right Side: Zoom Live Chat & Negotiation Stream -->
+        @if (showChatSidebar()) {
+          <aside class="zoom-chat-sidebar" role="complementary" aria-label="Meeting Chat">
+            <div class="chat-sidebar-header">
+              <span class="chat-title font-monospace">💬 COUNCIL DELIBERATION CHAT</span>
+              <button type="button" class="chat-close-btn" (click)="toggleChatSidebar()" title="Close Chat Sidebar">✕</button>
+            </div>
+
+            <div class="chat-messages-container" #chatScrollContainer>
+              @for (msg of meetingChatMessages(); track msg.id) {
+                <div class="meeting-chat-bubble" [class.host-msg]="msg.isHost">
+                  <div class="chat-meta-row font-monospace">
+                    <span class="chat-sender-tag" [style.color]="msg.color">{{ msg.sender }}</span>
+                    <span class="chat-time-tag">{{ msg.time }}</span>
+                  </div>
+                  <div class="chat-msg-text font-monospace">{{ msg.text }}</div>
+                </div>
+              }
+              @if (isDeliberating()) {
+                <div class="council-deliberating-indicator font-monospace">
+                  <span class="deliberating-spin">🌀</span> Multi-agent consensus deliberating across swarm...
+                </div>
+              }
+            </div>
+
+            <!-- Chat Input Form -->
+            <form class="chat-input-dock" (ngSubmit)="sendMeetingChat()">
+              <input
+                type="text"
+                class="chat-input-field font-monospace"
+                [(ngModel)]="chatInputText"
+                name="councilMsg"
+                [placeholder]="'Instruct council or ask question, Mamu...'"
+                [disabled]="isDeliberating()"
+              />
+              <button
+                type="submit"
+                class="chat-send-btn"
+                [disabled]="!chatInputText.trim() || isDeliberating()"
+              >
+                {{ isDeliberating() ? '...' : 'SEND' }}
+              </button>
+            </form>
+          </aside>
+        }
+      </div>
+
+      <!-- Zoom Bottom Toolbar Controls Dock -->
+      <footer class="zoom-bottom-toolbar" role="toolbar" aria-label="Meeting Controls">
+        <div class="toolbar-left-cluster">
+          <!-- Mic Toggle -->
+          <button
+            type="button"
+            class="control-btn"
+            [class.muted]="!isMicActive()"
+            (click)="toggleMic()"
+            [title]="isMicActive() ? 'Mute Microphone' : 'Unmute Microphone'"
+          >
+            <span class="c-icon">{{ isMicActive() ? '🎙️' : '🔇' }}</span>
+            <span class="c-label font-monospace">{{ isMicActive() ? 'Mute' : 'Unmuted' }}</span>
+          </button>
+
+          <!-- Video Camera Toggle -->
+          <button
+            type="button"
+            class="control-btn"
+            [class.muted]="!isVideoActive()"
+            (click)="toggleVideo()"
+            [title]="isVideoActive() ? 'Turn Camera Off' : 'Turn Camera On'"
+          >
+            <span class="c-icon">{{ isVideoActive() ? '📹' : '🚫' }}</span>
+            <span class="c-label font-monospace">{{ isVideoActive() ? 'Camera' : 'Off' }}</span>
+          </button>
+        </div>
+
+        <div class="toolbar-center-cluster">
+          <!-- Raise Hand -->
+          <button
+            type="button"
+            class="control-btn"
+            [class.active]="isHandRaised()"
+            (click)="toggleHandRaise()"
+            title="Raise Hand for Floor Priority"
+          >
+            <span class="c-icon">✋</span>
+            <span class="c-label font-monospace">{{ isHandRaised() ? 'Lower' : 'Raise' }}</span>
+          </button>
+
+          <!-- Autonomous Code Surgery / Self-Healing Button -->
+          <button
+            type="button"
+            class="control-btn surgery-btn"
+            [disabled]="isPerformingSurgery()"
+            (click)="triggerAutonomousCodeSurgery()"
+            title="Trigger multi-agent AST diagnosis, code patch, and automatic self-healing"
+          >
+            <span class="c-icon">⚡</span>
+            <span class="c-label font-monospace">{{ isPerformingSurgery() ? 'Healing...' : 'Code Surgery' }}</span>
+          </button>
+
+          <!-- Chat Sidebar Toggle -->
+          <button
+            type="button"
+            class="control-btn"
+            [class.active]="showChatSidebar()"
+            (click)="toggleChatSidebar()"
+            title="Toggle Meeting Chat Sidebar"
+          >
+            <span class="c-icon">💬</span>
+            <span class="c-label font-monospace">Chat</span>
+          </button>
+        </div>
+
+        <div class="toolbar-right-cluster">
+          <!-- Leave Meeting -->
+          <a routerLink="/home" class="leave-room-btn font-monospace">
+            🔴 Leave Chamber
+          </a>
+        </div>
+      </footer>
+    </div>
+  }
+</div>
+

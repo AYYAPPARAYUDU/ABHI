@@ -502,3 +502,4 @@ class MLPredictionEngine:
 
 # Global singleton instance
 prediction_engine = MLPredictionEngine()
+

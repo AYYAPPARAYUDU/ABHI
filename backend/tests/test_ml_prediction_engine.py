@@ -12,7 +12,7 @@ Verifies:
 import pytest
 import numpy as np
 from httpx import AsyncClient, ASGITransport
-from backend.app.main import app
+from backend.main import app
 from backend.app.cognitive.ml.prediction_engine import prediction_engine
 
 
@@ -111,3 +111,4 @@ async def test_ml_api_endpoints():
         resp_cl = await client.get("/api/v1/agent-gateway/ml/clusters?k=3")
         assert resp_cl.status_code == 200
         assert len(resp_cl.json()["clusters"]["clusters"]) == 3
+

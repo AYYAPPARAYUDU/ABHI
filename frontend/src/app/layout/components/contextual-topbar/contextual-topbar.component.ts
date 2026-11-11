@@ -86,6 +86,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
     if (url.startsWith('/home') || url === '/') return 'Personal AI Space';
     if (url.startsWith('/workspace')) return '3D Workspace Colony';
     if (url.startsWith('/live-console')) return 'Antigravity Live Console';
+    if (url.startsWith('/meeting') || url.startsWith('/council')) return 'Sovereign Council Meeting';
     if (url.startsWith('/automation')) return 'Physical OS Automation';
     if (url.startsWith('/decision-pipeline')) return 'Decision Pipeline';
     if (url.startsWith('/business')) return 'Business Sectors';

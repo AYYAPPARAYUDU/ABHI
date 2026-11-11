@@ -951,6 +951,24 @@ async def get_hardware_state_clusters(k: int = 3):
     return {"success": True, "clusters": res}
 
 
+@router.get("/operator/profile")
+async def get_sovereign_operator_profile():
+    """Retrieve Sovereign Operator Mamu's profile, personal email, and mobile number."""
+    from backend.app.core.config import Settings
+    cfg = Settings()
+    return {
+        "success": True,
+        "operator": {
+            "name": cfg.OPERATOR_NAME,
+            "callsign": cfg.OPERATOR_CALLSIGN,
+            "email": cfg.OPERATOR_EMAIL,
+            "phone": cfg.OPERATOR_PHONE,
+            "verified": True,
+            "role": "SOVEREIGN_OWNER_HOST"
+        }
+    }
+
+
 # Authoritative Gateway Router mirroring all agent routes under /agent-gateway
 gateway_router = APIRouter(prefix="/agent-gateway", tags=["Agent Gateway & Context"])
 for r in router.routes:

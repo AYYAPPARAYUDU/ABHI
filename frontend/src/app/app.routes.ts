@@ -28,6 +28,18 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'meeting',
+    loadComponent: () =>
+      import('./features/meeting/pages/meeting-page/meeting-page.component').then(
+        (m) => m.MeetingPageComponent
+      )
+  },
+  {
+    path: 'council',
+    redirectTo: 'meeting',
+    pathMatch: 'full'
+  },
+  {
     path: 'automation',
     loadComponent: () =>
       import('./features/automation/pages/automation-page/automation-page.component').then(

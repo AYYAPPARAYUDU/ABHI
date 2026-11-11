@@ -70,7 +70,7 @@ export class ThreeSceneManagerService {
     'Quantum Core online. Synchronizing situational perception...'
   );
 
-  // 10 Advanced Autonomous Sub-Agents (Arranged in 3 Anti-Colliding Concentric Orbital Shells)
+  // 10 Advanced Autonomous Sub-Agents (Arranged in Perfectly Balanced Equidistant Non-Colliding Orbital Positions)
   readonly agents = signal<AgentNode[]>([
     {
       id: 'agent_1_commander',
@@ -81,10 +81,10 @@ export class ThreeSceneManagerService {
       color: '#00f0ff',
       hexColor: 0x00f0ff,
       icon: '👑',
-      angle: 0,
-      elevation: -1.2,
+      angle: 0 * (2 * Math.PI / 10),
+      elevation: -0.8,
       speed: 0.85,
-      orbitRadius: 8.0,
+      orbitRadius: 10.2,
       description: 'Decomposes complex user goals, delegates tickets to specialist squads, arbitrates conflicts, and ensures quality gate sign-off for Mamu.',
       subsystem: 'COMMAND SQUAD',
       load: 'COORDINATING // 100%',
@@ -100,10 +100,10 @@ export class ThreeSceneManagerService {
       color: '#10b981',
       hexColor: 0x10b981,
       icon: '🌐',
-      angle: 0,
-      elevation: 0.2,
+      angle: 1 * (2 * Math.PI / 10),
+      elevation: 0.8,
       speed: 0.85,
-      orbitRadius: 11.2,
+      orbitRadius: 13.6,
       description: 'Interacts with live web applications, inspects DOM trees, handles cookies/sessions, and automates UI flows with zero guessing.',
       subsystem: 'EXECUTION SQUAD',
       load: 'DOM TREE READY',
@@ -119,10 +119,10 @@ export class ThreeSceneManagerService {
       color: '#3b82f6',
       hexColor: 0x3b82f6,
       icon: '💬',
-      angle: 0,
-      elevation: 1.6,
+      angle: 2 * (2 * Math.PI / 10),
+      elevation: -0.8,
       speed: 0.85,
-      orbitRadius: 14.5,
+      orbitRadius: 10.2,
       description: 'Dispatches external messages across native WhatsApp Desktop, Slack, and email with recipient verification & delivery confirmation.',
       subsystem: 'EXECUTION SQUAD',
       load: 'CHANNELS SYNCHED',
@@ -138,10 +138,10 @@ export class ThreeSceneManagerService {
       color: '#f59e0b',
       hexColor: 0xf59e0b,
       icon: '⚙️',
-      angle: (2 * Math.PI / 3),
-      elevation: -1.2,
+      angle: 3 * (2 * Math.PI / 10),
+      elevation: 0.8,
       speed: 0.85,
-      orbitRadius: 8.0,
+      orbitRadius: 13.6,
       description: 'Executes terminal commands, edits files with surgical precision, compiles code, and validates exit codes and processes.',
       subsystem: 'EXECUTION SQUAD',
       load: 'FREQ 6.2 GHz',
@@ -157,10 +157,10 @@ export class ThreeSceneManagerService {
       color: '#a855f7',
       hexColor: 0xa855f7,
       icon: '🔍',
-      angle: (Math.PI / 2),
-      elevation: 0.2,
+      angle: 4 * (2 * Math.PI / 10),
+      elevation: -0.8,
       speed: 0.85,
-      orbitRadius: 11.2,
+      orbitRadius: 10.2,
       description: 'Mines codebases, documentations, APIs, and web resources systematically; extracts grounded facts with exact citations.',
       subsystem: 'INTELLIGENCE SQUAD',
       load: 'HYBRID RAG ACTIVE',
@@ -176,10 +176,10 @@ export class ThreeSceneManagerService {
       color: '#ec4899',
       hexColor: 0xec4899,
       icon: '🧠',
-      angle: (2 * Math.PI / 3),
-      elevation: 1.6,
+      angle: 5 * (2 * Math.PI / 10),
+      elevation: 0.8,
       speed: 0.85,
-      orbitRadius: 14.5,
+      orbitRadius: 13.6,
       description: 'Engineers data pipelines, tracks training loss/accuracy, selects models, tunes hyperparameters, and prevents data leakage.',
       subsystem: 'INTELLIGENCE SQUAD',
       load: 'ACCURACY 99.4%',
@@ -195,10 +195,10 @@ export class ThreeSceneManagerService {
       color: '#6366f1',
       hexColor: 0x6366f1,
       icon: '🗺️',
-      angle: (4 * Math.PI / 3),
-      elevation: -1.2,
+      angle: 6 * (2 * Math.PI / 10),
+      elevation: -0.8,
       speed: 0.85,
-      orbitRadius: 8.0,
+      orbitRadius: 10.2,
       description: 'Transforms ambiguous goals into Kahn-verified Execution DAGs with dependency mapping, rollback plans, and token efficiency.',
       subsystem: 'INTELLIGENCE SQUAD',
       load: 'DAG VERIFIED',
@@ -214,10 +214,10 @@ export class ThreeSceneManagerService {
       color: '#84cc16',
       hexColor: 0x84cc16,
       icon: '🛡️',
-      angle: Math.PI,
-      elevation: 0.2,
+      angle: 7 * (2 * Math.PI / 10),
+      elevation: 0.8,
       speed: 0.85,
-      orbitRadius: 11.2,
+      orbitRadius: 13.6,
       description: 'The final quality gate for Mamu. Never trusts unproven assertions; tests edge cases and requires physical proof before issuing VERIFIED: PASS.',
       subsystem: 'QUALITY & GOVERNANCE',
       load: 'PASS 100%',
@@ -233,10 +233,10 @@ export class ThreeSceneManagerService {
       color: '#ef4444',
       hexColor: 0xef4444,
       icon: '🔒',
-      angle: (4 * Math.PI / 3),
-      elevation: 1.6,
+      angle: 8 * (2 * Math.PI / 10),
+      elevation: -0.8,
       speed: 0.85,
-      orbitRadius: 14.5,
+      orbitRadius: 10.2,
       description: 'Shields sensitive credentials, blocks destructive operations, defends against prompt injections, and guards system boundaries.',
       subsystem: 'QUALITY & GOVERNANCE',
       load: 'SHIELDS ONLINE',
@@ -252,10 +252,10 @@ export class ThreeSceneManagerService {
       color: '#38bdf8',
       hexColor: 0x38bdf8,
       icon: '📱',
-      angle: (3 * Math.PI / 2),
-      elevation: 0.2,
+      angle: 9 * (2 * Math.PI / 10),
+      elevation: 0.8,
       speed: 0.85,
-      orbitRadius: 11.2,
+      orbitRadius: 13.6,
       description: 'Autonomous zero-cable mobile synchronization, 1080x2400 FHD+ display mirroring, notification intelligence, and smart-reply synthesis.',
       subsystem: 'MOBILE & HARDWARE SQUAD',
       load: 'WIRELESS 5555 ACTIVE',
@@ -3121,11 +3121,11 @@ export class ThreeSceneManagerService {
           }
         });
 
-        // 7b. N-Body Pairwise Collision Avoidance Solver (Strict Physical Separation, 5 Relaxation Passes)
+        // 7b. N-Body Pairwise Collision Avoidance Solver (Strict Physical Separation, 8 Relaxation Passes, minClearance = 6.8)
         if (isDeployed && agentCount >= 2) {
-          const minClearance = 5.2;
+          const minClearance = 6.8;
           const minClearanceSq = minClearance * minClearance;
-          for (let pass = 0; pass < 5; pass++) {
+          for (let pass = 0; pass < 8; pass++) {
             for (let i = 0; i < agentCount; i++) {
               for (let j = i + 1; j < agentCount; j++) {
                 const vA = this.cachedAgentVectors[i];

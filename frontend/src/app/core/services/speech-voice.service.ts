@@ -340,31 +340,13 @@ export class SpeechVoiceService {
     text = text.replace(/\s+/g, ' ').trim();
 
     if (hasCodeBlock) {
-      if (text.length > 0 && text.length < 200) {
+      if (text.length > 0) {
         return text;
       }
       return 'Here is the implementation, Mamu!';
     }
 
-    if (isVeryLong) {
-      const sentences = text.match(/[^.!?]+[.!?]+/g);
-      if (sentences && sentences.length > 0) {
-        let naturalVoiceText = '';
-        for (const s of sentences) {
-          if ((naturalVoiceText + s).length <= 350) {
-            naturalVoiceText += (naturalVoiceText ? ' ' : '') + s.trim();
-          } else {
-            break;
-          }
-        }
-        if (naturalVoiceText.length > 20) {
-          return naturalVoiceText;
-        }
-      }
-      const boundary = text.lastIndexOf(' ', 280);
-      return (boundary > 0 ? text.substring(0, boundary) : text.substring(0, 280)).trim();
-    }
-
+    // Complete speech preservation: never truncate or discard remaining words!
     return text;
   }
 
@@ -596,7 +578,8 @@ export class SpeechVoiceService {
   }
 
   /**
-   * Browser SpeechSynthesis fallback with distinctive vocal persona tuning.
+   * Browser SpeechSynthesis fallback with sentence-by-sentence queueing
+   * and Chrome watchdog keep-alive to guarantee 100% of speech is spoken without truncation.
    */
   private fallbackSpeechSynthesis(
     spokenText: string,
@@ -619,10 +602,21 @@ export class SpeechVoiceService {
         this.loadVoices();
       }
 
-      const utterance = new SpeechSynthesisUtterance(spokenText.trim());
-      const userSpeed = this.speechSpeedRate();
+      // Split into sequential sentence chunks to eliminate Chrome's 15-second speech freeze
+      const rawChunks = spokenText.match(/[^.!?]+[.!?]*/g) || [spokenText];
+      const chunks = rawChunks.map((c) => c.trim()).filter((c) => c.length > 0);
+      if (chunks.length === 0) {
+        this.handleSpeechEnded();
+        return;
+      }
 
-      // Agent-specific pitch and cadence profile for authentic human distinction
+      const userSpeed = this.speechSpeedRate();
+      const isJarvis = req.speakerId === 'JARVIS' || this.personaMode() === 'JARVIS';
+      const preferredVoice = this.findBestNaturalVoice(isJarvis);
+      if (preferredVoice) {
+        this.selectedVoiceName.set(preferredVoice.name.replace(/\s*\(Natural\)\s*/i, ' Natural'));
+      }
+
       const agentVoiceTuning: Record<string, { pitch: number; rate: number }> = {
         agent_1_commander: { pitch: 0.94, rate: 0.98 },
         agent_2_browser: { pitch: 1.05, rate: 1.04 },
@@ -637,50 +631,74 @@ export class SpeechVoiceService {
         JARVIS: { pitch: 0.96, rate: 0.98 },
         FRIDAY: { pitch: 1.02, rate: 1.02 },
       };
-
       const tuning = agentVoiceTuning[req.speakerId] || { pitch: 0.98, rate: 1.0 };
-      utterance.pitch = tuning.pitch;
-      utterance.rate = tuning.rate * userSpeed;
-      utterance.volume = 1.0;
 
-      const isJarvis = req.speakerId === 'JARVIS' || this.personaMode() === 'JARVIS';
-      const preferredVoice = this.findBestNaturalVoice(isJarvis);
-      if (preferredVoice) {
-        utterance.voice = preferredVoice;
-        this.selectedVoiceName.set(preferredVoice.name.replace(/\s*\(Natural\)\s*/i, ' Natural'));
-      }
+      let currentChunkIdx = 0;
+      let globalWordOffset = 0;
 
-      utterance.onboundary = (event: SpeechSynthesisEvent) => {
-        if (event.name === 'word' || (event as any).type === 'boundary') {
-          const charIndex = event.charIndex || 0;
-          const textUpToChar = spokenText.substring(0, charIndex).trim();
-          const wordsUpToChar = textUpToChar ? textUpToChar.split(/\s+/).length : 0;
-          const currentIdx = Math.min(wordsUpToChar, words.length - 1);
-          this.activeWordIndex.set(currentIdx);
-          this.activeWord.set(words[currentIdx] || '');
+      // Chrome anti-freeze watchdog
+      const watchdog = setInterval(() => {
+        if (!this.isSpeaking()) {
+          clearInterval(watchdog);
+          return;
         }
+        if (this.synth?.paused) {
+          this.synth.resume();
+        }
+      }, 3500);
+
+      const speakNextChunk = () => {
+        if (currentChunkIdx >= chunks.length) {
+          clearInterval(watchdog);
+          this.handleSpeechEnded();
+          return;
+        }
+
+        const chunkText = chunks[currentChunkIdx];
+        const chunkWords = chunkText.split(/\s+/).filter((w) => w.length > 0);
+        const utterance = new SpeechSynthesisUtterance(chunkText);
+        utterance.pitch = tuning.pitch;
+        utterance.rate = tuning.rate * userSpeed;
+        utterance.volume = 1.0;
+        if (preferredVoice) {
+          utterance.voice = preferredVoice;
+        }
+
+        utterance.onstart = () => {
+          this.isSpeaking.set(true);
+          this.lastSpokenText.set(spokenText);
+        };
+
+        utterance.onboundary = (event: SpeechSynthesisEvent) => {
+          if (event.name === 'word' || (event as any).type === 'boundary') {
+            const charIndex = event.charIndex || 0;
+            const textUpToChar = chunkText.substring(0, charIndex).trim();
+            const wordsUpToChar = textUpToChar ? textUpToChar.split(/\s+/).length : 0;
+            const currentIdx = Math.min(globalWordOffset + wordsUpToChar, words.length - 1);
+            this.activeWordIndex.set(currentIdx);
+            this.activeWord.set(words[currentIdx] || '');
+          }
+        };
+
+        utterance.onend = () => {
+          globalWordOffset += chunkWords.length;
+          currentChunkIdx++;
+          speakNextChunk();
+        };
+
+        utterance.onerror = () => {
+          globalWordOffset += chunkWords.length;
+          currentChunkIdx++;
+          speakNextChunk();
+        };
+
+        if (this.synth?.paused) {
+          this.synth.resume();
+        }
+        this.synth?.speak(utterance);
       };
 
-      utterance.onstart = () => {
-        this.isSpeaking.set(true);
-        this.lastSpokenText.set(spokenText);
-      };
-
-      utterance.onend = () => {
-        this.handleSpeechEnded();
-      };
-
-      utterance.onerror = () => {
-        this.handleSpeechEnded();
-      };
-
-      if (this.synth.paused) {
-        this.synth.resume();
-      }
-      this.synth.speak(utterance);
-      if (this.synth.paused) {
-        this.synth.resume();
-      }
+      speakNextChunk();
     } catch {
       this.handleSpeechEnded();
     }

@@ -18,6 +18,14 @@ class Settings(BaseSettings):
         description="Secret key for local session tokens"
     )
 
+    # Sovereign Operator Identity & Personal Communication Links (Mamu)
+    OPERATOR_NAME: str = Field(default="Ayyappa Rayudu Ravuvari", description="Sovereign operator name")
+    OPERATOR_CALLSIGN: str = Field(default="Mamu", description="Revered callsign")
+    OPERATOR_EMAIL: str = Field(default="ayyapparayudu.ravuvari@gmail.com", description="Personal Gmail for data analysis & intelligence")
+    OPERATOR_PHONE: str = Field(default="9390598938", description="Mobile number for messaging & hardware device link")
+    MAMU_EMAIL: str = Field(default="ayyapparayudu.ravuvari@gmail.com", description="Alias for Mamu Gmail")
+    MAMU_PHONE: str = Field(default="9390598938", description="Alias for Mamu mobile phone")
+
     # CORS Settings
     CORS_ORIGINS: List[str] = Field(
         default=["http://localhost:4200", "http://127.0.0.1:4200"],

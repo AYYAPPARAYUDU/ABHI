@@ -96,6 +96,20 @@
         }
       </a>
 
+      <!-- 2.6 Sovereign Council Meeting (Zoom Multi-LLM Boardroom) -->
+      <a
+        routerLink="/meeting"
+        class="clean-nav-btn ribbon-btn council-meeting-btn"
+        [class.active]="isActive('/meeting')"
+        title="Multi-LLM Sovereign Zoom Council Meeting with Face Gate & Real-time Deliberation"
+      >
+        <span class="nav-btn-icon">👥</span>
+        <span class="nav-btn-text">Council</span>
+        @if (isActive('/meeting')) {
+          <span class="nav-active-pip"></span>
+        }
+      </a>
+
       <!-- 3. Theme Changer -->
       <button
         type="button"
