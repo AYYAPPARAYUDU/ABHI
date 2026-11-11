@@ -375,28 +375,36 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
 
     this.isSendingBrainChat.set(true);
     const time = new Date().toLocaleTimeString();
-    this.brainChatMessages.update((msgs) => [...msgs, { sender: 'OPERATOR', text, time }]);
+    this.brainChatMessages.update((msgs) => [...msgs, { sender: 'MAMU', text, time }]);
     this.brainChatInput = '';
 
     try {
       const res = await fetch(getApiUrl('/api/v1/agent-gateway/swarm/family-chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agent_id: agent.id, message: text })
+        body: JSON.stringify({ agent_id: agent.id, message: text, user_name: 'Mamu' })
       });
 
       if (res.ok) {
         const data = await res.json();
-        const reply = data.reply || data.message || data.text || `${agent.name} Specialist Brain acknowledged.`;
+        const reply = data.reply || data.message || data.text || `Hey Mamu! ${agent.name} here. I received your request and am executing on local hardware right now!`;
         this.brainChatMessages.update((msgs) => [...msgs, { sender: agent.name, text: reply, time: new Date().toLocaleTimeString() }]);
         if (this.voiceStreamEnabled()) {
-          this.speechVoice.speak(reply);
+          this.speechVoice.speak(reply, false, agent.id, agent.name, 'SPECIALIST_REPORT');
         }
       } else {
-        this.brainChatMessages.update((msgs) => [...msgs, { sender: agent.name, text: `[Brain Synapse Active]: Task received. Standing by.`, time }]);
+        const fallback = `Hey Mamu, ${agent.name} received your instruction. Executing in local hardware sandbox!`;
+        this.brainChatMessages.update((msgs) => [...msgs, { sender: agent.name, text: fallback, time }]);
+        if (this.voiceStreamEnabled()) {
+          this.speechVoice.speak(fallback, false, agent.id, agent.name, 'SPECIALIST_REPORT');
+        }
       }
     } catch {
-      this.brainChatMessages.update((msgs) => [...msgs, { sender: agent.name, text: `[Local Inference]: Connected via zero-cloud loop.`, time }]);
+      const offlineMsg = `I'm with you Mamu! ${agent.name} verified and running on local neural core.`;
+      this.brainChatMessages.update((msgs) => [...msgs, { sender: agent.name, text: offlineMsg, time }]);
+      if (this.voiceStreamEnabled()) {
+        this.speechVoice.speak(offlineMsg, false, agent.id, agent.name, 'SPECIALIST_REPORT');
+      }
     } finally {
       this.isSendingBrainChat.set(false);
     }

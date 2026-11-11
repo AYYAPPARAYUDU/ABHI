@@ -58,3 +58,4 @@ def test_strict_shutdown_restart_safety_invariant():
     ok, msg = os_control_engine.system_restart(30)
     assert ok is True
     assert "SYSTEM_RESTART_BLOCKED" in msg
+

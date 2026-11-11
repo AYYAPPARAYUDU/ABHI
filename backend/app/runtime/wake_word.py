@@ -131,7 +131,7 @@ class WakeWordDetector:
             "trigger": "SLEEP",
             "detected": True,
             "timestamp": now,
-            "message": "Standing by, Sir. Conversation mode paused."
+            "message": "Standing by, Mamu! I am right here whenever you call."
         }
 
     def reset_cooldown(self) -> None:

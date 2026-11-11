@@ -131,3 +131,4 @@ class AutonomousCapabilitySynthesizer:
             return {"success": False, "error": str(e)}
 
 capability_synthesizer = AutonomousCapabilitySynthesizer()
+

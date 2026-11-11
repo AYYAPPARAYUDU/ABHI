@@ -460,8 +460,8 @@
           <div class="popup-tab-pane chat-pane">
             <div class="brain-chat-box">
               @for (msg of brainChatMessages(); track $index) {
-                <div class="chat-item" [class.user]="msg.sender === 'OPERATOR'">
-                  <div class="chat-meta font-monospace">{{ msg.sender }} · {{ msg.time }}</div>
+                <div class="chat-item" [class.user]="msg.sender === 'MAMU' || msg.sender === 'OPERATOR'">
+                  <div class="chat-meta font-monospace">{{ msg.sender === 'MAMU' ? '❤️ MAMU (YOU)' : msg.sender }} · {{ msg.time }}</div>
                   <div class="chat-content font-monospace">{{ msg.text }}</div>
                 </div>
               }
