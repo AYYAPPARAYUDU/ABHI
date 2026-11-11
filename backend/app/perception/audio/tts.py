@@ -77,18 +77,24 @@ class TextToSpeechEngine:
         rate: float = 1.0
     ) -> bytes:
         """Stream authentic, high-fidelity neural human speech bytes (MP3)."""
-        clean_text = text.strip()
+        # Clean text from raw markdown, brackets, and codeblocks
+        import re
+        clean_text = re.sub(r'```[\s\S]*?```', '', text)
+        clean_text = re.sub(r'\[.*?\]:?', '', clean_text)
+        clean_text = re.sub(r'[*_~`#>]', '', clean_text)
+        clean_text = re.sub(r'\s+', ' ', clean_text).strip()
         if not clean_text:
             return b""
 
-        # Voice alias mapping
+        # Voice alias mapping with multilingual Indian neural voices
         voice_map = {
             "jarvis": "en-GB-RyanNeural",
             "friday": "en-IE-EmilyNeural",
-            "tony": "en-US-ChristopherNeural",
-            "boss": "en-US-GuyNeural",
-            "partner": "en-US-JennyNeural",
-            "hindi": "en-IN-PrabhatNeural",
+            "mamu": "en-IN-PrabhatNeural",
+            "telugu": "te-IN-MohanNeural",
+            "hindi": "hi-IN-MadhurNeural",
+            "tamil": "ta-IN-ValluvarNeural",
+            "english_in": "en-IN-PrabhatNeural",
             "default_neutral": "en-GB-RyanNeural",
         }
         selected_voice = voice_map.get(voice.lower(), voice)
@@ -105,9 +111,23 @@ class TextToSpeechEngine:
         except Exception as e:
             logger.warning(f"Edge-TTS stream error ({e}); falling back to synthetic PCM buffer.")
 
-        # Fallback to PCM WAV header + sine wave
-        num_samples = int(24000 * max(0.5, len(clean_text) * 0.06))
-        samples = [int(32767 * 0.2 * math.sin(2 * math.pi * 440 * i / 24000)) for i in range(num_samples)]
+        # Fallback to PCM WAV with smooth anti-pop envelope (10ms fade in/out)
+        sample_rate = 24000
+        duration_s = max(0.5, len(clean_text) * 0.06)
+        num_samples = int(sample_rate * duration_s)
+        fade_len = int(sample_rate * 0.01)
+
+        samples = []
+        for i in range(num_samples):
+            # 440 Hz fundamental with warm third harmonic
+            wave = 0.18 * math.sin(2 * math.pi * 440 * i / sample_rate) + 0.06 * math.sin(2 * math.pi * 880 * i / sample_rate)
+            # Anti-pop envelope
+            if i < fade_len:
+                wave *= (i / float(fade_len))
+            elif i > (num_samples - fade_len):
+                wave *= ((num_samples - i) / float(fade_len))
+            samples.append(int(32767 * wave))
+
         raw_pcm = bytes([b & 0xFF for s in samples for b in (s, s >> 8)])
         return raw_pcm
 
