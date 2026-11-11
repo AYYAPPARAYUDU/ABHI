@@ -72,7 +72,7 @@ export class ThreeSceneManagerService {
     'Quantum Core online. Synchronizing situational perception...'
   );
 
-  // 10 Advanced Autonomous Sub-Agents (Arranged in a Volumetric 3D Gyroscopic Celestial Constellation)
+  // 10 Advanced Autonomous Sub-Agents (Single Unified Celestial Flow Formation)
   readonly agents = signal<AgentNode[]>([
     {
       id: 'agent_1_commander',
@@ -86,9 +86,9 @@ export class ThreeSceneManagerService {
       angle: 0 * (2 * Math.PI / 10),
       elevation: 0.0,
       speed: 0.85,
-      orbitRadius: 10.5,
+      orbitRadius: 11.2,
       inclination: 0.0,
-      orbitSpeed: 0.058,
+      orbitSpeed: 0.052,
       description: 'Decomposes complex user goals, delegates tickets to specialist squads, arbitrates conflicts, and ensures quality gate sign-off for Mamu.',
       subsystem: 'COMMAND SQUAD',
       load: 'COORDINATING // 100%',
@@ -105,11 +105,11 @@ export class ThreeSceneManagerService {
       hexColor: 0x10b981,
       icon: '🌐',
       angle: 1 * (2 * Math.PI / 10),
-      elevation: 0.6,
+      elevation: 0.45,
       speed: 0.85,
-      orbitRadius: 13.8,
-      inclination: 0.52,
-      orbitSpeed: 0.046,
+      orbitRadius: 12.8,
+      inclination: 0.18,
+      orbitSpeed: 0.052,
       description: 'Interacts with live web applications, inspects DOM trees, handles cookies/sessions, and automates UI flows with zero guessing.',
       subsystem: 'EXECUTION SQUAD',
       load: 'DOM TREE READY',
@@ -126,11 +126,11 @@ export class ThreeSceneManagerService {
       hexColor: 0x3b82f6,
       icon: '💬',
       angle: 2 * (2 * Math.PI / 10),
-      elevation: -0.6,
+      elevation: 0.70,
       speed: 0.85,
       orbitRadius: 11.2,
-      inclination: -0.48,
-      orbitSpeed: 0.054,
+      inclination: 0.24,
+      orbitSpeed: 0.052,
       description: 'Dispatches external messages across native WhatsApp Desktop, Slack, and email with recipient verification & delivery confirmation.',
       subsystem: 'EXECUTION SQUAD',
       load: 'CHANNELS SYNCHED',
@@ -147,11 +147,11 @@ export class ThreeSceneManagerService {
       hexColor: 0xf59e0b,
       icon: '⚙️',
       angle: 3 * (2 * Math.PI / 10),
-      elevation: 0.8,
+      elevation: 0.45,
       speed: 0.85,
-      orbitRadius: 14.5,
-      inclination: 0.78,
-      orbitSpeed: 0.042,
+      orbitRadius: 12.8,
+      inclination: 0.18,
+      orbitSpeed: 0.052,
       description: 'Executes terminal commands, edits files with surgical precision, compiles code, and validates exit codes and processes.',
       subsystem: 'EXECUTION SQUAD',
       load: 'FREQ 6.2 GHz',
@@ -168,11 +168,11 @@ export class ThreeSceneManagerService {
       hexColor: 0xa855f7,
       icon: '🔍',
       angle: 4 * (2 * Math.PI / 10),
-      elevation: -0.8,
+      elevation: 0.0,
       speed: 0.85,
-      orbitRadius: 10.8,
-      inclination: -0.72,
-      orbitSpeed: 0.056,
+      orbitRadius: 11.2,
+      inclination: 0.0,
+      orbitSpeed: 0.052,
       description: 'Mines codebases, documentations, APIs, and web resources systematically; extracts grounded facts with exact citations.',
       subsystem: 'INTELLIGENCE SQUAD',
       load: 'HYBRID RAG ACTIVE',
@@ -189,11 +189,11 @@ export class ThreeSceneManagerService {
       hexColor: 0xec4899,
       icon: '🧠',
       angle: 5 * (2 * Math.PI / 10),
-      elevation: 0.7,
+      elevation: -0.45,
       speed: 0.85,
-      orbitRadius: 13.2,
-      inclination: 0.35,
-      orbitSpeed: 0.048,
+      orbitRadius: 12.8,
+      inclination: -0.18,
+      orbitSpeed: 0.052,
       description: 'Engineers data pipelines, tracks training loss/accuracy, selects models, tunes hyperparameters, and prevents data leakage.',
       subsystem: 'INTELLIGENCE SQUAD',
       load: 'ACCURACY 99.4%',
@@ -210,10 +210,10 @@ export class ThreeSceneManagerService {
       hexColor: 0x6366f1,
       icon: '🗺️',
       angle: 6 * (2 * Math.PI / 10),
-      elevation: -0.5,
+      elevation: -0.70,
       speed: 0.85,
-      orbitRadius: 11.5,
-      inclination: -0.32,
+      orbitRadius: 11.2,
+      inclination: -0.24,
       orbitSpeed: 0.052,
       description: 'Transforms ambiguous goals into Kahn-verified Execution DAGs with dependency mapping, rollback plans, and token efficiency.',
       subsystem: 'INTELLIGENCE SQUAD',
@@ -231,11 +231,11 @@ export class ThreeSceneManagerService {
       hexColor: 0x84cc16,
       icon: '🛡️',
       angle: 7 * (2 * Math.PI / 10),
-      elevation: 0.9,
+      elevation: -0.45,
       speed: 0.85,
-      orbitRadius: 14.0,
-      inclination: 0.65,
-      orbitSpeed: 0.044,
+      orbitRadius: 12.8,
+      inclination: -0.18,
+      orbitSpeed: 0.052,
       description: 'The final quality gate for Mamu. Never trusts unproven assertions; tests edge cases and requires physical proof before issuing VERIFIED: PASS.',
       subsystem: 'QUALITY & GOVERNANCE',
       load: 'PASS 100%',
@@ -252,11 +252,11 @@ export class ThreeSceneManagerService {
       hexColor: 0xef4444,
       icon: '🔒',
       angle: 8 * (2 * Math.PI / 10),
-      elevation: -0.9,
+      elevation: 0.0,
       speed: 0.85,
-      orbitRadius: 10.6,
-      inclination: -0.60,
-      orbitSpeed: 0.055,
+      orbitRadius: 11.2,
+      inclination: 0.0,
+      orbitSpeed: 0.052,
       description: 'Shields sensitive credentials, blocks destructive operations, defends against prompt injections, and guards system boundaries.',
       subsystem: 'QUALITY & GOVERNANCE',
       load: 'SHIELDS ONLINE',
@@ -273,11 +273,11 @@ export class ThreeSceneManagerService {
       hexColor: 0x38bdf8,
       icon: '📱',
       angle: 9 * (2 * Math.PI / 10),
-      elevation: 0.4,
+      elevation: 0.35,
       speed: 0.85,
-      orbitRadius: 12.5,
-      inclination: 0.22,
-      orbitSpeed: 0.050,
+      orbitRadius: 12.8,
+      inclination: 0.12,
+      orbitSpeed: 0.052,
       description: 'Autonomous zero-cable mobile synchronization, 1080x2400 FHD+ display mirroring, notification intelligence, and smart-reply synthesis.',
       subsystem: 'MOBILE & HARDWARE SQUAD',
       load: 'WIRELESS 5555 ACTIVE',
@@ -322,8 +322,7 @@ export class ThreeSceneManagerService {
     innerNucleus: THREE.Mesh; // Crystalline emissive polyhedral nucleus
     microRing: THREE.Mesh; // Orbiting micro-torus ring
     haloCloud?: THREE.Points; // Surrounding particle aura
-    beam: THREE.Line; // Multi-segment curved laser plasma conduit
-    pulseSpark?: THREE.Mesh; // Dynamic traveling action potential energy spark
+    beam: THREE.Line;
     currentRadius: number;
     currentScale: number;
   }> = new Map();
@@ -927,31 +926,20 @@ export class ThreeSceneManagerService {
       group.add(nameplate);
       this.orbitalSprites.push(nameplate);
 
-      // Multi-Segment Curved Laser Plasma Conduit (8 points for silky harmonic arc)
-      const ptsCount = 8;
-      const beamPositions = new Float32Array(ptsCount * 3);
-      const beamGeo = new THREE.BufferGeometry();
-      beamGeo.setAttribute('position', new THREE.BufferAttribute(beamPositions, 3));
+      // Energy Laser Tether Beam linking Agent to Central Singularity
+      const beamGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, 0),
+      ]);
       const beamMat = new THREE.LineBasicMaterial({
         color: agent.hexColor,
         transparent: true,
         opacity: 0.0,
         blending: THREE.AdditiveBlending,
+        depthWrite: false,
       });
       const beam = new THREE.Line(beamGeo, beamMat);
       this.scene?.add(beam);
-
-      // Traveling Synaptic Action Potential Energy Spark Node
-      const sparkGeo = new THREE.SphereGeometry(0.18, 12, 12);
-      const sparkMat = new THREE.MeshBasicMaterial({
-        color: agent.hexColor,
-        transparent: true,
-        opacity: 0.0,
-        blending: THREE.AdditiveBlending,
-      });
-      const pulseSpark = new THREE.Mesh(sparkGeo, sparkMat);
-      pulseSpark.visible = false;
-      this.scene?.add(pulseSpark);
 
       // Concealed inside core at startup
       group.scale.set(1.0, 1.0, 1.0);
@@ -965,23 +953,24 @@ export class ThreeSceneManagerService {
         innerNucleus,
         microRing,
         beam,
-        pulseSpark,
         currentRadius: agent.orbitRadius,
         currentScale: 1.0,
       });
     });
 
-    // Inter-Agent Synaptic Network Mesh (Adaptive Proximity Delaunay Mesh, max 35 synapses)
-    const maxSynapses = 35;
-    const meshPositions = new Float32Array(maxSynapses * 2 * 3);
+    // Inter-Agent Synaptic Network Mesh (Single Harmonious Perimeter Flow Loop)
+    const agentCount = this.agents().length;
+    const meshLineCount = agentCount;
+    const meshPositions = new Float32Array(meshLineCount * 2 * 3);
     const meshGeo = new THREE.BufferGeometry();
     meshGeo.setAttribute('position', new THREE.BufferAttribute(meshPositions, 3));
 
     const meshMat = new THREE.LineBasicMaterial({
-      color: 0x38bdf8,
+      color: 0x00f0ff,
       transparent: true,
       opacity: 0.0,
       blending: THREE.AdditiveBlending,
+      depthWrite: false,
     });
     this.interAgentMeshLines = new THREE.LineSegments(meshGeo, meshMat);
     this.scene.add(this.interAgentMeshLines);
@@ -1827,34 +1816,21 @@ export class ThreeSceneManagerService {
       stationGroup.position.set(pos.x, -4.2, pos.z);
       stationGroup.userData = { agentId: agent.id, agent };
 
-      // Radial Power Conduit & Glowing Energy Branch connecting Station back to Central Command Hub
+      // Radial Power Conduit connecting Station back to Central Command Hub
       const conduitGeo = new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(0, 0.1, 0),
         new THREE.Vector3(-pos.x, 0.4, -pos.z),
       ]);
-      // 1. Core Conduit Laser
       const conduitLine = new THREE.Line(
         conduitGeo,
         new THREE.LineBasicMaterial({
           color: agent.hexColor,
           transparent: true,
-          opacity: 0.85,
+          opacity: 0.45,
           blending: THREE.AdditiveBlending,
         })
       );
       stationGroup.add(conduitLine);
-
-      // 2. Outer Luminous Conduit Energy Track
-      const conduitGlowLine = new THREE.Line(
-        conduitGeo,
-        new THREE.LineBasicMaterial({
-          color: 0x38bdf8,
-          transparent: true,
-          opacity: 0.38,
-          blending: THREE.AdditiveBlending,
-        })
-      );
-      stationGroup.add(conduitGlowLine);
 
       // Station Hexagonal Platform Pad (Tuned roughness: 0.20, metalness: 0.88 with subtle emissive reflection)
       const padGeo = new THREE.CylinderGeometry(2.2, 2.5, 0.4, 6);
@@ -3211,100 +3187,51 @@ export class ThreeSceneManagerService {
             }
           }
 
-          // Apply resolved non-colliding positions and update tether laser beams with dynamic plasma waves
+          // Apply resolved non-colliding positions and update tether laser beams
           this.agents().forEach((agent, index) => {
             const data = this.agentMeshMap.get(agent.id);
             if (!data) return;
             const pos = this.cachedAgentVectors[index];
             data.group.position.copy(pos);
 
-            const isSelected = this.selectedAgent()?.id === agent.id;
-            const isSpeakingAgent = isSpeaking && isSelected;
-
-            // 1. Multi-Segment Harmonic Curved Plasma Arc Conduit
             if (data.beam && data.beam.geometry) {
               const attr = data.beam.geometry.attributes['position'] as THREE.BufferAttribute;
               if (attr) {
                 const arr = attr.array as Float32Array;
-                const ptsCount = 8;
-                for (let p = 0; p < ptsCount; p++) {
-                  const frac = p / (ptsCount - 1);
-                  // Electric sine wave arc displacement peaking in the middle of the beam
-                  const arcDisp = Math.sin(frac * Math.PI) * Math.sin(time * 5.0 + index * 1.4 + p * 0.5) * 0.28;
-                  const lateralDisp = Math.sin(frac * Math.PI) * Math.cos(time * 4.0 + index * 1.8 + p * 0.4) * 0.20;
-                  arr[p * 3] = pos.x * frac + lateralDisp;
-                  arr[p * 3 + 1] = pos.y * frac + arcDisp;
-                  arr[p * 3 + 2] = pos.z * frac;
-                }
+                arr[0] = 0;
+                arr[1] = 0;
+                arr[2] = 0;
+                arr[3] = pos.x;
+                arr[4] = pos.y;
+                arr[5] = pos.z;
                 attr.needsUpdate = true;
               }
-              const baseOpacity = isSelected ? 0.90 : 0.52;
-              (data.beam.material as THREE.LineBasicMaterial).opacity = isDeployed ? data.currentScale * baseOpacity : 0;
-            }
-
-            // 2. Traveling Synaptic Action Potential Energy Spark (Pulse outwards from core to agent)
-            if (data.pulseSpark) {
-              if (isDeployed && data.currentScale > 0.5) {
-                data.pulseSpark.visible = true;
-                const sparkSpeed = isSpeakingAgent ? 1.8 : 0.85;
-                const sparkFrac = ((time * sparkSpeed + index * 0.32) % 1.0);
-                const sparkArc = Math.sin(sparkFrac * Math.PI) * Math.sin(time * 5.0 + index * 1.4) * 0.28;
-                data.pulseSpark.position.set(
-                  pos.x * sparkFrac,
-                  pos.y * sparkFrac + sparkArc,
-                  pos.z * sparkFrac
-                );
-                const sparkScale = (1.0 + Math.sin(time * 12.0 + index) * 0.3) * (isSpeakingAgent ? 1.6 : 1.0);
-                data.pulseSpark.scale.set(sparkScale, sparkScale, sparkScale);
-                (data.pulseSpark.material as THREE.MeshBasicMaterial).opacity = Math.sin(sparkFrac * Math.PI) * (isSelected ? 1.0 : 0.75);
-              } else {
-                data.pulseSpark.visible = false;
-              }
+              (data.beam.material as THREE.LineBasicMaterial).opacity = isDeployed ? data.currentScale * 0.55 : 0;
             }
           });
         }
 
-        // 8. Dynamically re-link Inter-Agent Synaptic Neural Web (Organic Proximity Delaunay Mesh)
-        if (this.interAgentMeshLines && isDeployed && agentCount >= 2) {
+        // 8. Dynamically re-link Inter-Agent Synaptic Stream (Single Continuous Flow Loop with Razor Edges)
+        if (this.interAgentMeshLines && agentCount >= 2) {
           const attr = this.interAgentMeshLines.geometry.attributes['position'] as THREE.BufferAttribute;
           if (attr) {
             const arr = attr.array as Float32Array;
             let ptr = 0;
-            const maxSynapses = 35;
-            const maxDistance = 15.5;
-
-            // Connect nearby agents whose 3D distance is within transmission threshold
             for (let i = 0; i < agentCount; i++) {
-              for (let j = i + 1; j < agentCount; j++) {
-                if (ptr / 6 >= maxSynapses) break;
-                const vA = this.cachedAgentVectors[i];
-                const vB = this.cachedAgentVectors[j];
-                const dx = vA.x - vB.x;
-                const dy = vA.y - vB.y;
-                const dz = vA.z - vB.z;
-                const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+              const next = (i + 1) % agentCount;
 
-                // Proximity distance threshold or adjacent squad link
-                const isAdjacent = (j === (i + 1) % agentCount) || (j === (i + 2) % agentCount);
-                if (dist < maxDistance || isAdjacent) {
-                  arr[ptr++] = vA.x;
-                  arr[ptr++] = vA.y;
-                  arr[ptr++] = vA.z;
-                  arr[ptr++] = vB.x;
-                  arr[ptr++] = vB.y;
-                  arr[ptr++] = vB.z;
-                }
-              }
-            }
-
-            // Zero out remaining unused segments
-            while (ptr < arr.length) {
-              arr[ptr++] = 0;
+              // Pure single perimeter stream segment: agent(i) -> agent(next)
+              arr[ptr++] = this.cachedAgentVectors[i].x;
+              arr[ptr++] = this.cachedAgentVectors[i].y;
+              arr[ptr++] = this.cachedAgentVectors[i].z;
+              arr[ptr++] = this.cachedAgentVectors[next].x;
+              arr[ptr++] = this.cachedAgentVectors[next].y;
+              arr[ptr++] = this.cachedAgentVectors[next].z;
             }
             attr.needsUpdate = true;
           }
 
-          const pulseOpacity = (0.28 + Math.sin(time * 3.5) * 0.12) * (isDeployed ? 1 : 0);
+          const pulseOpacity = (0.35 + Math.sin(time * 3.0) * 0.12) * (isDeployed ? 1 : 0);
           (this.interAgentMeshLines.material as THREE.LineBasicMaterial).opacity = pulseOpacity;
         }
 
