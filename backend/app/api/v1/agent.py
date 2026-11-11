@@ -900,6 +900,57 @@ async def analyze_mamu_emotional_state(payload: Dict[str, Any]):
     }
 
 
+# =========================================================================
+# ML PREDICTION & DYNAMIC GRAPHICAL REPRESENTATION ENDPOINTS
+# =========================================================================
+
+@router.get("/ml/suite")
+async def get_ml_intelligence_suite():
+    """Retrieve full dynamic ML intelligence suite (Forecasting, Regression, Classification, Clustering)."""
+    from backend.app.cognitive.ml.prediction_engine import prediction_engine
+    return {"success": True, "data": prediction_engine.get_full_ml_intelligence_suite()}
+
+
+@router.get("/ml/forecast")
+async def get_ml_forecast(metric: str = "cpu_percent", horizon: int = 15):
+    """Holt-Winters double exponential smoothing with AR(2) forecast for host timeseries."""
+    from backend.app.cognitive.ml.prediction_engine import prediction_engine
+    res = prediction_engine.forecast_resource_timeseries(metric=metric, horizon=horizon)
+    return {"success": True, "forecast": res}
+
+
+@router.post("/ml/predict-task")
+async def predict_task_latency_and_load(payload: Dict[str, Any]):
+    """Ridge regression predicting task execution duration and hardware footprint."""
+    from backend.app.cognitive.ml.prediction_engine import prediction_engine
+    tokens = int(payload.get("token_count", 1500))
+    depth = int(payload.get("complexity_depth", 3))
+    squads = int(payload.get("agent_squad_count", 4))
+    res = prediction_engine.predict_task_latency_and_load(
+        token_count=tokens,
+        complexity_depth=depth,
+        agent_squad_count=squads
+    )
+    return {"success": True, "prediction": res}
+
+
+@router.post("/ml/classify-intent")
+async def classify_user_intent(payload: Dict[str, Any]):
+    """Softmax multi-class classifier routing query to specialist squad."""
+    from backend.app.cognitive.ml.prediction_engine import prediction_engine
+    query = payload.get("query", "")
+    res = prediction_engine.classify_squad_intent(query=query)
+    return {"success": True, "classification": res}
+
+
+@router.get("/ml/clusters")
+async def get_hardware_state_clusters(k: int = 3):
+    """K-Means clustering and anomaly detection on host telemetry."""
+    from backend.app.cognitive.ml.prediction_engine import prediction_engine
+    res = prediction_engine.cluster_system_operating_regimes(k=k)
+    return {"success": True, "clusters": res}
+
+
 # Authoritative Gateway Router mirroring all agent routes under /agent-gateway
 gateway_router = APIRouter(prefix="/agent-gateway", tags=["Agent Gateway & Context"])
 for r in router.routes:

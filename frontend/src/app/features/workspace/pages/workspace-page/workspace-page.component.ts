@@ -88,10 +88,12 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
   readonly isSendingBrainChat = signal(false);
 
   // Station Action Status & Popup Tabs
-  readonly activePopupTab = signal<'MISSION_WORK' | 'LIVE_TELEMETRY' | 'CHAT'>('MISSION_WORK');
+  readonly activePopupTab = signal<'MISSION_WORK' | 'LIVE_TELEMETRY' | 'ML_PREDICTIONS' | 'CHAT'>('MISSION_WORK');
   readonly stationActionStatus = signal<string | null>(null);
   readonly currentAgentDetails = signal<any>(null);
   readonly isLoadingDetails = signal<boolean>(false);
+  readonly mlSuiteData = signal<any>(null);
+  readonly isLoadingMl = signal<boolean>(false);
   private detailsLruCache = new Map<string, { data: any; expiry: number }>();
 
   // Delegation
@@ -237,6 +239,23 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
     }
   }
 
+  async loadMlSuite(): Promise<void> {
+    this.isLoadingMl.set(true);
+    try {
+      const res = await fetch(getApiUrl('/api/v1/agent-gateway/ml/suite'));
+      if (res.ok) {
+        const json = await res.json();
+        if (json.data) {
+          this.mlSuiteData.set(json.data);
+          this.cdr.markForCheck();
+        }
+      }
+    } catch {} finally {
+      this.isLoadingMl.set(false);
+      this.cdr.markForCheck();
+    }
+  }
+
   async selectStation(agent: AgentNode, triggerSceneFocus: boolean = true): Promise<void> {
     if (this.activeStation()?.id === agent.id && this.currentAgentDetails()) {
       return;
@@ -248,6 +267,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
       this.threeScene.focusAgent(agent);
     }
     this.stationActionStatus.set(null);
+    this.loadMlSuite();
     this.cdr.markForCheck();
 
     // O(1) LRU Cache check for instantaneous zero-stutter popup display

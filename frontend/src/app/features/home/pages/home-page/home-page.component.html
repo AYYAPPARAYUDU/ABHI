@@ -126,13 +126,13 @@
 
     <!-- UNIFIED BOTTOM COMMAND & CHAT CONSOLE (Plain, Clean, Minimalist) -->
     <div class="main-agent-bottom-console">
-      <!-- Floating J.A.R.V.I.S. Voice & Intelligence HUD Bar -->
+      <!-- Floating Intelligence HUD Bar -->
       @if (latestJarvisMessage(); as msg) {
         @if (!showActionsMenu()) {
         <div class="floating-jarvis-hud-bar">
           <div class="jarvis-symbol-icon">⚡</div>
           <div class="jarvis-text-content">
-            <span class="jarvis-tag">[J.A.R.V.I.S.]:</span>{{ msg }}
+            <span class="jarvis-tag">[ABHI COMPANION]:</span>{{ msg }}
           </div>
           <button type="button" (click)="latestJarvisMessage.set(null)" class="jarvis-close-btn" appAnimeInteractive [appAnimeType]="'button'" title="Dismiss message">✕</button>
         </div>
@@ -201,7 +201,7 @@
           <!-- 9. Voice Speech Companion -->
           <button type="button" class="quick-chip-btn" (click)="toggleAlexaMode(); closeActionsMenu()">
             <span class="chip-emoji">🎙️</span>
-            <span>{{ speechVoice.isAlexaConversationMode() ? 'Exit J.A.R.V.I.S.' : 'J.A.R.V.I.S. Voice' }}</span>
+            <span>{{ speechVoice.isAlexaConversationMode() ? 'Exit Voice Companion' : 'Voice Companion' }}</span>
           </button>
 
           <!-- 10. Ask ABHI AI -->
@@ -334,11 +334,11 @@
                   appAnimeInteractive [appAnimeType]="'button'"
                   [class.active]="speechVoice.isAlexaConversationMode()"
                   (click)="toggleAlexaMode()"
-                  [title]="speechVoice.isAlexaConversationMode() ? 'J.A.R.V.I.S. Conversation Mode ACTIVE (Click to switch to Text Chat)' : 'Activate J.A.R.V.I.S. Hands-Free Voice Dialogue'"
-                  aria-label="Toggle J.A.R.V.I.S. Direct Dialogue"
+                  [title]="speechVoice.isAlexaConversationMode() ? 'Hands-Free Voice Dialogue ACTIVE (Click to switch to Text Chat)' : 'Activate Hands-Free Voice Dialogue'"
+                  aria-label="Toggle Direct Voice Dialogue"
                 >
                   <span class="alexa-icon">🎙️</span>
-                  <span class="alexa-label">{{ speechVoice.isAlexaConversationMode() ? 'TALKING' : 'J.A.R.V.I.S.' }}</span>
+                  <span class="alexa-label">{{ speechVoice.isAlexaConversationMode() ? 'TALKING' : 'VOICE' }}</span>
                   @if (speechVoice.isAlexaConversationMode()) {
                     <span class="live-pulse-ring"></span>
                   }
