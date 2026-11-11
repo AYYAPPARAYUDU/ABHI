@@ -322,7 +322,8 @@ export class ThreeSceneManagerService {
     innerNucleus: THREE.Mesh; // Crystalline emissive polyhedral nucleus
     microRing: THREE.Mesh; // Orbiting micro-torus ring
     haloCloud?: THREE.Points; // Surrounding particle aura
-    beam: THREE.Line;
+    beam: THREE.Line; // Multi-segment curved laser plasma conduit
+    pulseSpark?: THREE.Mesh; // Dynamic traveling action potential energy spark
     currentRadius: number;
     currentScale: number;
   }> = new Map();
@@ -926,18 +927,31 @@ export class ThreeSceneManagerService {
       group.add(nameplate);
       this.orbitalSprites.push(nameplate);
 
-      // Energy Laser Tether Beam linking Agent to Central Singularity
-      const beamGeo = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 0, 0),
-      ]);
+      // Multi-Segment Curved Laser Plasma Conduit (8 points for silky harmonic arc)
+      const ptsCount = 8;
+      const beamPositions = new Float32Array(ptsCount * 3);
+      const beamGeo = new THREE.BufferGeometry();
+      beamGeo.setAttribute('position', new THREE.BufferAttribute(beamPositions, 3));
       const beamMat = new THREE.LineBasicMaterial({
         color: agent.hexColor,
         transparent: true,
         opacity: 0.0,
+        blending: THREE.AdditiveBlending,
       });
       const beam = new THREE.Line(beamGeo, beamMat);
       this.scene?.add(beam);
+
+      // Traveling Synaptic Action Potential Energy Spark Node
+      const sparkGeo = new THREE.SphereGeometry(0.18, 12, 12);
+      const sparkMat = new THREE.MeshBasicMaterial({
+        color: agent.hexColor,
+        transparent: true,
+        opacity: 0.0,
+        blending: THREE.AdditiveBlending,
+      });
+      const pulseSpark = new THREE.Mesh(sparkGeo, sparkMat);
+      pulseSpark.visible = false;
+      this.scene?.add(pulseSpark);
 
       // Concealed inside core at startup
       group.scale.set(1.0, 1.0, 1.0);
@@ -951,15 +965,15 @@ export class ThreeSceneManagerService {
         innerNucleus,
         microRing,
         beam,
+        pulseSpark,
         currentRadius: agent.orbitRadius,
         currentScale: 1.0,
       });
     });
 
-    // Inter-Agent Synaptic Network Mesh (Perimeter + Cross Connections)
-    const agentCount = this.agents().length;
-    const meshLineCount = agentCount * 2;
-    const meshPositions = new Float32Array(meshLineCount * 2 * 3);
+    // Inter-Agent Synaptic Network Mesh (Adaptive Proximity Delaunay Mesh, max 35 synapses)
+    const maxSynapses = 35;
+    const meshPositions = new Float32Array(maxSynapses * 2 * 3);
     const meshGeo = new THREE.BufferGeometry();
     meshGeo.setAttribute('position', new THREE.BufferAttribute(meshPositions, 3));
 
@@ -1813,21 +1827,34 @@ export class ThreeSceneManagerService {
       stationGroup.position.set(pos.x, -4.2, pos.z);
       stationGroup.userData = { agentId: agent.id, agent };
 
-      // Radial Power Conduit connecting Station back to Central Command Hub
+      // Radial Power Conduit & Glowing Energy Branch connecting Station back to Central Command Hub
       const conduitGeo = new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(0, 0.1, 0),
         new THREE.Vector3(-pos.x, 0.4, -pos.z),
       ]);
+      // 1. Core Conduit Laser
       const conduitLine = new THREE.Line(
         conduitGeo,
         new THREE.LineBasicMaterial({
           color: agent.hexColor,
           transparent: true,
-          opacity: 0.45,
+          opacity: 0.85,
           blending: THREE.AdditiveBlending,
         })
       );
       stationGroup.add(conduitLine);
+
+      // 2. Outer Luminous Conduit Energy Track
+      const conduitGlowLine = new THREE.Line(
+        conduitGeo,
+        new THREE.LineBasicMaterial({
+          color: 0x38bdf8,
+          transparent: true,
+          opacity: 0.38,
+          blending: THREE.AdditiveBlending,
+        })
+      );
+      stationGroup.add(conduitGlowLine);
 
       // Station Hexagonal Platform Pad (Tuned roughness: 0.20, metalness: 0.88 with subtle emissive reflection)
       const padGeo = new THREE.CylinderGeometry(2.2, 2.5, 0.4, 6);
@@ -3184,57 +3211,100 @@ export class ThreeSceneManagerService {
             }
           }
 
-          // Apply resolved non-colliding positions and update tether laser beams
+          // Apply resolved non-colliding positions and update tether laser beams with dynamic plasma waves
           this.agents().forEach((agent, index) => {
             const data = this.agentMeshMap.get(agent.id);
             if (!data) return;
             const pos = this.cachedAgentVectors[index];
             data.group.position.copy(pos);
 
+            const isSelected = this.selectedAgent()?.id === agent.id;
+            const isSpeakingAgent = isSpeaking && isSelected;
+
+            // 1. Multi-Segment Harmonic Curved Plasma Arc Conduit
             if (data.beam && data.beam.geometry) {
               const attr = data.beam.geometry.attributes['position'] as THREE.BufferAttribute;
               if (attr) {
                 const arr = attr.array as Float32Array;
-                arr[3] = pos.x;
-                arr[4] = pos.y;
-                arr[5] = pos.z;
+                const ptsCount = 8;
+                for (let p = 0; p < ptsCount; p++) {
+                  const frac = p / (ptsCount - 1);
+                  // Electric sine wave arc displacement peaking in the middle of the beam
+                  const arcDisp = Math.sin(frac * Math.PI) * Math.sin(time * 5.0 + index * 1.4 + p * 0.5) * 0.28;
+                  const lateralDisp = Math.sin(frac * Math.PI) * Math.cos(time * 4.0 + index * 1.8 + p * 0.4) * 0.20;
+                  arr[p * 3] = pos.x * frac + lateralDisp;
+                  arr[p * 3 + 1] = pos.y * frac + arcDisp;
+                  arr[p * 3 + 2] = pos.z * frac;
+                }
                 attr.needsUpdate = true;
               }
-              (data.beam.material as THREE.LineBasicMaterial).opacity = isDeployed ? data.currentScale * 0.45 : 0;
+              const baseOpacity = isSelected ? 0.90 : 0.52;
+              (data.beam.material as THREE.LineBasicMaterial).opacity = isDeployed ? data.currentScale * baseOpacity : 0;
+            }
+
+            // 2. Traveling Synaptic Action Potential Energy Spark (Pulse outwards from core to agent)
+            if (data.pulseSpark) {
+              if (isDeployed && data.currentScale > 0.5) {
+                data.pulseSpark.visible = true;
+                const sparkSpeed = isSpeakingAgent ? 1.8 : 0.85;
+                const sparkFrac = ((time * sparkSpeed + index * 0.32) % 1.0);
+                const sparkArc = Math.sin(sparkFrac * Math.PI) * Math.sin(time * 5.0 + index * 1.4) * 0.28;
+                data.pulseSpark.position.set(
+                  pos.x * sparkFrac,
+                  pos.y * sparkFrac + sparkArc,
+                  pos.z * sparkFrac
+                );
+                const sparkScale = (1.0 + Math.sin(time * 12.0 + index) * 0.3) * (isSpeakingAgent ? 1.6 : 1.0);
+                data.pulseSpark.scale.set(sparkScale, sparkScale, sparkScale);
+                (data.pulseSpark.material as THREE.MeshBasicMaterial).opacity = Math.sin(sparkFrac * Math.PI) * (isSelected ? 1.0 : 0.75);
+              } else {
+                data.pulseSpark.visible = false;
+              }
             }
           });
         }
 
-        // 8. Dynamically re-link Inter-Agent Synaptic Laser Mesh (Zero allocation in-place buffer mutation)
-        if (this.interAgentMeshLines && agentCount >= 2) {
+        // 8. Dynamically re-link Inter-Agent Synaptic Neural Web (Organic Proximity Delaunay Mesh)
+        if (this.interAgentMeshLines && isDeployed && agentCount >= 2) {
           const attr = this.interAgentMeshLines.geometry.attributes['position'] as THREE.BufferAttribute;
           if (attr) {
             const arr = attr.array as Float32Array;
             let ptr = 0;
+            const maxSynapses = 35;
+            const maxDistance = 15.5;
+
+            // Connect nearby agents whose 3D distance is within transmission threshold
             for (let i = 0; i < agentCount; i++) {
-              const next = (i + 1) % agentCount;
-              const cross = (i + 2) % agentCount;
+              for (let j = i + 1; j < agentCount; j++) {
+                if (ptr / 6 >= maxSynapses) break;
+                const vA = this.cachedAgentVectors[i];
+                const vB = this.cachedAgentVectors[j];
+                const dx = vA.x - vB.x;
+                const dy = vA.y - vB.y;
+                const dz = vA.z - vB.z;
+                const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-              // Perimeter line
-              arr[ptr++] = this.cachedAgentVectors[i].x;
-              arr[ptr++] = this.cachedAgentVectors[i].y;
-              arr[ptr++] = this.cachedAgentVectors[i].z;
-              arr[ptr++] = this.cachedAgentVectors[next].x;
-              arr[ptr++] = this.cachedAgentVectors[next].y;
-              arr[ptr++] = this.cachedAgentVectors[next].z;
+                // Proximity distance threshold or adjacent squad link
+                const isAdjacent = (j === (i + 1) % agentCount) || (j === (i + 2) % agentCount);
+                if (dist < maxDistance || isAdjacent) {
+                  arr[ptr++] = vA.x;
+                  arr[ptr++] = vA.y;
+                  arr[ptr++] = vA.z;
+                  arr[ptr++] = vB.x;
+                  arr[ptr++] = vB.y;
+                  arr[ptr++] = vB.z;
+                }
+              }
+            }
 
-              // Cross-synapse line for polyhedral neural mesh
-              arr[ptr++] = this.cachedAgentVectors[i].x;
-              arr[ptr++] = this.cachedAgentVectors[i].y;
-              arr[ptr++] = this.cachedAgentVectors[i].z;
-              arr[ptr++] = this.cachedAgentVectors[cross].x;
-              arr[ptr++] = this.cachedAgentVectors[cross].y;
-              arr[ptr++] = this.cachedAgentVectors[cross].z;
+            // Zero out remaining unused segments
+            while (ptr < arr.length) {
+              arr[ptr++] = 0;
             }
             attr.needsUpdate = true;
           }
 
-          const pulseOpacity = (0.2 + Math.sin(time * 3.5) * 0.1) * (isDeployed ? 1 : 0);
+          const pulseOpacity = (0.28 + Math.sin(time * 3.5) * 0.12) * (isDeployed ? 1 : 0);
           (this.interAgentMeshLines.material as THREE.LineBasicMaterial).opacity = pulseOpacity;
         }
 
