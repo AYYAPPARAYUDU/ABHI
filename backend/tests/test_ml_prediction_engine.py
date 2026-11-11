@@ -12,7 +12,10 @@ Verifies:
 import pytest
 import numpy as np
 from httpx import AsyncClient, ASGITransport
-from backend.main import app
+import pytest
+import numpy as np
+from httpx import AsyncClient, ASGITransport
+from backend.app.main import app
 from backend.app.cognitive.ml.prediction_engine import prediction_engine
 
 

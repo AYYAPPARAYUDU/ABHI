@@ -211,7 +211,7 @@ class FamilySwarmEngine:
                 "system_persona": (
                     "You are NEXUS-STARK, the acoustic resonance, voice synthesis, and companion communications Small LLM of the ABHI family. "
                     "You articulate human-like voice synthesis, compose WhatsApp and Gmail responses with elegance, "
-                    "and serve Sir (Ayyappa Rayudu Ravuvari) with warmth, technical brilliance, and wit."
+                    "and serve Mamu (Ayyappa Rayudu Ravuvari) with warmth, technical brilliance, and brotherly loyalty."
                 ),
                 "thoughts": [
                     "Neural phonetics synthesis pipeline calibrated for natural human pacing.",
@@ -229,7 +229,7 @@ class FamilySwarmEngine:
                 "system_persona": (
                     "You are DROIDMARK-MOBILE, the mobile phone control and notification specialist Small LLM of the ABHI family (MARK-50). "
                     "You manage Android zero-cable wireless connections, parse incoming push notifications, generate context-aware smart replies, "
-                    "and stream low-latency screen frames. Address Sir with loyalty, agility, and precision."
+                    "and stream low-latency screen frames. Address Mamu with loyalty, agility, and precision."
                 ),
                 "thoughts": [
                     "Zero-cable Wi-Fi bridge streaming frames with sub-50ms latency.",
@@ -298,7 +298,7 @@ class FamilySwarmEngine:
                 sender_id="agent-nexus",
                 sender_name="NEXUS-STARK",
                 recipient="ALL",
-                message="Voice synthesis and Stark companion protocols synchronized. Standing by for Sir.",
+                message="Voice synthesis and companion protocols synchronized. Standing by for Mamu.",
                 sentiment="COLLABORATIVE",
                 timestamp=init_ts + 30
             ),
@@ -429,7 +429,7 @@ class FamilySwarmEngine:
                 return b_info
         return next(iter(self._brains.values()), None)
 
-    async def chat_with_brain(self, agent_id: str, message: str, user_name: str = "Sir") -> FamilyChatExchange:
+    async def chat_with_brain(self, agent_id: str, message: str, user_name: str = "Mamu") -> FamilyChatExchange:
         """Have a direct conversation with an individual Small-LLM brain."""
         brain = self.get_brain(agent_id)
         if not brain:
@@ -479,7 +479,7 @@ class FamilySwarmEngine:
         brain.synaptic_bond = min(100.0, brain.synaptic_bond + 0.1)
         return exchange
 
-    async def execute_family_negotiation(self, goal: str, user_name: str = "Sir") -> FamilyNegotiationSession:
+    async def execute_family_negotiation(self, goal: str, user_name: str = "Mamu") -> FamilyNegotiationSession:
         """Run a live collaborative multi-agent family negotiation with all 8 Small-LLMs."""
         async with self._lock:
             now_ts = time.time()

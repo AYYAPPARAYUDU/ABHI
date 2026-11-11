@@ -28,6 +28,8 @@ export interface AgentNode {
   elevation: number;
   speed: number;
   orbitRadius: number;
+  inclination?: number;
+  orbitSpeed?: number;
   description: string;
   subsystem: string;
   load: string;
@@ -70,7 +72,7 @@ export class ThreeSceneManagerService {
     'Quantum Core online. Synchronizing situational perception...'
   );
 
-  // 10 Advanced Autonomous Sub-Agents (Arranged in Perfectly Balanced Equidistant Non-Colliding Orbital Positions)
+  // 10 Advanced Autonomous Sub-Agents (Arranged in a Volumetric 3D Gyroscopic Celestial Constellation)
   readonly agents = signal<AgentNode[]>([
     {
       id: 'agent_1_commander',
@@ -82,9 +84,11 @@ export class ThreeSceneManagerService {
       hexColor: 0x00f0ff,
       icon: '👑',
       angle: 0 * (2 * Math.PI / 10),
-      elevation: -0.8,
+      elevation: 0.0,
       speed: 0.85,
-      orbitRadius: 10.2,
+      orbitRadius: 10.5,
+      inclination: 0.0,
+      orbitSpeed: 0.058,
       description: 'Decomposes complex user goals, delegates tickets to specialist squads, arbitrates conflicts, and ensures quality gate sign-off for Mamu.',
       subsystem: 'COMMAND SQUAD',
       load: 'COORDINATING // 100%',
@@ -101,9 +105,11 @@ export class ThreeSceneManagerService {
       hexColor: 0x10b981,
       icon: '🌐',
       angle: 1 * (2 * Math.PI / 10),
-      elevation: 0.8,
+      elevation: 0.6,
       speed: 0.85,
-      orbitRadius: 13.6,
+      orbitRadius: 13.8,
+      inclination: 0.52,
+      orbitSpeed: 0.046,
       description: 'Interacts with live web applications, inspects DOM trees, handles cookies/sessions, and automates UI flows with zero guessing.',
       subsystem: 'EXECUTION SQUAD',
       load: 'DOM TREE READY',
@@ -120,9 +126,11 @@ export class ThreeSceneManagerService {
       hexColor: 0x3b82f6,
       icon: '💬',
       angle: 2 * (2 * Math.PI / 10),
-      elevation: -0.8,
+      elevation: -0.6,
       speed: 0.85,
-      orbitRadius: 10.2,
+      orbitRadius: 11.2,
+      inclination: -0.48,
+      orbitSpeed: 0.054,
       description: 'Dispatches external messages across native WhatsApp Desktop, Slack, and email with recipient verification & delivery confirmation.',
       subsystem: 'EXECUTION SQUAD',
       load: 'CHANNELS SYNCHED',
@@ -141,7 +149,9 @@ export class ThreeSceneManagerService {
       angle: 3 * (2 * Math.PI / 10),
       elevation: 0.8,
       speed: 0.85,
-      orbitRadius: 13.6,
+      orbitRadius: 14.5,
+      inclination: 0.78,
+      orbitSpeed: 0.042,
       description: 'Executes terminal commands, edits files with surgical precision, compiles code, and validates exit codes and processes.',
       subsystem: 'EXECUTION SQUAD',
       load: 'FREQ 6.2 GHz',
@@ -160,7 +170,9 @@ export class ThreeSceneManagerService {
       angle: 4 * (2 * Math.PI / 10),
       elevation: -0.8,
       speed: 0.85,
-      orbitRadius: 10.2,
+      orbitRadius: 10.8,
+      inclination: -0.72,
+      orbitSpeed: 0.056,
       description: 'Mines codebases, documentations, APIs, and web resources systematically; extracts grounded facts with exact citations.',
       subsystem: 'INTELLIGENCE SQUAD',
       load: 'HYBRID RAG ACTIVE',
@@ -177,9 +189,11 @@ export class ThreeSceneManagerService {
       hexColor: 0xec4899,
       icon: '🧠',
       angle: 5 * (2 * Math.PI / 10),
-      elevation: 0.8,
+      elevation: 0.7,
       speed: 0.85,
-      orbitRadius: 13.6,
+      orbitRadius: 13.2,
+      inclination: 0.35,
+      orbitSpeed: 0.048,
       description: 'Engineers data pipelines, tracks training loss/accuracy, selects models, tunes hyperparameters, and prevents data leakage.',
       subsystem: 'INTELLIGENCE SQUAD',
       load: 'ACCURACY 99.4%',
@@ -196,9 +210,11 @@ export class ThreeSceneManagerService {
       hexColor: 0x6366f1,
       icon: '🗺️',
       angle: 6 * (2 * Math.PI / 10),
-      elevation: -0.8,
+      elevation: -0.5,
       speed: 0.85,
-      orbitRadius: 10.2,
+      orbitRadius: 11.5,
+      inclination: -0.32,
+      orbitSpeed: 0.052,
       description: 'Transforms ambiguous goals into Kahn-verified Execution DAGs with dependency mapping, rollback plans, and token efficiency.',
       subsystem: 'INTELLIGENCE SQUAD',
       load: 'DAG VERIFIED',
@@ -215,9 +231,11 @@ export class ThreeSceneManagerService {
       hexColor: 0x84cc16,
       icon: '🛡️',
       angle: 7 * (2 * Math.PI / 10),
-      elevation: 0.8,
+      elevation: 0.9,
       speed: 0.85,
-      orbitRadius: 13.6,
+      orbitRadius: 14.0,
+      inclination: 0.65,
+      orbitSpeed: 0.044,
       description: 'The final quality gate for Mamu. Never trusts unproven assertions; tests edge cases and requires physical proof before issuing VERIFIED: PASS.',
       subsystem: 'QUALITY & GOVERNANCE',
       load: 'PASS 100%',
@@ -234,9 +252,11 @@ export class ThreeSceneManagerService {
       hexColor: 0xef4444,
       icon: '🔒',
       angle: 8 * (2 * Math.PI / 10),
-      elevation: -0.8,
+      elevation: -0.9,
       speed: 0.85,
-      orbitRadius: 10.2,
+      orbitRadius: 10.6,
+      inclination: -0.60,
+      orbitSpeed: 0.055,
       description: 'Shields sensitive credentials, blocks destructive operations, defends against prompt injections, and guards system boundaries.',
       subsystem: 'QUALITY & GOVERNANCE',
       load: 'SHIELDS ONLINE',
@@ -253,9 +273,11 @@ export class ThreeSceneManagerService {
       hexColor: 0x38bdf8,
       icon: '📱',
       angle: 9 * (2 * Math.PI / 10),
-      elevation: 0.8,
+      elevation: 0.4,
       speed: 0.85,
-      orbitRadius: 13.6,
+      orbitRadius: 12.5,
+      inclination: 0.22,
+      orbitSpeed: 0.050,
       description: 'Autonomous zero-cable mobile synchronization, 1080x2400 FHD+ display mirroring, notification intelligence, and smart-reply synthesis.',
       subsystem: 'MOBILE & HARDWARE SQUAD',
       load: 'WIRELESS 5555 ACTIVE',
@@ -3083,12 +3105,22 @@ export class ThreeSceneManagerService {
 
           data.group.scale.set(data.currentScale, data.currentScale, data.currentScale);
 
-          // Calm, Synchronized Orbital Trajectory Coordinates (Shared Angular Velocity)
-          const sharedOrbitalSpeed = 0.085;
-          const currentAngle = agent.angle + time * sharedOrbitalSpeed;
-          const posX = Math.cos(currentAngle) * data.currentRadius;
-          const posZ = Math.sin(currentAngle) * data.currentRadius;
-          const posY = agent.elevation + Math.sin(time * 0.45 + index * 1.2) * 0.18;
+          // Volumetric 3D Multi-Planar Gyroscopic Celestial Orbit Coordinates
+          const speed = agent.orbitSpeed || 0.050;
+          const currentAngle = agent.angle + time * speed;
+          const inc = agent.inclination || 0.0;
+          const r = data.currentRadius;
+
+          // Spherical Gyroscopic Inclined Orbit Coordinates:
+          const unTiltedX = Math.cos(currentAngle) * r;
+          const unTiltedZ = Math.sin(currentAngle) * r;
+          const cosInc = Math.cos(inc);
+          const sinInc = Math.sin(inc);
+
+          // 3D Rotated Position along Inclination Plane:
+          const posX = unTiltedX;
+          const posY = agent.elevation + unTiltedZ * sinInc + Math.sin(time * 0.45 + index * 1.2) * 0.32;
+          const posZ = unTiltedZ * cosInc;
 
           // Realistic Speech Acoustic Vibration on Agent when Speaking or Selected
           const isSelected = this.selectedAgent()?.id === agent.id;
