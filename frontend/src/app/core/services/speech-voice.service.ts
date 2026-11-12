@@ -76,6 +76,7 @@ export class SpeechVoiceService {
   private synth: SpeechSynthesis | null = null;
   private recognition: any = null;
   private voices: SpeechSynthesisVoice[] = [];
+  private activeUtterances: SpeechSynthesisUtterance[] = [];
   private sharedAudioCtx: AudioContext | null = null;
 
   constructor() {
@@ -637,9 +638,28 @@ export class SpeechVoiceService {
         this.loadVoices();
       }
 
-      // Split into sequential sentence chunks to eliminate Chrome's 15-second speech freeze
-      const rawChunks = spokenText.match(/[^.!?]+[.!?]*/g) || [spokenText];
-      const chunks = rawChunks.map((c) => c.trim()).filter((c) => c.length > 0);
+      // Split into fine sentence chunks and further split at comma/space if any chunk exceeds 140 chars
+      const rawSentences = spokenText.match(/[^.!?]+[.!?]*/g) || [spokenText];
+      const chunks: string[] = [];
+      rawSentences.forEach((raw) => {
+        const trimmed = raw.trim();
+        if (trimmed.length <= 140) {
+          if (trimmed.length > 0) chunks.push(trimmed);
+        } else {
+          // Sub-divide long sentence at comma or space boundaries
+          const subParts = trimmed.match(/[^,;]+[,;]*/g) || [trimmed];
+          let buffer = '';
+          subParts.forEach((part) => {
+            if ((buffer + ' ' + part).trim().length <= 140) {
+              buffer = (buffer + ' ' + part).trim();
+            } else {
+              if (buffer) chunks.push(buffer);
+              buffer = part.trim();
+            }
+          });
+          if (buffer) chunks.push(buffer);
+        }
+      });
       if (chunks.length === 0) {
         this.handleSpeechEnded();
         return;
@@ -677,8 +697,14 @@ export class SpeechVoiceService {
           clearInterval(watchdog);
           return;
         }
-        if (this.synth?.paused) {
-          this.synth.resume();
+        if (this.synth) {
+          if (this.synth.paused) {
+            this.synth.resume();
+          } else {
+            // Keep Chrome audio pump alive
+            this.synth.pause();
+            this.synth.resume();
+          }
         }
       }, 3500);
 
@@ -692,6 +718,8 @@ export class SpeechVoiceService {
         const chunkText = chunks[currentChunkIdx];
         const chunkWords = chunkText.split(/\s+/).filter((w) => w.length > 0);
         const utterance = new SpeechSynthesisUtterance(chunkText);
+        this.activeUtterances.push(utterance); // V8 GC protection
+
         utterance.pitch = tuning.pitch;
         utterance.rate = tuning.rate * userSpeed;
         utterance.volume = 1.0;
@@ -716,12 +744,14 @@ export class SpeechVoiceService {
         };
 
         utterance.onend = () => {
+          this.activeUtterances = this.activeUtterances.filter(u => u !== utterance);
           globalWordOffset += chunkWords.length;
           currentChunkIdx++;
           speakNextChunk();
         };
 
         utterance.onerror = () => {
+          this.activeUtterances = this.activeUtterances.filter(u => u !== utterance);
           globalWordOffset += chunkWords.length;
           currentChunkIdx++;
           speakNextChunk();
@@ -747,17 +777,20 @@ export class SpeechVoiceService {
       try {
         this.currentAudio.pause();
         this.currentAudio.currentTime = 0;
+        this.currentAudio.src = '';
       } catch {}
       this.currentAudio = null;
     }
     if (this.synth) {
-      this.synth.cancel();
+      try {
+        this.synth.cancel();
+      } catch {}
     }
+    this.activeUtterances = [];
     this.isSpeaking.set(false);
     this.activeWordIndex.set(-1);
     this.activeWord.set('');
   }
-
 
   /**
    * Spoken welcome greeting on app launch with dynamic situational awareness and friend companionship.
@@ -1101,18 +1134,24 @@ export class SpeechVoiceService {
 
     try {
       this.isListening.set(true);
-      let finalTranscript = '';
+      let accumulatedTranscript = '';
+      let lastDispatchedText = '';
 
       this.recognition.onresult = (event: any) => {
         let interimTranscript = '';
+        let currentFinal = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
+          const item = event.results[i];
+          if (item.isFinal) {
+            currentFinal += item[0].transcript;
           } else {
-            interimTranscript += event.results[i][0].transcript;
+            interimTranscript += item[0].transcript;
           }
         }
-        const currentText = (finalTranscript + ' ' + interimTranscript).trim();
+        if (currentFinal) {
+          accumulatedTranscript = (accumulatedTranscript + ' ' + currentFinal).trim();
+        }
+        const currentText = (accumulatedTranscript + ' ' + interimTranscript).trim();
 
         // 1. BARGE-IN VOICE INTERRUPTION:
         // If ABHI or an Agent is currently speaking and user speaks in between, stop speaking immediately!
@@ -1135,9 +1174,11 @@ export class SpeechVoiceService {
           }
           // Strip the wake word so clean command passes through
           const cleanedText = currentText.replace(/^(?:hey|hay|he|hi|hello)?\s*(?:mamu|abhi)\s*/i, '').trim();
-          if (cleanedText) {
+          if (cleanedText && cleanedText !== lastDispatchedText) {
+            lastDispatchedText = cleanedText;
             onResult(cleanedText, true);
           }
+          accumulatedTranscript = '';
           return;
         }
 
@@ -1145,11 +1186,13 @@ export class SpeechVoiceService {
           onResult(currentText, false);
         }
 
+        // 3. SILENCE TIMEOUT (Reliable multi-word capture)
         if (this.silenceTimer) clearTimeout(this.silenceTimer);
         this.silenceTimer = setTimeout(() => {
-          if (this.isListening() && finalTranscript.trim()) {
-            const dispatchText = finalTranscript.trim();
-            finalTranscript = '';
+          const dispatchText = currentText.trim();
+          if (this.isListening() && dispatchText && dispatchText !== lastDispatchedText) {
+            lastDispatchedText = dispatchText;
+            accumulatedTranscript = '';
             onResult(dispatchText, true);
 
             // In single-shot mode, close listening; in continuous mode, keep microphone active!
@@ -1158,7 +1201,7 @@ export class SpeechVoiceService {
               if (onEnd) onEnd();
             }
           }
-        }, 1600);
+        }, 1300);
       };
 
       this.recognition.onerror = () => {
@@ -1179,6 +1222,14 @@ export class SpeechVoiceService {
       };
 
       this.recognition.onend = () => {
+        // Guarantee no speech is dropped on end
+        const remainingText = accumulatedTranscript.trim();
+        if (remainingText && remainingText !== lastDispatchedText) {
+          lastDispatchedText = remainingText;
+          accumulatedTranscript = '';
+          onResult(remainingText, true);
+        }
+
         this.isListening.set(false);
         // If continuous conversation mode is active, restart microphone loop automatically
         if (this.isAlexaConversationMode()) {

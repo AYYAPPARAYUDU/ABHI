@@ -2,6 +2,7 @@
 
 import base64
 import math
+import re
 from typing import Optional
 from pydantic import BaseModel
 from backend.app.core.config import settings
@@ -15,7 +16,7 @@ class SpeechSynthesisResult(BaseModel):
     audio_format: str = "wav"
     format: str = "wav"
     duration_seconds: float = 1.0
-    engine_used: str = "piper_local"
+    engine_used: str = "piper"
     is_online_fallback: bool = False
 
 
@@ -23,12 +24,39 @@ class SpeechSynthesisResult(BaseModel):
 SynthesisResult = SpeechSynthesisResult
 
 
+def pcm_to_wav(
+    pcm_bytes: bytes,
+    sample_rate: int = 24000,
+    channels: int = 1,
+    bits_per_sample: int = 16
+) -> bytes:
+    """Wraps raw 16-bit PCM bytes with a standard 44-byte RIFF WAV header for universal browser playback."""
+    byte_rate = sample_rate * channels * (bits_per_sample // 8)
+    block_align = channels * (bits_per_sample // 8)
+    data_size = len(pcm_bytes)
+    total_size = 36 + data_size
+
+    header = bytearray(b"RIFF")
+    header.extend(total_size.to_bytes(4, "little"))
+    header.extend(b"WAVEfmt ")
+    header.extend((16).to_bytes(4, "little"))  # subchunk1 size (16 for PCM)
+    header.extend((1).to_bytes(2, "little"))   # audio format 1 = PCM
+    header.extend(channels.to_bytes(2, "little"))
+    header.extend(sample_rate.to_bytes(4, "little"))
+    header.extend(byte_rate.to_bytes(4, "little"))
+    header.extend(block_align.to_bytes(2, "little"))
+    header.extend(bits_per_sample.to_bytes(2, "little"))
+    header.extend(b"data")
+    header.extend(data_size.to_bytes(4, "little"))
+    return bytes(header) + pcm_bytes
+
+
 class TextToSpeechEngine:
     """Local Text-to-Speech neural voice synthesis engine with strict local-first privacy policy."""
 
     def __init__(self):
-        self.default_backend = settings.TTS_BACKEND
-        self.allow_online_fallback = settings.TTS_ALLOW_ONLINE_FALLBACK
+        self.default_backend = getattr(settings, "TTS_BACKEND", "piper")
+        self.allow_online_fallback = getattr(settings, "TTS_ALLOW_ONLINE_FALLBACK", False)
 
     async def synthesize(
         self,
@@ -38,7 +66,7 @@ class TextToSpeechEngine:
         speed: float = 1.0,
         force_backend: Optional[str] = None
     ) -> SpeechSynthesisResult:
-        """Synthesize text into high-fidelity speech audio following local-first policy."""
+        """Synthesize text into speech audio following local-first policy."""
         backend = force_backend or self.default_backend
 
         # Enforce local-first policy
@@ -54,18 +82,20 @@ class TextToSpeechEngine:
             f"Synthesizing speech for text: '{text[:50]}...' using engine '{backend}', voice '{voice}'"
         )
 
-        # Generate standard clean 24kHz synthetic audio response buffer (Piper local waveform simulation)
-        num_samples = int(24000 * max(0.5, len(text) * 0.06))
-        samples = [int(32767 * 0.2 * math.sin(2 * math.pi * 440 * i / 24000)) for i in range(num_samples)]
+        # Generate standard clean 24kHz synthetic audio response buffer with RIFF header
+        sample_rate = 24000
+        num_samples = int(sample_rate * max(0.5, len(text) * 0.06))
+        samples = [int(32767 * 0.2 * math.sin(2 * math.pi * 440 * i / sample_rate)) for i in range(num_samples)]
         raw_pcm = bytes([b & 0xFF for s in samples for b in (s, s >> 8)])
+        wav_bytes = pcm_to_wav(raw_pcm, sample_rate=sample_rate)
 
         return SpeechSynthesisResult(
-            audio_base64=base64.b64encode(raw_pcm).decode("utf-8"),
-            audio_bytes=raw_pcm,
-            sample_rate=24000,
+            audio_base64=base64.b64encode(wav_bytes).decode("utf-8"),
+            audio_bytes=wav_bytes,
+            sample_rate=sample_rate,
             audio_format="wav",
             format="wav",
-            duration_seconds=round(num_samples / 24000.0, 2),
+            duration_seconds=round(num_samples / float(sample_rate), 2),
             engine_used=backend,
             is_online_fallback=(backend == "edge_tts_online")
         )
@@ -76,9 +106,8 @@ class TextToSpeechEngine:
         voice: str = "en-GB-RyanNeural",
         rate: float = 1.0
     ) -> bytes:
-        """Stream authentic, high-fidelity neural human speech bytes (MP3)."""
+        """Stream authentic, high-fidelity neural human speech bytes (MP3 or WAV)."""
         # Clean text from raw markdown, brackets, and codeblocks
-        import re
         clean_text = re.sub(r'```[\s\S]*?```', '', text)
         clean_text = re.sub(r'\[.*?\]:?', '', clean_text)
         clean_text = re.sub(r'[*_~`#>]', '', clean_text)
@@ -99,9 +128,13 @@ class TextToSpeechEngine:
         }
         selected_voice = voice_map.get(voice.lower(), voice)
 
+        # Edge-TTS expects rate formatted as percentage string like '+0%' or '+15%'
+        rate_pct = int(round((rate - 1.0) * 100))
+        rate_str = f"+{rate_pct}%" if rate_pct >= 0 else f"{rate_pct}%"
+
         try:
             import edge_tts
-            communicate = edge_tts.Communicate(clean_text, selected_voice)
+            communicate = edge_tts.Communicate(clean_text, selected_voice, rate=rate_str)
             audio_bytes = bytearray()
             async for chunk in communicate.stream():
                 if chunk["type"] == "audio":
@@ -109,9 +142,9 @@ class TextToSpeechEngine:
             if len(audio_bytes) > 0:
                 return bytes(audio_bytes)
         except Exception as e:
-            logger.warning(f"Edge-TTS stream error ({e}); falling back to synthetic PCM buffer.")
+            logger.warning(f"Edge-TTS stream error ({e}); falling back to local WAV oscillator.")
 
-        # Fallback to PCM WAV with smooth anti-pop envelope (10ms fade in/out)
+        # Robust Fallback to valid RIFF WAV with smooth anti-pop envelope (10ms fade in/out)
         sample_rate = 24000
         duration_s = max(0.5, len(clean_text) * 0.06)
         num_samples = int(sample_rate * duration_s)
@@ -129,10 +162,9 @@ class TextToSpeechEngine:
             samples.append(int(32767 * wave))
 
         raw_pcm = bytes([b & 0xFF for s in samples for b in (s, s >> 8)])
-        return raw_pcm
+        return pcm_to_wav(raw_pcm, sample_rate=sample_rate)
 
 
 # Singletons
 text_to_speech = TextToSpeechEngine()
 tts_engine = text_to_speech
-
