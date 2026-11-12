@@ -22,6 +22,7 @@ from backend.app.api.v1.agent import router as agent_router, gateway_router
 from backend.app.api.v1.business import router as business_router
 from backend.app.api.v1.decisions import router as decisions_router
 from backend.app.api.v1.devices import router as devices_router
+from backend.app.api.v1.quantum import router as quantum_router
 from backend.app.api.websockets.telemetry import router as ws_router
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
@@ -157,6 +158,7 @@ app.include_router(resources_router, prefix="/api/v1")
 app.include_router(media_router, prefix="/api/v1")
 app.include_router(agent_router, prefix="/api/v1")
 app.include_router(gateway_router, prefix="/api/v1")
+app.include_router(quantum_router, prefix="/api/v1")
 
 # Support both /api/v1/agent-gateway and /api/v1/agent legacy compatibility
 agent_compat_router = APIRouter(prefix="/api/v1/agent", tags=["Agent Compatibility"])
