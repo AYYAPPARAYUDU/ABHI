@@ -77,7 +77,7 @@ class DualStateVerifier:
                     retryable=False
                 )
 
-        elif agent_id in ["os_desktop_agent", "agent_3_comms", "agent_4_system", "agent_2_browser"]:
+        elif agent_id in ["os_desktop_agent", "agent_3_comms", "agent_4_system", "agent_2_browser", "browser_agent"]:
             import os
             if action in ["send_whatsapp_message", "whatsapp_send"]:
                 if not result.success:
@@ -93,6 +93,38 @@ class DualStateVerifier:
                         confidence_score=0.0,
                         difference_detected="WhatsApp message delivery was not verified to recipient.",
                         retryable=True
+                    )
+            elif action in ["browser_navigate", "open_url", "navigate_url"]:
+                if not result.success:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=result.error_message or "Browser navigation failed.",
+                        retryable=True
+                    )
+            elif action in ["browser_fill", "enter_credentials"]:
+                if not result.success:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=result.error_message or "Browser form input / credential fill failed.",
+                        retryable=True
+                    )
+            elif action in ["browser_click", "submit_login", "click_element"]:
+                if not result.success:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=result.error_message or "Browser element click / login submission failed.",
+                        retryable=True
+                    )
+            elif action in ["tts_read_aloud", "voice_acceptance_gate"]:
+                if not result.success:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=result.error_message or "Voice synthesis vocalization failed.",
+                        retryable=False
                     )
             elif action in ["play_media", "play_youtube", "play_song", "play_music"]:
                 if not result.success or not result.data.get("playing"):

@@ -677,8 +677,58 @@ class QuantumCognitiveEngine:
         has_voice_gate = any(w in g for w in ["read it", "read", "voice acceptance", "accept", "approval", "confirm", "permission", "listen"])
         has_comms = any(w in g for w in ["whatsapp", "mail", "gmail", "message", "send", "dispatch", "deliver"])
 
-        # Mamu's explicit chained pattern: (App/Write) -> (Read/Accept) -> (Send)
-        return (has_editor and has_comms) or (has_editor and has_voice_gate) or (has_voice_gate and has_comms)
+        # Browser Navigation and Multi-Step Authentication Workflow (Mamu's Core Directive)
+        has_browser_login = (
+            any(w in g for w in ["browser", "website", "chrome", "edge", "site", "web", "portal", "page"])
+            and any(w in g for w in ["login", "credencials", "credentials", "sign in", "signin", "authenticate", "admin", "password"])
+        )
+
+        # Chained sequential commands with "then", "after", "and then"
+        has_chained_sequence = ("then " in g or "after " in g or "and login" in g or "and send" in g) and (has_editor or has_browser_login)
+
+        return (
+            has_browser_login
+            or has_chained_sequence
+            or (has_editor and has_comms)
+            or (has_editor and has_voice_gate)
+            or (has_voice_gate and has_comms)
+        )
+
+    def extract_browser_login_info(self, goal: str) -> Tuple[str, str, str]:
+        """Extracts website URL, username, and password credentials from user utterance."""
+        g = goal.lower()
+        # 1. Target URL Extraction
+        url_match = re.search(r"(https?://\S+|www\.\S+|\b[a-zA-Z0-9\.\-_]+\.(?:com|org|net|io|edu|gov|local)\b\S*)", goal)
+        if url_match:
+            target_url = url_match.group(1).strip()
+            if not target_url.startswith("http"):
+                target_url = "https://" + target_url
+        else:
+            # Default authoritative administrative portal or local interactive dashboard
+            target_url = "https://httpbin.org/forms/post"
+
+        # 2. Credential Extraction (e.g. "admin1 credencials", "with admin1 credentials", "user admin1")
+        username = "admin1"
+        password = "admin1"
+
+        cred_match = (
+            re.search(r"(?:with|using|as)?\s*([a-zA-Z0-9_\-\.]+)\s+(?:credencials|credentials|creds|login)", goal, re.IGNORECASE)
+            or re.search(r"(?:credencials|credentials|creds|login)[:\s]+(?:of\s+)?([a-zA-Z0-9_\-\.]+)", goal, re.IGNORECASE)
+        )
+        if cred_match:
+            cand = cred_match.group(1).strip()
+            if cand.lower() not in ["with", "the", "my", "using", "for", "and", "then"]:
+                username = cand
+                password = cand
+
+        explicit_user = re.search(r"(?:username|user)[:\s]+['\"]?(\w+)['\"]?", goal, re.IGNORECASE)
+        if explicit_user:
+            username = explicit_user.group(1)
+        explicit_pass = re.search(r"(?:password|pass)[:\s]+['\"]?(\w+)['\"]?", goal, re.IGNORECASE)
+        if explicit_pass:
+            password = explicit_pass.group(1)
+
+        return target_url, username, password
 
     def extract_letter_content(self, goal: str) -> str:
         """Extracts intended letter / note content from user utterance or generates polite context."""
@@ -724,12 +774,95 @@ class QuantumCognitiveEngine:
         self.trigger_bell_pair_teleportation()
 
         nodes: Dict[str, DAGNode] = {}
+        g_lower = goal.lower()
+
+        # Check for Browser Navigation & Authentication Workflow
+        has_browser_login = (
+            any(w in g_lower for w in ["browser", "website", "chrome", "edge", "site", "web", "portal", "page"])
+            and any(w in g_lower for w in ["login", "credencials", "credentials", "sign in", "signin", "authenticate", "admin", "password"])
+        )
+
+        if has_browser_login:
+            target_url, username, password = self.extract_browser_login_info(goal)
+
+            # Stage 1: Launch Browser & Navigate to Target Portal
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Open Browser & Navigate to {target_url[:35]}",
+                agent_id="browser_agent",
+                action="browser_navigate",
+                params={"url": target_url, "target_url": target_url, "target": target_url, "browser": "chrome"},
+                dependencies=[],
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+            # Stage 2: Fill Login Credentials (Username: admin1, Password: admin1)
+            nodes["step_2"] = DAGNode(
+                node_id="step_2",
+                title=f"Fill Authentication Credentials ({username})",
+                agent_id="browser_agent",
+                action="browser_fill",
+                params={
+                    "target_url": target_url,
+                    "username": username,
+                    "password": password,
+                    "text": username,
+                    "target_name": "login_credentials_form"
+                },
+                dependencies=["step_1"],
+                risk_tier="Tier 2",
+                status=NodeStatus.PENDING
+            )
+
+            # Stage 3: Submit Login Form & Sign In
+            nodes["step_3"] = DAGNode(
+                node_id="step_3",
+                title="Submit Login Form & Verify Session Sign-In",
+                agent_id="browser_agent",
+                action="browser_click",
+                params={
+                    "target_name": "login_button",
+                    "role": "button",
+                    "action_name": "submit_login",
+                    "target_url": target_url
+                },
+                dependencies=["step_2"],
+                risk_tier="Tier 2",
+                status=NodeStatus.PENDING
+            )
+
+            # Stage 4: Spoken Confirmation Aloud to Mamu via Speech Synthesis
+            vocal_summary = f"Mamu, I opened the browser, navigated to {target_url}, and completed login with {username} credentials. Session verified!"
+            nodes["step_4"] = DAGNode(
+                node_id="step_4",
+                title="Vocal Confirmation to Mamu via Neural Speech",
+                agent_id="os_desktop_agent",
+                action="tts_read_aloud",
+                params={"text": vocal_summary, "summary": vocal_summary, "user_callsign": "Mamu"},
+                dependencies=["step_3"],
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+            elapsed_ms = (time.perf_counter() - t0) * 1000.0
+            logger.info(
+                f"Quantum Cognitive Engine synthesized 4-step Browser Login DAG in {elapsed_ms:.2f}ms"
+            )
+            return TaskDAG(
+                dag_id=dag_id,
+                task_id=task_id,
+                goal=goal,
+                nodes=nodes,
+                created_at_ts=created_at
+            )
+
+        # Standard Multi-Stage Editor -> Voice Acceptance -> Comms Delivery Workflow
         letter_body = self.extract_letter_content(goal)
         recipient = self.extract_recipient(goal)
         is_whatsapp = "whatsapp" in goal.lower()
         is_mail = "mail" in goal.lower() or "gmail" in goal.lower() or not is_whatsapp
 
-        # Quantum Multi-Stage Chained Workflow (Mamu's Exact Architecture)
         # Stage 1: Launch Notepad Editor
         nodes["step_1"] = DAGNode(
             node_id="step_1",

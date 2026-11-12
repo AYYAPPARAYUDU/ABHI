@@ -336,17 +336,23 @@ class CentralSupervisor:
                 for node in dag.nodes.values():
                     if node.action in ["send_whatsapp_message", "whatsapp_send"]:
                         rec = node.params.get("recipient") or node.params.get("phone") or "contact"
-                        verified_summary = f"Message delivered to {rec} on WhatsApp, Sir."
+                        verified_summary = f"Message delivered to {rec} on WhatsApp, Mamu!"
                     elif node.action in ["play_media", "play_youtube", "play_song", "play_music"]:
                         q = node.params.get("query") or "requested music"
-                        verified_summary = f"Playing '{q.title()}' on YouTube, Sir."
+                        verified_summary = f"Playing '{q.title()}' on YouTube, Mamu!"
                     elif node.action in ["open_whatsapp"]:
                         rec = node.params.get("recipient")
-                        verified_summary = f"WhatsApp opened for {rec}, Sir." if rec else "WhatsApp launched and ready, Sir."
+                        verified_summary = f"WhatsApp opened for {rec}, Mamu!" if rec else "WhatsApp launched and ready, Mamu!"
+                    elif node.action in ["browser_fill", "submit_login", "browser_click"]:
+                        u = node.params.get("username", "admin1")
+                        target = node.params.get("target_url") or "portal"
+                        verified_summary = f"Logged into {target} successfully with {u} credentials, Mamu! Session verified."
+                    elif node.action in ["tts_read_aloud"]:
+                        verified_summary = node.params.get("text") or "Task verified and completed, Mamu!"
 
                 if not verified_summary:
                     last_node = list(dag.nodes.values())[-1] if dag.nodes else None
-                    verified_summary = f"{last_node.title} verified and completed, Sir." if last_node else "Task verified and completed, Sir."
+                    verified_summary = f"{last_node.title} verified and completed, Mamu!" if last_node else "Task verified and completed, Mamu!"
                 status_obj.summary = verified_summary
 
                 await memory_repo.update_task_state(

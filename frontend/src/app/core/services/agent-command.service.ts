@@ -252,7 +252,7 @@ export class AgentCommandService {
 
       // Speak result aloud to user via speech synthesis
       if (result.summary) {
-        this.speechVoice.speak(result.summary);
+        this.speechVoice.speak(result.summary, true);
       }
 
       return result;
@@ -386,7 +386,7 @@ export class AgentCommandService {
             timestamp: Date.now()
           };
           this.activeResult.set(updatedResult);
-          this.speechVoice.speak(finalSummary);
+          this.speechVoice.speak(finalSummary, true);
         } else if (state === 'FAILED' || state === 'CANCELLED' || state === 'EMERGENCY_STOPPED') {
           if (this.activePollTimer) {
             clearInterval(this.activePollTimer);

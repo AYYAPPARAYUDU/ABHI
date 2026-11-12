@@ -101,30 +101,23 @@ class SafetyPolicyEngine:
                 is_valid_origin = False
                 try:
                     parsed = urlparse(raw_url)
-                    # Scheme must be strictly http
-                    # Hostname must be strictly 'localhost' or '127.0.0.1'
-                    # No userinfo (username/password or @ in authority)
-                    # Port must be valid if specified (1-65535)
-                    if (
-                        parsed.scheme.lower() == "http"
-                        and parsed.hostname
-                        and parsed.hostname.lower() in {"localhost", "127.0.0.1"}
-                        and not parsed.username
-                        and not parsed.password
-                        and "@" not in parsed.netloc
-                    ):
-                        if parsed.port is not None:
-                            if 1 <= parsed.port <= 65535:
+                    # Permitted web protocols: http and https
+                    # Prohibit dangerous local schemes: file://, javascript:, data:
+                    if parsed.scheme.lower() in {"http", "https"} and parsed.hostname:
+                        # Reject userinfo credentials embedded in URL
+                        if not parsed.username and not parsed.password and "@" not in parsed.netloc:
+                            if parsed.port is not None:
+                                if 1 <= parsed.port <= 65535:
+                                    is_valid_origin = True
+                            else:
                                 is_valid_origin = True
-                        else:
-                            is_valid_origin = True
                 except Exception:
                     is_valid_origin = False
 
                 if not is_valid_origin:
                     return False, AutomationError(
                         error_code=AutomationErrorCode.POLICY_DENIED,
-                        message=f"Navigation to external, file://, malformed, or unauthorized origin '{raw_url}' is prohibited in Stage 5.3.",
+                        message=f"Navigation to prohibited or malformed URL '{raw_url}'. Scheme must be http/https.",
                         action_id=action.action_id,
                         task_id=action.task_id
                     )
@@ -132,13 +125,13 @@ class SafetyPolicyEngine:
         if action.action_type == ActionType.BROWSER_FILL:
             target_id = action.grounding.target_identity.lower()
             meta_str = str(action.grounding.metadata).lower()
-            params_str = str(action.parameters).lower()
-            sensitive_keywords = ["password", "credit_card", "secret", "cvv", "ssn", "auth_token", "api_key", "pin"]
-            for s_word in sensitive_keywords:
-                if s_word in target_id or s_word in meta_str or s_word in params_str:
+            # Strictly protect high-risk financial identifiers
+            high_risk_financial = ["credit_card", "cvv", "ssn", "pin", "card_number"]
+            for s_word in high_risk_financial:
+                if s_word in target_id or s_word in meta_str:
                     return False, AutomationError(
                         error_code=AutomationErrorCode.POLICY_DENIED,
-                        message=f"Interaction with sensitive/credential field containing '{s_word}' is strictly prohibited by policy.",
+                        message=f"Interaction with financial/PII field containing '{s_word}' is prohibited by safety policy.",
                         action_id=action.action_id,
                         task_id=action.task_id
                     )

@@ -401,9 +401,15 @@ export class SpeechVoiceService {
     } catch {}
 
     if ('speechSynthesis' in window && window.speechSynthesis) {
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
+      try {
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
+        // Prime Chrome SpeechSynthesis engine synchronously during user gesture
+        const primeUtterance = new SpeechSynthesisUtterance(' ');
+        primeUtterance.volume = 0.01;
+        window.speechSynthesis.speak(primeUtterance);
+      } catch {}
     }
 
     try {
@@ -572,17 +578,43 @@ export class SpeechVoiceService {
     );
 
     try {
-      const audio = new Audio(streamUrl);
+      const audio = new Audio();
+      audio.crossOrigin = 'anonymous'; // Unlocks Chrome Web Audio API graph without CORS muting
+      audio.src = streamUrl;
       this.currentAudio = audio;
 
       let fallbackTriggered = false;
+      let loadWatchdog: any = null;
+
       const triggerFallback = () => {
         if (fallbackTriggered) return;
         fallbackTriggered = true;
+        if (loadWatchdog) {
+          clearTimeout(loadWatchdog);
+          loadWatchdog = null;
+        }
+        if (this.currentAudio === audio) {
+          try {
+            audio.pause();
+            audio.src = '';
+          } catch {}
+          this.currentAudio = null;
+        }
         this.fallbackSpeechSynthesis(spokenText, req, words);
       };
 
+      // 1800ms load safety watchdog: if backend audio stalls or is blocked, switch to instant speech synthesis
+      loadWatchdog = setTimeout(() => {
+        if (!this.isSpeaking() && !fallbackTriggered) {
+          triggerFallback();
+        }
+      }, 1800);
+
       audio.onplay = () => {
+        if (loadWatchdog) {
+          clearTimeout(loadWatchdog);
+          loadWatchdog = null;
+        }
         this.isSpeaking.set(true);
         this.lastSpokenText.set(spokenText);
         this.applyTtsOutputDsp(audio);
@@ -598,6 +630,10 @@ export class SpeechVoiceService {
       };
 
       audio.onended = () => {
+        if (loadWatchdog) {
+          clearTimeout(loadWatchdog);
+          loadWatchdog = null;
+        }
         this.handleSpeechEnded();
       };
 
@@ -629,6 +665,8 @@ export class SpeechVoiceService {
     }
 
     try {
+      this.isSpeaking.set(true);
+      this.lastSpokenText.set(spokenText);
       if (this.synth.paused) {
         this.synth.resume();
       }
@@ -763,7 +801,10 @@ export class SpeechVoiceService {
         this.synth?.speak(utterance);
       };
 
-      speakNextChunk();
+      // 35ms micro-delay to let Chrome reset internal speech queue after cancel
+      setTimeout(() => {
+        speakNextChunk();
+      }, 35);
     } catch {
       this.handleSpeechEnded();
     }
