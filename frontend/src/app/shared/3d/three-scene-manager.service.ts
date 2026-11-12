@@ -1816,17 +1816,21 @@ export class ThreeSceneManagerService {
       stationGroup.position.set(pos.x, -4.2, pos.z);
       stationGroup.userData = { agentId: agent.id, agent };
 
-      // Radial Power Conduit connecting Station back to Central Command Hub
+      // Flush Floor Power Conduit connecting Station pad to Citadel perimeter (flat on ground, stops at dais edge)
+      const dist = Math.hypot(pos.x, pos.z);
+      const stopDist = Math.max(1.0, dist - 8.5);
+      const toCenterX = (-pos.x / dist) * stopDist;
+      const toCenterZ = (-pos.z / dist) * stopDist;
       const conduitGeo = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0, 0.1, 0),
-        new THREE.Vector3(-pos.x, 0.4, -pos.z),
+        new THREE.Vector3(0, 0.02, 0),
+        new THREE.Vector3(toCenterX, 0.02, toCenterZ),
       ]);
       const conduitLine = new THREE.Line(
         conduitGeo,
         new THREE.LineBasicMaterial({
           color: agent.hexColor,
           transparent: true,
-          opacity: 0.45,
+          opacity: 0.35,
           blending: THREE.AdditiveBlending,
         })
       );
