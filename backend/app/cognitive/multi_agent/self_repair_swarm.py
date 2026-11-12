@@ -13,6 +13,7 @@ import traceback
 import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime
+from backend.app.cognitive.quantum.quantum_engine import quantum_cognitive_engine
 
 logger = logging.getLogger("abhi.self_repair_swarm")
 
@@ -37,14 +38,21 @@ class AutonomousSelfRepairEngine:
         repair_id = f"repair_{int(start_ts)}_{len(self._repair_history) + 1}"
         logger.info(f"Convening Autonomous Self-Repair Swarm for issue in '{source_component}': {error_message[:80]}")
 
+        # Quantum Cognitive Swarm Entanglement & Error Correction Pass
+        quantum_cognitive_engine.synchronize_swarm_entanglement()
+        repaired_syndromes = {}
+        for aid, spec in quantum_cognitive_engine.specialists.items():
+            repaired_syndromes[aid] = spec.q_register.apply_stabilizer_error_correction()
+        quantum_cognitive_engine.trigger_bell_pair_teleportation()
+
         # 1. Agent 1 (COMMANDER & Lead Architect) — Root Cause Decomposition
         impacted_subsystem = self._identify_subsystem(source_component, error_message, stack_trace)
         deliberation_log = []
         deliberation_log.append({
             "agent_id": "agent_1_commander",
             "agent_name": "COMMANDER",
-            "phase": "TRIAGE & ORCHESTRATION",
-            "message": f"Detected operational friction in '{source_component}'. Subsystem: {impacted_subsystem}. Mobilizing Archon-Forge and Aegis-Critic for collaborative repair."
+            "phase": "QUANTUM STABILIZATION & TRIAGE",
+            "message": f"Quantum stabilizer verified 10 registers (syndrome: {repaired_syndromes.get('agent_1_commander', 0)}). Subsystem: {impacted_subsystem}. Teleporting state to Aegis-Critic for collaborative repair."
         })
 
         # 2. Agent 4 (ARCHON-FORGE & Systems Engineer) — DSA Algorithm Formulation

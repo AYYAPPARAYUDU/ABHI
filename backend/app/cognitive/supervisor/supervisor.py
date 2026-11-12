@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from backend.app.api.websockets.telemetry import manager as ws_manager
 from backend.app.cognitive.planner.models import DAGNode, NodeStatus, TaskDAG
 from backend.app.cognitive.planner.planner import task_planner
+from backend.app.cognitive.quantum.quantum_engine import quantum_cognitive_engine
 from backend.app.cognitive.registry.models import AgentTaskRequest
 from backend.app.cognitive.registry.registry import agent_registry
 from backend.app.cognitive.verification.verifier import dual_state_verifier
@@ -80,6 +81,15 @@ class CentralSupervisor:
         # Persist task record in SQLite
         await memory_repo.create_task(goal=goal, task_id=tid)
         await self._emit_telemetry(tid, "TASK_CREATED", {"goal": goal, "state": "PLANNING"})
+
+        # Quantum Cognitive Swarm Entanglement & Transverse-Field Annealing
+        quantum_cognitive_engine.synchronize_swarm_entanglement()
+        quantum_agents = quantum_cognitive_engine.swarm_annealer.optimize_agent_selection(goal, target_count=3)
+        await self._emit_telemetry(tid, "QUANTUM_SWARM_ENTANGLED", {
+            "swarm_phase": round(quantum_cognitive_engine.swarm_phase, 4),
+            "hyper_register_dim": quantum_cognitive_engine.master_register.dim,
+            "quantum_selected_agents": quantum_agents
+        })
 
         # Spawn asynchronous background orchestration loop
         asyncio.create_task(self._orchestrate_task(tid, goal))
@@ -256,6 +266,18 @@ class CentralSupervisor:
                     node.status = NodeStatus.RUNNING
                     await self._emit_telemetry(task_id, "NODE_STARTED", {"node_id": node.node_id, "title": node.title})
 
+                    # Quantum Cognitive Teleportation Burst to Bell Partner
+                    spec = quantum_cognitive_engine.specialists.get(node.agent_id)
+                    if spec and spec.bell_partner_id:
+                        partner = quantum_cognitive_engine.specialists.get(spec.bell_partner_id)
+                        if partner:
+                            spec.teleport_cognitive_state_to_partner(partner)
+                            await self._emit_telemetry(task_id, "QUANTUM_TELEPORTATION", {
+                                "source_agent": node.agent_id,
+                                "bell_partner": spec.bell_partner_id,
+                                "coherence": spec.coherence_history[-1] if spec.coherence_history else 0.99
+                            })
+
                     req = AgentTaskRequest(
                         task_id=task_id,
                         node_id=node.node_id,
@@ -281,6 +303,11 @@ class CentralSupervisor:
                             "duration_ms": exec_result.execution_duration_ms
                         })
                     else:
+                        # Quantum Error Correction: Stabilizer syndrome repair on cognitive drift
+                        if spec:
+                            syndrome = spec.q_register.apply_stabilizer_error_correction()
+                            logger.info(f"Quantum stabilizer repaired syndrome {syndrome} for agent '{node.agent_id}'")
+
                         node.retry_count += 1
                         if node.retry_count <= node.max_retries and ver_result.retryable:
                             logger.warning(

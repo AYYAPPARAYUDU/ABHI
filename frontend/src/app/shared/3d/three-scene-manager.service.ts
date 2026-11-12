@@ -328,6 +328,7 @@ export class ThreeSceneManagerService {
   }> = new Map();
 
   private interAgentMeshLines: THREE.LineSegments | null = null;
+  private quantumBellLines: THREE.LineSegments | null = null;
   private cachedAgentVectors: THREE.Vector3[] = [];
 
   // 3D Architectural Spatial Volume for Agent Swarm Home
@@ -974,6 +975,20 @@ export class ThreeSceneManagerService {
     });
     this.interAgentMeshLines = new THREE.LineSegments(meshGeo, meshMat);
     this.scene.add(this.interAgentMeshLines);
+
+    // 5 Quantum Bell-State Entanglement Beams linking paired specialist LLMs
+    const bellGeo = new THREE.BufferGeometry();
+    const bellPositions = new Float32Array(5 * 2 * 3);
+    bellGeo.setAttribute('position', new THREE.BufferAttribute(bellPositions, 3));
+    const bellMat = new THREE.LineBasicMaterial({
+      color: 0xa855f7, // Amethyst quantum entanglement glow
+      transparent: true,
+      opacity: 0.0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    this.quantumBellLines = new THREE.LineSegments(bellGeo, bellMat);
+    this.scene.add(this.quantumBellLines);
   }
 
   /**
@@ -2695,6 +2710,10 @@ export class ThreeSceneManagerService {
         this.interAgentMeshLines.visible = false;
         (this.interAgentMeshLines.material as THREE.LineBasicMaterial).opacity = 0;
       }
+      if (this.quantumBellLines) {
+        this.quantumBellLines.visible = false;
+        (this.quantumBellLines.material as THREE.LineBasicMaterial).opacity = 0;
+      }
       this.resetCameraFocus();
     }
   }
@@ -3231,6 +3250,40 @@ export class ThreeSceneManagerService {
           }
         }
 
+        // 8b. Dynamically re-link Quantum Bell-State Entanglement Beams across paired LLMs
+        if (this.quantumBellLines && agentCount >= 10) {
+          const isOrbitExpanded = isDeployed && this.agents().some(a => (this.agentMeshMap.get(a.id)?.currentRadius ?? 0) > 1.8);
+          if (isOrbitExpanded) {
+            this.quantumBellLines.visible = true;
+            const attr = this.quantumBellLines.geometry.attributes['position'] as THREE.BufferAttribute;
+            if (attr) {
+              const arr = attr.array as Float32Array;
+              const bellPairs = [
+                [0, 7], // COMMANDER <-> AEGIS-CRITIC
+                [3, 2], // ARCHON-FORGE <-> NEXUS-COMMS
+                [1, 4], // SYNTHEX-WEB <-> AURA-RESEARCH
+                [5, 6], // SYNAPSE-ML <-> CHRONOS-PLAN
+                [8, 9], // SENTINEL-GUARD <-> DROIDMARK-MOBILE
+              ];
+              let bPtr = 0;
+              bellPairs.forEach(([iA, iB]) => {
+                arr[bPtr++] = this.cachedAgentVectors[iA].x;
+                arr[bPtr++] = this.cachedAgentVectors[iA].y;
+                arr[bPtr++] = this.cachedAgentVectors[iA].z;
+                arr[bPtr++] = this.cachedAgentVectors[iB].x;
+                arr[bPtr++] = this.cachedAgentVectors[iB].y;
+                arr[bPtr++] = this.cachedAgentVectors[iB].z;
+              });
+              attr.needsUpdate = true;
+            }
+            const bellPulse = 0.24 + Math.sin(time * 3.6) * 0.12;
+            (this.quantumBellLines.material as THREE.LineBasicMaterial).opacity = bellPulse;
+          } else {
+            this.quantumBellLines.visible = false;
+            (this.quantumBellLines.material as THREE.LineBasicMaterial).opacity = 0;
+          }
+        }
+
         // 9. Volumetric Energy Columns Pulse & Swarm Architecture
         if (this.volumetricColumns.length > 0) {
           this.volumetricColumns.forEach((col) => {
@@ -3486,6 +3539,9 @@ export class ThreeSceneManagerService {
     });
     if (this.interAgentMeshLines) {
       this.interAgentMeshLines.visible = isHome && deployed;
+    }
+    if (this.quantumBellLines) {
+      this.quantumBellLines.visible = isHome && deployed;
     }
 
     if (this.networkNodeGroup) {
