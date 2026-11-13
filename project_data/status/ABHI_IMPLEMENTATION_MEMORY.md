@@ -2,6 +2,25 @@
 
 ## Verified Architecture & Implementation Status (2026-11-13)
 
+### 000000. Dedicated 3D Canvas on Core & Workspace with Dynamic Clamp Responsiveness & Authentic Treasury (2026-11-13)
+- **Dedicated 3D WebGL Canvas Layer on `/core` and `/workspace`**:
+  - `core-page.component.html` & `core-page.component.ts`: Embedded `<canvas #coreCanvas class="core-webgl-canvas"></canvas>` with `ThreeSceneManagerService.init()`, `setMode('MAIN_AGENT')`, and `ResizeObserver` dynamic camera aspect ratio tracking.
+  - `workspace-page.component.html` & `workspace-page.component.ts`: Embedded `<canvas #workspaceCanvas class="workspace-webgl-canvas"></canvas>` with `ThreeSceneManagerService.init()`, `setMode('WORKSPACE')`, and `ResizeObserver` tracking.
+  - Complete canvas cleanup on `ngOnDestroy` preventing WebGL context leaks.
+- **Dynamic Clamp-Based Responsive Sizing across All Screen Sizes**:
+  - `core-page.component.css`: Replaced fixed pixel widths with `clamp()` units. Floating DP and DL prediction cards dynamically scale from `clamp(210px, 20vw, 300px)` with `max-height: calc(100vh - 170px)` and scrollable inner content, preventing center core overlap.
+  - Floating controls bar and bottom command dock use `clamp(6px, 1vh, 14px)` and `min(720px, 92vw)` to ensure clean fit on 1366x768, 1440x900, and 1920x1080 screens.
+  - `workspace-page.component.css`: Stations compact pill dock, top command HUD, and family council drawers dynamically adapt with zero squishing or horizontal overflow.
+- **Flushed In-Memory Dummy Records & Enforced 100% Real Commercial Banking**:
+  - Cleared uvicorn in-memory cache and restarted daemon (`task-27819`).
+  - Purged fake client generation from `autonomous_ceo.py` and `service.py`.
+  - Verified `GET /api/v1/business/treasury/invoices` returns clean `[]`.
+  - Commercial pipeline (`revenue_pipeline.py`) accepts real commercial orders and settles exclusively to Ravuvai Ayyapparayudu's State Bank of India Account (`41130645649`, IFSC `SBIN0020507`, UPI `ayyapparayudu.5@ybl`) via verified 12-digit Bank UTR reconciliation.
+- **Verification**:
+  - `npm --prefix frontend run build`: Exited 0 with 0 compilation errors.
+  - `pytest backend/tests/test_quantum_cognitive_engine.py`: 9/9 passed.
+  - Committed (`3ce2139`) and pushed to remote `origin autonomous_agent_upgrade`.
+
 ### 00000. 3D Scene Isolation Strictly to Dedicated Pages & Contextual Ambient Backgrounds (2026-11-13)
 - **Eliminated Universal 3D Core Canvas Background Collision**:
   - Previously, `<app-spatial-background>` was mounted in `app-shell.component.html` unconditionally, forcing the heavy 3D WebGL core canvas to render in the background of all views (`/home`, `/business`, `/meeting`, `/media`, etc.).
