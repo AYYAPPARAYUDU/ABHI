@@ -1,3 +1,4 @@
+from backend.app.business.revenue_pipeline import sovereign_revenue_pipeline
 """FastAPI Router for Business Sectors, Autonomous Operations & Revenue Integrity (Phase 9 Stage 3)."""
 
 from typing import Any, Dict, List, Optional
@@ -244,3 +245,54 @@ async def run_b2b_outreach(payload: Optional[Dict[str, Any]] = None) -> Dict[str
     """B2B outreach endpoint in authentic zero-dummy mode."""
     return {"status": "SUCCESS", "message": "B2B pipeline online. Zero dummy invoices generated."}
 
+
+
+# =========================================================================
+# REAL REVENUE PIPELINE & COMMERCIAL WORKFLOWS
+# =========================================================================
+
+@router.get("/pipeline/telemetry")
+async def get_pipeline_telemetry() -> Dict[str, Any]:
+    """Retrieve real-time commercial operations pipeline telemetry."""
+    return sovereign_revenue_pipeline.get_pipeline_telemetry()
+
+
+@router.post("/pipeline/orders")
+async def create_pipeline_order(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Create an authentic commercial order and generate its official tax invoice."""
+    client_name = payload.get("client_name", "").strip()
+    service_description = payload.get("service_description", "").strip()
+    amount_inr = float(payload.get("amount_inr", 0.0))
+    if not client_name or not service_description or amount_inr <= 0:
+        raise HTTPException(status_code=400, detail="client_name, service_description, and positive amount_inr are required.")
+
+    return sovereign_revenue_pipeline.create_real_client_order(
+        client_name=client_name,
+        client_organization=payload.get("client_organization", "Client Organization"),
+        service_type=payload.get("service_type", "CUSTOM_ENGINEERING"),
+        service_description=service_description,
+        amount_inr=amount_inr,
+        client_email=payload.get("client_email")
+    )
+
+
+@router.post("/pipeline/reconcile-utr")
+async def reconcile_pipeline_utr(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Reconcile an authentic payment using Bank 12-digit UTR into State Bank of India account."""
+    utr_number = payload.get("utr_number", "").strip()
+    amount_inr = float(payload.get("amount_inr", 0.0))
+    payer_name = payload.get("payer_name", "Verified Client")
+    invoice_number = payload.get("invoice_number")
+
+    if not utr_number or amount_inr <= 0:
+        raise HTTPException(status_code=400, detail="Valid 12-digit Bank UTR and positive amount are required.")
+
+    try:
+        return sovereign_revenue_pipeline.reconcile_payment_with_utr(
+            utr_number=utr_number,
+            amount_inr=amount_inr,
+            payer_name=payer_name,
+            invoice_number=invoice_number
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

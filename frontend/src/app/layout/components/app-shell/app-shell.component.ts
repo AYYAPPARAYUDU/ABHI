@@ -73,4 +73,18 @@ export class AppShellComponent {
       url.startsWith('/workspace')
     );
   });
+
+  readonly is3DScenePage = computed(() => {
+    const url = this.currentUrl() || '';
+    return url.startsWith('/core') || url.startsWith('/workspace');
+  });
+
+  readonly pageBackgroundClass = computed(() => {
+    const url = this.currentUrl() || '';
+    if (url.startsWith('/business')) return 'bg-business-sovereign';
+    if (url.startsWith('/home') || url === '/' || url === '') return 'bg-home-era';
+    if (url.startsWith('/meeting') || url.startsWith('/council')) return 'bg-meeting-council';
+    if (url.startsWith('/live-console')) return 'bg-live-console';
+    return 'bg-default-obsidian';
+  });
 }

@@ -1,5 +1,12 @@
-<!-- 3D Immersive Spatial Canvas Layer -->
-<app-spatial-background></app-spatial-background>
+<!-- 3D Immersive Spatial Canvas Layer (Dedicated strictly to 3D Core and 3D Workspace) -->
+@if (is3DScenePage()) {
+  <app-spatial-background></app-spatial-background>
+}
+
+<!-- Contextual High-Tech Ambient Background for Other Pages -->
+@if (!is3DScenePage()) {
+  <div class="contextual-page-bg" [ngClass]="pageBackgroundClass()"></div>
+}
 
 <!-- Main Shell Container -->
 <div class="abhi-app-shell" [class.main-agent-shell]="isMainAgent()">

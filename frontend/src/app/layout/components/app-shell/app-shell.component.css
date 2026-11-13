@@ -65,3 +65,50 @@
     padding: 0 !important;
   }
 }
+
+/* Contextual Page Ambient Backgrounds (Non-3D Core pages) */
+.contextual-page-bg {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  transition: background 0.4s ease;
+}
+
+.bg-home-era {
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 85% 85%, rgba(14, 165, 233, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 15% 90%, rgba(99, 102, 241, 0.04) 0%, transparent 50%),
+    #050811;
+}
+
+.bg-business-sovereign {
+  background:
+    radial-gradient(ellipse 70% 45% at 50% -5%, rgba(16, 185, 129, 0.12) 0%, transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(245, 158, 11, 0.05) 0%, transparent 45%),
+    radial-gradient(circle at 20% 80%, rgba(6, 78, 59, 0.08) 0%, transparent 50%),
+    #040a12;
+}
+
+.bg-meeting-council {
+  background:
+    radial-gradient(ellipse 75% 50% at 50% 0%, rgba(139, 92, 246, 0.1) 0%, transparent 65%),
+    radial-gradient(circle at 85% 90%, rgba(244, 63, 94, 0.04) 0%, transparent 50%),
+    #060814;
+}
+
+.bg-live-console {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(0, 240, 255, 0.07) 0%, transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 50%),
+    #030712;
+}
+
+.bg-default-obsidian {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.05) 0%, transparent 50%),
+    #070b14;
+}
