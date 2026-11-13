@@ -2,6 +2,20 @@
 
 ## Verified Architecture & Implementation Status (2026-11-13)
 
+### 000. Master Topbar Single-Row Restoration & Viewport Responsiveness (2026-11-13)
+- **Root Cause & Fix for Vertical Navbar Tower**:
+  - In contextual-topbar.component.html, the center <nav> element had both .clean-main-navbar and .bar-nav-ribbon classes attached, where .bar-nav-ribbon applied lex-wrap: wrap; width: 100%;.
+  - When combined with a wide 450px .topbar-sbi-pill and companion tool buttons in .bar-right, the middle nav had insufficient horizontal width on standard laptop displays, forcing all 9 buttons (Home, Core, Business, Workspace, Live Console, Council, Theme, Brain, Gallery) to wrap onto 9 separate lines, creating a massive 350px tall vertical column in the center of the screen (media_1794556705046_61136d4f.jpg).
+  - Removed .bar-nav-ribbon from <nav> and streamlined .topbar-sbi-pill into a compact badge: 🏛️ SBI: ****5649 · Ravuvai A..
+  - Set :host and .contextual-bar to rigid single-row dimensions: height: 42px; max-height: 42px; flex-direction: row; flex-wrap: nowrap !important; overflow: hidden;.
+  - Enforced .clean-main-navbar as a horizontal flex capsule: lex-direction: row !important; flex-wrap: nowrap !important; height: 32px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none;.
+- **Home Viewport Grid Flex Restoration**:
+  - Fixed :host on home-page.component.css from width: 100vw; height: 100vh; to flexible flex child: width: 100%; height: 100%; flex: 1; min-height: 0; overflow: hidden;.
+  - Converted .era-grid-container from hardcoded height: calc(100vh - 140px); to dynamic flex filling: lex: 1; height: 100%; min-height: 0;.
+  - Updated pp-shell.component.css .workspace-main.main-agent-main to height: calc(100vh - 48px); display: flex; flex-direction: column;.
+  - Verified production build: 
+pm --prefix frontend run build completed with 0 errors. Backend quantum engine tests: 9/9 passed.
+
 ### 00. Era AI VisionOS HUD Overhaul, Deep OS Tab Controls & Sovereign SBI Revenue Engine
 - **Era AI Laptop HUD Overhaul (`frontend/src/app/features/home/`)**:
   - Implemented exact visionOS / Era AI grid layout from laptop screenshot (`media_1794544248089_3ca230d9.jpg`):
