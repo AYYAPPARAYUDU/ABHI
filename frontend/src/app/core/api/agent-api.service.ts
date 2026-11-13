@@ -530,4 +530,33 @@ export class AgentApiService {
       return null;
     }
   }
+
+  /**
+   * Execute one full zero-click autonomous cycle across all 4 intelligence tiers and commercial modules.
+   */
+  async runAutopilotCycle(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/intelligence/autopilot/cycle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Retrieve autonomous autopilot status and recent telemetry.
+   */
+  async getAutopilotStatus(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/intelligence/autopilot/status`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
 }

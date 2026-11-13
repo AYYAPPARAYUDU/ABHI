@@ -32,6 +32,8 @@ export class BusinessPageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly officeData = signal<any>(null);
   readonly selectedWorker = signal<any>(null);
   readonly isOrchestrating = signal<boolean>(false);
+  readonly isAutopilotRunning = signal<boolean>(false);
+  readonly latestAutopilotData = signal<any>(null);
   orchestratorGoal = 'Autonomous Code Quality Audit & AST Security Verification';
   readonly orchestratorResult = signal<any>(null);
   private officePollInterval: any = null;
@@ -173,6 +175,28 @@ export class BusinessPageComponent implements OnInit, OnDestroy, AfterViewInit {
       this.showToast('⚠️ Error in swarm orchestration.');
     } finally {
       this.isOrchestrating.set(false);
+    }
+  }
+
+  async triggerFullAutopilotCycle(): Promise<void> {
+    this.isAutopilotRunning.set(true);
+    this.speechVoice.speak('Engaging full master autopilot cycle across all 4 intelligence tiers and commercial modules, Mamu.');
+    try {
+      const res = await this.agentApi.runAutopilotCycle();
+      if (res) {
+        this.latestAutopilotData.set(res);
+        await Promise.all([
+          this.refreshOfficeData(),
+          this.refreshTreasuryData(),
+          this.refreshAffiliateData(),
+        ]);
+        this.showToast(`✓ Master Autopilot Cycle ${res.cycle_id} completed! Dual-state verified.`);
+        this.speechVoice.speak(`Autopilot cycle completed successfully, Mamu.`);
+      }
+    } catch {
+      this.showToast('Error executing autopilot cycle.');
+    } finally {
+      this.isAutopilotRunning.set(false);
     }
   }
 

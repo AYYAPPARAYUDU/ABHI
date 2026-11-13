@@ -1,0 +1,1008 @@
+<div class="sample-workspace-container" [attr.data-theme]="themeService?.activeTheme()?.id || 'dark'">
+  <!-- Top Ticker Bar -->
+  <div class="top-ticker-bar">
+    <div class="ticker-label">
+      <span class="live-dot"></span>
+      <span class="font-monospace">AGENTIC TELEMETRY:</span>
+    </div>
+    <div class="ticker-scroll-track">
+      @for (item of tickerFeed(); track item.id) {
+        <span class="ticker-chip">
+          <span class="chip-tag font-monospace">[{{ item.tag }}]</span>
+          <span class="chip-time font-monospace">{{ item.time }}</span>
+          <span class="chip-text">{{ item.text }}</span>
+        </span>
+      }
+    </div>
+    <div class="ticker-right-actions">
+      @if (pendingApprovals().length > 0) {
+        <button
+          type="button"
+          class="ticker-alert-btn font-monospace"
+          (click)="openApproval(pendingApprovals()[0])"
+        >
+          <span class="alert-pulse">⚠️</span>
+          <span>APPROVAL REQUIRED ({{ pendingApprovals().length }})</span>
+        </button>
+      }
+      <button
+        type="button"
+        class="ticker-btn"
+        (click)="openMissionModal()"
+        title="Dispatch Mission to Agent Swarm"
+      >
+        <span>⚡</span>
+        <span>Dispatch Mission</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Hero & Navigation Header -->
+  <header class="sample-header">
+    <div class="header-main-row">
+      <div class="header-title-block">
+        <div class="title-badge font-monospace">
+          <span class="badge-icon">🏢</span>
+          <span>OFFICE OF AI AGENTS · REFERENCE ARCHITECTURE</span>
+        </div>
+        <h1 class="header-title">
+          Autonomous Agent Office <span class="title-highlight">& Spatial Workspaces</span>
+        </h1>
+        <p class="header-subtitle">
+          31 Specialised Agents · 8 Autonomous Teams · 10 Interactive Spatial Rooms · 1 Shared Brain
+        </p>
+      </div>
+
+      <!-- Reference Reels Pill Links -->
+      <div class="reels-reference-strip">
+        <div class="reels-label font-monospace">REELS REFERENCE:</div>
+        <a
+          href="https://www.instagram.com/reel/DeV1fyFiA8A/?dlrf=MWdhbW01dDF2a2k1eA=="
+          target="_blank"
+          rel="noopener noreferrer"
+          class="reel-pill-link"
+          title="Reel 1: 8 teams, 31 agents, one shared brain — Watch what happens when I talk to them"
+        >
+          <span class="pill-ic">🎬</span>
+          <div class="pill-text">
+            <span class="pill-title">Reel 1: 31 Agents & 8 Teams</span>
+            <span class="pill-sub">Shared Brain · Parallel Sub-Agents · Safety Gate</span>
+          </div>
+          <span class="external-ic">↗</span>
+        </a>
+
+        <a
+          href="https://www.instagram.com/reel/DfJiHrmipzE/?obrf=MWp1YWloYnowejh6eg=="
+          target="_blank"
+          rel="noopener noreferrer"
+          class="reel-pill-link"
+          title="Reel 2: 10 rooms, 40 people, a game room, and one bathroom stall that is out of order"
+        >
+          <span class="pill-ic">🏢</span>
+          <div class="pill-text">
+            <span class="pill-title">Reel 2: 10 Rooms & 40 People</span>
+            <span class="pill-sub">Walkable Spatial Floor · Game Room · Out-of-Order Stall</span>
+          </div>
+          <span class="external-ic">↗</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Segmented 3-Way Workspace Toggle Switcher -->
+    <div class="workspace-mode-selector">
+      <button
+        type="button"
+        class="mode-toggle-btn"
+        [class.active]="layoutMode() === 'workspace-1'"
+        (click)="onLayoutChange('workspace-1')"
+      >
+        <span class="btn-ic">🏢</span>
+        <div class="btn-copy">
+          <span class="btn-primary-text">Workspace 1: Enterprise Office Grid</span>
+          <span class="btn-sub-text">8 Teams · 31 Agents · Parallel Sub-Agents · Shared Brain</span>
+        </div>
+        @if (layoutMode() === 'workspace-1') {
+          <span class="active-badge font-monospace">ACTIVE</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="mode-toggle-btn"
+        [class.active]="layoutMode() === 'workspace-2'"
+        (click)="onLayoutChange('workspace-2')"
+      >
+        <span class="btn-ic">🎮</span>
+        <div class="btn-copy">
+          <span class="btn-primary-text">Workspace 2: 10-Room Walkable Office</span>
+          <span class="btn-sub-text">10 Rooms · 40 Entities · Game Room · Out-of-Order Stall</span>
+        </div>
+        @if (layoutMode() === 'workspace-2') {
+          <span class="active-badge font-monospace">ACTIVE</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="mode-toggle-btn mode-holo-btn"
+        [class.active]="layoutMode() === 'workspace-3'"
+        (click)="onLayoutChange('workspace-3')"
+      >
+        <span class="btn-ic">🌐</span>
+        <div class="btn-copy">
+          <span class="btn-primary-text">Workspace 3: 3D Holo-Matrix Studio</span>
+          <span class="btn-sub-text">Three.js WebGL Spatial Studio · Orbital Satellites · Live Orbit</span>
+        </div>
+        @if (layoutMode() === 'workspace-3') {
+          <span class="active-badge font-monospace">ACTIVE</span>
+        }
+      </button>
+    </div>
+
+    <!-- Telemetry Statistics Ribbon -->
+    <div class="telemetry-ribbon">
+      <div class="stat-card">
+        <span class="stat-ic">🤖</span>
+        <div class="stat-data">
+          <span class="stat-val font-monospace">{{ agentService.totalAgentCount() }}</span>
+          <span class="stat-lbl">Total Agents</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-ic text-emerald">⚡</span>
+        <div class="stat-data">
+          <span class="stat-val font-monospace text-emerald">{{ agentService.workingAgentCount() }}</span>
+          <span class="stat-lbl">Active & Parallel</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-ic">🏢</span>
+        <div class="stat-data">
+          <span class="stat-val font-monospace">8 / 10</span>
+          <span class="stat-lbl">Teams / Rooms</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-ic">👥</span>
+        <div class="stat-data">
+          <span class="stat-val font-monospace">{{ agentService.totalEntityCount() }}</span>
+          <span class="stat-lbl">Office Entities</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-ic text-cyan">🧠</span>
+        <div class="stat-data">
+          <span class="stat-val font-monospace text-cyan">1,024 Dim</span>
+          <span class="stat-lbl">Shared Brain Vectors</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <span class="stat-ic text-amber">💰</span>
+        <div class="stat-data">
+          <span class="stat-val font-monospace text-amber">{{ agentService.totalTokenSpend() }}</span>
+          <span class="stat-lbl">Today Spend ($10 cap)</span>
+        </div>
+      </div>
+
+      <div class="stat-card" [class.alert]="agentService.pendingApprovalCount() > 0">
+        <span class="stat-ic">{{ agentService.pendingApprovalCount() > 0 ? '⚠️' : '🛡️' }}</span>
+        <div class="stat-data">
+          <span class="stat-val font-monospace" [class.text-rose]="agentService.pendingApprovalCount() > 0">
+            {{ agentService.pendingApprovalCount() }}
+          </span>
+          <span class="stat-lbl">Gatekeeper Approvals</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search & Filter Controls Bar -->
+    <div class="filter-controls-bar">
+      <div class="search-input-wrap">
+        <span class="search-ic">🔍</span>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search 31 agents, roles, tasks, codenames..."
+          [(ngModel)]="searchQuery"
+          (input)="onSearchChange()"
+        />
+        @if (searchQuery) {
+          <button type="button" class="clear-search-btn" (click)="searchQuery = ''; onSearchChange()">✕</button>
+        }
+      </div>
+
+      <div class="filter-select-group">
+        <label class="filter-label">Team:</label>
+        <select class="filter-select" [(ngModel)]="selectedTeam" (change)="onTeamFilterChange()">
+          <option value="all">All 8 Teams</option>
+          @for (t of teams(); track t.id) {
+            <option [value]="t.id">{{ t.icon }} {{ t.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-select-group">
+        <label class="filter-label">Room:</label>
+        <select class="filter-select" [(ngModel)]="selectedRoomFilter" (change)="onRoomFilterChange()">
+          <option value="all">All 10 Rooms</option>
+          @for (r of rooms(); track r.id) {
+            <option [value]="r.id">{{ r.icon }} {{ r.name }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-select-group">
+        <label class="filter-label">Status:</label>
+        <select class="filter-select" [(ngModel)]="selectedStatusFilter" (change)="onStatusFilterChange()">
+          <option value="all">All Statuses</option>
+          <option value="working">Working</option>
+          <option value="parallel">Parallel Run</option>
+          <option value="idle">Idle</option>
+          <option value="awaiting_approval">Awaiting Approval</option>
+        </select>
+      </div>
+
+      <button
+        type="button"
+        class="quick-action-btn"
+        (click)="dispatchPreset('sync-all')"
+        title="Synchronize Shared Brain Across All Agents"
+      >
+        <span>🔄</span>
+        <span>Sync Brain</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================================================= -->
+  <!-- WORKSPACE 1: ENTERPRISE MULTI-AGENT HQ (8 Teams · 31 Agents · Shared Brain)-->
+  <!-- ========================================================================= -->
+  @if (layoutMode() === 'workspace-1') {
+    <section class="workspace-view workspace-grid-view">
+      <!-- Shared Brain Central Terminal Banner -->
+      <div class="shared-brain-banner">
+        <div class="brain-left">
+          <div class="brain-orb-animation">
+            <span class="brain-pulse-ring"></span>
+            <span class="brain-core-glyph">🧠</span>
+          </div>
+          <div class="brain-info">
+            <div class="brain-header-tag font-monospace">CENTRAL VECTOR ARCHITECTURE · MCP BUS</div>
+            <h2 class="brain-title">Shared Brain Context Engine</h2>
+            <p class="brain-desc">
+              All 8 teams and 31 agents synchronize memory through this shared vector store.
+              Research findings automatically trigger script hooks, creative video pipelines, and social posts.
+            </p>
+          </div>
+        </div>
+
+        <div class="brain-metrics">
+          <div class="brain-chip">
+            <span class="chip-k">Vector Dim:</span>
+            <span class="chip-v font-monospace">1,536</span>
+          </div>
+          <div class="brain-chip">
+            <span class="chip-k">Sync Rate:</span>
+            <span class="chip-v font-monospace">120 emb/sec</span>
+          </div>
+          <div class="brain-chip">
+            <span class="chip-k">Active Keys:</span>
+            <span class="chip-v font-monospace">{{ sharedBrain().length }} Memory Slots</span>
+          </div>
+        </div>
+
+        <div class="brain-memory-slots">
+          @for (mem of sharedBrain(); track mem.id) {
+            <div class="memory-pill" [title]="mem.content">
+              <span class="mem-team font-monospace">{{ mem.team }}:</span>
+              <span class="mem-key">{{ mem.key }}</span>
+              <span class="mem-acc font-monospace">({{ mem.accessCount }} hits)</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- 8 Team Pods Grid -->
+      <div class="teams-container">
+        @for (team of teams(); track team.id) {
+          <div class="team-pod-card" [style.border-top-color]="team.color">
+            <div class="team-pod-header">
+              <div class="team-badge" [style.background-color]="team.color + '22'" [style.color]="team.color">
+                <span class="team-icon">{{ team.icon }}</span>
+                <span class="team-name">{{ team.name }}</span>
+              </div>
+              <div class="team-meta font-monospace">
+                <span class="meta-tasks">{{ team.activeTasks }} Active</span>
+                <span class="meta-sep">·</span>
+                <span class="meta-count">{{ team.agentCount }} Agents</span>
+              </div>
+            </div>
+
+            <p class="team-description">{{ team.description }}</p>
+
+            <div class="team-mcp-strip font-monospace">
+              <span class="mcp-label">MCP:</span>
+              @for (mcp of team.mcpIntegrations; track mcp) {
+                <span class="mcp-tag">{{ mcp }}</span>
+              }
+            </div>
+
+            <!-- Agents in this team -->
+            <div class="team-agents-grid">
+              @for (agent of agents(); track agent.id) {
+                @if (agent.teamId === team.id) {
+                  <div
+                    class="agent-card"
+                    [class.selected]="selectedAgent()?.id === agent.id"
+                    [class.working]="agent.status === 'working'"
+                    [class.parallel]="agent.status === 'parallel'"
+                    [class.approval-pending]="agent.status === 'awaiting_approval'"
+                    (click)="selectAgent(agent)"
+                  >
+                    <div class="agent-card-top">
+                      <div class="agent-avatar-box">
+                        <span class="agent-avatar">{{ agent.avatar }}</span>
+                        <span class="agent-status-dot" [attr.data-status]="agent.status"></span>
+                      </div>
+
+                      <div class="agent-info-block">
+                        <div class="agent-name-row">
+                          <span class="agent-name">{{ agent.name }}</span>
+                          <span class="agent-codename font-monospace">{{ agent.codename }}</span>
+                        </div>
+                        <span class="agent-role">{{ agent.role }}</span>
+                      </div>
+
+                      <span class="status-pill font-monospace" [attr.data-status]="agent.status">
+                        {{ agent.status === 'parallel' ? 'PARALLEL' : agent.status.toUpperCase() }}
+                      </span>
+                    </div>
+
+                    <div class="agent-task-snippet">
+                      <span class="task-label font-monospace">TASK:</span>
+                      <span class="task-text">{{ agent.currentTask }}</span>
+                    </div>
+
+                    <!-- Progress bar -->
+                    @if (agent.progress > 0) {
+                      <div class="agent-progress-bar-wrap">
+                        <div class="agent-progress-fill" [style.width.%]="agent.progress"></div>
+                      </div>
+                    }
+
+                    <!-- Sub-Agents parallel list if any (Highlighted from Reel 1!) -->
+                    @if (agent.subAgents.length > 0) {
+                      <div class="sub-agents-strip">
+                        <div class="sub-header font-monospace">
+                          <span>⚡ SUB-AGENTS ({{ agent.subAgents.length }} PARALLEL)</span>
+                        </div>
+                        @for (sub of agent.subAgents; track sub.id) {
+                          <div class="sub-agent-row">
+                            <span class="sub-status font-monospace">[{{ sub.status }}]</span>
+                            <span class="sub-name">{{ sub.name }}</span>
+                            <span class="sub-progress font-monospace">{{ sub.progress }}%</span>
+                          </div>
+                        }
+                      </div>
+                    }
+
+                    <!-- Tools used chips -->
+                    <div class="agent-tools-row">
+                      @for (t of agent.toolsUsed; track t) {
+                        <span class="tool-chip font-monospace">{{ t }}</span>
+                      }
+                    </div>
+
+                    <div class="agent-card-footer">
+                      <div class="footer-cost font-monospace">
+                        <span class="cost-lbl">Cost:</span>
+                        <span class="cost-val">{{ agent.costEstimate }}</span>
+                      </div>
+
+                      <div class="footer-actions">
+                        <button
+                          type="button"
+                          class="agent-action-btn font-monospace"
+                          (click)="triggerAgentTask(agent.id, $event)"
+                          title="Trigger Immediate Task Run"
+                        >
+                          RUN
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- WORKSPACE 2: 10-ROOM WALKABLE SPATIAL OFFICE (Reel 2 Reference)           -->
+  <!-- ========================================================================= -->
+  @if (layoutMode() === 'workspace-2') {
+    <section class="workspace-view spatial-office-view">
+      <div class="spatial-top-bar">
+        <div class="spatial-title-group">
+          <h2 class="spatial-title">Virtual Office Diorama & Floorplan</h2>
+          <p class="spatial-sub">
+            10 Rooms · 40 Entities (Avatars wandering, typing, drinking coffee & gaming) · Click any room or person to inspect
+          </p>
+        </div>
+
+        <div class="spatial-controls">
+          <button
+            type="button"
+            class="spatial-btn"
+            [class.paused]="agentService.isSimulationPaused()"
+            (click)="agentService.toggleSimulationPause()"
+          >
+            {{ agentService.isSimulationPaused() ? '▶ Resume Movement' : '⏸ Pause Movement' }}
+          </button>
+
+          <button
+            type="button"
+            class="spatial-btn"
+            (click)="dispatchPreset('all')"
+          >
+            📢 Trigger Office-Wide All-Hands
+          </button>
+        </div>
+      </div>
+
+      <!-- 10 Rooms Architectural Grid Floorplan -->
+      <div class="office-floorplan-grid">
+        @for (room of rooms(); track room.id) {
+          <div
+            class="office-room-card"
+            [class.out-of-order]="room.isOutOfOrder"
+            [class.selected]="selectedRoom()?.id === room.id"
+            [style.grid-row]="room.gridArea.rowStart + ' / span ' + room.gridArea.rowSpan"
+            [style.grid-column]="room.gridArea.colStart + ' / span ' + room.gridArea.colSpan"
+            [style.border-top-color]="room.themeColor"
+            (click)="selectRoom(room)"
+          >
+            <!-- Out of order caution ribbon for Room 10 -->
+            @if (room.isOutOfOrder) {
+              <div class="caution-tape-banner">
+                <span>⚠️ CAUTION: OUT OF ORDER · DO NOT ENTER · PLUMBER PENDING ⚠️</span>
+              </div>
+            }
+
+            <div class="room-header">
+              <div class="room-title-wrap">
+                <span class="room-icon">{{ room.icon }}</span>
+                <span class="room-name">{{ room.name }}</span>
+                <span class="room-code font-monospace">{{ room.code }}</span>
+              </div>
+
+              <div class="room-occupancy font-monospace">
+                <span class="occupant-count">{{ getRoomOccupantCount(room.id) }}</span> / {{ room.capacity }}
+              </div>
+            </div>
+
+            <!-- Features list -->
+            <div class="room-features-strip">
+              @for (feat of room.features; track feat) {
+                <span class="feature-tag font-monospace">• {{ feat }}</span>
+              }
+            </div>
+
+            <!-- Interactive Stage Area where 40 Avatars Wander & Work -->
+            <div class="room-stage-area">
+              <!-- Special Decor Items per room -->
+              @if (room.id === 'room-gameroom') {
+                <div class="decor-arcade-cabinet" title="Retro Arcade Cabinet">🕹️ ARCADE</div>
+                <div class="decor-pingpong" title="Ping-Pong Table">🏓</div>
+              }
+              @if (room.id === 'room-coffee') {
+                <div class="decor-espresso" title="High-Pressure Espresso Machine">☕ ESPRESSO</div>
+              }
+              @if (room.id === 'room-restroom') {
+                <div class="decor-broken-stall">
+                  <span class="stall-broken-ic">🚫</span>
+                  <span class="stall-water-leak">💧</span>
+                  <span class="stall-bucket">🪣</span>
+                </div>
+              }
+
+              <!-- Occupant Entities / Avatars inside this room -->
+              @for (ent of getEntitiesForRoom(room.id); track ent.id) {
+                <div
+                  class="entity-avatar-node"
+                  [class.facing-left]="ent.facing === 'left'"
+                  [class.selected]="selectedEntity()?.id === ent.id"
+                  [style.left.%]="ent.x"
+                  [style.top.%]="ent.y"
+                  (click)="$event.stopPropagation(); selectEntity(ent)"
+                  [title]="ent.name + ' (' + ent.role + ') — ' + ent.activity"
+                >
+                  <!-- Floating Speech Bubble -->
+                  @if (ent.speechBubble) {
+                    <div class="entity-speech-bubble font-monospace">
+                      <span>{{ ent.speechBubble }}</span>
+                    </div>
+                  }
+
+                  <div class="avatar-glyph-box">
+                    <span class="avatar-icon">{{ ent.avatar }}</span>
+                    <span class="activity-pip" [attr.data-activity]="ent.activity"></span>
+                  </div>
+
+                  <span class="entity-label">{{ ent.name }}</span>
+                </div>
+              }
+            </div>
+
+            <div class="room-footer font-monospace">
+              <span class="click-hint">Click to inspect room telemetry →</span>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- WORKSPACE 3: 3D CYBER-HOLO MATRIX (Three.js WebGL Spatial Studio)         -->
+  <!-- ========================================================================= -->
+  @if (layoutMode() === 'workspace-3') {
+    <section class="workspace-view holo-3d-view">
+      <div class="holo-viewport-container">
+        <!-- Three.js Canvas Element -->
+        <canvas #holoCanvas class="holo-three-canvas"></canvas>
+
+        <!-- 3D Overlay HUD Controls -->
+        <div class="holo-hud-overlay">
+          <div class="hud-top-controls">
+            <div class="hud-pill font-monospace">
+              <span class="hud-dot pulse"></span>
+              <span>THREE.JS WEBGL RENDERER · ISOMETRIC MATRIX</span>
+            </div>
+
+            <div class="camera-presets-group">
+              <button
+                type="button"
+                class="cam-btn font-monospace"
+                [class.active]="cameraPreset() === 'iso'"
+                (click)="setCameraPreset('iso')"
+              >
+                ISOMETRIC 45°
+              </button>
+              <button
+                type="button"
+                class="cam-btn font-monospace"
+                [class.active]="cameraPreset() === 'top'"
+                (click)="setCameraPreset('top')"
+              >
+                TOP-DOWN TACTICAL
+              </button>
+              <button
+                type="button"
+                class="cam-btn font-monospace"
+                [class.active]="cameraPreset() === 'focus'"
+                (click)="setCameraPreset('focus')"
+              >
+                CORE FOCUS
+              </button>
+            </div>
+          </div>
+
+          <div class="hud-center-tip font-monospace">
+            <span>🖱️ Click any floating 3D Agent Satellite to open profile drawer · Scroll to zoom</span>
+          </div>
+
+          <!-- Bottom Telemetry HUD Bar -->
+          <div class="hud-bottom-bar">
+            <div class="hud-stat-box">
+              <span class="hud-stat-lbl font-monospace">SATELLITE ORBIT:</span>
+              <span class="hud-stat-val text-cyan font-monospace">31 Active Nodes</span>
+            </div>
+            <div class="hud-stat-box">
+              <span class="hud-stat-lbl font-monospace">BRAIN CORE SPIN:</span>
+              <span class="hud-stat-val text-purple font-monospace">0.008 rad/frame</span>
+            </div>
+            <div class="hud-stat-box">
+              <span class="hud-stat-lbl font-monospace">SYNAPTIC CONDUITS:</span>
+              <span class="hud-stat-val text-emerald font-monospace">100% Active</span>
+            </div>
+            <button
+              type="button"
+              class="hud-dispatch-btn font-monospace"
+              (click)="openMissionModal()"
+            >
+              DISPATCH 3D MISSION
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: HUMAN-IN-THE-LOOP APPROVAL HUB ("Nothing big goes out without OK") -->
+  <!-- ========================================================================= -->
+  @if (activeApprovalModal(); as app) {
+    <div class="modal-backdrop" (click)="closeApproval()">
+      <div class="approval-modal-window" (click)="$event.stopPropagation()">
+        <div class="modal-header-danger">
+          <div class="modal-header-title">
+            <span class="modal-warn-ic">🛑</span>
+            <div>
+              <div class="modal-tag font-monospace">TIER 3 SAFETY GATE · HUMAN APPROVAL REQUIRED</div>
+              <h3 class="modal-h3">Authorization Request #{{ app.id }}</h3>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeApproval()">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="approval-meta-grid">
+            <div class="meta-item">
+              <span class="meta-k">Agent:</span>
+              <span class="meta-v font-monospace">{{ app.agentName }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-k">Team:</span>
+              <span class="meta-v">{{ app.teamName }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-k">Action:</span>
+              <span class="meta-v font-monospace text-amber">{{ app.action }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-k">Target:</span>
+              <span class="meta-v font-monospace">{{ app.target }}</span>
+            </div>
+          </div>
+
+          <div class="approval-summary-card">
+            <span class="summary-lbl font-monospace">SUMMARY OF INTENDED ACTION:</span>
+            <p class="summary-text">{{ app.summary }}</p>
+          </div>
+
+          @if (app.payloadDiff) {
+            <div class="diff-viewer-card">
+              <div class="diff-header font-monospace">
+                <span>PAYLOAD DIFF / TARGET SPECIFICATION:</span>
+                <span class="risk-badge" [attr.data-risk]="app.riskLevel">RISK: {{ app.riskLevel.toUpperCase() }}</span>
+              </div>
+              <pre class="diff-pre font-monospace"><code>{{ app.payloadDiff }}</code></pre>
+            </div>
+          }
+        </div>
+
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="modal-btn-reject font-monospace"
+            (click)="reject(app.id)"
+          >
+            ✕ REJECT & BLOCK
+          </button>
+
+          <button
+            type="button"
+            class="modal-btn-approve font-monospace"
+            (click)="approve(app.id)"
+          >
+            ✓ APPROVE & AUTHORIZE EXECUTION
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: DISPATCH AGENT MISSION                                             -->
+  <!-- ========================================================================= -->
+  @if (showMissionModal()) {
+    <div class="modal-backdrop" (click)="closeMissionModal()">
+      <div class="mission-modal-window" (click)="$event.stopPropagation()">
+        <div class="mission-modal-header">
+          <div class="modal-header-title">
+            <span class="mission-icon">⚡</span>
+            <div>
+              <div class="modal-tag font-monospace">AUTONOMOUS ORCHESTRATOR</div>
+              <h3 class="modal-h3">Dispatch Mission to Office Agents</h3>
+            </div>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeMissionModal()">✕</button>
+        </div>
+
+        <div class="mission-modal-body">
+          <div class="presets-section">
+            <div class="section-label font-monospace">QUICK DISPATCH PRESETS (FROM REELS REFERENCE):</div>
+            <div class="presets-grid">
+              <button
+                type="button"
+                class="preset-card"
+                (click)="dispatchPreset('github-scan')"
+              >
+                <span class="preset-ic">🔍</span>
+                <div class="preset-info">
+                  <span class="preset-title">Morning GitHub Scan</span>
+                  <span class="preset-sub">Team Research: Scans GitHub trending, ingests READMEs</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                class="preset-card"
+                (click)="dispatchPreset('viral-hook')"
+              >
+                <span class="preset-ic">✍️</span>
+                <div class="preset-info">
+                  <span class="preset-title">Viral Hook Generation</span>
+                  <span class="preset-sub">Team Scripts: 5 curiosity-gap openings for Reels</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                class="preset-card"
+                (click)="dispatchPreset('cut-video')"
+              >
+                <span class="preset-ic">🎬</span>
+                <div class="preset-info">
+                  <span class="preset-title">Auto Video Cut & Subtitles</span>
+                  <span class="preset-sub">Team Creative: Whisper + Silence Cut + Kinetic Text</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                class="preset-card"
+                (click)="dispatchPreset('schedule-social')"
+              >
+                <span class="preset-ic">📢</span>
+                <div class="preset-info">
+                  <span class="preset-title">Social Queue & Schedule</span>
+                  <span class="preset-sub">Team Social: Prepares X thread, YouTube Shorts, Reels</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div class="custom-prompt-section">
+            <div class="section-label font-monospace">OR ENTER CUSTOM NATURAL LANGUAGE MISSION:</div>
+            <textarea
+              class="custom-textarea"
+              rows="3"
+              placeholder="E.g. Analyze top 10 machine learning papers on arXiv, write an engaging script hook, and prepare an isometric diagram..."
+              [(ngModel)]="missionPrompt"
+            ></textarea>
+
+            <div class="target-team-row">
+              <label class="team-label font-monospace">Target Team:</label>
+              <select class="team-select" [(ngModel)]="missionTargetTeam">
+                <option value="all">All 8 Teams (Full Swarm Sync)</option>
+                @for (t of teams(); track t.id) {
+                  <option [value]="t.id">{{ t.icon }} {{ t.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="mission-modal-footer">
+          <button
+            type="button"
+            class="modal-btn-cancel font-monospace"
+            (click)="closeMissionModal()"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="modal-btn-dispatch font-monospace"
+            [disabled]="!missionPrompt.trim()"
+            (click)="submitCustomMission()"
+          >
+            ⚡ Dispatch Swarm Mission
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- DRAWER: SELECTED AGENT PROFILE INSPECTOR                                  -->
+  <!-- ========================================================================= -->
+  @if (selectedAgent(); as agent) {
+    <div class="drawer-backdrop" (click)="closeAgentDrawer()">
+      <div class="agent-drawer-window" (click)="$event.stopPropagation()">
+        <div class="drawer-header">
+          <div class="drawer-header-left">
+            <span class="drawer-avatar">{{ agent.avatar }}</span>
+            <div>
+              <div class="drawer-codename font-monospace">{{ agent.codename }} · {{ agent.teamName }}</div>
+              <h3 class="drawer-name">{{ agent.name }}</h3>
+              <div class="drawer-role">{{ agent.role }}</div>
+            </div>
+          </div>
+          <button type="button" class="drawer-close-btn" (click)="closeAgentDrawer()">✕</button>
+        </div>
+
+        <div class="drawer-body">
+          <div class="drawer-section">
+            <div class="section-title font-monospace">ACTIVE STATUS & WORKFLOW</div>
+            <div class="status-summary-box">
+              <div class="status-badge-row">
+                <span class="status-pill font-monospace" [attr.data-status]="agent.status">
+                  STATUS: {{ agent.status.toUpperCase() }}
+                </span>
+                <span class="room-chip font-monospace">📍 {{ agent.roomName }}</span>
+              </div>
+              <p class="status-msg">{{ agent.statusMessage }}</p>
+              <div class="current-task-box">
+                <span class="task-k font-monospace">CURRENT TASK:</span>
+                <p class="task-v">{{ agent.currentTask }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub-agents in parallel -->
+          @if (agent.subAgents.length > 0) {
+            <div class="drawer-section">
+              <div class="section-title font-monospace">PARALLEL SUB-AGENTS ({{ agent.subAgents.length }})</div>
+              <div class="subagents-list">
+                @for (sub of agent.subAgents; track sub.id) {
+                  <div class="subagent-card">
+                    <div class="sub-header-row">
+                      <span class="sub-title">{{ sub.name }}</span>
+                      <span class="sub-state font-monospace">[{{ sub.status }}]</span>
+                    </div>
+                    <p class="sub-role">{{ sub.role }}</p>
+                    @if (sub.outputSnippet) {
+                      <div class="sub-output font-monospace">{{ sub.outputSnippet }}</div>
+                    }
+                    <div class="sub-prog-wrap">
+                      <div class="sub-prog-bar" [style.width.%]="sub.progress"></div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- MCP Servers & Tools -->
+          <div class="drawer-section">
+            <div class="section-title font-monospace">MCP SERVERS & ACTIVE TOOLS</div>
+            <div class="chips-wrap">
+              @for (tool of agent.toolsUsed; track tool) {
+                <span class="chip-item font-monospace">🛠️ {{ tool }}</span>
+              }
+              @for (mcp of agent.mcpServers; track mcp) {
+                <span class="chip-item font-monospace text-cyan">🔌 MCP: {{ mcp }}</span>
+              }
+            </div>
+          </div>
+
+          <!-- Telemetry & Spend -->
+          <div class="drawer-section">
+            <div class="section-title font-monospace">COMPUTE TELEMETRY</div>
+            <div class="telemetry-grid">
+              <div class="t-box">
+                <span class="t-k">Tokens:</span>
+                <span class="t-v font-monospace">{{ agent.tokensUsed | number }}</span>
+              </div>
+              <div class="t-box">
+                <span class="t-k">Est. Cost:</span>
+                <span class="t-v font-monospace text-amber">{{ agent.costEstimate }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Logs Stream -->
+          <div class="drawer-section">
+            <div class="section-title font-monospace">EXECUTION LOG STREAM</div>
+            <div class="logs-console font-monospace">
+              @for (log of agent.recentLogs; track log.timestamp) {
+                <div class="log-line" [attr.data-level]="log.level">
+                  <span class="log-ts">{{ log.timestamp }}</span>
+                  <span class="log-lvl">[{{ log.level.toUpperCase() }}]</span>
+                  <span class="log-txt">{{ log.text }}</span>
+                  @if (log.toolCall) {
+                    <div class="log-tool-call">→ {{ log.toolCall }}</div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="drawer-footer">
+          <button
+            type="button"
+            class="drawer-btn-run font-monospace"
+            (click)="triggerAgentTask(agent.id)"
+          >
+            ⚡ Trigger Immediate Task Cycle
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- DRAWER: SELECTED ROOM INSPECTOR                                           -->
+  <!-- ========================================================================= -->
+  @if (selectedRoom(); as room) {
+    <div class="drawer-backdrop" (click)="closeRoomDrawer()">
+      <div class="room-drawer-window" (click)="$event.stopPropagation()">
+        <div class="drawer-header" [style.border-top-color]="room.themeColor">
+          <div class="drawer-header-left">
+            <span class="drawer-avatar">{{ room.icon }}</span>
+            <div>
+              <div class="drawer-codename font-monospace">{{ room.code }}</div>
+              <h3 class="drawer-name">{{ room.name }}</h3>
+            </div>
+          </div>
+          <button type="button" class="drawer-close-btn" (click)="closeRoomDrawer()">✕</button>
+        </div>
+
+        <div class="drawer-body">
+          @if (room.isOutOfOrder) {
+            <div class="room-alert-box-out">
+              <span class="alert-icon">⚠️</span>
+              <div>
+                <strong>OFFICIALLY OUT OF ORDER</strong>
+                <p>{{ room.specialNote }}</p>
+              </div>
+            </div>
+          }
+
+          <div class="drawer-section">
+            <div class="section-title font-monospace">ROOM SPECIFICATIONS</div>
+            <p class="room-desc-text">{{ room.description }}</p>
+            <div class="room-specs-list">
+              <div class="spec-row">
+                <span class="spec-k">Capacity:</span>
+                <span class="spec-v font-monospace">{{ room.capacity }} Workstations</span>
+              </div>
+              <div class="spec-row">
+                <span class="spec-k">Current Occupants:</span>
+                <span class="spec-v font-monospace">{{ getRoomOccupantCount(room.id) }} Active</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="drawer-section">
+            <div class="section-title font-monospace">INSTALLED HARDWARE & FEATURES</div>
+            <ul class="features-bullet-list">
+              @for (f of room.features; track f) {
+                <li>{{ f }}</li>
+              }
+            </ul>
+          </div>
+
+          <div class="drawer-section">
+            <div class="section-title font-monospace">OCCUPANTS IN THIS ROOM</div>
+            <div class="occupants-list">
+              @for (ent of getEntitiesForRoom(room.id); track ent.id) {
+                <div class="occupant-item" (click)="selectEntity(ent)">
+                  <span class="ent-ic">{{ ent.avatar }}</span>
+                  <div class="ent-info">
+                    <span class="ent-name">{{ ent.name }}</span>
+                    <span class="ent-role font-monospace">{{ ent.role }}</span>
+                  </div>
+                  <span class="ent-act font-monospace">[{{ ent.activity }}]</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>
+

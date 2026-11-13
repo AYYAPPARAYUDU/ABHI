@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from backend.app.intelligence.four_tier_engine import four_tier_engine
+from backend.app.intelligence.autonomous_autopilot import autonomous_autopilot
 
 router = APIRouter(prefix="/intelligence", tags=["Intelligence & 3D Office"])
 
@@ -61,3 +62,17 @@ async def update_agent_status(req: AgentStatusUpdate) -> Dict[str, Any]:
         worker.set_idle()
 
     return {"status": "SUCCESS", "worker": worker.to_dict()}
+
+
+@router.get("/autopilot/status")
+async def get_autopilot_status() -> Dict[str, Any]:
+    """Retrieve autonomous autopilot status and recent cycle telemetry."""
+    return autonomous_autopilot.get_status()
+
+
+@router.post("/autopilot/cycle")
+async def run_autopilot_cycle() -> Dict[str, Any]:
+    """Execute one full, zero-click autonomous cycle across all 4 intelligence tiers and commercial modules."""
+    return await autonomous_autopilot.run_master_cycle()
+
+

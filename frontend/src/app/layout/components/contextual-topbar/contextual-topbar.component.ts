@@ -84,6 +84,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
   readonly currentRouteTitle = computed(() => {
     const url = this.currentUrl() || this.router.url || '';
     if (url.startsWith('/home') || url === '/') return 'Era AI Sovereign HUD';
+    if (url.startsWith('/sample')) return 'Agent Office & Spatial Workspaces';
     if (url.startsWith('/core')) return '3D Arc Reactor Core';
     if (url.startsWith('/business')) return 'Sovereign Business & SBI';
     if (url.startsWith('/workspace')) return '3D Workspace Colony';

@@ -80,3 +80,17 @@ async def test_virtual_office_telemetry_endpoints():
         res_idle = await client.post("/api/v1/intelligence/agent/status", json=idle_payload)
         assert res_idle.status_code == 200
         assert res_idle.json()["worker"]["status"] == "IDLE"
+
+        # 4. Master Autopilot Execution
+        res_cycle = await client.post("/api/v1/intelligence/autopilot/cycle")
+        assert res_cycle.status_code == 200
+        c_data = res_cycle.json()
+        assert c_data["status"] == "ALL_SYSTEMS_OPTIMAL_DUAL_STATE_VERIFIED"
+        assert "daily_task_memory" in c_data["modules"]
+        assert "revenue_autopilot" in c_data["modules"]
+
+        # 5. Autopilot Status Query
+        res_stat = await client.get("/api/v1/intelligence/autopilot/status")
+        assert res_stat.status_code == 200
+        assert res_stat.json()["total_cycles_completed"] >= 1
+

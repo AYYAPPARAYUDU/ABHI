@@ -2,7 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { getApiUrl } from '../config/api-config';
 
 export type AppLanguage = 'auto' | 'en' | 'te' | 'hi' | 'ta';
-export type SpeechPriority = 'EMERGENCY' | 'DIRECTIVE' | 'SPECIALIST_REPORT' | 'AMBIENT';
+export type SpeechPriority = 'EMERGENCY' | 'DIRECTIVE' | 'SPECIALIST_REPORT' | 'AMBIENT' | 'NOTIFICATION';
 
 export interface SpeechNegotiationRequest {
   id?: string;
@@ -435,6 +435,13 @@ export class SpeechVoiceService {
     });
   }
 
+  /**
+   * Speak a system notification with directive priority.
+   */
+  speakNotification(text: string): void {
+    this.speak(text, false, 'JARVIS', 'J.A.R.V.I.S.', 'DIRECTIVE');
+  }
+
   // Timestamp of the last dispatched speech request (prevents double-triggering)
   private lastSpeechTimestamp = 0;
 
@@ -486,6 +493,7 @@ export class SpeechVoiceService {
     const priorityWeight: Record<SpeechPriority, number> = {
       EMERGENCY: 4,
       DIRECTIVE: 3,
+      NOTIFICATION: 3,
       SPECIALIST_REPORT: 2,
       AMBIENT: 1,
     };

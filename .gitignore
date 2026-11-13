@@ -1,4 +1,6 @@
-# Virtual Environments & Python Cache
+# Temporary files and scratch scripts
+scratch/
+
 .venv/
 venv/
 env/

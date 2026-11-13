@@ -2030,3 +2030,74 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+
+/* ==========================================================================
+   MASTER AUTOPILOT BUTTON & FOUR-TIER COGNITIVE RIBBON
+   ========================================================================== */
+.hq-autopilot-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #00f0ff 0%, #3b82f6 50%, #8b5cf6 100%);
+  border: none;
+  border-radius: 8px;
+  color: #030712;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.hq-autopilot-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 0 24px rgba(0, 240, 255, 0.65);
+}
+
+.hq-autopilot-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.autopilot-four-tier-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 20px;
+  background: rgba(4, 8, 16, 0.95);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.12);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tier-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tier-pill {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+}
+
+.tier-pill.t1 { border-color: rgba(59, 130, 246, 0.4); color: #60a5fa; }
+.tier-pill.t2 { border-color: rgba(16, 185, 129, 0.4); color: #34d399; }
+.tier-pill.t3 { border-color: rgba(245, 158, 11, 0.4); color: #fbbf24; }
+.tier-pill.t4 { border-color: rgba(168, 85, 247, 0.4); color: #c084fc; }
+
+.autopilot-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+}

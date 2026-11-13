@@ -181,6 +181,16 @@
         </div>
 
         <div class="hq-right-meta">
+          <button
+            type="button"
+            class="hq-autopilot-btn font-mono"
+            [disabled]="isAutopilotRunning()"
+            (click)="triggerFullAutopilotCycle()"
+            title="Execute complete zero-click master autopilot loop across all 4 intelligence tiers and commercial modules"
+          >
+            <span class="btn-spin" *ngIf="isAutopilotRunning()">⚙️</span>
+            <span>{{ isAutopilotRunning() ? 'AUTOPILOT RUNNING...' : '⚡ MASTER AUTOPILOT' }}</span>
+          </button>
           <span class="hq-agent-count-pill font-mono">
             <span class="live-dot" [class.pulse]="(officeData()?.working_agents || 0) > 0"></span>
             {{ officeData()?.total_agents || 7 }} agents · {{ officeData()?.working_agents || 0 }} working
@@ -188,6 +198,20 @@
           <button type="button" class="hq-refresh-btn font-mono" (click)="refreshOfficeData()">
             ↻
           </button>
+        </div>
+      </div>
+
+      <!-- Autopilot Status & 4-Stage Cognitive Strip -->
+      <div class="autopilot-four-tier-ribbon font-mono">
+        <div class="tier-badge-group">
+          <span class="tier-pill t1">T1: LLM Standalone ✓</span>
+          <span class="tier-pill t2">T2: Local Vector RAG ✓</span>
+          <span class="tier-pill t3">T3: Physical Agent OS Loop ✓</span>
+          <span class="tier-pill t4">T4: Agentic Swarm Orchestrator ✓</span>
+        </div>
+        <div class="autopilot-meta-item">
+          <span class="m-k">Sovereign Treasury:</span>
+          <span class="m-v text-emerald">SBI ****5649 · ayyapparayudu.5@ybl</span>
         </div>
       </div>
 
