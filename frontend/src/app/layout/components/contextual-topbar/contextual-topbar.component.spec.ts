@@ -38,8 +38,9 @@ describe('ContextualTopbarComponent', () => {
 
   it('should render holographic workspace navigation ribbon', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.bar-nav-ribbon')).toBeTruthy();
-    expect(component.navItems.length).toBeGreaterThanOrEqual(10);
+    expect(compiled.querySelector('.clean-main-navbar')).toBeTruthy();
+    const navButtons = compiled.querySelectorAll('.clean-nav-btn');
+    expect(navButtons.length).toBeGreaterThanOrEqual(10);
   });
 
   it('should render voice audio toggle button and toggle mute', () => {

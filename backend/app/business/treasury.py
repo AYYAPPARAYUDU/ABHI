@@ -77,10 +77,32 @@ class SovereignTreasuryEngine:
         self.settlement_profile = BankSettlementDetails()
         self._invoices: Dict[str, CommercialTaxInvoice] = {}
         self._settlement_history: List[Dict[str, Any]] = []
+        self._last_ledger_mtime = 0.0
         self._load_treasury_state()
+
+    def _check_reload_ledger(self) -> None:
+        """Reload ledger from disk if file was updated externally without latency penalty."""
+        if not self.ledger_file.exists():
+            return
+        try:
+            mtime = self.ledger_file.stat().st_mtime
+            if mtime > self._last_ledger_mtime:
+                self._last_ledger_mtime = mtime
+                with open(self.ledger_file, "r", encoding="utf-8") as f:
+                    raw_history = json.load(f)
+                    seen_tx = set()
+                    self._settlement_history = []
+                    for tx in raw_history:
+                        tx_id = tx.get("transaction_id") or tx.get("invoice_number") or tx.get("utr_number")
+                        if tx_id and tx_id not in seen_tx:
+                            seen_tx.add(tx_id)
+                            self._settlement_history.append(tx)
+        except Exception:
+            pass
 
     def _load_treasury_state(self) -> None:
         """Load persisted invoices and settlement transactions."""
+        self._check_reload_ledger()
         if self.invoices_file.exists():
             try:
                 with open(self.invoices_file, "r", encoding="utf-8") as f:
@@ -246,8 +268,9 @@ class SovereignTreasuryEngine:
 
     def get_financial_overview(self) -> Dict[str, Any]:
         """Compute aggregated lifetime settled revenue, pending pipeline, and invoices."""
+        self._check_reload_ledger()
         total_settled_inr = sum(
-            txn["amount_inr"] for txn in self._settlement_history
+            txn.get("amount_inr", 0.0) for txn in self._settlement_history
             if txn.get("status") == "SETTLED_TO_SBI_ACCOUNT"
         )
         total_pending_inr = sum(
@@ -256,18 +279,22 @@ class SovereignTreasuryEngine:
         )
 
         usd_rate = 87.50
+        recent = list(reversed(self._settlement_history[-30:]))
         return {
             "account_holder": self.settlement_profile.account_holder_name,
             "bank_name": self.settlement_profile.bank_name,
             "account_number_masked": f"****{self.settlement_profile.account_number[-4:]}",
             "ifsc_code": self.settlement_profile.ifsc_code,
+            "settled_revenue_inr": round(total_settled_inr, 2),
             "total_settled_revenue_inr": round(total_settled_inr, 2),
+            "settled_revenue_usd": round(total_settled_inr / usd_rate, 2),
             "total_settled_revenue_usd": round(total_settled_inr / usd_rate, 2),
             "pending_invoices_inr": round(total_pending_inr, 2),
             "pending_invoices_usd": round(total_pending_inr / usd_rate, 2),
             "settled_transactions_count": len(self._settlement_history),
             "invoices_count": len(self._invoices),
             "settlement_currency": "INR",
+            "recent_settlements": recent,
             "last_updated": datetime.now(timezone.utc).isoformat()
         }
 

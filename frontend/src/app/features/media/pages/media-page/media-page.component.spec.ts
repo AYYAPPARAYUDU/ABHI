@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { MediaPageComponent } from './media-page.component';
 import { MediaService } from '../../services/media.service';
 import { of } from 'rxjs';
@@ -12,7 +13,7 @@ describe('MediaPageComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [MediaPageComponent, HttpClientTestingModule],
-      providers: [MediaService],
+      providers: [MediaService, provideRouter([])],
     }).compileComponents();
 
     mediaService = TestBed.inject(MediaService);

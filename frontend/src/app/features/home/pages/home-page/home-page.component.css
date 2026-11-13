@@ -7,8 +7,8 @@
   min-height: 0;
   overflow: hidden;
   position: relative;
-  background: #080c14;
-  color: #e2e8f0;
+  background: var(--abhi-bg, #080c14);
+  color: var(--abhi-text-primary, #e2e8f0);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   user-select: none;
 }
@@ -234,21 +234,22 @@
 
 /* Common Card Styling (Neumorphic Glass HUD) */
 .era-card {
-  background: rgba(13, 19, 33, 0.88);
+  background: var(--abhi-surface-glass, rgba(13, 19, 33, 0.88));
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.08));
+  border-radius: 12px;
   padding: 12px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: var(--abhi-raised-shadow, 0 6px 24px rgba(0, 0, 0, 0.45));
   position: relative;
-  transition: border-color 0.2s ease;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
 }
 
 .era-card:hover {
-  border-color: rgba(0, 240, 255, 0.25);
+  border-color: var(--abhi-border-active, rgba(0, 240, 255, 0.35));
+  transform: translateY(-2px);
 }
 
 .card-header {
@@ -584,16 +585,98 @@
 .map-viewport-wrapper {
   position: relative;
   flex: 1;
-  border-radius: 6px;
+  min-height: 180px;
+  border-radius: 8px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.08));
+  background: var(--abhi-bg-base, #030712);
 }
 
 .osm-map-frame {
   width: 100%;
   height: 100%;
+  min-height: 180px;
   border: none;
-  filter: contrast(1.1) brightness(0.9);
+  filter: contrast(1.05) brightness(0.95);
+}
+
+/* High-Tech Animated Radar Overlay */
+.radar-scope-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+.radar-crosshair-h {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(0, 240, 255, 0.22);
+}
+
+.radar-crosshair-v {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(0, 240, 255, 0.22);
+}
+
+.radar-sweep-beam {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160px;
+  height: 160px;
+  margin-top: -80px;
+  margin-left: -80px;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 240, 255, 0.35);
+  background: conic-gradient(from 0deg, rgba(0, 240, 255, 0.18) 0deg, transparent 90deg);
+  animation: radarSweep 6s linear infinite;
+}
+
+@keyframes radarSweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.radar-ping-beacon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.beacon-core {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 12px #10b981;
+}
+
+.beacon-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(16, 185, 129, 0.7);
+  animation: beaconPulse 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.beacon-ring.ring-1 { width: 28px; height: 28px; animation-delay: 0s; }
+.beacon-ring.ring-2 { width: 48px; height: 48px; animation-delay: 0.8s; }
+
+@keyframes beaconPulse {
+  0% { transform: scale(0.3); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
 }
 
 .map-overlay-badge {
@@ -601,47 +684,92 @@
   bottom: 6px;
   left: 6px;
   right: 6px;
-  background: rgba(10, 15, 26, 0.88);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 240, 255, 0.25);
-  border-radius: 6px;
-  padding: 4px 8px;
+  background: var(--abhi-surface-glass, rgba(10, 15, 26, 0.92));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--abhi-border-active, rgba(0, 240, 255, 0.3));
+  border-radius: 8px;
+  padding: 8px 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 9px;
+  gap: 10px;
+  font-size: 10px;
   z-index: 10;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
 }
 
 .loc-pin-icon {
-  font-size: 14px;
+  font-size: 16px;
+  animation: bouncePin 2s infinite ease-in-out;
+}
+
+@keyframes bouncePin {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 .loc-text-group {
   flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 2px;
+}
+
+.loc-headline-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .loc-address {
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--abhi-text-primary, #ffffff);
+}
+
+.loc-isp-badge {
+  font-size: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #10b981;
   font-weight: 600;
-  color: #f1f5f9;
 }
 
 .loc-coords {
-  font-size: 8px;
+  font-size: 9px;
+  color: var(--abhi-cyan, #00f0ff);
+}
+
+.loc-links-group {
+  display: flex;
+  gap: 6px;
 }
 
 .btn-view-map-pill {
-  padding: 2px 6px;
+  padding: 4px 8px;
   background: rgba(0, 240, 255, 0.15);
-  border: 1px solid rgba(0, 240, 255, 0.35);
-  border-radius: 4px;
-  color: #00f0ff;
+  border: 1px solid rgba(0, 240, 255, 0.45);
+  border-radius: 6px;
+  color: var(--abhi-cyan, #00f0ff);
   text-decoration: none;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 700;
   white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-view-map-pill:hover {
+  background: rgba(0, 240, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-view-map-pill.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: var(--abhi-text-primary, #f8fafc);
 }
 
 /* Transcription Card (Chat Stream) */

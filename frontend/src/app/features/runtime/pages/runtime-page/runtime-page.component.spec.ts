@@ -1,5 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 import { RuntimePageComponent } from './runtime-page.component';
 import { RuntimeService } from '../../services/runtime.service';
 
@@ -9,6 +11,8 @@ describe('RuntimePageComponent', () => {
   let runtimeServiceMock: Partial<RuntimeService>;
 
   beforeEach(async () => {
+    TestBed.resetTestingModule();
+
     runtimeServiceMock = {
       state: signal({
         current_mode: 'ARMED',
@@ -59,6 +63,8 @@ describe('RuntimePageComponent', () => {
     await TestBed.configureTestingModule({
       imports: [RuntimePageComponent],
       providers: [
+        provideHttpClient(),
+        provideRouter([]),
         { provide: RuntimeService, useValue: runtimeServiceMock }
       ]
     }).compileComponents();

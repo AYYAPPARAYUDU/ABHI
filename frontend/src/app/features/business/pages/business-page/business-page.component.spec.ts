@@ -26,27 +26,26 @@ describe('BusinessPageComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should render revenue & ledger observatory with honest disclaimers', () => {
+  it('should render sovereign treasury and settlement observatory', () => {
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('REVENUE & LEDGER OBSERVATORY');
-    expect(compiled.textContent).toContain('Forecast only — not actual earnings');
+    expect(compiled.textContent).toContain('State Bank of India');
   });
 
   it('should toggle workspace perspective tabs cleanly', () => {
-    expect(component.activeTab()).toBe('all');
-    component.setWorkspaceTab('sectors');
-    expect(component.activeTab()).toBe('sectors');
-    component.setWorkspaceTab('financials');
-    expect(component.activeTab()).toBe('financials');
+    expect(component.activeTab()).toBe('office');
+    component.setActiveTab('overview');
+    expect(component.activeTab()).toBe('overview');
+    component.setActiveTab('receipts');
+    expect(component.activeTab()).toBe('receipts');
   });
 
   it('should toggle modals cleanly', () => {
-    expect(component.showNewProjModal()).toBe(false);
-    component.showNewProjModal.set(true);
-    expect(component.showNewProjModal()).toBe(true);
+    expect(component.showUtrModal()).toBe(false);
+    component.showUtrModal.set(true);
+    expect(component.showUtrModal()).toBe(true);
 
-    expect(component.showNewOppModal()).toBe(false);
-    component.showNewOppModal.set(true);
-    expect(component.showNewOppModal()).toBe(true);
+    expect(component.showCreateInvoiceModal()).toBe(false);
+    component.showCreateInvoiceModal.set(true);
+    expect(component.showCreateInvoiceModal()).toBe(true);
   });
 });

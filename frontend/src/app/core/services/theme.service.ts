@@ -347,11 +347,31 @@ export class ThemeService {
     root.style.setProperty('--abhi-danger', c.error);
 
     if (isLight) {
-      root.style.setProperty('--abhi-raised-shadow', '0 10px 25px -4px rgba(11, 19, 41, 0.07), 0 4px 10px -2px rgba(11, 19, 41, 0.04), 0 0 0 1px rgba(11, 19, 41, 0.06)');
-      root.style.setProperty('--abhi-inset-shadow', 'inset 2px 2px 6px rgba(11, 19, 41, 0.06), inset -2px -2px 6px rgba(255, 255, 255, 0.85)');
-      root.style.setProperty('--abhi-glow-bg', 'radial-gradient(circle at 50% 50%, rgba(0, 153, 204, 0.12) 0%, rgba(245, 247, 251, 0.65) 65%, #f5f7fb 100%)');
+      root.style.setProperty('--abhi-surface-glass', 'rgba(255, 255, 255, 0.82)');
+      root.style.setProperty('--abhi-surface-card', '#ffffff');
+      root.style.setProperty('--abhi-bg-surface-glass', 'rgba(255, 255, 255, 0.85)');
+      root.style.setProperty('--abhi-bg-surface-card', '#ffffff');
+      root.style.setProperty('--abhi-text-heading', '#0b1329');
+      root.style.setProperty('--abhi-border-subtle', 'rgba(11, 19, 41, 0.08)');
+      root.style.setProperty('--abhi-border-medium', 'rgba(11, 19, 41, 0.16)');
+      root.style.setProperty('--abhi-card-bg', '#ffffff');
+      root.style.setProperty('--abhi-card-border', 'rgba(11, 19, 41, 0.08)');
+      root.style.setProperty('--abhi-card-text', '#0b1329');
+      root.style.setProperty('--abhi-raised-shadow', '0 8px 24px -4px rgba(11, 19, 41, 0.07), 0 2px 8px -2px rgba(11, 19, 41, 0.04), 0 0 0 1px rgba(11, 19, 41, 0.06)');
+      root.style.setProperty('--abhi-inset-shadow', 'inset 2px 2px 6px rgba(11, 19, 41, 0.05), inset -2px -2px 6px rgba(255, 255, 255, 0.9)');
+      root.style.setProperty('--abhi-glow-bg', 'radial-gradient(circle at 50% 50%, rgba(0, 153, 204, 0.08) 0%, rgba(245, 247, 251, 0.7) 65%, #f5f7fb 100%)');
       root.style.setProperty('--abhi-rim-vignette', 'radial-gradient(circle at 50% 50%, transparent 60%, rgba(220, 228, 240, 0.45) 85%, rgba(210, 220, 235, 0.7) 100%)');
     } else {
+      root.style.setProperty('--abhi-surface-glass', 'rgba(13, 24, 46, 0.75)');
+      root.style.setProperty('--abhi-surface-card', c.surfaceRaised);
+      root.style.setProperty('--abhi-bg-surface-glass', 'rgba(13, 24, 46, 0.75)');
+      root.style.setProperty('--abhi-bg-surface-card', c.surfaceRaised);
+      root.style.setProperty('--abhi-text-heading', '#ffffff');
+      root.style.setProperty('--abhi-border-subtle', c.border);
+      root.style.setProperty('--abhi-border-medium', c.borderActive);
+      root.style.setProperty('--abhi-card-bg', c.surfaceRaised);
+      root.style.setProperty('--abhi-card-border', c.border);
+      root.style.setProperty('--abhi-card-text', c.textPrimary);
       root.style.setProperty('--abhi-raised-shadow', '12px 12px 28px rgba(0, 0, 0, 0.55), -6px -6px 20px rgba(0, 240, 255, 0.04)');
       root.style.setProperty('--abhi-inset-shadow', 'inset 4px 4px 12px rgba(0, 0, 0, 0.50), inset -3px -3px 8px rgba(0, 240, 255, 0.06)');
       root.style.setProperty('--abhi-glow-bg', 'radial-gradient(ellipse at 50% 48%, rgba(0, 240, 255, 0.09) 0%, rgba(168, 85, 247, 0.04) 30%, rgba(6, 11, 24, 0.9) 65%, #030712 100%)');

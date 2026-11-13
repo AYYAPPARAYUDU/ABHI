@@ -140,17 +140,16 @@
     <!-- COLUMN 2: LIVE LOCATION MAP & REAL-TIME TRANSCRIPTION FEED            -->
     <!-- --------------------------------------------------------------------- -->
     <section class="era-col col-center" aria-label="Live Geolocation Map & Dialogue Feed">
-      <!-- 2.1 Live Location Card (Matching Laptop Photo Exactly) -->
-      <div class="era-card card-location">
+      <!-- 2.1 Live Location Card (100% Real Physical Workstation Fix) -->
+      <div class="era-card card-location card-landing card-stagger-2">
         <div class="card-header">
           <div class="header-tag">
-            <span class="tag-dot emerald"></span>
-            <span class="tag-title font-monospace">LIVE LOCATION</span>
+            <span class="tag-dot emerald pulse-glow"></span>
+            <span class="tag-title font-monospace">PHYSICAL WORKSTATION LOCATION</span>
           </div>
           <div class="header-controls-group">
-            <button type="button" class="btn-loc-ctrl" (click)="refreshLocation()">START</button>
-            <button type="button" class="btn-loc-ctrl" (click)="refreshLocation()">RELOAD</button>
-            <button type="button" class="btn-loc-ctrl" (click)="refreshLocation()">RECENTER</button>
+            <button type="button" class="btn-loc-ctrl" (click)="refreshLocation()" title="Refresh live GPS / ISP geolocation">↻ REFRESH FIX</button>
+            <button type="button" class="btn-loc-ctrl" (click)="refreshLocation()" title="Recenter target coords">🎯 RECENTER</button>
           </div>
         </div>
 
@@ -163,21 +162,48 @@
             scrolling="no"
           ></iframe>
 
+          <!-- High-Tech Animated Radar Scope Layer -->
+          <div class="radar-scope-overlay pointer-none">
+            <div class="radar-crosshair-h"></div>
+            <div class="radar-crosshair-v"></div>
+            <div class="radar-sweep-beam"></div>
+            <div class="radar-ping-beacon">
+              <span class="beacon-ring ring-1"></span>
+              <span class="beacon-ring ring-2"></span>
+              <span class="beacon-core"></span>
+            </div>
+          </div>
+
           <!-- Location HUD Overlay Info Overlay on Map -->
           <div class="map-overlay-badge font-monospace">
             <div class="loc-pin-icon">📍</div>
             <div class="loc-text-group">
-              <span class="loc-address">{{ locationData().address }}</span>
-              <span class="loc-coords text-cyan">{{ locationData().lat }}°N, {{ locationData().lng }}°E // {{ locationData().city }}, {{ locationData().country }}</span>
+              <div class="loc-headline-row">
+                <span class="loc-address font-bold text-white">{{ locationData().city }}, {{ locationData().region }}, {{ locationData().country }}</span>
+                <span class="loc-isp-badge">{{ locationData().isp }}</span>
+              </div>
+              <span class="loc-coords text-cyan">{{ locationData().lat }}°N, {{ locationData().lng }}°E // Timezone: {{ locationData().timezone }}</span>
             </div>
-            <a
-              [href]="'https://www.openstreetmap.org/?mlat=' + locationData().lat + '&mlon=' + locationData().lng"
-              target="_blank"
-              rel="noopener"
-              class="btn-view-map-pill font-monospace"
-            >
-              VIEW ON MAP ↗
-            </a>
+            <div class="loc-links-group">
+              <a
+                [href]="'https://maps.google.com/?q=' + locationData().lat + ',' + locationData().lng"
+                target="_blank"
+                rel="noopener"
+                class="btn-view-map-pill font-monospace"
+                title="View physical pin on Google Maps"
+              >
+                GOOGLE MAPS ↗
+              </a>
+              <a
+                [href]="'https://www.openstreetmap.org/?mlat=' + locationData().lat + '&mlon=' + locationData().lng"
+                target="_blank"
+                rel="noopener"
+                class="btn-view-map-pill font-monospace secondary"
+                title="View on OpenStreetMap"
+              >
+                OSM ↗
+              </a>
+            </div>
           </div>
         </div>
       </div>
