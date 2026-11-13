@@ -52,22 +52,20 @@
       </div>
 
       <!-- SBI Sovereign Settlement Pill -->
-      <a routerLink="/business" class="topbar-sbi-pill font-monospace" title="Click to view Sovereign Business & State Bank of India Settlement Ledger">
+      <a routerLink="/business" class="topbar-sbi-pill font-monospace" title="Click to view Sovereign Business & State Bank of India Settlement Ledger (ayyapparayudu.5@ybl)">
         <span class="sbi-ic">🏛️</span>
         <span class="sbi-acc text-cyan">SBI: ****5649</span>
-        <span class="sbi-sep">|</span>
-        <span class="sbi-name">Ravuvai Ayyapparayudu</span>
-        <span class="sbi-sep">|</span>
-        <span class="sbi-rev text-emerald">UPI: ayyapparayudu.5@ybl</span>
+        <span class="sbi-sep">·</span>
+        <span class="sbi-name">Ravuvai A.</span>
       </a>
     </div>
 
     <!-- Center: Clean Primary Navbar with Direct Access to All Main Subsystems -->
-    <nav class="clean-main-navbar bar-nav-ribbon" role="navigation" aria-label="Main System Navigation">
+    <nav class="clean-main-navbar" role="navigation" aria-label="Main System Navigation">
       <!-- 1. Home (Era AI VisionOS HUD) -->
       <a
         routerLink="/home"
-        class="clean-nav-btn ribbon-btn"
+        class="clean-nav-btn"
         [class.active]="isActive('/home')"
         title="Era AI Sovereign HUD & Geolocation Command Center"
       >
@@ -81,7 +79,7 @@
       <!-- 2. 3D Core (Arc Reactor Intelligence Core) -->
       <a
         routerLink="/core"
-        class="clean-nav-btn ribbon-btn core-nav-btn"
+        class="clean-nav-btn core-nav-btn"
         [class.active]="isActive('/core')"
         title="Living 3D Arc Reactor Intelligence Core, Singularity & DP/DL Predictor"
       >
@@ -95,7 +93,7 @@
       <!-- 3. Business (SBI Revenue & Sovereign Commercial Ledger) -->
       <a
         routerLink="/business"
-        class="clean-nav-btn ribbon-btn business-nav-btn"
+        class="clean-nav-btn business-nav-btn"
         [class.active]="isActive('/business')"
         title="Sovereign Commercial Business, 3D LLM Constellation & SBI Invoicing (ayyapparayudu.5@ybl)"
       >
@@ -109,7 +107,7 @@
       <!-- 4. Workspace (3D Colony with Stable Specialist LLMs) -->
       <a
         routerLink="/workspace"
-        class="clean-nav-btn ribbon-btn"
+        class="clean-nav-btn"
         [class.active]="isActive('/workspace')"
         title="3D Autonomous Spatial Workspace & Stationary Specialist LLM Stations"
       >
@@ -123,7 +121,7 @@
       <!-- 5. Live Console -->
       <a
         routerLink="/live-console"
-        class="clean-nav-btn ribbon-btn live-console-btn"
+        class="clean-nav-btn live-console-btn"
         [class.active]="isActive('/live-console')"
         title="Antigravity Live Swarm, Code Stream & Daily Evolution Console"
       >
@@ -137,7 +135,7 @@
       <!-- 6. Sovereign Council Meeting (Zoom Multi-LLM Boardroom) -->
       <a
         routerLink="/meeting"
-        class="clean-nav-btn ribbon-btn council-meeting-btn"
+        class="clean-nav-btn council-meeting-btn"
         [class.active]="isActive('/meeting')"
         title="Multi-LLM Sovereign Zoom Council Meeting with Face Gate & Real-time Deliberation"
       >
@@ -148,10 +146,10 @@
         }
       </a>
 
-      <!-- 3. Theme Changer -->
+      <!-- 7. Theme Changer -->
       <button
         type="button"
-        class="clean-nav-btn theme-nav-btn ribbon-btn"
+        class="clean-nav-btn theme-nav-btn"
         (click)="cycleTheme($event)"
         [title]="'Cycle Theme: ' + themeService.activeTheme().label + ' (Click to Switch)'"
       >
@@ -160,10 +158,10 @@
         <span class="theme-tag font-monospace">{{ themeService.activeTheme().label }}</span>
       </button>
 
-      <!-- 4. Brain -->
+      <!-- 8. Brain -->
       <button
         type="button"
-        class="clean-nav-btn brain-nav-btn ribbon-btn"
+        class="clean-nav-btn brain-nav-btn"
         (click)="assistantService.openModal()"
         [title]="'3D Holographic Brain & Communications Assistant: ' + (assistantService.brainStatus()?.version || 'Ready')"
       >
@@ -174,11 +172,11 @@
         }
       </button>
 
-      <!-- 5. Gallery -->
+      <!-- 9. Gallery -->
       <a
         routerLink="/media"
         [queryParams]="{ tab: 'vault' }"
-        class="clean-nav-btn gallery-nav-btn ribbon-btn"
+        class="clean-nav-btn gallery-nav-btn"
         [class.active]="isActive('/media')"
         title="Media & Security Vault Gallery (Generated Images, Videos & Intruder Snapshots)"
       >
