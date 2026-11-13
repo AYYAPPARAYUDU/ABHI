@@ -127,6 +127,81 @@ export const EMERALD_MATRIX_THEME: AbhiTheme = {
   }
 };
 
+export const ARDENA_CRIMSON_THEME: AbhiTheme = {
+  id: 'ardena-crimson',
+  label: 'Ardena Sunset Crimson',
+  isCustom: false,
+  colors: {
+    background: '#0e1013',
+    backgroundSecondary: '#15181e',
+    surfaceRaised: '#1c2027',
+    surfaceInset: '#0a0b0d',
+    textPrimary: '#f8fafc',
+    textSecondary: '#9ca3af',
+    textMuted: '#6b7280',
+    accentPrimary: '#ff4d4d',
+    accentSecondary: '#ff7849',
+    coreGlow: '#ff4d4d',
+    networkLine: '#ff6b6b',
+    active: '#ff4d4d',
+    border: 'rgba(255, 77, 77, 0.22)',
+    borderActive: 'rgba(255, 77, 77, 0.65)',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444'
+  }
+};
+
+export const OMBRIA_SLATE_THEME: AbhiTheme = {
+  id: 'ombria-slate',
+  label: 'Ombria Titanium Slate',
+  isCustom: false,
+  colors: {
+    background: '#131518',
+    backgroundSecondary: '#1a1d22',
+    surfaceRaised: '#23272e',
+    surfaceInset: '#0e1012',
+    textPrimary: '#f3f4f6',
+    textSecondary: '#cbd5e1',
+    textMuted: '#94a3b8',
+    accentPrimary: '#f59e0b',
+    accentSecondary: '#fbbf24',
+    coreGlow: '#f59e0b',
+    networkLine: '#e2e8f0',
+    active: '#f59e0b',
+    border: 'rgba(255, 255, 255, 0.12)',
+    borderActive: 'rgba(245, 158, 11, 0.55)',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444'
+  }
+};
+
+export const SAPPHIRE_SAAS_THEME: AbhiTheme = {
+  id: 'sapphire-saas',
+  label: 'Sapphire Midnight SaaS',
+  isCustom: false,
+  colors: {
+    background: '#050914',
+    backgroundSecondary: '#0a1226',
+    surfaceRaised: '#101e3d',
+    surfaceInset: '#040710',
+    textPrimary: '#f0f6fc',
+    textSecondary: '#93c5fd',
+    textMuted: '#60a5fa',
+    accentPrimary: '#38bdf8',
+    accentSecondary: '#3b82f6',
+    coreGlow: '#0ea5e9',
+    networkLine: '#38bdf8',
+    active: '#0284c7',
+    border: 'rgba(56, 189, 248, 0.22)',
+    borderActive: 'rgba(56, 189, 248, 0.55)',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444'
+  }
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -135,9 +210,12 @@ export class ThemeService {
 
   readonly availablePresets: AbhiTheme[] = [
     OBSIDIAN_CYAN_THEME,
+    QUANTUM_WHITE_THEME,
+    ARDENA_CRIMSON_THEME,
+    OMBRIA_SLATE_THEME,
+    SAPPHIRE_SAAS_THEME,
     MIDNIGHT_AMETHYST_THEME,
-    EMERALD_MATRIX_THEME,
-    QUANTUM_WHITE_THEME
+    EMERALD_MATRIX_THEME
   ];
 
   readonly currentTheme = signal<AbhiTheme>(OBSIDIAN_CYAN_THEME);
@@ -168,6 +246,12 @@ export class ThemeService {
           this.currentTheme.set(QUANTUM_WHITE_THEME);
         } else if (parsed.id === 'obsidian-cyan') {
           this.currentTheme.set(OBSIDIAN_CYAN_THEME);
+        } else if (parsed.id === 'ardena-crimson') {
+          this.currentTheme.set(ARDENA_CRIMSON_THEME);
+        } else if (parsed.id === 'ombria-slate') {
+          this.currentTheme.set(OMBRIA_SLATE_THEME);
+        } else if (parsed.id === 'sapphire-saas') {
+          this.currentTheme.set(SAPPHIRE_SAAS_THEME);
         } else if (parsed.id === 'midnight-amethyst') {
           this.currentTheme.set(MIDNIGHT_AMETHYST_THEME);
         } else if (parsed.id === 'emerald-matrix') {

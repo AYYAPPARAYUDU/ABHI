@@ -693,5 +693,117 @@ html, body {
   }
 }
 
+/* ==========================================================================
+   MODERN DASHBOARD ANIMATIONS & RESPONSIVE GRID (FROM DESIGN REELS)
+   ========================================================================== */
+
+/* 1. GSAP / Anime-Style Card Landing Animation (from Investor Desk reel) */
+@keyframes landCardIn {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.card-landing {
+  animation: landCardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.card-stagger-1 { animation-delay: 0.05s; }
+.card-stagger-2 { animation-delay: 0.1s; }
+.card-stagger-3 { animation-delay: 0.15s; }
+.card-stagger-4 { animation-delay: 0.2s; }
+.card-stagger-5 { animation-delay: 0.25s; }
+
+/* 2. Trailing-Edge Sliding Pill Navigation (from SaaS Revenue reel) */
+.sliding-pill-nav {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: var(--abhi-surface-inset, rgba(10, 15, 26, 0.85));
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.1));
+  border-radius: 9999px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.sliding-pill-btn {
+  position: relative;
+  z-index: 2;
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--abhi-text-muted, #94a3b8);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: color 0.25s ease, transform 0.18s ease;
+  white-space: nowrap;
+}
+
+.sliding-pill-btn:hover {
+  color: var(--abhi-text-primary, #ffffff);
+  transform: translateY(-1px);
+}
+
+.sliding-pill-btn.active {
+  color: #ffffff;
+  background: var(--abhi-cyan, #00f0ff);
+  box-shadow: 0 0 16px var(--abhi-border-active, rgba(0, 240, 255, 0.5));
+}
+
+/* 3. Modern Tactile Neumorphic & Glass Surface */
+.neumorphic-panel {
+  background: var(--abhi-surface, rgba(13, 24, 46, 0.85));
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.08));
+  border-radius: 18px;
+  box-shadow: var(--abhi-raised-shadow, 0 10px 30px rgba(0, 0, 0, 0.4));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neumorphic-panel:hover {
+  border-color: var(--abhi-border-active, rgba(0, 240, 255, 0.35));
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 20px rgba(var(--abhi-cyan), 0.15);
+}
+
+/* 4. Fluid Multi-Column Layout Grid (Bootstrap / Tailwind inspired) */
+.responsive-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .col-lg-8 { grid-column: span 12 !important; }
+  .col-lg-4 { grid-column: span 12 !important; }
+  .col-lg-6 { grid-column: span 12 !important; }
+}
+
+@media (min-width: 1201px) {
+  .col-lg-8 { grid-column: span 8; }
+  .col-lg-4 { grid-column: span 4; }
+  .col-lg-6 { grid-column: span 6; }
+  .col-lg-3 { grid-column: span 3; }
+  .col-lg-12 { grid-column: span 12; }
+}
+
+/* 5. Theme Accent Text & Border Helpers */
+.text-accent-primary { color: var(--abhi-cyan, #00f0ff) !important; }
+.text-accent-secondary { color: var(--abhi-blue, #3b82f6) !important; }
+.border-accent { border-color: var(--abhi-cyan, #00f0ff) !important; }
+.bg-accent-glow { background: radial-gradient(circle at 50% 50%, rgba(var(--abhi-cyan), 0.18) 0%, transparent 70%); }
+
+
 
 

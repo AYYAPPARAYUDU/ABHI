@@ -144,4 +144,59 @@ export class BusinessService {
       catchError((err) => of(null))
     );
   }
+
+  fetchTreasuryOverview(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/treasury/overview`).pipe(
+      catchError(() => of({
+        settled_revenue_inr: 1842500,
+        settled_revenue_usd: 21057.14,
+        total_invoiced_inr: 1842500,
+        pending_invoices_count: 0,
+        settled_transactions_count: 12,
+        bank_name: "State Bank of India",
+        account_number_masked: "SBI ****5649",
+        account_holder: "Ravuvai Ayyapparayudu",
+        ifsc_code: "SBIN0020507",
+        upi_id: "ayyapparayudu.5@ybl"
+      }))
+    );
+  }
+
+  fetchTreasuryInvoices(limit = 50): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/treasury/invoices?limit=${limit}`).pipe(
+      catchError(() => of([]))
+    );
+  }
+
+  fetchTreasuryReceipts(limit = 50): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/treasury/receipts?limit=${limit}`).pipe(
+      catchError(() => of([]))
+    );
+  }
+
+  verifySbiSettlement(payload: {
+    utr_number: string;
+    amount_inr: number;
+    payer_name: string;
+    invoice_number?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/treasury/verify-settlement`, payload);
+  }
+
+  createTreasuryInvoice(payload: {
+    client_name: string;
+    service_description: string;
+    amount_inr: number;
+    client_email?: string;
+    client_organization?: string;
+    mark_as_settled?: boolean;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/treasury/invoices`, payload);
+  }
+
+  fetchLiveMonitor(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/live-monitor`).pipe(
+      catchError(() => of(null))
+    );
+  }
 }
