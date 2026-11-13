@@ -35,7 +35,7 @@
             </svg>
             &#64;ayyapparayudu
           </a>
-          <span class="badge-provenance">● 100% REAL VALID MONEY · ZERO DEMO DATA</span>
+          <span class="badge-provenance">● 100% REAL VALID MONEY · ZERO DUMMY DATA</span>
         </div>
 
         <p class="architect-subtext">
@@ -68,7 +68,7 @@
       </div>
     </div>
 
-    <!-- Live Verified Balance & UTR Verification Trigger -->
+    <!-- Live Verified Balance & Actions -->
     <div class="header-action-panel">
       <div class="settled-revenue-box">
         <span class="revenue-caption">LIVE SETTLED SBI BALANCE</span>
@@ -93,6 +93,17 @@
           <div class="btn-text-group">
             <span class="btn-title">VERIFY REAL UPI PAYMENT</span>
             <span class="btn-subtitle">Enter 12-digit Bank UTR from SMS / PhonePe / GPay</span>
+          </div>
+        </button>
+        <button
+          class="generate-invoice-header-btn"
+          (click)="openCreateInvoiceModal()"
+          title="Generate an official tax invoice for a real client"
+        >
+          <span class="btn-icon">📄</span>
+          <div class="btn-text-group">
+            <span class="btn-title">+ NEW CLIENT INVOICE</span>
+            <span class="btn-subtitle">Generate official invoice with UPI link</span>
           </div>
         </button>
       </div>
@@ -141,158 +152,22 @@
     </div>
   </section>
 
-  <!-- SECTION 3: COMMERCIAL CLIENT SERVICES (REAL BILLING) -->
-  <section class="streams-section">
-    <div class="section-title-bar">
-      <div>
-        <h2 class="section-title">Real Commercial Services & Client Invoicing</h2>
-        <p class="section-desc">Generate real technical deliverables and official tax invoices with instant UPI payment links for clients.</p>
-      </div>
-      <div class="status-indicator-tag">
-        <span class="dot-live"></span> 3 COMMERCIAL SERVICES READY
-      </div>
-    </div>
-
-    <div class="streams-grid">
-      <!-- Service 1: Python AST Code Audit -->
-      <div class="stream-card">
-        <div class="card-head">
-          <div class="card-icon-box cyan-glow">🛡️</div>
-          <div class="card-headings">
-            <span class="stream-code">SERVICE 01 // CODE SECURITY</span>
-            <h3 class="stream-title">Python AST Code Audit & Vulnerability Scan</h3>
-          </div>
-        </div>
-
-        <p class="stream-description">
-          Parses Python AST syntax trees to detect unsafe subprocess execution, credential leaks, and Win32 boundary violations. Delivers professional audit reports.
-        </p>
-
-        <div class="stream-details-list">
-          <div class="detail-row">
-            <span class="dk">Deliverable:</span>
-            <span class="dv">Executive Security Audit & Proof</span>
-          </div>
-          <div class="detail-row">
-            <span class="dk">Capability:</span>
-            <span class="dv text-cyan">Python ast · Subprocess Sanitizer · Zero CVEs</span>
-          </div>
-        </div>
-
-        <div class="card-footer">
-          <div class="payout-block">
-            <span class="payout-label">STANDARD SERVICE FEE</span>
-            <span class="payout-inr">₹24,500.00</span>
-            <span class="payout-usd">($280.00 USD)</span>
-          </div>
-
-          <button
-            class="stream-action-btn cyan-btn"
-            [disabled]="isExecutingRevenue()"
-            (click)="runCodeAuditBounty()"
-          >
-            <span>{{ isExecutingRevenue() && activeExecutionStream() === 'SERVICE 01' ? 'PROCESSING...' : '▶ Run Audit & Bill' }}</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Service 2: Sponsored Media & Tech Reels -->
-      <div class="stream-card">
-        <div class="card-head">
-          <div class="card-icon-box purple-glow">🎬</div>
-          <div class="card-headings">
-            <span class="stream-code">SERVICE 02 // CREATIVE AI</span>
-            <h3 class="stream-title">Sponsored AI Video & Tech Reels</h3>
-          </div>
-        </div>
-
-        <p class="stream-description">
-          Generates high-engagement 9:16 vertical video scripts, Whisper STT speech timestamps, and kinematic visual overlays for developer tool brand sponsorships.
-        </p>
-
-        <div class="stream-details-list">
-          <div class="detail-row">
-            <span class="dk">Deliverable:</span>
-            <span class="dv">Script with Timestamps & Voice Hooks</span>
-          </div>
-          <div class="detail-row">
-            <span class="dk">Capability:</span>
-            <span class="dv text-purple">Whisper Audio Sync · RTX GPU Composition</span>
-          </div>
-        </div>
-
-        <div class="card-footer">
-          <div class="payout-block">
-            <span class="payout-label">STANDARD SERVICE FEE</span>
-            <span class="payout-inr">₹35,000.00</span>
-            <span class="payout-usd">($400.00 USD)</span>
-          </div>
-
-          <button
-            class="stream-action-btn purple-btn"
-            [disabled]="isExecutingRevenue()"
-            (click)="runContentMonetization()"
-          >
-            <span>{{ isExecutingRevenue() && activeExecutionStream() === 'SERVICE 02' ? 'PROCESSING...' : '▶ Create Reel & Bill' }}</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Service 3: Enterprise B2B Architecture Proposal -->
-      <div class="stream-card">
-        <div class="card-head">
-          <div class="card-icon-box emerald-glow">🤝</div>
-          <div class="card-headings">
-            <span class="stream-code">SERVICE 03 // ENTERPRISE B2B</span>
-            <h3 class="stream-title">Enterprise AI Architecture Proposal</h3>
-          </div>
-        </div>
-
-        <p class="stream-description">
-          Synthesizes enterprise-grade on-premise AI automation proposals, private RAG blueprints, and multi-agent governance frameworks for high-tier enterprise clients.
-        </p>
-
-        <div class="stream-details-list">
-          <div class="detail-row">
-            <span class="dk">Deliverable:</span>
-            <span class="dv">Technical Architecture Proposal & Terms</span>
-          </div>
-          <div class="detail-row">
-            <span class="dk">Capability:</span>
-            <span class="dv text-emerald">On-Prem RAG · Dual-State Verification</span>
-          </div>
-        </div>
-
-        <div class="card-footer">
-          <div class="payout-block">
-            <span class="payout-label">STANDARD SERVICE FEE</span>
-            <span class="payout-inr">₹65,000.00</span>
-            <span class="payout-usd">($742.85 USD)</span>
-          </div>
-
-          <button
-            class="stream-action-btn emerald-btn"
-            [disabled]="isExecutingRevenue()"
-            (click)="runB2BOutreach()"
-          >
-            <span>{{ isExecutingRevenue() && activeExecutionStream() === 'SERVICE 03' ? 'PROCESSING...' : '▶ Synthesize & Bill' }}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION 4: REAL INVOICES & VERIFIED BANK SETTLEMENT LEDGER -->
+  <!-- SECTION 3: COMMERCIAL TAX INVOICES & VERIFIED BANK SETTLEMENT LEDGER -->
   <section class="invoices-section">
     <div class="section-title-bar">
       <div>
         <h2 class="section-title">Commercial Tax Invoices & Bank Settlement Ledger</h2>
-        <p class="section-desc">Zero mock rows. Real commercial tax invoices with UPI payment links. Click "Verify Payment" to credit via 12-digit Bank UTR.</p>
+        <p class="section-desc">Zero mock rows. Real commercial invoices with UPI payment links. Click "Verify Payment" to credit via 12-digit Bank UTR.</p>
       </div>
 
-      <button class="refresh-ledger-btn" (click)="refreshTreasuryData()" title="Reload Ledger">
-        🔄 Refresh Ledger
-      </button>
+      <div class="table-actions-group">
+        <button class="create-inv-btn" (click)="openCreateInvoiceModal()">
+          + Create Real Client Invoice
+        </button>
+        <button class="refresh-ledger-btn" (click)="refreshTreasuryData()" title="Reload Ledger">
+          🔄 Refresh Ledger
+        </button>
+      </div>
     </div>
 
     <div class="table-container">
@@ -350,7 +225,7 @@
           @empty {
             <tr>
               <td colspan="7" class="empty-cell">
-                Zero dummy records. Run a commercial service or scan the UPI QR code to record real incoming payments.
+                Zero dummy records. No invoices or transactions yet. Share your UPI QR code (ayyapparayudu.5@ybl) or create a real client invoice to record authentic inward settlements into your State Bank of India account.
               </td>
             </tr>
           }
@@ -379,52 +254,135 @@
           <label>12-DIGIT BANK UTR / TRANSACTION REFERENCE *</label>
           <input
             type="text"
+            class="modal-input font-mono"
+            placeholder="e.g. 431728192834 or SBIN12345678"
             [(ngModel)]="inputUtr"
-            placeholder="e.g. 431809231842"
-            class="form-input font-mono"
           />
         </div>
 
-        <div class="form-group">
-          <label>AMOUNT RECEIVED (INR) *</label>
-          <input
-            type="number"
-            [(ngModel)]="inputAmount"
-            placeholder="e.g. 24500"
-            class="form-input font-mono"
-          />
-        </div>
-
-        <div class="form-group">
-          <label>PAYER / CLIENT NAME</label>
-          <input
-            type="text"
-            [(ngModel)]="inputPayer"
-            placeholder="e.g. Rahul Sharma / Enterprise Client"
-            class="form-input"
-          />
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>AMOUNT RECEIVED (₹ INR) *</label>
+            <input
+              type="number"
+              class="modal-input font-mono"
+              placeholder="e.g. 25000"
+              [(ngModel)]="inputAmount"
+            />
+          </div>
+          <div class="form-group">
+            <label>PAYER / CLIENT NAME</label>
+            <input
+              type="text"
+              class="modal-input"
+              placeholder="e.g. Acme Tech Solutions"
+              [(ngModel)]="inputPayer"
+            />
+          </div>
         </div>
 
         <div class="form-group" *ngIf="inputInvoiceNum">
           <label>LINKED INVOICE NUMBER</label>
           <input
             type="text"
-            [value]="inputInvoiceNum"
+            class="modal-input font-mono readonly-input"
             readonly
-            class="form-input font-mono readonly"
+            [value]="inputInvoiceNum"
           />
         </div>
+
+        <div class="modal-actions">
+          <button class="modal-cancel-btn" (click)="showUtrModal.set(false)">Cancel</button>
+          <button
+            class="modal-confirm-btn"
+            [disabled]="isSubmittingUtr() || !inputUtr"
+            (click)="confirmUtrSettlement()"
+          >
+            <span>{{ isSubmittingUtr() ? 'Verifying with SBI...' : '✓ Confirm & Credit Balance' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CREATE REAL CLIENT INVOICE -->
+  <div class="utr-modal-backdrop" *ngIf="showCreateInvoiceModal()" (click)="showCreateInvoiceModal.set(false)">
+    <div class="utr-modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-head-title">
+          <span class="modal-icon">📄</span>
+          <h3>Generate Real Client Commercial Invoice</h3>
+        </div>
+        <button class="modal-close" (click)="showCreateInvoiceModal.set(false)">✕</button>
       </div>
 
-      <div class="modal-actions">
-        <button class="modal-btn secondary" (click)="showUtrModal.set(false)">Cancel</button>
-        <button
-          class="modal-btn primary"
-          [disabled]="isSubmittingUtr()"
-          (click)="confirmUtrSettlement()"
-        >
-          <span>{{ isSubmittingUtr() ? 'Verifying...' : '✓ Confirm & Credit SBI Balance' }}</span>
-        </button>
+      <p class="modal-desc">
+        Create an official commercial invoice with an instant UPI payment link for a real client. All disbursements settle to your State Bank of India account (41130645649).
+      </p>
+
+      <div class="modal-form">
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>CLIENT / RECIPIENT NAME *</label>
+            <input
+              type="text"
+              class="modal-input"
+              placeholder="e.g. John Doe / Tech Corp"
+              [(ngModel)]="newInvoiceClientName"
+            />
+          </div>
+          <div class="form-group">
+            <label>CLIENT ORGANIZATION</label>
+            <input
+              type="text"
+              class="modal-input"
+              placeholder="e.g. Cloud Enterprises Pvt Ltd"
+              [(ngModel)]="newInvoiceClientOrg"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>SERVICE DELIVERABLE DESCRIPTION *</label>
+          <input
+            type="text"
+            class="modal-input"
+            placeholder="e.g. Autonomous AI Engineering, Automation & System Optimization"
+            [(ngModel)]="newInvoiceServiceDesc"
+          />
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>CONTRACT AMOUNT (₹ INR) *</label>
+            <input
+              type="number"
+              class="modal-input font-mono"
+              placeholder="25000"
+              [(ngModel)]="newInvoiceAmountInr"
+            />
+          </div>
+          <div class="form-group">
+            <label>CLIENT EMAIL (OPTIONAL)</label>
+            <input
+              type="email"
+              class="modal-input"
+              placeholder="client@company.com"
+              [(ngModel)]="newInvoiceClientEmail"
+            />
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="modal-cancel-btn" (click)="showCreateInvoiceModal.set(false)">Cancel</button>
+          <button
+            class="modal-confirm-btn"
+            [disabled]="isCreatingInvoice() || !newInvoiceClientName || !newInvoiceServiceDesc"
+            (click)="submitCreateInvoice()"
+          >
+            <span>{{ isCreatingInvoice() ? 'Generating...' : '✓ Generate Official Invoice & UPI' }}</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

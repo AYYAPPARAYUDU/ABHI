@@ -125,24 +125,12 @@
           </div>
 
           <div class="treasury-actions-row">
-            <button
-              type="button"
-              class="btn-treasury-exec btn-revenue-pulse"
-              [disabled]="isGeneratingRevenue()"
-              (click)="runAutonomousRevenueCycle()"
-              title="Execute Autonomous CEO Revenue Cycle"
-            >
-              <span>{{ isGeneratingRevenue() ? '⚡ GENERATING DELIVERABLES...' : '⚡ RUN REVENUE CYCLE' }}</span>
-            </button>
-            <button
-              type="button"
-              class="btn-treasury-bounty"
-              [disabled]="isGeneratingRevenue()"
-              (click)="runCodeAuditBounty()"
-              title="Run AST Static Code Audit & Bug Bounty Deliverable"
-            >
-              <span>🛡️ CODE AUDIT BOUNTY</span>
-            </button>
+            <a routerLink="/business" class="btn-treasury-exec text-center" title="Open Official SBI Treasury & Live UPI Payment Channel">
+              <span>🏛️ OPEN SBI TREASURY</span>
+            </a>
+            <a routerLink="/business" class="btn-treasury-bounty text-center" title="Verify Real Inward Payment via Bank 12-digit UTR">
+              <span>💳 VERIFY BANK UTR</span>
+            </a>
           </div>
         </div>
       </div>

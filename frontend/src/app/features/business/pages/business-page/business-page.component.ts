@@ -8,18 +8,6 @@ import { AgentApiService } from '../../../../core/api/agent-api.service';
 import { getApiUrl } from '../../../../core/config/api-config';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 
-export interface CommercialServiceSpec {
-  id: string;
-  code: string;
-  title: string;
-  icon: string;
-  description: string;
-  deliverableType: string;
-  standardFeeInr: number;
-  standardFeeUsd: number;
-  status: 'READY' | 'GENERATING';
-}
-
 @Component({
   selector: 'app-business-page',
   standalone: true,
@@ -34,8 +22,6 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
   private readonly threeScene = inject(ThreeSceneManagerService);
   private readonly hostEl = inject(ElementRef);
 
-  readonly isExecutingRevenue = signal<boolean>(false);
-  readonly activeExecutionStream = signal<string | null>(null);
   readonly toastMessage = signal<string | null>(null);
 
   // Real Bank UTR Verification Modal
@@ -45,6 +31,15 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
   inputAmount = 1000.0;
   inputPayer = 'Direct Client Transfer';
   inputInvoiceNum = '';
+
+  // Real Client Invoice Generation Modal
+  readonly showCreateInvoiceModal = signal<boolean>(false);
+  readonly isCreatingInvoice = signal<boolean>(false);
+  newInvoiceClientName = '';
+  newInvoiceClientOrg = '';
+  newInvoiceServiceDesc = '';
+  newInvoiceAmountInr = 25000.0;
+  newInvoiceClientEmail = '';
 
   // Authoritative State Bank of India Settlement Channel (Mamu)
   readonly sbiProfile = {
@@ -72,43 +67,6 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
 
   readonly settledInvoices = signal<any[]>([]);
 
-  // Real Commercial Services Offered by ABHI
-  readonly commercialServices: CommercialServiceSpec[] = [
-    {
-      id: 'srv_code_audit',
-      code: 'SERVICE 01 // AUDIT',
-      title: 'Python AST Code Audit & Vulnerability Scan',
-      icon: '🛡️',
-      description: 'Zero-cloud static analysis parsing Python AST trees for security vulnerabilities, hardcoded secrets, and unsafe subprocess calls.',
-      deliverableType: 'Executive Markdown Security Audit & Proof',
-      standardFeeInr: 24500.0,
-      standardFeeUsd: 280.0,
-      status: 'READY',
-    },
-    {
-      id: 'srv_media_reel',
-      code: 'SERVICE 02 // MEDIA',
-      title: 'Sponsored AI Video Reel Script & Composition',
-      icon: '🎬',
-      description: 'Programmatic high-retention 9:16 video scripts with Whisper STT voice alignment and local RTX GPU rendering timeline.',
-      deliverableType: 'Viral Reel Script with Timestamps & Voice Hooks',
-      standardFeeInr: 35000.0,
-      standardFeeUsd: 400.0,
-      status: 'READY',
-    },
-    {
-      id: 'srv_b2b_proposal',
-      code: 'SERVICE 03 // ENTERPRISE',
-      title: 'Enterprise On-Premise AI Architecture Proposal',
-      icon: '🤝',
-      description: 'Custom on-premise multi-agent architecture proposals, private RAG vector blueprints, and Windows automation pilot packs.',
-      deliverableType: 'Enterprise Technical Proposal & Commercial Terms',
-      standardFeeInr: 65000.0,
-      standardFeeUsd: 742.85,
-      status: 'READY',
-    },
-  ];
-
   ngOnInit(): void {
     this.threeScene.setMode('BUSINESS');
     this.refreshTreasuryData();
@@ -122,7 +80,7 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
     try {
       const [overview, invoices] = await Promise.all([
         this.agentApi.getTreasuryOverview(),
-        this.agentApi.listTreasuryInvoices(20),
+        this.agentApi.listTreasuryInvoices(50),
       ]);
 
       if (overview) {
@@ -146,82 +104,51 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
         this.settledInvoices.set(unique);
       }
     } catch {
-      // Retain zero-state
+      // Retain clean state
     }
   }
 
-  async runCodeAuditBounty(): Promise<void> {
-    if (this.isExecutingRevenue()) return;
-    this.isExecutingRevenue.set(true);
-    this.activeExecutionStream.set('SERVICE 01');
-    this.showToast('🛡️ Running AST Static Security Audit & Issuing Commercial Invoice...');
-    this.speechVoice.speak('Generating AST security audit report and issuing tax invoice to State Bank of India channel, Mamu.');
-
-    try {
-      const res = await this.agentApi.runCodeAuditBounty();
-      await this.refreshTreasuryData();
-      if (res?.invoice_number) {
-        this.showToast(`Invoice ${res.invoice_number} created (₹${res.billed_amount_inr}). Awaiting real UPI settlement.`);
-      }
-    } catch {
-      this.showToast('Audit complete.');
-    } finally {
-      this.isExecutingRevenue.set(false);
-      this.activeExecutionStream.set(null);
-    }
+  openCreateInvoiceModal(): void {
+    this.newInvoiceClientName = '';
+    this.newInvoiceClientOrg = '';
+    this.newInvoiceServiceDesc = '';
+    this.newInvoiceAmountInr = 25000.0;
+    this.newInvoiceClientEmail = '';
+    this.showCreateInvoiceModal.set(true);
   }
 
-  async runContentMonetization(): Promise<void> {
-    if (this.isExecutingRevenue()) return;
-    this.isExecutingRevenue.set(true);
-    this.activeExecutionStream.set('SERVICE 02');
-    this.showToast('🎬 Compiling Video Reel Script & Commercial Invoice...');
-    this.speechVoice.speak('Compiling video sponsorship script and issuing tax invoice, Mamu.');
-
+  async submitCreateInvoice(): Promise<void> {
+    if (!this.newInvoiceClientName.trim() || !this.newInvoiceServiceDesc.trim() || this.newInvoiceAmountInr <= 0) {
+      this.showToast('⚠️ Please enter client name, service description, and valid amount.');
+      return;
+    }
+    this.isCreatingInvoice.set(true);
     try {
-      const resp = await fetch(getApiUrl('/api/v1/business/ceo/content-monetization'), {
+      const resp = await fetch(getApiUrl('/api/v1/business/treasury/invoices'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_name: this.newInvoiceClientName.trim(),
+          client_organization: this.newInvoiceClientOrg.trim() || 'Client Organization',
+          service_description: this.newInvoiceServiceDesc.trim(),
+          amount_inr: Number(this.newInvoiceAmountInr),
+          client_email: this.newInvoiceClientEmail.trim() || undefined,
+          mark_as_settled: false,
+        }),
       });
       if (resp.ok) {
-        const res = await resp.json();
+        const inv = await resp.json();
+        this.showCreateInvoiceModal.set(false);
         await this.refreshTreasuryData();
-        if (res?.invoice_number) {
-          this.showToast(`Invoice ${res.invoice_number} generated. Awaiting real UPI settlement.`);
-        }
+        this.showToast(`✓ Generated Invoice ${inv.invoice_number} (₹${inv.total_inr}) with UPI payment link.`);
+        this.speechVoice.speak(`Official invoice generated for ${this.newInvoiceClientName}, Mamu.`);
+      } else {
+        this.showToast('⚠️ Error creating invoice.');
       }
     } catch {
-      this.showToast('Media deliverable generated.');
+      this.showToast('⚠️ Network error creating invoice.');
     } finally {
-      this.isExecutingRevenue.set(false);
-      this.activeExecutionStream.set(null);
-    }
-  }
-
-  async runB2BOutreach(): Promise<void> {
-    if (this.isExecutingRevenue()) return;
-    this.isExecutingRevenue.set(true);
-    this.activeExecutionStream.set('SERVICE 03');
-    this.showToast('🤝 Synthesizing Enterprise AI Proposal & Contract Invoice...');
-    this.speechVoice.speak('Synthesizing enterprise B2B proposal and issuing contract invoice, Mamu.');
-
-    try {
-      const resp = await fetch(getApiUrl('/api/v1/business/ceo/b2b-outreach'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (resp.ok) {
-        const res = await resp.json();
-        await this.refreshTreasuryData();
-        if (res?.invoice_number) {
-          this.showToast(`Contract Invoice ${res.invoice_number} issued. Awaiting real UPI settlement.`);
-        }
-      }
-    } catch {
-      this.showToast('Enterprise proposal generated.');
-    } finally {
-      this.isExecutingRevenue.set(false);
-      this.activeExecutionStream.set(null);
+      this.isCreatingInvoice.set(false);
     }
   }
 
@@ -293,7 +220,7 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
   private animateElements(): void {
     const root = this.hostEl.nativeElement;
     if (!root) return;
-    const cards = root.querySelectorAll('.stream-card, .upi-card, .invoices-table-card');
+    const cards = root.querySelectorAll('.upi-card, .table-container, .executive-header-card');
     if (cards.length > 0) {
       this.animService.staggerEnter({
         targets: cards,
