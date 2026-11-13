@@ -186,13 +186,6 @@ export const routes: Routes = [
       )
   },
   {
-    path: 'sample',
-    loadComponent: () =>
-      import('./features/sample/pages/sample-page/sample-page.component').then(
-        (m) => m.SamplePageComponent
-      )
-  },
-  {
     path: 'dev-ui',
     redirectTo: 'system',
     pathMatch: 'full'

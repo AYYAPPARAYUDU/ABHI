@@ -234,26 +234,10 @@
         </div>
 
         <div class="hq-right-meta">
-          <button
-            type="button"
-            class="hq-livework-toggle-btn font-mono"
-            [class.active]="isLiveWorkActive()"
-            (click)="toggleLiveWorkDaemon()"
-            [title]="isLiveWorkActive() ? 'Click to pause 24/7 autonomous live work' : 'Click to engage 24/7 autonomous live work'"
-          >
-            <span class="live-dot" [class.pulse]="isLiveWorkActive()"></span>
-            <span>{{ isLiveWorkActive() ? '🟢 LIVE WORK ENGAGED' : '⏸️ LIVE WORK PAUSED' }}</span>
-          </button>
-          <button
-            type="button"
-            class="hq-autopilot-btn font-mono"
-            [disabled]="isAutopilotRunning()"
-            (click)="triggerFullAutopilotCycle()"
-            title="Execute complete zero-click master autopilot loop across all 4 intelligence tiers and commercial modules"
-          >
-            <span class="btn-spin" *ngIf="isAutopilotRunning()">⚙️</span>
-            <span>{{ isAutopilotRunning() ? 'AUTOPILOT RUNNING...' : '⚡ MASTER AUTOPILOT' }}</span>
-          </button>
+          <div class="hq-permanent-live-pill font-mono" title="24/7 Autonomous revenue & multi-agent swarm active — zero user clicks required">
+            <span class="live-dot pulse"></span>
+            <span class="pill-text">24/7 AUTONOMOUS REVENUE ENGINE ACTIVE</span>
+          </div>
           <span class="hq-agent-count-pill font-mono">
             <span class="live-dot" [class.pulse]="(officeData()?.working_agents || 0) > 0"></span>
             {{ officeData()?.total_agents || 7 }} agents · {{ officeData()?.working_agents || 0 }} working
@@ -382,20 +366,13 @@
                     <span class="spin-icon">⚙️</span>
                     <span class="task-txt">{{ worker.active_task || 'Processing task...' }}</span>
                   </div>
+                  <span class="pod-autonomous-tag text-emerald font-mono">⚡ LIVE AUTONOMOUS WORK</span>
                 } @else {
                   <div class="idle-task-line text-muted">
                     <span>💤 Standby · Completed: {{ worker.tasks_completed }}</span>
                   </div>
+                  <span class="pod-autonomous-tag text-muted font-mono">READY</span>
                 }
-
-                <button
-                  type="button"
-                  class="pod-toggle-btn"
-                  (click)="$event.stopPropagation(); toggleWorkerStatus(worker)"
-                  [title]="worker.status === 'WORKING' ? 'Set worker to IDLE' : 'Assign live test task'"
-                >
-                  {{ worker.status === 'WORKING' ? 'Pause' : 'Activate' }}
-                </button>
               </div>
             </div>
           }

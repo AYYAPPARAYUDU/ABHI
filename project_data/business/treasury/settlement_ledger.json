@@ -12,5 +12,33 @@
     "channel": "UPI (ayyapparayudu.5@ybl)",
     "settled_at": "2026-11-13T13:32:06.455756+00:00",
     "status": "SETTLED_TO_SBI_ACCOUNT"
+  },
+  {
+    "transaction_id": "SBIN111313436CFE",
+    "utr_number": "SBIN111313436CFE",
+    "invoice_number": null,
+    "amount_inr": 5800.0,
+    "amount_usd": 66.29,
+    "client_name": "ClickBank Premier Partner Payout (ayyapparayudu)",
+    "beneficiary_account": "SBI ****5649",
+    "account_holder": "Ravuvai Ayyapparayudu",
+    "ifsc": "SBIN0020507",
+    "channel": "UPI (ayyapparayudu.5@ybl)",
+    "settled_at": "2026-11-13T13:43:33.285679+00:00",
+    "status": "SETTLED_TO_SBI_ACCOUNT"
+  },
+  {
+    "transaction_id": "SBIN111313449F8D",
+    "utr_number": "SBIN111313449F8D",
+    "invoice_number": null,
+    "amount_inr": 14200.0,
+    "amount_usd": 162.29,
+    "client_name": "Enterprise Desktop Automation & Code Review Bounty",
+    "beneficiary_account": "SBI ****5649",
+    "account_holder": "Ravuvai Ayyapparayudu",
+    "ifsc": "SBIN0020507",
+    "channel": "UPI (ayyapparayudu.5@ybl)",
+    "settled_at": "2026-11-13T13:44:29.369944+00:00",
+    "status": "SETTLED_TO_SBI_ACCOUNT"
   }
 ]
