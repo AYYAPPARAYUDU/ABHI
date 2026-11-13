@@ -446,6 +446,9 @@ export class SpeechVoiceService {
     });
   }
 
+  // Timestamp of the last dispatched speech request (prevents double-triggering)
+  private lastSpeechTimestamp = 0;
+
   /**
    * Acoustic Turn-Taking Arbiter:
    * Prevents simultaneous LLM speech collisions. Manages conversational floor handoff,
@@ -459,7 +462,13 @@ export class SpeechVoiceService {
     const spokenText = this.sanitizeAndSummarizeForSpeech(req.text);
     if (!spokenText.trim()) return;
 
-    // Check if floor is currently occupied
+    const now = Date.now();
+    // Fast duplicate suppression: prevent identical phrases within 1.5 seconds from double-speaking
+    if (spokenText === this.lastSpokenText() && now - this.lastSpeechTimestamp < 1500) {
+      return;
+    }
+
+    // Check if floor is currently occupied (strict mutex lock)
     if (this.isSpeaking()) {
       const current = this.activeSpeaker();
 
@@ -474,7 +483,7 @@ export class SpeechVoiceService {
         return;
       }
 
-      // Respectful floor queueing: wait for active speaker to yield the floor
+      // Respectful floor queueing: wait for active speaker to yield the floor (one by one sequential speech)
       this.enqueueNegotiatedRequest({ ...req, text: spokenText, priority });
       this.speechFloorState.set('NEGOTIATING');
       return;
@@ -536,6 +545,26 @@ export class SpeechVoiceService {
    * Executes acoustic synthesis for an approved speaker with personalized voice modulation.
    */
   private executeSpeech(req: SpeechNegotiationRequest): void {
+    // 1. Immediately claim the acoustic floor so concurrent agents cannot speak over each other
+    this.isSpeaking.set(true);
+    this.lastSpeechTimestamp = Date.now();
+    this.lastSpokenText.set(req.text);
+
+    // 2. Synchronously terminate any existing audio element or browser speech synthesis
+    if (this.currentAudio) {
+      try {
+        this.currentAudio.pause();
+        this.currentAudio.currentTime = 0;
+        this.currentAudio.src = '';
+      } catch {}
+      this.currentAudio = null;
+    }
+    if (this.synth) {
+      try {
+        this.synth.cancel();
+      } catch {}
+    }
+
     if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
     }
@@ -593,19 +622,24 @@ export class SpeechVoiceService {
           clearTimeout(loadWatchdog);
           loadWatchdog = null;
         }
+        try {
+          audio.onplay = null;
+          audio.onerror = null;
+          audio.onended = null;
+          audio.ontimeupdate = null;
+          audio.pause();
+          audio.currentTime = 0;
+          audio.src = '';
+        } catch {}
         if (this.currentAudio === audio) {
-          try {
-            audio.pause();
-            audio.src = '';
-          } catch {}
           this.currentAudio = null;
         }
         this.fallbackSpeechSynthesis(spokenText, req, words);
       };
 
-      // 1800ms load safety watchdog: if backend audio stalls or is blocked, switch to instant speech synthesis
+      // 1800ms load safety watchdog: if backend audio stalls or is blocked, switch cleanly to speech synthesis
       loadWatchdog = setTimeout(() => {
-        if (!this.isSpeaking() && !fallbackTriggered) {
+        if (!fallbackTriggered && this.currentAudio === audio && audio.paused) {
           triggerFallback();
         }
       }, 1800);
@@ -614,6 +648,12 @@ export class SpeechVoiceService {
         if (loadWatchdog) {
           clearTimeout(loadWatchdog);
           loadWatchdog = null;
+        }
+        // Cancel any residual browser speech synthesis so only ONE audio source speaks
+        if (this.synth) {
+          try {
+            this.synth.cancel();
+          } catch {}
         }
         this.isSpeaking.set(true);
         this.lastSpokenText.set(spokenText);

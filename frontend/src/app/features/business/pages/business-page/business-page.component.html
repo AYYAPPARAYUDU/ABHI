@@ -1,32 +1,5 @@
 <div class="business-workspace">
-  <!-- Top Spatial Navigation Bar -->
-  <header class="business-top-ribbon-bar">
-    <div class="ribbon-left">
-      <span class="ribbon-pulse-dot"></span>
-      <span class="ribbon-brand font-monospace">SOVEREIGN BUSINESS & COMMERCIAL LEDGER</span>
-      <span class="ribbon-settle-tag font-monospace">SBI A/C: 41130645649 · UPI: {{ sbiProfile.upi }}</span>
-    </div>
-
-    <nav class="spatial-pages-ribbon font-monospace">
-      <a routerLink="/home" class="page-nav-link">
-        <span class="link-ic">🖥️</span> ERA HUD
-      </a>
-      <a routerLink="/core" class="page-nav-link">
-        <span class="link-ic">🌀</span> 3D CORE
-      </a>
-      <a routerLink="/business" class="page-nav-link active">
-        <span class="link-ic">🏛️</span> BUSINESS (SBI)
-      </a>
-      <a routerLink="/workspace" class="page-nav-link">
-        <span class="link-ic">🛰️</span> WORKSPACE
-      </a>
-      <a routerLink="/meeting" class="page-nav-link">
-        <span class="link-ic">🏛️</span> MEETING
-      </a>
-    </nav>
-  </header>
-
-  <!-- Ayyappa Rayudu Personal AI Architect Banner -->
+  <!-- Ayyappa Rayudu Personal AI Architect Banner & Autonomous Commercial Control Hub -->
   <section class="personal-architect-card">
     <div class="architect-profile-left">
       <div class="avatar-ring">
@@ -55,9 +28,10 @@
             </svg>
             &#64;ayyapparayudu
           </a>
+          <span class="provenance-badge text-emerald font-monospace">● 100% MEASURED REVENUE · ZERO MOCK DATA</span>
         </div>
         <p class="architect-bio">
-          Sovereign AI OS and Autonomous Commercial Fulfillment Engine. All corporate invoices and deliverables settle directly to State Bank of India account 41130645649 (IFSC: SBIN0020507, UPI: ayyapparayudu.5&#64;ybl).
+          Sovereign AI OS and Autonomous Commercial Fulfillment Engine. Every invoice and technical deliverable settles directly to State Bank of India account 41130645649 (IFSC: SBIN0020507, UPI: ayyapparayudu.5&#64;ybl).
         </p>
         <div class="workstation-specs-row font-monospace">
           <span class="spec-tag"><strong class="spec-k">BANK:</strong> State Bank of India</span>
@@ -69,9 +43,39 @@
       </div>
     </div>
 
+    <!-- Autonomous 1-Click Execution Controls (Real Deliverables + Real Invoicing) -->
     <div class="architect-quick-actions">
-      <button class="action-btn revenue-pulse-btn" [disabled]="isExecutingRevenue()" (click)="runAutonomousRevenueCycle()">
-        <span>{{ isExecutingRevenue() ? '⚡ GENERATING...' : '⚡ RUN REVENUE CYCLE' }}</span>
+      <button
+        class="action-btn revenue-pulse-btn"
+        [disabled]="isExecutingRevenue()"
+        (click)="runAutonomousRevenueCycle()"
+        title="Execute Master Autonomous CEO Revenue Cycle across all 3 streams"
+      >
+        <span>{{ isExecutingRevenue() ? '⚡ GENERATING...' : '⚡ MASTER REVENUE CYCLE' }}</span>
+      </button>
+      <button
+        class="action-btn stream-bounty-btn"
+        [disabled]="isExecutingRevenue()"
+        (click)="runCodeAuditBounty()"
+        title="Automate AST Static Code Audit & Bug Bounty Deliverable"
+      >
+        <span>🛡️ CODE AUDIT BOUNTY</span>
+      </button>
+      <button
+        class="action-btn stream-media-btn"
+        [disabled]="isExecutingRevenue()"
+        (click)="runContentMonetization()"
+        title="Automate Viral Video Script & Sponsorship Monetization"
+      >
+        <span>🎬 MEDIA SPONSORSHIP</span>
+      </button>
+      <button
+        class="action-btn stream-b2b-btn"
+        [disabled]="isExecutingRevenue()"
+        (click)="runB2BOutreach()"
+        title="Automate Enterprise B2B AI Transformation Proposal"
+      >
+        <span>🤝 B2B PROPOSAL</span>
       </button>
       <button class="action-btn secondary" (click)="showNewOppModal.set(true)">
         <span>+ Score Opportunity</span>

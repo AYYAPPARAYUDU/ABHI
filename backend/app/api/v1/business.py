@@ -205,7 +205,7 @@ async def run_audit_bounty(payload: Optional[Dict[str, Any]] = None) -> Dict[str
     client_name = payload.get("client_name", "FinTech Systems Ltd") if payload else "FinTech Systems Ltd"
     fee_inr = float(payload.get("service_fee_inr", 28500.0)) if payload else 28500.0
 
-    return await autonomous_business_ceo.execute_code_audit_cycle(
+    return await autonomous_business_ceo.execute_code_audit_order(
         target_code_or_path=target_path,
         client_name=client_name,
         service_fee_inr=fee_inr,

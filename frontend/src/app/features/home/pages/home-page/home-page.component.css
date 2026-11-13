@@ -18,6 +18,7 @@
   flex-direction: column;
   overflow: hidden;
   z-index: 10;
+  pointer-events: auto;
 }
 
 /* =========================================================================

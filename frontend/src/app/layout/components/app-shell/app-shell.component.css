@@ -11,10 +11,11 @@
   min-height: 100vh;
   width: 100%;
   display: flex;
+  pointer-events: auto;
 }
 
 .abhi-app-shell.main-agent-shell {
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .workspace-container {
@@ -26,6 +27,7 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  pointer-events: auto;
 }
 
 .workspace-container.main-agent-view {
@@ -38,7 +40,7 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .workspace-main.main-agent-main {
@@ -48,7 +50,7 @@
   min-height: 0;
   position: relative;
   overflow: hidden;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 @media (max-width: 768px) {

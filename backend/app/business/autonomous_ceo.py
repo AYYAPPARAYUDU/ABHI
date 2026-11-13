@@ -341,6 +341,9 @@ class AutonomousBusinessCEO:
             "duration_ms": round((time.perf_counter() - t0) * 1000, 2)
         }
 
+    # Alias for API compatibility
+    execute_code_audit_cycle = execute_code_audit_order
+
 
 # Global Singleton CEO Engine Instance
 autonomous_business_ceo = AutonomousBusinessCEO()

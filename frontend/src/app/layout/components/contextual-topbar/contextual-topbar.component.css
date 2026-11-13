@@ -192,6 +192,42 @@
   color: var(--abhi-cyan, #00f0ff);
 }
 
+.topbar-sbi-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: rgba(14, 24, 40, 0.85);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 12px;
+  font-size: 10px;
+  text-decoration: none;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.topbar-sbi-pill:hover {
+  border-color: #10b981;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
+}
+
+.topbar-sbi-pill .sbi-sep {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.topbar-sbi-pill .text-emerald {
+  color: #10b981;
+  font-weight: 800;
+}
+
+.topbar-sbi-pill .text-cyan {
+  color: var(--abhi-cyan, #00f0ff);
+  font-weight: 700;
+}
+
 .pulse-dot {
   width: 6px;
   height: 6px;

@@ -6,6 +6,7 @@ import { BusinessService } from '../../services/business.service';
 import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
 import { AnimeAnimationService } from '../../../../core/services/anime-animation.service';
 import { AgentApiService } from '../../../../core/api/agent-api.service';
+import { getApiUrl } from '../../../../core/config/api-config';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { SectorsDashboardComponent } from '../../components/sectors-dashboard/sectors-dashboard.component';
 import { FinancialLedgerComponent } from '../../components/financial-ledger/financial-ledger.component';
@@ -165,6 +166,69 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
       }
     } catch {
       // Keep existing
+    } finally {
+      this.isExecutingRevenue.set(false);
+    }
+  }
+
+  async runCodeAuditBounty(): Promise<void> {
+    if (this.isExecutingRevenue()) return;
+    this.isExecutingRevenue.set(true);
+    this.speechVoice.speak('Executing AST static security audit and bug bounty deliverable, Mamu.');
+    try {
+      const res = await this.agentApi.runCodeAuditBounty();
+      this.businessService.fetchFinancials().subscribe(() => this.animateCards());
+      if (res?.summary) {
+        this.speechVoice.speak(res.summary);
+      }
+    } catch {
+      // Retain existing
+    } finally {
+      this.isExecutingRevenue.set(false);
+    }
+  }
+
+  async runContentMonetization(): Promise<void> {
+    if (this.isExecutingRevenue()) return;
+    this.isExecutingRevenue.set(true);
+    this.speechVoice.speak('Generating programmatic media sponsorship script and invoice, Mamu.');
+    try {
+      const resp = await fetch(getApiUrl('/api/v1/business/ceo/content-monetization'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (resp.ok) {
+        const res = await resp.json();
+        this.businessService.fetchFinancials().subscribe(() => this.animateCards());
+        if (res?.summary) {
+          this.speechVoice.speak(res.summary);
+        }
+      }
+    } catch {
+      // Retain existing
+    } finally {
+      this.isExecutingRevenue.set(false);
+    }
+  }
+
+  async runB2BOutreach(): Promise<void> {
+    if (this.isExecutingRevenue()) return;
+    this.isExecutingRevenue.set(true);
+    this.speechVoice.speak('Synthesizing enterprise B2B AI transformation proposal and corporate invoice, Mamu.');
+    try {
+      const resp = await fetch(getApiUrl('/api/v1/business/ceo/b2b-outreach'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (resp.ok) {
+        const res = await resp.json();
+        this.businessService.fetchFinancials().subscribe(() => this.animateCards());
+        if (res?.summary) {
+          this.speechVoice.speak(res.summary);
+        }
+      }
+    } catch {
+      // Retain existing
     } finally {
       this.isExecutingRevenue.set(false);
     }
