@@ -97,6 +97,49 @@
     </div>
   </header>
 
+  <!-- LIVE MULTI-METRIC MONITOR RIBBON: MONEY, WORK IN FLIGHT, HARDWARE RESOURCES -->
+  <div class="live-monitor-ribbon font-mono">
+    <!-- Money Live Metric -->
+    <div class="mon-card mon-money">
+      <div class="mon-icon-orb green">₹</div>
+      <div class="mon-content">
+        <span class="mon-label">SETTLED REAL REVENUE</span>
+        <span class="mon-val text-emerald">₹{{ treasuryOverview().totalSettledInr | number:'1.2-2' }} <span class="mon-sub">(${{ treasuryOverview().totalSettledUsd | number:'1.2-2' }})</span></span>
+        <span class="mon-dest font-mono">Channel: SBI ****5649 (ayyapparayudu.5@ybl)</span>
+      </div>
+    </div>
+
+    <!-- Work In Flight Metric -->
+    <div class="mon-card mon-work">
+      <div class="mon-icon-orb cyan">⚡</div>
+      <div class="mon-content">
+        <span class="mon-label">LIVE WORK IN FLIGHT</span>
+        <span class="mon-val text-cyan">{{ officeData()?.working_agents || 0 }} Active Specialists <span class="mon-sub">/ 7 Roles</span></span>
+        <span class="mon-dest font-mono">Completed Today: {{ liveMonitorData()?.work_status?.tasks_completed_today || 0 }} · Dual-State 100%</span>
+      </div>
+    </div>
+
+    <!-- Hardware & Compute Resources Metric -->
+    <div class="mon-card mon-resources">
+      <div class="mon-icon-orb purple">🖥️</div>
+      <div class="mon-content">
+        <span class="mon-label">SYSTEM & COMPUTE RESOURCES</span>
+        <span class="mon-val text-purple">CPU: {{ liveMonitorData()?.resources?.cpu_percent || 0 }}% · RAM: {{ liveMonitorData()?.resources?.ram_used_gb || 0 }} / {{ liveMonitorData()?.resources?.ram_total_gb || 0 }} GB</span>
+        <span class="mon-dest font-mono">Vector RAG: {{ liveMonitorData()?.resources?.vector_rag_indexed_docs || 0 }} docs · {{ liveMonitorData()?.resources?.active_worker_threads || 0 }} threads</span>
+      </div>
+    </div>
+
+    <!-- Secure Receipts Counter -->
+    <div class="mon-card mon-receipts" (click)="setActiveTab('receipts')" title="Click to view all cryptographically signed settlement receipts">
+      <div class="mon-icon-orb amber">🛡️</div>
+      <div class="mon-content">
+        <span class="mon-label">SECURE RECEIPTS VAULT</span>
+        <span class="mon-val text-amber">{{ receiptsList().length }} Cryptographic Receipts</span>
+        <span class="mon-dest font-mono">Disk: project_data/treasury/receipts/</span>
+      </div>
+    </div>
+  </div>
+
   <!-- NAVIGATION SUB-BAR: EASY TAB SWITCHING (Agent HQ First) -->
   <div class="business-tab-bar">
     <button
@@ -135,6 +178,16 @@
     >
       <span class="tab-icon">📄</span>
       <span>Commercial Invoices & Ledger</span>
+    </button>
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'receipts'"
+      (click)="setActiveTab('receipts')"
+    >
+      <span class="tab-icon">🛡️</span>
+      <span>Secure Receipts Vault</span>
+      <span class="tab-pip font-mono">{{ receiptsList().length }}</span>
     </button>
   </div>
 
@@ -600,6 +653,76 @@
             }
           </tbody>
         </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB 4: SECURE CRYPTOGRAPHIC RECEIPTS VAULT (STORED SECURELY IN BACKEND) -->
+  <div *ngIf="activeTab() === 'receipts'" class="receipts-vault-container">
+    <section class="invoices-section">
+      <div class="section-title-bar">
+        <div>
+          <h2 class="section-title">Cryptographic Settlement Receipts Vault</h2>
+          <p class="section-desc">
+            All receipts are cryptographically sealed with HMAC-SHA256 and stored securely in backend storage
+            (<code>project_data/business/treasury/receipts/</code>). Authenticated payouts to State Bank of India A/C 41130645649 (<code>ayyapparayudu.5@ybl</code>).
+          </p>
+        </div>
+        <div class="table-actions-group">
+          <button class="create-inv-btn" (click)="openUtrModal()">
+            + Verify Inward Settlement
+          </button>
+          <button class="refresh-ledger-btn" (click)="refreshReceiptsData()" title="Reload Receipts">
+            🔄 Refresh Receipts
+          </button>
+        </div>
+      </div>
+
+      <div class="receipts-grid">
+        @if (receiptsList().length === 0) {
+          <div class="empty-receipts-banner font-mono">
+            <span class="empty-ic">🛡️</span>
+            <div class="empty-text">
+              <h4>Zero Mock Receipts • Vault is Authentic & Ready</h4>
+              <p>Whenever a real client payment lands in your SBI account via UPI (ayyapparayudu.5@ybl) and is verified with a 12-digit Bank UTR, an immutable, cryptographically sealed receipt (JSON + Markdown) is permanently recorded in the backend.</p>
+              <button class="create-inv-btn" (click)="openUtrModal()">+ Verify Bank UTR Receipt</button>
+            </div>
+          </div>
+        } @else {
+          @for (rcp of receiptsList(); track rcp.receipt_id) {
+            <div class="receipt-card" (click)="selectReceipt(rcp)">
+              <div class="receipt-card-header font-mono">
+                <span class="rcp-badge">AUTHENTICATED RECEIPT</span>
+                <span class="rcp-id">{{ rcp.receipt_id }}</span>
+              </div>
+              <div class="receipt-body">
+                <div class="rcp-amount font-mono text-emerald">
+                  ₹{{ rcp.amount_inr | number:'1.2-2' }} <span class="usd-sub">(${{ rcp.amount_usd | number:'1.2-2' }})</span>
+                </div>
+                <div class="rcp-meta-row">
+                  <span class="k">Client / Payer:</span>
+                  <span class="v">{{ rcp.payer?.name || 'Verified Client' }}</span>
+                </div>
+                <div class="rcp-meta-row">
+                  <span class="k">Bank Reference:</span>
+                  <span class="v font-mono text-cyan">{{ rcp.utr_transaction_ref }}</span>
+                </div>
+                <div class="rcp-meta-row">
+                  <span class="k">Beneficiary:</span>
+                  <span class="v">{{ rcp.beneficiary?.name }} (SBI ****5649)</span>
+                </div>
+                <div class="rcp-meta-row">
+                  <span class="k">SHA-256 Deliverable:</span>
+                  <span class="v font-mono text-muted">{{ rcp.service_deliverable?.deliverable_sha256 | slice:0:16 }}...</span>
+                </div>
+              </div>
+              <div class="receipt-footer font-mono">
+                <span class="date-txt">{{ rcp.issued_at | date:'medium' }}</span>
+                <span class="seal-pill">HMAC-SHA256 SEALED ✓</span>
+              </div>
+            </div>
+          }
+        }
       </div>
     </section>
   </div>

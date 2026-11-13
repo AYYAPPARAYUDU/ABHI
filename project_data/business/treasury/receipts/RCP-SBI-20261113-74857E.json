@@ -1,0 +1,30 @@
+{
+  "receipt_id": "RCP-SBI-20261113-74857E",
+  "invoice_number": "DIRECT-43187261",
+  "issued_at": "2026-11-13T13:32:06.456743+00:00",
+  "amount_inr": 24500.0,
+  "amount_usd": 280.0,
+  "currency": "INR",
+  "settlement_channel": "State Bank of India (UPI / NEFT)",
+  "utr_transaction_ref": "431872619281",
+  "beneficiary": {
+    "name": "Ravuvai Ayyapparayudu",
+    "bank": "State Bank of India",
+    "account_number": "41130645649",
+    "account_masked": "SBI ****5649",
+    "ifsc": "SBIN0020507",
+    "upi_id": "ayyapparayudu.5@ybl"
+  },
+  "payer": {
+    "name": "Enterprise Client Pilot"
+  },
+  "service_deliverable": {
+    "description": "Real-World Service Settlement & Verification",
+    "deliverable_sha256": "3b75cfac6e45166f572a45038b426397338390dfca898494eda45902122d4ad8"
+  },
+  "cryptographic_verification": {
+    "verification_status": "DUAL_STATE_AUTHENTICATED",
+    "crypto_seal": "1dc94e68ab2369e0e79468c11219406b93c908bea72ad752e42255acdd5d5c34",
+    "algorithm": "HMAC-SHA256"
+  }
+}

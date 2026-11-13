@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "transaction_id": "431872619281",
+    "utr_number": "431872619281",
+    "invoice_number": null,
+    "amount_inr": 24500.0,
+    "amount_usd": 280.0,
+    "client_name": "Enterprise Client Pilot",
+    "beneficiary_account": "SBI ****5649",
+    "account_holder": "Ravuvai Ayyapparayudu",
+    "ifsc": "SBIN0020507",
+    "channel": "UPI (ayyapparayudu.5@ybl)",
+    "settled_at": "2026-11-13T13:32:06.455756+00:00",
+    "status": "SETTLED_TO_SBI_ACCOUNT"
+  }
+]

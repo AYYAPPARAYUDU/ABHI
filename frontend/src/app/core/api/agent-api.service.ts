@@ -591,4 +591,43 @@ export class AgentApiService {
       return null;
     }
   }
+
+  /**
+   * Retrieve verified cryptographic settlement receipts securely stored in the backend.
+   */
+  async getTreasuryReceipts(limit: number = 50): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/business/treasury/receipts?limit=${limit}`);
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Retrieve single cryptographic receipt details.
+   */
+  async getTreasuryReceipt(receiptId: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/business/treasury/receipts/${receiptId}`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Retrieve live system monitor telemetry (money, work in flight, resources).
+   */
+  async getLiveSystemMonitor(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/business/live-monitor`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
 }

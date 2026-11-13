@@ -25,7 +25,7 @@ export class BusinessPageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly toastMessage = signal<string | null>(null);
 
   // Active Tab for Clean Organization (Agent HQ Office first)
-  readonly activeTab = signal<'office' | 'overview' | 'affiliate' | 'invoices'>('office');
+  readonly activeTab = signal<'office' | 'overview' | 'affiliate' | 'invoices' | 'receipts'>('office');
 
   // Agent HQ 3D Virtual Office State (Milestone 50)
   readonly activeOfficeSubTab = signal<'office' | 'tasks' | 'stats'>('office');
@@ -36,6 +36,9 @@ export class BusinessPageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly isLiveWorkActive = signal<boolean>(true);
   readonly latestAutopilotData = signal<any>(null);
   readonly activeWorkers = computed(() => (this.officeData()?.workers || []).filter((w: any) => w.status === 'WORKING'));
+  readonly receiptsList = signal<any[]>([]);
+  readonly selectedReceipt = signal<any | null>(null);
+  readonly liveMonitorData = signal<any | null>(null);
   orchestratorGoal = 'Autonomous Code Quality Audit & AST Security Verification';
   readonly orchestratorResult = signal<any>(null);
   private officePollInterval: any = null;
@@ -96,10 +99,13 @@ export class BusinessPageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.refreshTreasuryData();
     this.refreshAffiliateData();
     this.refreshOfficeData();
+    this.refreshReceiptsData();
+    this.refreshLiveMonitor();
 
-    // Live real-time polling for physical agent work state (2000ms high-fidelity cadence)
+    // Live real-time polling for physical agent work state and system monitoring (2000ms high-fidelity cadence)
     this.officePollInterval = setInterval(() => {
       this.refreshOfficeData();
+      this.refreshLiveMonitor();
     }, 2000);
   }
 
@@ -113,11 +119,37 @@ export class BusinessPageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.animateElements();
   }
 
-  setActiveTab(tab: 'office' | 'overview' | 'affiliate' | 'invoices'): void {
+  setActiveTab(tab: 'office' | 'overview' | 'affiliate' | 'invoices' | 'receipts'): void {
     this.activeTab.set(tab);
     if (tab === 'office') {
       this.refreshOfficeData();
+    } else if (tab === 'receipts') {
+      this.refreshReceiptsData();
     }
+  }
+
+  async refreshReceiptsData(): Promise<void> {
+    try {
+      const data = await this.agentApi.getTreasuryReceipts(50);
+      this.receiptsList.set(data || []);
+    } catch {
+      // Clean fallback
+    }
+  }
+
+  async refreshLiveMonitor(): Promise<void> {
+    try {
+      const data = await this.agentApi.getLiveSystemMonitor();
+      if (data) {
+        this.liveMonitorData.set(data);
+      }
+    } catch {
+      // Clean fallback
+    }
+  }
+
+  selectReceipt(rcp: any): void {
+    this.selectedReceipt.set(rcp);
   }
 
   // --- AGENT HQ 3D VIRTUAL OFFICE METHODS ---
@@ -370,7 +402,11 @@ export class BusinessPageComponent implements OnInit, OnDestroy, AfterViewInit {
 
       if (res?.status === 'SETTLED_TO_SBI_ACCOUNT') {
         this.showUtrModal.set(false);
-        await this.refreshTreasuryData();
+        await Promise.all([
+          this.refreshTreasuryData(),
+          this.refreshReceiptsData(),
+          this.refreshLiveMonitor()
+        ]);
         this.speechVoice.speak(`Payment of ₹${this.inputAmount} verified and settled to your State Bank of India account, Mamu!`);
         this.showToast(`✓ UTR ${this.inputUtr} verified! ₹${this.inputAmount} credited to SBI account.`);
       } else {
