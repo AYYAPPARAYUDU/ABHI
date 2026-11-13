@@ -76,3 +76,22 @@ async def run_autopilot_cycle() -> Dict[str, Any]:
     return await autonomous_autopilot.run_master_cycle()
 
 
+@router.get("/live-work/status")
+async def get_live_work_status() -> Dict[str, Any]:
+    """Return status of 24/7 continuous autonomous live work."""
+    return autonomous_autopilot.get_status()
+
+
+@router.post("/live-work/start")
+async def start_live_work() -> Dict[str, Any]:
+    """Engage continuous autonomous live work loop across all 4 tiers."""
+    return autonomous_autopilot.start_live_work()
+
+
+@router.post("/live-work/stop")
+async def stop_live_work() -> Dict[str, Any]:
+    """Pause continuous autonomous live work loop."""
+    return autonomous_autopilot.stop_live_work()
+
+
+

@@ -183,6 +183,16 @@
         <div class="hq-right-meta">
           <button
             type="button"
+            class="hq-livework-toggle-btn font-mono"
+            [class.active]="isLiveWorkActive()"
+            (click)="toggleLiveWorkDaemon()"
+            [title]="isLiveWorkActive() ? 'Click to pause 24/7 autonomous live work' : 'Click to engage 24/7 autonomous live work'"
+          >
+            <span class="live-dot" [class.pulse]="isLiveWorkActive()"></span>
+            <span>{{ isLiveWorkActive() ? '🟢 LIVE WORK ENGAGED' : '⏸️ LIVE WORK PAUSED' }}</span>
+          </button>
+          <button
+            type="button"
             class="hq-autopilot-btn font-mono"
             [disabled]="isAutopilotRunning()"
             (click)="triggerFullAutopilotCycle()"
@@ -214,6 +224,22 @@
           <span class="m-v text-emerald">SBI ****5649 · ayyapparayudu.5@ybl</span>
         </div>
       </div>
+
+      <!-- Real-Time Continuous Live Work Ticker -->
+      @if (activeWorkers().length > 0) {
+        <div class="live-work-ticker font-mono">
+          <span class="ticker-badge">⚡ LIVE WORK STREAMING:</span>
+          <div class="ticker-items">
+            @for (w of activeWorkers(); track w.agent_id) {
+              <span class="ticker-item" [style.border-color]="w.color_hex">
+                <span class="ticker-name" [style.color]="w.color_hex">{{ w.name }}</span>
+                <span class="ticker-pod font-mono">[{{ w.room_pod }}]</span>
+                <span class="ticker-task">{{ w.active_task }}</span>
+              </span>
+            }
+          </div>
+        </div>
+      }
 
       <!-- Autonomous Goal Orchestrator Stripe -->
       <div class="hq-orchestrator-stripe">

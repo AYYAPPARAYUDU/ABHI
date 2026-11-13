@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, AfterViewInit, signal, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, AfterViewInit, signal, computed, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -33,7 +33,9 @@ export class BusinessPageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly selectedWorker = signal<any>(null);
   readonly isOrchestrating = signal<boolean>(false);
   readonly isAutopilotRunning = signal<boolean>(false);
+  readonly isLiveWorkActive = signal<boolean>(true);
   readonly latestAutopilotData = signal<any>(null);
+  readonly activeWorkers = computed(() => (this.officeData()?.workers || []).filter((w: any) => w.status === 'WORKING'));
   orchestratorGoal = 'Autonomous Code Quality Audit & AST Security Verification';
   readonly orchestratorResult = signal<any>(null);
   private officePollInterval: any = null;
@@ -95,10 +97,10 @@ export class BusinessPageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.refreshAffiliateData();
     this.refreshOfficeData();
 
-    // Live real-time polling for physical agent work state
+    // Live real-time polling for physical agent work state (2000ms high-fidelity cadence)
     this.officePollInterval = setInterval(() => {
       this.refreshOfficeData();
-    }, 4000);
+    }, 2000);
   }
 
   ngOnDestroy(): void {
@@ -198,6 +200,21 @@ export class BusinessPageComponent implements OnInit, OnDestroy, AfterViewInit {
     } finally {
       this.isAutopilotRunning.set(false);
     }
+  }
+
+  async toggleLiveWorkDaemon(): Promise<void> {
+    if (this.isLiveWorkActive()) {
+      await this.agentApi.stopLiveWork();
+      this.isLiveWorkActive.set(false);
+      this.speechVoice.speak('Autonomous live work paused. Agents transitioning to standby, Mamu.');
+      this.showToast('Live work daemon paused.');
+    } else {
+      await this.agentApi.startLiveWork();
+      this.isLiveWorkActive.set(true);
+      this.speechVoice.speak('Engaging 24/7 continuous autonomous live work across all 4 tiers, Mamu.');
+      this.showToast('Live work daemon engaged.');
+    }
+    await this.refreshOfficeData();
   }
 
   // --- TREASURY & INVOICING METHODS ---

@@ -108,10 +108,23 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to start daily evolution scheduler: {e}")
 
+    # 6. Start 24/7 Autonomous Multi-Agent Live Work Daemon (The 4 Intelligence Tiers in Action)
+    try:
+        from backend.app.intelligence.autonomous_autopilot import autonomous_autopilot
+        autonomous_autopilot.start_live_work()
+        logger.info("24/7 Autonomous Multi-Agent Live Work Daemon initialized.")
+    except Exception as e:
+        logger.error(f"Failed to start live work daemon: {e}")
+
     logger.info("Backend Gateway & Cognitive Core startup complete.")
     yield
     if evolution_task and not evolution_task.done():
         evolution_task.cancel()
+    try:
+        from backend.app.intelligence.autonomous_autopilot import autonomous_autopilot
+        autonomous_autopilot.stop_live_work()
+    except Exception:
+        pass
     logger.info("Shutting down Backend Gateway...")
 
 

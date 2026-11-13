@@ -559,4 +559,36 @@ export class AgentApiService {
       return null;
     }
   }
+
+  /**
+   * Engage 24/7 continuous autonomous live work daemon.
+   */
+  async startLiveWork(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/intelligence/live-work/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Pause 24/7 continuous autonomous live work daemon.
+   */
+  async stopLiveWork(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/intelligence/live-work/stop`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
 }

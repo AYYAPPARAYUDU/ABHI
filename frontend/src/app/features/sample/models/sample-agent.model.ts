@@ -65,14 +65,13 @@ export interface OfficeRoom {
   occupantIds: string[];
   isOutOfOrder?: boolean;
   specialNote?: string;
-  gridArea: {
-    rowStart: number;
-    colStart: number;
-    rowSpan: number;
-    colSpan: number;
+  bounds: {
+    x: number; // in canvas coordinate units 0-1000
+    y: number;
+    w: number;
+    h: number;
   };
   features: string[];
-  ambientSound?: string;
 }
 
 export type EntityActivity = 'typing' | 'walking' | 'meeting' | 'coffee' | 'gaming' | 'thinking' | 'sleeping' | 'repairing';
@@ -83,14 +82,17 @@ export interface OfficeEntity {
   role: string;
   type: 'agent' | 'human' | 'bot' | 'visitor';
   roomId: string;
-  x: number; // 0 to 100% within room
-  y: number; // 0 to 100% within room
-  avatar: string;
-  activity: EntityActivity;
-  speechBubble?: string;
-  facing: 'left' | 'right';
+  x: number;
+  y: number;
   targetX?: number;
   targetY?: number;
+  avatar: string;
+  color: string;
+  activity: EntityActivity;
+  speechBubble?: string;
+  speechTimer?: number;
+  facing: 'left' | 'right' | 'up' | 'down';
+  deskPosition?: { x: number; y: number };
 }
 
 export interface ApprovalRequest {
@@ -109,14 +111,36 @@ export interface ApprovalRequest {
 
 export interface SharedBrainMemory {
   id: string;
-  key: string;
-  team: string;
-  vectorEmbeddingDim: number;
+  category: 'Brand rules' | 'Lessons' | 'Ideas' | 'Logs';
+  entity: string;
   content: string;
-  lastSync: string;
+  timestamp: string;
+  author: string;
   accessCount: number;
-  relevanceScore: number;
+}
+
+export interface ClaudeEventLog {
+  id: string;
+  timestamp: string;
+  step: number;
+  type: 'USER_COMMAND' | 'THINKING' | 'TOOL_CALL' | 'PARALLEL_SPAWN' | 'FILE_WRITE' | 'HUMAN_GATE' | 'OUTPUT';
+  agent: string;
+  title: string;
+  codeSnippet?: string;
+  durationMs: number;
+  isApprovalRequired?: boolean;
+}
+
+export interface PipelineItem {
+  id: string;
+  title: string;
+  category: 'video' | 'script' | 'research' | 'code' | 'social';
+  stage: 'inbox' | 'in_progress' | 'awaiting_approval' | 'done';
+  assignee: string;
+  progress: number;
+  subtasks: string[];
+  summary: string;
+  createdAt: string;
 }
 
 export type SampleLayoutMode = 'workspace-1' | 'workspace-2' | 'workspace-3';
-

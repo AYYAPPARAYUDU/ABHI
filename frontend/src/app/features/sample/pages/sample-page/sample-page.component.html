@@ -1,577 +1,585 @@
 <div class="sample-workspace-container" [attr.data-theme]="themeService?.activeTheme()?.id || 'dark'">
-  <!-- Top Ticker Bar -->
-  <div class="top-ticker-bar">
-    <div class="ticker-label">
-      <span class="live-dot"></span>
-      <span class="font-monospace">AGENTIC TELEMETRY:</span>
-    </div>
-    <div class="ticker-scroll-track">
-      @for (item of tickerFeed(); track item.id) {
-        <span class="ticker-chip">
-          <span class="chip-tag font-monospace">[{{ item.tag }}]</span>
-          <span class="chip-time font-monospace">{{ item.time }}</span>
-          <span class="chip-text">{{ item.text }}</span>
-        </span>
-      }
-    </div>
-    <div class="ticker-right-actions">
-      @if (pendingApprovals().length > 0) {
-        <button
-          type="button"
-          class="ticker-alert-btn font-monospace"
-          (click)="openApproval(pendingApprovals()[0])"
-        >
-          <span class="alert-pulse">⚠️</span>
-          <span>APPROVAL REQUIRED ({{ pendingApprovals().length }})</span>
-        </button>
-      }
-      <button
-        type="button"
-        class="ticker-btn"
-        (click)="openMissionModal()"
-        title="Dispatch Mission to Agent Swarm"
-      >
-        <span>⚡</span>
-        <span>Dispatch Mission</span>
-      </button>
-    </div>
-  </div>
 
-  <!-- Main Hero & Navigation Header -->
-  <header class="sample-header">
-    <div class="header-main-row">
-      <div class="header-title-block">
-        <div class="title-badge font-monospace">
-          <span class="badge-icon">🏢</span>
-          <span>OFFICE OF AI AGENTS · REFERENCE ARCHITECTURE</span>
+  <!-- ========================================================================= -->
+  <!-- TOP TELEMETRY & VOICE COMMAND HUD                                         -->
+  <!-- ========================================================================= -->
+  <header class="agent-hq-hero">
+    <div class="hero-top-row">
+      <div class="brand-badge-group">
+        <div class="hq-badge font-monospace">
+          <span class="pulse-beacon"></span>
+          <span>AGENT HQ · 8 TEAMS · 31 AGENTS · ONE SHARED BRAIN</span>
         </div>
-        <h1 class="header-title">
-          Autonomous Agent Office <span class="title-highlight">& Spatial Workspaces</span>
+        <h1 class="hero-title">
+          Autonomous AI Office <span class="gradient-text">& Spatial Workspaces</span>
         </h1>
-        <p class="header-subtitle">
-          31 Specialised Agents · 8 Autonomous Teams · 10 Interactive Spatial Rooms · 1 Shared Brain
+        <p class="hero-sub">
+          Official Reel Reference: 10 Rooms · 40 Entities · Game Room · Out-of-Order Stall · Parallel Sub-Agents · Human-in-the-Loop
         </p>
       </div>
 
-      <!-- Reference Reels Pill Links -->
-      <div class="reels-reference-strip">
-        <div class="reels-label font-monospace">REELS REFERENCE:</div>
-        <a
-          href="https://www.instagram.com/reel/DeV1fyFiA8A/?dlrf=MWdhbW01dDF2a2k1eA=="
-          target="_blank"
-          rel="noopener noreferrer"
-          class="reel-pill-link"
-          title="Reel 1: 8 teams, 31 agents, one shared brain — Watch what happens when I talk to them"
-        >
-          <span class="pill-ic">🎬</span>
-          <div class="pill-text">
-            <span class="pill-title">Reel 1: 31 Agents & 8 Teams</span>
-            <span class="pill-sub">Shared Brain · Parallel Sub-Agents · Safety Gate</span>
-          </div>
-          <span class="external-ic">↗</span>
-        </a>
+      <!-- Reference Reels Links -->
+      <div class="reels-links-box">
+        <span class="reels-box-title font-monospace">REELS REFERENCE:</span>
+        <div class="reels-badges">
+          <a
+            href="https://www.instagram.com/reel/DeV1fyFiA8A/?dlrf=MWdhbW01dDF2a2k1eA=="
+            target="_blank"
+            rel="noopener noreferrer"
+            class="reel-badge"
+          >
+            <span class="ig-icon">🎬</span>
+            <div class="badge-text">
+              <span class="badge-title">Reel 1: 31 Agents & 8 Teams</span>
+              <span class="badge-desc">Shared Brain · Parallel Sub-Agents · Gatekeeper</span>
+            </div>
+            <span class="arrow">↗</span>
+          </a>
 
-        <a
-          href="https://www.instagram.com/reel/DfJiHrmipzE/?obrf=MWp1YWloYnowejh6eg=="
-          target="_blank"
-          rel="noopener noreferrer"
-          class="reel-pill-link"
-          title="Reel 2: 10 rooms, 40 people, a game room, and one bathroom stall that is out of order"
-        >
-          <span class="pill-ic">🏢</span>
-          <div class="pill-text">
-            <span class="pill-title">Reel 2: 10 Rooms & 40 People</span>
-            <span class="pill-sub">Walkable Spatial Floor · Game Room · Out-of-Order Stall</span>
-          </div>
-          <span class="external-ic">↗</span>
-        </a>
+          <a
+            href="https://www.instagram.com/reel/DfJiHrmipzE/?obrf=MWp1YWloYnowejh6eg=="
+            target="_blank"
+            rel="noopener noreferrer"
+            class="reel-badge"
+          >
+            <span class="ig-icon">🏢</span>
+            <div class="badge-text">
+              <span class="badge-title">Reel 2: Walkable Office 2.0</span>
+              <span class="badge-desc">10 Rooms · 40 People · Game Room · Out-of-Order</span>
+            </div>
+            <span class="arrow">↗</span>
+          </a>
+        </div>
       </div>
     </div>
 
-    <!-- Segmented 3-Way Workspace Toggle Switcher -->
-    <div class="workspace-mode-selector">
+    <!-- Voice Command Bar ("Watch what happens when I just talk to them") -->
+    <div class="voice-command-bar">
+      <div class="voice-mic-indicator">
+        <span class="mic-icon">🎙️</span>
+        <div class="sound-wave">
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+          <span class="wave-bar"></span>
+        </div>
+      </div>
+
+      <div class="voice-input-wrap">
+        <input
+          type="text"
+          class="voice-input"
+          placeholder='Give one voice command... e.g. "There is a new clip in inbox. Make it a reel."'
+          [(ngModel)]="voiceCommandInput"
+          (keydown.enter)="dispatchVoiceCommand()"
+        />
+      </div>
+
       <button
         type="button"
-        class="mode-toggle-btn"
+        class="voice-dispatch-btn font-monospace"
+        (click)="dispatchVoiceCommand()"
+        [disabled]="!voiceCommandInput.trim()"
+      >
+        <span>EXECUTE</span>
+        <span>⚡</span>
+      </button>
+
+      <div class="voice-quick-presets">
+        <span class="preset-label font-monospace">TRY:</span>
+        <button
+          type="button"
+          class="quick-preset-chip font-monospace"
+          (click)="dispatchVoiceCommand('There is a new clip in inbox. Make it a reel.')"
+        >
+          🎬 "Make it a reel"
+        </button>
+        <button
+          type="button"
+          class="quick-preset-chip font-monospace"
+          (click)="dispatchVoiceCommand('Write a 45-second viral reel script about our AI office.')"
+        >
+          ✍️ "Write 45s script"
+        </button>
+        <button
+          type="button"
+          class="quick-preset-chip font-monospace"
+          (click)="dispatchVoiceCommand('Scan GitHub for trending agent repositories.')"
+        >
+          🔍 "Scan GitHub trends"
+        </button>
+      </div>
+    </div>
+
+    <!-- Segmented 3-Way Mode Switcher -->
+    <div class="workspace-mode-switcher">
+      <button
+        type="button"
+        class="switcher-tab"
         [class.active]="layoutMode() === 'workspace-1'"
         (click)="onLayoutChange('workspace-1')"
       >
-        <span class="btn-ic">🏢</span>
-        <div class="btn-copy">
-          <span class="btn-primary-text">Workspace 1: Enterprise Office Grid</span>
-          <span class="btn-sub-text">8 Teams · 31 Agents · Parallel Sub-Agents · Shared Brain</span>
+        <span class="tab-icon">🏢</span>
+        <div class="tab-meta">
+          <span class="tab-title">Workspace 1: Agent HQ Grid</span>
+          <span class="tab-desc">8 Teams · 31 Agents · Shared Brain MCP · Kanban Pipeline</span>
         </div>
         @if (layoutMode() === 'workspace-1') {
-          <span class="active-badge font-monospace">ACTIVE</span>
+          <span class="tab-pip font-monospace">ACTIVE</span>
         }
       </button>
 
       <button
         type="button"
-        class="mode-toggle-btn"
+        class="switcher-tab"
         [class.active]="layoutMode() === 'workspace-2'"
         (click)="onLayoutChange('workspace-2')"
       >
-        <span class="btn-ic">🎮</span>
-        <div class="btn-copy">
-          <span class="btn-primary-text">Workspace 2: 10-Room Walkable Office</span>
-          <span class="btn-sub-text">10 Rooms · 40 Entities · Game Room · Out-of-Order Stall</span>
+        <span class="tab-icon">🎮</span>
+        <div class="tab-meta">
+          <span class="tab-title">Workspace 2: Walkable Office 2.0</span>
+          <span class="tab-desc">WASD / Arrow Walk · 10 Rooms · 40 Entities · Game Room & Broken Restroom</span>
         </div>
         @if (layoutMode() === 'workspace-2') {
-          <span class="active-badge font-monospace">ACTIVE</span>
+          <span class="tab-pip font-monospace">ACTIVE</span>
         }
       </button>
 
       <button
         type="button"
-        class="mode-toggle-btn mode-holo-btn"
+        class="switcher-tab tab-matrix"
         [class.active]="layoutMode() === 'workspace-3'"
         (click)="onLayoutChange('workspace-3')"
       >
-        <span class="btn-ic">🌐</span>
-        <div class="btn-copy">
-          <span class="btn-primary-text">Workspace 3: 3D Holo-Matrix Studio</span>
-          <span class="btn-sub-text">Three.js WebGL Spatial Studio · Orbital Satellites · Live Orbit</span>
+        <span class="tab-icon">🌐</span>
+        <div class="tab-meta">
+          <span class="tab-title">Workspace 3: 3D Holo-Matrix & Claude Replay</span>
+          <span class="tab-desc">Three.js WebGL Spatial Studio · Live Claude Code Event Terminal Replay</span>
         </div>
         @if (layoutMode() === 'workspace-3') {
-          <span class="active-badge font-monospace">ACTIVE</span>
+          <span class="tab-pip font-monospace">ACTIVE</span>
         }
       </button>
     </div>
 
-    <!-- Telemetry Statistics Ribbon -->
-    <div class="telemetry-ribbon">
-      <div class="stat-card">
-        <span class="stat-ic">🤖</span>
-        <div class="stat-data">
-          <span class="stat-val font-monospace">{{ agentService.totalAgentCount() }}</span>
-          <span class="stat-lbl">Total Agents</span>
-        </div>
+    <!-- Live Telemetry Strip -->
+    <div class="telemetry-bar">
+      <div class="t-pill">
+        <span class="t-k">TOTAL AGENTS:</span>
+        <span class="t-v font-monospace text-cyan">{{ agentService.totalAgentCount() }}</span>
       </div>
-
-      <div class="stat-card">
-        <span class="stat-ic text-emerald">⚡</span>
-        <div class="stat-data">
-          <span class="stat-val font-monospace text-emerald">{{ agentService.workingAgentCount() }}</span>
-          <span class="stat-lbl">Active & Parallel</span>
-        </div>
+      <div class="t-pill">
+        <span class="t-k">ACTIVE / PARALLEL:</span>
+        <span class="t-v font-monospace text-emerald">{{ agentService.workingAgentCount() }}</span>
       </div>
-
-      <div class="stat-card">
-        <span class="stat-ic">🏢</span>
-        <div class="stat-data">
-          <span class="stat-val font-monospace">8 / 10</span>
-          <span class="stat-lbl">Teams / Rooms</span>
-        </div>
+      <div class="t-pill">
+        <span class="t-k">ROOMS / ENTITIES:</span>
+        <span class="t-v font-monospace">10 / 40</span>
       </div>
-
-      <div class="stat-card">
-        <span class="stat-ic">👥</span>
-        <div class="stat-data">
-          <span class="stat-val font-monospace">{{ agentService.totalEntityCount() }}</span>
-          <span class="stat-lbl">Office Entities</span>
-        </div>
+      <div class="t-pill">
+        <span class="t-k">SHARED BRAIN MCP:</span>
+        <span class="t-v font-monospace text-purple">1,024 Vectors</span>
       </div>
-
-      <div class="stat-card">
-        <span class="stat-ic text-cyan">🧠</span>
-        <div class="stat-data">
-          <span class="stat-val font-monospace text-cyan">1,024 Dim</span>
-          <span class="stat-lbl">Shared Brain Vectors</span>
-        </div>
+      <div class="t-pill">
+        <span class="t-k">TODAY SPEND:</span>
+        <span class="t-v font-monospace text-amber">{{ agentService.totalTokenSpend() }}</span>
       </div>
-
-      <div class="stat-card">
-        <span class="stat-ic text-amber">💰</span>
-        <div class="stat-data">
-          <span class="stat-val font-monospace text-amber">{{ agentService.totalTokenSpend() }}</span>
-          <span class="stat-lbl">Today Spend ($10 cap)</span>
-        </div>
-      </div>
-
-      <div class="stat-card" [class.alert]="agentService.pendingApprovalCount() > 0">
-        <span class="stat-ic">{{ agentService.pendingApprovalCount() > 0 ? '⚠️' : '🛡️' }}</span>
-        <div class="stat-data">
-          <span class="stat-val font-monospace" [class.text-rose]="agentService.pendingApprovalCount() > 0">
-            {{ agentService.pendingApprovalCount() }}
-          </span>
-          <span class="stat-lbl">Gatekeeper Approvals</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Search & Filter Controls Bar -->
-    <div class="filter-controls-bar">
-      <div class="search-input-wrap">
-        <span class="search-ic">🔍</span>
-        <input
-          type="text"
-          class="search-input"
-          placeholder="Search 31 agents, roles, tasks, codenames..."
-          [(ngModel)]="searchQuery"
-          (input)="onSearchChange()"
-        />
-        @if (searchQuery) {
-          <button type="button" class="clear-search-btn" (click)="searchQuery = ''; onSearchChange()">✕</button>
-        }
-      </div>
-
-      <div class="filter-select-group">
-        <label class="filter-label">Team:</label>
-        <select class="filter-select" [(ngModel)]="selectedTeam" (change)="onTeamFilterChange()">
-          <option value="all">All 8 Teams</option>
-          @for (t of teams(); track t.id) {
-            <option [value]="t.id">{{ t.icon }} {{ t.name }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="filter-select-group">
-        <label class="filter-label">Room:</label>
-        <select class="filter-select" [(ngModel)]="selectedRoomFilter" (change)="onRoomFilterChange()">
-          <option value="all">All 10 Rooms</option>
-          @for (r of rooms(); track r.id) {
-            <option [value]="r.id">{{ r.icon }} {{ r.name }}</option>
-          }
-        </select>
-      </div>
-
-      <div class="filter-select-group">
-        <label class="filter-label">Status:</label>
-        <select class="filter-select" [(ngModel)]="selectedStatusFilter" (change)="onStatusFilterChange()">
-          <option value="all">All Statuses</option>
-          <option value="working">Working</option>
-          <option value="parallel">Parallel Run</option>
-          <option value="idle">Idle</option>
-          <option value="awaiting_approval">Awaiting Approval</option>
-        </select>
-      </div>
-
-      <button
-        type="button"
-        class="quick-action-btn"
-        (click)="dispatchPreset('sync-all')"
-        title="Synchronize Shared Brain Across All Agents"
-      >
-        <span>🔄</span>
-        <span>Sync Brain</span>
-      </button>
+      @if (pendingApprovals().length > 0) {
+        <button
+          type="button"
+          class="t-pill t-pill-alert"
+          (click)="openApproval(pendingApprovals()[0])"
+        >
+          <span class="alert-icon">⚠️</span>
+          <span class="t-v font-monospace">OPERATOR OK REQUIRED ({{ pendingApprovals().length }})</span>
+        </button>
+      }
     </div>
   </header>
 
   <!-- ========================================================================= -->
-  <!-- WORKSPACE 1: ENTERPRISE MULTI-AGENT HQ (8 Teams · 31 Agents · Shared Brain)-->
+  <!-- WORKSPACE 1: AGENT HQ (Reel 1 Architecture)                               -->
   <!-- ========================================================================= -->
   @if (layoutMode() === 'workspace-1') {
-    <section class="workspace-view workspace-grid-view">
-      <!-- Shared Brain Central Terminal Banner -->
-      <div class="shared-brain-banner">
-        <div class="brain-left">
-          <div class="brain-orb-animation">
-            <span class="brain-pulse-ring"></span>
-            <span class="brain-core-glyph">🧠</span>
-          </div>
-          <div class="brain-info">
-            <div class="brain-header-tag font-monospace">CENTRAL VECTOR ARCHITECTURE · MCP BUS</div>
-            <h2 class="brain-title">Shared Brain Context Engine</h2>
-            <p class="brain-desc">
-              All 8 teams and 31 agents synchronize memory through this shared vector store.
-              Research findings automatically trigger script hooks, creative video pipelines, and social posts.
-            </p>
-          </div>
-        </div>
+    <main class="hq-content-grid">
 
-        <div class="brain-metrics">
-          <div class="brain-chip">
-            <span class="chip-k">Vector Dim:</span>
-            <span class="chip-v font-monospace">1,536</span>
-          </div>
-          <div class="brain-chip">
-            <span class="chip-k">Sync Rate:</span>
-            <span class="chip-v font-monospace">120 emb/sec</span>
-          </div>
-          <div class="brain-chip">
-            <span class="chip-k">Active Keys:</span>
-            <span class="chip-v font-monospace">{{ sharedBrain().length }} Memory Slots</span>
-          </div>
-        </div>
-
-        <div class="brain-memory-slots">
-          @for (mem of sharedBrain(); track mem.id) {
-            <div class="memory-pill" [title]="mem.content">
-              <span class="mem-team font-monospace">{{ mem.team }}:</span>
-              <span class="mem-key">{{ mem.key }}</span>
-              <span class="mem-acc font-monospace">({{ mem.accessCount }} hits)</span>
+      <!-- 1. The Shared Brain MCP Server (brain/memory.jsonl) -->
+      <section class="shared-brain-section">
+        <div class="brain-card-header">
+          <div class="brain-header-title">
+            <span class="brain-glyph">🧠</span>
+            <div>
+              <div class="brain-mcp-tag font-monospace">@modelcontextprotocol/server-memory · brain/memory.jsonl</div>
+              <h2 class="brain-heading">The Shared Brain</h2>
             </div>
+          </div>
+
+          <!-- Category Selector Tabs -->
+          <div class="brain-category-tabs font-monospace">
+            <button
+              type="button"
+              class="cat-tab"
+              [class.active]="activeBrainCategory() === 'Brand rules'"
+              (click)="setBrainCategory('Brand rules')"
+            >
+              Brand rules (3)
+            </button>
+            <button
+              type="button"
+              class="cat-tab"
+              [class.active]="activeBrainCategory() === 'Lessons'"
+              (click)="setBrainCategory('Lessons')"
+            >
+              Lessons (2)
+            </button>
+            <button
+              type="button"
+              class="cat-tab"
+              [class.active]="activeBrainCategory() === 'Ideas'"
+              (click)="setBrainCategory('Ideas')"
+            >
+              Ideas (2)
+            </button>
+          </div>
+        </div>
+
+        <p class="brain-explanation">
+          "One memory server every agent reads and writes. When I state a preference ('from now on, cover text is red'), it is saved instantly and remembered by all 31 agents."
+        </p>
+
+        <!-- Active Category Memory List -->
+        <div class="memory-entities-grid">
+          @for (mem of sharedBrain(); track mem.id) {
+            @if (mem.category === activeBrainCategory()) {
+              <div class="memory-entity-card">
+                <div class="mem-card-top font-monospace">
+                  <span class="mem-tag">ENTITY: {{ mem.entity }}</span>
+                  <span class="mem-hits">{{ mem.accessCount }} reads</span>
+                </div>
+                <p class="mem-content">"{{ mem.content }}"</p>
+                <div class="mem-footer font-monospace">
+                  <span class="mem-author">Added by: {{ mem.author }}</span>
+                  <span class="mem-time">{{ mem.timestamp }}</span>
+                </div>
+              </div>
+            }
           }
         </div>
-      </div>
+      </section>
 
-      <!-- 8 Team Pods Grid -->
-      <div class="teams-container">
-        @for (team of teams(); track team.id) {
-          <div class="team-pod-card" [style.border-top-color]="team.color">
-            <div class="team-pod-header">
-              <div class="team-badge" [style.background-color]="team.color + '22'" [style.color]="team.color">
-                <span class="team-icon">{{ team.icon }}</span>
-                <span class="team-name">{{ team.name }}</span>
-              </div>
-              <div class="team-meta font-monospace">
-                <span class="meta-tasks">{{ team.activeTasks }} Active</span>
-                <span class="meta-sep">·</span>
-                <span class="meta-count">{{ team.agentCount }} Agents</span>
-              </div>
+      <!-- 2. The 4-Stage Kanban Execution Pipeline -->
+      <section class="kanban-pipeline-section">
+        <div class="section-header-row">
+          <h2 class="section-title">
+            <span class="ic">⚡</span> Execution Pipeline: Raw Clip In → Finished Reel Out
+          </h2>
+          <span class="section-sub font-monospace">HUMAN-IN-THE-LOOP SAFETY ENFORCED</span>
+        </div>
+
+        <div class="kanban-board-columns">
+          <!-- Col 1: inbox/ -->
+          <div class="kanban-col">
+            <div class="col-header font-monospace">
+              <span class="col-title">📁 inbox/</span>
+              <span class="col-count">1</span>
             </div>
-
-            <p class="team-description">{{ team.description }}</p>
-
-            <div class="team-mcp-strip font-monospace">
-              <span class="mcp-label">MCP:</span>
-              @for (mcp of team.mcpIntegrations; track mcp) {
-                <span class="mcp-tag">{{ mcp }}</span>
-              }
-            </div>
-
-            <!-- Agents in this team -->
-            <div class="team-agents-grid">
-              @for (agent of agents(); track agent.id) {
-                @if (agent.teamId === team.id) {
-                  <div
-                    class="agent-card"
-                    [class.selected]="selectedAgent()?.id === agent.id"
-                    [class.working]="agent.status === 'working'"
-                    [class.parallel]="agent.status === 'parallel'"
-                    [class.approval-pending]="agent.status === 'awaiting_approval'"
-                    (click)="selectAgent(agent)"
-                  >
-                    <div class="agent-card-top">
-                      <div class="agent-avatar-box">
-                        <span class="agent-avatar">{{ agent.avatar }}</span>
-                        <span class="agent-status-dot" [attr.data-status]="agent.status"></span>
-                      </div>
-
-                      <div class="agent-info-block">
-                        <div class="agent-name-row">
-                          <span class="agent-name">{{ agent.name }}</span>
-                          <span class="agent-codename font-monospace">{{ agent.codename }}</span>
-                        </div>
-                        <span class="agent-role">{{ agent.role }}</span>
-                      </div>
-
-                      <span class="status-pill font-monospace" [attr.data-status]="agent.status">
-                        {{ agent.status === 'parallel' ? 'PARALLEL' : agent.status.toUpperCase() }}
-                      </span>
-                    </div>
-
-                    <div class="agent-task-snippet">
-                      <span class="task-label font-monospace">TASK:</span>
-                      <span class="task-text">{{ agent.currentTask }}</span>
-                    </div>
-
-                    <!-- Progress bar -->
-                    @if (agent.progress > 0) {
-                      <div class="agent-progress-bar-wrap">
-                        <div class="agent-progress-fill" [style.width.%]="agent.progress"></div>
-                      </div>
-                    }
-
-                    <!-- Sub-Agents parallel list if any (Highlighted from Reel 1!) -->
-                    @if (agent.subAgents.length > 0) {
-                      <div class="sub-agents-strip">
-                        <div class="sub-header font-monospace">
-                          <span>⚡ SUB-AGENTS ({{ agent.subAgents.length }} PARALLEL)</span>
-                        </div>
-                        @for (sub of agent.subAgents; track sub.id) {
-                          <div class="sub-agent-row">
-                            <span class="sub-status font-monospace">[{{ sub.status }}]</span>
-                            <span class="sub-name">{{ sub.name }}</span>
-                            <span class="sub-progress font-monospace">{{ sub.progress }}%</span>
-                          </div>
-                        }
-                      </div>
-                    }
-
-                    <!-- Tools used chips -->
-                    <div class="agent-tools-row">
-                      @for (t of agent.toolsUsed; track t) {
-                        <span class="tool-chip font-monospace">{{ t }}</span>
-                      }
-                    </div>
-
-                    <div class="agent-card-footer">
-                      <div class="footer-cost font-monospace">
-                        <span class="cost-lbl">Cost:</span>
-                        <span class="cost-val">{{ agent.costEstimate }}</span>
-                      </div>
-
-                      <div class="footer-actions">
-                        <button
-                          type="button"
-                          class="agent-action-btn font-monospace"
-                          (click)="triggerAgentTask(agent.id, $event)"
-                          title="Trigger Immediate Task Run"
-                        >
-                          RUN
-                        </button>
-                      </div>
+            <div class="col-cards">
+              @for (item of pipelineItems(); track item.id) {
+                @if (item.stage === 'inbox') {
+                  <div class="pipeline-card">
+                    <span class="pipe-cat font-monospace">RESEARCH INBOX</span>
+                    <h4 class="pipe-title font-monospace">{{ item.title }}</h4>
+                    <p class="pipe-summary">{{ item.summary }}</p>
+                    <div class="pipe-footer font-monospace">
+                      <span>{{ item.assignee }}</span>
                     </div>
                   </div>
                 }
               }
             </div>
           </div>
-        }
-      </div>
-    </section>
-  }
 
-  <!-- ========================================================================= -->
-  <!-- WORKSPACE 2: 10-ROOM WALKABLE SPATIAL OFFICE (Reel 2 Reference)           -->
-  <!-- ========================================================================= -->
-  @if (layoutMode() === 'workspace-2') {
-    <section class="workspace-view spatial-office-view">
-      <div class="spatial-top-bar">
-        <div class="spatial-title-group">
-          <h2 class="spatial-title">Virtual Office Diorama & Floorplan</h2>
-          <p class="spatial-sub">
-            10 Rooms · 40 Entities (Avatars wandering, typing, drinking coffee & gaming) · Click any room or person to inspect
-          </p>
-        </div>
-
-        <div class="spatial-controls">
-          <button
-            type="button"
-            class="spatial-btn"
-            [class.paused]="agentService.isSimulationPaused()"
-            (click)="agentService.toggleSimulationPause()"
-          >
-            {{ agentService.isSimulationPaused() ? '▶ Resume Movement' : '⏸ Pause Movement' }}
-          </button>
-
-          <button
-            type="button"
-            class="spatial-btn"
-            (click)="dispatchPreset('all')"
-          >
-            📢 Trigger Office-Wide All-Hands
-          </button>
-        </div>
-      </div>
-
-      <!-- 10 Rooms Architectural Grid Floorplan -->
-      <div class="office-floorplan-grid">
-        @for (room of rooms(); track room.id) {
-          <div
-            class="office-room-card"
-            [class.out-of-order]="room.isOutOfOrder"
-            [class.selected]="selectedRoom()?.id === room.id"
-            [style.grid-row]="room.gridArea.rowStart + ' / span ' + room.gridArea.rowSpan"
-            [style.grid-column]="room.gridArea.colStart + ' / span ' + room.gridArea.colSpan"
-            [style.border-top-color]="room.themeColor"
-            (click)="selectRoom(room)"
-          >
-            <!-- Out of order caution ribbon for Room 10 -->
-            @if (room.isOutOfOrder) {
-              <div class="caution-tape-banner">
-                <span>⚠️ CAUTION: OUT OF ORDER · DO NOT ENTER · PLUMBER PENDING ⚠️</span>
-              </div>
-            }
-
-            <div class="room-header">
-              <div class="room-title-wrap">
-                <span class="room-icon">{{ room.icon }}</span>
-                <span class="room-name">{{ room.name }}</span>
-                <span class="room-code font-monospace">{{ room.code }}</span>
-              </div>
-
-              <div class="room-occupancy font-monospace">
-                <span class="occupant-count">{{ getRoomOccupantCount(room.id) }}</span> / {{ room.capacity }}
-              </div>
+          <!-- Col 2: In Progress (Parallel Sub-Agents) -->
+          <div class="kanban-col col-progress">
+            <div class="col-header font-monospace">
+              <span class="col-title">⚡ IN PROGRESS (PARALLEL)</span>
+              <span class="col-count">1</span>
             </div>
-
-            <!-- Features list -->
-            <div class="room-features-strip">
-              @for (feat of room.features; track feat) {
-                <span class="feature-tag font-monospace">• {{ feat }}</span>
-              }
-            </div>
-
-            <!-- Interactive Stage Area where 40 Avatars Wander & Work -->
-            <div class="room-stage-area">
-              <!-- Special Decor Items per room -->
-              @if (room.id === 'room-gameroom') {
-                <div class="decor-arcade-cabinet" title="Retro Arcade Cabinet">🕹️ ARCADE</div>
-                <div class="decor-pingpong" title="Ping-Pong Table">🏓</div>
-              }
-              @if (room.id === 'room-coffee') {
-                <div class="decor-espresso" title="High-Pressure Espresso Machine">☕ ESPRESSO</div>
-              }
-              @if (room.id === 'room-restroom') {
-                <div class="decor-broken-stall">
-                  <span class="stall-broken-ic">🚫</span>
-                  <span class="stall-water-leak">💧</span>
-                  <span class="stall-bucket">🪣</span>
-                </div>
-              }
-
-              <!-- Occupant Entities / Avatars inside this room -->
-              @for (ent of getEntitiesForRoom(room.id); track ent.id) {
-                <div
-                  class="entity-avatar-node"
-                  [class.facing-left]="ent.facing === 'left'"
-                  [class.selected]="selectedEntity()?.id === ent.id"
-                  [style.left.%]="ent.x"
-                  [style.top.%]="ent.y"
-                  (click)="$event.stopPropagation(); selectEntity(ent)"
-                  [title]="ent.name + ' (' + ent.role + ') — ' + ent.activity"
-                >
-                  <!-- Floating Speech Bubble -->
-                  @if (ent.speechBubble) {
-                    <div class="entity-speech-bubble font-monospace">
-                      <span>{{ ent.speechBubble }}</span>
+            <div class="col-cards">
+              @for (item of pipelineItems(); track item.id) {
+                @if (item.stage === 'in_progress') {
+                  <div class="pipeline-card card-running">
+                    <div class="pipe-running-badge font-monospace">
+                      <span class="pulse-dot"></span>
+                      <span>PARALLEL SUB-AGENTS</span>
                     </div>
-                  }
+                    <h4 class="pipe-title font-monospace">{{ item.title }}</h4>
+                    <p class="pipe-summary">{{ item.summary }}</p>
 
-                  <div class="avatar-glyph-box">
-                    <span class="avatar-icon">{{ ent.avatar }}</span>
-                    <span class="activity-pip" [attr.data-activity]="ent.activity"></span>
+                    <div class="subtasks-list font-monospace">
+                      @for (st of item.subtasks; track st) {
+                        <div class="subtask-item">
+                          <span class="st-check">▸</span>
+                          <span>{{ st }}</span>
+                        </div>
+                      }
+                    </div>
+
+                    <div class="progress-bar-wrap">
+                      <div class="progress-bar-fill" [style.width.%]="item.progress"></div>
+                    </div>
+
+                    <div class="pipe-footer font-monospace">
+                      <span>Assignee: {{ item.assignee }}</span>
+                      <span class="text-emerald">{{ item.progress }}%</span>
+                    </div>
                   </div>
-
-                  <span class="entity-label">{{ ent.name }}</span>
-                </div>
+                }
               }
-            </div>
-
-            <div class="room-footer font-monospace">
-              <span class="click-hint">Click to inspect room telemetry →</span>
             </div>
           </div>
-        }
-      </div>
-    </section>
+
+          <!-- Col 3: Awaiting Operator OK -->
+          <div class="kanban-col col-approval">
+            <div class="col-header font-monospace">
+              <span class="col-title">🛑 AWAITING OPERATOR OK</span>
+              <span class="col-count">1</span>
+            </div>
+            <div class="col-cards">
+              @for (item of pipelineItems(); track item.id) {
+                @if (item.stage === 'awaiting_approval') {
+                  <div class="pipeline-card card-alert">
+                    <div class="pipe-alert-badge font-monospace">
+                      <span>⚠️ WAITING FOR BEKHRUZ'S OK</span>
+                    </div>
+                    <h4 class="pipe-title font-monospace">{{ item.title }}</h4>
+                    <p class="pipe-summary">{{ item.summary }}</p>
+
+                    <button
+                      type="button"
+                      class="btn-review-auth font-monospace"
+                      (click)="openApproval(pendingApprovals()[0])"
+                    >
+                      REVIEW & AUTHORIZE PUBLISH →
+                    </button>
+
+                    <div class="pipe-footer font-monospace">
+                      <span>Gatekeeper: Hold Active</span>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- Col 4: done / out/ -->
+          <div class="kanban-col col-done">
+            <div class="col-header font-monospace">
+              <span class="col-title">✅ out/ (PUBLISHED)</span>
+              <span class="col-count">1</span>
+            </div>
+            <div class="col-cards">
+              @for (item of pipelineItems(); track item.id) {
+                @if (item.stage === 'done') {
+                  <div class="pipeline-card card-completed">
+                    <span class="pipe-done-badge font-monospace">✓ COMPLETED</span>
+                    <h4 class="pipe-title font-monospace">{{ item.title }}</h4>
+                    <p class="pipe-summary">{{ item.summary }}</p>
+                    <div class="pipe-footer font-monospace">
+                      <span>Saved to out/</span>
+                      <span class="text-cyan">Ready</span>
+                    </div>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. The 8 Departments & 31 Specialized Agents -->
+      <section class="departments-section">
+        <div class="section-header-row">
+          <h2 class="section-title">
+            <span class="ic">🏢</span> 8 Autonomous Teams (31 Specialized Agents)
+          </h2>
+          <span class="section-sub font-monospace">CLICK ANY AGENT TO INSPECT PROMPTS & TOOLS</span>
+        </div>
+
+        <div class="teams-cards-grid">
+          @for (team of teams(); track team.id) {
+            <div class="team-block-card" [style.border-top-color]="team.color">
+              <div class="team-card-header">
+                <div class="team-tag" [style.background-color]="team.color + '22'" [style.color]="team.color">
+                  <span>{{ team.icon }}</span>
+                  <span class="team-title-text">{{ team.name }}</span>
+                </div>
+                <span class="team-count font-monospace">{{ team.agentCount }} Agents</span>
+              </div>
+
+              <p class="team-desc-text">{{ team.description }}</p>
+
+              <!-- Agent list in this team -->
+              <div class="agents-vertical-stack">
+                @for (agent of agents(); track agent.id) {
+                  @if (agent.teamId === team.id) {
+                    <div
+                      class="hq-agent-card"
+                      [class.working]="agent.status === 'working'"
+                      [class.parallel]="agent.status === 'parallel'"
+                      [class.approval]="agent.status === 'awaiting_approval'"
+                      (click)="selectAgent(agent)"
+                    >
+                      <div class="agent-main-row">
+                        <span class="agent-emoji">{{ agent.avatar }}</span>
+                        <div class="agent-name-stack">
+                          <div class="agent-title-row">
+                            <span class="name-text">{{ agent.name }}</span>
+                            <span class="codename-badge font-monospace">{{ agent.codename }}</span>
+                          </div>
+                          <span class="role-text">{{ agent.role }}</span>
+                        </div>
+
+                        <span class="status-indicator-pip font-monospace" [attr.data-status]="agent.status">
+                          {{ agent.status === 'parallel' ? 'PARALLEL' : agent.status.toUpperCase() }}
+                        </span>
+                      </div>
+
+                      <div class="agent-task-box">
+                        <span class="task-prefix font-monospace">TASK:</span>
+                        <span class="task-text">{{ agent.currentTask }}</span>
+                      </div>
+
+                      <!-- Sub-agents in parallel if any -->
+                      @if (agent.subAgents.length > 0) {
+                        <div class="parallel-workers-strip font-monospace">
+                          <span class="workers-label">⚡ PARALLEL SUB-AGENTS ({{ agent.subAgents.length }}):</span>
+                          @for (sub of agent.subAgents; track sub.id) {
+                            <div class="worker-pill">
+                              <span class="w-name">• {{ sub.name }}</span>
+                              <span class="w-prog">[{{ sub.progress }}%]</span>
+                            </div>
+                          }
+                        </div>
+                      }
+
+                      <div class="agent-card-bottom font-monospace">
+                        <div class="tools-list">
+                          @for (tool of agent.toolsUsed; track tool) {
+                            <span class="tool-tag">{{ tool }}</span>
+                          }
+                        </div>
+                        <button
+                          type="button"
+                          class="agent-run-btn"
+                          (click)="triggerAgentTask(agent.id, $event)"
+                        >
+                          RUN ⚡
+                        </button>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+    </main>
   }
 
   <!-- ========================================================================= -->
-  <!-- WORKSPACE 3: 3D CYBER-HOLO MATRIX (Three.js WebGL Spatial Studio)         -->
+  <!-- WORKSPACE 2: WALKABLE OFFICE 2.0 (Reel 2 Architecture)                    -->
+  <!-- ========================================================================= -->
+  @if (layoutMode() === 'workspace-2') {
+    <main class="walkable-office-view">
+      <!-- Top HUD Navigation Ribbon -->
+      <div class="walkable-hud-ribbon">
+        <div class="hud-left-info">
+          <div class="location-beacon font-monospace">
+            <span class="live-dot"></span>
+            <span>LOCATION: {{ playerPos().currentRoom.toUpperCase() }}</span>
+          </div>
+
+          <div class="controls-hint font-monospace">
+            <span>🎮 CONTROLS: Use <strong>[W] [A] [S] [D]</strong> or <strong>Arrow Keys</strong> to walk · Or Click Floor</span>
+          </div>
+        </div>
+
+        @if (nearbyTarget(); as target) {
+          <div class="proximity-action-banner font-monospace">
+            <span class="action-pulse">⚡</span>
+            <span>PRESS <strong>[E]</strong> or <strong>[SPACE]</strong> TO: {{ target.prompt }}</span>
+          </div>
+        }
+
+        <div class="hud-right-stats font-monospace">
+          <span>ROOMS: 10</span>
+          <span>·</span>
+          <span>ENTITIES: 40</span>
+          <span>·</span>
+          <span class="text-rose">1 OUT OF ORDER STALL</span>
+        </div>
+      </div>
+
+      <!-- High-DPI Interactive Walkable Canvas -->
+      <div class="canvas-viewport-wrapper">
+        <canvas #walkableCanvas width="1000" height="950" class="walkable-game-canvas"></canvas>
+
+        <!-- Floating UI Overlays inside Canvas Viewport -->
+        <div class="canvas-corner-legend font-monospace">
+          <div class="legend-item">
+            <span class="legend-color" style="background: #eab308;"></span>
+            <span>Executive Suite</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: #38bdf8;"></span>
+            <span>Research Lab</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: #10b981;"></span>
+            <span>Dev Bay</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: #ec4899;"></span>
+            <span>Creative Studio</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: #a855f7;"></span>
+            <span>The Game Room (Arcade)</span>
+          </div>
+          <div class="legend-item">
+            <span class="legend-color" style="background: #ef4444;"></span>
+            <span>Restroom (Out of Order)</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- WORKSPACE 3: 3D HOLO-MATRIX & CLAUDE CODE EVENT REPLAY                    -->
   <!-- ========================================================================= -->
   @if (layoutMode() === 'workspace-3') {
-    <section class="workspace-view holo-3d-view">
-      <div class="holo-viewport-container">
-        <!-- Three.js Canvas Element -->
-        <canvas #holoCanvas class="holo-three-canvas"></canvas>
+    <main class="matrix-replay-view">
+      <!-- Split View: 3D WebGL Canvas on Left + Claude Code Replay on Right -->
+      <div class="matrix-split-layout">
 
-        <!-- 3D Overlay HUD Controls -->
-        <div class="holo-hud-overlay">
-          <div class="hud-top-controls">
-            <div class="hud-pill font-monospace">
-              <span class="hud-dot pulse"></span>
-              <span>THREE.JS WEBGL RENDERER · ISOMETRIC MATRIX</span>
+        <!-- Left Column: Three.js 3D WebGL Spatial Studio -->
+        <div class="three-3d-pane">
+          <canvas #holoCanvas class="three-canvas"></canvas>
+
+          <!-- 3D Overlay Controls -->
+          <div class="three-overlay-controls">
+            <div class="overlay-pill font-monospace">
+              <span class="pulse-dot"></span>
+              <span>THREE.JS WEBGL RENDERER · 31 SATELLITES</span>
             </div>
 
-            <div class="camera-presets-group">
+            <div class="camera-preset-btns font-monospace">
               <button
                 type="button"
-                class="cam-btn font-monospace"
+                class="cam-toggle-btn"
                 [class.active]="cameraPreset() === 'iso'"
                 (click)="setCameraPreset('iso')"
               >
@@ -579,15 +587,15 @@
               </button>
               <button
                 type="button"
-                class="cam-btn font-monospace"
+                class="cam-toggle-btn"
                 [class.active]="cameraPreset() === 'top'"
                 (click)="setCameraPreset('top')"
               >
-                TOP-DOWN TACTICAL
+                TOP-DOWN
               </button>
               <button
                 type="button"
-                class="cam-btn font-monospace"
+                class="cam-toggle-btn"
                 [class.active]="cameraPreset() === 'focus'"
                 (click)="setCameraPreset('focus')"
               >
@@ -596,39 +604,105 @@
             </div>
           </div>
 
-          <div class="hud-center-tip font-monospace">
-            <span>🖱️ Click any floating 3D Agent Satellite to open profile drawer · Scroll to zoom</span>
+          <div class="three-bottom-tip font-monospace">
+            <span>Click any 3D floating satellite node to inspect agent profile drawer</span>
+          </div>
+        </div>
+
+        <!-- Right Column: Live Claude Code Event Log Replay Console -->
+        <div class="claude-replay-pane">
+          <div class="replay-pane-header">
+            <div class="terminal-badge font-monospace">
+              <span class="dot-red"></span>
+              <span class="dot-yellow"></span>
+              <span class="dot-green"></span>
+              <span class="terminal-title">CLAUDE CODE CLI EVENT REPLAY (OCT 29 RECORDING)</span>
+            </div>
+
+            <div class="replay-controls font-monospace">
+              <button type="button" class="ctrl-btn" (click)="toggleReplayPlay()">
+                {{ isReplayPlaying() ? '⏸ PAUSE' : '▶ PLAY' }}
+              </button>
+              <button type="button" class="ctrl-btn" (click)="stepReplay(1)">⏮ RESTART</button>
+            </div>
           </div>
 
-          <!-- Bottom Telemetry HUD Bar -->
-          <div class="hud-bottom-bar">
-            <div class="hud-stat-box">
-              <span class="hud-stat-lbl font-monospace">SATELLITE ORBIT:</span>
-              <span class="hud-stat-val text-cyan font-monospace">31 Active Nodes</span>
-            </div>
-            <div class="hud-stat-box">
-              <span class="hud-stat-lbl font-monospace">BRAIN CORE SPIN:</span>
-              <span class="hud-stat-val text-purple font-monospace">0.008 rad/frame</span>
-            </div>
-            <div class="hud-stat-box">
-              <span class="hud-stat-lbl font-monospace">SYNAPTIC CONDUITS:</span>
-              <span class="hud-stat-val text-emerald font-monospace">100% Active</span>
-            </div>
+          <!-- Replay Steps Timeline Scrub -->
+          <div class="timeline-step-strip font-monospace">
+            @for (ev of claudeEvents(); track ev.id) {
+              <button
+                type="button"
+                class="timeline-dot-btn"
+                [class.active]="replayCurrentStep() >= ev.step"
+                [class.current]="replayCurrentStep() === ev.step"
+                (click)="stepReplay(ev.step)"
+                [title]="ev.title"
+              >
+                <span class="step-num">{{ ev.step }}</span>
+                <span class="step-label">{{ ev.type }}</span>
+              </button>
+            }
+          </div>
+
+          <!-- Live Event Log Stream -->
+          <div class="terminal-events-stream font-monospace">
+            @for (ev of claudeEvents(); track ev.id) {
+              @if (replayCurrentStep() >= ev.step) {
+                <div class="event-stream-card" [class.alert-card]="ev.isApprovalRequired">
+                  <div class="event-top-row">
+                    <span class="event-time">{{ ev.timestamp }}</span>
+                    <span class="event-type-badge" [attr.data-type]="ev.type">[{{ ev.type }}]</span>
+                    <span class="event-agent">{{ ev.agent }}</span>
+                  </div>
+
+                  <h4 class="event-title">{{ ev.title }}</h4>
+
+                  @if (ev.codeSnippet) {
+                    <pre class="event-code-snippet"><code>{{ ev.codeSnippet }}</code></pre>
+                  }
+
+                  @if (ev.isApprovalRequired) {
+                    <div class="terminal-gate-action">
+                      <span class="gate-warning">⚠️ HUMAN-IN-THE-LOOP INTERCEPT REQUIRED</span>
+                      <button
+                        type="button"
+                        class="gate-btn"
+                        (click)="openApproval(pendingApprovals()[0])"
+                      >
+                        REVIEW & APPROVE VIA GATEKEEPER →
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            }
+          </div>
+
+          <!-- Terminal Command Bar -->
+          <div class="terminal-bottom-input">
+            <span class="prompt-prefix font-monospace">$ claude</span>
+            <input
+              type="text"
+              class="terminal-input font-monospace"
+              placeholder="Type instruction to simulate Claude Code execution..."
+              [(ngModel)]="voiceCommandInput"
+              (keydown.enter)="dispatchVoiceCommand()"
+            />
             <button
               type="button"
-              class="hud-dispatch-btn font-monospace"
-              (click)="openMissionModal()"
+              class="terminal-submit-btn font-monospace"
+              (click)="dispatchVoiceCommand()"
             >
-              DISPATCH 3D MISSION
+              RUN
             </button>
           </div>
         </div>
       </div>
-    </section>
+    </main>
   }
 
   <!-- ========================================================================= -->
-  <!-- MODAL: HUMAN-IN-THE-LOOP APPROVAL HUB ("Nothing big goes out without OK") -->
+  <!-- MODAL: HUMAN-IN-THE-LOOP APPROVAL HUB                                     -->
   <!-- ========================================================================= -->
   @if (activeApprovalModal(); as app) {
     <div class="modal-backdrop" (click)="closeApproval()">
@@ -637,7 +711,7 @@
           <div class="modal-header-title">
             <span class="modal-warn-ic">🛑</span>
             <div>
-              <div class="modal-tag font-monospace">TIER 3 SAFETY GATE · HUMAN APPROVAL REQUIRED</div>
+              <div class="modal-tag font-monospace">HUMAN-IN-THE-LOOP · BEKHRUZ'S APPROVAL REQUIRED</div>
               <h3 class="modal-h3">Authorization Request #{{ app.id }}</h3>
             </div>
           </div>
@@ -665,15 +739,15 @@
           </div>
 
           <div class="approval-summary-card">
-            <span class="summary-lbl font-monospace">SUMMARY OF INTENDED ACTION:</span>
+            <span class="summary-lbl font-monospace">INTENDED ACTION & BOUNDARY RULES:</span>
             <p class="summary-text">{{ app.summary }}</p>
           </div>
 
           @if (app.payloadDiff) {
             <div class="diff-viewer-card">
               <div class="diff-header font-monospace">
-                <span>PAYLOAD DIFF / TARGET SPECIFICATION:</span>
-                <span class="risk-badge" [attr.data-risk]="app.riskLevel">RISK: {{ app.riskLevel.toUpperCase() }}</span>
+                <span>PAYLOAD DIFF / OUTPUT ASSETS:</span>
+                <span class="risk-badge">RISK: {{ app.riskLevel.toUpperCase() }}</span>
               </div>
               <pre class="diff-pre font-monospace"><code>{{ app.payloadDiff }}</code></pre>
             </div>
@@ -686,7 +760,7 @@
             class="modal-btn-reject font-monospace"
             (click)="reject(app.id)"
           >
-            ✕ REJECT & BLOCK
+            ✕ REJECT & ROLLBACK
           </button>
 
           <button
@@ -694,120 +768,7 @@
             class="modal-btn-approve font-monospace"
             (click)="approve(app.id)"
           >
-            ✓ APPROVE & AUTHORIZE EXECUTION
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
-  <!-- ========================================================================= -->
-  <!-- MODAL: DISPATCH AGENT MISSION                                             -->
-  <!-- ========================================================================= -->
-  @if (showMissionModal()) {
-    <div class="modal-backdrop" (click)="closeMissionModal()">
-      <div class="mission-modal-window" (click)="$event.stopPropagation()">
-        <div class="mission-modal-header">
-          <div class="modal-header-title">
-            <span class="mission-icon">⚡</span>
-            <div>
-              <div class="modal-tag font-monospace">AUTONOMOUS ORCHESTRATOR</div>
-              <h3 class="modal-h3">Dispatch Mission to Office Agents</h3>
-            </div>
-          </div>
-          <button type="button" class="modal-close-btn" (click)="closeMissionModal()">✕</button>
-        </div>
-
-        <div class="mission-modal-body">
-          <div class="presets-section">
-            <div class="section-label font-monospace">QUICK DISPATCH PRESETS (FROM REELS REFERENCE):</div>
-            <div class="presets-grid">
-              <button
-                type="button"
-                class="preset-card"
-                (click)="dispatchPreset('github-scan')"
-              >
-                <span class="preset-ic">🔍</span>
-                <div class="preset-info">
-                  <span class="preset-title">Morning GitHub Scan</span>
-                  <span class="preset-sub">Team Research: Scans GitHub trending, ingests READMEs</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                class="preset-card"
-                (click)="dispatchPreset('viral-hook')"
-              >
-                <span class="preset-ic">✍️</span>
-                <div class="preset-info">
-                  <span class="preset-title">Viral Hook Generation</span>
-                  <span class="preset-sub">Team Scripts: 5 curiosity-gap openings for Reels</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                class="preset-card"
-                (click)="dispatchPreset('cut-video')"
-              >
-                <span class="preset-ic">🎬</span>
-                <div class="preset-info">
-                  <span class="preset-title">Auto Video Cut & Subtitles</span>
-                  <span class="preset-sub">Team Creative: Whisper + Silence Cut + Kinetic Text</span>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                class="preset-card"
-                (click)="dispatchPreset('schedule-social')"
-              >
-                <span class="preset-ic">📢</span>
-                <div class="preset-info">
-                  <span class="preset-title">Social Queue & Schedule</span>
-                  <span class="preset-sub">Team Social: Prepares X thread, YouTube Shorts, Reels</span>
-                </div>
-              </button>
-            </div>
-          </div>
-
-          <div class="custom-prompt-section">
-            <div class="section-label font-monospace">OR ENTER CUSTOM NATURAL LANGUAGE MISSION:</div>
-            <textarea
-              class="custom-textarea"
-              rows="3"
-              placeholder="E.g. Analyze top 10 machine learning papers on arXiv, write an engaging script hook, and prepare an isometric diagram..."
-              [(ngModel)]="missionPrompt"
-            ></textarea>
-
-            <div class="target-team-row">
-              <label class="team-label font-monospace">Target Team:</label>
-              <select class="team-select" [(ngModel)]="missionTargetTeam">
-                <option value="all">All 8 Teams (Full Swarm Sync)</option>
-                @for (t of teams(); track t.id) {
-                  <option [value]="t.id">{{ t.icon }} {{ t.name }}</option>
-                }
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div class="mission-modal-footer">
-          <button
-            type="button"
-            class="modal-btn-cancel font-monospace"
-            (click)="closeMissionModal()"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            class="modal-btn-dispatch font-monospace"
-            [disabled]="!missionPrompt.trim()"
-            (click)="submitCustomMission()"
-          >
-            ⚡ Dispatch Swarm Mission
+            ✓ APPROVE & BROADCAST PUBLISH
           </button>
         </div>
       </div>
@@ -834,7 +795,7 @@
 
         <div class="drawer-body">
           <div class="drawer-section">
-            <div class="section-title font-monospace">ACTIVE STATUS & WORKFLOW</div>
+            <div class="section-title font-monospace">CURRENT WORKFLOW</div>
             <div class="status-summary-box">
               <div class="status-badge-row">
                 <span class="status-pill font-monospace" [attr.data-status]="agent.status">
@@ -844,7 +805,7 @@
               </div>
               <p class="status-msg">{{ agent.statusMessage }}</p>
               <div class="current-task-box">
-                <span class="task-k font-monospace">CURRENT TASK:</span>
+                <span class="task-k font-monospace">TASK:</span>
                 <p class="task-v">{{ agent.currentTask }}</p>
               </div>
             </div>
@@ -876,7 +837,7 @@
 
           <!-- MCP Servers & Tools -->
           <div class="drawer-section">
-            <div class="section-title font-monospace">MCP SERVERS & ACTIVE TOOLS</div>
+            <div class="section-title font-monospace">TOOLS & MCP SERVERS</div>
             <div class="chips-wrap">
               @for (tool of agent.toolsUsed; track tool) {
                 <span class="chip-item font-monospace">🛠️ {{ tool }}</span>
@@ -887,24 +848,9 @@
             </div>
           </div>
 
-          <!-- Telemetry & Spend -->
-          <div class="drawer-section">
-            <div class="section-title font-monospace">COMPUTE TELEMETRY</div>
-            <div class="telemetry-grid">
-              <div class="t-box">
-                <span class="t-k">Tokens:</span>
-                <span class="t-v font-monospace">{{ agent.tokensUsed | number }}</span>
-              </div>
-              <div class="t-box">
-                <span class="t-k">Est. Cost:</span>
-                <span class="t-v font-monospace text-amber">{{ agent.costEstimate }}</span>
-              </div>
-            </div>
-          </div>
-
           <!-- Recent Logs Stream -->
           <div class="drawer-section">
-            <div class="section-title font-monospace">EXECUTION LOG STREAM</div>
+            <div class="section-title font-monospace">TERMINAL LOGS</div>
             <div class="logs-console font-monospace">
               @for (log of agent.recentLogs; track log.timestamp) {
                 <div class="log-line" [attr.data-level]="log.level">
@@ -926,7 +872,7 @@
             class="drawer-btn-run font-monospace"
             (click)="triggerAgentTask(agent.id)"
           >
-            ⚡ Trigger Immediate Task Cycle
+            ⚡ Trigger Immediate Task Execution
           </button>
         </div>
       </div>
@@ -964,16 +910,6 @@
           <div class="drawer-section">
             <div class="section-title font-monospace">ROOM SPECIFICATIONS</div>
             <p class="room-desc-text">{{ room.description }}</p>
-            <div class="room-specs-list">
-              <div class="spec-row">
-                <span class="spec-k">Capacity:</span>
-                <span class="spec-v font-monospace">{{ room.capacity }} Workstations</span>
-              </div>
-              <div class="spec-row">
-                <span class="spec-k">Current Occupants:</span>
-                <span class="spec-v font-monospace">{{ getRoomOccupantCount(room.id) }} Active</span>
-              </div>
-            </div>
           </div>
 
           <div class="drawer-section">
@@ -984,25 +920,9 @@
               }
             </ul>
           </div>
-
-          <div class="drawer-section">
-            <div class="section-title font-monospace">OCCUPANTS IN THIS ROOM</div>
-            <div class="occupants-list">
-              @for (ent of getEntitiesForRoom(room.id); track ent.id) {
-                <div class="occupant-item" (click)="selectEntity(ent)">
-                  <span class="ent-ic">{{ ent.avatar }}</span>
-                  <div class="ent-info">
-                    <span class="ent-name">{{ ent.name }}</span>
-                    <span class="ent-role font-monospace">{{ ent.role }}</span>
-                  </div>
-                  <span class="ent-act font-monospace">[{{ ent.activity }}]</span>
-                </div>
-              }
-            </div>
-          </div>
         </div>
       </div>
     </div>
   }
-</div>
 
+</div>
