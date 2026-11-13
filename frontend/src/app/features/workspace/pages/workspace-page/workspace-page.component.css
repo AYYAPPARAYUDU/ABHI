@@ -1,12 +1,42 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  pointer-events: auto;
+}
+
 .workspace-spatial-container {
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: calc(100vh - 80px);
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   pointer-events: none;
   font-family: 'Inter', system-ui, sans-serif;
   color: #f1f5f9;
+}
+
+/* Dedicated Real Three.js WebGL Workspace Canvas Layer */
+.workspace-canvas-viewport {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.workspace-webgl-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline: none;
 }
 
 /* Pointer events on interactive surfaces */
@@ -20,13 +50,13 @@
 /* Top Command HUD Header */
 .workspace-hud-header {
   position: absolute;
-  top: 6px;
-  left: 20px;
-  right: 20px;
+  top: clamp(4px, 1vh, 10px);
+  left: clamp(10px, 1.5vw, 20px);
+  right: clamp(10px, 1.5vw, 20px);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 16px;
+  padding: clamp(4px, 0.8vh, 8px) clamp(8px, 1.2vw, 16px);
   border-radius: 12px;
   background: var(--abhi-surface-raised, rgba(5, 14, 30, 0.85));
   border: 1px solid var(--abhi-border, rgba(56, 189, 248, 0.25));

@@ -63,11 +63,13 @@ class AutonomousBusinessCEO:
     async def execute_code_audit_order(
         self,
         target_code_or_path: str,
-        client_name: str = "Enterprise FinTech Client",
-        client_email: str = "security-procurement@fintech-corp.com",
-        service_fee_inr: float = 24500.0  # Approx $280 USD
+        client_name: str = "Client Partner",
+        client_email: Optional[str] = None,
+        client_org: Optional[str] = None,
+        service_fee_inr: float = 24500.0,
+        create_invoice: bool = False
     ) -> Dict[str, Any]:
-        """Perform static AST audit, vulnerability scan, and generate deliverable report + SBI invoice."""
+        """Perform static AST audit, vulnerability scan, and generate deliverable report + SBI invoice if requested."""
         t0 = time.perf_counter()
         code_to_audit = ""
         file_path_str = target_code_or_path
@@ -148,6 +150,7 @@ class AutonomousBusinessCEO:
             f"- **Bank:** State Bank of India\n"
             f"- **Account Number:** 41130645649\n"
             f"- **IFSC Code:** SBIN0020507\n"
+            f"- **UPI ID:** ayyapparayudu.5@ybl\n"
         )
 
         with open(deliverable_path, "w", encoding="utf-8") as f:
@@ -155,17 +158,23 @@ class AutonomousBusinessCEO:
 
         deliv_hash = hashlib.sha256(report_content.encode("utf-8")).hexdigest()
 
-        # Generate official commercial invoice with direct UPI link to Mamu's SBI account (Awaiting payment)
-        invoice = sovereign_treasury.generate_invoice(
-            client_name=client_name,
-            service_description=f"Automated Code Quality & Security Vulnerability Audit ({file_path_str[:30]})",
-            amount_inr=service_fee_inr,
-            client_email=client_email,
-            client_org="FinTech Solutions Pvt Ltd",
-            service_ref=str(deliverable_path),
-            deliverable_hash=deliv_hash,
-            mark_as_settled=False
-        )
+        invoice_data = {}
+        if create_invoice:
+            invoice = sovereign_treasury.generate_invoice(
+                client_name=client_name,
+                service_description=f"Automated Code Quality & Security Vulnerability Audit ({file_path_str[:30]})",
+                amount_inr=service_fee_inr,
+                client_email=client_email,
+                client_org=client_org or "Commercial Client",
+                service_ref=str(deliverable_path),
+                deliverable_hash=deliv_hash,
+                mark_as_settled=False
+            )
+            invoice_data = {
+                "invoice_number": invoice.invoice_number,
+                "billed_amount_inr": invoice.total_inr,
+                "billed_amount_usd": invoice.total_usd,
+            }
 
         return {
             "status": "COMPLETED",
@@ -173,11 +182,9 @@ class AutonomousBusinessCEO:
             "client_name": client_name,
             "deliverable_file": str(deliverable_path),
             "deliverable_hash": deliv_hash,
-            "invoice_number": invoice.invoice_number,
-            "billed_amount_inr": invoice.total_inr,
-            "billed_amount_usd": invoice.total_usd,
             "settled_to": "SBI Account 41130645649 (Ravuvai Ayyapparayudu)",
-            "execution_time_ms": round((time.perf_counter() - t0) * 1000, 2)
+            "execution_time_ms": round((time.perf_counter() - t0) * 1000, 2),
+            **invoice_data
         }
 
     # =========================================================================
@@ -187,10 +194,12 @@ class AutonomousBusinessCEO:
     async def execute_content_monetization_cycle(
         self,
         topic: str = "Autonomous AI Agents Running Entire Companies in 2026",
-        sponsor_name: str = "Cloud & DevTools Brand",
-        payout_inr: float = 38000.0  # Approx $435 USD
+        sponsor_name: str = "Creator Partner",
+        sponsor_email: Optional[str] = None,
+        payout_inr: float = 38000.0,
+        create_invoice: bool = False
     ) -> Dict[str, Any]:
-        """Synthesize high-retention viral video script, social copy, and generate sponsor invoice."""
+        """Synthesize high-retention viral video script, social copy, and generate sponsor invoice if requested."""
         script_filename = f"VIRAL_REEL_SCRIPT_{uuid.uuid4().hex[:8].upper()}.md"
         script_path = self.output_dir / script_filename
 
@@ -199,7 +208,7 @@ class AutonomousBusinessCEO:
             f"**Sponsor:** {sponsor_name}\n"
             f"**Campaign:** High-Impact AI Automation & Engineering Series\n"
             f"**Creator Beneficiary:** Ravuvai Ayyapparayudu (Mamu)\n"
-            f"**Settlement Account:** SBI 41130645649 (IFSC: SBIN0020507)\n\n"
+            f"**Settlement Account:** SBI 41130645649 (IFSC: SBIN0020507 | UPI: ayyapparayudu.5@ybl)\n\n"
             f"## Reel Script (0-60 Seconds High-Retention Hook)\n"
             f"- **[0:00 - 0:03 Hook]:** \"Everyone said AI couldn't run an entire business on its own... until we built ABHI.\"\n"
             f"- **[0:03 - 0:15 Demo]:** \"Watch this: with zero human mouse clicks, our local AI audits an entire repository, detects a security flaw, and automatically issues a verified invoice.\"\n"
@@ -211,26 +220,31 @@ class AutonomousBusinessCEO:
 
         deliv_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
 
-        invoice = sovereign_treasury.generate_invoice(
-            client_name=sponsor_name,
-            service_description=f"Sponsored Technical Media Creation & Programmatic Video Production: {topic[:30]}",
-            amount_inr=payout_inr,
-            client_email="brand-partnerships@devtools.io",
-            client_org=sponsor_name,
-            service_ref=str(script_path),
-            deliverable_hash=deliv_hash,
-            mark_as_settled=False
-        )
+        invoice_data = {}
+        if create_invoice:
+            invoice = sovereign_treasury.generate_invoice(
+                client_name=sponsor_name,
+                service_description=f"Sponsored Technical Media Creation & Programmatic Video Production: {topic[:30]}",
+                amount_inr=payout_inr,
+                client_email=sponsor_email,
+                client_org=sponsor_name,
+                service_ref=str(script_path),
+                deliverable_hash=deliv_hash,
+                mark_as_settled=False
+            )
+            invoice_data = {
+                "invoice_number": invoice.invoice_number,
+                "revenue_inr": invoice.total_inr,
+                "revenue_usd": invoice.total_usd,
+            }
 
         return {
             "status": "COMPLETED",
             "stream": "MEDIA_MONETIZATION",
             "sponsor": sponsor_name,
             "script_file": str(script_path),
-            "invoice_number": invoice.invoice_number,
-            "revenue_inr": invoice.total_inr,
-            "revenue_usd": invoice.total_usd,
-            "settled_to": "SBI Account 41130645649 (Ravuvai Ayyapparayudu)"
+            "settled_to": "SBI Account 41130645649 (Ravuvai Ayyapparayudu)",
+            **invoice_data
         }
 
     # =========================================================================
@@ -240,19 +254,23 @@ class AutonomousBusinessCEO:
     async def execute_b2b_outreach_pipeline(
         self,
         target_industry: str = "Enterprise Logistics & Retail",
-        contract_value_inr: float = 65000.0  # Approx $740 USD
+        client_name: str = "Client Representative",
+        client_org: Optional[str] = None,
+        client_email: Optional[str] = None,
+        contract_value_inr: float = 65000.0,
+        create_invoice: bool = False
     ) -> Dict[str, Any]:
-        """Generate personalized proposal, client onboarding pack, and contract invoice."""
+        """Generate personalized proposal, client onboarding pack, and contract invoice if requested."""
         proposal_filename = f"B2B_AI_TRANSFORMATION_PROPOSAL_{uuid.uuid4().hex[:8].upper()}.md"
         proposal_path = self.output_dir / proposal_filename
 
-        client_org = f"Global {target_industry.split()[0]} Logistics Corp"
+        client_org_name = client_org or f"{target_industry.split()[0]} Enterprise Partner"
         proposal_content = (
             f"# Sovereign AI Workflow Automation Proposal\n\n"
-            f"**Prepared For:** {client_org}\n"
+            f"**Prepared For:** {client_org_name}\n"
             f"**Prepared By:** ABHI Autonomous Engineering Core\n"
             f"**Managing Director:** Ravuvai Ayyapparayudu (Mamu)\n"
-            f"**Settlement Account:** State Bank of India | Account 41130645649 | IFSC SBIN0020507\n\n"
+            f"**Settlement Account:** State Bank of India | Account 41130645649 | IFSC SBIN0020507 | UPI ayyapparayudu.5@ybl\n\n"
             f"## Scope of Automated Deliverables\n"
             f"1. Zero-latency Windows OS desktop RPA automation (browser navigation, form entry, tab switching).\n"
             f"2. Local air-gapped LLM privacy: 100% confidential data stays on premise.\n"
@@ -264,26 +282,31 @@ class AutonomousBusinessCEO:
 
         deliv_hash = hashlib.sha256(proposal_content.encode("utf-8")).hexdigest()
 
-        invoice = sovereign_treasury.generate_invoice(
-            client_name="Director of Engineering, Enterprise Logistics",
-            service_description=f"Phase 1 Autonomous Desktop Workflow Pilot & Onboarding Pack",
-            amount_inr=contract_value_inr,
-            client_email="procurement@globallogistics.com",
-            client_org=client_org,
-            service_ref=str(proposal_path),
-            deliverable_hash=deliv_hash,
-            mark_as_settled=False
-        )
+        invoice_data = {}
+        if create_invoice:
+            invoice = sovereign_treasury.generate_invoice(
+                client_name=client_name,
+                service_description=f"Phase 1 Autonomous Desktop Workflow Pilot & Onboarding Pack",
+                amount_inr=contract_value_inr,
+                client_email=client_email,
+                client_org=client_org_name,
+                service_ref=str(proposal_path),
+                deliverable_hash=deliv_hash,
+                mark_as_settled=False
+            )
+            invoice_data = {
+                "invoice_number": invoice.invoice_number,
+                "revenue_inr": invoice.total_inr,
+                "revenue_usd": invoice.total_usd,
+            }
 
         return {
             "status": "COMPLETED",
             "stream": "B2B_OUTREACH",
-            "client_org": client_org,
+            "client_org": client_org_name,
             "proposal_file": str(proposal_path),
-            "invoice_number": invoice.invoice_number,
-            "revenue_inr": invoice.total_inr,
-            "revenue_usd": invoice.total_usd,
-            "settled_to": "SBI Account 41130645649 (Ravuvai Ayyapparayudu)"
+            "settled_to": "SBI Account 41130645649 (Ravuvai Ayyapparayudu)",
+            **invoice_data
         }
 
     # =========================================================================

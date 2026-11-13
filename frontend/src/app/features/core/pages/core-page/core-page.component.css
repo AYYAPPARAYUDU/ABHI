@@ -1,7 +1,10 @@
 :host {
-  display: block;
-  width: 100vw;
-  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   position: relative;
   pointer-events: auto;
@@ -14,8 +17,27 @@
   position: relative;
   width: 100%;
   height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   pointer-events: auto;
+}
+
+/* Dedicated Real Three.js WebGL Core Canvas Layer */
+.core-canvas-viewport {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.core-webgl-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline: none;
 }
 
 /* =========================================================================
@@ -23,13 +45,13 @@
    ========================================================================= */
 .core-floating-controls-bar {
   position: absolute;
-  top: 12px;
-  right: 20px;
-  left: 20px;
+  top: clamp(6px, 1vh, 12px);
+  right: clamp(10px, 1.8vw, 24px);
+  left: clamp(10px, 1.8vw, 24px);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 18px;
+  padding: clamp(6px, 0.8vh, 10px) clamp(10px, 1.2vw, 18px);
   background: rgba(8, 14, 26, 0.85);
   border: 1px solid rgba(0, 240, 255, 0.25);
   border-radius: 16px;
@@ -204,26 +226,28 @@
    ========================================================================= */
 .floating-hud-card {
   position: absolute;
-  top: 72px;
-  width: 270px;
+  top: clamp(55px, 8vh, 85px);
+  width: clamp(210px, 20vw, 300px);
+  max-height: calc(100vh - 170px);
+  overflow-y: auto;
   background: rgba(11, 17, 30, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
-  padding: 12px 14px;
+  padding: clamp(8px, 1.2vh, 12px) clamp(10px, 1.2vw, 14px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   z-index: 80;
   pointer-events: auto;
 }
 
 .dp-card {
-  left: 20px;
+  left: clamp(10px, 1.8vw, 24px);
   border-left: 3px solid #00f0ff;
 }
 
 .dl-card {
-  right: 20px;
+  right: clamp(10px, 1.8vw, 24px);
   border-right: 3px solid #8b5cf6;
 }
 
@@ -316,20 +340,20 @@
    ========================================================================= */
 .core-bottom-command-bar {
   position: absolute;
-  bottom: 24px;
+  bottom: clamp(6px, 1.2vh, 18px);
   left: 0;
   right: 0;
   display: flex;
   justify-content: center;
   z-index: 100;
   pointer-events: auto;
-  padding: 0 20px;
+  padding: 0 clamp(10px, 2vw, 20px);
 }
 
 .command-dock-shell {
   width: 100%;
-  max-width: 720px;
-  height: 48px;
+  max-width: min(720px, 92vw);
+  height: clamp(40px, 5vh, 48px);
   background: rgba(10, 16, 28, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -338,7 +362,7 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 clamp(8px, 1vw, 12px);
   transition: all 0.2s ease;
 }
 

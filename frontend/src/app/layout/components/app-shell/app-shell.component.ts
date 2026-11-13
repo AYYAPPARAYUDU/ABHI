@@ -5,7 +5,6 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs/operators';
 import { ContextualTopbarComponent } from '../contextual-topbar/contextual-topbar.component';
 import { ConsentModalComponent } from '../../../features/operator-console/components/consent-modal/consent-modal.component';
-import { SpatialBackgroundComponent } from '../../../shared/3d/spatial-background/spatial-background.component';
 import { CommandPaletteComponent } from '../../../shared/ui/command-palette/command-palette.component';
 import { AssistantModalComponent } from '../assistant-modal/assistant-modal.component';
 import { WorkspaceLockScreenComponent } from '../../../features/perception/components/workspace-lock-screen/workspace-lock-screen.component';
@@ -20,7 +19,6 @@ import { SpatialEnvironmentMode } from '../../../core/models/agent-experience.mo
     RouterModule,
     ContextualTopbarComponent,
     ConsentModalComponent,
-    SpatialBackgroundComponent,
     CommandPaletteComponent,
     AssistantModalComponent,
     WorkspaceLockScreenComponent

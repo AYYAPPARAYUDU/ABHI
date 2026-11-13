@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, signal, effect, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, AfterViewInit, ViewChild, ElementRef, signal, effect, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -51,7 +51,10 @@ interface ChannelMessage {
   styleUrl: './workspace-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class WorkspacePageComponent implements OnInit, OnDestroy {
+export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit {
+  @ViewChild('workspaceCanvas', { static: true }) workspaceCanvas!: ElementRef<HTMLCanvasElement>;
+  private resizeObserver: ResizeObserver | null = null;
+
   readonly threeScene = inject(ThreeSceneManagerService);
   readonly speechVoice = inject(SpeechVoiceService);
   readonly commandService = inject(AgentCommandService);
@@ -107,8 +110,6 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
   constructor() {}
 
   ngOnInit(): void {
-    this.threeScene.setMode('WORKSPACE');
-    this.threeScene.resetCameraFocus();
     this.fetchFamilyStatus();
     this.fetchChannelMessages();
 
@@ -125,6 +126,26 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
     }, 4500);
   }
 
+  ngAfterViewInit(): void {
+    if (typeof window !== 'undefined' && this.workspaceCanvas) {
+      this.threeScene.init(this.workspaceCanvas.nativeElement);
+      this.threeScene.setMode('WORKSPACE');
+      this.threeScene.resetCameraFocus();
+
+      if (typeof ResizeObserver !== 'undefined') {
+        this.resizeObserver = new ResizeObserver((entries) => {
+          for (let entry of entries) {
+            const { width, height } = entry.contentRect;
+            if (width > 0 && height > 0) {
+              this.threeScene.onResize(width, height);
+            }
+          }
+        });
+        this.resizeObserver.observe(this.workspaceCanvas.nativeElement);
+      }
+    }
+  }
+
   ngOnDestroy(): void {
     if (this.agentFocusSub) {
       this.agentFocusSub.unsubscribe();
@@ -135,6 +156,11 @@ export class WorkspacePageComponent implements OnInit, OnDestroy {
       this.syncTimer = null;
     }
     this.stopTelemetryTimer();
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+    this.threeScene.cleanup();
   }
 
   private startTelemetryTimer(agentId: string): void {

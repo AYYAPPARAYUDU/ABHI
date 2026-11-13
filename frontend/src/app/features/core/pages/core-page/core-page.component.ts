@@ -38,7 +38,9 @@ export class CorePageComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly router = inject(Router);
 
   @ViewChild('cmdInputRef') cmdInputRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('coreCanvas', { static: true }) coreCanvas!: ElementRef<HTMLCanvasElement>;
   commandInput = '';
+  private resizeObserver: ResizeObserver | null = null;
 
   // 3D Arc Reactor Intelligence Signals
   readonly isSwarmDeployed = this.threeScene.isSwarmDeployed;
@@ -82,9 +84,6 @@ export class CorePageComponent implements OnInit, OnDestroy, AfterViewInit {
   private dpInterval: any = null;
 
   ngOnInit(): void {
-    // Engage Full 3D Arc Reactor Workspace
-    this.threeScene.setMode('MAIN_AGENT');
-
     // Live Dynamic Programming & Deep Learning metric updates
     this.dpInterval = setInterval(() => {
       this.pollPredictions();
@@ -92,7 +91,22 @@ export class CorePageComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Initial entrance
+    if (typeof window !== 'undefined' && this.coreCanvas) {
+      this.threeScene.init(this.coreCanvas.nativeElement);
+      this.threeScene.setMode('MAIN_AGENT');
+
+      if (typeof ResizeObserver !== 'undefined') {
+        this.resizeObserver = new ResizeObserver((entries) => {
+          for (let entry of entries) {
+            const { width, height } = entry.contentRect;
+            if (width > 0 && height > 0) {
+              this.threeScene.onResize(width, height);
+            }
+          }
+        });
+        this.resizeObserver.observe(this.coreCanvas.nativeElement);
+      }
+    }
   }
 
   ngOnDestroy(): void {
@@ -100,6 +114,11 @@ export class CorePageComponent implements OnInit, OnDestroy, AfterViewInit {
       clearInterval(this.dpInterval);
       this.dpInterval = null;
     }
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+    this.threeScene.cleanup();
   }
 
   private pollPredictions(): void {
