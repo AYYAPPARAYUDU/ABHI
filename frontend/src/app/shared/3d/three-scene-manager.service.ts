@@ -1404,6 +1404,115 @@ export class ThreeSceneManagerService {
       { id: 'workflow_solutions', name: 'Workflow Solutions', color: 0xec4899, pos: new THREE.Vector3(2.0, -4.0, 6.0) },
     ];
 
+    // =========================================================================
+    // ADVANCED 3D SOVEREIGN BUSINESS LLM CONSTELLATION (CEO & SQUADS)
+    // =========================================================================
+    const businessLlmNodes = [
+      {
+        id: 'llm_ceo_executive',
+        name: 'CEO-EXECUTIVE (MAMU BRAIN)',
+        color: 0xf59e0b,
+        pos: new THREE.Vector3(0.0, 2.8, 0.0),
+        size: 1.35,
+        role: 'Master Revenue Director & SBI Settlement Arbiter',
+        upi: 'ayyapparayudu.5@ybl'
+      },
+      {
+        id: 'llm_audit_bounty',
+        name: 'AUDIT-BOUNTY LLM',
+        color: 0x00f0ff,
+        pos: new THREE.Vector3(-5.2, 1.8, 2.5),
+        size: 0.95,
+        role: 'AST Code Analysis & Security Bounty Hunter',
+        upi: '₹28,500 Deliverables'
+      },
+      {
+        id: 'llm_media_monetize',
+        name: 'MEDIA-MONETIZE LLM',
+        color: 0xa855f7,
+        pos: new THREE.Vector3(5.2, 1.8, 2.5),
+        size: 0.95,
+        role: 'Programmatic Scripts & Sponsorship Monetization',
+        upi: '₹42,000 Deliverables'
+      },
+      {
+        id: 'llm_b2b_outreach',
+        name: 'B2B-OUTREACH LLM',
+        color: 0x38bdf8,
+        pos: new THREE.Vector3(-3.8, -1.8, 3.8),
+        size: 0.9,
+        role: 'Enterprise Lead Gen & Contract Negotiation',
+        upi: '₹75,000 Deliverables'
+      },
+      {
+        id: 'llm_treasury_settle',
+        name: 'SBI TREASURY SETTLEMENT LLM',
+        color: 0x10b981,
+        pos: new THREE.Vector3(3.8, -1.8, 3.8),
+        size: 1.0,
+        role: 'State Bank of India Automated Wire Engine',
+        upi: 'ayyapparayudu.5@ybl'
+      }
+    ];
+
+    businessLlmNodes.forEach((bLlm) => {
+      const llmGroup = new THREE.Group();
+      llmGroup.position.copy(bLlm.pos);
+
+      // Core Geometric Shape
+      const coreGeo = new THREE.OctahedronGeometry(bLlm.size, 1);
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: bLlm.color,
+        emissive: bLlm.color,
+        emissiveIntensity: 0.65,
+        roughness: 0.2,
+        metalness: 0.85,
+        wireframe: false
+      });
+      const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+      llmGroup.add(coreMesh);
+
+      // Outer Holographic Energy Ring
+      const ringGeo = new THREE.TorusGeometry(bLlm.size * 1.5, 0.035, 16, 64);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: bLlm.color,
+        transparent: true,
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending
+      });
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+      ringMesh.rotation.x = Math.PI * 0.4;
+      llmGroup.add(ringMesh);
+
+      // Counter-rotating Inner Halo
+      const haloGeo = new THREE.TorusGeometry(bLlm.size * 1.25, 0.02, 16, 48);
+      const haloMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.6,
+        blending: THREE.AdditiveBlending
+      });
+      const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+      haloMesh.rotation.y = Math.PI * 0.5;
+      llmGroup.add(haloMesh);
+
+      // Synaptic Laser Conduits connecting to Sovereign CEO Core
+      if (bLlm.id !== 'llm_ceo_executive') {
+        const conduitPoints = [businessLlmNodes[0].pos, bLlm.pos];
+        const conduitGeo = new THREE.BufferGeometry().setFromPoints(conduitPoints);
+        const conduitMat = new THREE.LineBasicMaterial({
+          color: bLlm.color,
+          transparent: true,
+          opacity: 0.45,
+          blending: THREE.AdditiveBlending
+        });
+        const conduitLine = new THREE.Line(conduitGeo, conduitMat);
+        this.sectorGroup!.add(conduitLine);
+      }
+
+      this.sectorGroup!.add(llmGroup);
+    });
+
     sectorDefs.forEach((def) => {
       const nodeGroup = new THREE.Group();
       nodeGroup.position.copy(def.pos);
@@ -3359,23 +3468,22 @@ export class ThreeSceneManagerService {
             });
           }
 
-          // Station Specialist Bots Articulated Idle / Work Animation
+          // Station Specialist Bots: Fixed Stable Stations (No circular rotation above balls)
           if (this.workspaceBotAvatars.length > 0) {
             this.workspaceBotAvatars.forEach((bot) => {
-              const botAngle = time * 0.85 + bot.phase;
-              bot.group.position.x = bot.basePos.x + Math.cos(botAngle) * 0.45;
-              bot.group.position.z = bot.basePos.z + Math.sin(botAngle) * 0.45;
-              bot.group.position.y = 0.52 + Math.abs(Math.sin(time * 3.4 + bot.phase)) * 0.08;
-              bot.group.rotation.y = -botAngle + Math.PI / 2;
+              bot.group.position.x = bot.basePos.x;
+              bot.group.position.z = bot.basePos.z;
+              bot.group.position.y = 0.52;
+              bot.group.rotation.y = Math.atan2(-bot.basePos.x, -bot.basePos.z);
 
               if (bot.headMesh) {
-                bot.headMesh.rotation.y = Math.sin(time * 1.5 + bot.phase) * 0.35;
+                bot.headMesh.rotation.y = Math.sin(time * 1.5 + bot.phase) * 0.2;
               }
               if (bot.leftArm) {
-                bot.leftArm.rotation.x = Math.sin(time * 3.4 + bot.phase) * 0.5;
+                bot.leftArm.rotation.x = Math.sin(time * 2.0 + bot.phase) * 0.25;
               }
               if (bot.rightArm) {
-                bot.rightArm.rotation.x = -Math.sin(time * 3.4 + bot.phase) * 0.5;
+                bot.rightArm.rotation.x = -Math.sin(time * 2.0 + bot.phase) * 0.25;
               }
             });
           }
@@ -3393,11 +3501,11 @@ export class ThreeSceneManagerService {
             });
           }
 
-          // Station Holographic Diamond Markers Levitation & Rotation
+          // Station Holographic Diamond Markers: Static Elevation & Stable Orientation (No rotation)
           if (this.stationMarkers.length > 0) {
             this.stationMarkers.forEach((m) => {
-              m.mesh.rotation.y = time * 1.4 + m.phase;
-              m.mesh.position.y = m.baseY + Math.sin(time * 2.5 + m.phase) * 0.12;
+              m.mesh.rotation.y = m.phase;
+              m.mesh.position.y = m.baseY;
             });
           }
         }

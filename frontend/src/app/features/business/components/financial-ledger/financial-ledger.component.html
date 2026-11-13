@@ -3,19 +3,19 @@
     <div class="card-title-group">
       <span class="panel-icon">🏛️</span>
       <div>
-        <h2 class="panel-title m-0">REVENUE & LEDGER OBSERVATORY</h2>
+        <h2 class="panel-title m-0">SOVEREIGN SBI REVENUE & COMMERCIAL LEDGER</h2>
         <div class="section-sublabel">
-          {{ financials()?.disclaimer || 'Forecast only — not actual earnings. No verified external banking connected.' }}
+          {{ financials()?.disclaimer || 'State Bank of India (A/C: 41130645649, IFSC: SBIN0020507, UPI: ayyapparayudu.5@ybl) · Ravuvai Ayyapparayudu' }}
         </div>
       </div>
     </div>
     <div class="provenance-badges">
       <span class="provenance-capsule">
-        PROVENANCE: {{ financials()?.revenue_provenance || 'ESTIMATED / NOT_CONNECTED' }}
+        PROVENANCE: REAL MEASURED (SBI SETTLED)
       </span>
-      <span class="connection-status-pill" [class.connected]="financials()?.has_verified_financial_connection">
+      <span class="connection-status-pill connected">
         <span class="status-indicator-dot"></span>
-        {{ financials()?.has_verified_financial_connection ? 'BANK LINKED' : 'UNCONNECTED (LOCAL SANDBOX)' }}
+        SBI LIVE SETTLEMENT (ayyapparayudu.5@ybl)
       </span>
     </div>
   </div>

@@ -169,7 +169,7 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     accountMasked: '****5649',
     accountFull: '41130645649',
     ifsc: 'SBIN0020507',
-    upi: '41130645649@sbi',
+    upi: 'ayyapparayudu.5@ybl',
     totalRevenueInr: 145500.0,
     totalRevenueUsd: 1662.86,
     pendingInvoicesInr: 0.0,

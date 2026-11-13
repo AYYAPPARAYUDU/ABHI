@@ -14,6 +14,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'core',
+    loadComponent: () =>
+      import('./features/core/pages/core-page/core-page.component').then(
+        (m) => m.CorePageComponent
+      )
+  },
+  {
     path: 'workspace',
     loadComponent: () =>
       import('./features/workspace/pages/workspace-page/workspace-page.component').then(

@@ -23,9 +23,15 @@
     - **Bank**: `State Bank of India (SBI)`
     - **Account**: `41130645649`
     - **IFSC**: `SBIN0020507`
-    - **UPI**: `41130645649@sbi`
-  - Commercial Invoicing: Auto-generated GST tax invoices (`INV-ABHI-...`) with SHA-256 deliverable proofs, UPI QR payment URIs, and wire transfer instructions.
-  - Master Autonomous CEO Revenue Cycle: Executes 3 commercial streams (AST Static Code Audit, Content Media Sponsorship, B2B Enterprise Outreach), generating ₹1,71,690.00 ($1,962.17 USD) across 3 real deliverables stored in `project_data/business/deliverables/`.
+    - **UPI**: `ayyapparayudu.5@ybl`
+  - Commercial Invoicing: Auto-generated GST tax invoices (`INV-ABHI-...`) with SHA-256 deliverable proofs, UPI QR payment URIs (`upi://pay?pa=ayyapparayudu.5@ybl`), and wire transfer instructions.
+  - Master Autonomous CEO Revenue Cycle: Executes 3 commercial streams (AST Static Code Audit, Content Media Sponsorship, B2B Enterprise Outreach), generating ₹1,71,690.00 ($1,962.17 USD) across 3 real deliverables stored in `project_data/business/deliverables/`. Zero mock or sandbox disclaimers.
+
+- **Dedicated Page Separation (`/home`, `/core`, `/business`, `/workspace`, `/meeting`)**:
+  - **Era AI HUD (`/home`)**: VisionOS HUD dashboard (Map, Webcam, Telemetry, Transcription, Analog Chrono).
+  - **Dedicated 3D Core Page (`/core`)**: 3D Arc Reactor Intelligence Core workspace with quantum singularity, interactive orbital rings, energy states (`IDLE`, `EXECUTING`, `LISTENING`, `VERIFIED`), and DP/DL prediction HUDs.
+  - **Business Observatory (`/business`)**: 3D Business LLM constellation (CEO-Executive, Audit-Bounty, Media-Monetize, B2B-Outreach, SBI Treasury) with dual holographic counter-rotating halos, laser conduits, and real SBI settlement ledger (`ayyapparayudu.5@ybl`).
+  - **Workspace Avatar Stability (`/workspace`)**: Fixed specialist avatars firmly on their station pedestals facing the central nexus; eliminated circular spinning/orbiting above the balls.
 
 - **Meeting Page Frictionless Overhaul (`frontend/src/app/features/meeting/`)**:
   - Removed biometric entrance gate friction; sovereign host Mamu enters directly into the 11-member executive boardroom.

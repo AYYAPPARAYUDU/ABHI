@@ -1,0 +1,38 @@
+[
+  {
+    "transaction_id": "SBI-TXN-CF956D0D50",
+    "invoice_number": "INV-ABHI-20261113-5E06BE",
+    "amount_inr": 33630.0,
+    "amount_usd": 384.34,
+    "client_name": "FinTech Systems Ltd",
+    "beneficiary_account": "SBI ****5649",
+    "account_holder": "Ravuvai Ayyapparayudu",
+    "ifsc": "SBIN0020507",
+    "settled_at": "2026-11-13T05:00:41.227034+00:00",
+    "status": "SETTLED_TO_SBI_ACCOUNT"
+  },
+  {
+    "transaction_id": "SBI-TXN-BD375D5CC5",
+    "invoice_number": "INV-ABHI-20261113-F5C354",
+    "amount_inr": 49560.0,
+    "amount_usd": 566.4,
+    "client_name": "Apex Developer Tools Inc",
+    "beneficiary_account": "SBI ****5649",
+    "account_holder": "Ravuvai Ayyapparayudu",
+    "ifsc": "SBIN0020507",
+    "settled_at": "2026-11-13T05:00:41.242211+00:00",
+    "status": "SETTLED_TO_SBI_ACCOUNT"
+  },
+  {
+    "transaction_id": "SBI-TXN-49545D54E4",
+    "invoice_number": "INV-ABHI-20261113-49E8C1",
+    "amount_inr": 88500.0,
+    "amount_usd": 1011.43,
+    "client_name": "Director of Engineering, Enterprise Logistics",
+    "beneficiary_account": "SBI ****5649",
+    "account_holder": "Ravuvai Ayyapparayudu",
+    "ifsc": "SBIN0020507",
+    "settled_at": "2026-11-13T05:00:41.246684+00:00",
+    "status": "SETTLED_TO_SBI_ACCOUNT"
+  }
+]

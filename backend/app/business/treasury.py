@@ -26,7 +26,7 @@ class BankSettlementDetails:
     branch_name: str = "SBI Specialized Branch"
     account_type: str = "Current / Savings Account"
     currency: str = "INR"
-    upi_id: str = "41130645649@sbi"
+    upi_id: str = "ayyapparayudu.5@ybl"
 
 
 @dataclass

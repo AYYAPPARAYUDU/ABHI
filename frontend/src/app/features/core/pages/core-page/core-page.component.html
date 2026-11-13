@@ -1,0 +1,239 @@
+<div class="core-workspace-container" role="region" aria-label="3D Quantum Arc Reactor Workspace">
+  <!-- Top Spatial Navigation Bar -->
+  <header class="core-top-nav">
+    <div class="nav-left">
+      <div class="reactor-brand font-monospace">
+        <span class="reactor-pulse-dot"></span>
+        <span class="brand-text">ABHI 3D ARC REACTOR</span>
+        <span class="core-mode-tag">QUANTUM SINGULARITY</span>
+      </div>
+
+      <nav class="spatial-pages-ribbon font-monospace">
+        <a routerLink="/home" class="page-nav-link">
+          <span class="link-ic">🖥️</span> ERA HUD
+        </a>
+        <a routerLink="/core" class="page-nav-link active">
+          <span class="link-ic">🌀</span> 3D CORE
+        </a>
+        <a routerLink="/business" class="page-nav-link">
+          <span class="link-ic">🏛️</span> BUSINESS (SBI)
+        </a>
+        <a routerLink="/workspace" class="page-nav-link">
+          <span class="link-ic">🛰️</span> WORKSPACE
+        </a>
+        <a routerLink="/meeting" class="page-nav-link">
+          <span class="link-ic">🏛️</span> MEETING
+        </a>
+      </nav>
+    </div>
+
+    <!-- Energy State Selector & Core Triggers -->
+    <div class="nav-right">
+      <div class="energy-pills-group font-monospace">
+        <button
+          type="button"
+          class="energy-pill"
+          [class.active]="currentEnergyState() === 'IDLE'"
+          (click)="setEnergy('IDLE')"
+        >
+          IDLE
+        </button>
+        <button
+          type="button"
+          class="energy-pill processing"
+          [class.active]="currentEnergyState() === 'EXECUTING'"
+          (click)="setEnergy('EXECUTING')"
+        >
+          EXECUTE
+        </button>
+        <button
+          type="button"
+          class="energy-pill charging"
+          [class.active]="currentEnergyState() === 'LISTENING'"
+          (click)="setEnergy('LISTENING')"
+        >
+          LISTEN
+        </button>
+        <button
+          type="button"
+          class="energy-pill discharging"
+          [class.active]="currentEnergyState() === 'VERIFIED'"
+          (click)="setEnergy('VERIFIED')"
+        >
+          VERIFIED
+        </button>
+      </div>
+
+      <button
+        type="button"
+        class="core-action-btn pulse-btn font-monospace"
+        (click)="triggerCorePulse()"
+        title="Pulse Quantum Arc Singularity"
+      >
+        <span>⚡ PULSE CORE</span>
+      </button>
+
+      <button
+        type="button"
+        class="core-action-btn swarm-toggle-btn font-monospace"
+        (click)="toggleCoreDeployment()"
+        title="Deploy / Dock 10 Specialist LLM Agents"
+      >
+        <span>🛰️ {{ isSwarmDeployed() ? 'DOCK SWARM' : 'DEPLOY SWARM' }}</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Left Floating HUD: Dynamic Programming Wavefront Engine -->
+  <aside class="floating-hud-card dp-card" aria-label="Dynamic Programming Engine">
+    <div class="hud-card-header font-monospace">
+      <span class="header-dot cyan"></span>
+      <span class="header-title">DYNAMIC PROGRAMMING OPTIMIZER</span>
+    </div>
+    <div class="hud-metric-row font-monospace">
+      <span class="metric-label">ALGORITHM:</span>
+      <span class="metric-val text-cyan">{{ dpPrediction().algorithm }}</span>
+    </div>
+    <div class="hud-metric-row font-monospace">
+      <span class="metric-label">OPTIMAL PATH LATENCY:</span>
+      <span class="metric-val text-emerald font-bold">{{ dpPrediction().optimalPathLatencyMs }} ms</span>
+    </div>
+    <div class="hud-metric-row font-monospace">
+      <span class="metric-label">MEMOIZED SUBPROBLEMS:</span>
+      <span class="metric-val text-cyan">{{ dpPrediction().subproblemsCached }} states</span>
+    </div>
+    <div class="hud-metric-row font-monospace">
+      <span class="metric-label">KNAPSACK EFFICIENCY:</span>
+      <span class="metric-val text-gold font-bold">{{ dpPrediction().tokenKnapsackEfficiencyPct }}%</span>
+    </div>
+    <div class="hud-card-footer font-monospace">
+      <span class="footer-tag">STATUS: {{ dpPrediction().activeWavefrontStage }}</span>
+    </div>
+  </aside>
+
+  <!-- Right Floating HUD: Deep Learning Predictions -->
+  <aside class="floating-hud-card dl-card" aria-label="Deep Learning Predictions">
+    <div class="hud-card-header font-monospace">
+      <span class="header-dot amethyst"></span>
+      <span class="header-title">DEEP LEARNING NEURAL PREDICTOR</span>
+    </div>
+    <div class="hud-metric-row font-monospace">
+      <span class="metric-label">ARCHITECTURE:</span>
+      <span class="metric-val text-amethyst">{{ dlPrediction().architecture }}</span>
+    </div>
+    <div class="hud-metric-row font-monospace">
+      <span class="metric-label">EXECUTION DURATION FORECAST:</span>
+      <span class="metric-val text-emerald font-bold">{{ dlPrediction().taskDurationForecastMs }} ms</span>
+    </div>
+    <div class="hud-metric-row font-monospace">
+      <span class="metric-label">CONFIDENCE SCORE:</span>
+      <span class="metric-val text-cyan font-bold">{{ dlPrediction().confidenceScore }}</span>
+    </div>
+    <div class="hud-metric-row font-monospace">
+      <span class="metric-label">SUCCESS PROBABILITY:</span>
+      <span class="metric-val text-emerald font-bold">{{ dlPrediction().successProbabilityPct }}%</span>
+    </div>
+    <div class="hud-metric-row font-monospace">
+      <span class="metric-label">VRAM FOOTPRINT:</span>
+      <span class="metric-val text-coral">{{ dlPrediction().vramConsumptionMb }} MB</span>
+    </div>
+  </aside>
+
+  <!-- Subconscious Thought Stream Ticker -->
+  <div class="core-subconscious-bar font-monospace clickable" (click)="openSwarmDialogue()">
+    <span class="bar-dot"></span>
+    <span class="bar-prefix">COGNITIVE STREAM //</span>
+    <span class="bar-thought">{{ activeSubconsciousThought() }}</span>
+  </div>
+
+  <!-- Focused Specialist Agent Tactical Modal (If Agent Selected) -->
+  @if (selectedAgent(); as current) {
+    <div class="agent-tactical-hud-modal">
+      <div class="modal-header">
+        <div class="agent-identity">
+          <div class="agent-avatar" [style.borderColor]="current.color">
+            {{ current.icon }}
+          </div>
+          <div>
+            <div class="agent-title-name">{{ current.name }}</div>
+            <div class="agent-meta-sub font-monospace">{{ current.codename }} // {{ current.subsystem }}</div>
+          </div>
+        </div>
+        <button type="button" (click)="closeSelectedAgent()" class="modal-close-btn">✕</button>
+      </div>
+
+      <p class="agent-desc">{{ current.description }}</p>
+
+      <div class="agent-telemetry-grid font-monospace">
+        <div class="telemetry-cell">
+          <span class="cell-k">SUBSYSTEM LOAD</span>
+          <span class="cell-v text-cyan">{{ current.load }}</span>
+        </div>
+        <div class="telemetry-cell">
+          <span class="cell-k">SYNAPSE RATE</span>
+          <span class="cell-v text-emerald">{{ current.synapticRate }}</span>
+        </div>
+        <div class="telemetry-cell">
+          <span class="cell-k">EFFICIENCY</span>
+          <span class="cell-v text-gold">{{ current.neuralEfficiency }}</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Bottom Floating Plain Neumorphic Command Input -->
+  <footer class="core-bottom-command-bar">
+    <div class="command-dock-shell" [class.working]="isWorking()">
+      <form class="dock-form" (ngSubmit)="onSubmitCommand()">
+        <div class="dock-inner">
+          <span class="dock-sparkle">✦</span>
+          <input
+            #cmdInputRef
+            type="text"
+            class="dock-input font-monospace"
+            [(ngModel)]="commandInput"
+            name="coreCommand"
+            placeholder="Command the 3D Arc Reactor (e.g. 'pulse core', 'deploy swarm', 'calculate 125 * 48')..."
+            autocomplete="off"
+            [disabled]="isWorking()"
+          />
+          <button type="submit" class="dock-submit-btn font-monospace" [disabled]="!commandInput.trim() || isWorking()">
+            {{ isWorking() ? 'PROCESSING...' : 'ENGAGE ➔' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </footer>
+
+  <!-- Swarm Dialogue Modal -->
+  @if (showSwarmModal()) {
+    <div class="swarm-backdrop" (click)="closeSwarmDialogue()">
+      <div class="swarm-panel" (click)="$event.stopPropagation()">
+        <div class="panel-header">
+          <span class="panel-title font-monospace">⚡ MULTI-LLM SWARM DELIBERATION</span>
+          <button type="button" class="panel-close" (click)="closeSwarmDialogue()">✕</button>
+        </div>
+        <div class="panel-body">
+          @for (item of swarmDialogueList(); track item.id || $index) {
+            <div class="dialogue-row">
+              <span class="badge text-cyan font-monospace">{{ item.sender_name }}</span>
+              <span class="sym">➔</span>
+              <span class="badge text-amethyst font-monospace">{{ item.recipient }}</span>
+              <span class="text">"{{ item.message }}"</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Universal Result Sheet -->
+  @if (commandService.activeResult()) {
+    <div class="active-result-overlay">
+      <app-result-sheet
+        [result]="commandService.activeResult()"
+        (onDismiss)="commandService.dismissResult()"
+      ></app-result-sheet>
+    </div>
+  }
+</div>

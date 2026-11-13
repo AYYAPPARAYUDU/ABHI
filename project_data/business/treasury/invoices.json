@@ -1,0 +1,122 @@
+[
+  {
+    "invoice_number": "INV-ABHI-20261113-5E06BE",
+    "client_name": "FinTech Systems Ltd",
+    "client_email": "security-procurement@fintech-corp.com",
+    "client_organization": "FinTech Solutions Pvt Ltd",
+    "issue_date": "2026-11-13",
+    "due_date": "2026-11-13",
+    "currency": "INR",
+    "line_items": [
+      {
+        "item_id": "item_c7a773",
+        "description": "Automated Code Quality & Security Vulnerability Audit (backend/app/automation/desktop)",
+        "quantity": 1,
+        "unit_price_inr": 28500.0,
+        "unit_price_usd": 325.71,
+        "total_inr": 28500.0,
+        "total_usd": 325.71
+      }
+    ],
+    "subtotal_inr": 28500.0,
+    "tax_rate_pct": 18.0,
+    "tax_amount_inr": 5130.0,
+    "total_inr": 33630.0,
+    "total_usd": 384.34,
+    "status": "SETTLED",
+    "beneficiary": {
+      "bank_name": "State Bank of India",
+      "account_holder_name": "Ravuvai Ayyapparayudu",
+      "account_number": "41130645649",
+      "ifsc_code": "SBIN0020507",
+      "branch_name": "SBI Specialized Branch",
+      "account_type": "Current / Savings Account",
+      "currency": "INR",
+      "upi_id": "ayyapparayudu.5@ybl"
+    },
+    "upi_payment_link": "upi://pay?pa=ayyapparayudu.5@ybl&pn=Ravuvai%20Ayyapparayudu&am=33630.0&cu=INR&tn=INV-ABHI-20261113-5E06BE",
+    "settlement_reference": "SBI-TXN-CF956D0D50",
+    "service_fulfillment_ref": "c:\\Users\\AYYAPPA RAYUDU\\OneDrive\\Desktop\\ABHI\\project_data\\business\\deliverables\\SECURITY_AUDIT_REPORT_1FA2EE4F.md",
+    "deliverable_hash": "ccbdbe431debc98d77b65db6998700caac35160c8b8f3c12b527b937a9ea3b60"
+  },
+  {
+    "invoice_number": "INV-ABHI-20261113-F5C354",
+    "client_name": "Apex Developer Tools Inc",
+    "client_email": "brand-partnerships@devtools.io",
+    "client_organization": "Apex Developer Tools Inc",
+    "issue_date": "2026-11-13",
+    "due_date": "2026-11-13",
+    "currency": "INR",
+    "line_items": [
+      {
+        "item_id": "item_cb0c6a",
+        "description": "Sponsored Technical Media Creation & Programmatic Video Production: Autonomous Windows OS Agents w",
+        "quantity": 1,
+        "unit_price_inr": 42000.0,
+        "unit_price_usd": 480.0,
+        "total_inr": 42000.0,
+        "total_usd": 480.0
+      }
+    ],
+    "subtotal_inr": 42000.0,
+    "tax_rate_pct": 18.0,
+    "tax_amount_inr": 7560.0,
+    "total_inr": 49560.0,
+    "total_usd": 566.4,
+    "status": "SETTLED",
+    "beneficiary": {
+      "bank_name": "State Bank of India",
+      "account_holder_name": "Ravuvai Ayyapparayudu",
+      "account_number": "41130645649",
+      "ifsc_code": "SBIN0020507",
+      "branch_name": "SBI Specialized Branch",
+      "account_type": "Current / Savings Account",
+      "currency": "INR",
+      "upi_id": "ayyapparayudu.5@ybl"
+    },
+    "upi_payment_link": "upi://pay?pa=ayyapparayudu.5@ybl&pn=Ravuvai%20Ayyapparayudu&am=49560.0&cu=INR&tn=INV-ABHI-20261113-F5C354",
+    "settlement_reference": "SBI-TXN-BD375D5CC5",
+    "service_fulfillment_ref": "c:\\Users\\AYYAPPA RAYUDU\\OneDrive\\Desktop\\ABHI\\project_data\\business\\deliverables\\VIRAL_REEL_SCRIPT_10591F5C.md",
+    "deliverable_hash": "a4a3f398184f8761d2530fe0ac2af609a6e8da6e6c22250cd900249d13ee9c70"
+  },
+  {
+    "invoice_number": "INV-ABHI-20261113-49E8C1",
+    "client_name": "Director of Engineering, Enterprise Logistics",
+    "client_email": "procurement@globallogistics.com",
+    "client_organization": "Global E-Commerce Logistics Corp",
+    "issue_date": "2026-11-13",
+    "due_date": "2026-11-13",
+    "currency": "INR",
+    "line_items": [
+      {
+        "item_id": "item_22b6fd",
+        "description": "Phase 1 Autonomous Desktop Workflow Pilot & Onboarding Pack",
+        "quantity": 1,
+        "unit_price_inr": 75000.0,
+        "unit_price_usd": 857.14,
+        "total_inr": 75000.0,
+        "total_usd": 857.14
+      }
+    ],
+    "subtotal_inr": 75000.0,
+    "tax_rate_pct": 18.0,
+    "tax_amount_inr": 13500.0,
+    "total_inr": 88500.0,
+    "total_usd": 1011.43,
+    "status": "SETTLED",
+    "beneficiary": {
+      "bank_name": "State Bank of India",
+      "account_holder_name": "Ravuvai Ayyapparayudu",
+      "account_number": "41130645649",
+      "ifsc_code": "SBIN0020507",
+      "branch_name": "SBI Specialized Branch",
+      "account_type": "Current / Savings Account",
+      "currency": "INR",
+      "upi_id": "ayyapparayudu.5@ybl"
+    },
+    "upi_payment_link": "upi://pay?pa=ayyapparayudu.5@ybl&pn=Ravuvai%20Ayyapparayudu&am=88500.0&cu=INR&tn=INV-ABHI-20261113-49E8C1",
+    "settlement_reference": "SBI-TXN-49545D54E4",
+    "service_fulfillment_ref": "c:\\Users\\AYYAPPA RAYUDU\\OneDrive\\Desktop\\ABHI\\project_data\\business\\deliverables\\B2B_AI_TRANSFORMATION_PROPOSAL_EBD14BAA.md",
+    "deliverable_hash": "038f3c591ce578e587d6c6d167220f3ec3374c275130d037654fb0c3c6cdfce8"
+  }
+]

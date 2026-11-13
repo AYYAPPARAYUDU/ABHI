@@ -1,4 +1,31 @@
 <div class="business-workspace">
+  <!-- Top Spatial Navigation Bar -->
+  <header class="business-top-ribbon-bar">
+    <div class="ribbon-left">
+      <span class="ribbon-pulse-dot"></span>
+      <span class="ribbon-brand font-monospace">SOVEREIGN BUSINESS & COMMERCIAL LEDGER</span>
+      <span class="ribbon-settle-tag font-monospace">SBI A/C: 41130645649 · UPI: {{ sbiProfile.upi }}</span>
+    </div>
+
+    <nav class="spatial-pages-ribbon font-monospace">
+      <a routerLink="/home" class="page-nav-link">
+        <span class="link-ic">🖥️</span> ERA HUD
+      </a>
+      <a routerLink="/core" class="page-nav-link">
+        <span class="link-ic">🌀</span> 3D CORE
+      </a>
+      <a routerLink="/business" class="page-nav-link active">
+        <span class="link-ic">🏛️</span> BUSINESS (SBI)
+      </a>
+      <a routerLink="/workspace" class="page-nav-link">
+        <span class="link-ic">🛰️</span> WORKSPACE
+      </a>
+      <a routerLink="/meeting" class="page-nav-link">
+        <span class="link-ic">🏛️</span> MEETING
+      </a>
+    </nav>
+  </header>
+
   <!-- Ayyappa Rayudu Personal AI Architect Banner -->
   <section class="personal-architect-card">
     <div class="architect-profile-left">
@@ -14,7 +41,7 @@
       <div class="architect-details">
         <div class="name-badge-row">
           <h2 class="architect-name">Ayyappa Rayudu Ravuvari</h2>
-          <span class="architect-role-pill">PRINCIPAL ARCHITECT</span>
+          <span class="architect-role-pill">SOVEREIGN OWNER & ARCHITECT</span>
           <a
             href="https://www.linkedin.com/in/ayyapparayudu"
             target="_blank"
@@ -30,18 +57,22 @@
           </a>
         </div>
         <p class="architect-bio">
-          Angular 22 & RxJS lead building metadata-driven architectures, multi-agent autonomous execution systems, and ABHI personal offline neural workspace.
+          Sovereign AI OS and Autonomous Commercial Fulfillment Engine. All corporate invoices and deliverables settle directly to State Bank of India account 41130645649 (IFSC: SBIN0020507, UPI: ayyapparayudu.5&#64;ybl).
         </p>
-        <div class="workstation-specs-row">
-          <span class="spec-tag"><strong class="spec-k">VRAM:</strong> 100% RTX GPU</span>
-          <span class="spec-tag"><strong class="spec-k">LLM Context:</strong> 32,768 Tokens (abhi:latest)</span>
-          <span class="spec-tag"><strong class="spec-k">Safety:</strong> Dual-State Physical Verifier</span>
-          <span class="spec-tag"><strong class="spec-k">Data Privacy:</strong> 100% Local · Zero Leakage</span>
+        <div class="workstation-specs-row font-monospace">
+          <span class="spec-tag"><strong class="spec-k">BANK:</strong> State Bank of India</span>
+          <span class="spec-tag"><strong class="spec-k">A/C:</strong> 41130645649</span>
+          <span class="spec-tag"><strong class="spec-k">IFSC:</strong> SBIN0020507</span>
+          <span class="spec-tag"><strong class="spec-k">UPI:</strong> ayyapparayudu.5&#64;ybl</span>
+          <span class="spec-tag"><strong class="spec-k">DELIVERABLES:</strong> Real AST Code Audits & B2B Proposals</span>
         </div>
       </div>
     </div>
 
     <div class="architect-quick-actions">
+      <button class="action-btn revenue-pulse-btn" [disabled]="isExecutingRevenue()" (click)="runAutonomousRevenueCycle()">
+        <span>{{ isExecutingRevenue() ? '⚡ GENERATING...' : '⚡ RUN REVENUE CYCLE' }}</span>
+      </button>
       <button class="action-btn secondary" (click)="showNewOppModal.set(true)">
         <span>+ Score Opportunity</span>
       </button>

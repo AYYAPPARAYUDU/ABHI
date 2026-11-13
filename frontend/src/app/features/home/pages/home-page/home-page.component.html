@@ -14,6 +14,25 @@
         <span class="sys-badge secure">DEFENDER SECURE</span>
         <span class="sys-badge latency font-monospace">LATENCY: 9ms</span>
       </div>
+
+      <!-- Spatial Perspective Switcher Ribbon -->
+      <nav class="spatial-pages-ribbon font-monospace">
+        <a routerLink="/home" class="page-nav-link active">
+          <span class="link-ic">🖥️</span> ERA HUD
+        </a>
+        <a routerLink="/core" class="page-nav-link">
+          <span class="link-ic">🌀</span> 3D CORE
+        </a>
+        <a routerLink="/business" class="page-nav-link">
+          <span class="link-ic">🏛️</span> BUSINESS (SBI)
+        </a>
+        <a routerLink="/workspace" class="page-nav-link">
+          <span class="link-ic">🛰️</span> WORKSPACE
+        </a>
+        <a routerLink="/meeting" class="page-nav-link">
+          <span class="link-ic">🏛️</span> MEETING
+        </a>
+      </nav>
     </div>
 
     <!-- Center: Mamu's State Bank of India Settlement Channel -->
@@ -189,6 +208,10 @@
             <div class="cred-cell">
               <span class="cell-label">IFSC CODE</span>
               <span class="cell-val font-monospace text-emerald">SBIN0020507</span>
+            </div>
+            <div class="cred-cell">
+              <span class="cell-label">UPI ID</span>
+              <span class="cell-val font-monospace text-emerald">{{ sbiTreasury().upi }}</span>
             </div>
           </div>
 

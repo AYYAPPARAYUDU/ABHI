@@ -5,6 +5,8 @@ import { RouterModule } from '@angular/router';
 import { BusinessService } from '../../services/business.service';
 import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
 import { AnimeAnimationService } from '../../../../core/services/anime-animation.service';
+import { AgentApiService } from '../../../../core/api/agent-api.service';
+import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { SectorsDashboardComponent } from '../../components/sectors-dashboard/sectors-dashboard.component';
 import { FinancialLedgerComponent } from '../../components/financial-ledger/financial-ledger.component';
 import { ProjectInitiativesComponent } from '../../components/project-initiatives/project-initiatives.component';
@@ -31,14 +33,26 @@ export type BusinessWorkspaceTab = 'all' | 'sectors' | 'initiatives' | 'financia
 export class BusinessPageComponent implements OnInit, AfterViewInit {
   readonly businessService = inject(BusinessService);
   readonly animService = inject(AnimeAnimationService);
+  readonly agentApi = inject(AgentApiService);
+  readonly speechVoice = inject(SpeechVoiceService);
   private readonly threeScene = inject(ThreeSceneManagerService);
   private readonly hostEl = inject(ElementRef);
 
   readonly activeTab = signal<BusinessWorkspaceTab>('all');
   readonly selectedSectorId = signal<string | null>(null);
   readonly isExecuting = signal<boolean>(false);
+  readonly isExecutingRevenue = signal<boolean>(false);
   readonly showNewProjModal = signal<boolean>(false);
   readonly showNewOppModal = signal<boolean>(false);
+
+  // Sovereign SBI Settlement Targets (Mamu)
+  readonly sbiProfile = {
+    beneficiary: 'Ravuvai Ayyapparayudu',
+    bank: 'State Bank of India',
+    account: '41130645649',
+    ifsc: 'SBIN0020507',
+    upi: 'ayyapparayudu.5@ybl'
+  };
 
   // New Project Form
   newProjSector = 'software_tools';
@@ -137,6 +151,23 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
         this.newProjName = '';
         this.newProjObjective = '';
       });
+  }
+
+  async runAutonomousRevenueCycle(): Promise<void> {
+    if (this.isExecutingRevenue()) return;
+    this.isExecutingRevenue.set(true);
+    this.speechVoice.speak('Engaging sovereign revenue fulfillment cycle for operator Mamu.');
+    try {
+      const res = await this.agentApi.runAutonomousRevenueCycle();
+      this.businessService.fetchFinancials().subscribe(() => this.animateCards());
+      if (res?.summary) {
+        this.speechVoice.speak(res.summary);
+      }
+    } catch {
+      // Keep existing
+    } finally {
+      this.isExecutingRevenue.set(false);
+    }
   }
 
   scoreOpportunity(): void {
