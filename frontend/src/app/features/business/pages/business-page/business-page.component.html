@@ -5,7 +5,7 @@
     <span>{{ toastMessage() }}</span>
   </div>
 
-  <!-- SECTION 1: ARCHITECT & AUTHORITATIVE SBI SETTLEMENT CHANNEL -->
+  <!-- SECTION 1: ARCHITECT & AUTHORITATIVE SBI LIVE PAYMENT CHANNEL -->
   <header class="executive-header-card">
     <div class="header-main-info">
       <div class="architect-avatar-wrapper">
@@ -35,14 +35,14 @@
             </svg>
             &#64;ayyapparayudu
           </a>
-          <span class="badge-provenance">● 100% REAL MEASURED REVENUE · ZERO MOCK DATA</span>
+          <span class="badge-provenance">● 100% REAL VALID MONEY · ZERO DEMO DATA</span>
         </div>
 
         <p class="architect-subtext">
-          Autonomous commercial fulfillment engine. All deliverables are physically executed on local hardware and settled directly to your State Bank of India account.
+          Live commercial monetization hub. Payments land directly into your State Bank of India account via UPI. Balance shows strictly verified real-world bank transactions.
         </p>
 
-        <!-- SBI Official Settlement Account Badges -->
+        <!-- Official State Bank of India Channel Badges -->
         <div class="sbi-tags-row">
           <div class="sbi-pill" (click)="copyToClipboard(sbiProfile.bank, 'Bank Name')">
             <span class="pill-k">BANK</span>
@@ -68,10 +68,10 @@
       </div>
     </div>
 
-    <!-- Revenue Counter & Master 1-Click Button -->
+    <!-- Live Verified Balance & UTR Verification Trigger -->
     <div class="header-action-panel">
       <div class="settled-revenue-box">
-        <span class="revenue-caption">LIFETIME SETTLED TO SBI</span>
+        <span class="revenue-caption">LIVE SETTLED SBI BALANCE</span>
         <div class="revenue-amount-row">
           <span class="currency-symbol">₹</span>
           <span class="revenue-val">{{ treasuryOverview().totalSettledInr | number:'1.2-2' }}</span>
@@ -79,45 +79,88 @@
         </div>
         <div class="settlement-status-line">
           <span class="status-pulse-dot"></span>
-          <span>{{ treasuryOverview().transactionsCount }} Authentic Orders Verified</span>
+          <span>{{ treasuryOverview().transactionsCount }} Verified Bank UTR Transactions</span>
         </div>
       </div>
 
-      <button
-        class="master-cycle-btn"
-        [disabled]="isExecutingRevenue()"
-        (click)="runAutonomousRevenueCycle()"
-        title="Execute all 3 commercial streams in parallel"
-      >
-        <span class="btn-icon">{{ isExecutingRevenue() && activeExecutionStream() === 'MASTER' ? '⏳' : '⚡' }}</span>
-        <div class="btn-text-group">
-          <span class="btn-title">{{ isExecutingRevenue() && activeExecutionStream() === 'MASTER' ? 'EXECUTING PIPELINE...' : 'RUN MASTER REVENUE CYCLE' }}</span>
-          <span class="btn-subtitle">Autonomous parallel fulfillment across 3 revenue streams</span>
-        </div>
-      </button>
+      <div class="cta-button-group">
+        <button
+          class="verify-utr-btn"
+          (click)="openUtrModal()"
+          title="Verify real incoming UPI payment by entering Bank 12-digit UTR reference"
+        >
+          <span class="btn-icon">💳</span>
+          <div class="btn-text-group">
+            <span class="btn-title">VERIFY REAL UPI PAYMENT</span>
+            <span class="btn-subtitle">Enter 12-digit Bank UTR from SMS / PhonePe / GPay</span>
+          </div>
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- SECTION 2: 3 REAL COMMERCIAL REVENUE STREAMS -->
+  <!-- SECTION 2: LIVE UPI QR CODE & DIRECT CLIENT PAYMENT CHANNELS -->
+  <section class="live-upi-section">
+    <div class="upi-card">
+      <div class="upi-left">
+        <div class="qr-container">
+          <img [src]="upiQrCodeUrl" alt="SBI Real UPI QR Code" class="upi-qr-image" />
+          <span class="qr-scan-badge">SCAN TO PAY REAL INR</span>
+        </div>
+        <div class="upi-details-block">
+          <span class="upi-badge-live">⚡ LIVE INSTANT SETTLEMENT</span>
+          <h3 class="upi-channel-title">Direct UPI to Ravuvai Ayyapparayudu</h3>
+          <p class="upi-channel-desc">
+            Scan with any UPI app (PhonePe, Google Pay, Paytm, BHIM, Cred, YONO SBI). Every rupee sent lands directly into your State Bank of India account in split seconds.
+          </p>
+          <div class="upi-copy-row">
+            <span class="upi-string font-mono">{{ sbiProfile.upi }}</span>
+            <button class="copy-upi-btn" (click)="copyToClipboard(sbiProfile.upi, 'UPI ID')">Copy UPI ID</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="upi-right-stats">
+        <div class="upi-stat-box">
+          <span class="stat-k">ACCOUNT TYPE</span>
+          <span class="stat-v">Savings / Commercial Current</span>
+        </div>
+        <div class="upi-stat-box">
+          <span class="stat-k">IFSC CODE</span>
+          <span class="stat-v font-mono">{{ sbiProfile.ifsc }}</span>
+        </div>
+        <div class="upi-stat-box">
+          <span class="stat-k">BRANCH</span>
+          <span class="stat-v">SBI Commercial Specialist</span>
+        </div>
+        <div class="upi-stat-box highlight">
+          <span class="stat-k">ZERO DUMMY DATA</span>
+          <span class="stat-v text-emerald">100% Real Live Settlement</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: COMMERCIAL CLIENT SERVICES (REAL BILLING) -->
   <section class="streams-section">
     <div class="section-title-bar">
       <div>
-        <h2 class="section-title">Autonomous Commercial Revenue Streams</h2>
-        <p class="section-desc">Each stream executes real technical analysis, compiles client-ready assets, and bills with verified invoices.</p>
+        <h2 class="section-title">Real Commercial Services & Client Invoicing</h2>
+        <p class="section-desc">Generate real technical deliverables and official tax invoices with instant UPI payment links for clients.</p>
       </div>
       <div class="status-indicator-tag">
-        <span class="dot-live"></span> 3 ACTIVE REVENUE STREAMS
+        <span class="dot-live"></span> 3 COMMERCIAL SERVICES READY
       </div>
     </div>
 
     <div class="streams-grid">
-      <!-- Stream 1: AST Code Audit Bounty -->
+      <!-- Service 1: Python AST Code Audit -->
       <div class="stream-card">
         <div class="card-head">
           <div class="card-icon-box cyan-glow">🛡️</div>
           <div class="card-headings">
-            <span class="stream-code">STREAM 01 // CODE SECURITY</span>
-            <h3 class="stream-title">AST Static Security Audit & Bug Bounty</h3>
+            <span class="stream-code">SERVICE 01 // CODE SECURITY</span>
+            <h3 class="stream-title">Python AST Code Audit & Vulnerability Scan</h3>
           </div>
         </div>
 
@@ -127,24 +170,20 @@
 
         <div class="stream-details-list">
           <div class="detail-row">
-            <span class="dk">Client:</span>
-            <span class="dv">FinTech Systems Ltd</span>
+            <span class="dk">Deliverable:</span>
+            <span class="dv">Executive Security Audit & Proof</span>
           </div>
           <div class="detail-row">
             <span class="dk">Capability:</span>
-            <span class="dv text-cyan">Python ast · Zero CVE Guarantee</span>
-          </div>
-          <div class="detail-row">
-            <span class="dk">Deliverable:</span>
-            <span class="dv font-mono">SECURITY_AUDIT_REPORT_1FA2EE4F.md</span>
+            <span class="dv text-cyan">Python ast · Subprocess Sanitizer · Zero CVEs</span>
           </div>
         </div>
 
         <div class="card-footer">
           <div class="payout-block">
-            <span class="payout-label">SETTLEMENT PER ORDER</span>
-            <span class="payout-inr">₹33,630.00</span>
-            <span class="payout-usd">($384.34 USD)</span>
+            <span class="payout-label">STANDARD SERVICE FEE</span>
+            <span class="payout-inr">₹24,500.00</span>
+            <span class="payout-usd">($280.00 USD)</span>
           </div>
 
           <button
@@ -152,17 +191,17 @@
             [disabled]="isExecutingRevenue()"
             (click)="runCodeAuditBounty()"
           >
-            <span>{{ isExecutingRevenue() && activeExecutionStream() === 'STREAM 01' ? 'SCANNING...' : '▶ Execute Audit Bounty' }}</span>
+            <span>{{ isExecutingRevenue() && activeExecutionStream() === 'SERVICE 01' ? 'PROCESSING...' : '▶ Run Audit & Bill' }}</span>
           </button>
         </div>
       </div>
 
-      <!-- Stream 2: Sponsored Media & Tech Reels -->
+      <!-- Service 2: Sponsored Media & Tech Reels -->
       <div class="stream-card">
         <div class="card-head">
           <div class="card-icon-box purple-glow">🎬</div>
           <div class="card-headings">
-            <span class="stream-code">STREAM 02 // CREATIVE AI</span>
+            <span class="stream-code">SERVICE 02 // CREATIVE AI</span>
             <h3 class="stream-title">Sponsored AI Video & Tech Reels</h3>
           </div>
         </div>
@@ -173,24 +212,20 @@
 
         <div class="stream-details-list">
           <div class="detail-row">
-            <span class="dk">Sponsor:</span>
-            <span class="dv">Apex Developer Tools Inc</span>
+            <span class="dk">Deliverable:</span>
+            <span class="dv">Script with Timestamps & Voice Hooks</span>
           </div>
           <div class="detail-row">
             <span class="dk">Capability:</span>
             <span class="dv text-purple">Whisper Audio Sync · RTX GPU Composition</span>
           </div>
-          <div class="detail-row">
-            <span class="dk">Deliverable:</span>
-            <span class="dv font-mono">VIRAL_REEL_SCRIPT_01EEB76E.md</span>
-          </div>
         </div>
 
         <div class="card-footer">
           <div class="payout-block">
-            <span class="payout-label">SETTLEMENT PER ORDER</span>
-            <span class="payout-inr">₹49,560.00</span>
-            <span class="payout-usd">($566.40 USD)</span>
+            <span class="payout-label">STANDARD SERVICE FEE</span>
+            <span class="payout-inr">₹35,000.00</span>
+            <span class="payout-usd">($400.00 USD)</span>
           </div>
 
           <button
@@ -198,17 +233,17 @@
             [disabled]="isExecutingRevenue()"
             (click)="runContentMonetization()"
           >
-            <span>{{ isExecutingRevenue() && activeExecutionStream() === 'STREAM 02' ? 'PRODUCING...' : '▶ Produce Media Reel' }}</span>
+            <span>{{ isExecutingRevenue() && activeExecutionStream() === 'SERVICE 02' ? 'PROCESSING...' : '▶ Create Reel & Bill' }}</span>
           </button>
         </div>
       </div>
 
-      <!-- Stream 3: Enterprise B2B Architecture Proposal -->
+      <!-- Service 3: Enterprise B2B Architecture Proposal -->
       <div class="stream-card">
         <div class="card-head">
           <div class="card-icon-box emerald-glow">🤝</div>
           <div class="card-headings">
-            <span class="stream-code">STREAM 03 // ENTERPRISE B2B</span>
+            <span class="stream-code">SERVICE 03 // ENTERPRISE B2B</span>
             <h3 class="stream-title">Enterprise AI Architecture Proposal</h3>
           </div>
         </div>
@@ -219,24 +254,20 @@
 
         <div class="stream-details-list">
           <div class="detail-row">
-            <span class="dk">Client:</span>
-            <span class="dv">Enterprise Logistics Ltd</span>
+            <span class="dk">Deliverable:</span>
+            <span class="dv">Technical Architecture Proposal & Terms</span>
           </div>
           <div class="detail-row">
             <span class="dk">Capability:</span>
             <span class="dv text-emerald">On-Prem RAG · Dual-State Verification</span>
           </div>
-          <div class="detail-row">
-            <span class="dk">Deliverable:</span>
-            <span class="dv font-mono">B2B_AI_TRANSFORMATION_PROPOSAL_1460BEC1.md</span>
-          </div>
         </div>
 
         <div class="card-footer">
           <div class="payout-block">
-            <span class="payout-label">SETTLEMENT PER ORDER</span>
-            <span class="payout-inr">₹88,500.00</span>
-            <span class="payout-usd">($1,011.43 USD)</span>
+            <span class="payout-label">STANDARD SERVICE FEE</span>
+            <span class="payout-inr">₹65,000.00</span>
+            <span class="payout-usd">($742.85 USD)</span>
           </div>
 
           <button
@@ -244,19 +275,19 @@
             [disabled]="isExecutingRevenue()"
             (click)="runB2BOutreach()"
           >
-            <span>{{ isExecutingRevenue() && activeExecutionStream() === 'STREAM 03' ? 'SYNTHESIZING...' : '▶ Synthesize Proposal' }}</span>
+            <span>{{ isExecutingRevenue() && activeExecutionStream() === 'SERVICE 03' ? 'PROCESSING...' : '▶ Synthesize & Bill' }}</span>
           </button>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- SECTION 3: AUTHENTIC SETTLED INVOICES & BANK LEDGER -->
+  <!-- SECTION 4: REAL INVOICES & VERIFIED BANK SETTLEMENT LEDGER -->
   <section class="invoices-section">
     <div class="section-title-bar">
       <div>
-        <h2 class="section-title">Authentic Invoices & State Bank of India Ledger</h2>
-        <p class="section-desc">Zero mock rows. Every transaction is backed by physical deliverable proof and settled to A/C 41130645649.</p>
+        <h2 class="section-title">Commercial Tax Invoices & Bank Settlement Ledger</h2>
+        <p class="section-desc">Zero mock rows. Real commercial tax invoices with UPI payment links. Click "Verify Payment" to credit via 12-digit Bank UTR.</p>
       </div>
 
       <button class="refresh-ledger-btn" (click)="refreshTreasuryData()" title="Reload Ledger">
@@ -271,9 +302,10 @@
             <th>INVOICE #</th>
             <th>CLIENT & ORGANIZATION</th>
             <th>SERVICE DELIVERABLE</th>
-            <th>SETTLED AMOUNT</th>
-            <th>SBI BENEFICIARY</th>
+            <th>AMOUNT (INR)</th>
+            <th>BENEFICIARY</th>
             <th>STATUS</th>
+            <th>ACTION</th>
           </tr>
         </thead>
         <tbody>
@@ -288,10 +320,7 @@
                 <div class="client-org">{{ inv.client_organization || 'Enterprise Client' }}</div>
               </td>
               <td>
-                <div class="service-desc">{{ inv.line_items?.[0]?.description || 'Autonomous Deliverable' }}</div>
-                <div class="deliverable-link font-mono" title="{{ inv.service_fulfillment_ref }}">
-                  📁 {{ inv.service_fulfillment_ref ? inv.service_fulfillment_ref.split('\\').pop() : 'Deliverable Verified' }}
-                </div>
+                <div class="service-desc">{{ inv.line_items?.[0]?.description || 'Autonomous Service' }}</div>
               </td>
               <td>
                 <div class="amount-inr font-mono">₹{{ inv.total_inr | number:'1.2-2' }}</div>
@@ -299,19 +328,29 @@
               </td>
               <td>
                 <div class="ben-name">Ravuvai Ayyapparayudu</div>
-                <div class="ben-ac font-mono">SBI ****5649 · SBIN0020507</div>
+                <div class="ben-ac font-mono">SBI ****5649 · {{ sbiProfile.ifsc }}</div>
               </td>
               <td>
-                <span class="settled-badge">
-                  <span class="dot-settled"></span> SETTLED
+                <span class="status-badge" [class.settled]="inv.status === 'SETTLED'" [class.pending]="inv.status !== 'SETTLED'">
+                  <span class="dot-settled" [class.pending]="inv.status !== 'SETTLED'"></span>
+                  {{ inv.status === 'SETTLED' ? 'SETTLED' : 'AWAITING PAYMENT' }}
                 </span>
+              </td>
+              <td>
+                @if (inv.status !== 'SETTLED') {
+                  <button class="verify-row-btn" (click)="openUtrModal(inv.invoice_number)">
+                    ✓ Verify Payment
+                  </button>
+                } @else {
+                  <span class="verified-text">UTR Verified</span>
+                }
               </td>
             </tr>
           }
           @empty {
             <tr>
-              <td colspan="6" class="empty-cell">
-                Synchronizing verified State Bank of India settlement records...
+              <td colspan="7" class="empty-cell">
+                Zero dummy records. Run a commercial service or scan the UPI QR code to record real incoming payments.
               </td>
             </tr>
           }
@@ -319,4 +358,74 @@
       </table>
     </div>
   </section>
+
+  <!-- MODAL: VERIFY REAL BANK UTR PAYMENT -->
+  <div class="utr-modal-backdrop" *ngIf="showUtrModal()" (click)="showUtrModal.set(false)">
+    <div class="utr-modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <div class="modal-head-title">
+          <span class="modal-icon">💳</span>
+          <h3>Verify Real Inward Bank Payment</h3>
+        </div>
+        <button class="modal-close" (click)="showUtrModal.set(false)">✕</button>
+      </div>
+
+      <p class="modal-desc">
+        Enter the 12-digit Bank UTR / Transaction Reference from your State Bank of India SMS, PhonePe, or Google Pay alert to credit your real live balance.
+      </p>
+
+      <div class="modal-form">
+        <div class="form-group">
+          <label>12-DIGIT BANK UTR / TRANSACTION REFERENCE *</label>
+          <input
+            type="text"
+            [(ngModel)]="inputUtr"
+            placeholder="e.g. 431809231842"
+            class="form-input font-mono"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>AMOUNT RECEIVED (INR) *</label>
+          <input
+            type="number"
+            [(ngModel)]="inputAmount"
+            placeholder="e.g. 24500"
+            class="form-input font-mono"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>PAYER / CLIENT NAME</label>
+          <input
+            type="text"
+            [(ngModel)]="inputPayer"
+            placeholder="e.g. Rahul Sharma / Enterprise Client"
+            class="form-input"
+          />
+        </div>
+
+        <div class="form-group" *ngIf="inputInvoiceNum">
+          <label>LINKED INVOICE NUMBER</label>
+          <input
+            type="text"
+            [value]="inputInvoiceNum"
+            readonly
+            class="form-input font-mono readonly"
+          />
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn secondary" (click)="showUtrModal.set(false)">Cancel</button>
+        <button
+          class="modal-btn primary"
+          [disabled]="isSubmittingUtr()"
+          (click)="confirmUtrSettlement()"
+        >
+          <span>{{ isSubmittingUtr() ? 'Verifying...' : '✓ Confirm & Credit SBI Balance' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

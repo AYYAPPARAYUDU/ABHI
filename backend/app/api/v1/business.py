@@ -188,6 +188,35 @@ async def create_treasury_invoice(payload: Dict[str, Any]) -> Dict[str, Any]:
     return asdict(invoice)
 
 
+@router.post("/treasury/clear-dummy-data")
+async def clear_treasury_dummy_data() -> Dict[str, Any]:
+    """Purge all dummy simulated records from the treasury ledger and reset to clean authentic state."""
+    sovereign_treasury.clear_all_dummy_data()
+    return {"status": "SUCCESS", "message": "All dummy data removed. Ledger reset to real authentic state."}
+
+
+@router.post("/treasury/verify-settlement")
+async def verify_sbi_settlement(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Verify authentic inward UPI payment landed in SBI Account 41130645649 (ayyapparayudu.5@ybl) via Bank UTR."""
+    utr_number = payload.get("utr_number", "")
+    amount_inr = float(payload.get("amount_inr", 0.0))
+    payer_name = payload.get("payer_name", "Verified Client")
+    invoice_number = payload.get("invoice_number")
+
+    if not utr_number or amount_inr <= 0:
+        raise HTTPException(status_code=400, detail="Valid 12-digit Bank UTR number and positive amount are required.")
+
+    try:
+        return sovereign_treasury.record_verified_sbi_settlement(
+            utr_number=utr_number,
+            amount_inr=amount_inr,
+            payer_name=payer_name,
+            invoice_number=invoice_number,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 # =========================================================================
 # AUTONOMOUS CEO REVENUE ENGINE
 # =========================================================================

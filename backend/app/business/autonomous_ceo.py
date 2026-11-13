@@ -155,7 +155,7 @@ class AutonomousBusinessCEO:
 
         deliv_hash = hashlib.sha256(report_content.encode("utf-8")).hexdigest()
 
-        # Generate official commercial invoice settled directly to Mamu's SBI account
+        # Generate official commercial invoice with direct UPI link to Mamu's SBI account (Awaiting payment)
         invoice = sovereign_treasury.generate_invoice(
             client_name=client_name,
             service_description=f"Automated Code Quality & Security Vulnerability Audit ({file_path_str[:30]})",
@@ -164,7 +164,7 @@ class AutonomousBusinessCEO:
             client_org="FinTech Solutions Pvt Ltd",
             service_ref=str(deliverable_path),
             deliverable_hash=deliv_hash,
-            mark_as_settled=True
+            mark_as_settled=False
         )
 
         return {
@@ -219,7 +219,7 @@ class AutonomousBusinessCEO:
             client_org=sponsor_name,
             service_ref=str(script_path),
             deliverable_hash=deliv_hash,
-            mark_as_settled=True
+            mark_as_settled=False
         )
 
         return {
@@ -272,7 +272,7 @@ class AutonomousBusinessCEO:
             client_org=client_org,
             service_ref=str(proposal_path),
             deliverable_hash=deliv_hash,
-            mark_as_settled=True
+            mark_as_settled=False
         )
 
         return {

@@ -170,10 +170,10 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     accountFull: '41130645649',
     ifsc: 'SBIN0020507',
     upi: 'ayyapparayudu.5@ybl',
-    totalRevenueInr: 145500.0,
-    totalRevenueUsd: 1662.86,
+    totalRevenueInr: 0.0,
+    totalRevenueUsd: 0.0,
     pendingInvoicesInr: 0.0,
-    invoicesCount: 3
+    invoicesCount: 0
   });
   readonly isGeneratingRevenue = signal<boolean>(false);
 

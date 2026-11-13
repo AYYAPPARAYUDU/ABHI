@@ -403,4 +403,21 @@ export class AgentApiService {
       return [];
     }
   }
+
+  /**
+   * Verify authentic inward UPI settlement to SBI Account 41130645649 using 12-digit Bank UTR.
+   */
+  async verifySbiSettlement(payload: { utr_number: string; amount_inr: number; payer_name?: string; invoice_number?: string }): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/business/treasury/verify-settlement`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
 }

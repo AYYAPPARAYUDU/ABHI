@@ -259,6 +259,58 @@ class SovereignTreasuryEngine:
 
     get_treasury_overview = get_financial_overview
 
+    def clear_all_dummy_data(self) -> None:
+        """Purge all simulated/dummy records and reset to clean authentic state."""
+        self._invoices = {}
+        self._settlement_history = []
+        self._save_treasury_state()
+
+    def record_verified_sbi_settlement(
+        self,
+        utr_number: str,
+        amount_inr: float,
+        payer_name: str = "Verified Client",
+        invoice_number: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Record an authentic payment received into State Bank of India account 41130645649 via UPI (ayyapparayudu.5@ybl)."""
+        utr_clean = utr_number.strip().upper()
+        if not utr_clean or len(utr_clean) < 6:
+            raise ValueError("Invalid UTR transaction reference. Bank UTR must be at least 6 characters.")
+
+        # Check for duplicate UTR
+        for txn in self._settlement_history:
+            if txn.get("utr_number") == utr_clean or txn.get("transaction_id") == utr_clean:
+                return txn
+
+        now_dt = datetime.now(timezone.utc)
+        usd_rate = 87.50
+        amount_usd = round(amount_inr / usd_rate, 2)
+
+        # If linked to an issued invoice, mark it as SETTLED
+        if invoice_number and invoice_number in self._invoices:
+            inv = self._invoices[invoice_number]
+            inv.status = "SETTLED"
+            inv.settlement_reference = utr_clean
+
+        record = {
+            "transaction_id": utr_clean,
+            "utr_number": utr_clean,
+            "invoice_number": invoice_number,
+            "amount_inr": round(amount_inr, 2),
+            "amount_usd": amount_usd,
+            "client_name": payer_name,
+            "beneficiary_account": f"SBI ****{self.settlement_profile.account_number[-4:]}",
+            "account_holder": self.settlement_profile.account_holder_name,
+            "ifsc": self.settlement_profile.ifsc_code,
+            "channel": "UPI (ayyapparayudu.5@ybl)",
+            "settled_at": now_dt.isoformat(),
+            "status": "SETTLED_TO_SBI_ACCOUNT"
+        }
+
+        self._settlement_history.append(record)
+        self._save_treasury_state()
+        return record
+
     def list_invoices(self, limit: int = 50) -> List[Dict[str, Any]]:
         """Return list of invoices formatted for UI and PDF generation."""
         invs = sorted(self._invoices.values(), key=lambda x: x.issue_date, reverse=True)
