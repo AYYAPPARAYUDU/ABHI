@@ -64,7 +64,7 @@ export class ThreeSceneManagerService {
 
   // Component Signals & State
   readonly isSwarmDeployed = signal<boolean>(true);
-  readonly soundEnabled = signal<boolean>(true);
+  readonly soundEnabled = signal<boolean>(false); // Completely muted on startup to prevent speaker clicks/noise
   readonly selectedAgent = signal<AgentNode | null>(null);
   readonly agentFocused$ = new Subject<AgentNode>();
   readonly hoveredAgent = signal<AgentNode | null>(null);
@@ -493,36 +493,40 @@ export class ThreeSceneManagerService {
       gain.connect(ctx.destination);
 
       if (type === 'deploy') {
-        // Iris opening whoosh & upward frequency sweep
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(120, now);
-        osc.frequency.exponentialRampToValueAtTime(1400, now + 0.4);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-        osc.start(now);
-        osc.stop(now + 0.45);
-      } else if (type === 'dock') {
-        // Deep implosion & lock tone
+        // Silky smooth sine sweep with soft attack and decay (zero harsh clicks)
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(900, now);
-        osc.frequency.exponentialRampToValueAtTime(150, now + 0.35);
-        gain.gain.setValueAtTime(0.18, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-        osc.start(now);
-        osc.stop(now + 0.4);
-      } else if (type === 'pulse') {
-        osc.type = 'triangle';
         osc.frequency.setValueAtTime(220, now);
-        osc.frequency.exponentialRampToValueAtTime(80, now + 0.3);
-        gain.gain.setValueAtTime(0.25, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc.frequency.exponentialRampToValueAtTime(640, now + 0.25);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.02, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
         osc.start(now);
-        osc.stop(now + 0.35);
+        osc.stop(now + 0.25);
+      } else if (type === 'dock') {
+        // Gentle soft sine drop
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.2);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.02, now + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      } else if (type === 'pulse') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(320, now);
+        osc.frequency.exponentialRampToValueAtTime(160, now + 0.18);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.02, now + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+        osc.start(now);
+        osc.stop(now + 0.18);
       } else {
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(1100, now);
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.frequency.setValueAtTime(880, now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.015, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.08);
         osc.start(now);
         osc.stop(now + 0.08);
       }

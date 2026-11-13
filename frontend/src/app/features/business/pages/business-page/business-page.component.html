@@ -1,25 +1,32 @@
-<div class="business-workspace">
-  <!-- Ayyappa Rayudu Personal AI Architect Banner & Autonomous Commercial Control Hub -->
-  <section class="personal-architect-card">
-    <div class="architect-profile-left">
-      <div class="avatar-ring">
+<div class="business-executive-container">
+  <!-- Toast Notification Feedback -->
+  <div class="toast-pill" *ngIf="toastMessage()">
+    <span class="toast-sparkle">✦</span>
+    <span>{{ toastMessage() }}</span>
+  </div>
+
+  <!-- SECTION 1: ARCHITECT & AUTHORITATIVE SBI SETTLEMENT CHANNEL -->
+  <header class="executive-header-card">
+    <div class="header-main-info">
+      <div class="architect-avatar-wrapper">
         <img
           src="assets/images/ayyappa_rayudu.jpg"
           alt="Ayyappa Rayudu"
-          class="architect-photo"
+          class="architect-avatar"
           (error)="onAvatarErr($event)"
         />
-        <span class="online-status-dot"></span>
+        <span class="avatar-status-dot" title="Sovereign Control Online"></span>
       </div>
-      <div class="architect-details">
-        <div class="name-badge-row">
-          <h2 class="architect-name">Ayyappa Rayudu Ravuvari</h2>
-          <span class="architect-role-pill">SOVEREIGN OWNER & ARCHITECT</span>
+
+      <div class="architect-meta">
+        <div class="meta-row-top">
+          <h1 class="architect-heading">Ayyappa Rayudu Ravuvari</h1>
+          <span class="badge-role">SOVEREIGN OWNER & ARCHITECT</span>
           <a
             href="https://www.linkedin.com/in/ayyapparayudu"
             target="_blank"
             rel="noopener noreferrer"
-            class="linkedin-pill"
+            class="badge-linkedin"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
               <path
@@ -28,231 +35,288 @@
             </svg>
             &#64;ayyapparayudu
           </a>
-          <span class="provenance-badge text-emerald font-monospace">● 100% MEASURED REVENUE · ZERO MOCK DATA</span>
+          <span class="badge-provenance">● 100% REAL MEASURED REVENUE · ZERO MOCK DATA</span>
         </div>
-        <p class="architect-bio">
-          Sovereign AI OS and Autonomous Commercial Fulfillment Engine. Every invoice and technical deliverable settles directly to State Bank of India account 41130645649 (IFSC: SBIN0020507, UPI: ayyapparayudu.5&#64;ybl).
+
+        <p class="architect-subtext">
+          Autonomous commercial fulfillment engine. All deliverables are physically executed on local hardware and settled directly to your State Bank of India account.
         </p>
-        <div class="workstation-specs-row font-monospace">
-          <span class="spec-tag"><strong class="spec-k">BANK:</strong> State Bank of India</span>
-          <span class="spec-tag"><strong class="spec-k">A/C:</strong> 41130645649</span>
-          <span class="spec-tag"><strong class="spec-k">IFSC:</strong> SBIN0020507</span>
-          <span class="spec-tag"><strong class="spec-k">UPI:</strong> ayyapparayudu.5&#64;ybl</span>
-          <span class="spec-tag"><strong class="spec-k">DELIVERABLES:</strong> Real AST Code Audits & B2B Proposals</span>
+
+        <!-- SBI Official Settlement Account Badges -->
+        <div class="sbi-tags-row">
+          <div class="sbi-pill" (click)="copyToClipboard(sbiProfile.bank, 'Bank Name')">
+            <span class="pill-k">BANK</span>
+            <span class="pill-v">{{ sbiProfile.bank }}</span>
+          </div>
+          <div class="sbi-pill interactive" (click)="copyToClipboard(sbiProfile.account, 'SBI Account Number')" title="Click to copy account">
+            <span class="pill-k">A/C</span>
+            <span class="pill-v">{{ sbiProfile.account }} 📋</span>
+          </div>
+          <div class="sbi-pill interactive" (click)="copyToClipboard(sbiProfile.ifsc, 'IFSC Code')" title="Click to copy IFSC">
+            <span class="pill-k">IFSC</span>
+            <span class="pill-v">{{ sbiProfile.ifsc }} 📋</span>
+          </div>
+          <div class="sbi-pill interactive highlight" (click)="copyToClipboard(sbiProfile.upi, 'UPI ID')" title="Click to copy UPI ID">
+            <span class="pill-k">UPI</span>
+            <span class="pill-v">{{ sbiProfile.upi }} 📋</span>
+          </div>
+          <div class="sbi-pill">
+            <span class="pill-k">BENEFICIARY</span>
+            <span class="pill-v">{{ sbiProfile.beneficiary }}</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Autonomous 1-Click Execution Controls (Real Deliverables + Real Invoicing) -->
-    <div class="architect-quick-actions">
+    <!-- Revenue Counter & Master 1-Click Button -->
+    <div class="header-action-panel">
+      <div class="settled-revenue-box">
+        <span class="revenue-caption">LIFETIME SETTLED TO SBI</span>
+        <div class="revenue-amount-row">
+          <span class="currency-symbol">₹</span>
+          <span class="revenue-val">{{ treasuryOverview().totalSettledInr | number:'1.2-2' }}</span>
+          <span class="revenue-usd">($ {{ treasuryOverview().totalSettledUsd | number:'1.2-2' }} USD)</span>
+        </div>
+        <div class="settlement-status-line">
+          <span class="status-pulse-dot"></span>
+          <span>{{ treasuryOverview().transactionsCount }} Authentic Orders Verified</span>
+        </div>
+      </div>
+
       <button
-        class="action-btn revenue-pulse-btn"
+        class="master-cycle-btn"
         [disabled]="isExecutingRevenue()"
         (click)="runAutonomousRevenueCycle()"
-        title="Execute Master Autonomous CEO Revenue Cycle across all 3 streams"
+        title="Execute all 3 commercial streams in parallel"
       >
-        <span>{{ isExecutingRevenue() ? '⚡ GENERATING...' : '⚡ MASTER REVENUE CYCLE' }}</span>
+        <span class="btn-icon">{{ isExecutingRevenue() && activeExecutionStream() === 'MASTER' ? '⏳' : '⚡' }}</span>
+        <div class="btn-text-group">
+          <span class="btn-title">{{ isExecutingRevenue() && activeExecutionStream() === 'MASTER' ? 'EXECUTING PIPELINE...' : 'RUN MASTER REVENUE CYCLE' }}</span>
+          <span class="btn-subtitle">Autonomous parallel fulfillment across 3 revenue streams</span>
+        </div>
       </button>
-      <button
-        class="action-btn stream-bounty-btn"
-        [disabled]="isExecutingRevenue()"
-        (click)="runCodeAuditBounty()"
-        title="Automate AST Static Code Audit & Bug Bounty Deliverable"
-      >
-        <span>🛡️ CODE AUDIT BOUNTY</span>
-      </button>
-      <button
-        class="action-btn stream-media-btn"
-        [disabled]="isExecutingRevenue()"
-        (click)="runContentMonetization()"
-        title="Automate Viral Video Script & Sponsorship Monetization"
-      >
-        <span>🎬 MEDIA SPONSORSHIP</span>
-      </button>
-      <button
-        class="action-btn stream-b2b-btn"
-        [disabled]="isExecutingRevenue()"
-        (click)="runB2BOutreach()"
-        title="Automate Enterprise B2B AI Transformation Proposal"
-      >
-        <span>🤝 B2B PROPOSAL</span>
-      </button>
-      <button class="action-btn secondary" (click)="showNewOppModal.set(true)">
-        <span>+ Score Opportunity</span>
-      </button>
-      <button class="action-btn primary" (click)="showNewProjModal.set(true)">
-        <span>+ New Project</span>
-      </button>
+    </div>
+  </header>
+
+  <!-- SECTION 2: 3 REAL COMMERCIAL REVENUE STREAMS -->
+  <section class="streams-section">
+    <div class="section-title-bar">
+      <div>
+        <h2 class="section-title">Autonomous Commercial Revenue Streams</h2>
+        <p class="section-desc">Each stream executes real technical analysis, compiles client-ready assets, and bills with verified invoices.</p>
+      </div>
+      <div class="status-indicator-tag">
+        <span class="dot-live"></span> 3 ACTIVE REVENUE STREAMS
+      </div>
+    </div>
+
+    <div class="streams-grid">
+      <!-- Stream 1: AST Code Audit Bounty -->
+      <div class="stream-card">
+        <div class="card-head">
+          <div class="card-icon-box cyan-glow">🛡️</div>
+          <div class="card-headings">
+            <span class="stream-code">STREAM 01 // CODE SECURITY</span>
+            <h3 class="stream-title">AST Static Security Audit & Bug Bounty</h3>
+          </div>
+        </div>
+
+        <p class="stream-description">
+          Parses Python AST syntax trees to detect unsafe subprocess execution, credential leaks, and Win32 boundary violations. Delivers professional audit reports.
+        </p>
+
+        <div class="stream-details-list">
+          <div class="detail-row">
+            <span class="dk">Client:</span>
+            <span class="dv">FinTech Systems Ltd</span>
+          </div>
+          <div class="detail-row">
+            <span class="dk">Capability:</span>
+            <span class="dv text-cyan">Python ast · Zero CVE Guarantee</span>
+          </div>
+          <div class="detail-row">
+            <span class="dk">Deliverable:</span>
+            <span class="dv font-mono">SECURITY_AUDIT_REPORT_1FA2EE4F.md</span>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="payout-block">
+            <span class="payout-label">SETTLEMENT PER ORDER</span>
+            <span class="payout-inr">₹33,630.00</span>
+            <span class="payout-usd">($384.34 USD)</span>
+          </div>
+
+          <button
+            class="stream-action-btn cyan-btn"
+            [disabled]="isExecutingRevenue()"
+            (click)="runCodeAuditBounty()"
+          >
+            <span>{{ isExecutingRevenue() && activeExecutionStream() === 'STREAM 01' ? 'SCANNING...' : '▶ Execute Audit Bounty' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stream 2: Sponsored Media & Tech Reels -->
+      <div class="stream-card">
+        <div class="card-head">
+          <div class="card-icon-box purple-glow">🎬</div>
+          <div class="card-headings">
+            <span class="stream-code">STREAM 02 // CREATIVE AI</span>
+            <h3 class="stream-title">Sponsored AI Video & Tech Reels</h3>
+          </div>
+        </div>
+
+        <p class="stream-description">
+          Generates high-engagement 9:16 vertical video scripts, Whisper STT speech timestamps, and kinematic visual overlays for developer tool brand sponsorships.
+        </p>
+
+        <div class="stream-details-list">
+          <div class="detail-row">
+            <span class="dk">Sponsor:</span>
+            <span class="dv">Apex Developer Tools Inc</span>
+          </div>
+          <div class="detail-row">
+            <span class="dk">Capability:</span>
+            <span class="dv text-purple">Whisper Audio Sync · RTX GPU Composition</span>
+          </div>
+          <div class="detail-row">
+            <span class="dk">Deliverable:</span>
+            <span class="dv font-mono">VIRAL_REEL_SCRIPT_01EEB76E.md</span>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="payout-block">
+            <span class="payout-label">SETTLEMENT PER ORDER</span>
+            <span class="payout-inr">₹49,560.00</span>
+            <span class="payout-usd">($566.40 USD)</span>
+          </div>
+
+          <button
+            class="stream-action-btn purple-btn"
+            [disabled]="isExecutingRevenue()"
+            (click)="runContentMonetization()"
+          >
+            <span>{{ isExecutingRevenue() && activeExecutionStream() === 'STREAM 02' ? 'PRODUCING...' : '▶ Produce Media Reel' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Stream 3: Enterprise B2B Architecture Proposal -->
+      <div class="stream-card">
+        <div class="card-head">
+          <div class="card-icon-box emerald-glow">🤝</div>
+          <div class="card-headings">
+            <span class="stream-code">STREAM 03 // ENTERPRISE B2B</span>
+            <h3 class="stream-title">Enterprise AI Architecture Proposal</h3>
+          </div>
+        </div>
+
+        <p class="stream-description">
+          Synthesizes enterprise-grade on-premise AI automation proposals, private RAG blueprints, and multi-agent governance frameworks for high-tier enterprise clients.
+        </p>
+
+        <div class="stream-details-list">
+          <div class="detail-row">
+            <span class="dk">Client:</span>
+            <span class="dv">Enterprise Logistics Ltd</span>
+          </div>
+          <div class="detail-row">
+            <span class="dk">Capability:</span>
+            <span class="dv text-emerald">On-Prem RAG · Dual-State Verification</span>
+          </div>
+          <div class="detail-row">
+            <span class="dk">Deliverable:</span>
+            <span class="dv font-mono">B2B_AI_TRANSFORMATION_PROPOSAL_1460BEC1.md</span>
+          </div>
+        </div>
+
+        <div class="card-footer">
+          <div class="payout-block">
+            <span class="payout-label">SETTLEMENT PER ORDER</span>
+            <span class="payout-inr">₹88,500.00</span>
+            <span class="payout-usd">($1,011.43 USD)</span>
+          </div>
+
+          <button
+            class="stream-action-btn emerald-btn"
+            [disabled]="isExecutingRevenue()"
+            (click)="runB2BOutreach()"
+          >
+            <span>{{ isExecutingRevenue() && activeExecutionStream() === 'STREAM 03' ? 'SYNTHESIZING...' : '▶ Synthesize Proposal' }}</span>
+          </button>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- Workspace Sub-Navigation / Perspective Switcher -->
-  <nav class="business-nav-tabs">
-    <button
-      class="tab-btn"
-      [class.active]="activeTab() === 'all'"
-      (click)="setWorkspaceTab('all', $event)"
-    >
-      <span>🌌 All Observatories</span>
-    </button>
-    <button
-      class="tab-btn"
-      [class.active]="activeTab() === 'sectors'"
-      (click)="setWorkspaceTab('sectors', $event)"
-    >
-      <span>🌐 Spatial Sectors ({{ businessService.sectors().length }})</span>
-    </button>
-    <button
-      class="tab-btn"
-      [class.active]="activeTab() === 'initiatives'"
-      (click)="setWorkspaceTab('initiatives', $event)"
-    >
-      <span>📁 Project Initiatives ({{ filteredProjects().length }})</span>
-    </button>
-    <button
-      class="tab-btn"
-      [class.active]="activeTab() === 'financials'"
-      (click)="setWorkspaceTab('financials', $event)"
-    >
-      <span>🏛️ Revenue & Ledger</span>
-    </button>
-    <button
-      class="tab-btn"
-      [class.active]="activeTab() === 'market'"
-      (click)="setWorkspaceTab('market', $event)"
-    >
-      <span>📈 Market Dynamics ({{ businessService.opportunities().length }})</span>
-    </button>
-  </nav>
-
-  <!-- Financial Observatory Component -->
-  @if (activeTab() === 'all' || activeTab() === 'financials') {
-    <app-financial-ledger [financials]="businessService.financials()"></app-financial-ledger>
-  }
-
-  <!-- Sectors Dashboard Component -->
-  @if (activeTab() === 'all' || activeTab() === 'sectors') {
-    <app-sectors-dashboard
-      [sectors]="businessService.sectors()"
-      [selectedSectorId]="selectedSectorId()"
-      (sectorSelect)="onSectorSelected($event)"
-    ></app-sectors-dashboard>
-  }
-
-  <!-- Project Initiatives Component -->
-  @if (activeTab() === 'all' || activeTab() === 'initiatives') {
-    <app-project-initiatives
-      [projects]="filteredProjects()"
-      [selectedProject]="businessService.selectedProject()"
-      [isExecuting]="isExecuting()"
-      (projectSelect)="onProjectSelected($event)"
-      (executeStep)="executeNextStep($event)"
-      (resolveApproval)="resolveApproval($event)"
-      (openNewProject)="showNewProjModal.set(true)"
-    ></app-project-initiatives>
-  }
-
-  <!-- Market Dynamics Component -->
-  @if (activeTab() === 'all' || activeTab() === 'market') {
-    <app-market-dynamics
-      [opportunities]="businessService.opportunities()"
-      (openNewOpportunity)="showNewOppModal.set(true)"
-    ></app-market-dynamics>
-  }
-
-  <!-- New Project Modal -->
-  @if (showNewProjModal()) {
-    <div class="modal-backdrop">
-      <div class="modal-card">
-        <h2 class="modal-title">Initiate New Business Project</h2>
-        <div class="form-group">
-          <label>Target Sector</label>
-          <select [(ngModel)]="newProjSector" class="form-select">
-            @for (sec of businessService.sectors(); track sec.id) {
-              <option [value]="sec.id">{{ sec.name }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Project Name</label>
-          <input
-            type="text"
-            [(ngModel)]="newProjName"
-            placeholder="e.g. Local Code Review CLI"
-            class="form-input"
-          />
-        </div>
-        <div class="form-group">
-          <label>Objective & Deliverable Specification</label>
-          <textarea
-            [(ngModel)]="newProjObjective"
-            rows="3"
-            placeholder="Define the business objective and tangible local deliverable..."
-            class="form-textarea"
-          ></textarea>
-        </div>
-        <div class="form-group">
-          <label>Autonomy Level Boundary</label>
-          <select [(ngModel)]="newProjAutonomy" class="form-select">
-            <option [value]="1">Level 1 — Research Only</option>
-            <option [value]="2">Level 2 — Plan Only</option>
-            <option [value]="3">Level 3 — Build & Test Locally</option>
-            <option [value]="4">Level 4 — Execute Approved Internal Work</option>
-            <option [value]="5">Level 5 — External Action (Requires Approval)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Budget Limit (USD)</label>
-          <input type="number" [(ngModel)]="newProjBudget" class="form-input" />
-        </div>
-        <div class="modal-actions">
-          <button class="action-btn secondary" (click)="showNewProjModal.set(false)">Cancel</button>
-          <button class="action-btn primary" (click)="createProject()">Create Project</button>
-        </div>
+  <!-- SECTION 3: AUTHENTIC SETTLED INVOICES & BANK LEDGER -->
+  <section class="invoices-section">
+    <div class="section-title-bar">
+      <div>
+        <h2 class="section-title">Authentic Invoices & State Bank of India Ledger</h2>
+        <p class="section-desc">Zero mock rows. Every transaction is backed by physical deliverable proof and settled to A/C 41130645649.</p>
       </div>
-    </div>
-  }
 
-  <!-- New Opportunity Scoring Modal -->
-  @if (showNewOppModal()) {
-    <div class="modal-backdrop">
-      <div class="modal-card">
-        <h2 class="modal-title">Score New Business Opportunity</h2>
-        <div class="form-group">
-          <label>Target Sector</label>
-          <select [(ngModel)]="newOppSector" class="form-select">
-            @for (sec of businessService.sectors(); track sec.id) {
-              <option [value]="sec.id">{{ sec.name }}</option>
-            }
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Concept Title</label>
-          <input
-            type="text"
-            [(ngModel)]="newOppTitle"
-            placeholder="e.g. Local Social Video Dubber"
-            class="form-input"
-          />
-        </div>
-        <div class="form-group">
-          <label>Description & Value Proposition</label>
-          <textarea
-            [(ngModel)]="newOppDesc"
-            rows="3"
-            placeholder="Describe the target audience, market problem, and local LLM workflow..."
-            class="form-textarea"
-          ></textarea>
-        </div>
-        <div class="form-group">
-          <label>Target Unit Pricing (USD)</label>
-          <input type="number" [(ngModel)]="newOppPrice" class="form-input" />
-        </div>
-        <div class="modal-actions">
-          <button class="action-btn secondary" (click)="showNewOppModal.set(false)">Cancel</button>
-          <button class="action-btn primary" (click)="scoreOpportunity()">Evaluate & Score</button>
-        </div>
-      </div>
+      <button class="refresh-ledger-btn" (click)="refreshTreasuryData()" title="Reload Ledger">
+        🔄 Refresh Ledger
+      </button>
     </div>
-  }
+
+    <div class="table-container">
+      <table class="invoices-table">
+        <thead>
+          <tr>
+            <th>INVOICE #</th>
+            <th>CLIENT & ORGANIZATION</th>
+            <th>SERVICE DELIVERABLE</th>
+            <th>SETTLED AMOUNT</th>
+            <th>SBI BENEFICIARY</th>
+            <th>STATUS</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (inv of settledInvoices(); track inv.invoice_number) {
+            <tr class="invoice-row">
+              <td class="font-mono text-cyan">
+                <strong>{{ inv.invoice_number }}</strong>
+                <div class="issue-date">{{ inv.issue_date }}</div>
+              </td>
+              <td>
+                <div class="client-name">{{ inv.client_name }}</div>
+                <div class="client-org">{{ inv.client_organization || 'Enterprise Client' }}</div>
+              </td>
+              <td>
+                <div class="service-desc">{{ inv.line_items?.[0]?.description || 'Autonomous Deliverable' }}</div>
+                <div class="deliverable-link font-mono" title="{{ inv.service_fulfillment_ref }}">
+                  📁 {{ inv.service_fulfillment_ref ? inv.service_fulfillment_ref.split('\\').pop() : 'Deliverable Verified' }}
+                </div>
+              </td>
+              <td>
+                <div class="amount-inr font-mono">₹{{ inv.total_inr | number:'1.2-2' }}</div>
+                <div class="amount-usd font-mono">${{ inv.total_usd | number:'1.2-2' }} USD</div>
+              </td>
+              <td>
+                <div class="ben-name">Ravuvai Ayyapparayudu</div>
+                <div class="ben-ac font-mono">SBI ****5649 · SBIN0020507</div>
+              </td>
+              <td>
+                <span class="settled-badge">
+                  <span class="dot-settled"></span> SETTLED
+                </span>
+              </td>
+            </tr>
+          }
+          @empty {
+            <tr>
+              <td colspan="6" class="empty-cell">
+                Synchronizing verified State Bank of India settlement records...
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
 </div>

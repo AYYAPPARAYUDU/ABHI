@@ -390,4 +390,17 @@ export class AgentApiService {
       return null;
     }
   }
+
+  /**
+   * List authentic commercial tax invoices settled to Mamu's SBI account.
+   */
+  async listTreasuryInvoices(limit = 50): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/business/treasury/invoices?limit=${limit}`);
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  }
 }

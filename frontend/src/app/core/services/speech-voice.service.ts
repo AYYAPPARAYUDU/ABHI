@@ -393,22 +393,11 @@ export class SpeechVoiceService {
     if (typeof window === 'undefined') return;
     this.hasUserInteracted.set(true);
 
-    // Synchronously unlock browser HTML5 Audio policy with a silent micro-buffer
-    try {
-      const silentAudio = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
-      silentAudio.volume = 0.01;
-      silentAudio.play().catch(() => {});
-    } catch {}
-
     if ('speechSynthesis' in window && window.speechSynthesis) {
       try {
         if (window.speechSynthesis.paused) {
           window.speechSynthesis.resume();
         }
-        // Prime Chrome SpeechSynthesis engine synchronously during user gesture
-        const primeUtterance = new SpeechSynthesisUtterance(' ');
-        primeUtterance.volume = 0.01;
-        window.speechSynthesis.speak(primeUtterance);
       } catch {}
     }
 

@@ -114,7 +114,14 @@ class SovereignTreasuryEngine:
         if self.ledger_file.exists():
             try:
                 with open(self.ledger_file, "r", encoding="utf-8") as f:
-                    self._settlement_history = json.load(f)
+                    raw_history = json.load(f)
+                    seen_tx = set()
+                    self._settlement_history = []
+                    for tx in raw_history:
+                        tx_id = tx.get("transaction_id") or tx.get("invoice_number")
+                        if tx_id and tx_id not in seen_tx:
+                            seen_tx.add(tx_id)
+                            self._settlement_history.append(tx)
             except Exception:
                 self._settlement_history = []
 
@@ -148,6 +155,12 @@ class SovereignTreasuryEngine:
         mark_as_settled: bool = False
     ) -> CommercialTaxInvoice:
         """Generate a compliant commercial invoice settled directly to Mamu's SBI account."""
+        # Deduplication check: return existing settled invoice if deliverable reference already exists
+        if service_ref:
+            for existing_inv in self._invoices.values():
+                if existing_inv.service_fulfillment_ref == service_ref:
+                    return existing_inv
+
         now_dt = datetime.now(timezone.utc)
         inv_id = f"INV-ABHI-{now_dt.strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
         usd_rate = 87.50
