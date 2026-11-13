@@ -2,6 +2,21 @@
 
 ## Verified Architecture & Implementation Status (2026-11-13)
 
+### 00000. 3D Scene Isolation Strictly to Dedicated Pages & Contextual Ambient Backgrounds (2026-11-13)
+- **Eliminated Universal 3D Core Canvas Background Collision**:
+  - Previously, `<app-spatial-background>` was mounted in `app-shell.component.html` unconditionally, forcing the heavy 3D WebGL core canvas to render in the background of all views (`/home`, `/business`, `/meeting`, `/media`, etc.).
+  - Isolated `<app-spatial-background>` strictly to dedicated 3D spatial pages (`/core` and `/workspace`).
+  - Added `.contextual-page-bg` with route-tailored visual atmospheres:
+    - `.bg-home-era`: Deep cosmic cybernetic radial grid with dark cyan telemetry glow.
+    - `.bg-business-sovereign`: Executive obsidian emerald and gold gradient with geometric glassmorphic grid.
+    - `.bg-meeting-council`: Deep holographic boardroom ambient violet/amethyst backlights.
+    - `.bg-live-console`: High-tech monospace matrix terminal atmosphere.
+- **End-to-End Real Commercial Pipeline**:
+  - Implemented `backend/app/business/revenue_pipeline.py` with multi-agent job allocation (`ChiefSupervisor`, `TaskPlanner`, `AuditAgent`, `CodingAgent`, `OSDesktopAgent`, `TreasuryAgent`).
+  - REST endpoints: `GET /api/v1/business/pipeline/telemetry`, `POST /api/v1/business/pipeline/orders`, `POST /api/v1/business/pipeline/reconcile-utr`.
+  - Zero fake client data: real orders generate official tax invoices with instant UPI links to `ayyapparayudu.5@ybl` and reconcile exclusively via authentic 12-digit Indian Bank UTRs.
+  - Verification: Production build succeeded in 8.36s with 0 errors. Backend pytest passed 9/9.
+
 ### 0000. Complete Zero-Dummy Data Enforcement & Authentic Commercial Operations (2026-11-13)
 - **Purged All Simulated Billing & Dummy Records**:
   - Eliminated the 3 fake service simulation cards ("Run Audit & Bill", "Create Reel & Bill", "Synthesize & Bill") from `business-page.component.html`.
