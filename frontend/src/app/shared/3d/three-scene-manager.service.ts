@@ -3241,160 +3241,171 @@ export class ThreeSceneManagerService {
           });
         }
 
-        // 7. Multi-Agent Eruption & Synchronized Circular Orbital Flow
-        const isDeployed = this.isSwarmDeployed();
-        const agentCount = this.agents().length;
-        while (this.cachedAgentVectors.length < agentCount) {
-          this.cachedAgentVectors.push(new THREE.Vector3());
-        }
-
-        // Shared smooth orbital angular rotation velocity
-        const sharedOrbitalSpeed = 0.065;
-
-        this.agents().forEach((agent, index) => {
-          const data = this.agentMeshMap.get(agent.id);
-          if (!data) return;
-
-          // Target radius and scale based on deployment state
-          const targetRadius = isDeployed ? agent.orbitRadius : 0.0;
-          const targetScale = isDeployed ? 1.0 : 0.001;
-
-          // Smooth kinematic interpolation
-          data.currentRadius += (targetRadius - data.currentRadius) * 0.08;
-          data.currentScale += (targetScale - data.currentScale) * 0.08;
-
-          data.group.scale.set(data.currentScale, data.currentScale, data.currentScale);
-
-          // Synchronized Equatorial Orbit Trajectory around Core
-          const currentAngle = agent.angle + time * sharedOrbitalSpeed;
-          const r = data.currentRadius;
-          const posX = Math.cos(currentAngle) * r;
-          const posZ = Math.sin(currentAngle) * r;
-          const posY = isDeployed ? (agent.elevation + Math.sin(time * 0.6 + index) * 0.25) : 0;
-
-          // Realistic Speech Acoustic Vibration on Agent when Speaking or Selected
-          const isSelected = this.selectedAgent()?.id === agent.id;
-          const agentVibration = (isSpeaking && isSelected) ? (speechLevel * 0.12 + Math.sin(time * 30.0) * 0.03) : 0;
-          const finalY = posY + agentVibration;
-
-          data.group.position.set(posX, finalY, posZ);
-          this.cachedAgentVectors[index].set(posX, finalY, posZ);
-
-          // Visual culling: completely conceal sub-agents inside core when scale is minimal
-          data.group.visible = isDeployed || data.currentScale > 0.05;
-
-          // Vibrate inner nucleus and dot ball with REAL dynamic vocal harmonics!
-          if (data.innerNucleus && isSpeaking && isSelected) {
-            const vibScale = 1.0 + speechLevel * 0.35 + Math.sin(time * 24.0) * 0.04;
-            data.innerNucleus.scale.set(vibScale, vibScale, vibScale);
-          } else if (data.innerNucleus) {
-            data.innerNucleus.scale.set(1, 1, 1);
+        // 7. Multi-Agent Eruption & Synchronized Circular Orbital Flow (Strictly on /home and /core)
+        const isHome = this.currentMode === 'MAIN_AGENT' || this.currentMode === 'DEFAULT';
+        if (isHome) {
+          const isDeployed = this.isSwarmDeployed();
+          const agentCount = this.agents().length;
+          while (this.cachedAgentVectors.length < agentCount) {
+            this.cachedAgentVectors.push(new THREE.Vector3());
           }
 
-          // Orbit micro quantum particle halo around each agent
-          if (data.haloCloud) {
-            data.haloCloud.rotation.y += 0.01;
-            data.haloCloud.rotation.x += 0.008;
-          }
-          if (data.dotBall) {
-            data.dotBall.rotation.y += 0.015;
-          }
-          if (data.microRing) {
-            data.microRing.rotation.z += 0.02;
-          }
-          if (data.innerNucleus) {
-            data.innerNucleus.rotation.x += 0.012;
-            data.innerNucleus.rotation.y += 0.016;
-          }
+          // Shared smooth orbital angular rotation velocity
+          const sharedOrbitalSpeed = 0.065;
 
-          // Laser tether beam to central core singularity
-          if (data.beam) {
-            if (isDeployed && data.currentRadius > 1.8) {
-              data.beam.visible = true;
-              const attr = data.beam.geometry.attributes['position'] as THREE.BufferAttribute;
+          this.agents().forEach((agent, index) => {
+            const data = this.agentMeshMap.get(agent.id);
+            if (!data) return;
+
+            // Target radius and scale based on deployment state
+            const targetRadius = isDeployed ? agent.orbitRadius : 0.0;
+            const targetScale = isDeployed ? 1.0 : 0.001;
+
+            // Smooth kinematic interpolation
+            data.currentRadius += (targetRadius - data.currentRadius) * 0.08;
+            data.currentScale += (targetScale - data.currentScale) * 0.08;
+
+            data.group.scale.set(data.currentScale, data.currentScale, data.currentScale);
+
+            // Synchronized Equatorial Orbit Trajectory around Core
+            const currentAngle = agent.angle + time * sharedOrbitalSpeed;
+            const r = data.currentRadius;
+            const posX = Math.cos(currentAngle) * r;
+            const posZ = Math.sin(currentAngle) * r;
+            const posY = isDeployed ? (agent.elevation + Math.sin(time * 0.6 + index) * 0.25) : 0;
+
+            // Realistic Speech Acoustic Vibration on Agent when Speaking or Selected
+            const isSelected = this.selectedAgent()?.id === agent.id;
+            const agentVibration = (isSpeaking && isSelected) ? (speechLevel * 0.12 + Math.sin(time * 30.0) * 0.03) : 0;
+            const finalY = posY + agentVibration;
+
+            data.group.position.set(posX, finalY, posZ);
+            this.cachedAgentVectors[index].set(posX, finalY, posZ);
+
+            // Visual culling: completely conceal sub-agents inside core when scale is minimal
+            data.group.visible = isDeployed || data.currentScale > 0.05;
+
+            // Vibrate inner nucleus and dot ball with REAL dynamic vocal harmonics!
+            if (data.innerNucleus && isSpeaking && isSelected) {
+              const vibScale = 1.0 + speechLevel * 0.35 + Math.sin(time * 24.0) * 0.04;
+              data.innerNucleus.scale.set(vibScale, vibScale, vibScale);
+            } else if (data.innerNucleus) {
+              data.innerNucleus.scale.set(1, 1, 1);
+            }
+
+            // Orbit micro quantum particle halo around each agent
+            if (data.haloCloud) {
+              data.haloCloud.rotation.y += 0.01;
+              data.haloCloud.rotation.x += 0.008;
+            }
+            if (data.dotBall) {
+              data.dotBall.rotation.y += 0.015;
+            }
+            if (data.microRing) {
+              data.microRing.rotation.z += 0.02;
+            }
+            if (data.innerNucleus) {
+              data.innerNucleus.rotation.x += 0.012;
+              data.innerNucleus.rotation.y += 0.016;
+            }
+
+            // Laser tether beam to central core singularity
+            if (data.beam) {
+              if (isDeployed && data.currentRadius > 1.8) {
+                data.beam.visible = true;
+                const attr = data.beam.geometry.attributes['position'] as THREE.BufferAttribute;
+                if (attr) {
+                  const arr = attr.array as Float32Array;
+                  arr[0] = 0;
+                  arr[1] = 0;
+                  arr[2] = 0;
+                  arr[3] = posX;
+                  arr[4] = finalY;
+                  arr[5] = posZ;
+                  attr.needsUpdate = true;
+                }
+                (data.beam.material as THREE.LineBasicMaterial).opacity = data.currentScale * 0.55;
+              } else {
+                // Completely invisible when docked inside! Zero stray lines!
+                data.beam.visible = false;
+                (data.beam.material as THREE.LineBasicMaterial).opacity = 0;
+              }
+            }
+          });
+
+          // 8. Dynamically re-link Inter-Agent Synaptic Stream (Single Continuous Flow Loop with Razor Edges)
+          if (this.interAgentMeshLines && agentCount >= 2) {
+            const isOrbitExpanded = isDeployed && this.agents().some(a => (this.agentMeshMap.get(a.id)?.currentRadius ?? 0) > 1.8);
+            if (isOrbitExpanded) {
+              this.interAgentMeshLines.visible = true;
+              const attr = this.interAgentMeshLines.geometry.attributes['position'] as THREE.BufferAttribute;
               if (attr) {
                 const arr = attr.array as Float32Array;
-                arr[0] = 0;
-                arr[1] = 0;
-                arr[2] = 0;
-                arr[3] = posX;
-                arr[4] = finalY;
-                arr[5] = posZ;
+                let ptr = 0;
+                for (let i = 0; i < agentCount; i++) {
+                  const next = (i + 1) % agentCount;
+
+                  // Pure single perimeter stream segment: agent(i) -> agent(next)
+                  arr[ptr++] = this.cachedAgentVectors[i].x;
+                  arr[ptr++] = this.cachedAgentVectors[i].y;
+                  arr[ptr++] = this.cachedAgentVectors[i].z;
+                  arr[ptr++] = this.cachedAgentVectors[next].x;
+                  arr[ptr++] = this.cachedAgentVectors[next].y;
+                  arr[ptr++] = this.cachedAgentVectors[next].z;
+                }
                 attr.needsUpdate = true;
               }
-              (data.beam.material as THREE.LineBasicMaterial).opacity = data.currentScale * 0.55;
+
+              const pulseOpacity = 0.35 + Math.sin(time * 3.0) * 0.12;
+              (this.interAgentMeshLines.material as THREE.LineBasicMaterial).opacity = pulseOpacity;
             } else {
               // Completely invisible when docked inside! Zero stray lines!
-              data.beam.visible = false;
-              (data.beam.material as THREE.LineBasicMaterial).opacity = 0;
+              this.interAgentMeshLines.visible = false;
+              (this.interAgentMeshLines.material as THREE.LineBasicMaterial).opacity = 0;
             }
           }
-        });
 
-        // 8. Dynamically re-link Inter-Agent Synaptic Stream (Single Continuous Flow Loop with Razor Edges)
-        if (this.interAgentMeshLines && agentCount >= 2) {
-          const isOrbitExpanded = isDeployed && this.agents().some(a => (this.agentMeshMap.get(a.id)?.currentRadius ?? 0) > 1.8);
-          if (isOrbitExpanded) {
-            this.interAgentMeshLines.visible = true;
-            const attr = this.interAgentMeshLines.geometry.attributes['position'] as THREE.BufferAttribute;
-            if (attr) {
-              const arr = attr.array as Float32Array;
-              let ptr = 0;
-              for (let i = 0; i < agentCount; i++) {
-                const next = (i + 1) % agentCount;
-
-                // Pure single perimeter stream segment: agent(i) -> agent(next)
-                arr[ptr++] = this.cachedAgentVectors[i].x;
-                arr[ptr++] = this.cachedAgentVectors[i].y;
-                arr[ptr++] = this.cachedAgentVectors[i].z;
-                arr[ptr++] = this.cachedAgentVectors[next].x;
-                arr[ptr++] = this.cachedAgentVectors[next].y;
-                arr[ptr++] = this.cachedAgentVectors[next].z;
+          // 8b. Dynamically re-link Quantum Bell-State Entanglement Beams across paired LLMs
+          if (this.quantumBellLines && agentCount >= 10) {
+            const isOrbitExpanded = isDeployed && this.agents().some(a => (this.agentMeshMap.get(a.id)?.currentRadius ?? 0) > 1.8);
+            if (isOrbitExpanded) {
+              this.quantumBellLines.visible = true;
+              const attr = this.quantumBellLines.geometry.attributes['position'] as THREE.BufferAttribute;
+              if (attr) {
+                const arr = attr.array as Float32Array;
+                const bellPairs = [
+                  [0, 7], // COMMANDER <-> AEGIS-CRITIC
+                  [3, 2], // ARCHON-FORGE <-> NEXUS-COMMS
+                  [1, 4], // SYNTHEX-WEB <-> AURA-RESEARCH
+                  [5, 6], // SYNAPSE-ML <-> CHRONOS-PLAN
+                  [8, 9], // SENTINEL-GUARD <-> DROIDMARK-MOBILE
+                ];
+                let bPtr = 0;
+                bellPairs.forEach(([iA, iB]) => {
+                  arr[bPtr++] = this.cachedAgentVectors[iA].x;
+                  arr[bPtr++] = this.cachedAgentVectors[iA].y;
+                  arr[bPtr++] = this.cachedAgentVectors[iA].z;
+                  arr[bPtr++] = this.cachedAgentVectors[iB].x;
+                  arr[bPtr++] = this.cachedAgentVectors[iB].y;
+                  arr[bPtr++] = this.cachedAgentVectors[iB].z;
+                });
+                attr.needsUpdate = true;
               }
-              attr.needsUpdate = true;
+              const bellPulse = 0.24 + Math.sin(time * 3.6) * 0.12;
+              (this.quantumBellLines.material as THREE.LineBasicMaterial).opacity = bellPulse;
+            } else {
+              this.quantumBellLines.visible = false;
+              (this.quantumBellLines.material as THREE.LineBasicMaterial).opacity = 0;
             }
-
-            const pulseOpacity = 0.35 + Math.sin(time * 3.0) * 0.12;
-            (this.interAgentMeshLines.material as THREE.LineBasicMaterial).opacity = pulseOpacity;
-          } else {
-            // Completely invisible when docked inside! Zero stray lines!
-            this.interAgentMeshLines.visible = false;
-            (this.interAgentMeshLines.material as THREE.LineBasicMaterial).opacity = 0;
           }
-        }
-
-        // 8b. Dynamically re-link Quantum Bell-State Entanglement Beams across paired LLMs
-        if (this.quantumBellLines && agentCount >= 10) {
-          const isOrbitExpanded = isDeployed && this.agents().some(a => (this.agentMeshMap.get(a.id)?.currentRadius ?? 0) > 1.8);
-          if (isOrbitExpanded) {
-            this.quantumBellLines.visible = true;
-            const attr = this.quantumBellLines.geometry.attributes['position'] as THREE.BufferAttribute;
-            if (attr) {
-              const arr = attr.array as Float32Array;
-              const bellPairs = [
-                [0, 7], // COMMANDER <-> AEGIS-CRITIC
-                [3, 2], // ARCHON-FORGE <-> NEXUS-COMMS
-                [1, 4], // SYNTHEX-WEB <-> AURA-RESEARCH
-                [5, 6], // SYNAPSE-ML <-> CHRONOS-PLAN
-                [8, 9], // SENTINEL-GUARD <-> DROIDMARK-MOBILE
-              ];
-              let bPtr = 0;
-              bellPairs.forEach(([iA, iB]) => {
-                arr[bPtr++] = this.cachedAgentVectors[iA].x;
-                arr[bPtr++] = this.cachedAgentVectors[iA].y;
-                arr[bPtr++] = this.cachedAgentVectors[iA].z;
-                arr[bPtr++] = this.cachedAgentVectors[iB].x;
-                arr[bPtr++] = this.cachedAgentVectors[iB].y;
-                arr[bPtr++] = this.cachedAgentVectors[iB].z;
-              });
-              attr.needsUpdate = true;
-            }
-            const bellPulse = 0.24 + Math.sin(time * 3.6) * 0.12;
-            (this.quantumBellLines.material as THREE.LineBasicMaterial).opacity = bellPulse;
-          } else {
-            this.quantumBellLines.visible = false;
-            (this.quantumBellLines.material as THREE.LineBasicMaterial).opacity = 0;
-          }
+        } else {
+          // Conceal all orbital agent spheres and beams in Workspace mode (zero rotating balls overhead)
+          this.agentMeshMap.forEach((m) => {
+            m.group.visible = false;
+            if (m.beam) m.beam.visible = false;
+          });
+          if (this.interAgentMeshLines) this.interAgentMeshLines.visible = false;
+          if (this.quantumBellLines) this.quantumBellLines.visible = false;
         }
 
         // 9. Volumetric Energy Columns Pulse & Swarm Architecture
@@ -3515,7 +3526,6 @@ export class ThreeSceneManagerService {
         }
 
         // Orbital Markers rotation in Home mode
-        const isHome = this.currentMode === 'MAIN_AGENT' || this.currentMode === 'DEFAULT';
         if (this.orbitalMarkers.length > 0 && isHome) {
           this.orbitalMarkers.forEach((m) => {
             m.mesh.rotation.y = time * 1.8 + m.phase;
@@ -3631,8 +3641,8 @@ export class ThreeSceneManagerService {
     });
   }
 
-  setMode(mode: SpatialEnvironmentMode): void {
-    if (this.currentMode === mode) return;
+  setMode(mode: SpatialEnvironmentMode, force = false): void {
+    if (this.currentMode === mode && !force) return;
     this.currentMode = mode;
     this.selectedAgent.set(null);
     if (mode === 'WORKSPACE') {
@@ -3641,7 +3651,7 @@ export class ThreeSceneManagerService {
     }
     const isHome = mode === 'MAIN_AGENT' || mode === 'DEFAULT';
 
-    // Strictly isolate Main Agent orbital agents & beams to /home only
+    // Strictly isolate Main Agent orbital agents & beams to /home and /core only
     const deployed = this.isSwarmDeployed();
     this.agentMeshMap.forEach((m) => {
       m.group.visible = isHome && (deployed || m.currentScale > 0.05);
@@ -3919,5 +3929,6 @@ export class ThreeSceneManagerService {
     }
     this.scene = null;
     this.camera = null;
+    this.currentMode = '' as any;
   }
 }

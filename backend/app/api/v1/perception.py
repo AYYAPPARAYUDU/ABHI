@@ -80,8 +80,10 @@ async def synthesize_speech(request: SynthesizeRequest) -> SpeechSynthesisResult
 
 @router.get("/tts/stream")
 async def stream_speech(text: str, voice: str = "en-GB-RyanNeural", rate: float = 1.0) -> Response:
-    """Stream authentic, realistic human neural audio (MP3 or WAV)."""
+    """Stream authentic, realistic human neural audio (MP3 or WAV), or 204 for client TTS delegation."""
     audio_bytes = await text_to_speech.synthesize_stream(text=text, voice=voice, rate=rate)
+    if not audio_bytes:
+        return Response(status_code=204)
     is_wav = audio_bytes.startswith(b"RIFF")
     media_type = "audio/wav" if is_wav else "audio/mpeg"
     filename = "speech.wav" if is_wav else "speech.mp3"

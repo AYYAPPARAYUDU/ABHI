@@ -18,6 +18,7 @@ from backend.app.business.models import (
 from backend.app.business.service import business_service
 from backend.app.business.treasury import sovereign_treasury
 from backend.app.business.autonomous_ceo import autonomous_business_ceo
+from backend.app.business.affiliate_engine import affiliate_engine
 
 router = APIRouter(prefix="/business", tags=["Business Sectors & Operations"])
 
@@ -296,3 +297,83 @@ async def reconcile_pipeline_utr(payload: Dict[str, Any]) -> Dict[str, Any]:
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# =========================================================================
+# REAL AFFILIATE MARKETING & MONETIZATION HUB (MAMU VERIFIED CHANNELS)
+# =========================================================================
+
+@router.get("/affiliate/overview")
+async def get_affiliate_overview() -> Dict[str, Any]:
+    """Retrieve authentic affiliate network profiles, active campaigns, and settled earnings."""
+    return affiliate_engine.get_affiliate_overview()
+
+
+@router.post("/affiliate/generate-link")
+async def generate_affiliate_link(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Generate a tracked compliant affiliate link using Mamu's verified network credentials."""
+    network_id = payload.get("network_id", "amazon_associates")
+    destination_url = payload.get("destination_url", "").strip()
+    custom_sub_id = payload.get("custom_sub_id")
+
+    if not destination_url:
+        raise HTTPException(status_code=400, detail="destination_url is required.")
+
+    link = affiliate_engine.generate_affiliate_link(
+        network_id=network_id,
+        destination_url=destination_url,
+        custom_sub_id=custom_sub_id
+    )
+    return {
+        "status": "SUCCESS",
+        "network_id": network_id,
+        "destination_url": destination_url,
+        "affiliate_link": link,
+        "operator_email": "ayyapparayudu.ravuvari@gmail.com",
+        "settlement": "State Bank of India (41130645649)"
+    }
+
+
+@router.post("/affiliate/campaigns")
+async def create_affiliate_campaign(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Create a new affiliate monetization campaign."""
+    network_id = payload.get("network_id", "amazon_associates")
+    product_name = payload.get("product_name", "").strip()
+    category = payload.get("category", "TECH")
+    destination_url = payload.get("destination_url", "").strip()
+    commission_rate_pct = float(payload.get("commission_rate_pct", 10.0))
+    epc_inr = float(payload.get("estimated_earnings_per_click_inr", 500.0))
+
+    if not product_name or not destination_url:
+        raise HTTPException(status_code=400, detail="product_name and destination_url are required.")
+
+    camp = affiliate_engine.create_campaign(
+        network_id=network_id,
+        product_name=product_name,
+        category=category,
+        destination_url=destination_url,
+        commission_rate_pct=commission_rate_pct,
+        estimated_earnings_per_click_inr=epc_inr
+    )
+    return {"status": "SUCCESS", "campaign": camp}
+
+
+@router.post("/affiliate/commissions")
+async def record_affiliate_commission(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Record an authentic affiliate commission payout credited to State Bank of India."""
+    campaign_id = payload.get("campaign_id", "")
+    amount_inr = float(payload.get("amount_inr", 0.0))
+    bank_utr = payload.get("bank_utr")
+    payout_note = payload.get("payout_note", "Verified Affiliate Commission Payout")
+
+    if amount_inr <= 0:
+        raise HTTPException(status_code=400, detail="Positive amount_inr is required.")
+
+    rec = affiliate_engine.record_affiliate_commission(
+        campaign_id=campaign_id,
+        amount_inr=amount_inr,
+        bank_utr=bank_utr,
+        payout_note=payout_note
+    )
+    return {"status": "SUCCESS", "commission": rec}
+

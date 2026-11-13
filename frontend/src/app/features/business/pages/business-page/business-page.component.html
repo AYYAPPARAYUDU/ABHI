@@ -21,25 +21,12 @@
       <div class="architect-meta">
         <div class="meta-row-top">
           <h1 class="architect-heading">Ayyappa Rayudu Ravuvari</h1>
-          <span class="badge-role">SOVEREIGN OWNER & ARCHITECT</span>
-          <a
-            href="https://www.linkedin.com/in/ayyapparayudu"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="badge-linkedin"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
-              />
-            </svg>
-            &#64;ayyapparayudu
-          </a>
+          <span class="badge-role">SOVEREIGN ARCHITECT & OPERATOR (MAMU)</span>
           <span class="badge-provenance">● 100% REAL VALID MONEY · ZERO DUMMY DATA</span>
         </div>
 
         <p class="architect-subtext">
-          Live commercial monetization hub. Payments land directly into your State Bank of India account via UPI. Balance shows strictly verified real-world bank transactions.
+          Direct monetization & sovereign revenue hub. All earnings from commercial contracts and affiliate networks route directly into your State Bank of India account via UPI.
         </p>
 
         <!-- Official State Bank of India Channel Badges -->
@@ -60,9 +47,9 @@
             <span class="pill-k">UPI</span>
             <span class="pill-v">{{ sbiProfile.upi }} 📋</span>
           </div>
-          <div class="sbi-pill">
-            <span class="pill-k">BENEFICIARY</span>
-            <span class="pill-v">{{ sbiProfile.beneficiary }}</span>
+          <div class="sbi-pill interactive" (click)="copyToClipboard(sbiProfile.email, 'Primary Email')" title="Click to copy Email">
+            <span class="pill-k">EMAIL</span>
+            <span class="pill-v">{{ sbiProfile.email }} 📋</span>
           </div>
         </div>
       </div>
@@ -92,7 +79,7 @@
           <span class="btn-icon">💳</span>
           <div class="btn-text-group">
             <span class="btn-title">VERIFY REAL UPI PAYMENT</span>
-            <span class="btn-subtitle">Enter 12-digit Bank UTR from SMS / PhonePe / GPay</span>
+            <span class="btn-subtitle">Enter 12-digit Bank UTR from SMS / GPay</span>
           </div>
         </button>
         <button
@@ -103,136 +90,264 @@
           <span class="btn-icon">📄</span>
           <div class="btn-text-group">
             <span class="btn-title">+ NEW CLIENT INVOICE</span>
-            <span class="btn-subtitle">Generate official invoice with UPI link</span>
+            <span class="btn-subtitle">Generate invoice with direct UPI link</span>
           </div>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- SECTION 2: LIVE UPI QR CODE & DIRECT CLIENT PAYMENT CHANNELS -->
-  <section class="live-upi-section">
-    <div class="upi-card">
-      <div class="upi-left">
-        <div class="qr-container">
-          <img [src]="upiQrCodeUrl" alt="SBI Real UPI QR Code" class="upi-qr-image" />
-          <span class="qr-scan-badge">SCAN TO PAY REAL INR</span>
+  <!-- NAVIGATION SUB-BAR: EASY TAB SWITCHING -->
+  <div class="business-tab-bar">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'overview'"
+      (click)="setActiveTab('overview')"
+    >
+      <span class="tab-icon">🏛️</span>
+      <span>Bank Settlement & UPI QR</span>
+    </button>
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'affiliate'"
+      (click)="setActiveTab('affiliate')"
+    >
+      <span class="tab-icon">🚀</span>
+      <span>Real Affiliate Marketing Hub</span>
+    </button>
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'invoices'"
+      (click)="setActiveTab('invoices')"
+    >
+      <span class="tab-icon">📄</span>
+      <span>Commercial Invoices & Ledger</span>
+    </button>
+  </div>
+
+  <!-- TAB 1: BANK SETTLEMENT & LIVE UPI QR -->
+  <div *ngIf="activeTab() === 'overview'">
+    <section class="live-upi-section">
+      <div class="upi-card">
+        <div class="upi-left">
+          <div class="qr-container">
+            <img [src]="upiQrCodeUrl" alt="SBI Real UPI QR Code" class="upi-qr-image" />
+            <span class="qr-scan-badge">SCAN TO PAY REAL INR</span>
+          </div>
+          <div class="upi-details-block">
+            <span class="upi-badge-live">⚡ LIVE INSTANT SETTLEMENT</span>
+            <h3 class="upi-channel-title">Direct UPI to Ravuvai Ayyapparayudu</h3>
+            <p class="upi-channel-desc">
+              Scan with any UPI app (PhonePe, Google Pay, Paytm, BHIM, Cred, YONO SBI). Every rupee sent lands directly into your State Bank of India account in split seconds.
+            </p>
+            <div class="upi-copy-row">
+              <span class="upi-string font-mono">{{ sbiProfile.upi }}</span>
+              <button class="copy-upi-btn" (click)="copyToClipboard(sbiProfile.upi, 'UPI ID')">Copy UPI ID</button>
+            </div>
+          </div>
         </div>
-        <div class="upi-details-block">
-          <span class="upi-badge-live">⚡ LIVE INSTANT SETTLEMENT</span>
-          <h3 class="upi-channel-title">Direct UPI to Ravuvai Ayyapparayudu</h3>
-          <p class="upi-channel-desc">
-            Scan with any UPI app (PhonePe, Google Pay, Paytm, BHIM, Cred, YONO SBI). Every rupee sent lands directly into your State Bank of India account in split seconds.
-          </p>
-          <div class="upi-copy-row">
-            <span class="upi-string font-mono">{{ sbiProfile.upi }}</span>
-            <button class="copy-upi-btn" (click)="copyToClipboard(sbiProfile.upi, 'UPI ID')">Copy UPI ID</button>
+
+        <div class="upi-right-stats">
+          <div class="upi-stat-box">
+            <span class="stat-k">ACCOUNT TYPE</span>
+            <span class="stat-v">Savings / Commercial Current</span>
+          </div>
+          <div class="upi-stat-box">
+            <span class="stat-k">IFSC CODE</span>
+            <span class="stat-v font-mono">{{ sbiProfile.ifsc }}</span>
+          </div>
+          <div class="upi-stat-box">
+            <span class="stat-k">BRANCH</span>
+            <span class="stat-v">SBI Commercial Specialist</span>
+          </div>
+          <div class="upi-stat-box highlight">
+            <span class="stat-k">OPERATOR AUTH</span>
+            <span class="stat-v text-cyan font-mono">{{ sbiProfile.email }}</span>
           </div>
         </div>
       </div>
+    </section>
+  </div>
 
-      <div class="upi-right-stats">
-        <div class="upi-stat-box">
-          <span class="stat-k">ACCOUNT TYPE</span>
-          <span class="stat-v">Savings / Commercial Current</span>
+  <!-- TAB 2: REAL AFFILIATE MARKETING & MONETIZATION HUB -->
+  <div *ngIf="activeTab() === 'affiliate'">
+    <section class="affiliate-section">
+      <div class="section-title-bar">
+        <div>
+          <h2 class="section-title">Verified Affiliate Marketing & Partner Revenue</h2>
+          <p class="section-desc">
+            Configured with <strong>{{ sbiProfile.email }}</strong>. Real affiliate payouts settle automatically to State Bank of India A/C 41130645649.
+          </p>
         </div>
-        <div class="upi-stat-box">
-          <span class="stat-k">IFSC CODE</span>
-          <span class="stat-v font-mono">{{ sbiProfile.ifsc }}</span>
-        </div>
-        <div class="upi-stat-box">
-          <span class="stat-k">BRANCH</span>
-          <span class="stat-v">SBI Commercial Specialist</span>
-        </div>
-        <div class="upi-stat-box highlight">
-          <span class="stat-k">ZERO DUMMY DATA</span>
-          <span class="stat-v text-emerald">100% Real Live Settlement</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SECTION 3: COMMERCIAL TAX INVOICES & VERIFIED BANK SETTLEMENT LEDGER -->
-  <section class="invoices-section">
-    <div class="section-title-bar">
-      <div>
-        <h2 class="section-title">Commercial Tax Invoices & Bank Settlement Ledger</h2>
-        <p class="section-desc">Zero mock rows. Real commercial invoices with UPI payment links. Click "Verify Payment" to credit via 12-digit Bank UTR.</p>
-      </div>
-
-      <div class="table-actions-group">
-        <button class="create-inv-btn" (click)="openCreateInvoiceModal()">
-          + Create Real Client Invoice
-        </button>
-        <button class="refresh-ledger-btn" (click)="refreshTreasuryData()" title="Reload Ledger">
-          🔄 Refresh Ledger
+        <button class="refresh-ledger-btn" (click)="refreshAffiliateData()">
+          🔄 Refresh Affiliate Stats
         </button>
       </div>
-    </div>
 
-    <div class="table-container">
-      <table class="invoices-table">
-        <thead>
-          <tr>
-            <th>INVOICE #</th>
-            <th>CLIENT & ORGANIZATION</th>
-            <th>SERVICE DELIVERABLE</th>
-            <th>AMOUNT (INR)</th>
-            <th>BENEFICIARY</th>
-            <th>STATUS</th>
-            <th>ACTION</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (inv of settledInvoices(); track inv.invoice_number) {
-            <tr class="invoice-row">
-              <td class="font-mono text-cyan">
-                <strong>{{ inv.invoice_number }}</strong>
-                <div class="issue-date">{{ inv.issue_date }}</div>
-              </td>
-              <td>
-                <div class="client-name">{{ inv.client_name }}</div>
-                <div class="client-org">{{ inv.client_organization || 'Enterprise Client' }}</div>
-              </td>
-              <td>
-                <div class="service-desc">{{ inv.line_items?.[0]?.description || 'Autonomous Service' }}</div>
-              </td>
-              <td>
-                <div class="amount-inr font-mono">₹{{ inv.total_inr | number:'1.2-2' }}</div>
-                <div class="amount-usd font-mono">${{ inv.total_usd | number:'1.2-2' }} USD</div>
-              </td>
-              <td>
-                <div class="ben-name">Ravuvai Ayyapparayudu</div>
-                <div class="ben-ac font-mono">SBI ****5649 · {{ sbiProfile.ifsc }}</div>
-              </td>
-              <td>
-                <span class="status-badge" [class.settled]="inv.status === 'SETTLED'" [class.pending]="inv.status !== 'SETTLED'">
-                  <span class="dot-settled" [class.pending]="inv.status !== 'SETTLED'"></span>
-                  {{ inv.status === 'SETTLED' ? 'SETTLED' : 'AWAITING PAYMENT' }}
-                </span>
-              </td>
-              <td>
-                @if (inv.status !== 'SETTLED') {
-                  <button class="verify-row-btn" (click)="openUtrModal(inv.invoice_number)">
-                    ✓ Verify Payment
-                  </button>
-                } @else {
-                  <span class="verified-text">UTR Verified</span>
-                }
-              </td>
-            </tr>
-          }
-          @empty {
+      <!-- Quick Affiliate Link Generator -->
+      <div class="affiliate-generator-card">
+        <h3 class="gen-title">⚡ Instant Tracked Affiliate Link Generator</h3>
+        <p class="gen-desc">
+          Paste any product, server, or AI tool URL. The engine attaches your verified affiliate ID and generates a ready-to-share link.
+        </p>
+        <div class="gen-form-row">
+          <select class="gen-select font-mono" [(ngModel)]="selectedNetwork">
+            <option value="amazon_associates">Amazon Associates (Tag: ayyappa-21)</option>
+            <option value="clickbank">ClickBank (Account: ayyapparayudu)</option>
+            <option value="impact_radius">Impact.com / Hostinger (Partner: ayyapparayudu.ravuvari)</option>
+            <option value="digistore24">Digistore24 (ID: ayyappa_ai)</option>
+            <option value="cloud_partner">Cloud GPU & Server Affiliates</option>
+          </select>
+          <input
+            type="text"
+            class="gen-input font-mono"
+            placeholder="Paste target URL (e.g. https://www.amazon.in/dp/B0CKZ... or https://hostinger.in/...)"
+            [(ngModel)]="inputProductUrl"
+          />
+          <button
+            class="gen-btn"
+            [disabled]="isGeneratingLink() || !inputProductUrl"
+            (click)="generateQuickAffiliateLink()"
+          >
+            {{ isGeneratingLink() ? 'GENERATING...' : 'GENERATE TRACKED LINK' }}
+          </button>
+        </div>
+
+        <div *ngIf="generatedAffiliateLink()" class="gen-result-box">
+          <span class="result-label">YOUR TRACKED LINK:</span>
+          <span class="result-url font-mono">{{ generatedAffiliateLink() }}</span>
+          <button class="copy-result-btn" (click)="copyToClipboard(generatedAffiliateLink(), 'Tracked Affiliate Link')">
+            Copy Link 📋
+          </button>
+        </div>
+      </div>
+
+      <!-- Active High-Yield Campaigns -->
+      <div class="campaigns-grid">
+        @for (camp of affiliateOverview()?.campaigns || []; track camp.campaign_id) {
+          <div class="campaign-card">
+            <div class="camp-top">
+              <span class="camp-cat font-mono">{{ camp.category }}</span>
+              <span class="camp-rate text-emerald font-mono">{{ camp.commission_rate_pct }}% Commission</span>
+            </div>
+            <h4 class="camp-name">{{ camp.product_name }}</h4>
+            <div class="camp-metrics">
+              <div class="metric-item">
+                <span class="m-k">Network:</span>
+                <span class="m-v font-mono">{{ camp.network_id }}</span>
+              </div>
+              <div class="metric-item">
+                <span class="m-k">Est. / Sale:</span>
+                <span class="m-v text-cyan font-mono">₹{{ camp.estimated_earnings_per_click_inr | number:'1.2-2' }}</span>
+              </div>
+              <div class="metric-item">
+                <span class="m-k">Settlement:</span>
+                <span class="m-v font-mono">Direct to SBI ****5649</span>
+              </div>
+            </div>
+            <div class="camp-actions">
+              <button class="camp-copy-btn" (click)="copyToClipboard(camp.affiliate_link, 'Affiliate Link')">
+                Copy Link 📋
+              </button>
+              <a [href]="camp.affiliate_link" target="_blank" rel="noopener noreferrer" class="camp-open-link">
+                Preview ↗
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB 3: COMMERCIAL TAX INVOICES & VERIFIED BANK SETTLEMENT LEDGER -->
+  <div *ngIf="activeTab() === 'invoices'">
+    <section class="invoices-section">
+      <div class="section-title-bar">
+        <div>
+          <h2 class="section-title">Commercial Tax Invoices & Bank Settlement Ledger</h2>
+          <p class="section-desc">Zero mock rows. Real commercial invoices with UPI payment links. Click "Verify Payment" to credit via 12-digit Bank UTR.</p>
+        </div>
+
+        <div class="table-actions-group">
+          <button class="create-inv-btn" (click)="openCreateInvoiceModal()">
+            + Create Real Client Invoice
+          </button>
+          <button class="purge-btn" (click)="purgeAllDummyData()" title="Clear any test or mock rows">
+            🗑️ Clear Dummy Data
+          </button>
+          <button class="refresh-ledger-btn" (click)="refreshTreasuryData()" title="Reload Ledger">
+            🔄 Refresh Ledger
+          </button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="invoices-table">
+          <thead>
             <tr>
-              <td colspan="7" class="empty-cell">
-                Zero dummy records. No invoices or transactions yet. Share your UPI QR code (ayyapparayudu.5@ybl) or create a real client invoice to record authentic inward settlements into your State Bank of India account.
-              </td>
+              <th>INVOICE #</th>
+              <th>CLIENT & ORGANIZATION</th>
+              <th>SERVICE DELIVERABLE</th>
+              <th>AMOUNT (INR)</th>
+              <th>BENEFICIARY</th>
+              <th>STATUS</th>
+              <th>ACTION</th>
             </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </section>
+          </thead>
+          <tbody>
+            @for (inv of settledInvoices(); track inv.invoice_number) {
+              <tr class="invoice-row">
+                <td class="font-mono text-cyan">
+                  <strong>{{ inv.invoice_number }}</strong>
+                  <div class="issue-date">{{ inv.issue_date }}</div>
+                </td>
+                <td>
+                  <div class="client-name">{{ inv.client_name }}</div>
+                  <div class="client-org">{{ inv.client_organization || 'Enterprise Client' }}</div>
+                </td>
+                <td>
+                  <div class="service-desc">{{ inv.line_items?.[0]?.description || 'Autonomous Service' }}</div>
+                </td>
+                <td>
+                  <div class="amount-inr font-mono">₹{{ inv.total_inr | number:'1.2-2' }}</div>
+                  <div class="amount-usd font-mono">${{ inv.total_usd | number:'1.2-2' }} USD</div>
+                </td>
+                <td>
+                  <div class="ben-name">Ravuvai Ayyapparayudu</div>
+                  <div class="ben-ac font-mono">SBI ****5649 · {{ sbiProfile.ifsc }}</div>
+                </td>
+                <td>
+                  <span class="status-badge" [class.settled]="inv.status === 'SETTLED'" [class.pending]="inv.status !== 'SETTLED'">
+                    <span class="dot-settled" [class.pending]="inv.status !== 'SETTLED'"></span>
+                    {{ inv.status === 'SETTLED' ? 'SETTLED' : 'AWAITING PAYMENT' }}
+                  </span>
+                </td>
+                <td>
+                  @if (inv.status !== 'SETTLED') {
+                    <button class="verify-row-btn" (click)="openUtrModal(inv.invoice_number)">
+                      ✓ Verify Payment
+                    </button>
+                  } @else {
+                    <span class="verified-text">UTR Verified</span>
+                  }
+                </td>
+              </tr>
+            }
+            @empty {
+              <tr>
+                <td colspan="7" class="empty-cell">
+                  Zero dummy records. No invoices or transactions yet. Share your UPI QR code (ayyapparayudu.5@ybl) or create a real client invoice to record authentic inward settlements into your State Bank of India account.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
 
   <!-- MODAL: VERIFY REAL BANK UTR PAYMENT -->
   <div class="utr-modal-backdrop" *ngIf="showUtrModal()" (click)="showUtrModal.set(false)">
@@ -298,7 +413,7 @@
             [disabled]="isSubmittingUtr() || !inputUtr"
             (click)="confirmUtrSettlement()"
           >
-            <span>{{ isSubmittingUtr() ? 'Verifying with SBI...' : '✓ Confirm & Credit Balance' }}</span>
+            {{ isSubmittingUtr() ? 'VERIFYING...' : 'CONFIRM & CREDIT SBI BALANCE' }}
           </button>
         </div>
       </div>
@@ -311,63 +426,63 @@
       <div class="modal-head">
         <div class="modal-head-title">
           <span class="modal-icon">📄</span>
-          <h3>Generate Real Client Commercial Invoice</h3>
+          <h3>Generate Real Client Tax Invoice</h3>
         </div>
         <button class="modal-close" (click)="showCreateInvoiceModal.set(false)">✕</button>
       </div>
 
       <p class="modal-desc">
-        Create an official commercial invoice with an instant UPI payment link for a real client. All disbursements settle to your State Bank of India account (41130645649).
+        Creates an official commercial invoice settled directly to Ravuvai Ayyapparayudu (SBI A/C: 41130645649, UPI: ayyapparayudu.5@ybl).
       </p>
 
       <div class="modal-form">
         <div class="form-row-2">
           <div class="form-group">
-            <label>CLIENT / RECIPIENT NAME *</label>
+            <label>CLIENT CONTACT NAME *</label>
             <input
               type="text"
               class="modal-input"
-              placeholder="e.g. John Doe / Tech Corp"
+              placeholder="e.g. Rajesh Kumar"
               [(ngModel)]="newInvoiceClientName"
             />
           </div>
           <div class="form-group">
-            <label>CLIENT ORGANIZATION</label>
+            <label>CLIENT ORGANIZATION / COMPANY</label>
             <input
               type="text"
               class="modal-input"
-              placeholder="e.g. Cloud Enterprises Pvt Ltd"
+              placeholder="e.g. CloudTech Global Pvt Ltd"
               [(ngModel)]="newInvoiceClientOrg"
             />
           </div>
         </div>
 
         <div class="form-group">
-          <label>SERVICE DELIVERABLE DESCRIPTION *</label>
+          <label>SERVICE DELIVERABLE / SCOPE *</label>
           <input
             type="text"
             class="modal-input"
-            placeholder="e.g. Autonomous AI Engineering, Automation & System Optimization"
+            placeholder="e.g. Autonomous Full-Stack AI System Optimization & Deployment"
             [(ngModel)]="newInvoiceServiceDesc"
           />
         </div>
 
         <div class="form-row-2">
           <div class="form-group">
-            <label>CONTRACT AMOUNT (₹ INR) *</label>
+            <label>SERVICE AMOUNT (₹ INR) *</label>
             <input
               type="number"
               class="modal-input font-mono"
-              placeholder="25000"
+              placeholder="e.g. 50000"
               [(ngModel)]="newInvoiceAmountInr"
             />
           </div>
           <div class="form-group">
-            <label>CLIENT EMAIL (OPTIONAL)</label>
+            <label>CLIENT EMAIL (FOR INVOICE DELIVERY)</label>
             <input
               type="email"
-              class="modal-input"
-              placeholder="client@company.com"
+              class="modal-input font-mono"
+              placeholder="e.g. client@example.com"
               [(ngModel)]="newInvoiceClientEmail"
             />
           </div>
@@ -377,10 +492,10 @@
           <button class="modal-cancel-btn" (click)="showCreateInvoiceModal.set(false)">Cancel</button>
           <button
             class="modal-confirm-btn"
-            [disabled]="isCreatingInvoice() || !newInvoiceClientName || !newInvoiceServiceDesc"
+            [disabled]="isCreatingInvoice() || !newInvoiceClientName || !newInvoiceServiceDesc || newInvoiceAmountInr <= 0"
             (click)="submitCreateInvoice()"
           >
-            <span>{{ isCreatingInvoice() ? 'Generating...' : '✓ Generate Official Invoice & UPI' }}</span>
+            {{ isCreatingInvoice() ? 'GENERATING...' : 'GENERATE INVOICE WITH UPI' }}
           </button>
         </div>
       </div>

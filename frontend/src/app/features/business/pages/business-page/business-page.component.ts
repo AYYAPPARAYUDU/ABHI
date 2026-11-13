@@ -24,6 +24,9 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
 
   readonly toastMessage = signal<string | null>(null);
 
+  // Active Tab for Clean Organization
+  readonly activeTab = signal<'overview' | 'affiliate' | 'invoices'>('overview');
+
   // Real Bank UTR Verification Modal
   readonly showUtrModal = signal<boolean>(false);
   readonly isSubmittingUtr = signal<boolean>(false);
@@ -41,6 +44,13 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
   newInvoiceAmountInr = 25000.0;
   newInvoiceClientEmail = '';
 
+  // Affiliate Marketing Controls
+  readonly affiliateOverview = signal<any>(null);
+  readonly isGeneratingLink = signal<boolean>(false);
+  selectedNetwork = 'amazon_associates';
+  inputProductUrl = '';
+  readonly generatedAffiliateLink = signal<string>('');
+
   // Authoritative State Bank of India Settlement Channel (Mamu)
   readonly sbiProfile = {
     beneficiary: 'Ravuvai Ayyapparayudu',
@@ -48,6 +58,7 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
     account: '41130645649',
     ifsc: 'SBIN0020507',
     upi: 'ayyapparayudu.5@ybl',
+    email: 'ayyapparayudu.ravuvari@gmail.com',
     branch: 'SBI Specialized Commercial Branch',
   };
 
@@ -70,10 +81,15 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     this.threeScene.setMode('BUSINESS');
     this.refreshTreasuryData();
+    this.refreshAffiliateData();
   }
 
   ngAfterViewInit(): void {
     this.animateElements();
+  }
+
+  setActiveTab(tab: 'overview' | 'affiliate' | 'invoices'): void {
+    this.activeTab.set(tab);
   }
 
   async refreshTreasuryData(): Promise<void> {
@@ -105,6 +121,55 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
       }
     } catch {
       // Retain clean state
+    }
+  }
+
+  async refreshAffiliateData(): Promise<void> {
+    try {
+      const data = await this.agentApi.getAffiliateOverview();
+      if (data) {
+        this.affiliateOverview.set(data);
+      }
+    } catch {
+      // Clean fallback
+    }
+  }
+
+  async generateQuickAffiliateLink(): Promise<void> {
+    if (!this.inputProductUrl.trim()) {
+      this.showToast('⚠️ Please enter a destination product or service URL.');
+      return;
+    }
+    this.isGeneratingLink.set(true);
+    try {
+      const res = await this.agentApi.generateAffiliateLink({
+        network_id: this.selectedNetwork,
+        destination_url: this.inputProductUrl.trim(),
+      });
+      if (res?.affiliate_link) {
+        this.generatedAffiliateLink.set(res.affiliate_link);
+        this.showToast('✓ Tracked affiliate link generated with your verified ID!');
+        this.speechVoice.speak('Affiliate link generated successfully, Mamu.');
+      } else {
+        this.showToast('⚠️ Failed to generate link.');
+      }
+    } catch {
+      this.showToast('⚠️ Network error generating affiliate link.');
+    } finally {
+      this.isGeneratingLink.set(false);
+    }
+  }
+
+  async purgeAllDummyData(): Promise<void> {
+    try {
+      const res = await this.agentApi.clearTreasuryDummyData();
+      if (res) {
+        await this.refreshTreasuryData();
+        this.showToast('✓ All dummy records purged. Ledger is 100% clean and authentic.');
+        this.speechVoice.speak('All dummy records purged. Ready for real transactions, Mamu.');
+      }
+    } catch {
+      this.showToast('Error purging dummy data.');
     }
   }
 

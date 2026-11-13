@@ -128,9 +128,15 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
 
   ngAfterViewInit(): void {
     if (typeof window !== 'undefined' && this.workspaceCanvas) {
-      this.threeScene.init(this.workspaceCanvas.nativeElement);
-      this.threeScene.setMode('WORKSPACE');
-      this.threeScene.resetCameraFocus();
+      setTimeout(() => {
+        this.threeScene.init(this.workspaceCanvas.nativeElement);
+        this.threeScene.setMode('WORKSPACE', true);
+        this.threeScene.resetCameraFocus();
+        const rect = this.workspaceCanvas.nativeElement.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          this.threeScene.onResize(rect.width, rect.height);
+        }
+      }, 50);
 
       if (typeof ResizeObserver !== 'undefined') {
         this.resizeObserver = new ResizeObserver((entries) => {

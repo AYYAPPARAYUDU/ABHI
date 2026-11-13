@@ -92,8 +92,14 @@ export class CorePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit(): void {
     if (typeof window !== 'undefined' && this.coreCanvas) {
-      this.threeScene.init(this.coreCanvas.nativeElement);
-      this.threeScene.setMode('MAIN_AGENT');
+      setTimeout(() => {
+        this.threeScene.init(this.coreCanvas.nativeElement);
+        this.threeScene.setMode('MAIN_AGENT', true);
+        const rect = this.coreCanvas.nativeElement.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          this.threeScene.onResize(rect.width, rect.height);
+        }
+      }, 50);
 
       if (typeof ResizeObserver !== 'undefined') {
         this.resizeObserver = new ResizeObserver((entries) => {

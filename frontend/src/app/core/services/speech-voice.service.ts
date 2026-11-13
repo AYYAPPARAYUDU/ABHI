@@ -444,7 +444,7 @@ export class SpeechVoiceService {
    * priority preemption for emergency directives, and distinct personality pitches.
    */
   speakNegotiated(req: SpeechNegotiationRequest): void {
-    if (this.isMuted() && !req.force) return;
+    if (this.isMuted()) return;
     if (!req.text || !req.text.trim()) return;
 
     const priority: SpeechPriority = req.priority || 'SPECIALIST_REPORT';
@@ -758,26 +758,23 @@ export class SpeechVoiceService {
       let currentChunkIdx = 0;
       let globalWordOffset = 0;
 
-      // Chrome anti-freeze watchdog
-      const watchdog = setInterval(() => {
-        if (!this.isSpeaking()) {
-          clearInterval(watchdog);
-          return;
+      // Max speech duration safety watchdog to prevent stuck [Speaking] state
+      const totalWords = words.length || 10;
+      const maxDurationMs = Math.max(4000, totalWords * 650);
+      const watchdog = setTimeout(() => {
+        if (this.isSpeaking()) {
+          this.handleSpeechEnded();
         }
-        if (this.synth) {
-          if (this.synth.paused) {
-            this.synth.resume();
-          } else {
-            // Keep Chrome audio pump alive
-            this.synth.pause();
-            this.synth.resume();
-          }
-        }
-      }, 3500);
+      }, maxDurationMs);
 
       const speakNextChunk = () => {
+        if (this.isMuted()) {
+          clearTimeout(watchdog);
+          this.handleSpeechEnded();
+          return;
+        }
         if (currentChunkIdx >= chunks.length) {
-          clearInterval(watchdog);
+          clearTimeout(watchdog);
           this.handleSpeechEnded();
           return;
         }
@@ -962,11 +959,8 @@ export class SpeechVoiceService {
   toggleMute(): boolean {
     const muted = !this.isMuted();
     this.isMuted.set(muted);
-    if (muted) {
-      this.stop();
-    } else {
-      this.speak('Voice audio enabled.');
-    }
+    this.stop();
+    this.speechNegotiationQueue = [];
     return muted;
   }
 
@@ -1153,7 +1147,7 @@ export class SpeechVoiceService {
       analyser.fftSize = 256;
       this.ttsAnalyser = analyser;
 
-      source.connect(warmth).connect(air).connect(limiter).connect(duckingGain).connect(analyser).connect(ctx.destination);
+      source.connect(analyser);
       this.startTtsEnvelopeMonitoring();
     } catch {
       // Audio element connects directly to default output on restriction

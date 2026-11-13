@@ -1,0 +1,62 @@
+[
+  {
+    "campaign_id": "CAMP-AMZN-RTXGPU",
+    "network_id": "amazon_associates",
+    "product_name": "NVIDIA RTX 4090 / 4080 AI Workstation Hardware",
+    "category": "AI_HARDWARE",
+    "destination_url": "https://www.amazon.in/s?k=nvidia+rtx+4090+gpu",
+    "affiliate_link": "https://www.amazon.in/s?k=nvidia+rtx+4090+gpu&tag=ayyappa-21&linkCode=ll2",
+    "commission_rate_pct": 5.0,
+    "estimated_earnings_per_click_inr": 850.0,
+    "clicks": 0,
+    "conversions": 0,
+    "total_earned_inr": 0.0,
+    "status": "ACTIVE",
+    "created_at": "2026-11-13T12:05:11.203504+00:00"
+  },
+  {
+    "campaign_id": "CAMP-IMPACT-CLOUD",
+    "network_id": "impact_radius",
+    "product_name": "High-Performance Cloud GPU & Virtual Private Servers",
+    "category": "CLOUD_SAAS",
+    "destination_url": "https://www.hostinger.in/vps-hosting",
+    "affiliate_link": "https://hostinger.in?REFERRALCODE=AYYAPPA_AI&utm_source=impact&utm_medium=affiliate",
+    "commission_rate_pct": 40.0,
+    "estimated_earnings_per_click_inr": 1200.0,
+    "clicks": 0,
+    "conversions": 0,
+    "total_earned_inr": 0.0,
+    "status": "ACTIVE",
+    "created_at": "2026-11-13T12:05:11.203517+00:00"
+  },
+  {
+    "campaign_id": "CAMP-CLICKBANK-AI",
+    "network_id": "clickbank",
+    "product_name": "Autonomous AI & Deep Learning Certification Program",
+    "category": "EDUCATION",
+    "destination_url": "https://learn-ai.com/mastery",
+    "affiliate_link": "https://hop.clickbank.net/?affiliate=ayyapparayudu&vendor=aimastery",
+    "commission_rate_pct": 50.0,
+    "estimated_earnings_per_click_inr": 2400.0,
+    "clicks": 0,
+    "conversions": 0,
+    "total_earned_inr": 0.0,
+    "status": "ACTIVE",
+    "created_at": "2026-11-13T12:05:11.203520+00:00"
+  },
+  {
+    "campaign_id": "CAMP-DIGI-PROMPT",
+    "network_id": "digistore24",
+    "product_name": "Enterprise LLM Prompt & Workflow Automation Suite",
+    "category": "DEV_TOOLS",
+    "destination_url": "https://www.digistore24.com/product/581920",
+    "affiliate_link": "https://www.digistore24.com/redir/581920/ayyappa_ai/",
+    "commission_rate_pct": 35.0,
+    "estimated_earnings_per_click_inr": 650.0,
+    "clicks": 0,
+    "conversions": 0,
+    "total_earned_inr": 0.0,
+    "status": "ACTIVE",
+    "created_at": "2026-11-13T12:05:11.203522+00:00"
+  }
+]

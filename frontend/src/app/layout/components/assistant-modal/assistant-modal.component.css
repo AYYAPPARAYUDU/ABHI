@@ -698,3 +698,110 @@
   from { transform: translateY(-100%); }
   to { transform: translateY(0); }
 }
+
+
+/* ==========================================================================
+   STREAMLINED BRAIN VISUAL COCKPIT & TELEMETRY
+   ========================================================================== */
+.brain-visual-cockpit {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 18px;
+  background: rgba(8, 14, 24, 0.7);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+}
+
+.brain-3d-box {
+  width: 240px;
+  height: 190px;
+  border-radius: 12px;
+  background: radial-gradient(circle at center, rgba(0, 240, 255, 0.06) 0%, rgba(5, 10, 18, 0.95) 100%);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.brain-telemetry-panel {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.telem-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.telem-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(15, 23, 42, 0.7);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.t-k {
+  font-size: 9px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+.t-v {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.upgrade-action-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.upgrade-hint {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.quick-profile-edit-box {
+  padding: 10px 18px;
+  background: rgba(15, 23, 42, 0.9);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+}
+
+.edit-inputs-grid {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.edit-inputs-grid .field-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 6px 12px;
+  background: rgba(6, 11, 20, 0.9);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 11px;
+}
+
+.edit-inputs-grid .save-profile-btn {
+  padding: 6px 14px;
+  background: #00f0ff;
+  border: none;
+  border-radius: 6px;
+  color: #030712;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}

@@ -14,169 +14,120 @@
         <div class="header-title-group">
           <span class="brain-icon-pulse">🧠</span>
           <div>
-            <h2 class="modal-title font-mono">HUMAN-BRAIN & AUTONOMOUS COMMUNICATIONS</h2>
-            <span class="modal-sub">Personal Messaging Engine • Adaptive Metaparameter Self-Upgrading Core</span>
+            <h2 class="modal-title font-mono">ABHI HOLOGRAPHIC BRAIN & COGNITION</h2>
+            <span class="modal-sub">Personal Cognitive Engine • Adaptive Metaparameter Core</span>
           </div>
         </div>
 
         <div class="header-badges-group">
           <!-- Brain Version Badge -->
-          @if (assistant.brainStatus()) {
-            <span class="badge-brain-ver font-mono">
-              {{ assistant.brainStatus()?.version }}
-            </span>
-            <span class="badge-alignment font-mono">
-              ⚡ {{ ((assistant.brainStatus()?.alignment_score || 0.94) * 100).toFixed(1) }}% ALIGNED
-            </span>
-          }
+          <span class="badge-brain-ver font-mono">
+            {{ assistant.brainStatus()?.version || 'v2.4 Sovereign' }}
+          </span>
+          <span class="badge-alignment font-mono">
+            ⚡ {{ ((assistant.brainStatus()?.alignment_score || 0.98) * 100).toFixed(1) }}% ALIGNED
+          </span>
 
           <!-- Close Button -->
-          <button type="button" class="modal-close-btn" (click)="assistant.closeModal()" title="Close Assistant">
+          <button type="button" class="modal-close-btn" (click)="assistant.closeModal()" title="Close Brain">
             ✕
           </button>
         </div>
       </div>
 
-      <!-- 3D Living Anatomical Brain Core -->
-      <div class="brain-3d-showcase-box">
-        <app-brain-3d-viewer height="210px"></app-brain-3d-viewer>
+      <!-- Connected Operator Status Strip -->
+      <div class="connected-status-strip">
+        <div class="connected-info">
+          <span class="status-dot-live"></span>
+          <span class="connected-text font-mono">
+            OPERATOR: <strong>{{ assistant.profile()?.email || 'ayyapparayudu.ravuvari@gmail.com' }}</strong>
+            • <strong>{{ assistant.profile()?.phone_number || '+91 91330 00000' }}</strong>
+          </span>
+          <span class="mode-badge font-mono">{{ assistant.profile()?.auto_reply_mode || 'SOVEREIGN' }}</span>
+        </div>
+
+        <button type="button" class="edit-profile-btn font-mono" (click)="toggleEditProfile()">
+          {{ isEditingProfile() ? 'CANCEL' : '✎ EDIT PROFILE' }}
+        </button>
       </div>
 
-      <!-- ONBOARDING PROMPT (When email or phone is missing) -->
-      @if (!assistant.isConfigured() || isEditingProfile()) {
-        <div class="onboarding-banner-card">
-          <div class="onboarding-banner-header">
-            <span class="warn-icon">⚠️</span>
-            <div>
-              <h3 class="onboarding-title font-mono">CONNECT YOUR EMAIL & PHONE FOR AUTONOMOUS COMPANION</h3>
-              <p class="onboarding-desc">
-                Enable ABHI to monitor phone ADB notifications, SMS, WhatsApp web, and Gmail traces, and autonomously synthesize human-sounding replies.
-              </p>
-            </div>
-          </div>
-
-          <div class="onboarding-form-grid">
-            <div class="input-field-group">
-              <label class="field-label font-mono">Primary Email Address</label>
-              <input
-                type="email"
-                class="field-input font-mono"
-                [(ngModel)]="inputEmail"
-                placeholder="e.g. operator@gmail.com"
-              />
-            </div>
-
-            <div class="input-field-group">
-              <label class="field-label font-mono">Mobile Phone Number (WhatsApp / SMS)</label>
-              <input
-                type="tel"
-                class="field-input font-mono"
-                [(ngModel)]="inputPhone"
-                placeholder="e.g. +91 98765 43210 or +1 (555) 019-2834"
-              />
-            </div>
-
-            <div class="input-field-group">
-              <label class="field-label font-mono">Auto-Reply Decision Mode</label>
-              <select class="field-select font-mono" [(ngModel)]="inputMode">
-                <option value="HUMAN_CONFIRMATION">Human Confirmation (1-Click Approval)</option>
-                <option value="FULLY_AUTONOMOUS">Fully Autonomous (Self-Dispatched)</option>
-              </select>
-            </div>
-
-            <div class="input-field-group">
-              <label class="field-label font-mono">Priority Monitored Senders</label>
-              <input
-                type="text"
-                class="field-input font-mono"
-                [(ngModel)]="inputThreads"
-                placeholder="e.g. Lead Engineer, Client VIP (comma separated)"
-              />
-            </div>
-          </div>
-
-          <div class="onboarding-actions-row">
-            <label class="checkbox-label font-mono">
-              <input type="checkbox" [(ngModel)]="inputWhatsapp" />
-              <span>Enable WhatsApp Desktop / Mobile Intent Dispatch</span>
-            </label>
-
-            <div class="actions-right">
-              @if (assistant.isConfigured()) {
-                <button type="button" class="cancel-btn font-mono" (click)="toggleEditProfile()">Cancel</button>
-              }
-              <button
-                type="button"
-                class="save-profile-btn font-mono"
-                (click)="saveProfile()"
-                [disabled]="!inputEmail || !inputPhone || assistant.isLoading()"
-              >
-                {{ assistant.isLoading() ? 'SAVING...' : 'SAVE & CONNECT PROFILE' }}
-              </button>
-            </div>
-          </div>
-        </div>
-      } @else {
-        <!-- Connected Status Bar -->
-        <div class="connected-status-strip">
-          <div class="connected-info">
-            <span class="status-dot-live"></span>
-            <span class="connected-text font-mono">
-              CONNECTED: <strong>{{ assistant.profile()?.email }}</strong> • <strong>{{ assistant.profile()?.phone_number }}</strong>
-            </span>
-            <span class="mode-badge font-mono">{{ assistant.profile()?.auto_reply_mode }}</span>
-          </div>
-
-          <div class="connected-tools">
-            <button type="button" class="edit-profile-btn font-mono" (click)="toggleEditProfile()">
-              ✎ EDIT PROFILE
+      <!-- Quick Edit Profile Form (collapsible) -->
+      @if (isEditingProfile()) {
+        <div class="quick-profile-edit-box">
+          <div class="edit-inputs-grid">
+            <input
+              type="email"
+              class="field-input font-mono"
+              [(ngModel)]="inputEmail"
+              placeholder="operator email"
+            />
+            <input
+              type="tel"
+              class="field-input font-mono"
+              [(ngModel)]="inputPhone"
+              placeholder="mobile phone"
+            />
+            <button
+              type="button"
+              class="save-profile-btn font-mono"
+              (click)="saveProfile()"
+              [disabled]="assistant.isLoading()"
+            >
+              {{ assistant.isLoading() ? 'SAVING...' : 'SAVE PROFILE' }}
             </button>
           </div>
         </div>
       }
 
-      <!-- Autonomous Brain Self-Upgrading Core Strip -->
-      <div class="brain-upgrade-strip">
-        <div class="brain-strip-left">
-          <div class="brain-metric">
-            <span class="metric-label font-mono">Self-Tuned Core:</span>
-            <span class="metric-val text-cyan font-mono">{{ assistant.brainStatus()?.version || 'v1.0' }}</span>
-          </div>
-          <div class="brain-metric">
-            <span class="metric-label font-mono">Alignment Score:</span>
-            <span class="metric-val text-emerald font-mono">
-              {{ ((assistant.brainStatus()?.alignment_score || 0.94) * 100).toFixed(1) }}%
-            </span>
-          </div>
-          <div class="brain-metric">
-            <span class="metric-label font-mono">Temperature:</span>
-            <span class="metric-val text-amethyst font-mono">{{ assistant.brainStatus()?.temperature || 0.40 }}</span>
-          </div>
-          <div class="brain-metric">
-            <span class="metric-label font-mono">Reasoning:</span>
-            <span class="metric-val text-amber font-mono">{{ assistant.brainStatus()?.reasoning_depth || 'DEEP' }}</span>
-          </div>
+      <!-- 3D Living Anatomical Brain Core & Cognitive Telemetry -->
+      <div class="brain-visual-cockpit">
+        <div class="brain-3d-box">
+          <app-brain-3d-viewer height="190px"></app-brain-3d-viewer>
         </div>
 
-        <button
-          type="button"
-          class="brain-upgrade-action-btn font-mono"
-          (click)="assistant.evaluateAndUpgradeBrain()"
-          [disabled]="assistant.isUpgradingBrain()"
-        >
-          <span class="btn-sparkle">✨</span>
-          <span>{{ assistant.isUpgradingBrain() ? 'EVALUATING INTERACTION TRACES...' : 'EVALUATE & UPGRADE BRAIN' }}</span>
-        </button>
+        <div class="brain-telemetry-panel">
+          <div class="telem-row">
+            <div class="telem-item">
+              <span class="t-k font-mono">COGNITIVE STATUS:</span>
+              <span class="t-v text-emerald font-mono">PRIMED & ONLINE</span>
+            </div>
+            <div class="telem-item">
+              <span class="t-k font-mono">ALIGNMENT:</span>
+              <span class="t-v text-cyan font-mono">{{ ((assistant.brainStatus()?.alignment_score || 0.98) * 100).toFixed(1) }}%</span>
+            </div>
+            <div class="telem-item">
+              <span class="t-k font-mono">TEMPERATURE:</span>
+              <span class="t-v text-amethyst font-mono">{{ assistant.brainStatus()?.temperature || 0.35 }}</span>
+            </div>
+            <div class="telem-item">
+              <span class="t-k font-mono">REASONING:</span>
+              <span class="t-v text-amber font-mono">{{ assistant.brainStatus()?.reasoning_depth || 'DEEP DUAL-STATE' }}</span>
+            </div>
+          </div>
+
+          <div class="upgrade-action-block">
+            <button
+              type="button"
+              class="brain-upgrade-action-btn font-mono"
+              (click)="assistant.evaluateAndUpgradeBrain()"
+              [disabled]="assistant.isUpgradingBrain()"
+            >
+              <span class="btn-sparkle">✨</span>
+              <span>{{ assistant.isUpgradingBrain() ? 'EVALUATING INTERACTION TRACES...' : 'EVALUATE & UPGRADE BRAIN' }}</span>
+            </button>
+            <span class="upgrade-hint font-mono">Auto-tunes local LLM metaparameters against your decisions</span>
+          </div>
+        </div>
       </div>
 
-      <!-- Main Communications Workspace: Inbox Stream vs AI Brain Reply Generator -->
+      <!-- Communications & Autonomous Thought Stream -->
       <div class="comms-workspace-grid">
         <!-- LEFT: Inbox Stream -->
         <div class="inbox-column">
           <div class="column-header-row">
             <div class="col-title-group">
               <span class="col-icon">📥</span>
-              <h3 class="col-heading font-mono">INCOMING COMMUNICATIONS STREAM</h3>
+              <h3 class="col-heading font-mono">INCOMING COMMUNICATIONS</h3>
             </div>
             <button type="button" class="refresh-inbox-btn font-mono" (click)="assistant.fetchInbox()" title="Fetch Real ADB & Traces">
               ↻ REFRESH
@@ -186,7 +137,7 @@
           <div class="inbox-list-wrap">
             @if (assistant.inbox().length === 0) {
               <div class="empty-inbox-notice font-mono">
-                No recent incoming communications found. Connect phone via ADB or send a message.
+                No new communications pending. System is monitoring Gmail & phone channels.
               </div>
             }
 
@@ -221,7 +172,7 @@
           <div class="column-header-row">
             <div class="col-title-group">
               <span class="col-icon">⚡</span>
-              <h3 class="col-heading font-mono">AI BRAIN CONTEXT-AWARE REPLIES</h3>
+              <h3 class="col-heading font-mono">AI CONTEXT-AWARE REPLIES</h3>
             </div>
             @if (assistant.activeMessage()) {
               <button
@@ -250,7 +201,7 @@
               @if (assistant.isGeneratingReplies()) {
                 <div class="loading-replies-indicator font-mono">
                   <span class="spin-dot"></span>
-                  <span>Synthesizing 3 human-like context-aware replies via fine-tuned LLM core...</span>
+                  <span>Synthesizing human-like context-aware replies via fine-tuned LLM...</span>
                 </div>
               } @else {
                 @for (rep of assistant.suggestedReplies(); track rep.category) {
@@ -282,9 +233,9 @@
               <label class="custom-reply-label font-mono">Customized or Selected Reply Text:</label>
               <textarea
                 class="custom-reply-textarea font-mono"
-                rows="3"
+                rows="2"
                 [(ngModel)]="customReplyText"
-                placeholder="Click one of the 3 AI suggestions above to load here, or type your custom reply..."
+                placeholder="Click one of the AI suggestions above or type your custom message..."
               ></textarea>
 
               <div class="dispatch-actions-row">
@@ -304,7 +255,7 @@
             </div>
           } @else {
             <div class="no-selection-notice font-mono">
-              Select an incoming message from the inbox stream to generate context-aware AI replies.
+              Select an incoming message from the left or connect device via ADB to dispatch replies.
             </div>
           }
         </div>

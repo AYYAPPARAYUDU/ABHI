@@ -142,27 +142,10 @@ class TextToSpeechEngine:
             if len(audio_bytes) > 0:
                 return bytes(audio_bytes)
         except Exception as e:
-            logger.warning(f"Edge-TTS stream error ({e}); falling back to local WAV oscillator.")
+            logger.info(f"Edge-TTS stream unavailable ({e}); delegating cleanly to native client speech synthesis.")
+            return b""
 
-        # Robust Fallback to valid RIFF WAV with smooth anti-pop envelope (10ms fade in/out)
-        sample_rate = 24000
-        duration_s = max(0.5, len(clean_text) * 0.06)
-        num_samples = int(sample_rate * duration_s)
-        fade_len = int(sample_rate * 0.01)
-
-        samples = []
-        for i in range(num_samples):
-            # 440 Hz fundamental with warm third harmonic
-            wave = 0.18 * math.sin(2 * math.pi * 440 * i / sample_rate) + 0.06 * math.sin(2 * math.pi * 880 * i / sample_rate)
-            # Anti-pop envelope
-            if i < fade_len:
-                wave *= (i / float(fade_len))
-            elif i > (num_samples - fade_len):
-                wave *= ((num_samples - i) / float(fade_len))
-            samples.append(int(32767 * wave))
-
-        raw_pcm = bytes([b & 0xFF for s in samples for b in (s, s >> 8)])
-        return pcm_to_wav(raw_pcm, sample_rate=sample_rate)
+        return b""
 
 
 # Singletons

@@ -68,6 +68,7 @@ export class AppShellComponent {
       url === '' ||
       url === '/' ||
       url.startsWith('/home') ||
+      url.startsWith('/core') ||
       url.startsWith('/workspace')
     );
   });

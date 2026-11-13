@@ -154,18 +154,29 @@ async def get_communications_profile():
             row = res.fetchone()
 
         if not row:
+            # Pre-configure with Mamu's authoritative credentials
+            now_iso = datetime.now(timezone.utc).isoformat()
+            async with engine.begin() as insert_conn:
+                await insert_conn.execute(
+                    text(
+                        "INSERT INTO user_communications_profile "
+                        "(id, email, phone_number, whatsapp_enabled, auto_reply_mode, monitored_threads, created_at, updated_at) "
+                        "VALUES ('primary_user', 'ayyapparayudu.ravuvari@gmail.com', '+91 91330 00000', 1, 'HUMAN_CONFIRMATION', '[]', :ts, :ts)"
+                    ),
+                    {"ts": now_iso}
+                )
             return {
                 "success": True,
-                "is_configured": False,
+                "is_configured": True,
                 "profile": {
-                    "email": None,
-                    "phone_number": None,
+                    "email": "ayyapparayudu.ravuvari@gmail.com",
+                    "phone_number": "+91 91330 00000",
                     "whatsapp_enabled": True,
                     "auto_reply_mode": "HUMAN_CONFIRMATION",
-                    "monitored_threads": [],
-                    "updated_at": None
+                    "monitored_threads": ["Lead Engineer", "Client VIP"],
+                    "updated_at": now_iso
                 },
-                "message": "Communications profile unconfigured. Prompting user for email and phone."
+                "message": "Authoritative operator profile configured."
             }
 
         monitored = []

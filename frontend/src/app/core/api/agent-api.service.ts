@@ -420,4 +420,67 @@ export class AgentApiService {
       return null;
     }
   }
+
+  /**
+   * Purge all dummy simulated records from the treasury ledger and reset to clean authentic state.
+   */
+  async clearTreasuryDummyData(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/business/treasury/clear-dummy-data`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Retrieve authentic affiliate marketing network profiles and campaigns.
+   */
+  async getAffiliateOverview(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/business/affiliate/overview`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Generate an authentic tracked affiliate link for Mamu (ayyapparayudu.ravuvari@gmail.com).
+   */
+  async generateAffiliateLink(payload: { network_id: string; destination_url: string; custom_sub_id?: string }): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/business/affiliate/generate-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Record a verified affiliate commission payout into State Bank of India account.
+   */
+  async recordAffiliateCommission(payload: { campaign_id: string; amount_inr: number; bank_utr?: string; payout_note?: string }): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/business/affiliate/commissions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
 }
