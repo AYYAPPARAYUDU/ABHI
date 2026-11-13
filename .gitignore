@@ -35,6 +35,7 @@ data/
 project_data/repair_backups/
 project_data/sandbox_test/
 project_data/open_higgsfield_repo/
+project_data/external/
 *.db
 
 # System Logs & Observability

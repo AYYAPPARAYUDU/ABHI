@@ -97,8 +97,18 @@
     </div>
   </header>
 
-  <!-- NAVIGATION SUB-BAR: EASY TAB SWITCHING -->
+  <!-- NAVIGATION SUB-BAR: EASY TAB SWITCHING (Agent HQ First) -->
   <div class="business-tab-bar">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="activeTab() === 'office'"
+      (click)="setActiveTab('office')"
+    >
+      <span class="tab-icon">🏢</span>
+      <span>Agent HQ (Virtual 3D Office)</span>
+      <span class="tab-pip font-mono">{{ officeData()?.working_agents || 0 }}/{{ officeData()?.total_agents || 7 }} Active</span>
+    </button>
     <button
       type="button"
       class="tab-btn"
@@ -126,6 +136,201 @@
       <span class="tab-icon">📄</span>
       <span>Commercial Invoices & Ledger</span>
     </button>
+  </div>
+
+  <!-- TAB 0: AGENT HQ (3D VIRTUAL AUTONOMOUS OFFICE MATCHING IMAGE 2) -->
+  <div *ngIf="activeTab() === 'office'" class="agent-hq-view-container">
+    <div class="agent-hq-card">
+      <!-- Agent HQ Top Control Bar -->
+      <div class="hq-top-bar">
+        <div class="hq-brand-group">
+          <div class="hq-logo-cube">
+            <span class="cube-core"></span>
+          </div>
+          <div class="hq-title-block">
+            <h2 class="hq-title font-mono">Agent HQ</h2>
+            <span class="hq-sub font-mono">Autonomous Specialist Office • 3D Pod Hive</span>
+          </div>
+        </div>
+
+        <div class="hq-sub-nav">
+          <button
+            type="button"
+            class="hq-sub-btn"
+            [class.active]="activeOfficeSubTab() === 'office'"
+            (click)="activeOfficeSubTab.set('office')"
+          >
+            Office
+          </button>
+          <button
+            type="button"
+            class="hq-sub-btn"
+            [class.active]="activeOfficeSubTab() === 'tasks'"
+            (click)="activeOfficeSubTab.set('tasks')"
+          >
+            Tasks
+          </button>
+          <button
+            type="button"
+            class="hq-sub-btn"
+            [class.active]="activeOfficeSubTab() === 'stats'"
+            (click)="activeOfficeSubTab.set('stats')"
+          >
+            Stats
+          </button>
+        </div>
+
+        <div class="hq-right-meta">
+          <span class="hq-agent-count-pill font-mono">
+            <span class="live-dot" [class.pulse]="(officeData()?.working_agents || 0) > 0"></span>
+            {{ officeData()?.total_agents || 7 }} agents · {{ officeData()?.working_agents || 0 }} working
+          </span>
+          <button type="button" class="hq-refresh-btn font-mono" (click)="refreshOfficeData()">
+            ↻
+          </button>
+        </div>
+      </div>
+
+      <!-- Autonomous Goal Orchestrator Stripe -->
+      <div class="hq-orchestrator-stripe">
+        <span class="orch-label font-mono">⚡ SWARM ORCHESTRATOR:</span>
+        <input
+          type="text"
+          class="orch-input font-mono"
+          placeholder="Enter high-level objective to dispatch to specialist human workers..."
+          [(ngModel)]="orchestratorGoal"
+        />
+        <button
+          type="button"
+          class="orch-btn font-mono"
+          [disabled]="isOrchestrating() || !orchestratorGoal"
+          (click)="triggerOrchestratorGoal()"
+        >
+          {{ isOrchestrating() ? 'ORCHESTRATING SWARM...' : 'DISPATCH SWARM ➔' }}
+        </button>
+      </div>
+
+      <!-- MAIN 3D ISOMETRIC OFFICE ARENA (MATCHING IMAGE 2) -->
+      <div class="hq-isometric-stage">
+        <!-- Central Glowing Energy Hub -->
+        <div class="central-hub-pedestal">
+          <div class="central-core-beam"></div>
+          <div class="central-radar-ring"></div>
+          <div class="central-hub-label font-mono">CENTRAL DISPATCH</div>
+        </div>
+
+        <!-- Radial Office Pods Grid -->
+        <div class="pods-isometric-grid">
+          @for (worker of officeData()?.workers || []; track worker.agent_id) {
+            <div
+              class="office-pod-card"
+              [class.working]="worker.status === 'WORKING'"
+              [class.idle]="worker.status === 'IDLE'"
+              [class.selected]="selectedWorker()?.agent_id === worker.agent_id"
+              (click)="selectWorker(worker)"
+              [style.--pod-accent]="worker.color_hex"
+            >
+              <!-- Pod Header & Status Badge -->
+              <div class="pod-header">
+                <div class="pod-name-group">
+                  <span class="pod-room-tag font-mono">{{ worker.room_pod }}</span>
+                  <span class="pod-title">{{ worker.name }}</span>
+                </div>
+                <span class="pod-status-badge font-mono" [class.badge-working]="worker.status === 'WORKING'">
+                  <span class="status-indicator-dot"></span>
+                  {{ worker.status === 'WORKING' ? 'WORKING' : 'IDLE' }}
+                </span>
+              </div>
+
+              <!-- 3D Room Interior & Humanoid Avatar Illustration -->
+              <div class="pod-room-interior">
+                <div class="isometric-floor-tile"></div>
+
+                <!-- 3D Human Avatar Model Representation -->
+                <div class="human-worker-avatar" [class.typing]="worker.status === 'WORKING'">
+                  <div class="avatar-head">
+                    <span class="avatar-eyes"></span>
+                  </div>
+                  <div class="avatar-torso">
+                    <div class="avatar-arm arm-left"></div>
+                    <div class="avatar-arm arm-right"></div>
+                  </div>
+                  <div class="avatar-chair"></div>
+                </div>
+
+                <!-- Workstation Desk & Monitors -->
+                <div class="workstation-desk">
+                  <div class="monitor-screen" [class.screen-active]="worker.status === 'WORKING'">
+                    <div class="code-stream-lines" *ngIf="worker.status === 'WORKING'">
+                      <span></span><span></span><span></span>
+                    </div>
+                    <span class="screensaver-dot" *ngIf="worker.status === 'IDLE'"></span>
+                  </div>
+                  <div class="desk-surface">
+                    <span class="keyboard-unit"></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Live Task & Telemetry Footer -->
+              <div class="pod-footer font-mono">
+                @if (worker.status === 'WORKING') {
+                  <div class="active-task-line text-cyan">
+                    <span class="spin-icon">⚙️</span>
+                    <span class="task-txt">{{ worker.active_task || 'Processing task...' }}</span>
+                  </div>
+                } @else {
+                  <div class="idle-task-line text-muted">
+                    <span>💤 Standby · Completed: {{ worker.tasks_completed }}</span>
+                  </div>
+                }
+
+                <button
+                  type="button"
+                  class="pod-toggle-btn"
+                  (click)="$event.stopPropagation(); toggleWorkerStatus(worker)"
+                  [title]="worker.status === 'WORKING' ? 'Set worker to IDLE' : 'Assign live test task'"
+                >
+                  {{ worker.status === 'WORKING' ? 'Pause' : 'Activate' }}
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Selected Worker Live Terminal & Task Inspector -->
+      <div *ngIf="selectedWorker()" class="selected-worker-inspector">
+        <div class="inspector-header">
+          <div class="worker-meta">
+            <span class="worker-avatar-icon">🧑‍💻</span>
+            <div>
+              <h4 class="inspector-name">{{ selectedWorker().name }} ({{ selectedWorker().room_pod }})</h4>
+              <span class="inspector-role font-mono">{{ selectedWorker().role }}</span>
+            </div>
+          </div>
+          <div class="inspector-controls">
+            <button
+              type="button"
+              class="toggle-work-btn font-mono"
+              (click)="toggleWorkerStatus(selectedWorker())"
+            >
+              {{ selectedWorker().status === 'WORKING' ? 'PAUSE WORKER' : 'ACTIVATE FOR WORK' }}
+            </button>
+            <button type="button" class="inspector-close" (click)="selectedWorker.set(null)">✕</button>
+          </div>
+        </div>
+
+        <div class="inspector-terminal font-mono">
+          <div class="terminal-bar">LIVE TERMINAL LOGS · {{ selectedWorker().active_tool || 'IDLE_MONITOR' }}</div>
+          <div class="terminal-body">
+            @for (log of selectedWorker().terminal_output || []; track log) {
+              <div class="log-line">{{ log }}</div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- TAB 1: BANK SETTLEMENT & LIVE UPI QR -->

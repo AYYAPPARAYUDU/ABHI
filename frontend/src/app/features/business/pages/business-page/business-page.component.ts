@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, AfterViewInit, signal, ElementRef } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, AfterViewInit, signal, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -15,7 +15,7 @@ import { SpeechVoiceService } from '../../../../core/services/speech-voice.servi
   templateUrl: './business-page.component.html',
   styleUrl: './business-page.component.css',
 })
-export class BusinessPageComponent implements OnInit, AfterViewInit {
+export class BusinessPageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly agentApi = inject(AgentApiService);
   readonly animService = inject(AnimeAnimationService);
   readonly speechVoice = inject(SpeechVoiceService);
@@ -24,8 +24,17 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
 
   readonly toastMessage = signal<string | null>(null);
 
-  // Active Tab for Clean Organization
-  readonly activeTab = signal<'overview' | 'affiliate' | 'invoices'>('overview');
+  // Active Tab for Clean Organization (Agent HQ Office first)
+  readonly activeTab = signal<'office' | 'overview' | 'affiliate' | 'invoices'>('office');
+
+  // Agent HQ 3D Virtual Office State (Milestone 50)
+  readonly activeOfficeSubTab = signal<'office' | 'tasks' | 'stats'>('office');
+  readonly officeData = signal<any>(null);
+  readonly selectedWorker = signal<any>(null);
+  readonly isOrchestrating = signal<boolean>(false);
+  orchestratorGoal = 'Autonomous Code Quality Audit & AST Security Verification';
+  readonly orchestratorResult = signal<any>(null);
+  private officePollInterval: any = null;
 
   // Real Bank UTR Verification Modal
   readonly showUtrModal = signal<boolean>(false);
@@ -82,16 +91,92 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
     this.threeScene.setMode('BUSINESS');
     this.refreshTreasuryData();
     this.refreshAffiliateData();
+    this.refreshOfficeData();
+
+    // Live real-time polling for physical agent work state
+    this.officePollInterval = setInterval(() => {
+      this.refreshOfficeData();
+    }, 4000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.officePollInterval) {
+      clearInterval(this.officePollInterval);
+    }
   }
 
   ngAfterViewInit(): void {
     this.animateElements();
   }
 
-  setActiveTab(tab: 'overview' | 'affiliate' | 'invoices'): void {
+  setActiveTab(tab: 'office' | 'overview' | 'affiliate' | 'invoices'): void {
     this.activeTab.set(tab);
+    if (tab === 'office') {
+      this.refreshOfficeData();
+    }
   }
 
+  // --- AGENT HQ 3D VIRTUAL OFFICE METHODS ---
+  async refreshOfficeData(): Promise<void> {
+    try {
+      const data = await this.agentApi.getOfficeOverview();
+      if (data) {
+        this.officeData.set(data);
+        if (this.selectedWorker()) {
+          const updated = data.workers?.find((w: any) => w.agent_id === this.selectedWorker().agent_id);
+          if (updated) this.selectedWorker.set(updated);
+        }
+      }
+    } catch {
+      // Clean fallback
+    }
+  }
+
+  selectWorker(worker: any): void {
+    this.selectedWorker.set(worker);
+  }
+
+  async toggleWorkerStatus(worker: any): Promise<void> {
+    const newStatus = worker.status === 'WORKING' ? 'IDLE' : 'WORKING';
+    try {
+      const res = await this.agentApi.updateAgentStatus({
+        agent_id: worker.agent_id,
+        status: newStatus,
+        task_desc: newStatus === 'WORKING' ? 'Live Autonomous Execution' : undefined,
+        tool_name: newStatus === 'WORKING' ? 'SpecialistAgentTool' : undefined,
+      });
+      if (res?.worker) {
+        this.showToast(`✓ ${worker.name} status updated to ${newStatus}`);
+        await this.refreshOfficeData();
+      }
+    } catch {
+      this.showToast('Failed to update agent status.');
+    }
+  }
+
+  async triggerOrchestratorGoal(): Promise<void> {
+    if (!this.orchestratorGoal.trim()) {
+      this.showToast('⚠️ Please enter an autonomous goal.');
+      return;
+    }
+    this.isOrchestrating.set(true);
+    this.speechVoice.speak(`Orchestrating agent swarm for goal, Mamu: ${this.orchestratorGoal}`);
+    try {
+      const res = await this.agentApi.runTier4Orchestration(this.orchestratorGoal.trim());
+      if (res) {
+        this.orchestratorResult.set(res);
+        await this.refreshOfficeData();
+        this.showToast(`✓ Swarm orchestration completed! Dual-state verified.`);
+        this.speechVoice.speak(`Swarm execution completed and dual-state verified, Mamu.`);
+      }
+    } catch {
+      this.showToast('⚠️ Error in swarm orchestration.');
+    } finally {
+      this.isOrchestrating.set(false);
+    }
+  }
+
+  // --- TREASURY & INVOICING METHODS ---
   async refreshTreasuryData(): Promise<void> {
     try {
       const [overview, invoices] = await Promise.all([
@@ -217,14 +302,12 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // Open Real Bank UTR Verification Modal
   openUtrModal(invoiceNumber?: string): void {
     this.inputInvoiceNum = invoiceNumber || '';
     this.inputUtr = '';
     this.showUtrModal.set(true);
   }
 
-  // Confirm Real Inward UPI Payment (credited to SBI Account)
   async confirmUtrSettlement(): Promise<void> {
     if (!this.inputUtr || this.inputUtr.trim().length < 6) {
       this.showToast('⚠️ Please enter a valid 12-digit Bank UTR reference number.');
@@ -285,7 +368,7 @@ export class BusinessPageComponent implements OnInit, AfterViewInit {
   private animateElements(): void {
     const root = this.hostEl.nativeElement;
     if (!root) return;
-    const cards = root.querySelectorAll('.upi-card, .table-container, .executive-header-card');
+    const cards = root.querySelectorAll('.upi-card, .table-container, .executive-header-card, .agent-hq-stage');
     if (cards.length > 0) {
       this.animService.staggerEnter({
         targets: cards,

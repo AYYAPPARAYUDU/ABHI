@@ -483,4 +483,51 @@ export class AgentApiService {
       return null;
     }
   }
+
+  /**
+   * Retrieve live real-time humanoid workers telemetry for the 3D Virtual Agent Office (Agent HQ).
+   */
+  async getOfficeOverview(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/intelligence/office-overview`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Update an agent's working or idle state in the virtual office.
+   */
+  async updateAgentStatus(payload: { agent_id: string; status: string; task_desc?: string; tool_name?: string }): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/intelligence/agent/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Trigger Tier 4 Multi-Agent Swarm Orchestration.
+   */
+  async runTier4Orchestration(goal: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/intelligence/orchestrate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal }),
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
 }
