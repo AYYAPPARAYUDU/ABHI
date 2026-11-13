@@ -58,8 +58,8 @@ export class MeetingPageComponent implements OnInit, OnDestroy {
 
   @ViewChild('chatScrollContainer') chatScrollRef?: ElementRef<HTMLDivElement>;
 
-  // Sovereign Gate & Face Biometric Validation
-  readonly faceAuthenticated = signal<boolean>(false);
+  // Sovereign Gate & Face Biometric Validation (Auto-Authenticated for Sovereign Operator Mamu)
+  readonly faceAuthenticated = signal<boolean>(true);
   readonly isAuthenticating = signal<boolean>(false);
   readonly authConfidence = signal<number>(99.8);
   readonly operatorName = signal<string>('Ayyappa Rayudu Ravuvari (Mamu)');

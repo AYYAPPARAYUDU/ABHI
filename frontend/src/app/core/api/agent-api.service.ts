@@ -331,4 +331,63 @@ export class AgentApiService {
       return null;
     }
   }
+
+  /**
+   * Fetch real-time physical Windows hardware telemetry.
+   */
+  async getSystemTelemetry(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/health/system-telemetry`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Fetch Sovereign Treasury overview and Mamu's SBI settlement metrics.
+   */
+  async getTreasuryOverview(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/business/treasury/overview`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Trigger the autonomous CEO revenue generation cycle across all commercial streams.
+   */
+  async runAutonomousRevenueCycle(): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/business/ceo/revenue-cycle`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Execute Stream A AST static code audit and bug bounty deliverable.
+   */
+  async runCodeAuditBounty(targetPath?: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/business/ceo/audit-bounty`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target_path: targetPath || 'backend/app/automation/desktop/os_control_engine.py' }),
+      });
+      if (!response.ok) return null;
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
 }

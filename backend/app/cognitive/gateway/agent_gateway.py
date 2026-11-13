@@ -932,6 +932,8 @@ class AgentGateway:
             "lock workstation", "mute", "unmute", "lock phone", "lock mobile", "unlock phone",
             "unlock mobile", "phone battery", "mobile battery", "check battery", "mobile screen",
             "take screenshot", "open camera", "open youtube", "open spotify", "open chrome",
+            "switch tab", "next tab", "prev tab", "previous tab", "close tab", "new tab",
+            "scan virus", "virus scan", "scan pc", "scan system", "security scan", "security audit", "check virus", "has a virus",
             "restart laptop", "restart pc", "restart computer", "reboot",
             "shutdown laptop", "shutdown pc", "shutdown computer", "power off computer", "power off laptop", "turn off computer", "turn off laptop"
         ]):

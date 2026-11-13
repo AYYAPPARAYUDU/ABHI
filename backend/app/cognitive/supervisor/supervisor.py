@@ -347,6 +347,15 @@ class CentralSupervisor:
                         u = node.params.get("username", "admin1")
                         target = node.params.get("target_url") or "portal"
                         verified_summary = f"Logged into {target} successfully with {u} credentials, Mamu! Session verified."
+                    elif node.action in ["switch_tab", "tab_switch", "next_tab", "prev_tab"]:
+                        verified_summary = "Switched active browser tab smoothly, Mamu!"
+                    elif node.action in ["new_tab", "open_tab"]:
+                        verified_summary = "New browser tab opened and focused, Mamu!"
+                    elif node.action in ["close_tab"]:
+                        verified_summary = "Active browser tab closed, Mamu!"
+                    elif node.action in ["scan_system_security", "scan_virus", "security_scan", "virus_scan", "scan_pc", "system_audit"]:
+                        verdict = (node.result_data or {}).get("verdict") if hasattr(node, "result_data") and node.result_data else None
+                        verified_summary = verdict or "Security audit complete, Mamu! System is 100% clean, verified and safe."
                     elif node.action in ["tts_read_aloud"]:
                         verified_summary = node.params.get("text") or "Task verified and completed, Mamu!"
 

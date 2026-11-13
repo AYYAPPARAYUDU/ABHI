@@ -887,6 +887,56 @@ class TaskPlanner:
                     status=NodeStatus.PENDING
                 )
 
+        elif any(k in goal_lower for k in ["switch tab", "next tab", "prev tab", "previous tab", "change tab", "switch to tab"]):
+            direction = "prev" if any(p in goal_lower for p in ["prev", "previous", "left", "back"]) else "next"
+            idx_match = re.search(r"tab\s+(\d+)", goal_lower)
+            index = int(idx_match.group(1)) if idx_match else None
+            title_text = f"Switch Browser Tab to #{index}" if index else f"Switch Browser Tab ({direction.upper()})"
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=title_text,
+                agent_id="os_desktop_agent",
+                action="switch_tab",
+                params={"direction": direction, "index": index},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["new tab", "open new tab", "create tab"]):
+            url_match = re.search(r"https?://[^\s]+", goal)
+            target_url = url_match.group(0) if url_match else None
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Open New Browser Tab: {target_url or 'Blank'}",
+                agent_id="os_desktop_agent",
+                action="new_tab",
+                params={"url": target_url},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["close tab", "exit tab", "kill tab"]):
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title="Close Active Browser Tab",
+                agent_id="os_desktop_agent",
+                action="close_tab",
+                params={},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["scan virus", "virus scan", "scan pc", "scan system", "check virus", "has a virus", "have a virus", "security scan", "security audit"]):
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title="Physical PC Security & Antivirus Audit",
+                agent_id="os_desktop_agent",
+                action="scan_system_security",
+                params={},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
         elif any(k in goal_lower for k in ["ocr", "screen vision", "perceive screen", "ground element", "find element", "face track", "hand track"]):
             if "find" in goal_lower or "ground" in goal_lower:
                 nodes["step_1"] = DAGNode(

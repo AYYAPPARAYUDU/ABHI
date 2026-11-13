@@ -761,6 +761,93 @@ class OSDesktopAgent(BaseAgent):
                 error_message=err
             )
 
+        if action in ["switch_tab", "tab_switch", "next_tab", "prev_tab", "previous_tab"]:
+            direction = str(params.get("direction") or ("prev" if "prev" in action else "next"))
+            index = params.get("index")
+            ok, err = os_control_engine.switch_tab(direction=direction, index=index)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"direction": direction, "index": index, "switched": ok},
+                observed_state={"tab_switched": ok, "direction": direction},
+                error_message=err
+            )
+
+        if action in ["new_tab", "open_tab", "create_tab"]:
+            target_url = params.get("url")
+            ok, err = os_control_engine.new_tab(url=target_url)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"url": target_url, "opened": ok},
+                observed_state={"new_tab_opened": ok, "url": target_url},
+                error_message=err
+            )
+
+        if action in ["close_tab", "exit_tab"]:
+            ok, err = os_control_engine.close_tab()
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"closed": ok},
+                observed_state={"tab_closed": ok},
+                error_message=err
+            )
+
+        if action in ["reopen_tab", "restore_tab"]:
+            ok, err = os_control_engine.reopen_tab()
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"restored": ok},
+                observed_state={"tab_restored": ok},
+                error_message=err
+            )
+
+        if action in ["switch_window", "window_switch", "next_window"]:
+            direction = str(params.get("direction") or "next")
+            ok, err = os_control_engine.switch_window(direction=direction)
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=ok,
+                data={"switched": ok, "direction": direction},
+                observed_state={"window_switched": ok},
+                error_message=err
+            )
+
+        if action in ["scan_system_security", "scan_virus", "security_scan", "virus_scan", "scan_pc", "system_audit"]:
+            scan_res = os_control_engine.scan_system_security()
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=True,
+                data=scan_res,
+                observed_state={
+                    "scanned": True,
+                    "threats_count": scan_res.get("threats_count", 0),
+                    "is_clean": scan_res.get("is_clean", True),
+                    "verdict": scan_res.get("verdict")
+                },
+                error_message=None
+            )
+
         if action in ["adjust_volume", "volume_control"]:
             direction = str(params.get("direction") or "up")
             steps = int(params.get("steps", 2))

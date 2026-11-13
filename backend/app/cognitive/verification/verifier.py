@@ -126,6 +126,22 @@ class DualStateVerifier:
                         difference_detected=result.error_message or "Voice synthesis vocalization failed.",
                         retryable=False
                     )
+            elif action in ["switch_tab", "tab_switch", "new_tab", "close_tab", "reopen_tab", "switch_window"]:
+                if not result.success:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=result.error_message or f"Window / tab operation '{action}' failed.",
+                        retryable=True
+                    )
+            elif action in ["scan_system_security", "scan_virus", "security_scan", "virus_scan", "scan_pc", "system_audit"]:
+                if not result.success:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected="Physical system security scan failed to execute.",
+                        retryable=True
+                    )
             elif action in ["play_media", "play_youtube", "play_song", "play_music"]:
                 if not result.success or not result.data.get("playing"):
                     return VerificationResult(
