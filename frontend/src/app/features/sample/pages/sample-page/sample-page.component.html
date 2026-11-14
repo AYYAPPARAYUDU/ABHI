@@ -83,15 +83,16 @@
     </div>
   </header>
 
-  <!-- Horizontal Pod Selector Ribbon (Matching Image 1) -->
+  <!-- Horizontal Pod Selector Ribbon (Matching Image 1) with GSAP Sliding Pill -->
   <div class="pods-horizontal-ribbon" role="toolbar" aria-label="Specialist Pod Ribbon">
+    <div #podPill class="pod-sliding-pill"></div>
     @for (pod of pods(); track pod.id) {
       <button
         type="button"
         class="pod-ribbon-btn"
         [class.selected]="activePod()?.id === pod.id"
         [style.--pod-color]="pod.colorHex"
-        (click)="selectPod(pod)"
+        (click)="selectPod(pod, $event)"
       >
         <span class="ribbon-icon">{{ pod.icon }}</span>
         <div class="ribbon-text-group">

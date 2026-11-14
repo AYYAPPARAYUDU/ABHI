@@ -2,6 +2,31 @@
 
 ## Verified Architecture & Implementation Status (2026-11-14)
 
+### Milestone 60. Active Living Screen Bot, Screen Perception & GSAP Micro-Interactions (2026-11-14)
+- **Active Living Screen Bot Component (`LivingScreenBotComponent`)**:
+  - Permanently mounted on the screen via `app-shell.component.html` with dynamic positioning (draggable anywhere on screen, docks, persists coordinates to `localStorage`).
+  - Never closes permanently as per operator's directive: smooth toggle between compact living holographic core (54px pulsing orb with rotating dashed rings and cyan/amethyst glow) and full glassmorphic HUD companion (350px dark neumorphic card).
+- **Continuous Wake-Word Detection ("Mamu" / "Hey Mamu" / "Oi Mamu")**:
+  - Web Speech Recognition API in continuous background listening mode.
+  - Automatically wakes upon hearing `"mamu"`, `"hey mamu"`, `"oi mamu"`, `"hello mamu"`, `"ok mamu"`.
+  - Visual aura pulses with golden-amber illumination, acoustic chime triggers, and speaks aloud: *"Yes Mamu, I'm listening! Tell me what to do"*.
+  - Dispatches captured directives to OS automation, screen perception, or local four-tier LLM engine, addressing Mamu in all vocal and textual responses.
+- **Screen Perception & Real Desktop Context (`backend/app/api/v1/desktop.py`)**:
+  - `GET /api/v1/desktop/active-context`: inspects foreground Win32 window (HWND, title, coordinates, foreground state), lists top running applications, and returns live system telemetry (CPU, RAM, Disk, Display, Battery).
+  - Summarizes active screen state: *"Mamu, you are currently viewing [Window Title]. 8 main applications are running on your 1280x800 screen. RAM is at 85.3% and CPU is at 61.7%."*
+  - `POST /api/v1/desktop/quick-action`: authoritative Windows OS control (Notepad, Terminal/PowerShell, Chrome, Calculator, Explorer, Keystrokes, Hotkeys, Volume, Workstation lock).
+  - `POST /api/v1/desktop/ask-bot`: conversational query answering with screen grounding, local LLMs (`abhi:latest`), and vector store memory.
+- **GSAP Motion Engine Integration (`frontend/src/app/core/motion.ts`)**:
+  - Implemented exact motion physics from `_code_and_chill_` reels:
+    - `slidePill`: Elastic sliding clipPath pill indicator (`0.36s, power3.out` leading edge stretch, `0.55s, power3.inOut` trailing edge snap).
+    - `landCards`: Staggered card entry physics with exponential easing (`expo.out`, `stagger: 0.06`).
+    - `pulseAura`: Ambient breathing aura for living agent cores.
+  - Applied `slidePill` to the horizontal pod ribbon in `sample-page` and `landCards` to all HUD detail cards!
+- **Verification & Zero Error State**:
+  - Angular production build: `npm --prefix frontend run build` exited 0 (15.9s, bundle generated successfully).
+  - Pytest test suite: `backend/tests/test_desktop_bot.py` (3/3 PASS), `backend/tests/test_flow_engine.py` (3/3 PASS), `backend/tests/test_four_tier_intelligence.py` (5/5 PASS) — total 11/11 tests pass in 4.09s.
+  - Backend running live with `/api/v1/desktop/active-context` verified and serving real Win32 telemetry.
+
 ### Milestone 59. Analysis of AI OS Videos, n8n Architecture Comparison, Native Flow Engine & J.A.R.V.I.S. Voice Upgrades (2026-11-14)
 - **Deep Technical Analysis of YouTube Video 1 (`8mL3D6ku8MQ`)**:
   - **Title**: *"I Built a Complete AI Operating System for my Company (Full Stack)"*.

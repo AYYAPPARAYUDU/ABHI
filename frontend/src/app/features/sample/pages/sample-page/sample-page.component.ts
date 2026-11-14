@@ -19,6 +19,7 @@ import * as THREE from 'three';
 import { SampleAgentService } from '../../services/sample-agent.service';
 import { SampleAgent, PodRoom, SampleViewMode } from '../../models/sample-agent.model';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
+import { slidePill, landCards } from '../../../../core/motion';
 
 export type WorkspaceViewMode = 'colony' | 'live-agents' | 'agent-works' | 'live-business';
 
@@ -34,6 +35,7 @@ export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() initialMode?: SampleViewMode;
   @Output() modeChange = new EventEmitter<WorkspaceViewMode>();
   @ViewChild('sceneCanvas') sceneCanvasRef?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('podPill') podPillRef?: ElementRef<HTMLElement>;
 
   readonly sampleService = inject(SampleAgentService);
   readonly speechVoice = inject(SpeechVoiceService, { optional: true });
@@ -79,6 +81,17 @@ export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
     if (typeof window !== 'undefined' && this.sceneCanvasRef?.nativeElement) {
       this.initThreeJs(this.sceneCanvasRef.nativeElement);
     }
+    // High-Fidelity Entrance Animation for HUD cards and sliding pill
+    setTimeout(() => {
+      const initialCards = document.querySelectorAll('.pod-detail-modal, .coffee-break-subcard, .agent-chatter-modal, .kpi-card');
+      if (initialCards.length) {
+        landCards(initialCards, { y: 22, stagger: 0.06 });
+      }
+      const selectedBtn = document.querySelector('.pod-ribbon-btn.selected') as HTMLElement;
+      if (this.podPillRef?.nativeElement && selectedBtn) {
+        slidePill(this.podPillRef.nativeElement, selectedBtn, { vertical: false, borderRadius: 8 });
+      }
+    }, 120);
   }
 
   ngOnDestroy(): void {
@@ -118,8 +131,22 @@ export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  selectPod(pod: PodRoom | null): void {
+  selectPod(pod: PodRoom | null, event?: MouseEvent): void {
     this.sampleService.selectPod(pod);
+    if (this.podPillRef?.nativeElement && event?.currentTarget) {
+      slidePill(this.podPillRef.nativeElement, event.currentTarget as HTMLElement, {
+        vertical: false,
+        borderRadius: 8,
+      });
+    }
+    if (pod) {
+      setTimeout(() => {
+        const hudCards = document.querySelectorAll('.pod-detail-modal, .coffee-break-subcard, .agent-chatter-modal');
+        if (hudCards.length) {
+          landCards(hudCards, { y: 22, stagger: 0.08 });
+        }
+      }, 30);
+    }
     this.cdr.markForCheck();
   }
 

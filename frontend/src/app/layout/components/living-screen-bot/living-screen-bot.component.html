@@ -1,0 +1,152 @@
+<!-- ABHI Active Living Screen Bot (Draggable, Floats Everywhere, Never Closes) -->
+<div
+  class="living-screen-bot-root"
+  [style.transform]="'translate3d(' + posX() + 'px, ' + posY() + 'px, 0)'"
+  [class.is-dragging]="isDragging()"
+>
+  <!-- 1. COMPACT LIVING CORE (Default Mode: Pulsing Holographic Orb) -->
+  @if (!isExpanded()) {
+    <div
+      #livingOrb
+      class="compact-living-orb"
+      (pointerdown)="onPointerDown($event)"
+      (click)="toggleExpanded()"
+      title="Mamu Living Core — Drag to move, Click to expand"
+    >
+      <div class="orb-core">
+        <div class="orb-inner-sphere"></div>
+        <div class="orb-ring ring-1"></div>
+        <div class="orb-ring ring-2"></div>
+        <span class="orb-symbol">⚡</span>
+      </div>
+
+      <div class="orb-beacon" [ngClass]="botState().toLowerCase()">
+        <span class="beacon-dot"></span>
+        <span class="beacon-label">MAMU CORE</span>
+      </div>
+
+      <div class="orb-mic-badge" [class.active]="botState() === 'LISTENING'">
+        🎤
+      </div>
+    </div>
+  }
+
+  <!-- 2. EXPANDED LIVING HUD CARD (Full Spatial HUD Mode) -->
+  @if (isExpanded()) {
+    <div #hudCard class="expanded-hud-card">
+      <!-- HUD Drag Handle & Header -->
+      <div class="hud-header" (pointerdown)="onPointerDown($event)">
+        <div class="drag-handle-grip">
+          <span class="grip-dot"></span>
+          <span class="grip-dot"></span>
+          <span class="grip-dot"></span>
+          <span class="grip-dot"></span>
+        </div>
+
+        <div class="hud-title-zone">
+          <div class="hud-title">MAMU LIVING COMPANION</div>
+          <div class="hud-status-badge" [ngClass]="botState().toLowerCase()">
+            <span class="pulse-indicator"></span>
+            @switch (botState()) {
+              @case ('LISTENING') { <span>LISTENING TO MAMU...</span> }
+              @case ('OBSERVING') { <span>OBSERVING SCREEN</span> }
+              @case ('EXECUTING') { <span>EXECUTING ON PC</span> }
+              @case ('SPEAKING') { <span>SPEAKING TO MAMU</span> }
+              @default { <span>ACTIVE ON SCREEN</span> }
+            }
+          </div>
+        </div>
+
+        <button
+          class="interactive-control hud-btn-minimize"
+          (click)="toggleExpanded()"
+          title="Minimize to Living Core"
+        >
+          _
+        </button>
+      </div>
+
+      <!-- Live Screen Observation Strip -->
+      <div class="screen-perception-strip">
+        <span class="eye-icon">👁️</span>
+        <div class="perception-text">
+          <span class="label">Focused Window:</span>
+          <strong class="window-title">{{ activeWindowName() }}</strong>
+        </div>
+        <button
+          class="interactive-control strip-btn-observe"
+          (click)="observeScreenNow()"
+          title="Scan and summarize screen now"
+        >
+          Scan
+        </button>
+      </div>
+
+      <!-- Conversation Transcript Stream -->
+      <div class="hud-chat-history">
+        @for (msg of messages(); track $index) {
+          <div class="chat-row" [ngClass]="msg.sender">
+            <div class="chat-bubble">
+              <span class="sender-tag">{{ msg.sender === 'mamu' ? 'Mamu' : 'Core' }}</span>
+              <p class="bubble-text">{{ msg.text }}</p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Quick PC Automation & Query Chips -->
+      <div class="hud-action-chips">
+        <button
+          class="interactive-control chip-btn"
+          (click)="observeScreenNow()"
+        >
+          👁️ Observe Screen
+        </button>
+        <button
+          class="interactive-control chip-btn"
+          (click)="triggerQuickAction('open_terminal')"
+        >
+          💻 Terminal
+        </button>
+        <button
+          class="interactive-control chip-btn"
+          (click)="triggerQuickAction('open_notepad')"
+        >
+          📝 Notepad
+        </button>
+        <button
+          class="interactive-control chip-btn"
+          (click)="triggerQuickAction('open_calc')"
+        >
+          🧮 Calc
+        </button>
+        <button
+          class="interactive-control chip-btn"
+          (click)="executeDirective('What is our SBI treasury balance?')"
+        >
+          🏛️ SBI Balance
+        </button>
+      </div>
+
+      <!-- Bottom Chat & Voice Bar -->
+      <div class="hud-input-bar">
+        <input
+          type="text"
+          class="interactive-control hud-text-input"
+          placeholder="Say 'Hey Mamu' or type a command..."
+          [ngModel]="chatInput()"
+          (ngModelChange)="chatInput.set($event)"
+          (keydown.enter)="submitChat()"
+        />
+
+        <button
+          class="interactive-control hud-send-btn"
+          (click)="submitChat()"
+          title="Dispatch command"
+        >
+          ➤
+        </button>
+      </div>
+    </div>
+  }
+</div>

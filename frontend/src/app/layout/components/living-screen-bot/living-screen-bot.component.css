@@ -1,0 +1,486 @@
+/* ABHI Living Screen Bot Component Styles */
+
+.living-screen-bot-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 999999;
+  user-select: none;
+  touch-action: none;
+  pointer-events: auto;
+  transition: transform 0.05s ease-out;
+  will-change: transform;
+}
+
+.living-screen-bot-root.is-dragging {
+  cursor: grabbing !important;
+  transition: none;
+}
+
+/* ==========================================================================
+   1. COMPACT LIVING CORE (Glowing Holographic Orb)
+   ========================================================================== */
+.compact-living-orb {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(13, 27, 42, 0.95), rgba(4, 9, 15, 0.98));
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 16px rgba(0, 240, 255, 0.3), inset 0 0 12px rgba(0, 240, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  position: relative;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+
+.compact-living-orb:hover {
+  transform: scale(1.08);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), 0 0 24px rgba(0, 240, 255, 0.5), inset 0 0 16px rgba(0, 240, 255, 0.3);
+}
+
+.orb-core {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.orb-inner-sphere {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #00f0ff 0%, #7b2cbf 70%, #0a1128 100%);
+  box-shadow: 0 0 12px #00f0ff;
+  animation: core-pulsate 2.4s infinite ease-in-out;
+}
+
+.orb-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed rgba(0, 240, 255, 0.5);
+  pointer-events: none;
+}
+
+.orb-ring.ring-1 {
+  width: 38px;
+  height: 38px;
+  animation: ring-rotate 6s infinite linear;
+}
+
+.orb-ring.ring-2 {
+  width: 48px;
+  height: 48px;
+  border-color: rgba(189, 0, 255, 0.4);
+  animation: ring-rotate 9s infinite linear reverse;
+}
+
+.orb-symbol {
+  position: absolute;
+  font-size: 11px;
+  color: #ffffff;
+  text-shadow: 0 0 6px #00f0ff;
+  pointer-events: none;
+}
+
+.orb-beacon {
+  position: absolute;
+  bottom: -18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(4, 10, 18, 0.9);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 10px;
+  padding: 1px 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+}
+
+.beacon-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00f0ff;
+  box-shadow: 0 0 6px #00f0ff;
+  animation: beacon-blink 1.4s infinite ease-in-out;
+}
+
+.orb-beacon.listening .beacon-dot {
+  background: #ffb703;
+  box-shadow: 0 0 8px #ffb703;
+}
+
+.orb-beacon.executing .beacon-dot {
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+}
+
+.beacon-label {
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #c9d6df;
+}
+
+.orb-mic-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #0d1b2a;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  font-size: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.orb-mic-badge.active {
+  background: #ffb703;
+  border-color: #ffd166;
+  transform: scale(1.2);
+  box-shadow: 0 0 10px #ffb703;
+}
+
+/* ==========================================================================
+   2. EXPANDED LIVING HUD CARD (Dark Neumorphic Glassmorphism)
+   ========================================================================== */
+.expanded-hud-card {
+  width: 350px;
+  max-height: 480px;
+  background: rgba(9, 16, 26, 0.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 16px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75), 0 0 20px rgba(0, 240, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #e2e8f0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* HUD Header */
+.hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(14, 23, 38, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: grab;
+}
+
+.drag-handle-grip {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 4px;
+}
+
+.grip-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(0, 240, 255, 0.5);
+}
+
+.hud-title-zone {
+  flex: 1;
+  margin-left: 8px;
+}
+
+.hud-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #00f0ff;
+  text-transform: uppercase;
+}
+
+.hud-status-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.4px;
+}
+
+.hud-status-badge .pulse-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00f0ff;
+  box-shadow: 0 0 6px #00f0ff;
+}
+
+.hud-status-badge.listening .pulse-indicator {
+  background: #ffb703;
+  box-shadow: 0 0 8px #ffb703;
+}
+
+.hud-status-badge.executing .pulse-indicator {
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+}
+
+.hud-btn-minimize {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hud-btn-minimize:hover {
+  background: rgba(0, 240, 255, 0.2);
+  color: #00f0ff;
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+/* Screen Perception Strip */
+.screen-perception-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 240, 255, 0.04);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+  font-size: 11px;
+}
+
+.eye-icon {
+  font-size: 13px;
+}
+
+.perception-text {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.perception-text .label {
+  color: #64748b;
+  margin-right: 4px;
+}
+
+.perception-text .window-title {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.strip-btn-observe {
+  background: rgba(0, 240, 255, 0.12);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  color: #00f0ff;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.strip-btn-observe:hover {
+  background: rgba(0, 240, 255, 0.25);
+  box-shadow: 0 0 8px rgba(0, 240, 255, 0.3);
+}
+
+/* Chat Transcript Stream */
+.hud-chat-history {
+  flex: 1;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 240, 255, 0.2) transparent;
+}
+
+.chat-row {
+  display: flex;
+  width: 100%;
+}
+
+.chat-row.mamu {
+  justify-content: flex-end;
+}
+
+.chat-row.bot {
+  justify-content: flex-start;
+}
+
+.chat-bubble {
+  max-width: 82%;
+  padding: 7px 11px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.chat-row.mamu .chat-bubble {
+  background: linear-gradient(135deg, rgba(0, 150, 255, 0.25), rgba(0, 240, 255, 0.18));
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  color: #f1f5f9;
+  border-bottom-right-radius: 2px;
+}
+
+.chat-row.bot .chat-bubble {
+  background: rgba(18, 28, 45, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  border-bottom-left-radius: 2px;
+}
+
+.sender-tag {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  color: #00f0ff;
+  margin-bottom: 2px;
+  text-transform: uppercase;
+}
+
+.chat-row.mamu .sender-tag {
+  color: #ffd166;
+  text-align: right;
+}
+
+.bubble-text {
+  margin: 0;
+  word-break: break-word;
+}
+
+/* Action Chips */
+.hud-action-chips {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  overflow-x: auto;
+  background: rgba(6, 12, 20, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  scrollbar-width: none;
+}
+
+.chip-btn {
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 4px 9px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.chip-btn:hover {
+  background: rgba(0, 240, 255, 0.15);
+  color: #00f0ff;
+  border-color: rgba(0, 240, 255, 0.35);
+}
+
+/* Bottom Chat & Voice Bar */
+.hud-input-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: rgba(10, 18, 30, 0.95);
+  border-top: 1px solid rgba(0, 240, 255, 0.15);
+}
+
+.hud-text-input {
+  flex: 1;
+  background: rgba(4, 9, 15, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 7px 11px;
+  color: #f8fafc;
+  font-size: 11.5px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hud-text-input:focus {
+  border-color: #00f0ff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.25);
+}
+
+.hud-send-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #00f0ff, #0077b6);
+  border: none;
+  color: #04090f;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hud-send-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.45);
+}
+
+/* Animations */
+@keyframes core-pulsate {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 12px #00f0ff;
+  }
+  50% {
+    transform: scale(1.14);
+    box-shadow: 0 0 20px #00f0ff, 0 0 30px #7b2cbf;
+  }
+}
+
+@keyframes ring-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes beacon-blink {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}

@@ -203,6 +203,7 @@
    ========================================================================= */
 
 .pods-horizontal-ribbon {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -213,6 +214,20 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   z-index: 40;
   overflow-x: auto;
+}
+
+.pod-sliding-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.2), inset 0 0 10px rgba(0, 240, 255, 0.15);
+  border-radius: 8px;
+  z-index: 1;
 }
 
 .pod-ribbon-btn {
