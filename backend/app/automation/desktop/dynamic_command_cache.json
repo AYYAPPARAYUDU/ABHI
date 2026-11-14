@@ -1,9 +1,4 @@
 {
-  "fb open": {
-    "type": "url",
-    "url": "https://www.facebook.com",
-    "reply": "Opened Facebook for you, Mamu."
-  },
   "open whatsapp": {
     "type": "url",
     "url": "https://web.whatsapp.com",
@@ -24,6 +19,11 @@
     "url": "https://www.youtube.com",
     "reply": "Opened YouTube for you, Mamu."
   },
+  "patrika": {
+    "type": "url",
+    "url": "https://www.patrika.com",
+    "reply": "Opened Rajasthan Patrika for you, Mamu."
+  },
   "close the window": {
     "type": "window_close",
     "reply": "Closed active window, Mamu."
@@ -32,6 +32,26 @@
     "type": "hotkey",
     "key": "CTRL+W",
     "reply": "Closed browser tab, Mamu."
+  },
+  "close tab": {
+    "type": "hotkey",
+    "key": "CTRL+W",
+    "reply": "Closed browser tab, Mamu."
+  },
+  "stop the song": {
+    "type": "hotkey",
+    "key": "SPACE",
+    "reply": "Stopped playback for you, Mamu."
+  },
+  "stop music": {
+    "type": "hotkey",
+    "key": "SPACE",
+    "reply": "Stopped playback for you, Mamu."
+  },
+  "stop video": {
+    "type": "hotkey",
+    "key": "SPACE",
+    "reply": "Stopped playback for you, Mamu."
   },
   "pause the video": {
     "type": "hotkey",
@@ -61,26 +81,31 @@
   "hindi open youtube": {
     "type": "youtube_play",
     "query": "hindi songs",
-    "reply": "Opened YouTube and playing 'hindi songs' for you, Mamu!"
+    "reply": "Opened YouTube and playing 'hindi songs', Mamu!"
   },
   "youtube telugu songs": {
     "type": "youtube_play",
     "query": "telugu songs",
-    "reply": "Opened YouTube and playing 'telugu songs' for you, Mamu!"
+    "reply": "Opened YouTube and playing 'telugu songs', Mamu!"
   },
-  "play telugu songs": {
+  "open calculator": {
+    "type": "app",
+    "name": "calculator",
+    "reply": "Launched Calculator, Mamu."
+  },
+  "close calculator": {
+    "type": "close_app",
+    "target": "calculator",
+    "reply": "Closed Calculator for you, Mamu."
+  },
+  "play youtube": {
+    "type": "url",
+    "url": "https://www.youtube.com",
+    "reply": "Opened YouTube for you, Mamu."
+  },
+  "rajasthani picture film": {
     "type": "youtube_play",
-    "query": "telugu songs",
-    "reply": "Opened YouTube and playing 'telugu songs' for you, Mamu!"
-  },
-  "hindi songs": {
-    "type": "youtube_play",
-    "query": "hindi songs",
-    "reply": "Opened YouTube and playing 'hindi songs' for you, Mamu!"
-  },
-  "open chrome": {
-    "type": "shortcut",
-    "path": "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Google Chrome.lnk",
-    "reply": "Launched chrome, Mamu."
+    "query": "rajasthani picture film",
+    "reply": "Opened YouTube and playing 'rajasthani picture film', Mamu!"
   }
 }

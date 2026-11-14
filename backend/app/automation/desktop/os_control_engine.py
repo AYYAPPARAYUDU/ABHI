@@ -12,6 +12,7 @@ Authoritative native Windows 11 automation layer providing comprehensive OS cont
 import ctypes
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -782,6 +783,21 @@ class OSControlEngine:
             if clean_target.startswith(("http://", "https://")):
                 ok, err = self.open_url(clean_target, browser="chrome")
                 return ok, {"target": clean_target, "is_uri": True, "launched": ok}, err
+
+            # Verify executable validity before launch
+            known_sys_aliases = {
+                "notepad", "calc", "calculator", "explorer", "cmd", "powershell",
+                "pwsh", "mspaint", "paint", "taskmgr", "osk", "snippingtool",
+                "chrome", "msedge", "code", "control"
+            }
+            is_valid = (
+                clean_target.lower().rstrip(".exe") in known_sys_aliases or
+                os.path.exists(clean_target) or
+                shutil.which(clean_target) is not None or
+                shutil.which(f"{clean_target}.exe") is not None
+            )
+            if not is_valid:
+                return False, {"target": clean_target}, f"Application '{app_name}' not found on system."
 
             # Windows-native interactive application launch
             proc_pid = None
