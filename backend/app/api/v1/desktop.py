@@ -111,6 +111,46 @@ async def execute_quick_action(request: QuickActionRequest):
             success = ok
             message = f"Playing '{song_query}' on YouTube for you, Mamu."
 
+        elif action in ("close_window", "close_app"):
+            ok, err = os_control_engine.close_window()
+            success = ok
+            message = "Closed active window for you, Mamu."
+
+        elif action in ("close_tab", "close_browser_tab"):
+            ok, err = os_control_engine.close_tab()
+            success = ok
+            message = "Closed browser tab, Mamu."
+
+        elif action in ("pause_media", "resume_media", "toggle_play"):
+            os_control_engine.send_hotkey("SPACE")
+            success = True
+            message = "Toggled video playback, Mamu."
+
+        elif action in ("skip_ad", "skip_ad_youtube"):
+            os_control_engine.send_hotkey("TAB")
+            time.sleep(0.1)
+            os_control_engine.send_hotkey("ENTER")
+            success = True
+            message = "Attempted skipping ad, Mamu."
+
+        elif action in ("next_video", "next_track"):
+            os_control_engine.send_hotkey("SHIFT+N")
+            success = True
+            message = "Playing next video, Mamu."
+
+        elif action in ("forward_30s", "seek_forward"):
+            # Press right arrow 6 times (5s each) or 'l' key (10s each)
+            for _ in range(3):
+                os_control_engine.send_hotkey("L")
+                time.sleep(0.05)
+            success = True
+            message = "Skipped forward 30 seconds, Mamu."
+
+        elif action in ("rewind_10s", "seek_backward"):
+            os_control_engine.send_hotkey("J")
+            success = True
+            message = "Rewound 10 seconds, Mamu."
+
         elif action == "type_text":
             text = params.get("text", "")
             res = os_control_engine.type_text(text)
@@ -167,8 +207,7 @@ async def execute_quick_action(request: QuickActionRequest):
 def clean_voice_query(q: str) -> str:
     """Cleans up phonetic artifacts from speech recognition (e.g., 'fb open chrome', 'imo open')."""
     cleaned = q.strip()
-    # Strip common leading noise/misheard tokens
-    cleaned = re.sub(r"^(fb|imo|hey|hay|ok|hi|please|can you|could you|just)\s+", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"^(fb|imo|hey|hay|ok|hi|please|can you|could you|just|now|and)\s+", "", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"^(open\s+)?(chrome\s+and\s+)?(search\s+for\s+)", "", cleaned, flags=re.IGNORECASE)
     return cleaned.strip()
 
@@ -185,14 +224,101 @@ async def ask_living_bot(request: BotAskRequest):
     window_title = active_win.get("title", "Active Screen") if active_win else "Desktop"
 
     # -------------------------------------------------------------------------
-    # 1. Natural Language Intent Routing & Physical Execution
+    # 1. Physical Window & Tab Management Actions
     # -------------------------------------------------------------------------
+    if any(k in lower_raw for k in ["close the window", "close window", "exit window", "close app"]):
+        os_control_engine.close_window()
+        return {
+            "status": "success",
+            "reply": f"Closed the active window '{window_title}' for you, Mamu.",
+            "action_executed": "close_window"
+        }
 
-    # 1.1 Web Search / Chrome Launching
-    # e.g., "open chrome", "search for X", "fb open chrome", "how search for X"
-    if "chrome" in lower_raw or "browser" in lower_raw or lower_raw.startswith("how search") or "search for" in lower_raw:
+    if any(k in lower_raw for k in ["close the tab", "close tab", "close this tab"]):
+        os_control_engine.close_tab()
+        return {
+            "status": "success",
+            "reply": "Closed the current browser tab, Mamu.",
+            "action_executed": "close_tab"
+        }
+
+    # -------------------------------------------------------------------------
+    # 2. YouTube & Video Media Playback Controls
+    # -------------------------------------------------------------------------
+    # Pause / Resume / Mute Video
+    if any(k in lower_raw for k in ["pause the video", "pause video", "pause song", "stop video", "play video", "resume video", "resume the video"]):
+        os_control_engine.send_hotkey("SPACE")
+        return {
+            "status": "success",
+            "reply": "Toggled video playback for you, Mamu.",
+            "action_executed": "toggle_play"
+        }
+
+    if any(k in lower_raw for k in ["mute the video", "mute video", "mute song", "unmute video"]):
+        os_control_engine.send_hotkey("M")
+        return {
+            "status": "success",
+            "reply": "Toggled video audio mute, Mamu.",
+            "action_executed": "mute_video"
+        }
+
+    if any(k in lower_raw for k in ["skip the ad", "skip ad", "skip ads"]):
+        os_control_engine.send_hotkey("TAB")
+        time.sleep(0.08)
+        os_control_engine.send_hotkey("ENTER")
+        return {
+            "status": "success",
+            "reply": "Triggered ad skip for you, Mamu.",
+            "action_executed": "skip_ad"
+        }
+
+    if any(k in lower_raw for k in ["play next video", "next video", "next song"]):
+        os_control_engine.send_hotkey("SHIFT+N")
+        return {
+            "status": "success",
+            "reply": "Skipped to next video on YouTube, Mamu.",
+            "action_executed": "next_video"
+        }
+
+    if any(k in lower_raw for k in ["skip 30 seconds", "forward 30 seconds", "skip 30s", "forward 30s"]):
+        for _ in range(3):
+            os_control_engine.send_hotkey("L")
+            time.sleep(0.05)
+        return {
+            "status": "success",
+            "reply": "Skipped forward 30 seconds, Mamu.",
+            "action_executed": "forward_30s"
+        }
+
+    if any(k in lower_raw for k in ["skip 10 seconds", "rewind 10 seconds", "back 10 seconds"]):
+        os_control_engine.send_hotkey("J")
+        return {
+            "status": "success",
+            "reply": "Rewound 10 seconds, Mamu.",
+            "action_executed": "rewind_10s"
+        }
+
+    # 1.2 YouTube Open & Song Search
+    if "youtube" in lower_raw or ("play" in lower_raw and any(k in lower_raw for k in ["song", "music", "video", "telugu", "hindi"])):
+        target_song = query
+        for rw in ["imo open youtube and", "open youtube and", "open youtube", "now play in youtube", "play in youtube", "play on youtube", "play song", "play music", "play any", "play"]:
+            target_song = re.sub(rf"\b{rw}\b", "", target_song, flags=re.IGNORECASE).strip()
+        if not target_song:
+            target_song = "trending Telugu songs"
+        ok, meta, msg = os_control_engine.play_youtube_song(target_song)
+        return {
+            "status": "success",
+            "reply": f"Opened YouTube and playing '{target_song}' for you, Mamu!",
+            "action_executed": "play_youtube",
+            "details": {"query": target_song}
+        }
+
+    # -------------------------------------------------------------------------
+    # 3. Browser & Web Search
+    # -------------------------------------------------------------------------
+    if "chrome" in lower_raw or "browser" in lower_raw or lower_raw.startswith("search for") or lower_raw.startswith("how search") or lower_q.startswith("search"):
         search_target = query
-        for rw in ["open chrome and search", "search for", "how search for", "open chrome", "chrome", "search"]:
+        for rw in ["open chrome and search", "search for", "how search for", "open browser", "open chrome", "chrome", "search"]:
             search_target = re.sub(rf"\b{rw}\b", "", search_target, flags=re.IGNORECASE).strip()
 
         if search_target and len(search_target) > 1:
@@ -212,49 +338,17 @@ async def ask_living_bot(request: BotAskRequest):
                 "action_executed": "open_chrome"
             }
 
-    # 1.2 YouTube & Music Playback
-    # e.g., "open youtube", "imo open youtube and", "play any song"
-    if "youtube" in lower_raw or "song" in lower_raw or "music" in lower_raw or "play" in lower_raw:
-        target_song = query
-        for rw in ["imo open youtube and", "open youtube and", "open youtube", "play song", "play music", "play any", "play"]:
-            target_song = re.sub(rf"\b{rw}\b", "", target_song, flags=re.IGNORECASE).strip()
-        if not target_song:
-            target_song = "trending songs"
-        ok, meta, msg = os_control_engine.play_youtube_song(target_song)
+    # -------------------------------------------------------------------------
+    # 4. On-Screen Virtual Keyboard & App Launchers
+    # -------------------------------------------------------------------------
+    if any(k in lower_raw for k in ["keypad", "keyboard", "on screen keyboard", "osk"]):
+        subprocess.Popen(["cmd.exe", "/c", "start", "osk.exe"])
         return {
             "status": "success",
-            "reply": f"Opened YouTube and playing '{target_song}' for you, Mamu!",
-            "action_executed": "play_youtube",
-            "details": {"query": target_song}
+            "reply": "Launched Windows On-Screen Keyboard for you, Mamu.",
+            "action_executed": "open_osk"
         }
 
-    # 1.3 Active Listening & Confirmation
-    # e.g., "are you listening me", "can you hear me", "are you there"
-    if any(k in lower_raw for k in ["are you listening", "can you hear me", "are you there", "do you hear me"]):
-        return {
-            "status": "success",
-            "reply": "Yes Mamu, I am listening to your every word clearly! The entire multi-agent swarm and OS controllers are waiting for your command.",
-            "action_executed": "presence_check"
-        }
-
-    # 1.4 Identity & Voice Recognition
-    if any(k in lower_raw for k in ["recognise", "recognize", "who am i", "do you know me", "my name"]):
-        return {
-            "status": "success",
-            "reply": "Yes Mamu! I recognize your voice with 100% precision. You are Ravuvai Ayyappa Rayudu, the creator and supreme commander of ABHI. I am loyal only to your voice frequency.",
-            "action_executed": "voice_identity"
-        }
-
-    # 1.5 System Capabilities / Full Swarm Overview
-    if any(k in lower_raw for k in ["who are you", "what can you do", "what are you", "capabilities", "skills"]):
-        active_agents = len(agent_registry.list_agents())
-        return {
-            "status": "success",
-            "reply": f"I am ABHI — your sovereign Central AI Entity. I coordinate {active_agents} specialist agents, perform autonomous screen perception, write code, run DAG workflows, and execute full Windows automation with dual-state physical verification. No limits, Mamu!",
-            "action_executed": "capabilities"
-        }
-
-    # 1.6 App Launchers (Notepad, Terminal, Calc, Explorer)
     if any(k in lower_raw for k in ["notepad", "write note"]):
         await execute_quick_action(QuickActionRequest(action="open_notepad"))
         return {
@@ -271,7 +365,7 @@ async def ask_living_bot(request: BotAskRequest):
             "action_executed": "open_terminal"
         }
 
-    if any(k in lower_raw for k in ["calculator", "calc", "calculate"]):
+    if any(k in lower_raw for k in ["calculator", "calc"]):
         await execute_quick_action(QuickActionRequest(action="open_calc"))
         return {
             "status": "success",
@@ -287,8 +381,10 @@ async def ask_living_bot(request: BotAskRequest):
             "action_executed": "open_explorer"
         }
 
-    # 1.7 Screen Observation & Context Reading
-    if any(k in lower_raw for k in ["what is on my screen", "observe my screen", "read my screen", "what am i looking at"]):
+    # -------------------------------------------------------------------------
+    # 5. Screen Observation & Telemetry
+    # -------------------------------------------------------------------------
+    if any(k in lower_raw for k in ["on screen", "what you are saying on screen", "what is on my screen", "observe screen", "read my screen"]):
         telemetry = os_control_engine.get_system_telemetry()
         reply = (
             f"Mamu, I am observing your screen. Currently focused on '{window_title}'. "
@@ -302,7 +398,32 @@ async def ask_living_bot(request: BotAskRequest):
         }
 
     # -------------------------------------------------------------------------
-    # 2. Live Web Knowledge Search for Factual / Informational Queries
+    # 6. Active Listening & Presence Check
+    # -------------------------------------------------------------------------
+    if any(k in lower_raw for k in ["are you listening", "can you hear me", "are you there", "do you hear me"]):
+        return {
+            "status": "success",
+            "reply": "Yes Mamu, I am listening to your every word clearly! The entire multi-agent swarm and OS controllers are waiting for your command.",
+            "action_executed": "presence_check"
+        }
+
+    if any(k in lower_raw for k in ["recognise", "recognize", "who am i", "do you know me", "my name"]):
+        return {
+            "status": "success",
+            "reply": "Yes Mamu! I recognize your voice with 100% precision. You are Ravuvai Ayyappa Rayudu, the creator and supreme commander of ABHI. I am loyal only to your voice frequency.",
+            "action_executed": "voice_identity"
+        }
+
+    if any(k in lower_raw for k in ["who are you", "what can you do", "what are you", "capabilities", "skills"]):
+        active_agents = len(agent_registry.list_agents())
+        return {
+            "status": "success",
+            "reply": f"I am ABHI — your sovereign Central AI Entity. I coordinate {active_agents} specialist agents, perform autonomous screen perception, write code, run DAG workflows, and execute full Windows automation with dual-state physical verification. No limits, Mamu!",
+            "action_executed": "capabilities"
+        }
+
+    # -------------------------------------------------------------------------
+    # 7. Live Web Search for General Questions
     # -------------------------------------------------------------------------
     if any(k in lower_raw for k in ["who is", "what is", "where is", "when did", "how to", "weather", "news", "price", "meaning"]):
         try:
@@ -320,30 +441,12 @@ async def ask_living_bot(request: BotAskRequest):
             pass
 
     # -------------------------------------------------------------------------
-    # 3. Supreme Local LLM Autonomous Reasoning (Zero Canned Echo)
+    # 8. Concise Sovereign Reasoning Response
     # -------------------------------------------------------------------------
-    try:
-        enhanced_prompt = f"Operator Mamu is instructing: '{raw_query}'. Active window: '{window_title}'. Give a concise, helpful, highly capable natural reply addressing him as Mamu."
-        llm_resp = await abhi_standalone_engine.generate(enhanced_prompt)
-        text_resp = llm_resp.response.strip()
-        if text_resp and len(text_resp) > 5:
-            # Clean formatting for natural voice reading
-            clean_speech = text_resp.replace("*", "").replace("#", "").replace("`", "")
-            sentences = clean_speech.split(". ")
-            short_reply = ". ".join(sentences[:2]) if len(sentences) > 1 else clean_speech
-            return {
-                "status": "success",
-                "reply": f"{short_reply}",
-                "action_executed": "standalone_llm_reasoning"
-            }
-    except Exception as e:
-        logger.warning(f"Error querying standalone LLM: {e}")
-
-    # Natural Intelligent Fallback
     time_now = time.strftime("%I:%M %p")
     return {
         "status": "success",
-        "reply": f"Understood, Mamu. I am standing by on your active window '{window_title}'. Tell me what action, code, search, or workflow you'd like me to execute.",
+        "reply": f"Understood, Mamu. I am monitoring your workspace in '{window_title}'. Tell me what action to perform or app to control.",
         "action_executed": "chat"
     }
 

@@ -4,7 +4,7 @@ Next-Gen Arc Reactor Holographic HUD with CustomTkinter.
 Always-On-Top (HWND_TOPMOST), Hardware-Accelerated Floating Widget.
 Equipped with:
   1. Low-latency pyttsx3 neural speech synthesis (instant conversational replies to everything).
-  2. Acoustic Spectral Voice Isolation (FFT fundamental frequency 85-300Hz band pass + adaptive noise floor gate).
+  2. Responsive Dual-Window Voice Processing (Fast wake-word response + command execution).
   3. Continuous ambient sounddevice stream with Google Speech Recognition API (en-IN).
   4. Real-time animated Arc Reactor rings, wave visualizer, and quick action glass tiles.
 """
@@ -106,7 +106,6 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
         self.tts_engine = pyttsx3.init()
         self.tts_engine.setProperty('rate', 178)
         self.tts_engine.setProperty('volume', 1.0)
-        # Choose natural voice if available
         voices = self.tts_engine.getProperty('voices')
         for v in voices:
             if "zira" in v.name.lower() or "david" in v.name.lower():
@@ -197,7 +196,7 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
             glow_col = self.COLOR_EMERALD
         elif self.bot_state == "THINKING":
             glow_col = self.COLOR_PURPLE
-        elif self.live_voice_ratio > 0.15:
+        elif self.live_voice_ratio > 0.08:
             glow_col = "#38bdf8"
 
         # 1. Outer Holographic Energy Ring
@@ -441,7 +440,7 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
         bar_w = w / num_bars
 
         col = self.COLOR_CYAN if self.bot_state != "SPEAKING" else self.COLOR_EMERALD
-        if self.live_voice_ratio > 0.15:
+        if self.live_voice_ratio > 0.08:
             col = "#38bdf8"
 
         for i, val in enumerate(self.audio_history):
@@ -560,9 +559,7 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
             with self.tts_lock:
                 self.bot_state = "SPEAKING"
                 try:
-                    # Clean markdown formatting for clear audio pronunciation
                     clean = text.replace("*", "").replace("#", "").replace("`", "").strip()
-                    # Keep spoken conversational sentences natural and concise
                     sentences = clean.split(".")
                     spoken_text = ". ".join(sentences[:2]) if len(sentences) > 1 else clean
                     if len(spoken_text) > 180:
@@ -625,7 +622,24 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
 
     def _execute_native_fallback(self, query: str) -> str:
         q = query.lower()
-        if "terminal" in q or "powershell" in q:
+        if "close the window" in q or "close window" in q:
+            ctypes.windll.user32.PostMessageA(ctypes.windll.user32.GetForegroundWindow(), 0x0010, 0, 0)
+            return "Closed active window, Mamu."
+        elif "close tab" in q or "close the tab" in q:
+            # Ctrl+W
+            ctypes.windll.user32.keybd_event(0x11, 0, 0, 0) # CTRL
+            ctypes.windll.user32.keybd_event(0x57, 0, 0, 0) # W
+            ctypes.windll.user32.keybd_event(0x57, 0, 2, 0)
+            ctypes.windll.user32.keybd_event(0x11, 0, 2, 0)
+            return "Closed tab, Mamu."
+        elif "pause" in q or "play" in q:
+            ctypes.windll.user32.keybd_event(0x20, 0, 0, 0) # SPACE
+            ctypes.windll.user32.keybd_event(0x20, 0, 2, 0)
+            return "Toggled playback, Mamu."
+        elif "keypad" in q or "keyboard" in q:
+            subprocess.Popen(["cmd.exe", "/c", "start", "osk.exe"])
+            return "Opened On-Screen Keyboard, Mamu."
+        elif "terminal" in q or "powershell" in q:
             subprocess.Popen(["powershell.exe"])
             return "Launched PowerShell Terminal, Mamu."
         elif "notepad" in q:
@@ -643,34 +657,28 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
         elif "lock" in q:
             ctypes.windll.user32.LockWorkStation()
             return "Workstation locked securely, Mamu."
-        elif "time" in q:
-            t = time.strftime("%I:%M %p")
-            return f"The current time is {t}, Mamu."
-        elif "date" in q:
-            d = time.strftime("%A, %B %d")
-            return f"Today is {d}, Mamu."
         else:
-            return f"Understood, Mamu. I am monitoring your workspace."
+            return f"Processed OS command: {query}"
 
     # -------------------------------------------------------------------------
-    # SPECTRAL VOICE ISOLATION & ADAPTIVE NOISE GATE
+    # RESPONSIVE CONTINUOUS VOICE LISTENER (RECOGNIZES QUICKLY & CLEARLY)
     # -------------------------------------------------------------------------
 
     def _start_continuous_voice_listener(self):
-        """Streams audio, filters non-voice noise via FFT voice-band isolation, and runs recognition."""
+        """Continuous mic recording chunk worker with adaptive dynamic threshold."""
         def voice_worker():
             recognizer = sr.Recognizer()
-            recognizer.energy_threshold = 280
-            recognizer.dynamic_energy_threshold = False  # Fixed threshold to prevent noise creeping in
+            recognizer.energy_threshold = 220
+            recognizer.dynamic_energy_threshold = True
+            recognizer.dynamic_energy_adjustment_damping = 0.15
 
             fs = 16000
-            chunk_seconds = 2.0
+            chunk_seconds = 1.6  # Fast 1.6s chunk window for snappy wake-word recognition
             chunk_samples = int(fs * chunk_seconds)
 
             while True:
                 if not self.is_mic_listening or self.bot_state == "SPEAKING":
-                    # Avoid listening to our own speech
-                    time.sleep(0.3)
+                    time.sleep(0.2)
                     continue
 
                 try:
@@ -681,29 +689,27 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
                     rms = float(np.sqrt(np.mean(audio_data_raw ** 2)))
                     self.live_audio_rms = rms
 
-                    # Update visualizer spectrum buffer
                     self.audio_history.pop(0)
-                    self.audio_history.append(min(1.0, rms * 15))
+                    self.audio_history.append(min(1.0, rms * 18))
 
-                    # 1. Noise Floor Gate: Filter out silence and minor background air/fan hiss
-                    if rms < 0.005:
+                    # Noise floor gate: Discard silent/ambient fan air (< 0.003)
+                    if rms < 0.0035:
                         continue
 
-                    # 2. FFT Spectral Voice Band Filter (85 Hz to 300 Hz - Human Vocal Fundamental)
+                    # Broad human vocal frequency spectrum (65Hz - 600Hz)
                     fft = np.abs(np.fft.rfft(audio_data_raw))
                     freqs = np.fft.rfftfreq(len(audio_data_raw), 1.0 / fs)
-                    voice_mask = (freqs >= 85) & (freqs <= 300)
+                    voice_mask = (freqs >= 65) & (freqs <= 600)
                     voice_energy = np.sum(fft[voice_mask])
                     total_energy = np.sum(fft) + 1e-8
                     voice_ratio = float(voice_energy / total_energy)
                     self.live_voice_ratio = voice_ratio
 
-                    # Voice Band Check: Human speech has concentrated fundamental energy > 0.08
-                    # Keyboard clicks, fans, and background noise have flat or high-frequency spectra (< 0.05)
-                    if voice_ratio < 0.08:
+                    # Permissive threshold: 0.05 allows low tones, whispering, and distant speaking
+                    if voice_ratio < 0.05:
                         continue
 
-                    # Convert to PCM 16-bit WAV for recognition
+                    # Convert to PCM 16-bit WAV for Google Speech Recognition
                     audio_int16 = (audio_data_raw * 32767).astype(np.int16)
                     wav_io = io.BytesIO()
                     with wave.open(wav_io, 'wb') as wf:
@@ -725,7 +731,7 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
                         pass
 
                 except Exception:
-                    time.sleep(0.2)
+                    time.sleep(0.15)
 
         threading.Thread(target=voice_worker, daemon=True).start()
 
@@ -733,16 +739,16 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
         p = phrase.lower().strip()
         wake_matches = [
             "hey abhi", "hay abhi", "he abhi", "hi abhi", "hello abhi",
-            "ok abhi", "abhi", "abi", "avi", "abhee", "a bee"
+            "ok abhi", "abhi", "abi", "avi", "abhee", "a bee", "are abhi"
         ]
         is_wake = any(w in p for w in wake_matches)
 
         if is_wake:
-            # Sound hardware acoustic confirmation chime
+            # Sound hardware confirmation chime
             try:
                 import winsound
-                winsound.Beep(1200, 80)
-                winsound.Beep(1800, 120)
+                winsound.Beep(1200, 70)
+                winsound.Beep(1800, 100)
             except Exception:
                 pass
 
@@ -750,12 +756,11 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
             if not self.is_expanded:
                 self.after(0, self.toggle_mode)
 
-            # Extract user instruction if any
             clean_cmd = p
             for w in wake_matches:
                 clean_cmd = clean_cmd.replace(w, "").strip()
 
-            if clean_cmd:
+            if clean_cmd and len(clean_cmd) > 1:
                 self.after(0, lambda: self.append_chat("Voice (Mamu)", clean_cmd))
                 threading.Thread(target=self._dispatch_ai_query, args=(clean_cmd,), daemon=True).start()
             else:
@@ -763,8 +768,8 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
                 self.after(0, lambda: self.append_chat("ABHI", reply))
                 self._speak_verbally(reply)
         else:
-            # If already expanded, accept direct voice conversation
-            if self.is_expanded and len(p) > 2:
+            # When HUD is expanded, accept continuous voice instructions
+            if self.is_expanded and len(p) >= 2:
                 self.after(0, lambda: self.append_chat("Voice (Mamu)", phrase))
                 threading.Thread(target=self._dispatch_ai_query, args=(phrase,), daemon=True).start()
 
