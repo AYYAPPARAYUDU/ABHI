@@ -117,5 +117,49 @@
     "type": "youtube_play",
     "query": "agriculture",
     "reply": "Opened YouTube and searching for 'agriculture', Mamu!"
+  },
+  "open chrome": {
+    "type": "shortcut",
+    "path": "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Google Chrome.lnk",
+    "reply": "Launched Chrome, Mamu."
+  },
+  "open notepad": {
+    "type": "app",
+    "name": "notepad",
+    "reply": "Launched Notepad, Mamu."
+  },
+  "close window": {
+    "type": "window_close",
+    "reply": "Closed active window, Mamu."
+  },
+  "mute video": {
+    "type": "hotkey",
+    "key": "M",
+    "reply": "Toggled audio mute, Mamu."
+  },
+  "skip ad": {
+    "type": "hotkey",
+    "key": "TAB+ENTER",
+    "reply": "Skipped the advertisement, Mamu."
+  },
+  "open terminal": {
+    "type": "app",
+    "name": "terminal",
+    "reply": "Launched Terminal on your screen, Mamu."
+  },
+  "volume up": {
+    "type": "volume_change",
+    "delta": 10,
+    "reply": "Increased system volume for you, Mamu."
+  },
+  "volume down": {
+    "type": "volume_change",
+    "delta": -10,
+    "reply": "Decreased system volume for you, Mamu."
+  },
+  "set volume 50": {
+    "type": "volume_set",
+    "value": 50,
+    "reply": "System volume set to 50 percent, Mamu."
   }
 }

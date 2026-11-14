@@ -300,9 +300,8 @@ async def ask_living_bot(request: BotAskRequest):
     except Exception as e:
         logger.warning(f"DynamicActionResolver execution error: {e}")
 
-    # 2. Live Web Knowledge Search for General Questions
-    lower_raw = raw_query.lower()
-    if any(k in lower_raw for k in ["who is", "what is", "where is", "when did", "how to", "weather", "news", "price", "meaning", "capital", "explain", "tell me about"]):
+    # 2. Live Web Knowledge Search for Genuine Informational Questions
+    if dynamic_action_resolver.is_info_query(raw_query):
         try:
             snippets = online_searcher.search_live_snippets(raw_query)
             if snippets and len(snippets) > 0:

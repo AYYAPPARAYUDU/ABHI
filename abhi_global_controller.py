@@ -679,7 +679,7 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
             ctypes.windll.user32.LockWorkStation()
             return "Workstation locked securely, Mamu."
         else:
-            return f"Processed OS command: {query}"
+            return "Understood, Mamu. I am monitoring your screen. Tell me what program to launch, song to play, or action to automate."
 
     # -------------------------------------------------------------------------
     # RESPONSIVE CONTINUOUS VOICE LISTENER (RECOGNIZES QUICKLY & CLEARLY)

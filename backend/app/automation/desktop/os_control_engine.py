@@ -716,6 +716,9 @@ class OSControlEngine:
             return "cmd.exe", [], False
         if "powershell" in n or "pwsh" in n:
             return "powershell.exe", [], False
+        if "terminal" in n or "wt" in n or "console" in n:
+            wt_path = shutil.which("wt")
+            return (wt_path or "powershell.exe"), [], False
         if "paint" in n or "mspaint" in n:
             return "mspaint.exe", [], False
         if "taskmgr" in n or "task manager" in n:
@@ -788,7 +791,7 @@ class OSControlEngine:
             known_sys_aliases = {
                 "notepad", "calc", "calculator", "explorer", "cmd", "powershell",
                 "pwsh", "mspaint", "paint", "taskmgr", "osk", "snippingtool",
-                "chrome", "msedge", "code", "control"
+                "chrome", "msedge", "code", "control", "wt", "terminal"
             }
             is_valid = (
                 clean_target.lower().rstrip(".exe") in known_sys_aliases or

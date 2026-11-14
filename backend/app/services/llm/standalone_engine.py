@@ -821,17 +821,10 @@ class AbhiStandaloneEngine:
             return steps
 
         # ---------------------------------------------------------------------
-        # 10. Default General OS Action Fallback
+        # 10. Default Autonomous Workflow Fallback
         # ---------------------------------------------------------------------
-        steps.append({
-            "node_id": "step_1",
-            "title": f"Execute Command: {goal[:40]}",
-            "agent_id": "os_desktop_agent",
-            "action": "launch_application" if "open" in g_lower else "run_allowlisted_command",
-            "params": {"command": goal},
-            "dependencies": [],
-            "risk_tier": "Tier 1"
-        })
+        # If no recognized multi-step DAG pattern matched, return empty so conversational
+        # intelligence, live search, or sovereign companion guidance can respond cleanly.
         return steps
 
     # -------------------------------------------------------------------------

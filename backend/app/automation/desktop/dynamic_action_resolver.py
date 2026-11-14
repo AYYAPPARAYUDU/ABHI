@@ -169,6 +169,43 @@ class DynamicActionResolver:
         }
         return web_map.get(t)
 
+    @staticmethod
+    def is_info_query(query: str) -> bool:
+        """Determines if a query is a genuine informational question or knowledge search."""
+        q = query.lower().strip()
+        words = q.split()
+        if len(words) < 2:
+            return False
+
+        question_starters = (
+            "who is", "who was", "who are",
+            "what is", "what was", "what are", "what does",
+            "where is", "where was", "where are",
+            "when is", "when was", "when did",
+            "how to", "how do", "how does", "how is", "how much", "how many",
+            "why is", "why does", "why are", "why did",
+            "explain", "tell me about", "define", "meaning of", "summary of",
+            "capital of", "population of", "president of", "ceo of",
+            "prime minister of", "weather in", "price of"
+        )
+        if any(q.startswith(qs) for qs in question_starters):
+            return True
+
+        info_keywords = (
+            "pin code", "pincode", "zip code", "capital", "population", "gdp",
+            "currency", "weather forecast", "latest news", "stock price",
+            "share price", "score of", "match score", "ipl score", "election result",
+            "who won", "ranking", "scheme", "eligibility", "symptoms of",
+            "treatment of", "distance between"
+        )
+        if any(ik in q for ik in info_keywords):
+            return True
+
+        if q.endswith("?"):
+            return True
+
+        return False
+
     def resolve_and_execute(
         self,
         raw_query: str,
@@ -197,6 +234,64 @@ class DynamicActionResolver:
 
         if lower_clean in ["search", "search for"]:
             return True, "ask_clarification", "What would you like me to search for, Mamu?"
+
+        # ---------------------------------------------------------------------
+        # 1A. Greetings & Pleasantries (Strictly Intercepted for Conversation)
+        # ---------------------------------------------------------------------
+        greetings_list = ["hi", "hello", "hey", "namaste", "good morning", "good afternoon", "good evening", "what's up", "whats up", "yo"]
+        if lower_clean in greetings_list or any(lower_clean == f"{g} abhi" or lower_clean == f"abhi {g}" for g in greetings_list):
+            return True, "greeting", "Hello Mamu! I am right here listening. Tell me what application to open, song to play, or task to automate."
+
+        if any(lower_clean == q for q in ["how are you", "how are you doing", "how r u"]):
+            return True, "greeting", "I am running at peak performance and ready for your commands, Mamu! How can I assist you?"
+
+        if any(lower_clean == q for q in ["thank you", "thanks", "thanks abhi", "thank you abhi"]):
+            return True, "gratitude", "You are always welcome, Mamu! I am always at your service."
+
+        # ---------------------------------------------------------------------
+        # 1B. Presence, Identity, Time & Date
+        # ---------------------------------------------------------------------
+        if any(k in lower_clean for k in ["are you listening", "can you hear me", "are you there", "do you hear me"]):
+            return True, "presence_check", "Yes Mamu, I am listening to your every word clearly! The entire OS controller and multi-agent swarm are at your command."
+
+        if any(k in lower_clean for k in ["recognise", "recognize", "can you recognise", "can you recognize", "who am i", "do you know me", "my name"]):
+            return True, "voice_identity", "Yes Mamu! I recognize your voice with 100% fidelity. You are Ravuvai Ayyappa Rayudu, supreme commander of ABHI."
+
+        if any(k in lower_clean for k in ["who are you", "what can you do", "what are you"]):
+            return True, "capabilities", "I am ABHI — your unified central AI companion. I provide full Windows OS control, browser manipulation, autonomous multi-step execution, and live intelligence without limits, Mamu!"
+
+        if any(k in lower_clean for k in ["what is the time", "what's the time", "time now", "current time", "what time is it", "tell me the time"]):
+            curr_time = time.strftime("%I:%M %p")
+            return True, "current_time", f"Mamu, it is currently {curr_time}."
+
+        if any(k in lower_clean for k in ["what is the date", "what's the date", "date today", "today date", "what's today's date"]):
+            curr_date = time.strftime("%A, %B %d, %Y")
+            return True, "current_date", f"Mamu, today is {curr_date}."
+
+        # ---------------------------------------------------------------------
+        # 1C. System Master Audio Volume & Mute Controls
+        # ---------------------------------------------------------------------
+        m_vol_set = re.match(r"^(?:set\s+)?volume\s+(?:to\s+)?(\d{1,3})(?:%|\s*percent)?$", lower_clean)
+        if m_vol_set:
+            val = int(m_vol_set.group(1))
+            val = max(0, min(100, val))
+            os_control_engine.set_volume_percentage(val)
+            self._cache_action(lower_clean, {"type": "volume_set", "value": val, "reply": f"System volume set to {val} percent, Mamu."})
+            return True, "volume_set", f"System volume set to {val} percent, Mamu."
+
+        if any(k in lower_clean for k in ["volume up", "increase volume", "turn volume up", "louder", "sound up", "raise volume", "volume higher"]):
+            os_control_engine.change_volume_by(10)
+            self._cache_action(lower_clean, {"type": "volume_change", "delta": 10, "reply": "Increased system volume for you, Mamu."})
+            return True, "volume_up", "Increased system volume for you, Mamu."
+
+        if any(k in lower_clean for k in ["volume down", "decrease volume", "turn volume down", "lower volume", "softer", "sound down", "volume lower"]):
+            os_control_engine.change_volume_by(-10)
+            self._cache_action(lower_clean, {"type": "volume_change", "delta": -10, "reply": "Decreased system volume for you, Mamu."})
+            return True, "volume_down", "Decreased system volume for you, Mamu."
+
+        if any(lower_clean == p for p in ["mute", "mute system", "mute audio", "mute master", "silence", "unmute system", "unmute"]):
+            os_control_engine.adjust_volume("mute", steps=1)
+            return True, "toggle_mute", "Toggled system audio mute, Mamu."
 
         # ---------------------------------------------------------------------
         # 2. Stop / Pause Media (Prioritized BEFORE Song Search!)
@@ -422,7 +517,15 @@ class DynamicActionResolver:
             return True, "screenshot", "Screen snip tool activated, Mamu."
 
         # ---------------------------------------------------------------------
-        # 8. Direct Web Services / Apps (e.g. "Patrika", "WhatsApp", "Facebook")
+        # 8A. Terminal & Shell Launching
+        # ---------------------------------------------------------------------
+        if any(lower_clean == p or lower_clean == f"open {p}" or lower_clean == f"launch {p}" for p in ["terminal", "powershell", "cmd", "command prompt", "console", "windows terminal", "wt"]):
+            res = os_control_engine.launch_application("terminal")
+            self._cache_action(lower_clean, {"type": "app", "name": "terminal", "reply": "Launched Terminal on your screen, Mamu."})
+            return True, "launch_terminal", "Launched Terminal on your screen, Mamu."
+
+        # ---------------------------------------------------------------------
+        # 8B. Direct Web Services / Apps (e.g. "Patrika", "WhatsApp", "Facebook")
         # ---------------------------------------------------------------------
         target_cand = re.sub(r"^(?:open|launch|start|goto|show)\s+", "", lower_clean).strip()
         target_cand = re.sub(r"\s+open$", "", target_cand).strip()
@@ -451,33 +554,24 @@ class DynamicActionResolver:
                 return True, f"launch_{target_cand}", f"Launched {target_cand.title()}, Mamu."
 
         # ---------------------------------------------------------------------
-        # 9. Live Web Search & General Knowledge Topics (e.g. "Lucknow PIN code", "Kaushal Vikas", "who is cricketer")
+        # 9. Live Web Search & General Knowledge Topics (Strictly Gated!)
         # ---------------------------------------------------------------------
-        try:
-            snippets = self._searcher.search_live_snippets(raw_query)
-            if snippets and len(snippets) > 0:
-                best_snippet = snippets[0].get("snippet", "")
-                if best_snippet and len(best_snippet) > 20:
-                    clean_snip = best_snippet.split(". ")[0].replace("\n", " ").strip() + "."
-                    return True, "live_web_search", f"Mamu, according to live intelligence: {clean_snip}"
-        except Exception:
-            pass
+        if self.is_info_query(lower_clean):
+            try:
+                snippets = self._searcher.search_live_snippets(raw_query)
+                if snippets and len(snippets) > 0:
+                    best_snippet = snippets[0].get("snippet", "")
+                    if best_snippet and len(best_snippet) > 20:
+                        clean_snip = best_snippet.split(". ")[0].replace("\n", " ").strip() + "."
+                        return True, "live_web_search", f"Mamu, according to live intelligence: {clean_snip}"
+            except Exception:
+                pass
 
-        # ---------------------------------------------------------------------
-        # 10. Presence, Identity & Capabilities
-        # ---------------------------------------------------------------------
-        if any(k in lower_clean for k in ["are you listening", "can you hear me", "are you there", "do you hear me"]):
-            return True, "presence_check", "Yes Mamu, I am listening to your every word clearly! The entire OS controller and multi-agent swarm are at your command."
-
-        if any(k in lower_clean for k in ["recognise", "recognize", "who am i", "do you know me", "my name"]):
-            return True, "voice_identity", "Yes Mamu! I recognize your voice with 100% fidelity. You are Ravuvai Ayyappa Rayudu, supreme commander of ABHI."
-
-        if any(k in lower_clean for k in ["who are you", "what can you do", "what are you"]):
-            return True, "capabilities", "I am ABHI — your unified central AI companion. I provide full Windows OS control, browser manipulation, autonomous multi-step execution, and live intelligence without limits, Mamu!"
-
-        # Final Sovereign Companion Guidance
+        # Final Sovereign Companion Guidance for any unhandled / casual phrase
         active_title = os_control_engine.get_active_window().get("title", "Windows Desktop")
-        return False, "unhandled", f"Understood, Mamu. I am monitoring '{active_title}'. Tell me what program to launch, song to play, or action to automate."
+        if not active_title:
+            active_title = "Windows Desktop"
+        return False, "unhandled", f"Understood, Mamu. I am monitoring '{active_title}'. Tell me what application to open, song to play, or task to automate."
 
     def _cache_action(self, pattern: str, plan: Dict[str, Any]):
         self._learned_cache[pattern] = plan
@@ -509,6 +603,12 @@ class DynamicActionResolver:
                 return True, reply
             elif p_type == "cmd":
                 subprocess.Popen(["cmd.exe", "/c", plan.get("cmd")])
+                return True, reply
+            elif p_type == "volume_set":
+                os_control_engine.set_volume_percentage(plan.get("value", 50))
+                return True, reply
+            elif p_type == "volume_change":
+                os_control_engine.change_volume_by(plan.get("delta", 10))
                 return True, reply
             elif p_type == "window_close":
                 os_control_engine.close_window()
