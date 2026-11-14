@@ -491,6 +491,17 @@ export class LivingScreenBotComponent implements OnInit, AfterViewInit, OnDestro
       });
   }
 
+  detachToGlobalDesktop(): void {
+    this.http.post<any>(getApiUrl('/api/v1/desktop/launch-global-controller'), {}).subscribe({
+      next: () => {
+        this.speechService.speakNotification('Pinned ABHI Global OS Controller to Windows Desktop.');
+      },
+      error: () => {
+        console.warn('Could not launch global desktop overlay.');
+      }
+    });
+  }
+
   // --- Quick Action Buttons ---
 
   triggerQuickAction(action: string, params: any = {}): void {

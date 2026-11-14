@@ -63,6 +63,13 @@
         </div>
 
         <button
+          class="interactive-control hud-btn-detach"
+          (click)="detachToGlobalDesktop()"
+          title="Float on Windows Desktop (Never vanishes on minimize)"
+        >
+          📌 Float Global
+        </button>
+        <button
           class="interactive-control hud-btn-minimize"
           (click)="toggleExpanded()"
           title="Minimize to Living Core"

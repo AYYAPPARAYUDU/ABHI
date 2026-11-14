@@ -39,5 +39,8 @@ if defined BROWSER_EXE (
     start http://127.0.0.1:4200
 )
 
+:: 5. Launch Native Always-On-Top Global OS Desktop Controller (Never vanishes on minimize)
+start /b "" python abhi_global_controller.py
+
 exit /b 0
 

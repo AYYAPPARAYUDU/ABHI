@@ -224,3 +224,13 @@ async def ask_living_bot(request: BotAskRequest):
         "active_window": window_title,
         "timestamp": time.time()
     }
+
+
+@router.post("/launch-global-controller")
+async def launch_global_controller():
+    """Launch or focus the native Always-On-Top Global OS Desktop Controller."""
+    controller_script = os.path.join(os.getcwd(), "abhi_global_controller.py")
+    if os.path.exists(controller_script):
+        subprocess.Popen([sys.executable, controller_script])
+        return {"status": "success", "message": "Global OS Desktop Controller engaged."}
+    return {"status": "error", "message": "Controller script not found."}
