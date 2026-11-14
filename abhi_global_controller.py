@@ -28,6 +28,17 @@ import numpy as np
 import speech_recognition as sr
 import pyttsx3
 import customtkinter as ctk
+import collections
+
+# Direct integration with ABHI Dynamic Action Resolver for 0ms in-process execution
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+if APP_ROOT not in sys.path:
+    sys.path.insert(0, APP_ROOT)
+
+try:
+    from backend.app.automation.desktop.dynamic_action_resolver import dynamic_action_resolver
+except Exception:
+    dynamic_action_resolver = None
 
 # DPI Awareness for crisp 4K / High-DPI Windows displays
 try:
@@ -547,7 +558,17 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
                 self.after(0, lambda: self.append_chat("ABHI", reply))
                 self._speak_verbally(reply)
         except Exception:
-            reply = self._execute_native_fallback(query)
+            # 0ms In-Process Local Execution Fallback
+            reply = None
+            if dynamic_action_resolver:
+                try:
+                    ok, action_name, res_reply = dynamic_action_resolver.resolve_and_execute(query)
+                    if ok:
+                        reply = res_reply
+                except Exception:
+                    pass
+            if not reply:
+                reply = self._execute_native_fallback(query)
             self.after(0, lambda: self.append_chat("ABHI", reply))
             self._speak_verbally(reply)
 
@@ -665,75 +686,104 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
     # -------------------------------------------------------------------------
 
     def _start_continuous_voice_listener(self):
-        """Continuous mic recording chunk worker with adaptive dynamic threshold."""
+        """Continuous voice listener with Voice Activity Detection (VAD) buffering."""
         def voice_worker():
             recognizer = sr.Recognizer()
-            recognizer.energy_threshold = 220
+            recognizer.energy_threshold = 200
             recognizer.dynamic_energy_threshold = True
             recognizer.dynamic_energy_adjustment_damping = 0.15
 
             fs = 16000
-            chunk_seconds = 1.6  # Fast 1.6s chunk window for snappy wake-word recognition
-            chunk_samples = int(fs * chunk_seconds)
+            frame_seconds = 0.25
+            frame_samples = int(fs * frame_seconds)
+
+            is_speaking = False
+            phrase_frames = []
+            silence_frames_count = 0
+            max_silence_frames = 2  # ~500ms silence terminates speech chunk
+            max_phrase_frames = 28  # 7 seconds max continuous utterance
+            pre_roll_buffer = collections.deque(maxlen=2)
 
             while True:
                 if not self.is_mic_listening or self.bot_state == "SPEAKING":
-                    time.sleep(0.2)
+                    time.sleep(0.15)
+                    is_speaking = False
+                    phrase_frames.clear()
+                    silence_frames_count = 0
                     continue
 
                 try:
-                    recording = sd.rec(chunk_samples, samplerate=fs, channels=1, dtype='float32')
+                    frame = sd.rec(frame_samples, samplerate=fs, channels=1, dtype='float32')
                     sd.wait()
 
-                    audio_data_raw = recording.flatten()
-                    rms = float(np.sqrt(np.mean(audio_data_raw ** 2)))
+                    raw_frame = frame.flatten()
+                    rms = float(np.sqrt(np.mean(raw_frame ** 2)))
                     self.live_audio_rms = rms
 
                     self.audio_history.pop(0)
                     self.audio_history.append(min(1.0, rms * 18))
 
-                    # Noise floor gate: Discard silent/ambient fan air (< 0.003)
-                    if rms < 0.0035:
-                        continue
-
-                    # Broad human vocal frequency spectrum (65Hz - 600Hz)
-                    fft = np.abs(np.fft.rfft(audio_data_raw))
-                    freqs = np.fft.rfftfreq(len(audio_data_raw), 1.0 / fs)
+                    # Frequency spectrum analysis
+                    fft = np.abs(np.fft.rfft(raw_frame))
+                    freqs = np.fft.rfftfreq(len(raw_frame), 1.0 / fs)
                     voice_mask = (freqs >= 65) & (freqs <= 600)
                     voice_energy = np.sum(fft[voice_mask])
                     total_energy = np.sum(fft) + 1e-8
                     voice_ratio = float(voice_energy / total_energy)
                     self.live_voice_ratio = voice_ratio
 
-                    # Permissive threshold: 0.05 allows low tones, whispering, and distant speaking
-                    if voice_ratio < 0.05:
-                        continue
+                    # Acoustic gate: human vocal spectrum + sound pressure level
+                    has_speech = (rms >= 0.0035 and voice_ratio >= 0.04)
 
-                    # Convert to PCM 16-bit WAV for Google Speech Recognition
-                    audio_int16 = (audio_data_raw * 32767).astype(np.int16)
-                    wav_io = io.BytesIO()
-                    with wave.open(wav_io, 'wb') as wf:
-                        wf.setnchannels(1)
-                        wf.setsampwidth(2)
-                        wf.setframerate(fs)
-                        wf.writeframes(audio_int16.tobytes())
-                    wav_io.seek(0)
+                    if has_speech:
+                        if not is_speaking:
+                            is_speaking = True
+                            phrase_frames = list(pre_roll_buffer)
+                        phrase_frames.append(raw_frame)
+                        silence_frames_count = 0
+                    else:
+                        if is_speaking:
+                            phrase_frames.append(raw_frame)
+                            silence_frames_count += 1
+                            if silence_frames_count >= max_silence_frames or len(phrase_frames) >= max_phrase_frames:
+                                full_phrase = np.concatenate(phrase_frames)
+                                is_speaking = False
+                                phrase_frames = []
+                                silence_frames_count = 0
 
-                    try:
-                        with sr.AudioFile(wav_io) as source:
-                            audio_sr = recognizer.record(source)
-                        recognized = recognizer.recognize_google(audio_sr, language="en-IN")
-                        if recognized:
-                            self._handle_voice_phrase(recognized)
-                    except sr.UnknownValueError:
-                        pass
-                    except sr.RequestError:
-                        pass
+                                threading.Thread(
+                                    target=self._process_recorded_audio,
+                                    args=(full_phrase, fs, recognizer),
+                                    daemon=True
+                                ).start()
+                        else:
+                            pre_roll_buffer.append(raw_frame)
 
                 except Exception:
-                    time.sleep(0.15)
+                    time.sleep(0.1)
 
         threading.Thread(target=voice_worker, daemon=True).start()
+
+    def _process_recorded_audio(self, audio_data: np.ndarray, fs: int, recognizer: sr.Recognizer):
+        try:
+            audio_int16 = (audio_data * 32767).astype(np.int16)
+            wav_io = io.BytesIO()
+            with wave.open(wav_io, 'wb') as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(2)
+                wf.setframerate(fs)
+                wf.writeframes(audio_int16.tobytes())
+            wav_io.seek(0)
+
+            with sr.AudioFile(wav_io) as source:
+                audio_sr = recognizer.record(source)
+            recognized = recognizer.recognize_google(audio_sr, language="en-IN")
+            if recognized and len(recognized.strip()) > 1:
+                self._handle_voice_phrase(recognized)
+        except sr.UnknownValueError:
+            pass
+        except Exception:
+            pass
 
     def _handle_voice_phrase(self, phrase: str):
         p = phrase.lower().strip()
@@ -744,7 +794,6 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
         is_wake = any(w in p for w in wake_matches)
 
         if is_wake:
-            # Sound hardware confirmation chime
             try:
                 import winsound
                 winsound.Beep(1200, 70)
@@ -752,7 +801,6 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
             except Exception:
                 pass
 
-            # Expand if compact so user immediately sees HUD
             if not self.is_expanded:
                 self.after(0, self.toggle_mode)
 
@@ -768,8 +816,16 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
                 self.after(0, lambda: self.append_chat("ABHI", reply))
                 self._speak_verbally(reply)
         else:
-            # When HUD is expanded, accept continuous voice instructions
-            if self.is_expanded and len(p) >= 2:
+            action_triggers = [
+                "open", "close", "play", "pause", "mute", "unmute", "search", "skip",
+                "type", "run", "keypad", "keyboard", "screen", "what", "how", "who",
+                "youtube", "chrome", "notepad", "terminal", "calc", "tab", "window",
+                "fb", "movie", "scroll", "next", "rewind", "desktop", "task manager"
+            ]
+            has_action = any(t in p for t in action_triggers)
+            if (self.is_expanded or has_action) and len(p) >= 2:
+                if not self.is_expanded and has_action:
+                    self.after(0, self.toggle_mode)
                 self.after(0, lambda: self.append_chat("Voice (Mamu)", phrase))
                 threading.Thread(target=self._dispatch_ai_query, args=(phrase,), daemon=True).start()
 

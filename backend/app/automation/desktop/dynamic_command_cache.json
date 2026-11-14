@@ -1,0 +1,60 @@
+{
+  "fb open": {
+    "type": "url",
+    "url": "https://www.facebook.com",
+    "reply": "Opened Facebook, Mamu."
+  },
+  "movie open": {
+    "type": "url",
+    "url": "https://www.google.com/search?q=latest+movies",
+    "reply": "Opened Movies, Mamu."
+  },
+  "play in youtube": {
+    "type": "hotkey",
+    "key": "SPACE",
+    "reply": "Resumed playback, Mamu."
+  },
+  "close the window": {
+    "type": "window_close",
+    "reply": "Closed window, Mamu."
+  },
+  "keypad": {
+    "type": "cmd",
+    "cmd": "start osk.exe",
+    "reply": "Opened On-Screen Keyboard, Mamu."
+  },
+  "skip the ad": {
+    "type": "hotkey",
+    "key": "TAB+ENTER",
+    "reply": "Skipped ad, Mamu."
+  },
+  "play next video": {
+    "type": "hotkey",
+    "key": "SHIFT+N",
+    "reply": "Playing next video, Mamu."
+  },
+  "skip 30 seconds": {
+    "type": "multi_hotkey",
+    "keys": [
+      "L",
+      "L",
+      "L"
+    ],
+    "reply": "Skipped 30 seconds forward, Mamu."
+  },
+  "mute the video": {
+    "type": "hotkey",
+    "key": "M",
+    "reply": "Toggled audio mute, Mamu."
+  },
+  "pause the video": {
+    "type": "hotkey",
+    "key": "SPACE",
+    "reply": "Paused video playback, Mamu."
+  },
+  "close the tab": {
+    "type": "hotkey",
+    "key": "CTRL+W",
+    "reply": "Closed tab, Mamu."
+  }
+}
