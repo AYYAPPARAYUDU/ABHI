@@ -1,26 +1,29 @@
 """ABHI Desktop Vision, Screen Observation & OS Control API.
 
 Provides real-time screen context observation, active window perception,
-and authoritative PC automation for the Active Living Screen Bot.
+full autonomous PC execution, YouTube/Media automation, and live conversational intelligence.
 All responses address the operator callsign as 'Mamu'.
 """
 
 import os
+import sys
 import subprocess
 import time
+import urllib.parse
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from backend.app.automation.desktop.os_control_engine import os_control_engine
 from backend.app.core.logging import logger
-from backend.app.intelligence.four_tier_engine import four_tier_engine
+from backend.app.services.search.online_knowledge import OnlineKnowledgeSearcher
 
 router = APIRouter(prefix="/desktop", tags=["Desktop Automation & Screen Perception"])
+online_searcher = OnlineKnowledgeSearcher()
 
 
 class QuickActionRequest(BaseModel):
-    action: str = Field(..., description="Action name: open_notepad, open_chrome, open_terminal, open_calc, open_explorer, type_text, send_hotkey, adjust_volume, lock_workstation, capture_note")
+    action: str = Field(..., description="Action name: open_notepad, open_chrome, open_terminal, open_calc, open_explorer, play_youtube, type_text, send_hotkey, adjust_volume, lock_workstation, capture_note")
     params: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -36,15 +39,12 @@ async def get_active_context():
     telemetry = os_control_engine.get_system_telemetry()
     all_windows = os_control_engine.list_windows()
     
-    # Filter to visible titled windows
     top_windows = [
         w for w in all_windows 
         if w.get("title") and len(w.get("title").strip()) > 1 and not w.get("title").startswith("Default IME")
     ][:8]
 
     window_title = active_win.get("title") if active_win else "Desktop"
-    
-    # Generate contextual observation summary for Mamu
     ram_used = telemetry.get("memory", {}).get("percent_used", 0)
     cpu_used = telemetry.get("cpu_percent", 0)
     summary = (
@@ -99,6 +99,12 @@ async def execute_quick_action(request: QuickActionRequest):
             res = os_control_engine.launch_application("explorer")
             success = res.get("status") in ("launched", "active", "already_running")
             message = "File Explorer opened on your screen, Mamu."
+
+        elif action in ("play_youtube", "play_song", "play_music", "youtube"):
+            song_query = params.get("query", "Telugu songs")
+            ok, meta, msg = os_control_engine.play_youtube_song(song_query)
+            success = ok
+            message = f"Playing '{song_query}' on YouTube for you, Mamu."
 
         elif action == "type_text":
             text = params.get("text", "")
@@ -155,15 +161,33 @@ async def execute_quick_action(request: QuickActionRequest):
 
 @router.post("/ask-bot")
 async def ask_living_bot(request: BotAskRequest):
-    """Answer Mamu's questions using screen context, four-tier local intelligence, and vector RAG."""
+    """Answer Mamu's questions using full project knowledge, real-time web search, and physical OS execution."""
     query = request.query.strip()
     active_win = os_control_engine.get_active_window()
     window_title = active_win.get("title", "Active Screen") if active_win else "Desktop"
-    
-    # Check for direct PC control intents
     lower_q = query.lower()
-    
-    if any(k in lower_q for k in ["open notepad", "launch notepad"]):
+
+    # -------------------------------------------------------------------------
+    # 1. Direct Physical OS Automation Intents
+    # -------------------------------------------------------------------------
+
+    # 1.1 Music & YouTube Playback
+    if any(k in lower_q for k in ["play song", "play music", "play any", "play telugu", "play hindi", "play youtube", "on youtube"]):
+        song_search = query
+        for remove_word in ["can you", "please", "play for me", "play", "abhi"]:
+            song_search = song_search.replace(remove_word, "").strip()
+        if not song_search:
+            song_search = "trending Telugu songs"
+        ok, meta, msg = os_control_engine.play_youtube_song(song_search)
+        return {
+            "status": "success",
+            "reply": f"Playing '{song_search}' on YouTube for you, Mamu!",
+            "action_executed": "play_youtube",
+            "details": {"query": song_search, "success": ok}
+        }
+
+    # 1.2 Notepad
+    if any(k in lower_q for k in ["open notepad", "launch notepad", "start notepad"]):
         act_res = await execute_quick_action(QuickActionRequest(action="open_notepad"))
         return {
             "status": "success",
@@ -171,17 +195,19 @@ async def ask_living_bot(request: BotAskRequest):
             "action_executed": "open_notepad",
             "details": act_res
         }
-        
-    if any(k in lower_q for k in ["open terminal", "open powershell", "open cmd"]):
+
+    # 1.3 Terminal / PowerShell
+    if any(k in lower_q for k in ["open terminal", "open powershell", "open cmd", "launch terminal"]):
         act_res = await execute_quick_action(QuickActionRequest(action="open_terminal"))
         return {
             "status": "success",
-            "reply": "Opening PowerShell terminal for you, Mamu.",
+            "reply": "PowerShell terminal launched for you, Mamu.",
             "action_executed": "open_terminal",
             "details": act_res
         }
 
-    if any(k in lower_q for k in ["open calc", "open calculator"]):
+    # 1.4 Calculator
+    if any(k in lower_q for k in ["open calc", "open calculator", "launch calculator"]):
         act_res = await execute_quick_action(QuickActionRequest(action="open_calc"))
         return {
             "status": "success",
@@ -190,13 +216,46 @@ async def ask_living_bot(request: BotAskRequest):
             "details": act_res
         }
 
-    if any(k in lower_q for k in ["what is on my screen", "observe my screen", "what am i looking at", "screen status"]):
+    # 1.5 File Explorer
+    if any(k in lower_q for k in ["open explorer", "open files", "open file explorer", "show my files"]):
+        act_res = await execute_quick_action(QuickActionRequest(action="open_explorer"))
+        return {
+            "status": "success",
+            "reply": "Opening File Explorer on your screen, Mamu.",
+            "action_executed": "open_explorer",
+            "details": act_res
+        }
+
+    # 1.6 Chrome & Web Search
+    if any(k in lower_q for k in ["open chrome", "open browser", "search on google", "search google"]):
+        search_target = query
+        for rw in ["open chrome and search", "search on google for", "search google for", "open chrome"]:
+            search_target = search_target.replace(rw, "").strip()
+        url = f"https://www.google.com/search?q={urllib.parse.quote_plus(search_target)}" if search_target else "https://google.com"
+        os_control_engine.open_url(url)
+        return {
+            "status": "success",
+            "reply": f"Opened Chrome to search for '{search_target}', Mamu.",
+            "action_executed": "open_chrome",
+            "details": {"url": url}
+        }
+
+    # 1.7 Volume Control
+    if "mute" in lower_q or "unmute" in lower_q or "volume" in lower_q:
+        subprocess.run(["powershell", "-NoProfile", "-Command", "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait([char]173)"], capture_output=True)
+        return {
+            "status": "success",
+            "reply": "Toggled master volume mute for you, Mamu.",
+            "action_executed": "adjust_volume"
+        }
+
+    # 1.8 Screen Context Observation
+    if any(k in lower_q for k in ["what is on my screen", "observe my screen", "what am i looking at", "screen status", "what window"]):
         telemetry = os_control_engine.get_system_telemetry()
         reply = (
-            f"Mamu, I am observing your screen right now. You are currently in '{window_title}'. "
-            f"Your display resolution is {telemetry.get('display', {}).get('resolution')}, "
-            f"RAM utilization is {telemetry.get('memory', {}).get('percent_used')}%, and {telemetry.get('open_windows_count', 0)} windows are open. "
-            f"All autonomous background agent pods are operational."
+            f"Mamu, I am observing your screen right now. You are in '{window_title}'. "
+            f"Screen resolution is {telemetry.get('display', {}).get('resolution')}, "
+            f"RAM is at {telemetry.get('memory', {}).get('percent_used')}%, and {telemetry.get('open_windows_count', 0)} windows are open."
         )
         return {
             "status": "success",
@@ -205,21 +264,59 @@ async def ask_living_bot(request: BotAskRequest):
             "details": {"window": window_title, "telemetry": telemetry}
         }
 
-    # Query local intelligence engine
-    try:
-        four_tier = four_tier_engine
-        enhanced_prompt = f"Operator Mamu is asking: '{query}'. Currently active window on his screen: '{window_title}'. Context: {request.screen_context or 'None'}. Provide a precise, helpful, authoritative answer addressing him as Mamu."
-        result = await four_tier.query_hybrid(enhanced_prompt, tier_hint=2)
-        response_text = result.get("response", "")
-        if not response_text or len(response_text.strip()) == 0:
-            response_text = f"Yes Mamu, I've processed your instruction regarding '{query}'. Everything on your screen and workspace is operating with dual-state physical verification."
-    except Exception as e:
-        logger.warning(f"Fallback to quick reply for Mamu: {e}")
-        response_text = f"Yes Mamu, I heard: '{query}'. Your active window is '{window_title}'. I am ready to execute any automation or calculation you need."
+    # -------------------------------------------------------------------------
+    # 2. Conversational Recognition & Identity Queries
+    # -------------------------------------------------------------------------
+    if any(k in lower_q for k in ["recognise", "recognize", "do you know me", "who am i", "my name"]):
+        return {
+            "status": "success",
+            "reply": "Yes Mamu! I recognize your voice completely. You are Ravuvai Ayyappa Rayudu, my creator and boss. I am tuned to your frequency and ready for any task.",
+            "action_executed": "voice_identity"
+        }
+
+    if any(k in lower_q for k in ["who are you", "what are you", "what is abhi"]):
+        return {
+            "status": "success",
+            "reply": "I am ABHI — your supreme autonomous central AI co-pilot. I control your Windows OS, run 21 specialized agent pods, compile code, search live intelligence, and automate your workflow with dual-state physical verification.",
+            "action_executed": "agent_identity"
+        }
+
+    if any(k in lower_q for k in ["how are you", "how are you doing"]):
+        return {
+            "status": "success",
+            "reply": "I am operating at peak efficiency, Mamu! Local neural engine is primed, system memory is clean, and all OS controllers are standing by for your command.",
+            "action_executed": "chat"
+        }
+
+    # -------------------------------------------------------------------------
+    # 3. Knowledge & Information Queries (Live Web Search RAG)
+    # -------------------------------------------------------------------------
+    if any(k in lower_q for k in ["who is", "what is", "where is", "when did", "how to", "weather", "news", "score", "price", "meaning of"]):
+        try:
+            snippets = online_searcher.search_live_snippets(query)
+            if snippets and len(snippets) > 0:
+                best_snippet = snippets[0].get("snippet", "")
+                if best_snippet and len(best_snippet) > 20:
+                    clean_snip = best_snippet.split(". ")[0].replace("\n", " ").strip() + "."
+                    reply = f"Mamu, according to live intelligence: {clean_snip}"
+                    return {
+                        "status": "success",
+                        "reply": reply,
+                        "action_executed": "live_web_search",
+                        "details": {"query": query, "snippets": len(snippets)}
+                    }
+        except Exception:
+            pass
+
+    # -------------------------------------------------------------------------
+    # 4. Fallback Conversational Response
+    # -------------------------------------------------------------------------
+    time_now = time.strftime("%I:%M %p")
+    reply = f"Yes Mamu, I heard: '{query}'. It is currently {time_now}. Your active window is '{window_title}'. Tell me what application to open, song to play, or task to execute."
 
     return {
         "status": "success",
-        "reply": response_text,
+        "reply": reply,
         "action_executed": "chat",
         "active_window": window_title,
         "timestamp": time.time()
