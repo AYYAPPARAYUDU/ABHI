@@ -190,7 +190,16 @@ class DynamicActionResolver:
                 return True, cached_plan.get("action", "learned_action"), reply
 
         # ---------------------------------------------------------------------
-        # 1. Stop / Pause Media (Prioritized BEFORE Song Search!)
+        # 1. Incomplete / Bare Command Verbs ("open", "go", "launch", "play", "search")
+        # ---------------------------------------------------------------------
+        if lower_clean in ["open", "launch", "start", "go", "show"]:
+            return True, "ask_clarification", "What would you like me to open, Mamu? Tell me any application, website, or song."
+
+        if lower_clean in ["search", "search for"]:
+            return True, "ask_clarification", "What would you like me to search for, Mamu?"
+
+        # ---------------------------------------------------------------------
+        # 2. Stop / Pause Media (Prioritized BEFORE Song Search!)
         # ---------------------------------------------------------------------
         if any(lower_clean == p or p in lower_clean for p in [
             "stop the song", "stop song", "stop music", "stop video", "stop playing",
@@ -211,11 +220,12 @@ class DynamicActionResolver:
             self._cache_action(lower_clean, {"type": "hotkey", "key": "M", "reply": "Toggled audio mute, Mamu."})
             return True, "mute_video", "Toggled video audio mute, Mamu."
 
-        if any(k in lower_clean for k in ["skip ad", "skip the ad", "skip ads", "remove ad"]):
+        # Skip advertisement (handles 'skip ad' and phonetic 'skip add')
+        if any(k in lower_clean for k in ["skip ad", "skip add", "skip the ad", "skip the add", "skip ads", "remove ad", "remove add"]):
             os_control_engine.send_hotkey("TAB")
             time.sleep(0.05)
             os_control_engine.send_hotkey("ENTER")
-            self._cache_action(lower_clean, {"type": "hotkey", "key": "TAB+ENTER", "reply": "Skipped ad, Mamu."})
+            self._cache_action(lower_clean, {"type": "hotkey", "key": "TAB+ENTER", "reply": "Skipped the advertisement, Mamu."})
             return True, "skip_ad", "Skipped the advertisement, Mamu."
 
         if any(k in lower_clean for k in ["next video", "play next video", "next track", "next song"]):
@@ -246,15 +256,53 @@ class DynamicActionResolver:
             os_control_engine.send_hotkey("F")
             return True, "fullscreen_toggle", "Toggled fullscreen view, Mamu."
 
+        # Bare "video" or "open video"
+        if lower_clean in ["video", "open video", "play video"]:
+            os_control_engine.send_hotkey("SPACE")
+            return True, "toggle_video", "Toggled video playback, Mamu."
+
         # ---------------------------------------------------------------------
-        # 2. Interactive Window Management & Switching
+        # 3. YouTube Navigation & Search
+        # ---------------------------------------------------------------------
+        # Case A: Explicit Home Page Navigation
+        if any(k in lower_clean for k in [
+            "home page of youtube", "youtube home page", "youtube homepage",
+            "youtube home", "go to youtube", "open youtube", "youtube"
+        ]) and not any(k in lower_clean for k in ["search", "download", "song", "songs", "music", "play", "movie", "film"]):
+            os_control_engine.open_url("https://www.youtube.com")
+            self._cache_action(lower_clean, {"type": "url", "url": "https://www.youtube.com", "reply": "Opened YouTube home page for you, Mamu."})
+            return True, "open_youtube", "Opened YouTube home page for you, Mamu."
+
+        # Case B: YouTube Search & Topic Playing (e.g. "YouTube and search agriculture", "Rajasthani picture film")
+        if "youtube" in lower_clean or any(k in lower_clean for k in ["song", "songs", "music", "track", "film", "picture film", "movie", "trailer"]):
+            term = lower_clean
+            for w in [
+                "open youtube and search", "youtube and search", "search in youtube for",
+                "search on youtube for", "search in youtube", "search on youtube",
+                "search for", "search", "open youtube and play", "play on youtube",
+                "play in youtube", "in youtube", "on youtube", "open youtube",
+                "home page of", "go to home page of", "youtube", "open", "play", "and"
+            ]:
+                term = re.sub(rf"\b{w}\b", "", term, flags=re.IGNORECASE).strip()
+
+            term = re.sub(r"^(for|of|to|in|on|and|the)\s+", "", term).strip()
+            term = re.sub(r"\s+(for|of|to|in|on|and|the)$", "", term).strip()
+
+            if term and len(term) > 1 and term not in ["video", "videos", "song", "songs"]:
+                os_control_engine.play_youtube_song(term)
+                self._cache_action(lower_clean, {"type": "youtube_play", "query": term, "reply": f"Opened YouTube and searching for '{term}', Mamu!"})
+                return True, "play_youtube", f"Opened YouTube and searching for '{term}' for you, Mamu!"
+            else:
+                os_control_engine.open_url("https://www.youtube.com")
+                return True, "open_youtube", "Opened YouTube for you, Mamu."
+
+        # ---------------------------------------------------------------------
+        # 4. Interactive Window Management & Switching
         # ---------------------------------------------------------------------
         user_windows = self.get_user_open_windows()
 
-        # "switch window" or "next window"
         if any(lower_clean == p for p in ["switch window", "next window", "switch to next window", "alt tab"]):
             if len(user_windows) > 1:
-                # Focus the second window in stack
                 target_win = user_windows[1]
                 os_control_engine.focus_window(target_win["hwnd"])
                 names = [w["display_name"] for w in user_windows[:4]]
@@ -263,7 +311,6 @@ class DynamicActionResolver:
             elif len(user_windows) == 1:
                 return True, "switch_window", f"Only '{user_windows[0]['display_name']}' is currently active on your screen, Mamu."
 
-        # "what windows are open" or "list windows"
         if any(k in lower_clean for k in [
             "what windows are open", "which windows are open", "show open windows",
             "list windows", "what is open", "open windows", "active windows"
@@ -275,18 +322,16 @@ class DynamicActionResolver:
             else:
                 return True, "list_windows", "No main application windows are currently open, Mamu."
 
-        # "switch to <target>" or "go to <target>" or "focus <target>"
         m_switch_to = re.match(r"^(?:switch\s+to|go\s+to|focus|bring\s+up)\s+(.+)$", lower_clean)
         if m_switch_to:
             target_name = m_switch_to.group(1).strip()
-            # Find matching window
             for w in user_windows:
                 if target_name in w["display_name"].lower() or target_name in w["full_title"].lower():
                     os_control_engine.focus_window(w["hwnd"])
                     return True, f"switch_to_{target_name}", f"Switched to '{w['display_name']}' for you, Mamu."
 
         # ---------------------------------------------------------------------
-        # 3. Close Applications, Windows, and Tabs
+        # 5. Close Applications, Windows, and Tabs
         # ---------------------------------------------------------------------
         m_close = re.match(r"^close\s+([a-z0-9_\-\.\s]+)$", lower_clean)
         if m_close:
@@ -300,14 +345,13 @@ class DynamicActionResolver:
                 self._cache_action(lower_clean, {"type": "window_close", "reply": "Closed active window, Mamu."})
                 return True, "close_window", "Closed active window, Mamu."
             else:
-                # Specific app close (e.g. "close calculator", "close notepad", "close chrome")
                 os_control_engine.close_window(target)
                 os_control_engine.kill_process(target)
                 self._cache_action(lower_clean, {"type": "close_app", "target": target, "reply": f"Closed {target.title()} for you, Mamu."})
                 return True, f"close_{target}", f"Closed {target.title()} for you, Mamu."
 
         # ---------------------------------------------------------------------
-        # 4. Browser Navigation & Tabs
+        # 6. Browser Navigation & Tabs
         # ---------------------------------------------------------------------
         if any(k in lower_clean for k in ["new tab", "open new tab", "open a tab", "create tab"]):
             os_control_engine.new_tab()
@@ -354,34 +398,7 @@ class DynamicActionResolver:
             return True, "browser_history", "Opened browser history, Mamu."
 
         # ---------------------------------------------------------------------
-        # 5. YouTube & Music / Video / Film Automation
-        # ---------------------------------------------------------------------
-        if any(k in lower_clean for k in [
-            "youtube", "song", "songs", "music", "film", "picture film", "movie", "trailer", "video"
-        ]):
-            term = lower_clean
-            for w in [
-                "open youtube and", "open youtube", "youtube open", "in youtube", "on youtube",
-                "youtube", "search for", "search", "play", "open", "listen to", "can you",
-                "please", "now", "any", "song", "songs"
-            ]:
-                term = re.sub(rf"\b{w}\b", "", term, flags=re.IGNORECASE).strip()
-
-            if term and len(term) > 1:
-                query_term = term
-                if not any(k in term for k in ["song", "music", "film", "movie", "video"]):
-                    query_term = f"{term} songs"
-                ok, meta, _ = os_control_engine.play_youtube_song(query_term)
-                if ok:
-                    self._cache_action(lower_clean, {"type": "youtube_play", "query": query_term, "reply": f"Opened YouTube and playing '{query_term}', Mamu!"})
-                    return True, "play_youtube", f"Opened YouTube and playing '{query_term}' for you, Mamu!"
-            else:
-                os_control_engine.open_url("https://www.youtube.com")
-                self._cache_action(lower_clean, {"type": "url", "url": "https://www.youtube.com", "reply": "Opened YouTube for you, Mamu."})
-                return True, "open_youtube", "Opened YouTube for you, Mamu."
-
-        # ---------------------------------------------------------------------
-        # 6. Desktop OS Utilities
+        # 7. Desktop OS Utilities
         # ---------------------------------------------------------------------
         if any(k in lower_clean for k in ["show desktop", "minimize all", "desktop screen", "go to desktop"]):
             os_control_engine.send_hotkey("WIN+D")
@@ -405,9 +422,8 @@ class DynamicActionResolver:
             return True, "screenshot", "Screen snip tool activated, Mamu."
 
         # ---------------------------------------------------------------------
-        # 7. Direct Web Services / Apps (e.g. "Patrika", "WhatsApp", "Facebook")
+        # 8. Direct Web Services / Apps (e.g. "Patrika", "WhatsApp", "Facebook")
         # ---------------------------------------------------------------------
-        # Target with or without "open"/"launch"
         target_cand = re.sub(r"^(?:open|launch|start|goto|show)\s+", "", lower_clean).strip()
         target_cand = re.sub(r"\s+open$", "", target_cand).strip()
 
@@ -435,7 +451,7 @@ class DynamicActionResolver:
                 return True, f"launch_{target_cand}", f"Launched {target_cand.title()}, Mamu."
 
         # ---------------------------------------------------------------------
-        # 8. Live Web Search & General Knowledge Topics (e.g. "Kaushal Vikas", "who is cricketer")
+        # 9. Live Web Search & General Knowledge Topics (e.g. "Lucknow PIN code", "Kaushal Vikas", "who is cricketer")
         # ---------------------------------------------------------------------
         try:
             snippets = self._searcher.search_live_snippets(raw_query)
@@ -448,7 +464,7 @@ class DynamicActionResolver:
             pass
 
         # ---------------------------------------------------------------------
-        # 9. Presence, Identity & Capabilities
+        # 10. Presence, Identity & Capabilities
         # ---------------------------------------------------------------------
         if any(k in lower_clean for k in ["are you listening", "can you hear me", "are you there", "do you hear me"]):
             return True, "presence_check", "Yes Mamu, I am listening to your every word clearly! The entire OS controller and multi-agent swarm are at your command."

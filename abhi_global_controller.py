@@ -700,9 +700,9 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
             is_speaking = False
             phrase_frames = []
             silence_frames_count = 0
-            max_silence_frames = 2  # ~500ms silence terminates speech chunk
-            max_phrase_frames = 28  # 7 seconds max continuous utterance
-            pre_roll_buffer = collections.deque(maxlen=2)
+            max_silence_frames = 5  # ~1250ms silence terminates speech chunk to prevent mid-sentence cutting
+            max_phrase_frames = 36  # 9 seconds max continuous utterance
+            pre_roll_buffer = collections.deque(maxlen=3)
 
             while True:
                 if not self.is_mic_listening or self.bot_state == "SPEAKING":

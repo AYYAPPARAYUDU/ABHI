@@ -12,12 +12,27 @@
   "youtube": {
     "type": "url",
     "url": "https://www.youtube.com",
-    "reply": "Opened YouTube for you, Mamu."
+    "reply": "Opened YouTube home page for you, Mamu."
   },
   "open youtube": {
     "type": "url",
     "url": "https://www.youtube.com",
-    "reply": "Opened YouTube for you, Mamu."
+    "reply": "Opened YouTube home page for you, Mamu."
+  },
+  "play youtube": {
+    "type": "url",
+    "url": "https://www.youtube.com",
+    "reply": "Opened YouTube home page for you, Mamu."
+  },
+  "go to home page of youtube": {
+    "type": "url",
+    "url": "https://www.youtube.com",
+    "reply": "Opened YouTube home page for you, Mamu."
+  },
+  "youtube home page": {
+    "type": "url",
+    "url": "https://www.youtube.com",
+    "reply": "Opened YouTube home page for you, Mamu."
   },
   "patrika": {
     "type": "url",
@@ -68,6 +83,11 @@
     "key": "TAB+ENTER",
     "reply": "Skipped advertisement, Mamu."
   },
+  "skip add": {
+    "type": "hotkey",
+    "key": "TAB+ENTER",
+    "reply": "Skipped advertisement, Mamu."
+  },
   "play next video": {
     "type": "hotkey",
     "key": "SHIFT+N",
@@ -77,16 +97,6 @@
     "type": "cmd",
     "cmd": "start osk.exe",
     "reply": "On-Screen Keyboard opened on your screen, Mamu."
-  },
-  "hindi open youtube": {
-    "type": "youtube_play",
-    "query": "hindi songs",
-    "reply": "Opened YouTube and playing 'hindi songs', Mamu!"
-  },
-  "youtube telugu songs": {
-    "type": "youtube_play",
-    "query": "telugu songs",
-    "reply": "Opened YouTube and playing 'telugu songs', Mamu!"
   },
   "open calculator": {
     "type": "app",
@@ -98,14 +108,14 @@
     "target": "calculator",
     "reply": "Closed Calculator for you, Mamu."
   },
-  "play youtube": {
-    "type": "url",
-    "url": "https://www.youtube.com",
-    "reply": "Opened YouTube for you, Mamu."
-  },
-  "rajasthani picture film": {
+  "youtube download video": {
     "type": "youtube_play",
-    "query": "rajasthani picture film",
-    "reply": "Opened YouTube and playing 'rajasthani picture film', Mamu!"
+    "query": "download video",
+    "reply": "Opened YouTube and searching for 'download video', Mamu!"
+  },
+  "youtube and search agriculture": {
+    "type": "youtube_play",
+    "query": "agriculture",
+    "reply": "Opened YouTube and searching for 'agriculture', Mamu!"
   }
 }
