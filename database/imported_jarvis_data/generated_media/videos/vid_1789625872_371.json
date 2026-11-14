@@ -1,0 +1,256 @@
+{
+  "media_id": "vid_1789625872_371",
+  "type": "video",
+  "prompt": "human walks on water ",
+  "duration_sec": 5,
+  "fps": 30,
+  "total_frames": 150,
+  "keyframes_count": 30,
+  "keyframes": [
+    {
+      "frame": 0,
+      "time_sec": 0.0,
+      "camera_zoom": 1.0,
+      "camera_rotation_deg": 0.0,
+      "particle_density": 300,
+      "focal_color": "hsl(180, 100%, 55%)"
+    },
+    {
+      "frame": 5,
+      "time_sec": 0.17,
+      "camera_zoom": 1.017,
+      "camera_rotation_deg": 12.0,
+      "particle_density": 320,
+      "focal_color": "hsl(185, 100%, 55%)"
+    },
+    {
+      "frame": 10,
+      "time_sec": 0.33,
+      "camera_zoom": 1.033,
+      "camera_rotation_deg": 24.0,
+      "particle_density": 341,
+      "focal_color": "hsl(190, 100%, 55%)"
+    },
+    {
+      "frame": 15,
+      "time_sec": 0.5,
+      "camera_zoom": 1.05,
+      "camera_rotation_deg": 36.0,
+      "particle_density": 361,
+      "focal_color": "hsl(196, 100%, 55%)"
+    },
+    {
+      "frame": 20,
+      "time_sec": 0.67,
+      "camera_zoom": 1.067,
+      "camera_rotation_deg": 48.0,
+      "particle_density": 381,
+      "focal_color": "hsl(201, 100%, 55%)"
+    },
+    {
+      "frame": 25,
+      "time_sec": 0.83,
+      "camera_zoom": 1.083,
+      "camera_rotation_deg": 60.0,
+      "particle_density": 400,
+      "focal_color": "hsl(206, 100%, 55%)"
+    },
+    {
+      "frame": 30,
+      "time_sec": 1.0,
+      "camera_zoom": 1.1,
+      "camera_rotation_deg": 72.0,
+      "particle_density": 417,
+      "focal_color": "hsl(212, 100%, 55%)"
+    },
+    {
+      "frame": 35,
+      "time_sec": 1.17,
+      "camera_zoom": 1.117,
+      "camera_rotation_deg": 84.0,
+      "particle_density": 433,
+      "focal_color": "hsl(217, 100%, 55%)"
+    },
+    {
+      "frame": 40,
+      "time_sec": 1.33,
+      "camera_zoom": 1.133,
+      "camera_rotation_deg": 96.0,
+      "particle_density": 448,
+      "focal_color": "hsl(222, 100%, 55%)"
+    },
+    {
+      "frame": 45,
+      "time_sec": 1.5,
+      "camera_zoom": 1.15,
+      "camera_rotation_deg": 108.0,
+      "particle_density": 461,
+      "focal_color": "hsl(228, 100%, 55%)"
+    },
+    {
+      "frame": 50,
+      "time_sec": 1.67,
+      "camera_zoom": 1.167,
+      "camera_rotation_deg": 120.0,
+      "particle_density": 473,
+      "focal_color": "hsl(233, 100%, 55%)"
+    },
+    {
+      "frame": 55,
+      "time_sec": 1.83,
+      "camera_zoom": 1.183,
+      "camera_rotation_deg": 132.0,
+      "particle_density": 482,
+      "focal_color": "hsl(238, 100%, 55%)"
+    },
+    {
+      "frame": 60,
+      "time_sec": 2.0,
+      "camera_zoom": 1.2,
+      "camera_rotation_deg": 144.0,
+      "particle_density": 490,
+      "focal_color": "hsl(244, 100%, 55%)"
+    },
+    {
+      "frame": 65,
+      "time_sec": 2.17,
+      "camera_zoom": 1.217,
+      "camera_rotation_deg": 156.0,
+      "particle_density": 495,
+      "focal_color": "hsl(249, 100%, 55%)"
+    },
+    {
+      "frame": 70,
+      "time_sec": 2.33,
+      "camera_zoom": 1.233,
+      "camera_rotation_deg": 168.0,
+      "particle_density": 498,
+      "focal_color": "hsl(254, 100%, 55%)"
+    },
+    {
+      "frame": 75,
+      "time_sec": 2.5,
+      "camera_zoom": 1.25,
+      "camera_rotation_deg": 180.0,
+      "particle_density": 500,
+      "focal_color": "hsl(260, 100%, 55%)"
+    },
+    {
+      "frame": 80,
+      "time_sec": 2.67,
+      "camera_zoom": 1.267,
+      "camera_rotation_deg": 192.0,
+      "particle_density": 498,
+      "focal_color": "hsl(265, 100%, 55%)"
+    },
+    {
+      "frame": 85,
+      "time_sec": 2.83,
+      "camera_zoom": 1.283,
+      "camera_rotation_deg": 204.0,
+      "particle_density": 495,
+      "focal_color": "hsl(270, 100%, 55%)"
+    },
+    {
+      "frame": 90,
+      "time_sec": 3.0,
+      "camera_zoom": 1.3,
+      "camera_rotation_deg": 216.0,
+      "particle_density": 490,
+      "focal_color": "hsl(276, 100%, 55%)"
+    },
+    {
+      "frame": 95,
+      "time_sec": 3.17,
+      "camera_zoom": 1.317,
+      "camera_rotation_deg": 228.0,
+      "particle_density": 482,
+      "focal_color": "hsl(281, 100%, 55%)"
+    },
+    {
+      "frame": 100,
+      "time_sec": 3.33,
+      "camera_zoom": 1.333,
+      "camera_rotation_deg": 240.0,
+      "particle_density": 473,
+      "focal_color": "hsl(286, 100%, 55%)"
+    },
+    {
+      "frame": 105,
+      "time_sec": 3.5,
+      "camera_zoom": 1.35,
+      "camera_rotation_deg": 252.0,
+      "particle_density": 461,
+      "focal_color": "hsl(292, 100%, 55%)"
+    },
+    {
+      "frame": 110,
+      "time_sec": 3.67,
+      "camera_zoom": 1.367,
+      "camera_rotation_deg": 264.0,
+      "particle_density": 448,
+      "focal_color": "hsl(297, 100%, 55%)"
+    },
+    {
+      "frame": 115,
+      "time_sec": 3.83,
+      "camera_zoom": 1.383,
+      "camera_rotation_deg": 276.0,
+      "particle_density": 433,
+      "focal_color": "hsl(302, 100%, 55%)"
+    },
+    {
+      "frame": 120,
+      "time_sec": 4.0,
+      "camera_zoom": 1.4,
+      "camera_rotation_deg": 288.0,
+      "particle_density": 417,
+      "focal_color": "hsl(308, 100%, 55%)"
+    },
+    {
+      "frame": 125,
+      "time_sec": 4.17,
+      "camera_zoom": 1.417,
+      "camera_rotation_deg": 300.0,
+      "particle_density": 400,
+      "focal_color": "hsl(313, 100%, 55%)"
+    },
+    {
+      "frame": 130,
+      "time_sec": 4.33,
+      "camera_zoom": 1.433,
+      "camera_rotation_deg": 312.0,
+      "particle_density": 381,
+      "focal_color": "hsl(318, 100%, 55%)"
+    },
+    {
+      "frame": 135,
+      "time_sec": 4.5,
+      "camera_zoom": 1.45,
+      "camera_rotation_deg": 324.0,
+      "particle_density": 361,
+      "focal_color": "hsl(324, 100%, 55%)"
+    },
+    {
+      "frame": 140,
+      "time_sec": 4.67,
+      "camera_zoom": 1.467,
+      "camera_rotation_deg": 336.0,
+      "particle_density": 341,
+      "focal_color": "hsl(329, 100%, 55%)"
+    },
+    {
+      "frame": 145,
+      "time_sec": 4.83,
+      "camera_zoom": 1.483,
+      "camera_rotation_deg": 348.0,
+      "particle_density": 320,
+      "focal_color": "hsl(334, 100%, 55%)"
+    }
+  ],
+  "rendering_engine": "Neural Particle Keyframe Streamer",
+  "resolution": "1920x1080 (60fps Canvas Interpolation)",
+  "filename": "vid_1789625872_371.json",
+  "url": "/api/media/videos/vid_1789625872_371.json",
+  "created_at": "2026-09-17T06:17:52.535232"
+}

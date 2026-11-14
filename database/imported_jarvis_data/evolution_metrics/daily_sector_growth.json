@@ -1,0 +1,577 @@
+{
+  "history": [
+    {
+      "date": "2026-08-18",
+      "day_index": 1,
+      "scores": {
+        "coding": 68.9,
+        "empathy": 55.4,
+        "perception": 60.6,
+        "os_control": 72.4,
+        "language": 64.4,
+        "memory": 58.8
+      },
+      "average_mastery": 63.42,
+      "tokens_processed": 122020,
+      "neural_synapses": 4500,
+      "loss_convergence": 0.455,
+      "learning_velocity_pct": 74.0,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-19",
+      "day_index": 2,
+      "scores": {
+        "coding": 72.0,
+        "empathy": 60.2,
+        "perception": 64.7,
+        "os_control": 75.1,
+        "language": 68.1,
+        "memory": 63.2
+      },
+      "average_mastery": 67.22,
+      "tokens_processed": 155286,
+      "neural_synapses": 5320,
+      "loss_convergence": 0.432,
+      "learning_velocity_pct": 74.8,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-20",
+      "day_index": 3,
+      "scores": {
+        "coding": 71.8,
+        "empathy": 59.6,
+        "perception": 64.3,
+        "os_control": 75.0,
+        "language": 67.8,
+        "memory": 62.7
+      },
+      "average_mastery": 66.87,
+      "tokens_processed": 193552,
+      "neural_synapses": 6140,
+      "loss_convergence": 0.427,
+      "learning_velocity_pct": 75.6,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-21",
+      "day_index": 4,
+      "scores": {
+        "coding": 70.2,
+        "empathy": 57.6,
+        "perception": 62.5,
+        "os_control": 73.5,
+        "language": 66.0,
+        "memory": 60.8
+      },
+      "average_mastery": 65.1,
+      "tokens_processed": 226818,
+      "neural_synapses": 6960,
+      "loss_convergence": 0.404,
+      "learning_velocity_pct": 76.4,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-22",
+      "day_index": 5,
+      "scores": {
+        "coding": 74.8,
+        "empathy": 63.8,
+        "perception": 68.0,
+        "os_control": 77.6,
+        "language": 71.1,
+        "memory": 66.6
+      },
+      "average_mastery": 70.32,
+      "tokens_processed": 260084,
+      "neural_synapses": 7780,
+      "loss_convergence": 0.399,
+      "learning_velocity_pct": 77.2,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-23",
+      "day_index": 6,
+      "scores": {
+        "coding": 73.2,
+        "empathy": 61.8,
+        "perception": 66.2,
+        "os_control": 76.1,
+        "language": 69.4,
+        "memory": 64.7
+      },
+      "average_mastery": 68.57,
+      "tokens_processed": 293350,
+      "neural_synapses": 8600,
+      "loss_convergence": 0.376,
+      "learning_velocity_pct": 78.0,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-24",
+      "day_index": 7,
+      "scores": {
+        "coding": 73.0,
+        "empathy": 61.2,
+        "perception": 65.8,
+        "os_control": 76.0,
+        "language": 69.1,
+        "memory": 64.2
+      },
+      "average_mastery": 68.22,
+      "tokens_processed": 331616,
+      "neural_synapses": 9420,
+      "loss_convergence": 0.371,
+      "learning_velocity_pct": 78.8,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-25",
+      "day_index": 8,
+      "scores": {
+        "coding": 76.1,
+        "empathy": 66.0,
+        "perception": 69.9,
+        "os_control": 78.7,
+        "language": 72.8,
+        "memory": 68.6
+      },
+      "average_mastery": 72.02,
+      "tokens_processed": 364882,
+      "neural_synapses": 10240,
+      "loss_convergence": 0.348,
+      "learning_velocity_pct": 79.6,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-26",
+      "day_index": 9,
+      "scores": {
+        "coding": 75.9,
+        "empathy": 65.5,
+        "perception": 69.5,
+        "os_control": 78.7,
+        "language": 72.4,
+        "memory": 68.1
+      },
+      "average_mastery": 71.68,
+      "tokens_processed": 398148,
+      "neural_synapses": 11060,
+      "loss_convergence": 0.343,
+      "learning_velocity_pct": 80.4,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-27",
+      "day_index": 10,
+      "scores": {
+        "coding": 74.3,
+        "empathy": 63.5,
+        "perception": 67.7,
+        "os_control": 77.2,
+        "language": 70.7,
+        "memory": 66.2
+      },
+      "average_mastery": 69.93,
+      "tokens_processed": 431414,
+      "neural_synapses": 11880,
+      "loss_convergence": 0.32,
+      "learning_velocity_pct": 81.2,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-28",
+      "day_index": 11,
+      "scores": {
+        "coding": 78.9,
+        "empathy": 69.7,
+        "perception": 73.2,
+        "os_control": 81.3,
+        "language": 75.8,
+        "memory": 72.0
+      },
+      "average_mastery": 75.15,
+      "tokens_processed": 469680,
+      "neural_synapses": 12700,
+      "loss_convergence": 0.315,
+      "learning_velocity_pct": 82.0,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-29",
+      "day_index": 12,
+      "scores": {
+        "coding": 77.3,
+        "empathy": 67.7,
+        "perception": 71.4,
+        "os_control": 79.8,
+        "language": 74.1,
+        "memory": 70.1
+      },
+      "average_mastery": 73.4,
+      "tokens_processed": 502946,
+      "neural_synapses": 13520,
+      "loss_convergence": 0.292,
+      "learning_velocity_pct": 82.8,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-30",
+      "day_index": 13,
+      "scores": {
+        "coding": 77.1,
+        "empathy": 67.1,
+        "perception": 70.9,
+        "os_control": 79.7,
+        "language": 73.8,
+        "memory": 69.6
+      },
+      "average_mastery": 73.03,
+      "tokens_processed": 536212,
+      "neural_synapses": 14340,
+      "loss_convergence": 0.287,
+      "learning_velocity_pct": 83.6,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-08-31",
+      "day_index": 14,
+      "scores": {
+        "coding": 80.2,
+        "empathy": 71.9,
+        "perception": 75.1,
+        "os_control": 82.4,
+        "language": 77.4,
+        "memory": 74.0
+      },
+      "average_mastery": 76.83,
+      "tokens_processed": 569478,
+      "neural_synapses": 15160,
+      "loss_convergence": 0.264,
+      "learning_velocity_pct": 84.4,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-01",
+      "day_index": 15,
+      "scores": {
+        "coding": 80.0,
+        "empathy": 71.3,
+        "perception": 74.7,
+        "os_control": 82.3,
+        "language": 77.1,
+        "memory": 73.5
+      },
+      "average_mastery": 76.48,
+      "tokens_processed": 607744,
+      "neural_synapses": 15980,
+      "loss_convergence": 0.259,
+      "learning_velocity_pct": 85.2,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-02",
+      "day_index": 16,
+      "scores": {
+        "coding": 78.4,
+        "empathy": 69.3,
+        "perception": 72.8,
+        "os_control": 80.8,
+        "language": 75.4,
+        "memory": 71.6
+      },
+      "average_mastery": 74.72,
+      "tokens_processed": 641010,
+      "neural_synapses": 16800,
+      "loss_convergence": 0.236,
+      "learning_velocity_pct": 86.0,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-03",
+      "day_index": 17,
+      "scores": {
+        "coding": 83.0,
+        "empathy": 75.5,
+        "perception": 78.4,
+        "os_control": 84.9,
+        "language": 80.5,
+        "memory": 77.4
+      },
+      "average_mastery": 79.95,
+      "tokens_processed": 674276,
+      "neural_synapses": 17620,
+      "loss_convergence": 0.231,
+      "learning_velocity_pct": 86.8,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-04",
+      "day_index": 18,
+      "scores": {
+        "coding": 81.4,
+        "empathy": 73.5,
+        "perception": 76.5,
+        "os_control": 83.4,
+        "language": 78.8,
+        "memory": 75.5
+      },
+      "average_mastery": 78.18,
+      "tokens_processed": 707542,
+      "neural_synapses": 18440,
+      "loss_convergence": 0.208,
+      "learning_velocity_pct": 87.6,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-05",
+      "day_index": 19,
+      "scores": {
+        "coding": 81.2,
+        "empathy": 73.0,
+        "perception": 76.1,
+        "os_control": 83.3,
+        "language": 78.4,
+        "memory": 75.0
+      },
+      "average_mastery": 77.83,
+      "tokens_processed": 745808,
+      "neural_synapses": 19260,
+      "loss_convergence": 0.203,
+      "learning_velocity_pct": 88.4,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-06",
+      "day_index": 20,
+      "scores": {
+        "coding": 84.3,
+        "empathy": 77.7,
+        "perception": 80.3,
+        "os_control": 86.0,
+        "language": 82.1,
+        "memory": 79.4
+      },
+      "average_mastery": 81.63,
+      "tokens_processed": 779074,
+      "neural_synapses": 20080,
+      "loss_convergence": 0.18,
+      "learning_velocity_pct": 89.2,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-07",
+      "day_index": 21,
+      "scores": {
+        "coding": 84.1,
+        "empathy": 77.2,
+        "perception": 79.8,
+        "os_control": 85.9,
+        "language": 81.8,
+        "memory": 78.9
+      },
+      "average_mastery": 81.28,
+      "tokens_processed": 812340,
+      "neural_synapses": 20900,
+      "loss_convergence": 0.175,
+      "learning_velocity_pct": 90.0,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-08",
+      "day_index": 22,
+      "scores": {
+        "coding": 82.5,
+        "empathy": 75.2,
+        "perception": 78.0,
+        "os_control": 84.4,
+        "language": 80.1,
+        "memory": 77.0
+      },
+      "average_mastery": 79.53,
+      "tokens_processed": 845606,
+      "neural_synapses": 21720,
+      "loss_convergence": 0.152,
+      "learning_velocity_pct": 90.8,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-09",
+      "day_index": 23,
+      "scores": {
+        "coding": 87.1,
+        "empathy": 81.4,
+        "perception": 83.6,
+        "os_control": 88.5,
+        "language": 85.2,
+        "memory": 82.8
+      },
+      "average_mastery": 84.77,
+      "tokens_processed": 883872,
+      "neural_synapses": 22540,
+      "loss_convergence": 0.147,
+      "learning_velocity_pct": 91.6,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-10",
+      "day_index": 24,
+      "scores": {
+        "coding": 85.5,
+        "empathy": 79.4,
+        "perception": 81.7,
+        "os_control": 87.1,
+        "language": 83.4,
+        "memory": 80.9
+      },
+      "average_mastery": 83.0,
+      "tokens_processed": 917138,
+      "neural_synapses": 23360,
+      "loss_convergence": 0.124,
+      "learning_velocity_pct": 92.4,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-11",
+      "day_index": 25,
+      "scores": {
+        "coding": 85.3,
+        "empathy": 78.8,
+        "perception": 81.3,
+        "os_control": 87.0,
+        "language": 83.1,
+        "memory": 80.4
+      },
+      "average_mastery": 82.65,
+      "tokens_processed": 950404,
+      "neural_synapses": 24180,
+      "loss_convergence": 0.119,
+      "learning_velocity_pct": 93.2,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-12",
+      "day_index": 26,
+      "scores": {
+        "coding": 88.4,
+        "empathy": 83.6,
+        "perception": 85.4,
+        "os_control": 89.7,
+        "language": 86.8,
+        "memory": 84.8
+      },
+      "average_mastery": 86.45,
+      "tokens_processed": 983670,
+      "neural_synapses": 25000,
+      "loss_convergence": 0.096,
+      "learning_velocity_pct": 94.0,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-13",
+      "day_index": 27,
+      "scores": {
+        "coding": 88.2,
+        "empathy": 83.0,
+        "perception": 85.0,
+        "os_control": 89.6,
+        "language": 86.5,
+        "memory": 84.3
+      },
+      "average_mastery": 86.1,
+      "tokens_processed": 1021936,
+      "neural_synapses": 25820,
+      "loss_convergence": 0.091,
+      "learning_velocity_pct": 94.8,
+      "status": "ADAPTING"
+    },
+    {
+      "date": "2026-09-14",
+      "day_index": 28,
+      "scores": {
+        "coding": 86.6,
+        "empathy": 81.0,
+        "perception": 83.2,
+        "os_control": 88.1,
+        "language": 84.8,
+        "memory": 82.4
+      },
+      "average_mastery": 84.35,
+      "tokens_processed": 1055202,
+      "neural_synapses": 26640,
+      "loss_convergence": 0.068,
+      "learning_velocity_pct": 95.6,
+      "status": "CONVERGED"
+    },
+    {
+      "date": "2026-09-15",
+      "day_index": 29,
+      "scores": {
+        "coding": 91.2,
+        "empathy": 87.2,
+        "perception": 88.7,
+        "os_control": 92.2,
+        "language": 89.8,
+        "memory": 88.2
+      },
+      "average_mastery": 89.55,
+      "tokens_processed": 1088468,
+      "neural_synapses": 27460,
+      "loss_convergence": 0.063,
+      "learning_velocity_pct": 96.4,
+      "status": "CONVERGED"
+    },
+    {
+      "date": "2026-09-16",
+      "day_index": 30,
+      "scores": {
+        "coding": 89.6,
+        "empathy": 85.2,
+        "perception": 86.9,
+        "os_control": 90.7,
+        "language": 88.1,
+        "memory": 86.3
+      },
+      "average_mastery": 87.8,
+      "tokens_processed": 1121734,
+      "neural_synapses": 28280,
+      "loss_convergence": 0.04,
+      "learning_velocity_pct": 97.2,
+      "status": "CONVERGED"
+    },
+    {
+      "date": "2026-09-17",
+      "day_index": 31,
+      "scores": {
+        "coding": 90.84,
+        "empathy": 85.1,
+        "perception": 86.9,
+        "os_control": 91.08,
+        "language": 88.2,
+        "memory": 86.36
+      },
+      "average_mastery": 88.08,
+      "tokens_processed": 1224000,
+      "neural_synapses": 29652,
+      "loss_convergence": 0.035,
+      "learning_velocity_pct": 98.0,
+      "status": "CONVERGED"
+    }
+  ],
+  "last_updated": "2026-09-17T05:38:31.657474",
+  "scores": {
+    "coding": 89.4,
+    "empathy": 74.32,
+    "perception": 77.44,
+    "os_control": 84.88,
+    "language": 80.24,
+    "memory": 78.24
+  },
+  "last_event": {
+    "sector": "language",
+    "delta": 0.08,
+    "type": "online_ingestion",
+    "timestamp": "2026-09-23T03:55:30.003353"
+  }
+}

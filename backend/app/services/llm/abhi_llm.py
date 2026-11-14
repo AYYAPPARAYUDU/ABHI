@@ -16,6 +16,7 @@ from pydantic import BaseModel, Field
 
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
+from backend.app.analytics.agent_llm_analytics import agent_llm_analytics
 from backend.app.services.llm.ollama_client import (
     LLMResponse,
     ModelInfo,
@@ -116,6 +117,7 @@ class AbhiNativeLLM:
     ) -> LLMResponse:
         """Dynamically generate completions or structured DAG plans."""
         target_model = model or self.model_id
+        start_t = time.perf_counter()
 
         # 1. Try local Ollama model first for authentic intelligence
         if await ollama_client.is_healthy():
@@ -128,6 +130,17 @@ class AbhiNativeLLM:
                     stream=stream,
                     options=options,
                     **kwargs
+                )
+                latency_ms = (time.perf_counter() - start_t) * 1000.0
+                prompt_tokens = len(prompt.split()) * 2
+                comp_tokens = len(resp.response.split()) * 2 if resp.response else 20
+                agent_llm_analytics.record_llm_call(
+                    model_name=target_model,
+                    latency_ms=latency_ms,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=comp_tokens,
+                    is_fallback=False,
+                    success=True
                 )
                 if resp.response:
                     thought, cleaned = extract_thinking_and_clean_text(resp.response)
@@ -151,6 +164,17 @@ class AbhiNativeLLM:
                 stream=stream,
                 options=options,
                 **kwargs
+            )
+            latency_ms = (time.perf_counter() - start_t) * 1000.0
+            prompt_tokens = len(prompt.split()) * 2
+            comp_tokens = len(resp.response.split()) * 2 if resp.response else 20
+            agent_llm_analytics.record_llm_call(
+                model_name=f"{target_model} (standalone)",
+                latency_ms=latency_ms,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=comp_tokens,
+                is_fallback=True,
+                success=True
             )
             if format_schema and resp.response:
                 cleaned = clean_json_markdown(resp.response)

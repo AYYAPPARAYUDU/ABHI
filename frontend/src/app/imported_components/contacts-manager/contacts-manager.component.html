@@ -1,0 +1,63 @@
+<div class="contacts-panel">
+  <div class="panel-header">
+    <div class="title-wrap">
+      <i class="fas fa-address-book gold-glow"></i>
+      <span class="panel-title">MEMORY & CONTACTS DIRECTORY</span>
+    </div>
+    <span class="badge">{{ contacts.length }} REGISTERED</span>
+  </div>
+
+  <div class="status-banner" *ngIf="statusMessage">
+    <i class="fas fa-check-circle"></i> {{ statusMessage }}
+  </div>
+
+  <!-- Add Contact Quick Form -->
+  <div class="add-card">
+    <div class="card-title"><i class="fas fa-user-plus"></i> REGISTER CONTACT FOR WHATSAPP & OS ACTIONS</div>
+    <div class="form-grid">
+      <input type="text" [(ngModel)]="newName" placeholder="Name (e.g. Dheenu)" class="cyber-input" />
+      <input type="text" [(ngModel)]="newPhone" placeholder="Phone (+91... / 10 digits)" class="cyber-input" />
+      <input type="email" [(ngModel)]="newEmail" placeholder="Email Address (Optional)" class="cyber-input" />
+      <input type="text" [(ngModel)]="newNotes" placeholder="Notes / Role (Optional)" class="cyber-input" />
+    </div>
+    <button class="add-btn" (click)="addContact()" [disabled]="!newName.trim()">
+      <i class="fas fa-save"></i> MEMORIZE CONTACT
+    </button>
+  </div>
+
+  <!-- Search Filter -->
+  <div class="search-bar">
+    <i class="fas fa-search"></i>
+    <input type="text" [(ngModel)]="searchQuery" placeholder="Search contacts by name, phone or email..." class="search-input" />
+  </div>
+
+  <!-- Contacts List -->
+  <div class="contacts-list" *ngIf="filteredContacts.length > 0">
+    <div class="contact-card" *ngFor="let c of filteredContacts">
+      <div class="avatar-circle">
+        {{ c.name.charAt(0).toUpperCase() }}
+      </div>
+      <div class="contact-info">
+        <div class="contact-name">{{ c.name | uppercase }}</div>
+        <div class="contact-meta">
+          <span *ngIf="c.phone"><i class="fab fa-whatsapp text-green"></i> {{ c.phone }}</span>
+          <span *ngIf="c.email"><i class="fas fa-envelope text-cyan"></i> {{ c.email }}</span>
+          <span *ngIf="c.notes" class="notes-tag">{{ c.notes }}</span>
+        </div>
+      </div>
+      <div class="contact-actions">
+        <button class="action-btn wa-btn" (click)="openWhatsAppForContact(c)" title="Send WhatsApp Message">
+          <i class="fab fa-whatsapp"></i> CHAT
+        </button>
+        <button class="action-btn del-btn" (click)="deleteContact(c.name)" title="Delete Contact">
+          <i class="fas fa-trash-alt"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="filteredContacts.length === 0 && !isLoading">
+    <i class="fas fa-users-slash"></i>
+    <p>No contacts found. Register 'Dheenu' or any contact above so ABHI & Indra can send messages directly on WhatsApp!</p>
+  </div>
+</div>

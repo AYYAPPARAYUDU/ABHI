@@ -24,23 +24,33 @@ class WakeWordDetector:
     """Detects 'Hey Mamu' wake words and 'Ok Bye Mamu' sleep words with multilingual support."""
 
     WAKE_PHRASES = [
-        "hey mamu", "hay mamu", "he mamu", "hi mamu", "hello mamu", "mamu",
-        "hey abhi", "hay abhi", "abhi", "wake up abhi", "wake up mamu",
-        "హే మామూ", "హాయ్ మామూ", "మామూ", "హే అభి", "లే మామూ",
-        "हे मामू", "हाय मामू", "मामू", "सुनो मामू", "अभि", "जागो मामू",
-        "ஹே மாமு", "ஹாய் மாமு", "மாமு", "அபி"
+        "hey abhi", "hay abhi", "he abhi", "hi abhi", "hello abhi", "ok abhi", "okay abhi", "wake up abhi", "listen abhi",
+        "hey abi", "hay abi", "hi abi", "hello abi",
+        "hey avi", "hay avi",
+        "abhi", "abi", "avi", "abhee", "obby",
+        "hey mamu", "hay mamu", "he mamu", "hi mamu", "hello mamu", "mamu", "wake up mamu",
+        "హే అభి", "హాయ్ అభి", "అభి", "లే అభి",
+        "హే మామూ", "హాయ్ మామూ", "మామూ", "లే మామూ",
+        "हे अभि", "हाय अभि", "अभि", "जागो अभि",
+        "हे मामू", "हाय मामू", "मामू", "सुनो मामू", "जागो मामू",
+        "ஹே அபி", "அபி",
+        "ஹே மாமு", "மாமு"
     ]
 
     SLEEP_PHRASES = [
+        "ok bye abhi", "okay bye abhi", "bye abhi", "goodbye abhi", "sleep abhi", "close abhi", "stop abhi",
         "ok bye mamu", "okay bye mamu", "bye mamu", "goodbye mamu", "bye bye mamu",
         "stop mamu", "sleep mamu", "close mamu", "shut down mamu", "standby mamu",
         "ok bye", "okay bye", "goodbye abhi", "bye abhi", "sleep abhi",
+        "సరే బై అభి", "బై అభి", "ఆపు అభి", "నిద్రపో అభి",
         "సరే బై మామూ", "ఓకే బై మామూ", "బై మామూ", "ఆపు మామూ", "నిద్రపో మామూ", "సెలవు మామూ",
+        "ओके बाय अभि", "बाय अभि", "अलविदा अभि", "बंद करो अभि", "सो जाओ अभि",
         "ओके बाय मामू", "बाय मामू", "अलविदा मामू", "बंद करो मामू", "सो जाओ मामू",
+        "பாய் அபி", "நிறுத்து அபி",
         "பாய் மாமு", "நிறுத்து மாமு", "தூங்கு மாமு"
     ]
 
-    def __init__(self, keyword: str = "HEY MAMU", cooldown_duration_sec: float = 1.5, threshold: float = 0.70):
+    def __init__(self, keyword: str = "HEY ABHI", cooldown_duration_sec: float = 1.5, threshold: float = 0.70):
         self.keyword = keyword.upper()
         self.cooldown_duration_sec = cooldown_duration_sec
         self.threshold = threshold

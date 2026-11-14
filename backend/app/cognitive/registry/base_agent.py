@@ -5,6 +5,7 @@ import time
 from typing import Any, Dict
 from backend.app.cognitive.registry.models import AgentMetadata, AgentTaskRequest, AgentTaskResult
 from backend.app.core.logging import logger
+from backend.app.analytics.agent_llm_analytics import agent_llm_analytics
 
 
 class BaseAgent(ABC):
@@ -33,10 +34,28 @@ class BaseAgent(ABC):
             logger.info(f"[{self.agent_id}] Executing action '{request.action}' on node '{request.node_id}'")
             result = await self.execute(request)
             result.execution_duration_ms = int((time.perf_counter() - start_ts) * 1000)
+            agent_llm_analytics.record_agent_execution(
+                agent_id=self.agent_id,
+                name=self.metadata.name,
+                role=self.metadata.description,
+                latency_ms=result.execution_duration_ms,
+                success=result.success,
+                tools_called=1,
+                verification_passed=result.success
+            )
             return result
         except Exception as e:
             duration = int((time.perf_counter() - start_ts) * 1000)
             logger.error(f"[{self.agent_id}] Action '{request.action}' failed: {str(e)}")
+            agent_llm_analytics.record_agent_execution(
+                agent_id=self.agent_id,
+                name=self.metadata.name,
+                role=self.metadata.description,
+                latency_ms=duration,
+                success=False,
+                tools_called=1,
+                verification_passed=False
+            )
             return AgentTaskResult(
                 task_id=request.task_id,
                 node_id=request.node_id,

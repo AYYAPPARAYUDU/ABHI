@@ -899,19 +899,29 @@ export class SpeechVoiceService {
   }
 
   private readonly WAKE_TRIGGERS = [
-    'hey mamu', 'hay mamu', 'he mamu', 'hi mamu', 'hello mamu', 'mamu',
-    'hey abhi', 'hay abhi', 'abhi', 'wake up mamu', 'wake up abhi',
-    'హే మామూ', 'హాయ్ మామూ', 'మామూ', 'హే అభి', 'లే మామూ',
-    'हे मामू', 'हाय मामू', 'मामू', 'सुनो मामू', 'अभि', 'जागो मामू',
-    'ஹே மாமு', 'ஹாய் மாமு', 'மாமு', 'அபி'
+    'hey abhi', 'hay abhi', 'he abhi', 'hi abhi', 'hello abhi', 'ok abhi', 'okay abhi', 'wake up abhi', 'listen abhi',
+    'hey abi', 'hay abi', 'hi abi', 'hello abi',
+    'hey avi', 'hay avi',
+    'abhi', 'abi', 'avi', 'abhee', 'obby',
+    'hey mamu', 'hay mamu', 'he mamu', 'hi mamu', 'hello mamu', 'mamu', 'wake up mamu',
+    'హే అభి', 'హాయ్ అభి', 'అభి', 'లే అభి',
+    'హే మామూ', 'హాయ్ మామూ', 'మామూ', 'లే మామూ',
+    'हे अभि', 'हाय अभि', 'अभि', 'जागो अभि',
+    'हे मामू', 'हाय मामू', 'मामू', 'सुनो मामू', 'जागो मामू',
+    'ஹே அபி', 'அபி',
+    'ஹே மாமு', 'மாமு'
   ];
 
   private readonly SLEEP_TRIGGERS = [
+    'ok bye abhi', 'okay bye abhi', 'bye abhi', 'goodbye abhi', 'sleep abhi', 'close abhi', 'stop abhi',
     'ok bye mamu', 'okay bye mamu', 'bye mamu', 'goodbye mamu', 'bye bye mamu',
     'stop mamu', 'sleep mamu', 'close mamu', 'standby mamu',
-    'ok bye', 'okay bye', 'goodbye abhi', 'bye abhi', 'sleep abhi', 'close abhi',
+    'ok bye', 'okay bye',
+    'సరే బై అభి', 'బై అభి', 'ఆపు అభి', 'నిద్రపో అభి',
     'సరే బై మామూ', 'ఓకే బై మామూ', 'బై మామూ', 'ఆపు మామూ', 'నిద్రపో మామూ', 'సెలవు మామూ',
+    'ओके बाय अभि', 'बाय अभि', 'अलविदा अभि', 'बंद करो अभि', 'सो जाओ अभि',
     'ओके बाय मामू', 'बाय मामू', 'अलविदा मामू', 'बंद करो मामू', 'सो जाओ मामू',
+    'பாய் அபி', 'நிறுத்து அபி',
     'பாய் மாமு', 'நிறுத்து மாமு', 'தூங்கு மாமு'
   ];
 
@@ -935,6 +945,11 @@ export class SpeechVoiceService {
       if (regex.test(lower) || lower.includes(wake)) {
         return 'WAKE';
       }
+    }
+
+    // Regex check for "abhi", "abi", "avi", "abhee"
+    if (/\b(hey|hay|hi|hello|ok|wake\s*up|listen)?\s*(abhi|abi|avi|abhee)\b/i.test(lower)) {
+      return 'WAKE';
     }
 
     return 'NONE';

@@ -53,6 +53,6 @@ def setup_windows_proactor_handler():
 
 if __name__ == "__main__":
     setup_windows_proactor_handler()
-    uvicorn.run("backend.app.main:app", host="0.0.0.0", port=8000, log_level="info")
+    uvicorn.run("backend.app.main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
 
 

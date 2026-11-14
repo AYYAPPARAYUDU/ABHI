@@ -24,6 +24,9 @@ dist/
 *.key
 
 # Runtime Databases & Media Storage
+*.db
+*.db-wal
+*.db-shm
 database/relational/*.db
 database/relational/*.db-wal
 database/relational/*.db-shm

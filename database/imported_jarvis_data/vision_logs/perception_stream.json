@@ -1,0 +1,18 @@
+{
+  "dominant_emotion": "Deep Focus",
+  "emotion_scores": {
+    "Deep Focus": 0.99,
+    "Joy": 0.55,
+    "Calm": 0.65,
+    "Curiosity": 0.55,
+    "Fatigue": 0.15,
+    "Stress": 0.08
+  },
+  "attention_level": 0.99,
+  "blink_rate_bpm": 15,
+  "speech_tone": "Active & Expressive",
+  "audio_decibel_avg": 52.0,
+  "face_detected": true,
+  "clone_mirror_response": "I feel your intense concentration. Synchronizing our neural workflows for maximum execution speed.",
+  "last_synced": "2026-09-17T12:19:06.989438"
+}

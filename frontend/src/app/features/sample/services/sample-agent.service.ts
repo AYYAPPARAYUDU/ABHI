@@ -19,13 +19,13 @@ export class SampleAgentService {
   readonly totalAgents = signal<number>(31);
   readonly runningAgentsCount = signal<number>(12);
   readonly realNotesCount = signal<number>(1842);
-  readonly liveTasksToday = signal<number>(18);
-  readonly sbiBalanceFormatted = signal<string>('₹30.98L REAL SBI');
+  readonly liveTasksToday = signal<number>(0);
+  readonly sbiBalanceFormatted = signal<string>('₹0.00 SBI');
   readonly realChatMessages = signal<{ agent: string; msg: string; time: string; color: string }[]>([
     { agent: 'Synthex-Dev', msg: 'Compiling responsive spatial HUD and Three.js isometric pod camera gliders.', time: '14:24:01', color: '#10b981' },
     { agent: 'Nexus-Comms', msg: 'Synchronizing daily operator agenda & Sovereign SBI payment notifications.', time: '14:24:28', color: '#f59e0b' },
     { agent: 'Aegis-Critic', msg: 'Dual-State AST Syntax Audit verified with 100% physically authentic state.', time: '14:25:12', color: '#3b82f6' },
-    { agent: 'Stark-Forge', msg: 'Amazon & ClickBank monetization cycle completed. Settled directly into SBI 41130645649.', time: '14:25:40', color: '#f43f5e' }
+    { agent: 'Stark-Forge', msg: 'Monetization engine ready. Waiting for authentic client orders or verified UTR payments.', time: '14:25:40', color: '#f43f5e' }
   ]);
 
   private pollTimer: any = null;
@@ -50,12 +50,17 @@ export class SampleAgentService {
         const ws = d.work_status;
         const resrc = d.resources;
         const treas = d.treasury;
-        if (treas && treas.settled_revenue_inr) {
-          const lakhs = (treas.settled_revenue_inr / 100000).toFixed(2);
-          this.sbiBalanceFormatted.set(`₹${lakhs}L REAL SBI`);
+        if (treas && treas.settled_revenue_inr !== undefined) {
+          const rev = Number(treas.settled_revenue_inr) || 0;
+          if (rev >= 100000) {
+            const lakhs = (rev / 100000).toFixed(2);
+            this.sbiBalanceFormatted.set(`₹${lakhs}L REAL SBI`);
+          } else {
+            this.sbiBalanceFormatted.set(`₹${rev.toFixed(2)} SBI`);
+          }
         }
         if (ws) {
-          this.liveTasksToday.set(ws.tasks_completed_today || 18);
+          this.liveTasksToday.set(ws.tasks_completed_today || 0);
         }
       }
     } catch {
@@ -185,7 +190,7 @@ export class SampleAgentService {
         { name: 'automated-partner-payout', progress: 99 },
         { name: 'cryptographic-receipt-vault', progress: 100 }
       ],
-      recentOutput: 'Continuous 24/7 revenue settled into SBI Account 41130645649'
+      recentOutput: 'Real banking & UPI settlement channels active for authentic client transactions'
     }
   ]);
 

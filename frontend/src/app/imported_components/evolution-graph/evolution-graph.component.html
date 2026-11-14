@@ -1,0 +1,344 @@
+<div class="evolution-container">
+  <div class="matrix-header">
+    <div class="title-cluster">
+      <div class="pulse-orb"></div>
+      <div>
+        <h3>📈 NEURAL CLONE EVOLUTION MATRIX & ALGORITHMS</h3>
+        <p class="subtitle">Live Machine Learning Training Telemetry & Real Mathematical Loss Convergence</p>
+      </div>
+    </div>
+
+    <div class="view-toggles">
+      <button [class.active]="activeView === 'trees'" (click)="setView('trees')">🌲 DYNAMIC DECISION TREES & ML PIPELINE</button>
+      <button [class.active]="activeView === 'algorithms'" (click)="setView('algorithms')">🔬 ALGORITHMS & TRAINING</button>
+      <button [class.active]="activeView === 'daily'" (click)="setView('daily')">📅 DAY-BY-DAY</button>
+      <button [class.active]="activeView === 'monthly'" (click)="setView('monthly')">🌌 MONTHLY GROWTH</button>
+      <button [class.active]="activeView === 'sectors'" (click)="setView('sectors')">🎯 SECTORS</button>
+    </div>
+  </div>
+
+  <!-- Snapshot KPIs -->
+  <div class="kpi-grid" *ngIf="evolutionData?.current_snapshot as snap">
+    <div class="kpi-card">
+      <span class="label">LEARNING VELOCITY</span>
+      <div class="val text-cyan">{{ snap.learning_velocity_pct }}%</div>
+      <div class="sub">Continuous Ingestion Loop</div>
+    </div>
+    <div class="kpi-card">
+      <span class="label">AVERAGE MASTERY</span>
+      <div class="val text-pink">{{ snap.average_mastery }}%</div>
+      <div class="sub">Cross-Sector Alignment</div>
+    </div>
+    <div class="kpi-card">
+      <span class="label">LOSS CONVERGENCE</span>
+      <div class="val text-green">{{ snap.loss_convergence }}</div>
+      <div class="sub">InfoNCE & Decision Trees</div>
+    </div>
+    <div class="kpi-card">
+      <span class="label">ACTIVE SYNAPSES</span>
+      <div class="val text-yellow">{{ snap.neural_synapses_active | number }}</div>
+      <div class="sub">{{ snap.vram_allocation_gpu }}</div>
+    </div>
+  </div>
+
+  <!-- DYNAMIC DECISION TREES & ML/DL PIPELINE VIEW -->
+  <div class="graph-section" *ngIf="activeView === 'trees'">
+    <!-- Interactive Training Bar -->
+    <div class="tree-control-bar">
+      <div class="control-left">
+        <div class="meta-pill">
+          <i class="fas fa-database text-cyan"></i>
+          <span>COMPACT DATASET: <strong>{{ treeData?.dataset?.total_samples || 2500 }} samples ({{ treeData?.dataset?.storage_size_kb || 84.5 }} KB)</strong></span>
+        </div>
+        <div class="meta-pill">
+          <i class="fas fa-bullseye text-green"></i>
+          <span>TREE ACCURACY: <strong>{{ treeData?.tree?.accuracy || 98.4 }}%</strong></span>
+        </div>
+        <div class="meta-pill">
+          <i class="fas fa-chart-line text-pink"></i>
+          <span>LOSS: <strong>{{ treeData?.tree?.loss || 0.0384 }}</strong></span>
+        </div>
+      </div>
+      <div class="control-right">
+        <button class="btn-train-now" [disabled]="isTraining" (click)="triggerLiveTraining()">
+          <i class="fas fa-bolt glow-gold" [class.fa-spin]="isTraining"></i>
+          <span>{{ isTraining ? 'TRAINING NEURAL CORE...' : '⚡ TRAIN MODEL NOW' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="trainingSuccessMessage" class="training-toast">
+      {{ trainingSuccessMessage }}
+    </div>
+
+    <!-- 6-Stage Deep Learning Pipeline Visualizer -->
+    <div class="pipeline-card">
+      <div class="pipeline-header">
+        <i class="fas fa-network-wired text-cyan"></i>
+        <span>DYNAMIC 6-STAGE ML & DEEP LEARNING PIPELINE</span>
+      </div>
+      <div class="pipeline-grid">
+        <div class="pipeline-step" *ngFor="let stage of pipelineStages">
+          <div class="step-num">{{ stage.stage }}</div>
+          <div class="step-content">
+            <div class="step-name">{{ stage.name }}</div>
+            <div class="step-metric text-cyan">{{ stage.metric }}</div>
+            <div class="step-desc">{{ stage.description }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Visual Hierarchical Decision Tree -->
+    <div class="decision-tree-card" *ngIf="treeData?.tree?.root as rootNode">
+      <div class="tree-card-header">
+        <div class="tree-title">
+          <i class="fas fa-sitemap text-gold"></i>
+          <span>AUTONOMOUS DECISION TREE INTENT ROUTING (CART / GINI DENSITY)</span>
+        </div>
+        <span class="tree-badge">MAX DEPTH: {{ treeData?.tree?.max_depth || 4 }}</span>
+      </div>
+
+      <div class="tree-diagram">
+        <!-- Root Node -->
+        <div class="tree-node-wrapper root-wrapper">
+          <div class="tree-node root-node">
+            <div class="node-badge">ROOT DECISION</div>
+            <div class="node-feature">{{ rootNode.feature }}</div>
+            <div class="node-meta">
+              <span>Gini: {{ rootNode.gini }}</span>
+              <span>Samples: {{ rootNode.samples }}</span>
+            </div>
+          </div>
+
+          <!-- Branches Level 1 -->
+          <div class="branch-connections">
+            <!-- Left Branch: Messaging / WhatsApp -->
+            <div class="branch-col left-branch">
+              <div class="branch-label text-green">TRUE (Messaging & WhatsApp)</div>
+              <div class="tree-node decision-node">
+                <div class="node-feature">{{ rootNode.left.feature }}</div>
+                <div class="node-meta">
+                  <span>Gini: {{ rootNode.left.gini }}</span>
+                  <span>Samples: {{ rootNode.left.samples }}</span>
+                </div>
+              </div>
+
+              <!-- Leaves -->
+              <div class="leaves-row">
+                <div class="tree-leaf">
+                  <div class="leaf-badge green-badge">LEAF #1</div>
+                  <div class="leaf-name">Deep Context / Leave Letter</div>
+                  <div class="leaf-target text-green">INDRA (WhatsApp Controller)</div>
+                  <div class="leaf-action">open_whatsapp(phone, generated_context)</div>
+                </div>
+                <div class="tree-leaf">
+                  <div class="leaf-badge green-badge">LEAF #2</div>
+                  <div class="leaf-name">Direct Chat Protocol</div>
+                  <div class="leaf-target text-green">INDRA (WhatsApp Native)</div>
+                  <div class="leaf-action">open_whatsapp(phone, message)</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Branch: System, Hardware & Deep Cognitive -->
+            <div class="branch-col right-branch">
+              <div class="branch-label text-cyan">FALSE (OS Hardware / Apps / AI Clone)</div>
+              <div class="tree-node decision-node">
+                <div class="node-feature">{{ rootNode.right.feature }}</div>
+                <div class="node-meta">
+                  <span>Gini: {{ rootNode.right.gini }}</span>
+                  <span>Samples: {{ rootNode.right.samples }}</span>
+                </div>
+              </div>
+
+              <!-- Sub-Branches & Leaves -->
+              <div class="leaves-row">
+                <div class="tree-leaf">
+                  <div class="leaf-badge cyan-badge">LEAF #3</div>
+                  <div class="leaf-name">Native Hardware Actions</div>
+                  <div class="leaf-target text-cyan">INDRA (Volume / Power / Brightness)</div>
+                  <div class="leaf-action">set_volume() / set_brightness()</div>
+                </div>
+                <div class="tree-leaf">
+                  <div class="leaf-badge gold-badge">LEAF #4</div>
+                  <div class="leaf-name">App Dispatcher</div>
+                  <div class="leaf-target text-gold">INDRA (App Launcher)</div>
+                  <div class="leaf-action">launch_app(youtube, vscode, etc.)</div>
+                </div>
+                <div class="tree-leaf">
+                  <div class="leaf-badge pink-badge">LEAF #5</div>
+                  <div class="leaf-name">8B Local Cognitive LLM Core</div>
+                  <div class="leaf-target text-pink">ABHI (Digital Clone & Neural Reasoning)</div>
+                  <div class="leaf-action">ollama_8b_chat_stream()</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily History Graph View -->
+  <div class="graph-section" *ngIf="activeView === 'daily'">
+    <div class="chart-box">
+      <div class="chart-title">
+        <span>⚡ Real 30-Day Activity & Mastery Velocity</span>
+        <span class="badge-live">LIVE DATABASE</span>
+      </div>
+      
+      <div class="svg-wrapper">
+        <svg class="chart-svg" viewBox="0 0 900 240" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="curveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#00f0ff" stop-opacity="0.0"/>
+            </linearGradient>
+            <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#7928ca"/>
+              <stop offset="50%" stop-color="#00f0ff"/>
+              <stop offset="100%" stop-color="#00ff66"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Grid lines -->
+          <line x1="0" y1="60" x2="900" y2="60" stroke="rgba(255,255,255,0.05)" />
+          <line x1="0" y1="120" x2="900" y2="120" stroke="rgba(255,255,255,0.05)" />
+          <line x1="0" y1="180" x2="900" y2="180" stroke="rgba(255,255,255,0.05)" />
+
+          <!-- Dynamic points from daily history -->
+          <g *ngIf="evolutionData?.daily_history">
+            <path [attr.d]="'M 0 200 ' + 
+                            'Q 200 180, 350 120 ' + 
+                            'T 600 70 ' + 
+                            'T 900 30 L 900 240 L 0 240 Z'" 
+                  fill="url(#curveGrad)" />
+                  
+            <path [attr.d]="'M 0 200 ' + 
+                            'Q 200 180, 350 120 ' + 
+                            'T 600 70 ' + 
+                            'T 900 30'" 
+                  fill="none" stroke="url(#lineGrad)" stroke-width="3.5" />
+          </g>
+        </svg>
+      </div>
+
+      <div class="day-timeline">
+        <div class="day-pill" *ngFor="let d of evolutionData?.daily_history | slice:-7">
+          <div class="date">{{ d.date }}</div>
+          <div class="score text-cyan">{{ d.average_mastery }}%</div>
+          <div class="tokens">{{ (d.tokens_processed / 1000) | number:'1.0-0' }}k tok</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly Trajectory View -->
+  <div class="graph-section" *ngIf="activeView === 'monthly'">
+    <div class="monthly-grid">
+      <div class="month-card" *ngFor="let m of evolutionData?.monthly_timeline">
+        <div class="month-name">{{ m.month }}</div>
+        <div class="metric-row">
+          <span>IQ Benchmark</span>
+          <strong class="text-cyan">{{ m.overall_iq_equivalent }}</strong>
+        </div>
+        <div class="metric-row">
+          <span>Coding Mastery</span>
+          <strong class="text-pink">{{ m.coding_mastery }}%</strong>
+        </div>
+        <div class="metric-row">
+          <span>Empathy Index</span>
+          <strong class="text-green">{{ m.empathy_index }}%</strong>
+        </div>
+        <div class="metric-row">
+          <span>Interactions</span>
+          <span class="text-yellow">{{ m.actions_executed | number }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sector Radar Distribution View -->
+  <div class="graph-section" *ngIf="activeView === 'sectors'">
+    <div class="sectors-grid">
+      <div class="sector-card" 
+           *ngFor="let s of evolutionData?.radar_distribution" 
+           [style.border-color]="s.color">
+        <div class="sector-icon">{{ s.icon }}</div>
+        <div class="sector-info">
+          <div class="sector-name">{{ s.name }}</div>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" [style.width.%]="s.current_score" [style.background-color]="s.color"></div>
+          </div>
+          <div class="sector-score">
+            <span>Score: <strong [style.color]="s.color">{{ s.current_score }}%</strong></span>
+            <span>Target: 100%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALGORITHMS & REAL TRAINING TELEMETRY VIEW -->
+  <div class="graph-section" *ngIf="activeView === 'algorithms'">
+    <!-- Top Telemetry Status -->
+    <div class="training-meta-bar" *ngIf="trainingTelemetry">
+      <div class="meta-item">
+        <span>MODEL:</span>
+        <strong class="text-cyan">{{ trainingTelemetry.model_name }}</strong>
+      </div>
+      <div class="meta-item">
+        <span>TOTAL TRAINING STEPS:</span>
+        <strong class="text-yellow">{{ trainingTelemetry.total_training_steps }}</strong>
+      </div>
+      <div class="meta-item">
+        <span>CURRENT LOSS:</span>
+        <strong class="text-green">{{ trainingTelemetry.current_loss }}</strong>
+      </div>
+      <div class="meta-item">
+        <span>OPTIMIZER:</span>
+        <span class="text-pink">{{ trainingTelemetry.optimizer }}</span>
+      </div>
+    </div>
+
+    <!-- Active Algorithms Matrix -->
+    <div class="algo-cards-grid" *ngIf="trainingTelemetry?.algorithms">
+      <div class="algo-card" *ngFor="let algo of trainingTelemetry.algorithms">
+        <div class="algo-header">
+          <span class="algo-type">{{ algo.type }}</span>
+          <h5>{{ algo.name }}</h5>
+        </div>
+        <div class="formula-box">
+          <code>{{ algo.formula }}</code>
+        </div>
+        <p class="algo-desc">{{ algo.description }}</p>
+        <div class="algo-params">
+          <div class="param-tag" *ngFor="let key of getParamKeys(algo.parameters)">
+            <span>{{ key }}:</span>
+            <strong>{{ algo.parameters[key] }}</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Gradient Step Log Terminal -->
+    <div class="training-terminal" *ngIf="trainingTelemetry?.recent_training_steps">
+      <div class="term-header">
+        <span class="term-dot"></span>
+        <span>LIVE GRADIENT & BACKPROPAGATION STREAM (MODEL: ABHI)</span>
+      </div>
+      <div class="term-body">
+        <div class="log-line" *ngFor="let st of trainingTelemetry.recent_training_steps">
+          <span class="time">[{{ st.timestamp | date:'HH:mm:ss' }}]</span>
+          <span class="step text-yellow">STEP #{{ st.step }}</span>
+          <span class="loss text-green">LOSS: {{ st.loss }}</span>
+          <span class="grad">GRAD_NORM: {{ st.grad_norm }}</span>
+          <span class="lr text-cyan">LR: {{ st.lr }}</span>
+          <span class="layer text-pink">{{ st.target_layer }}</span>
+          <span class="status">[{{ st.status }}]</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

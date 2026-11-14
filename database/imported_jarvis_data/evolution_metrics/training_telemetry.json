@@ -1,0 +1,197 @@
+{
+  "total_steps": 2,
+  "current_loss": 0.0095,
+  "learning_rate": 1.5e-05,
+  "recent_steps": [
+    {
+      "step": -15,
+      "epoch": -0.15,
+      "loss": 0.088,
+      "grad_norm": 1.25,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:08:05.934150"
+    },
+    {
+      "step": -14,
+      "epoch": -0.14,
+      "loss": 0.0797,
+      "grad_norm": 1.197,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:09:05.934150"
+    },
+    {
+      "step": -13,
+      "epoch": -0.13,
+      "loss": 0.0813,
+      "grad_norm": 1.143,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:10:05.934150"
+    },
+    {
+      "step": -12,
+      "epoch": -0.12,
+      "loss": 0.073,
+      "grad_norm": 1.09,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:11:05.934150"
+    },
+    {
+      "step": -11,
+      "epoch": -0.11,
+      "loss": 0.0747,
+      "grad_norm": 1.037,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:12:05.934150"
+    },
+    {
+      "step": -10,
+      "epoch": -0.1,
+      "loss": 0.0663,
+      "grad_norm": 0.983,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:13:05.934150"
+    },
+    {
+      "step": -9,
+      "epoch": -0.09,
+      "loss": 0.068,
+      "grad_norm": 0.93,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:14:05.934150"
+    },
+    {
+      "step": -8,
+      "epoch": -0.08,
+      "loss": 0.0597,
+      "grad_norm": 0.877,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:15:05.934150"
+    },
+    {
+      "step": -7,
+      "epoch": -0.07,
+      "loss": 0.0613,
+      "grad_norm": 0.823,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:16:05.934150"
+    },
+    {
+      "step": -6,
+      "epoch": -0.06,
+      "loss": 0.053,
+      "grad_norm": 0.77,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:17:05.934150"
+    },
+    {
+      "step": -5,
+      "epoch": -0.05,
+      "loss": 0.0547,
+      "grad_norm": 0.717,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:18:05.934150"
+    },
+    {
+      "step": -4,
+      "epoch": -0.04,
+      "loss": 0.0463,
+      "grad_norm": 0.663,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:19:05.934150"
+    },
+    {
+      "step": -3,
+      "epoch": -0.03,
+      "loss": 0.048,
+      "grad_norm": 0.61,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:20:05.934150"
+    },
+    {
+      "step": -2,
+      "epoch": -0.02,
+      "loss": 0.0397,
+      "grad_norm": 0.557,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:21:05.934150"
+    },
+    {
+      "step": -1,
+      "epoch": -0.01,
+      "loss": 0.0413,
+      "grad_norm": 0.503,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "target_layer": "abhi.model.layers.qkv_proj.lora_A",
+      "status": "GRADIENT_CONVERGED",
+      "timestamp": "2026-09-17T11:22:05.934150"
+    },
+    {
+      "step": 1,
+      "epoch": 0.01,
+      "loss": 0.0095,
+      "grad_norm": 0.399,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "sector": "coding",
+      "target_layer": "abhi.layers.sector_coding.lora",
+      "status": "CONVERGED",
+      "timestamp": "2026-09-17T11:25:15.730459"
+    },
+    {
+      "step": 2,
+      "epoch": 0.02,
+      "loss": 0.0095,
+      "grad_norm": 0.397,
+      "lr": 1.5e-05,
+      "optimizer": "AdamW-8bit (Weight Decay=0.01)",
+      "sector": "coding",
+      "target_layer": "abhi.layers.sector_coding.lora",
+      "status": "CONVERGED",
+      "timestamp": "2026-09-17T12:19:07.107826"
+    }
+  ],
+  "last_checkpoint": "2026-09-17T12:19:07.108237"
+}

@@ -62,19 +62,22 @@ export class LivingScreenBotComponent implements OnInit, AfterViewInit, OnDestro
   private dragStartY = 0;
   private initialPosX = 0;
   private initialPosY = 0;
+  private totalDragDistance = 0;
+  private suppressClick = false;
 
   // Bot Living States
   readonly isExpanded = signal<boolean>(false);
   readonly botState = signal<'IDLE' | 'LISTENING' | 'OBSERVING' | 'EXECUTING' | 'SPEAKING'>('IDLE');
   readonly currentObservation = signal<string>('Observing screen...');
   readonly activeWindowName = signal<string>('Detecting...');
+  readonly micPermissionGranted = signal<boolean>(false);
 
   // Conversational Stream
   readonly chatInput = signal<string>('');
   readonly messages = signal<ChatMessage[]>([
     {
       sender: 'bot',
-      text: "Pranam Mamu! I'm active on your screen. Say 'Hey Mamu' or click me anytime to control your PC, observe your screen, or execute tasks.",
+      text: "Pranam! I am Abhi, active on your screen. Say 'Hey Abhi' or 'Abhi' anytime to control your PC, observe your screen, or execute tasks.",
       timestamp: 'Just now',
     },
   ]);
@@ -136,6 +139,7 @@ export class LivingScreenBotComponent implements OnInit, AfterViewInit, OnDestro
     if (target.closest('.interactive-control')) return;
 
     this.isDragging.set(true);
+    this.totalDragDistance = 0;
     this.dragStartX = event.clientX;
     this.dragStartY = event.clientY;
     this.initialPosX = this.posX();
@@ -150,6 +154,7 @@ export class LivingScreenBotComponent implements OnInit, AfterViewInit, OnDestro
 
     const deltaX = event.clientX - this.dragStartX;
     const deltaY = event.clientY - this.dragStartY;
+    this.totalDragDistance = Math.hypot(deltaX, deltaY);
 
     const width = this.isExpanded() ? 360 : 64;
     const height = this.isExpanded() ? 440 : 64;
@@ -168,6 +173,13 @@ export class LivingScreenBotComponent implements OnInit, AfterViewInit, OnDestro
   onPointerUp(): void {
     if (this.isDragging()) {
       this.isDragging.set(false);
+      // If user moved more than 6px, treat as drag and suppress the ensuing click event
+      if (this.totalDragDistance > 6) {
+        this.suppressClick = true;
+        setTimeout(() => {
+          this.suppressClick = false;
+        }, 300);
+      }
       try {
         localStorage.setItem(
           'abhi_screen_bot_pos',
@@ -175,6 +187,79 @@ export class LivingScreenBotComponent implements OnInit, AfterViewInit, OnDestro
         );
       } catch {}
     }
+  }
+
+  async onOrbClick(event: MouseEvent): Promise<void> {
+    if (this.suppressClick) {
+      this.suppressClick = false;
+      event.stopPropagation();
+      event.preventDefault();
+      return;
+    }
+    // Prime audio & microphone permissions on first direct user interaction
+    await this.requestMicPermission();
+    this.toggleExpanded();
+  }
+
+  async onMicBadgeClick(event: MouseEvent): Promise<void> {
+    event.stopPropagation();
+    event.preventDefault();
+    await this.requestMicPermission();
+    this.playWakeChime();
+    this.botState.set('LISTENING');
+    if (!this.isExpanded()) {
+      this.isExpanded.set(true);
+    }
+  }
+
+  async requestMicPermission(): Promise<boolean> {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((t) => t.stop());
+        this.micPermissionGranted.set(true);
+        this.restartWakeWordListener();
+        return true;
+      }
+    } catch (e) {
+      console.warn('Microphone permission request rejected:', e);
+      this.micPermissionGranted.set(false);
+    }
+    return false;
+  }
+
+  playWakeChime(): void {
+    try {
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const audioCtx = new AudioCtx();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.12); // A5
+      gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.3);
+    } catch {}
+  }
+
+  speakAcknowledgement(): void {
+    this.playWakeChime();
+    try {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance("Yes, I am listening! Tell me what to do.");
+        utter.rate = 1.05;
+        utter.pitch = 1.0;
+        utter.lang = 'en-IN';
+        window.speechSynthesis.speak(utter);
+      }
+    } catch {}
+    this.speechService.speakNotification("Yes, I am listening! Tell me what to do.");
   }
 
   // --- Toggle Compact / Expanded (Never Closes) ---
@@ -212,9 +297,11 @@ export class LivingScreenBotComponent implements OnInit, AfterViewInit, OnDestro
     });
   }
 
-  // --- Wake Word Detection ("Mamu" / "Hey Mamu") ---
+  // --- Wake Word Detection ("Abhi" / "Hey Abhi" / "Hay Abhi") ---
 
   private initWakeWordListener(): void {
+    if (typeof window === 'undefined') return;
+
     const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRec) {
       console.warn('SpeechRecognition API not available in browser.');
@@ -225,21 +312,28 @@ export class LivingScreenBotComponent implements OnInit, AfterViewInit, OnDestro
       this.recognition = new SpeechRec();
       this.recognition.continuous = true;
       this.recognition.interimResults = true;
-      this.recognition.lang = 'en-US';
+      this.recognition.maxAlternatives = 3;
+      // Default to en-IN (Indian English) for accurate recognition of Indian names like Abhi
+      this.recognition.lang = 'en-IN';
 
       this.recognition.onresult = (event: any) => {
         for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const transcript = event.results[i][0].transcript.trim().toLowerCase();
-          const isFinal = event.results[i].isFinal;
+          const res = event.results[i];
+          const transcript = res[0].transcript.trim().toLowerCase();
+          const isFinal = res.isFinal;
 
-          // Check wake-word triggers
-          if (
-            transcript.includes('mamu') ||
-            transcript.includes('hey mamu') ||
-            transcript.includes('oi mamu') ||
-            transcript.includes('hello mamu') ||
-            transcript.includes('ok mamu')
-          ) {
+          // Check wake-word triggers across primary transcript and alternatives
+          let wakeDetected = this.isWakeWordTrigger(transcript);
+          if (!wakeDetected && res.length > 1) {
+            for (let a = 1; a < res.length; a++) {
+              if (this.isWakeWordTrigger(res[a].transcript.trim().toLowerCase())) {
+                wakeDetected = true;
+                break;
+              }
+            }
+          }
+
+          if (wakeDetected) {
             this.handleWakeWordTrigger(transcript, isFinal);
             return;
           }
@@ -251,14 +345,18 @@ export class LivingScreenBotComponent implements OnInit, AfterViewInit, OnDestro
         }
       };
 
-      this.recognition.onerror = () => {
-        // Automatically recover listening loop
-        setTimeout(() => this.restartWakeWordListener(), 2000);
+      this.recognition.onerror = (err: any) => {
+        if (err?.error === 'not-allowed') {
+          console.warn('Microphone access denied for Abhi wake word.');
+          return;
+        }
+        // Automatically recover listening loop with debounce
+        setTimeout(() => this.restartWakeWordListener(), 1200);
       };
 
       this.recognition.onend = () => {
         if (this.isListeningContinuous) {
-          this.restartWakeWordListener();
+          setTimeout(() => this.restartWakeWordListener(), 300);
         }
       };
 
@@ -269,11 +367,49 @@ export class LivingScreenBotComponent implements OnInit, AfterViewInit, OnDestro
     }
   }
 
+  private isWakeWordTrigger(text: string): boolean {
+    if (!text) return false;
+    const lower = text.toLowerCase().trim();
+
+    // Direct multi-dialect variations for "Abhi" / "Hey Abhi" / "Hay Abhi"
+    const triggers = [
+      'hey abhi', 'hay abhi', 'he abhi', 'hi abhi', 'hello abhi', 'ok abhi', 'okay abhi', 'wake up abhi', 'listen abhi',
+      'hey abi', 'hay abi', 'hi abi', 'hello abi', 'ok abi',
+      'hey avi', 'hay avi', 'hi avi',
+      'hey a bee', 'hay a bee', 'a bee',
+      'abhi', 'abi', 'avi',
+      // Indic scripts (Telugu, Hindi, Tamil)
+      'హే అభి', 'హాయ్ అభి', 'అభి', 'లే అభి',
+      'हे अभि', 'हाय अभि', 'अभि', 'जागो अभि',
+      'ஹே அபி', 'அபி',
+      // Legacy compatibility
+      'hey mamu', 'hay mamu', 'mamu', 'hi mamu', 'hello mamu'
+    ];
+
+    for (const kw of triggers) {
+      if (lower.includes(kw)) {
+        return true;
+      }
+    }
+
+    // Word boundary regex for "abhi", "abi", "avi", "abhee"
+    const boundaryRegex = /\b(hey|hay|hi|hello|ok|wake\s*up|listen)?\s*(abhi|abi|avi|abhee)\b/i;
+    return boundaryRegex.test(lower);
+  }
+
   private restartWakeWordListener(): void {
     if (!this.isListeningContinuous || !this.recognition) return;
     try {
       this.recognition.start();
-    } catch {}
+    } catch (e: any) {
+      if (e?.name !== 'InvalidStateError') {
+        setTimeout(() => {
+          if (this.isListeningContinuous) {
+            try { this.recognition?.start(); } catch {}
+          }
+        }, 1000);
+      }
+    }
   }
 
   private stopWakeWordListener(): void {
@@ -291,15 +427,15 @@ export class LivingScreenBotComponent implements OnInit, AfterViewInit, OnDestro
       this.isExpanded.set(true);
     }
 
-    // Play subtle audio cue and acknowledge
-    this.speechService.speakNotification("Yes Mamu, I'm listening! Tell me what to do.");
+    // Acknowledge wake-up call to operator with audio chime & verbal feedback
+    this.speakAcknowledgement();
 
     // Extract any command spoken immediately after the wake word
     const cleaned = transcript
-      .replace(/^(hey|oi|hello|ok|sun)?\s*mamu\s*/i, '')
+      .replace(/^(hey|hay|hi|hello|ok|okay|wake\s*up|listen|oi|sun)?\s*(abhi|abi|avi|abhee|mamu)\s*/i, '')
       .trim();
 
-    if (cleaned.length > 3 && isFinal) {
+    if (cleaned.length > 2 && isFinal) {
       this.executeDirective(cleaned);
     }
   }

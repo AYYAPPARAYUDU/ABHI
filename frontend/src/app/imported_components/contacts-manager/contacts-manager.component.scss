@@ -1,0 +1,285 @@
+.contacts-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 4px;
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+    padding-bottom: 8px;
+
+    .title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #ffd700;
+
+      .gold-glow {
+        color: #ffd700;
+        text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+      }
+    }
+
+    .badge {
+      background: rgba(255, 215, 0, 0.1);
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      color: #ffd700;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 1px;
+    }
+  }
+
+  .status-banner {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #10b981;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .add-card {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(0, 240, 255, 0.25);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #00f0ff;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+
+      @media (max-width: 600px) {
+        grid-template-columns: 1fr;
+      }
+
+      .cyber-input {
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(0, 240, 255, 0.2);
+        color: #e2e8f0;
+        padding: 6px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        outline: none;
+        transition: border-color 0.2s;
+
+        &:focus {
+          border-color: #00f0ff;
+          box-shadow: 0 0 6px rgba(0, 240, 255, 0.3);
+        }
+      }
+    }
+
+    .add-btn {
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(255, 215, 0, 0.2));
+      border: 1px solid #00f0ff;
+      color: #00f0ff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+
+      &:hover:not(:disabled) {
+        background: rgba(0, 240, 255, 0.3);
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+        color: #fff;
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 6px;
+    padding: 6px 10px;
+    gap: 8px;
+
+    i {
+      color: #ffd700;
+      font-size: 12px;
+    }
+
+    .search-input {
+      background: transparent;
+      border: none;
+      color: #e2e8f0;
+      font-size: 12px;
+      width: 100%;
+      outline: none;
+    }
+  }
+
+  .contacts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .contact-card {
+      background: rgba(10, 15, 30, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: border-color 0.2s, background 0.2s;
+
+      &:hover {
+        border-color: rgba(255, 215, 0, 0.4);
+        background: rgba(15, 23, 42, 0.85);
+      }
+
+      .avatar-circle {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #ffd700, #ff8c00);
+        color: #000;
+        font-weight: 800;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+        flex-shrink: 0;
+      }
+
+      .contact-info {
+        flex: 1;
+        min-width: 0;
+
+        .contact-name {
+          font-size: 12px;
+          font-weight: 700;
+          color: #f8fafc;
+          letter-spacing: 0.5px;
+        }
+
+        .contact-meta {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          font-size: 11px;
+          color: #94a3b8;
+          margin-top: 2px;
+
+          .text-green {
+            color: #25d366;
+          }
+
+          .text-cyan {
+            color: #00f0ff;
+          }
+
+          .notes-tag {
+            background: rgba(255, 255, 255, 0.06);
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+          }
+        }
+      }
+
+      .contact-actions {
+        display: flex;
+        gap: 6px;
+
+        .action-btn {
+          border: none;
+          padding: 5px 8px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 11px;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          transition: all 0.2s;
+
+          &.wa-btn {
+            background: rgba(37, 211, 102, 0.15);
+            border: 1px solid #25d366;
+            color: #25d366;
+
+            &:hover {
+              background: #25d366;
+              color: #000;
+            }
+          }
+
+          &.del-btn {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+
+            &:hover {
+              background: #ef4444;
+              color: #fff;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 30px 15px;
+    color: #64748b;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+
+    i {
+      font-size: 32px;
+      color: rgba(255, 215, 0, 0.3);
+    }
+
+    p {
+      font-size: 12px;
+      max-width: 320px;
+      line-height: 1.5;
+    }
+  }
+}

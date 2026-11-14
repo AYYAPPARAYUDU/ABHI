@@ -10,8 +10,8 @@
       #livingOrb
       class="compact-living-orb"
       (pointerdown)="onPointerDown($event)"
-      (click)="toggleExpanded()"
-      title="Mamu Living Core — Drag to move, Click to expand"
+      (click)="onOrbClick($event)"
+      title="Abhi Living Core — Drag to move, Click or say 'Hey Abhi' to activate"
     >
       <div class="orb-core">
         <div class="orb-inner-sphere"></div>
@@ -22,10 +22,15 @@
 
       <div class="orb-beacon" [ngClass]="botState().toLowerCase()">
         <span class="beacon-dot"></span>
-        <span class="beacon-label">MAMU CORE</span>
+        <span class="beacon-label">ABHI CORE</span>
       </div>
 
-      <div class="orb-mic-badge" [class.active]="botState() === 'LISTENING'">
+      <div
+        class="orb-mic-badge"
+        [class.active]="botState() === 'LISTENING'"
+        (click)="onMicBadgeClick($event)"
+        title="Microphone Active — Click to test audio chime & verify listening"
+      >
         🎤
       </div>
     </div>
@@ -44,15 +49,15 @@
         </div>
 
         <div class="hud-title-zone">
-          <div class="hud-title">MAMU LIVING COMPANION</div>
+          <div class="hud-title">ABHI OS CONTROLLER & COMPANION</div>
           <div class="hud-status-badge" [ngClass]="botState().toLowerCase()">
             <span class="pulse-indicator"></span>
             @switch (botState()) {
-              @case ('LISTENING') { <span>LISTENING TO MAMU...</span> }
-              @case ('OBSERVING') { <span>OBSERVING SCREEN</span> }
-              @case ('EXECUTING') { <span>EXECUTING ON PC</span> }
-              @case ('SPEAKING') { <span>SPEAKING TO MAMU</span> }
-              @default { <span>ACTIVE ON SCREEN</span> }
+              @case ('LISTENING') { <span>LISTENING TO YOU...</span> }
+              @case ('OBSERVING') { <span>OBSERVING WHOLE OS</span> }
+              @case ('EXECUTING') { <span>EXECUTING ON SYSTEM</span> }
+              @case ('SPEAKING') { <span>SPEAKING...</span> }
+              @default { <span>SYSTEM-WIDE ACTIVE</span> }
             }
           </div>
         </div>
@@ -68,17 +73,17 @@
 
       <!-- Live Screen Observation Strip -->
       <div class="screen-perception-strip">
-        <span class="eye-icon">👁️</span>
+        <span class="eye-icon">🖥️</span>
         <div class="perception-text">
-          <span class="label">Focused Window:</span>
-          <strong class="window-title">{{ activeWindowName() }}</strong>
+          <span class="label">Complete OS Scope:</span>
+          <strong class="window-title">{{ activeWindowName() }} · System-Wide</strong>
         </div>
         <button
           class="interactive-control strip-btn-observe"
           (click)="observeScreenNow()"
-          title="Scan and summarize screen now"
+          title="Scan and summarize complete OS state now"
         >
-          Scan
+          Scan OS
         </button>
       </div>
 
@@ -133,7 +138,7 @@
         <input
           type="text"
           class="interactive-control hud-text-input"
-          placeholder="Say 'Hey Mamu' or type a command..."
+          placeholder="Command complete OS (e.g., 'Open Chrome', 'Run PowerShell', 'Hey Abhi')..."
           [ngModel]="chatInput()"
           (ngModelChange)="chatInput.set($event)"
           (keydown.enter)="submitChat()"

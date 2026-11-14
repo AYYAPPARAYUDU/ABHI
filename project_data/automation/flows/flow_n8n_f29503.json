@@ -1,0 +1,35 @@
+{
+  "id": "flow_n8n_f29503",
+  "name": "Incoming Stripe Payment Webhook",
+  "description": "Imported from n8n JSON with 2 nodes converted to local zero-cloud execution.",
+  "is_active": true,
+  "trigger_type": "webhook",
+  "nodes": [
+    {
+      "id": "node_1",
+      "name": "Stripe Webhook",
+      "type": "trigger",
+      "sub_type": "webhook",
+      "parameters": {
+        "path": "stripe-inward"
+      },
+      "next_node_ids": [
+        "node_2"
+      ],
+      "position": null
+    },
+    {
+      "id": "node_2",
+      "name": "Format JSON",
+      "type": "action",
+      "sub_type": "python_script",
+      "parameters": {
+        "code": "return items;"
+      },
+      "next_node_ids": [],
+      "position": null
+    }
+  ],
+  "created_at": 1794633613.3327005,
+  "updated_at": 1794633613.3327086
+}

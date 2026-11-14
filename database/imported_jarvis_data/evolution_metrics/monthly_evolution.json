@@ -1,0 +1,125 @@
+{
+  "monthly_timeline": [
+    {
+      "month": "Oct",
+      "overall_iq_equivalent": 109.6,
+      "coding_mastery": 46.5,
+      "empathy_index": 40.0,
+      "perception_accuracy": 54.0,
+      "actions_executed": 3600,
+      "memory_vectors_stored": 15000,
+      "uptime_reliability_pct": 99.26
+    },
+    {
+      "month": "Nov",
+      "overall_iq_equivalent": 114.2,
+      "coding_mastery": 51.0,
+      "empathy_index": 45.0,
+      "perception_accuracy": 58.0,
+      "actions_executed": 7200,
+      "memory_vectors_stored": 30000,
+      "uptime_reliability_pct": 99.33
+    },
+    {
+      "month": "Dec",
+      "overall_iq_equivalent": 118.8,
+      "coding_mastery": 55.5,
+      "empathy_index": 50.0,
+      "perception_accuracy": 62.0,
+      "actions_executed": 10800,
+      "memory_vectors_stored": 45000,
+      "uptime_reliability_pct": 99.39
+    },
+    {
+      "month": "Jan",
+      "overall_iq_equivalent": 123.3,
+      "coding_mastery": 60.0,
+      "empathy_index": 55.0,
+      "perception_accuracy": 66.0,
+      "actions_executed": 14400,
+      "memory_vectors_stored": 60000,
+      "uptime_reliability_pct": 99.45
+    },
+    {
+      "month": "Feb",
+      "overall_iq_equivalent": 127.9,
+      "coding_mastery": 64.5,
+      "empathy_index": 60.0,
+      "perception_accuracy": 70.0,
+      "actions_executed": 18000,
+      "memory_vectors_stored": 75000,
+      "uptime_reliability_pct": 99.51
+    },
+    {
+      "month": "Mar",
+      "overall_iq_equivalent": 132.5,
+      "coding_mastery": 69.0,
+      "empathy_index": 65.0,
+      "perception_accuracy": 74.0,
+      "actions_executed": 21600,
+      "memory_vectors_stored": 90000,
+      "uptime_reliability_pct": 99.58
+    },
+    {
+      "month": "Apr",
+      "overall_iq_equivalent": 137.1,
+      "coding_mastery": 73.5,
+      "empathy_index": 70.0,
+      "perception_accuracy": 78.0,
+      "actions_executed": 25200,
+      "memory_vectors_stored": 105000,
+      "uptime_reliability_pct": 99.64
+    },
+    {
+      "month": "May",
+      "overall_iq_equivalent": 141.7,
+      "coding_mastery": 78.0,
+      "empathy_index": 75.0,
+      "perception_accuracy": 82.0,
+      "actions_executed": 28800,
+      "memory_vectors_stored": 120000,
+      "uptime_reliability_pct": 99.7
+    },
+    {
+      "month": "Jun",
+      "overall_iq_equivalent": 146.2,
+      "coding_mastery": 82.5,
+      "empathy_index": 80.0,
+      "perception_accuracy": 86.0,
+      "actions_executed": 32400,
+      "memory_vectors_stored": 135000,
+      "uptime_reliability_pct": 99.76
+    },
+    {
+      "month": "Jul",
+      "overall_iq_equivalent": 150.8,
+      "coding_mastery": 87.0,
+      "empathy_index": 85.0,
+      "perception_accuracy": 90.0,
+      "actions_executed": 36000,
+      "memory_vectors_stored": 150000,
+      "uptime_reliability_pct": 99.83
+    },
+    {
+      "month": "Aug",
+      "overall_iq_equivalent": 155.4,
+      "coding_mastery": 91.5,
+      "empathy_index": 90.0,
+      "perception_accuracy": 94.0,
+      "actions_executed": 39600,
+      "memory_vectors_stored": 165000,
+      "uptime_reliability_pct": 99.89
+    },
+    {
+      "month": "Sep",
+      "overall_iq_equivalent": 160.0,
+      "coding_mastery": 96.0,
+      "empathy_index": 95.0,
+      "perception_accuracy": 98.0,
+      "actions_executed": 43200,
+      "memory_vectors_stored": 180000,
+      "uptime_reliability_pct": 99.95
+    }
+  ],
+  "last_updated": "2026-09-17T10:47:24.145882"
+}

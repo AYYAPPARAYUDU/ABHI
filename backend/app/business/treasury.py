@@ -304,6 +304,12 @@ class SovereignTreasuryEngine:
         """Purge all simulated/dummy records and reset to clean authentic state."""
         self._invoices = {}
         self._settlement_history = []
+        if self.receipts_dir.exists():
+            for p in self.receipts_dir.glob("*.*"):
+                try:
+                    p.unlink(missing_ok=True)
+                except Exception:
+                    pass
         self._save_treasury_state()
 
     def record_verified_sbi_settlement(
