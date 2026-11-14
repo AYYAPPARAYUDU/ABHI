@@ -3,6 +3,7 @@ ABHI Native Global OS Desktop Controller.
 A permanent, always-on-top (HWND_TOPMOST) Windows desktop companion widget.
 Floats globally across the entire operating system and never vanishes when other apps are minimized.
 Controls all Windows applications, processes, terminal, and system settings via ABHI Cognitive Core.
+Equipped with Windows SAPI / System.Speech real-time wake word ('Hey Abhi') and voice speech recognition.
 """
 
 import sys
@@ -76,10 +77,10 @@ class AbhiGlobalOSController:
         # Live telemetry
         self.active_window_title = "Scanning OS..."
         self.bot_state = "IDLE"  # IDLE, LISTENING, EXECUTING, SPEAKING
+        self.voice_active = False
 
         # Pulse animation variables
         self.pulse_phase = 0
-        self.pulse_timer = None
 
         # Build UI Modes
         self.compact_frame = tk.Frame(self.root, bg=self.COLOR_BG, cursor="hand2")
@@ -95,22 +96,22 @@ class AbhiGlobalOSController:
         # Enforce topmost periodically
         self._enforce_topmost()
         self._start_background_monitors()
+        self._start_voice_listener()
 
     # -------------------------------------------------------------------------
     # TOPMOST ENFORCEMENT & GEOMETRY
     # -------------------------------------------------------------------------
 
     def _enforce_topmost(self):
-        """Pin the window to HWND_TOPMOST so it stays above every OS application."""
+        """Enforce HWND_TOPMOST via Windows user32 API to ensure it never gets buried."""
         try:
             hwnd = ctypes.windll.user32.GetParent(self.root.winfo_id())
             if not hwnd:
                 hwnd = self.root.winfo_id()
-            # HWND_TOPMOST = -1, SWP_NOMOVE = 0x0002, SWP_NOSIZE = 0x0001, SWP_NOACTIVATE = 0x0010
-            ctypes.windll.user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0010)
+            # HWND_TOPMOST (-1), SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE = 0x0002 | 0x0001 | 0x0010 = 0x0013
+            ctypes.windll.user32.SetWindowPos(hwnd, -1, 0, 0, 0, 0, 0x0013)
         except Exception:
             pass
-        self.root.lift()
         self.root.after(1500, self._enforce_topmost)
 
     def _update_geometry(self):
@@ -119,161 +120,222 @@ class AbhiGlobalOSController:
         self.root.geometry(f"{w}x{h}+{self.pos_x}+{self.pos_y}")
 
     # -------------------------------------------------------------------------
-    # COMPACT CYBERNETIC ORB VIEW
+    # COMPACT FLOATING ORB VIEW
     # -------------------------------------------------------------------------
 
     def _build_compact_view(self):
-        self.canvas = tk.Canvas(
+        self.canvas_orb = tk.Canvas(
             self.compact_frame,
             width=self.compact_w,
             height=self.compact_h,
             bg=self.COLOR_BG,
             highlightthickness=0
         )
-        self.canvas.pack(fill="both", expand=True)
+        self.canvas_orb.pack(fill="both", expand=True)
 
-        self.canvas.bind("<ButtonPress-1>", self._on_drag_start)
-        self.canvas.bind("<B1-Motion>", self._on_drag_motion)
-        self.canvas.bind("<ButtonRelease-1>", self._on_drag_end_orb)
-
+        # Render Core Orb
         self._draw_orb()
+
+        # Dragging & Clicking handlers
+        self.canvas_orb.bind("<Button-1>", self._on_drag_start)
+        self.canvas_orb.bind("<B1-Motion>", self._on_drag_motion)
+        self.canvas_orb.bind("<ButtonRelease-1>", self._on_drag_end_orb)
+
+        # Start ambient pulse animation
+        self._animate_pulse()
 
     def _draw_orb(self):
-        self.canvas.delete("all")
+        self.canvas_orb.delete("all")
         cx, cy = self.compact_w // 2, self.compact_h // 2
-        r_outer = 32
-        r_inner = 24
+        r = 28
 
-        # Glow rings
-        ring_color = self.COLOR_CYAN if self.bot_state != "EXECUTING" else self.COLOR_PURPLE
-        self.canvas.create_oval(
-            cx - r_outer, cy - r_outer, cx + r_outer, cy + r_outer,
-            outline=ring_color, width=2
-        )
-        self.canvas.create_oval(
-            cx - r_inner, cy - r_inner, cx + r_inner, cy + r_inner,
-            fill="#0d1b2a", outline=self.COLOR_CYAN, width=1
+        # Outer energy ring
+        color_ring = self.COLOR_CYAN if self.bot_state != "EXECUTING" else self.COLOR_PURPLE
+        if self.voice_active:
+            color_ring = self.COLOR_ACCENT
+
+        self.canvas_orb.create_oval(
+            cx - r - 4, cy - r - 4, cx + r + 4, cy + r + 4,
+            outline=color_ring, width=2
         )
 
-        # Center Symbol & Core
-        self.canvas.create_text(
+        # Inner dark nucleus
+        self.canvas_orb.create_oval(
+            cx - r, cy - r, cx + r, cy + r,
+            fill="#0b1329", outline="#1e293b", width=1
+        )
+
+        # Central glowing insignia
+        self.canvas_orb.create_text(
             cx, cy - 2,
-            text="⚡", fill=self.COLOR_CYAN, font=("Segoe UI Symbol", 16, "bold")
+            text="ABHI",
+            font=("Segoe UI", 10, "bold"),
+            fill=self.COLOR_CYAN
         )
-        self.canvas.create_text(
-            cx, cy + 18,
-            text="ABHI", fill="#ffffff", font=("Segoe UI", 7, "bold")
+        sub_text = "VOICE" if self.voice_active else "GLOBAL"
+        self.canvas_orb.create_text(
+            cx, cy + 13,
+            text=sub_text,
+            font=("Segoe UI", 6, "bold"),
+            fill=self.COLOR_TEXT_DIM
         )
 
-    def _animate_orb_pulse(self):
+    def _animate_pulse(self):
         self.pulse_phase = (self.pulse_phase + 1) % 20
         self._draw_orb()
-        self.pulse_timer = self.root.after(100, self._animate_orb_pulse)
+        self.root.after(120, self._animate_pulse)
 
     # -------------------------------------------------------------------------
-    # EXPANDED FULL OS CONTROLLER HUD
+    # EXPANDED GLOBAL CONTROLLER PANEL
     # -------------------------------------------------------------------------
 
     def _build_expanded_view(self):
-        # Outer Border & Container
-        container = tk.Frame(self.expanded_frame, bg=self.COLOR_PANEL, highlightthickness=1, highlightbackground=self.COLOR_CYAN)
-        container.pack(fill="both", expand=True, padx=2, pady=2)
-
-        # Header with Drag Handle
-        header = tk.Frame(container, bg="#0d1424", height=42)
-        header.pack(fill="x", side="top")
-        header.bind("<ButtonPress-1>", self._on_drag_start)
-        header.bind("<B1-Motion>", self._on_drag_motion)
-        header.bind("<ButtonRelease-1>", self._on_drag_end_header)
+        # 1. Header Bar (Draggable)
+        self.header_bar = tk.Frame(self.expanded_frame, bg=self.COLOR_PANEL, height=42, cursor="fleur")
+        self.header_bar.pack(fill="x", side="top")
+        self.header_bar.pack_propagate(False)
 
         title_lbl = tk.Label(
-            header,
-            text="⚡ ABHI · COMPLETE OS CONTROLLER",
-            bg="#0d1424", fg=self.COLOR_CYAN, font=("Segoe UI", 9, "bold")
+            self.header_bar,
+            text="⚡ ABHI GLOBAL OS CONTROLLER",
+            font=("Segoe UI", 9, "bold"),
+            bg=self.COLOR_PANEL,
+            fg=self.COLOR_CYAN
         )
-        title_lbl.pack(side="left", padx=10, pady=8)
-        title_lbl.bind("<ButtonPress-1>", self._on_drag_start)
+        title_lbl.pack(side="left", padx=10)
+
+        # Header controls
+        close_btn = tk.Label(
+            self.header_bar,
+            text="✕",
+            font=("Segoe UI", 10, "bold"),
+            bg=self.COLOR_PANEL,
+            fg=self.COLOR_TEXT_DIM,
+            cursor="hand2"
+        )
+        close_btn.pack(side="right", padx=10)
+        close_btn.bind("<Button-1>", lambda e: self.toggle_mode())
+
+        min_btn = tk.Label(
+            self.header_bar,
+            text="—",
+            font=("Segoe UI", 10, "bold"),
+            bg=self.COLOR_PANEL,
+            fg=self.COLOR_TEXT_DIM,
+            cursor="hand2"
+        )
+        min_btn.pack(side="right", padx=6)
+        min_btn.bind("<Button-1>", lambda e: self.toggle_mode())
+
+        # Header Drag bindings
+        self.header_bar.bind("<Button-1>", self._on_drag_start)
+        self.header_bar.bind("<B1-Motion>", self._on_drag_motion)
+        self.header_bar.bind("<ButtonRelease-1>", self._on_drag_end_header)
+        title_lbl.bind("<Button-1>", self._on_drag_start)
         title_lbl.bind("<B1-Motion>", self._on_drag_motion)
         title_lbl.bind("<ButtonRelease-1>", self._on_drag_end_header)
 
-        min_btn = tk.Button(
-            header, text="—", bg="#0d1424", fg=self.COLOR_TEXT_DIM,
-            font=("Segoe UI", 10, "bold"), bd=0, activebackground=self.COLOR_PANEL,
-            activeforeground="#ffffff", cursor="hand2", command=self.toggle_mode
-        )
-        min_btn.pack(side="right", padx=10, pady=4)
-
-        # OS Active Window Observation Strip
-        strip_frame = tk.Frame(container, bg="#131c2e", height=38)
-        strip_frame.pack(fill="x", padx=8, pady=6)
-
-        strip_icon = tk.Label(strip_frame, text="🖥️", bg="#131c2e", font=("Segoe UI Emoji", 11))
-        strip_icon.pack(side="left", padx=6)
+        # 2. OS Context Banner
+        self.context_frame = tk.Frame(self.expanded_frame, bg="#0d1424", height=32)
+        self.context_frame.pack(fill="x", padx=8, pady=(6, 4))
+        self.context_frame.pack_propagate(False)
 
         self.os_status_lbl = tk.Label(
-            strip_frame, text="Tracking OS Active Window...",
-            bg="#131c2e", fg=self.COLOR_TEXT, font=("Segoe UI", 8),
-            anchor="w", justify="left"
+            self.context_frame,
+            text="Active OS Window: Desktop",
+            font=("Segoe UI", 8),
+            bg="#0d1424",
+            fg=self.COLOR_TEXT_DIM,
+            anchor="w"
         )
-        self.os_status_lbl.pack(side="left", fill="x", expand=True, padx=4)
+        self.os_status_lbl.pack(side="left", fill="x", expand=True, padx=8)
 
-        # Quick System Action Buttons
-        actions_bar = tk.Frame(container, bg=self.COLOR_PANEL)
-        actions_bar.pack(fill="x", padx=8, pady=4)
+        # 3. Quick Action Buttons Grid
+        actions_frame = tk.Frame(self.expanded_frame, bg=self.COLOR_BG)
+        actions_frame.pack(fill="x", padx=8, pady=4)
 
-        btn_specs = [
-            ("💻 PowerShell", "open_terminal"),
-            ("📁 Explorer", "open_explorer"),
-            ("🧮 Calc", "open_calc"),
-            ("📝 Notepad", "open_notepad"),
-            ("🌐 Chrome", "open_chrome"),
-            ("🔊 Volume", "adjust_volume")
+        actions = [
+            ("Terminal", "open_terminal", self.COLOR_CYAN),
+            ("Explorer", "open_explorer", self.COLOR_PURPLE),
+            ("Notepad", "open_notepad", "#3b82f6"),
+            ("Calc", "open_calc", "#10b981"),
+            ("Chrome", "open_chrome", "#f59e0b"),
+            ("Mute Vol", "adjust_volume", "#ef4444")
         ]
 
-        for idx, (label, action_id) in enumerate(btn_specs):
-            b = tk.Button(
-                actions_bar, text=label, bg="#1a2336", fg=self.COLOR_TEXT,
-                font=("Segoe UI", 8), bd=0, padx=6, pady=4, cursor="hand2",
-                activebackground=self.COLOR_CYAN, activeforeground="#000000",
-                command=lambda act=action_id: self.trigger_quick_action(act)
+        for i, (name, act_key, col) in enumerate(actions):
+            r, c = divmod(i, 3)
+            btn = tk.Button(
+                actions_frame,
+                text=name,
+                font=("Segoe UI", 8, "bold"),
+                bg="#1a2234",
+                fg=col,
+                activebackground="#25324d",
+                activeforeground=col,
+                relief="flat",
+                bd=0,
+                padx=8,
+                pady=4,
+                cursor="hand2",
+                command=lambda k=act_key: self.trigger_quick_action(k)
             )
-            b.grid(row=idx // 3, column=idx % 3, padx=2, pady=2, sticky="nsew")
+            btn.grid(row=r, column=c, padx=3, pady=3, sticky="ew")
+        actions_frame.grid_columnconfigure((0, 1, 2), weight=1)
 
-        actions_bar.grid_columnconfigure(0, weight=1)
-        actions_bar.grid_columnconfigure(1, weight=1)
-        actions_bar.grid_columnconfigure(2, weight=1)
+        # 4. Chat & Execution Terminal Output
+        chat_frame = tk.Frame(self.expanded_frame, bg=self.COLOR_BG)
+        chat_frame.pack(fill="both", expand=True, padx=8, pady=4)
 
-        # Chat / Transcript History Box
         self.chat_history = tk.Text(
-            container, bg="#0b0f19", fg=self.COLOR_TEXT,
-            font=("Segoe UI", 8), wrap="word", bd=0, height=13,
-            highlightthickness=1, highlightbackground=self.COLOR_BORDER
+            chat_frame,
+            bg="#0b1120",
+            fg=self.COLOR_TEXT,
+            font=("Consolas", 8),
+            wrap="word",
+            bd=0,
+            padx=8,
+            pady=8,
+            state="disabled"
         )
-        self.chat_history.pack(fill="both", expand=True, padx=8, pady=6)
-        self.chat_history.insert("end", "ABHI: Pranam Mamu! I am controlling your complete Operating System.\nType any system command, open apps, or ask questions.\n\n")
-        self.chat_history.config(state="disabled")
+        self.chat_history.pack(fill="both", expand=True)
 
-        # Bottom Command Input Bar
-        input_frame = tk.Frame(container, bg=self.COLOR_PANEL)
-        input_frame.pack(fill="x", padx=8, pady=6, side="bottom")
+        self.append_chat("ABHI", "Unified Global OS Controller online. Say 'Hey Abhi' or ask any OS task.")
+
+        # 5. Bottom Input Bar
+        input_frame = tk.Frame(self.expanded_frame, bg=self.COLOR_PANEL, height=44)
+        input_frame.pack(fill="x", side="bottom")
+        input_frame.pack_propagate(False)
 
         self.cmd_entry = tk.Entry(
-            input_frame, bg="#0d1424", fg="#ffffff",
-            font=("Segoe UI", 9), insertbackground=self.COLOR_CYAN,
-            bd=0, highlightthickness=1, highlightbackground=self.COLOR_BORDER
+            input_frame,
+            bg="#1f293d",
+            fg="#ffffff",
+            insertbackground="#00f0ff",
+            font=("Segoe UI", 9),
+            relief="flat",
+            bd=0
         )
-        self.cmd_entry.pack(side="left", fill="x", expand=True, ipady=5, padx=(0, 6))
+        self.cmd_entry.pack(side="left", fill="both", expand=True, padx=(8, 4), pady=6)
         self.cmd_entry.bind("<Return>", lambda e: self.submit_command())
 
         send_btn = tk.Button(
-            input_frame, text="Run ➤", bg=self.COLOR_CYAN, fg="#000000",
-            font=("Segoe UI", 8, "bold"), bd=0, padx=10, cursor="hand2",
-            activebackground="#00c8d7", command=self.submit_command
+            input_frame,
+            text="Run",
+            font=("Segoe UI", 8, "bold"),
+            bg=self.COLOR_CYAN,
+            fg="#080c14",
+            activebackground="#00d8e6",
+            relief="flat",
+            bd=0,
+            padx=12,
+            cursor="hand2",
+            command=self.submit_command
         )
-        send_btn.pack(side="right", ipady=3)
+        send_btn.pack(side="right", padx=(0, 8), pady=6)
 
     # -------------------------------------------------------------------------
-    # DRAG & DROP LOGIC (WITH THRESHOLD SUPPRESSION)
+    # DRAG & DROP LOGIC
     # -------------------------------------------------------------------------
 
     def _on_drag_start(self, event):
@@ -283,20 +345,19 @@ class AbhiGlobalOSController:
         self.is_dragging = True
 
     def _on_drag_motion(self, event):
-        if not self.is_dragging:
-            return
         dx = event.x_root - self.drag_start_x
         dy = event.y_root - self.drag_start_y
-        self.drag_distance = (dx ** 2 + dy ** 2) ** 0.5
+        self.drag_distance += abs(dx) + abs(dy)
 
         self.pos_x += dx
         self.pos_y += dy
         self.drag_start_x = event.x_root
         self.drag_start_y = event.y_root
 
-        # Clamp to screen bounds
         w = self.expanded_w if self.is_expanded else self.compact_w
         h = self.expanded_h if self.is_expanded else self.compact_h
+
+        # Screen boundary clamping
         self.pos_x = max(0, min(self.pos_x, self.screen_width - w))
         self.pos_y = max(0, min(self.pos_y, self.screen_height - h))
 
@@ -363,12 +424,26 @@ class AbhiGlobalOSController:
                 data = json.loads(resp.read().decode())
                 reply = data.get("reply", "Command executed, Mamu.")
                 self.root.after(0, lambda: self.append_chat("ABHI", reply))
-        except Exception as e:
+                self._speak_response(reply)
+        except Exception:
             # Native OS Execution Fallback
             reply = self._execute_native_fallback(query)
             self.root.after(0, lambda: self.append_chat("ABHI", reply))
+            self._speak_response(reply)
 
         self.bot_state = "IDLE"
+
+    def _speak_response(self, text: str):
+        """Speak brief responses using Windows Speech Synthesis."""
+        def run_speak():
+            try:
+                # Keep spoken response concise
+                clean_text = text.replace('"', '').replace("'", "")[:120]
+                ps_speak = f'Add-Type -AssemblyName System.Speech; $s = New-Object System.Speech.Synthesis.SpeechSynthesizer; $s.Speak("{clean_text}")'
+                subprocess.run(['powershell', '-NoProfile', '-Command', ps_speak], capture_output=True, timeout=10)
+            except Exception:
+                pass
+        threading.Thread(target=run_speak, daemon=True).start()
 
     def trigger_quick_action(self, action: str):
         self.append_chat("Action", f"Triggering {action}...")
@@ -427,6 +502,80 @@ class AbhiGlobalOSController:
             return "Workstation locked securely, Mamu."
         else:
             return f"Processed OS command: '{query}'."
+
+    # -------------------------------------------------------------------------
+    # REAL-TIME SYSTEM.SPEECH VOICE LISTENER ("HEY ABHI" / "HAY ABHI")
+    # -------------------------------------------------------------------------
+
+    def _start_voice_listener(self):
+        """Spawns abhi_voice_listener.ps1 and parses continuous voice stream."""
+        def listener_worker():
+            listener_script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "abhi_voice_listener.ps1")
+            if not os.path.exists(listener_script):
+                return
+
+            try:
+                proc = subprocess.Popen(
+                    ['powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', listener_script],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1
+                )
+
+                for line in iter(proc.stdout.readline, ''):
+                    line_str = line.strip()
+                    if not line_str:
+                        continue
+
+                    if "SPEECH_ENGINE_ACTIVE" in line_str:
+                        self.voice_active = True
+                        self.root.after(0, lambda: self.append_chat("Voice", "Microphone listening for 'Hey Abhi'..."))
+                    elif "VOICE_RECOGNIZED:" in line_str:
+                        recognized = line_str.replace("VOICE_RECOGNIZED:", "").strip()
+                        self._handle_voice_phrase(recognized)
+
+                proc.stdout.close()
+                proc.wait()
+            except Exception as e:
+                pass
+
+        threading.Thread(target=listener_worker, daemon=True).start()
+
+    def _handle_voice_phrase(self, phrase: str):
+        p = phrase.lower().strip()
+        wake_matches = ["hey abhi", "hay abhi", "abhi", "hello abhi", "ok abhi"]
+        is_wake = any(w in p for w in wake_matches)
+
+        if is_wake:
+            # Sound hardware chime
+            try:
+                import winsound
+                winsound.Beep(1200, 100)
+                winsound.Beep(1800, 150)
+            except Exception:
+                pass
+
+            # Expand if compact so user can see Abhi responding
+            if not self.is_expanded:
+                self.root.after(0, self.toggle_mode)
+
+            # Strip wake word to get prompt
+            clean_cmd = p
+            for w in wake_matches:
+                clean_cmd = clean_cmd.replace(w, "").strip()
+
+            if clean_cmd:
+                self.root.after(0, lambda: self.append_chat("Voice (Mamu)", clean_cmd))
+                threading.Thread(target=self._dispatch_ai_query, args=(clean_cmd,), daemon=True).start()
+            else:
+                reply = "Yes Mamu, I am listening! Tell me what to do."
+                self.root.after(0, lambda: self.append_chat("ABHI", reply))
+                self._speak_response(reply)
+        else:
+            # Direct recognized voice action
+            self.root.after(0, lambda: self.append_chat("Voice (Mamu)", phrase))
+            threading.Thread(target=self._dispatch_ai_query, args=(phrase,), daemon=True).start()
 
     # -------------------------------------------------------------------------
     # BACKGROUND REAL-TIME OS MONITORING
