@@ -206,7 +206,7 @@ def clean_voice_query(q: str) -> str:
 
 
 def execute_dag_plan_dynamically(steps: List[Dict[str, Any]]) -> Tuple[bool, str]:
-    """Dynamically executes discrete DAG steps directly via os_control_engine."""
+    """Dynamically executes discrete DAG steps directly via os_control_engine and dynamic resolver."""
     executed_titles = []
     for step in steps:
         action = step.get("action")
@@ -214,9 +214,31 @@ def execute_dag_plan_dynamically(steps: List[Dict[str, Any]]) -> Tuple[bool, str
         title = step.get("title", action)
         
         try:
-            if action == "launch_application":
-                app_name = params.get("app_name") or params.get("executable") or "notepad"
-                os_control_engine.launch_application(app_name)
+            if action in ("run_allowlisted_command", "execute_command", "shell_command"):
+                cmd = params.get("command") or params.get("cmd") or ""
+                if cmd:
+                    ok, a_name, r_msg = dynamic_action_resolver.resolve_and_execute(cmd)
+                    if ok:
+                        executed_titles.append(r_msg)
+                        continue
+                    else:
+                        subprocess.Popen(["powershell.exe", "-Command", cmd])
+                        executed_titles.append(f"Executed '{cmd}'")
+                        continue
+
+            elif action == "launch_application":
+                raw_app = params.get("app_name") or params.get("command") or params.get("executable") or ""
+                if raw_app and any(k in raw_app.lower() for k in ["youtube", "song", "music", "video"]):
+                    ok, a_name, r_msg = dynamic_action_resolver.resolve_and_execute(raw_app)
+                    if ok:
+                        executed_titles.append(r_msg)
+                        continue
+                app_name = raw_app if raw_app else "notepad"
+                shortcut = dynamic_action_resolver.find_installed_app_shortcut(app_name)
+                if shortcut:
+                    os.startfile(shortcut)
+                else:
+                    os_control_engine.launch_application(app_name)
                 executed_titles.append(f"Launched {app_name}")
             elif action == "open_url":
                 url = params.get("url") or "https://google.com"
@@ -253,8 +275,9 @@ def execute_dag_plan_dynamically(steps: List[Dict[str, Any]]) -> Tuple[bool, str
         except Exception as e:
             logger.error(f"Error executing step {title}: {e}")
             
-    summary = ", ".join(executed_titles) if executed_titles else "Completed dynamic execution"
-    return True, summary
+    if not executed_titles:
+        return False, ""
+    return True, ", ".join(executed_titles)
 
 
 @router.post("/ask-bot")

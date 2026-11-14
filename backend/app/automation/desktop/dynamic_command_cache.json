@@ -2,59 +2,85 @@
   "fb open": {
     "type": "url",
     "url": "https://www.facebook.com",
-    "reply": "Opened Facebook, Mamu."
+    "reply": "Opened Facebook for you, Mamu."
   },
-  "movie open": {
+  "open whatsapp": {
     "type": "url",
-    "url": "https://www.google.com/search?q=latest+movies",
-    "reply": "Opened Movies, Mamu."
+    "url": "https://web.whatsapp.com",
+    "reply": "Opened WhatsApp Web for you, Mamu."
   },
-  "play in youtube": {
-    "type": "hotkey",
-    "key": "SPACE",
-    "reply": "Resumed playback, Mamu."
+  "whatsapp": {
+    "type": "url",
+    "url": "https://web.whatsapp.com",
+    "reply": "Opened WhatsApp Web for you, Mamu."
+  },
+  "youtube": {
+    "type": "url",
+    "url": "https://www.youtube.com",
+    "reply": "Opened YouTube for you, Mamu."
+  },
+  "open youtube": {
+    "type": "url",
+    "url": "https://www.youtube.com",
+    "reply": "Opened YouTube for you, Mamu."
   },
   "close the window": {
     "type": "window_close",
-    "reply": "Closed window, Mamu."
-  },
-  "keypad": {
-    "type": "cmd",
-    "cmd": "start osk.exe",
-    "reply": "Opened On-Screen Keyboard, Mamu."
-  },
-  "skip the ad": {
-    "type": "hotkey",
-    "key": "TAB+ENTER",
-    "reply": "Skipped ad, Mamu."
-  },
-  "play next video": {
-    "type": "hotkey",
-    "key": "SHIFT+N",
-    "reply": "Playing next video, Mamu."
-  },
-  "skip 30 seconds": {
-    "type": "multi_hotkey",
-    "keys": [
-      "L",
-      "L",
-      "L"
-    ],
-    "reply": "Skipped 30 seconds forward, Mamu."
-  },
-  "mute the video": {
-    "type": "hotkey",
-    "key": "M",
-    "reply": "Toggled audio mute, Mamu."
-  },
-  "pause the video": {
-    "type": "hotkey",
-    "key": "SPACE",
-    "reply": "Paused video playback, Mamu."
+    "reply": "Closed active window, Mamu."
   },
   "close the tab": {
     "type": "hotkey",
     "key": "CTRL+W",
-    "reply": "Closed tab, Mamu."
+    "reply": "Closed browser tab, Mamu."
+  },
+  "pause the video": {
+    "type": "hotkey",
+    "key": "SPACE",
+    "reply": "Paused video playback for you, Mamu."
+  },
+  "mute the video": {
+    "type": "hotkey",
+    "key": "M",
+    "reply": "Toggled video audio mute, Mamu."
+  },
+  "skip the ad": {
+    "type": "hotkey",
+    "key": "TAB+ENTER",
+    "reply": "Skipped advertisement, Mamu."
+  },
+  "play next video": {
+    "type": "hotkey",
+    "key": "SHIFT+N",
+    "reply": "Playing next video on YouTube, Mamu."
+  },
+  "keypad": {
+    "type": "cmd",
+    "cmd": "start osk.exe",
+    "reply": "On-Screen Keyboard opened on your screen, Mamu."
+  },
+  "hindi open youtube": {
+    "type": "youtube_play",
+    "query": "hindi songs",
+    "reply": "Opened YouTube and playing 'hindi songs' for you, Mamu!"
+  },
+  "youtube telugu songs": {
+    "type": "youtube_play",
+    "query": "telugu songs",
+    "reply": "Opened YouTube and playing 'telugu songs' for you, Mamu!"
+  },
+  "play telugu songs": {
+    "type": "youtube_play",
+    "query": "telugu songs",
+    "reply": "Opened YouTube and playing 'telugu songs' for you, Mamu!"
+  },
+  "hindi songs": {
+    "type": "youtube_play",
+    "query": "hindi songs",
+    "reply": "Opened YouTube and playing 'hindi songs' for you, Mamu!"
+  },
+  "open chrome": {
+    "type": "shortcut",
+    "path": "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Google Chrome.lnk",
+    "reply": "Launched chrome, Mamu."
   }
 }

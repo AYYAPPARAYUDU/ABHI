@@ -71,10 +71,8 @@ class DynamicActionResolver:
 
     def find_installed_app_shortcut(self, query: str) -> Optional[str]:
         q = query.lower().strip()
-        # Direct exact match
         if q in self._installed_apps:
             return self._installed_apps[q]
-        # Substring or token match
         for app_name, app_path in self._installed_apps.items():
             if q == app_name or q in app_name or app_name in q:
                 return app_path
@@ -83,7 +81,6 @@ class DynamicActionResolver:
     def clean_query(self, raw: str) -> str:
         """Removes filler speech prefixes while preserving target intent."""
         c = raw.strip()
-        # Remove wake phrases and conversation fillers
         c = re.sub(
             r"^(hey\s+abhi|hay\s+abhi|hi\s+abhi|hello\s+abhi|ok\s+abhi|abhi|abi|avi|are\s+abhi)\s*",
             "", c, flags=re.IGNORECASE
@@ -110,6 +107,7 @@ class DynamicActionResolver:
             "x": ("https://x.com", "X"),
             "gmail": ("https://mail.google.com", "Gmail"),
             "email": ("https://mail.google.com", "Gmail"),
+            "mail": ("https://mail.google.com", "Gmail"),
             "github": ("https://github.com", "GitHub"),
             "linkedin": ("https://www.linkedin.com", "LinkedIn"),
             "chatgpt": ("https://chatgpt.com", "ChatGPT"),
@@ -144,7 +142,6 @@ class DynamicActionResolver:
         """Resolves any OS, browser, media, or dynamic action and executes immediately."""
         clean = self.clean_query(raw_query)
         lower_clean = clean.lower()
-        lower_raw = raw_query.lower()
 
         logger.info(f"DynamicActionResolver evaluating: '{clean}' (raw: '{raw_query}')")
 
@@ -158,7 +155,31 @@ class DynamicActionResolver:
                 return True, cached_plan.get("action", "learned_action"), reply
 
         # ---------------------------------------------------------------------
-        # 1. YouTube & Media Playback Control
+        # 1. YouTube & Music / Song Automation
+        # ---------------------------------------------------------------------
+        # If user mentions YouTube OR asks for any song/music/track
+        if "youtube" in lower_clean or any(k in lower_clean for k in ["song", "songs", "music", "track"]):
+            term = lower_clean
+            for w in [
+                "open youtube and", "open youtube", "youtube open", "in youtube", "on youtube",
+                "youtube", "search for", "search", "play", "open", "listen to", "can you",
+                "please", "now", "any", "song", "songs"
+            ]:
+                term = re.sub(rf"\b{w}\b", "", term, flags=re.IGNORECASE).strip()
+
+            if term and len(term) > 1:
+                query_term = f"{term} songs" if not ("song" in term or "music" in term) else term
+                ok, meta, _ = os_control_engine.play_youtube_song(query_term)
+                if ok:
+                    self._cache_action(lower_clean, {"type": "youtube_play", "query": query_term, "reply": f"Opened YouTube and playing '{query_term}' for you, Mamu!"})
+                    return True, "play_youtube", f"Opened YouTube and playing '{query_term}' for you, Mamu!"
+            else:
+                os_control_engine.open_url("https://www.youtube.com")
+                self._cache_action(lower_clean, {"type": "url", "url": "https://www.youtube.com", "reply": "Opened YouTube for you, Mamu."})
+                return True, "open_youtube", "Opened YouTube for you, Mamu."
+
+        # ---------------------------------------------------------------------
+        # 2. YouTube & Media Playback Control (Pause, Mute, Skip, Next, etc.)
         # ---------------------------------------------------------------------
         if any(k in lower_clean for k in ["next video", "play next video", "next track", "next song"]):
             os_control_engine.send_hotkey("SHIFT+N")
@@ -175,7 +196,7 @@ class DynamicActionResolver:
             self._cache_action(lower_clean, {"type": "hotkey", "key": "SPACE", "reply": "Paused video playback, Mamu."})
             return True, "pause_media", "Paused video playback for you, Mamu."
 
-        if any(lower_clean == p or lower_clean.startswith(f"{p} ") for p in ["play", "resume", "play video", "play the video", "unpause"]) and not any(k in lower_clean for k in ["song", "music", "telugu", "hindi", "youtube"]):
+        if any(lower_clean == p or lower_clean.startswith(f"{p} ") for p in ["play", "resume", "play video", "play the video", "unpause"]):
             ctypes.windll.user32.keybd_event(0x20, 0, 0, 0)
             ctypes.windll.user32.keybd_event(0x20, 0, 2, 0)
             self._cache_action(lower_clean, {"type": "hotkey", "key": "SPACE", "reply": "Resumed playback, Mamu."})
@@ -187,21 +208,11 @@ class DynamicActionResolver:
             return True, "mute_video", "Toggled video audio mute, Mamu."
 
         if any(k in lower_clean for k in ["skip ad", "skip the ad", "skip ads", "remove ad"]):
-            # In YouTube web player: Tab into skip button or click
             os_control_engine.send_hotkey("TAB")
             time.sleep(0.05)
             os_control_engine.send_hotkey("ENTER")
             self._cache_action(lower_clean, {"type": "hotkey", "key": "TAB+ENTER", "reply": "Skipped ad, Mamu."})
             return True, "skip_ad", "Skipped the advertisement, Mamu."
-
-        if any(k in lower_clean for k in ["next video", "play next video", "next track", "next song"]):
-            os_control_engine.send_hotkey("SHIFT+N")
-            self._cache_action(lower_clean, {"type": "hotkey", "key": "SHIFT+N", "reply": "Playing next video, Mamu."})
-            return True, "next_video", "Playing the next video, Mamu."
-
-        if any(k in lower_clean for k in ["previous video", "previous song", "last video"]):
-            os_control_engine.send_hotkey("SHIFT+P")
-            return True, "previous_video", "Playing previous video, Mamu."
 
         if any(k in lower_clean for k in ["skip 30 seconds", "forward 30 seconds", "seek forward 30 seconds", "skip 30s"]):
             for _ in range(3):
@@ -227,7 +238,7 @@ class DynamicActionResolver:
             return True, "theater_mode", "Toggled theater mode, Mamu."
 
         # ---------------------------------------------------------------------
-        # 2. Browser Tab & Navigation Control
+        # 3. Browser Tab & Navigation Control
         # ---------------------------------------------------------------------
         if any(k in lower_clean for k in ["close tab", "close the tab", "close this tab", "exit tab"]):
             os_control_engine.close_tab()
@@ -284,7 +295,7 @@ class DynamicActionResolver:
             return True, "browser_history", "Opened browser history, Mamu."
 
         # ---------------------------------------------------------------------
-        # 3. Windows & Desktop Control
+        # 4. Windows & Desktop Control
         # ---------------------------------------------------------------------
         if any(k in lower_clean for k in ["close window", "close the window", "now close the window", "exit window", "close app"]):
             os_control_engine.close_window()
@@ -325,25 +336,12 @@ class DynamicActionResolver:
             return True, "screenshot", "Screen snip tool activated, Mamu."
 
         # ---------------------------------------------------------------------
-        # 4. Direct Web Target / Service Launching ("fb open", "open fb", "movie open")
+        # 5. Direct App & Web Target Resolution (e.g. "open WhatsApp", "WhatsApp", "Chrome", "calc")
         # ---------------------------------------------------------------------
-        # Pattern 1: "<target> open" (e.g. "fb open", "movie open", "chrome open")
-        m_target_open = re.match(r"^([a-z0-9_\-\.\s]+)\s+open$", lower_clean)
-        # Pattern 2: "open <target>" (e.g. "open fb", "open movie", "open chrome")
-        m_open_target = re.match(r"^open\s+([a-z0-9_\-\.\s]+)$", lower_clean)
-        # Pattern 3: "goto <target>" or "launch <target>"
-        m_launch_target = re.match(r"^(?:goto|launch|start|show)\s+([a-z0-9_\-\.\s]+)$", lower_clean)
-
-        target_candidate = None
-        if m_target_open:
-            target_candidate = m_target_open.group(1).strip()
-        elif m_open_target:
-            target_candidate = m_open_target.group(1).strip()
-        elif m_launch_target:
-            target_candidate = m_launch_target.group(1).strip()
+        target_candidate = re.sub(r"^(?:open|launch|start|goto|show)\s+", "", lower_clean).strip()
+        target_candidate = re.sub(r"\s+open$", "", target_candidate).strip()
 
         if target_candidate:
-            # Check Web Map
             web_info = self.resolve_web_target(target_candidate)
             if web_info:
                 url, title = web_info
@@ -351,7 +349,6 @@ class DynamicActionResolver:
                 self._cache_action(lower_clean, {"type": "url", "url": url, "reply": f"Opened {title}, Mamu."})
                 return True, f"open_{target_candidate}", f"Opened {title} for you, Mamu."
 
-            # Check Installed Apps Start Menu
             shortcut = self.find_installed_app_shortcut(target_candidate)
             if shortcut:
                 try:
@@ -361,27 +358,14 @@ class DynamicActionResolver:
                 except Exception as e:
                     logger.warning(f"Error launching shortcut {shortcut}: {e}")
 
-            # Check Native OS Executables
             res = os_control_engine.launch_application(target_candidate)
             if res and (res[0] if isinstance(res, tuple) else bool(res)):
+                self._cache_action(lower_clean, {"type": "app", "name": target_candidate, "reply": f"Launched {target_candidate.title()}, Mamu."})
                 return True, f"launch_{target_candidate}", f"Launched {target_candidate.title()}, Mamu."
 
         # ---------------------------------------------------------------------
-        # 5. Media & YouTube Search & Play ("play X in youtube", "search for X")
+        # 6. General Web Search ("search for X", "google X")
         # ---------------------------------------------------------------------
-        # "search for <query> in youtube" or "play <query> in youtube"
-        m_yt = re.search(r"(?:search\s+for\s+|play\s+)(.+?)(?:\s+(?:in|on)\s+youtube|\s+song|\s+music)?$", lower_clean)
-        if ("youtube" in lower_clean or "play" in lower_clean or "song" in lower_clean) and m_yt:
-            song_term = m_yt.group(1).strip()
-            # Clean filler
-            song_term = re.sub(r"^(now|please|any)\s+", "", song_term)
-            if not song_term or song_term in ["youtube", "in youtube", "song"]:
-                song_term = "trending songs"
-            ok, meta, _ = os_control_engine.play_youtube_song(song_term)
-            if ok:
-                return True, "play_youtube", f"Opened YouTube and playing '{song_term}' for you, Mamu!"
-
-        # "search for <query>" or "google <query>"
         m_search = re.search(r"^(?:search\s+for|search|google|find)\s+(.+)$", lower_clean)
         if m_search:
             search_query = m_search.group(1).strip()
@@ -391,7 +375,7 @@ class DynamicActionResolver:
             return True, "web_search", f"Opened Chrome and searching for '{search_query}', Mamu!"
 
         # ---------------------------------------------------------------------
-        # 6. Multi-Step DAG Task Execution ("open X and type Y")
+        # 7. Multi-Step DAG Task Execution ("open X and type Y")
         # ---------------------------------------------------------------------
         if " and " in lower_clean or " then " in lower_clean:
             steps = self._decompose_dynamic_goal(clean)
@@ -401,7 +385,7 @@ class DynamicActionResolver:
                     return True, "dag_workflow", f"Executed for you, Mamu: {summary}."
 
         # ---------------------------------------------------------------------
-        # 7. Presence, Identity & Capabilities
+        # 8. Presence, Identity & Capabilities
         # ---------------------------------------------------------------------
         if any(k in lower_clean for k in ["are you listening", "can you hear me", "are you there", "do you hear me"]):
             return True, "presence_check", "Yes Mamu, I am listening to your every word clearly! The entire OS controller and multi-agent swarm are at your command."
@@ -413,9 +397,8 @@ class DynamicActionResolver:
             return True, "capabilities", "I am ABHI — your unified central AI companion. I provide full Windows OS control, browser manipulation, autonomous multi-step execution, and live intelligence without limits, Mamu!"
 
         # ---------------------------------------------------------------------
-        # 8. Dynamic General Action Learning Fallback
+        # 9. Dynamic General Shell Action Fallback
         # ---------------------------------------------------------------------
-        # If the user issued a command that can be run as a PowerShell command:
         if lower_clean.startswith("run ") or lower_clean.startswith("exec "):
             shell_cmd = clean[4:].strip()
             try:
@@ -431,7 +414,6 @@ class DynamicActionResolver:
 
     def _cache_action(self, pattern: str, plan: Dict[str, Any]):
         self._learned_cache[pattern] = plan
-        # Auto-persist cache asynchronously or directly
         self._save_cache()
 
     def _execute_learned_plan(self, plan: Dict[str, Any]) -> Tuple[bool, str]:
@@ -448,6 +430,12 @@ class DynamicActionResolver:
                 return True, reply
             elif p_type == "url":
                 os_control_engine.open_url(plan.get("url", "https://google.com"))
+                return True, reply
+            elif p_type == "youtube_play":
+                os_control_engine.play_youtube_song(plan.get("query", "trending songs"))
+                return True, reply
+            elif p_type == "app":
+                os_control_engine.launch_application(plan.get("name", "notepad"))
                 return True, reply
             elif p_type == "shortcut":
                 os.startfile(plan.get("path"))
@@ -470,6 +458,15 @@ class DynamicActionResolver:
             p_clean = p.strip()
             p_lower = p_clean.lower()
             if not p_clean:
+                continue
+
+            # Check if this part is a YouTube/song query
+            if "youtube" in p_lower or any(k in p_lower for k in ["song", "music", "play"]):
+                term = p_lower
+                for w in ["open youtube and", "open youtube", "youtube open", "in youtube", "on youtube", "youtube", "play", "open", "search for", "search"]:
+                    term = re.sub(rf"\b{w}\b", "", term, flags=re.IGNORECASE).strip()
+                song_q = f"{term} songs" if term and not ("song" in term or "music" in term) else (term or "trending songs")
+                steps.append({"action": "play_youtube_song", "params": {"query": song_q}, "title": f"Play {song_q}"})
                 continue
 
             # App opening
@@ -512,7 +509,12 @@ class DynamicActionResolver:
             action = step.get("action")
             params = step.get("params", {})
             try:
-                if action == "launch_application":
+                if action == "play_youtube_song":
+                    song = params.get("query", "trending songs")
+                    os_control_engine.play_youtube_song(song)
+                    executed.append(f"Playing '{song}'")
+                    time.sleep(0.5)
+                elif action == "launch_application":
                     app = params.get("app_name", "notepad")
                     shortcut = self.find_installed_app_shortcut(app)
                     if shortcut:
