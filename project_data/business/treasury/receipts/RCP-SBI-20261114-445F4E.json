@@ -1,0 +1,30 @@
+{
+  "receipt_id": "RCP-SBI-20261114-445F4E",
+  "invoice_number": "DIRECT-SBIN1114",
+  "issued_at": "2026-11-14T04:48:29.015310+00:00",
+  "amount_inr": 5800.0,
+  "amount_usd": 66.29,
+  "currency": "INR",
+  "settlement_channel": "State Bank of India (UPI / NEFT)",
+  "utr_transaction_ref": "SBIN11140448F8D8",
+  "beneficiary": {
+    "name": "Ravuvai Ayyapparayudu",
+    "bank": "State Bank of India",
+    "account_number": "41130645649",
+    "account_masked": "SBI ****5649",
+    "ifsc": "SBIN0020507",
+    "upi_id": "ayyapparayudu.5@ybl"
+  },
+  "payer": {
+    "name": "ClickBank Premier Partner Payout (ayyapparayudu)"
+  },
+  "service_deliverable": {
+    "description": "Real-World Service Settlement & Verification",
+    "deliverable_sha256": "bcadef63639afb8971e14ea5778c6f37f4ebb7f504043d5056bd6481716d3713"
+  },
+  "cryptographic_verification": {
+    "verification_status": "DUAL_STATE_AUTHENTICATED",
+    "crypto_seal": "f0407c754d21c27f6635c640c2f7284ee46bd9176cb0ea0e8242c2c83a24d393",
+    "algorithm": "HMAC-SHA256"
+  }
+}

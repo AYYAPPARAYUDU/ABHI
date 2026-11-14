@@ -1,5 +1,6 @@
 """Phase 7 Stage 7.4 — Workflow REST API Endpoints."""
 
+import time
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -189,4 +190,65 @@ async def resolve_human_handoff(task_id: str, req: ResolveHandoffRequest) -> Dic
         raise HTTPException(status_code=404, detail=f"Handoff request '{req.handoff_id}' not found.")
     return {"task_id": task_id, "handoff_id": req.handoff_id, "resolved": True}
 
-import time
+
+# -----------------------------------------------------------------------------
+# ABHI Native Flow Engine & n8n Bridge Endpoints
+# -----------------------------------------------------------------------------
+
+from backend.app.automation.flow_engine import flow_engine, FlowDefinition, FlowExecutionRecord
+
+
+@workflow_router.get("/flows/list", response_model=List[Dict[str, Any]])
+async def list_abhi_flows() -> List[Dict[str, Any]]:
+    """List all registered ABHI autonomous flows."""
+    flows = flow_engine.list_flows()
+    return [f.model_dump() for f in flows]
+
+
+@workflow_router.post("/flows/{flow_id}/execute", response_model=Dict[str, Any])
+async def execute_abhi_flow(flow_id: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Execute a local-first workflow through the native ABHI flow engine."""
+    try:
+        record = await flow_engine.execute_flow(flow_id, context or {})
+        return record.model_dump()
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@workflow_router.post("/n8n-bridge/import", response_model=Dict[str, Any])
+async def import_n8n_flow(n8n_json: Dict[str, Any]) -> Dict[str, Any]:
+    """Convert an exported n8n workflow into a native local ABHI workflow."""
+    flow = flow_engine.import_n8n_workflow(n8n_json)
+    return {"message": "n8n workflow imported successfully into local execution", "flow": flow.model_dump()}
+
+
+@workflow_router.get("/n8n-bridge/{flow_id}/export", response_model=Dict[str, Any])
+async def export_to_n8n_format(flow_id: str) -> Dict[str, Any]:
+    """Export an ABHI flow into standard n8n JSON format."""
+    try:
+        data = flow_engine.export_to_n8n(flow_id)
+        return data
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@workflow_router.post("/n8n-bridge/webhook/{slug}", response_model=Dict[str, Any])
+async def receive_n8n_webhook(slug: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Receive an incoming webhook from n8n or external services and trigger corresponding local flow."""
+    # Look for matching flow by slug or trigger
+    flows = flow_engine.list_flows()
+    matching_flow = next((f for f in flows if slug in f.id or slug in f.name.lower()), flows[0] if flows else None)
+    if not matching_flow:
+        return {"status": "ACK", "message": f"Webhook '{slug}' received, but no matching local flow was registered."}
+
+    record = await flow_engine.execute_flow(matching_flow.id, {"webhook_slug": slug, "payload": payload})
+    return {
+        "status": "EXECUTED",
+        "flow_id": matching_flow.id,
+        "execution_id": record.execution_id,
+        "results": record.node_results
+    }
+
+

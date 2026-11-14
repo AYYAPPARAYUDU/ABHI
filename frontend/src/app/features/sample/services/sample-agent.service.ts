@@ -275,15 +275,15 @@ export class SampleAgentService {
   setViewMode(mode: SampleViewMode): void {
     this.viewMode.set(mode);
     if (this.speechVoice) {
-      const modeName = mode === 'hub-and-spoke' ? 'Live Agents Hub and Spoke' : 'Corporate Architectural Office Floorplan';
-      this.speechVoice.speak(`Switched to ${modeName}.`);
+      const modeName = mode === 'hub-and-spoke' ? 'Live Agents 8-Pod Hub' : 'Corporate Architectural Office Floorplan';
+      this.speechVoice.speak(`Switched to ${modeName}, Mamu.`);
     }
   }
 
   selectPod(pod: PodRoom | null): void {
     this.activePod.set(pod);
     if (pod && this.speechVoice) {
-      this.speechVoice.speak(`Inspecting ${pod.title} pod. ${pod.runningCount} agents running.`);
+      this.speechVoice.speak(`Inspecting ${pod.title} team, Mamu. ${pod.runningCount} specialist agents actively running.`);
     }
   }
 

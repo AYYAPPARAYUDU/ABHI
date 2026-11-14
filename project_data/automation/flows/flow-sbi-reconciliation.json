@@ -1,0 +1,61 @@
+{
+  "id": "flow-sbi-reconciliation",
+  "name": "SBI Daily Sovereign Settlement & Ledger Audit",
+  "description": "Automatically verifies incoming commercial receipts against State Bank of India account 41130645649 and generates cryptographic HMAC seals.",
+  "is_active": true,
+  "trigger_type": "cron",
+  "nodes": [
+    {
+      "id": "n1-trigger",
+      "name": "Scheduled Daily Trigger (16:00 IST)",
+      "type": "trigger",
+      "sub_type": "cron",
+      "parameters": {
+        "cron": "0 16 * * *"
+      },
+      "next_node_ids": [
+        "n2-query-ledger"
+      ],
+      "position": null
+    },
+    {
+      "id": "n2-query-ledger",
+      "name": "Audit Inward UTR Records",
+      "type": "action",
+      "sub_type": "sbi_settlement",
+      "parameters": {
+        "action": "audit_unsettled_vouchers"
+      },
+      "next_node_ids": [
+        "n3-verify-physical"
+      ],
+      "position": null
+    },
+    {
+      "id": "n3-verify-physical",
+      "name": "Dual-State Physical Verification",
+      "type": "action",
+      "sub_type": "python_script",
+      "parameters": {
+        "script": "verify_sbi_wal_integrity"
+      },
+      "next_node_ids": [
+        "n4-voice-brief"
+      ],
+      "position": null
+    },
+    {
+      "id": "n4-voice-brief",
+      "name": "Voice Status Briefing to Mamu",
+      "type": "action",
+      "sub_type": "voice_speak",
+      "parameters": {
+        "phrase": "Sovereign SBI settlements verified and sealed on disk, Mamu."
+      },
+      "next_node_ids": [],
+      "position": null
+    }
+  ],
+  "created_at": 1794632519.0854347,
+  "updated_at": 1794632519.0854354
+}

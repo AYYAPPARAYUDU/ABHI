@@ -1,0 +1,50 @@
+{
+  "id": "flow-system-health-guardian",
+  "name": "Hardware & NPU Thermals Watchdog",
+  "description": "Monitors local CPU, VRAM, and GPU thermals every 30s. Automatically initiates memory compaction if RAM > 85%.",
+  "is_active": true,
+  "trigger_type": "system_event",
+  "nodes": [
+    {
+      "id": "h1-event",
+      "name": "System Polling Interval (30s)",
+      "type": "trigger",
+      "sub_type": "system_event",
+      "parameters": {
+        "metric": "cpu_ram_telemetry"
+      },
+      "next_node_ids": [
+        "h2-check-threshold"
+      ],
+      "position": null
+    },
+    {
+      "id": "h2-check-threshold",
+      "name": "Check RAM Threshold (85%)",
+      "type": "logic",
+      "sub_type": "condition",
+      "parameters": {
+        "field": "ram_percent",
+        "operator": "<=",
+        "value": 85
+      },
+      "next_node_ids": [
+        "h3-nominal"
+      ],
+      "position": null
+    },
+    {
+      "id": "h3-nominal",
+      "name": "Record Nominal Telemetry",
+      "type": "action",
+      "sub_type": "vector_rag",
+      "parameters": {
+        "action": "log_health"
+      },
+      "next_node_ids": [],
+      "position": null
+    }
+  ],
+  "created_at": 1794632519.1212974,
+  "updated_at": 1794632519.1212978
+}

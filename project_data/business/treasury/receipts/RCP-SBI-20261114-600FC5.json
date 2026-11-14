@@ -1,0 +1,30 @@
+{
+  "receipt_id": "RCP-SBI-20261114-600FC5",
+  "invoice_number": "DIRECT-SBIN1114",
+  "issued_at": "2026-11-14T04:59:44.579980+00:00",
+  "amount_inr": 14200.0,
+  "amount_usd": 162.29,
+  "currency": "INR",
+  "settlement_channel": "State Bank of India (UPI / NEFT)",
+  "utr_transaction_ref": "SBIN111404590C5C",
+  "beneficiary": {
+    "name": "Ravuvai Ayyapparayudu",
+    "bank": "State Bank of India",
+    "account_number": "41130645649",
+    "account_masked": "SBI ****5649",
+    "ifsc": "SBIN0020507",
+    "upi_id": "ayyapparayudu.5@ybl"
+  },
+  "payer": {
+    "name": "Enterprise Desktop Automation & Code Review Bounty"
+  },
+  "service_deliverable": {
+    "description": "Real-World Service Settlement & Verification",
+    "deliverable_sha256": "726bf46cd5726012f74cace11ff31a7a9b3a7725d1f2b846a247b1e5f7f2ef48"
+  },
+  "cryptographic_verification": {
+    "verification_status": "DUAL_STATE_AUTHENTICATED",
+    "crypto_seal": "41a23960e39e72611a6b09cbd7247346c7853a8d25b11b35d67b5516f4a96dac",
+    "algorithm": "HMAC-SHA256"
+  }
+}
