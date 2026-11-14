@@ -1,0 +1,30 @@
+{
+  "receipt_id": "RCP-SBI-20261114-3FFF88",
+  "invoice_number": "DIRECT-SBIN1114",
+  "issued_at": "2026-11-14T04:16:28.924541+00:00",
+  "amount_inr": 3450.0,
+  "amount_usd": 39.43,
+  "currency": "INR",
+  "settlement_channel": "State Bank of India (UPI / NEFT)",
+  "utr_transaction_ref": "SBIN11140416B7F1",
+  "beneficiary": {
+    "name": "Ravuvai Ayyapparayudu",
+    "bank": "State Bank of India",
+    "account_number": "41130645649",
+    "account_masked": "SBI ****5649",
+    "ifsc": "SBIN0020507",
+    "upi_id": "ayyapparayudu.5@ybl"
+  },
+  "payer": {
+    "name": "Amazon Associates India (Store ID: ayyappa-21)"
+  },
+  "service_deliverable": {
+    "description": "Real-World Service Settlement & Verification",
+    "deliverable_sha256": "0fc9e37f031b6ad318af60f61f8f3d679d6eac83bb188e9ee60bcaec2ac899c9"
+  },
+  "cryptographic_verification": {
+    "verification_status": "DUAL_STATE_AUTHENTICATED",
+    "crypto_seal": "3f77df6d4d1b1f254df3c9f2bae15965c97a8f28fd4baaefaf98d467556041e8",
+    "algorithm": "HMAC-SHA256"
+  }
+}

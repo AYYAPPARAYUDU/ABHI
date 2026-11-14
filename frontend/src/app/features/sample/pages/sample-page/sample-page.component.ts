@@ -9,6 +9,8 @@ import {
   ElementRef,
   signal,
   Input,
+  Output,
+  EventEmitter,
   ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -17,6 +19,8 @@ import * as THREE from 'three';
 import { SampleAgentService } from '../../services/sample-agent.service';
 import { SampleAgent, PodRoom, SampleViewMode } from '../../models/sample-agent.model';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
+
+export type WorkspaceViewMode = 'colony' | 'live-agents' | 'agent-works' | 'live-business';
 
 @Component({
   selector: 'app-sample-page',
@@ -28,6 +32,7 @@ import { SpeechVoiceService } from '../../../../core/services/speech-voice.servi
 })
 export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() initialMode?: SampleViewMode;
+  @Output() modeChange = new EventEmitter<WorkspaceViewMode>();
   @ViewChild('sceneCanvas') sceneCanvasRef?: ElementRef<HTMLCanvasElement>;
 
   readonly sampleService = inject(SampleAgentService);
@@ -98,7 +103,19 @@ export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
   switchMode(mode: SampleViewMode): void {
     this.sampleService.setViewMode(mode);
     this.updateSceneVisibility();
+    const wsMode: WorkspaceViewMode = mode === 'hub-and-spoke' ? 'live-agents' : 'agent-works';
+    this.modeChange.emit(wsMode);
     this.cdr.markForCheck();
+  }
+
+  selectWorkspaceMode(target: WorkspaceViewMode): void {
+    if (target === 'live-agents') {
+      this.switchMode('hub-and-spoke');
+    } else if (target === 'agent-works') {
+      this.switchMode('corporate-floorplan');
+    } else {
+      this.modeChange.emit(target);
+    }
   }
 
   selectPod(pod: PodRoom | null): void {
@@ -183,11 +200,20 @@ export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
       this.hubAndSpokeGroup.add(ring);
     }
 
-    // 2. 8 Color-Coded Pod Rooms
-    const podList = this.pods();
+    // 2. 8 Color-Coded Pod Rooms matching Image 1
+    const roomColors = [
+      '#8b5cf6', // 0: Purple
+      '#6366f1', // 1: Indigo
+      '#06b6d4', // 2: Cyan
+      '#f43f5e', // 3: Crimson
+      '#10b981', // 4: Emerald
+      '#f59e0b', // 5: Amber
+      '#3b82f6', // 6: Blue
+      '#eab308'  // 7: Golden yellow
+    ];
     const radius = 8.5;
 
-    podList.forEach((pod, index) => {
+    roomColors.forEach((colorHex, index) => {
       const angle = (index * 2 * Math.PI) / 8;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
@@ -198,7 +224,7 @@ export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
       // Room Floor Slab
       const slabGeo = new THREE.BoxGeometry(3.6, 0.3, 3.6);
       const slabMat = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(pod.colorHex),
+        color: new THREE.Color(colorHex),
         roughness: 0.4,
         metalness: 0.2
       });
@@ -208,7 +234,7 @@ export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
       // Two Isometric Back Walls
       const wallMat = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(pod.colorHex).multiplyScalar(0.7),
+        color: new THREE.Color(colorHex).multiplyScalar(0.7),
         roughness: 0.5
       });
       const wallGeo1 = new THREE.BoxGeometry(3.6, 1.8, 0.2);
@@ -237,7 +263,7 @@ export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
       // Neon Border Outline
       const edges = new THREE.EdgesGeometry(slabGeo);
-      const lineMat = new THREE.LineBasicMaterial({ color: new THREE.Color(pod.colorHex), linewidth: 2 });
+      const lineMat = new THREE.LineBasicMaterial({ color: new THREE.Color(colorHex), linewidth: 2 });
       const wireframe = new THREE.LineSegments(edges, lineMat);
       wireframe.position.y = 0.15;
       podGroup.add(wireframe);
@@ -250,7 +276,7 @@ export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
         new THREE.Vector3(x, 0.25, z)
       ]);
       const spokeMat = new THREE.LineDashedMaterial({
-        color: new THREE.Color(pod.colorHex),
+        color: new THREE.Color(colorHex),
         dashSize: 0.4,
         gapSize: 0.2
       });
@@ -259,7 +285,7 @@ export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
       this.hubAndSpokeGroup.add(spokeLine);
 
       // Animated Walking Avatar between Pod and Central Brain
-      const avatar = this.createLowPolyAgent(pod.colorHex);
+      const avatar = this.createLowPolyAgent(colorHex);
       this.hubAndSpokeGroup.add(avatar);
       this.walkingAvatars.push({
         mesh: avatar,
@@ -273,84 +299,128 @@ export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private buildCorporateFloorplanScene(): void {
     // 1. Large Ground Slab
-    const slabGeo = new THREE.BoxGeometry(22, 0.4, 18);
-    const slabMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 });
+    const slabGeo = new THREE.BoxGeometry(24, 0.4, 20);
+    const slabMat = new THREE.MeshStandardMaterial({ color: 0x0a1128, roughness: 0.6 });
     const floor = new THREE.Mesh(slabGeo, slabMat);
     floor.position.y = -0.2;
     this.floorplanGroup.add(floor);
 
     // Floor Grid pattern
-    const grid = new THREE.GridHelper(22, 22, 0x475569, 0x334155);
+    const grid = new THREE.GridHelper(24, 24, 0x38bdf8, 0x1e293b);
     grid.position.y = 0.02;
     this.floorplanGroup.add(grid);
 
-    // 2. Open Bullpen Cubicles (Left side)
-    for (let row = 0; row < 2; row++) {
-      for (let col = 0; col < 3; col++) {
-        const desk = new THREE.Group();
-        desk.position.set(-7 + col * 2.6, 0, -4 + row * 2.6);
+    // 2. Open Bullpen Cubicles (6 Desks in 2 Rows of 3, centered exactly as in Image 2)
+    const cubiclePositions = [
+      { x: -2.8, z: -2.6 }, { x: 0.0, z: -2.6 }, { x: 2.8, z: -2.6 },
+      { x: -2.8, z: 0.6 },  { x: 0.0, z: 0.6 },  { x: 2.8, z: 0.6 }
+    ];
 
-        const dGeo = new THREE.BoxGeometry(1.6, 0.7, 0.9);
-        const dMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
-        const deskMesh = new THREE.Mesh(dGeo, dMat);
-        deskMesh.position.y = 0.35;
-        desk.add(deskMesh);
+    cubiclePositions.forEach(pos => {
+      const desk = new THREE.Group();
+      desk.position.set(pos.x, 0, pos.z);
 
-        // Partition screen
-        const pGeo = new THREE.BoxGeometry(1.6, 0.4, 0.05);
-        const pMat = new THREE.MeshStandardMaterial({ color: 0x0284c7 });
-        const part = new THREE.Mesh(pGeo, pMat);
-        part.position.set(0, 0.85, -0.45);
-        desk.add(part);
+      // Main desk body
+      const dGeo = new THREE.BoxGeometry(1.9, 0.7, 1.1);
+      const dMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
+      const deskMesh = new THREE.Mesh(dGeo, dMat);
+      deskMesh.position.y = 0.35;
+      desk.add(deskMesh);
 
-        // Chair
-        const chairGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.4, 16);
-        const chairMat = new THREE.MeshStandardMaterial({ color: 0x0f172a });
-        const chair = new THREE.Mesh(chairGeo, chairMat);
-        chair.position.set(0, 0.2, 0.6);
-        desk.add(chair);
+      // Privacy divider screen (Blue panel on back edge)
+      const pGeo = new THREE.BoxGeometry(1.9, 0.55, 0.06);
+      const pMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3 });
+      const part = new THREE.Mesh(pGeo, pMat);
+      part.position.set(0, 0.95, -0.52);
+      desk.add(part);
 
-        this.floorplanGroup.add(desk);
-      }
-    }
+      // Dual glowing cyan monitors
+      const mMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+      const monL = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.38, 0.04), mMat);
+      monL.position.set(-0.45, 0.95, -0.32);
+      desk.add(monL);
 
-    // 3. Executive Suite (Top Right)
-    const execGroup = new THREE.Group();
-    execGroup.position.set(5.5, 0, -4.5);
-    const execDesk = new THREE.Mesh(
-      new THREE.BoxGeometry(2.4, 0.75, 1.2),
-      new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.3 })
+      const monR = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.38, 0.04), mMat);
+      monR.position.set(0.45, 0.95, -0.32);
+      desk.add(monR);
+
+      // Ergonomic black office chair
+      const chairSeat = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.35, 0.35, 0.1, 16),
+        new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.6 })
+      );
+      chairSeat.position.set(0, 0.45, 0.75);
+      desk.add(chairSeat);
+
+      const chairBack = new THREE.Mesh(
+        new THREE.BoxGeometry(0.6, 0.55, 0.08),
+        new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.6 })
+      );
+      chairBack.position.set(0, 0.75, 0.92);
+      desk.add(chairBack);
+
+      const chairLeg = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.04, 0.4, 8),
+        new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.7 })
+      );
+      chairLeg.position.set(0, 0.2, 0.75);
+      desk.add(chairLeg);
+
+      this.floorplanGroup.add(desk);
+    });
+
+    // 3. Break Lounge Area (Green Turf & Wood platform at front-left, Image 2 match)
+    const loungeArea = new THREE.Group();
+    loungeArea.position.set(-2.8, 0, 4.2);
+
+    // Warm mahogany frame
+    const woodBase = new THREE.Mesh(
+      new THREE.BoxGeometry(3.6, 0.65, 2.4),
+      new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.7 })
     );
-    execDesk.position.y = 0.375;
-    execGroup.add(execDesk);
-    this.floorplanGroup.add(execGroup);
+    woodBase.position.y = 0.325;
+    loungeArea.add(woodBase);
 
-    // 4. Lounge / Billiard Table Area (Bottom Center)
-    const poolTable = new THREE.Group();
-    poolTable.position.set(0, 0, 4);
-
-    const felt = new THREE.Mesh(
-      new THREE.BoxGeometry(3.0, 0.6, 1.8),
-      new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.8 })
+    // Vibrant emerald green turf / felt carpet
+    const turfTop = new THREE.Mesh(
+      new THREE.BoxGeometry(3.4, 0.08, 2.2),
+      new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.9 })
     );
-    felt.position.y = 0.3;
-    poolTable.add(felt);
+    turfTop.position.y = 0.69;
+    loungeArea.add(turfTop);
 
-    const frame = new THREE.Mesh(
-      new THREE.BoxGeometry(3.2, 0.65, 2.0),
-      new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.5 })
+    // Wooden coffee counter & machine
+    const coffeeBar = new THREE.Mesh(
+      new THREE.BoxGeometry(1.1, 0.6, 0.5),
+      new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.5 })
     );
-    frame.position.y = 0.27;
-    poolTable.add(frame);
-    this.floorplanGroup.add(poolTable);
+    coffeeBar.position.set(0.8, 0.95, 0);
+    loungeArea.add(coffeeBar);
 
-    // Outer Perimeter Glass / Railing
-    const perimeterEdges = new THREE.EdgesGeometry(new THREE.BoxGeometry(22, 1.2, 18));
+    const espressoMachine = new THREE.Mesh(
+      new THREE.BoxGeometry(0.35, 0.3, 0.25),
+      new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.2 })
+    );
+    espressoMachine.position.set(0.8, 1.35, 0);
+    loungeArea.add(espressoMachine);
+
+    this.floorplanGroup.add(loungeArea);
+
+    // 4. Conference / Side Review Desk (Right side, Image 2 match)
+    const confDesk = new THREE.Mesh(
+      new THREE.BoxGeometry(2.8, 0.75, 1.3),
+      new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4 })
+    );
+    confDesk.position.set(4.2, 0.375, 1.8);
+    this.floorplanGroup.add(confDesk);
+
+    // Outer Perimeter Glass / Railing Box
+    const perimeterEdges = new THREE.EdgesGeometry(new THREE.BoxGeometry(24, 2.5, 20));
     const perimLine = new THREE.LineSegments(
       perimeterEdges,
-      new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.3 })
+      new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.35 })
     );
-    perimLine.position.y = 0.6;
+    perimLine.position.y = 1.25;
     this.floorplanGroup.add(perimLine);
   }
 
@@ -395,7 +465,6 @@ export class SamplePageComponent implements OnInit, OnDestroy, AfterViewInit {
       av.t += av.speed * delta;
       if (av.t > 1) {
         av.t = 0;
-        // Swap start & end to reverse path
         const tmp = av.startPos.clone();
         av.startPos.copy(av.endPos);
         av.endPos.copy(tmp);

@@ -1,55 +1,88 @@
 <div class="workspace-spatial-container" role="region" aria-label="3D Cybernetic Bot Workspace">
-  <!-- Master Workspace Viewport Mode Switcher -->
-  <nav class="workspace-mode-switcher-bar" aria-label="Workspace View Selector">
-    <div class="mode-switcher-pill-group">
-      <button
-        type="button"
-        class="mode-switch-btn"
-        [class.active]="activeWorkspaceMode() === 'colony'"
-        (click)="setWorkspaceMode('colony')"
-        title="Original 10-Agent Cybernetic Colony"
-      >
-        <span class="mode-icon">🛰️</span>
-        <span class="mode-label">3D Colony (Default)</span>
-      </button>
+  <!-- Master Workspace Viewport Mode Switcher (Visible in Colony & Business Views) -->
+  @if (activeWorkspaceMode() === 'colony' || activeWorkspaceMode() === 'live-business') {
+    <header class="workspace-top-nav-bar">
+      <div class="nav-left">
+        <div class="brand-badge">
+          <span class="brand-icon">⬢</span>
+          <span class="brand-title">Agent HQ</span>
+        </div>
+        <div class="profile-chip" title="Sovereign Architect & Operator">
+          <span class="profile-avatar">👨‍💻</span>
+          <span class="profile-name">Ayyappa Rayudu (Mamu)</span>
+          <span class="dropdown-arrow">▾</span>
+        </div>
+      </div>
 
-      <button
-        type="button"
-        class="mode-switch-btn"
-        [class.active]="activeWorkspaceMode() === 'live-agents'"
-        (click)="setWorkspaceMode('live-agents')"
-        title="Bekhruz AI 8-Pod Hub & Spoke Live Agents"
-      >
-        <span class="mode-icon">🧠</span>
-        <span class="mode-label">Live Agents HQ</span>
-        <span class="mode-badge">8-POD HUB</span>
-      </button>
+      <nav class="nav-center-tabs" aria-label="Workspace View Selector">
+        <button
+          type="button"
+          class="tab-pill-btn"
+          [class.active]="activeWorkspaceMode() === 'colony'"
+          (click)="setWorkspaceMode('colony')"
+          title="Original 10-Agent Cybernetic Colony"
+        >
+          <span class="pill-icon">🛰️</span>
+          <span class="pill-label">3D Colony (Default)</span>
+        </button>
 
-      <button
-        type="button"
-        class="mode-switch-btn"
-        [class.active]="activeWorkspaceMode() === 'agent-works'"
-        (click)="setWorkspaceMode('agent-works')"
-        title="Corporate Architectural Office Floorplan"
-      >
-        <span class="mode-icon">🏢</span>
-        <span class="mode-label">Agent Works & Floorplan</span>
-        <span class="mode-badge">LIVE OFFICE</span>
-      </button>
+        <button
+          type="button"
+          class="tab-pill-btn"
+          [class.active]="activeWorkspaceMode() === 'live-agents'"
+          (click)="setWorkspaceMode('live-agents')"
+          title="Live Agents 8-Pod Hub & Spoke"
+        >
+          <span class="pill-icon">🧠</span>
+          <span class="pill-label">Live Agents HQ</span>
+          <span class="pill-badge-hub">8-POD HUB</span>
+        </button>
 
-      <button
-        type="button"
-        class="mode-switch-btn"
-        [class.active]="activeWorkspaceMode() === 'live-business'"
-        (click)="setWorkspaceMode('live-business')"
-        title="Real-World SBI Settlement & Autonomous Business Treasury"
-      >
-        <span class="mode-icon">🏛️</span>
-        <span class="mode-label">Live Business & Settlement</span>
-        <span class="mode-badge live-pulse">₹18.42L REAL SBI</span>
-      </button>
-    </div>
-  </nav>
+        <button
+          type="button"
+          class="tab-pill-btn"
+          [class.active]="activeWorkspaceMode() === 'agent-works'"
+          (click)="setWorkspaceMode('agent-works')"
+          title="Corporate Architectural Office Floorplan"
+        >
+          <span class="pill-icon">🏢</span>
+          <span class="pill-label">Agent Works & Floorplan</span>
+          <span class="pill-badge-office">LIVE OFFICE</span>
+        </button>
+
+        <button
+          type="button"
+          class="tab-pill-btn"
+          [class.active]="activeWorkspaceMode() === 'live-business'"
+          (click)="setWorkspaceMode('live-business')"
+          title="Real-World SBI Settlement & Autonomous Business Treasury"
+        >
+          <span class="pill-icon">🏛️</span>
+          <span class="pill-label">Live Business & Settlement</span>
+          <span class="pill-badge-sbi">₹30.98L REAL SBI</span>
+        </button>
+
+        <button
+          type="button"
+          class="tab-pill-btn icon-only-pill"
+          (click)="setWorkspaceMode('agent-works')"
+          title="Office Floorplan"
+        >
+          <span class="pill-icon">🖨️</span>
+          <span class="pill-label">Office Floorplan</span>
+        </button>
+      </nav>
+
+      <div class="nav-right">
+        <div class="agents-live-counter">
+          <span class="live-dot pulse"></span>
+          <span class="counter-text">
+            <strong>31 agents</strong> · 12 running
+          </span>
+        </div>
+      </div>
+    </header>
+  }
 
   <!-- View 1: 3D Colony (Default, preserved) -->
   <div class="colony-view-wrapper" [class.d-none]="activeWorkspaceMode() !== 'colony'">
@@ -792,17 +825,17 @@
   }
   </div> <!-- colony-view-wrapper end -->
 
-  <!-- View 2: Live Agents 3D HQ (Bekhruz AI 8-Pod Hub & Spoke) -->
+  <!-- View 2: Live Agents 3D HQ (8-Pod Hub) -->
   @if (activeWorkspaceMode() === 'live-agents') {
     <div class="embedded-view-container" role="region" aria-label="Live Agents 3D HQ">
-      <app-sample-page [initialMode]="'hub-and-spoke'"></app-sample-page>
+      <app-sample-page [initialMode]="'hub-and-spoke'" (modeChange)="setWorkspaceMode($event)"></app-sample-page>
     </div>
   }
 
   <!-- View 3: Agent Works & Floorplan (Corporate Architectural Floorplan) -->
   @if (activeWorkspaceMode() === 'agent-works') {
     <div class="embedded-view-container" role="region" aria-label="Agent Works Floorplan Office">
-      <app-sample-page [initialMode]="'corporate-floorplan'"></app-sample-page>
+      <app-sample-page [initialMode]="'corporate-floorplan'" (modeChange)="setWorkspaceMode($event)"></app-sample-page>
     </div>
   }
 

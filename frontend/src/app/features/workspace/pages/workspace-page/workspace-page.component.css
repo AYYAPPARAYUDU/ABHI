@@ -1872,70 +1872,158 @@
 }
 
 /* =========================================================================
-   WORKSPACE MULTI-VIEWPORT SWITCHER BAR (PERSISTENT TOP DOCK)
+   WORKSPACE MULTI-VIEWPORT SWITCHER BAR (IMAGE 1 & IMAGE 2 UNIFIED HEADER)
    ========================================================================= */
 
-.workspace-mode-switcher-bar {
+.workspace-top-nav-bar {
   position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 18px;
+  background: rgba(9, 14, 26, 0.94);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   z-index: 120;
+  gap: 16px;
+  min-height: 52px;
   pointer-events: auto;
 }
 
-.mode-switcher-pill-group {
+.workspace-top-nav-bar .nav-left {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px;
-  background: rgba(10, 15, 29, 0.88);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 9999px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.15);
+  gap: 12px;
+  flex-shrink: 0;
 }
 
-.mode-switch-btn {
+.workspace-top-nav-bar .brand-badge {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+}
+
+.workspace-top-nav-bar .brand-icon {
+  font-size: 18px;
+  color: #38bdf8;
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.6));
+}
+
+.workspace-top-nav-bar .brand-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.workspace-top-nav-bar .profile-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.workspace-top-nav-bar .nav-center-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.65);
+  padding: 3px 6px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.workspace-top-nav-bar .tab-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 9999px;
   color: #94a3b8;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
 }
 
-.mode-switch-btn:hover {
-  color: #f8fafc;
+.workspace-top-nav-bar .tab-pill-btn:hover {
+  color: #ffffff;
   background: rgba(255, 255, 255, 0.06);
 }
 
-.mode-switch-btn.active {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(99, 102, 241, 0.28));
-  border-color: rgba(56, 189, 248, 0.5);
+.workspace-top-nav-bar .tab-pill-btn.active {
+  background: rgba(14, 165, 233, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
 }
 
-.mode-icon {
-  font-size: 14px;
+.workspace-top-nav-bar .pill-icon {
+  font-size: 13px;
 }
 
-.mode-badge {
+.workspace-top-nav-bar .pill-badge-hub {
   font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  padding: 2px 6px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.1);
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(14, 165, 233, 0.25);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.workspace-top-nav-bar .pill-badge-office {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.workspace-top-nav-bar .pill-badge-sbi {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.workspace-top-nav-bar .icon-only-pill {
+  color: #64748b;
+}
+
+.workspace-top-nav-bar .nav-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.workspace-top-nav-bar .agents-live-counter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
   color: #cbd5e1;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 4px 12px;
+  border-radius: 9999px;
 }
 
 .mode-switch-btn.active .mode-badge {

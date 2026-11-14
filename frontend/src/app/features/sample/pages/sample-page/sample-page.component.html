@@ -1,5 +1,5 @@
 <div class="sample-viewport-root" role="region" aria-label="3D Isometric AI Agent Command Center">
-  <!-- Top Navigation Header (Exact design from Reel 1) -->
+  <!-- Unified Top Navigation Header (Exact design from Image 1 & Image 2) -->
   <header class="top-nav-bar">
     <div class="nav-left">
       <div class="brand-badge">
@@ -13,365 +13,236 @@
       </div>
     </div>
 
-    <!-- Center Nav Tabs -->
+    <!-- Center Nav View Switcher Pills -->
     <nav class="nav-center-tabs">
       <button
         type="button"
-        class="tab-btn"
-        [class.active]="activeTab() === 'OFFICE'"
-        (click)="setTab('OFFICE')"
+        class="tab-pill-btn"
+        (click)="selectWorkspaceMode('colony')"
+        title="Original 10-Agent Cybernetic Colony"
       >
-        Office
+        <span class="pill-icon">🛰️</span>
+        <span class="pill-label">3D Colony (Default)</span>
       </button>
+
       <button
         type="button"
-        class="tab-btn"
-        [class.active]="activeTab() === 'TASKS'"
-        (click)="setTab('TASKS')"
+        class="tab-pill-btn"
+        [class.active]="viewMode() === 'hub-and-spoke'"
+        (click)="selectWorkspaceMode('live-agents')"
+        title="Live Agents 8-Pod Hub & Spoke"
       >
-        Tasks <span class="tab-badge">22</span>
+        <span class="pill-icon">🧠</span>
+        <span class="pill-label">Live Agents HQ</span>
+        <span class="pill-badge-hub">8-POD HUB</span>
       </button>
+
       <button
         type="button"
-        class="tab-btn"
-        [class.active]="activeTab() === 'CALENDAR'"
-        (click)="setTab('CALENDAR')"
+        class="tab-pill-btn"
+        [class.active]="viewMode() === 'corporate-floorplan'"
+        (click)="selectWorkspaceMode('agent-works')"
+        title="Corporate Architectural Office Floorplan"
       >
-        Calendar
+        <span class="pill-icon">🏢</span>
+        <span class="pill-label">Agent Works & Floorplan</span>
+        <span class="pill-badge-office">LIVE OFFICE</span>
       </button>
+
       <button
         type="button"
-        class="tab-btn"
-        [class.active]="activeTab() === 'BRAIN'"
-        (click)="setTab('BRAIN')"
+        class="tab-pill-btn"
+        (click)="selectWorkspaceMode('live-business')"
+        title="Real-World SBI Settlement & Autonomous Business Treasury"
       >
-        Brain
+        <span class="pill-icon">🏛️</span>
+        <span class="pill-label">Live Business & Settlement</span>
+        <span class="pill-badge-sbi">{{ sampleService.sbiBalanceFormatted() }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-pill-btn icon-only-pill"
+        [class.active]="viewMode() === 'corporate-floorplan'"
+        (click)="selectWorkspaceMode('agent-works')"
+        title="Office Floorplan"
+      >
+        <span class="pill-icon">🖨️</span>
+        <span class="pill-label">Office Floorplan</span>
       </button>
     </nav>
 
-    <!-- Right Controls & Mode Switcher -->
+    <!-- Right Controls: Running Agent Counter -->
     <div class="nav-right">
-      <!-- 2-Mode Toggle Button (Mode 3 completely removed) -->
-      <div class="mode-toggle-group">
-        <button
-          type="button"
-          class="mode-pill-btn"
-          [class.active]="viewMode() === 'hub-and-spoke'"
-          (click)="switchMode('hub-and-spoke')"
-          title="Bekhruz AI 8-Pod Hub & Spoke Layout"
-        >
-          <span class="btn-icon">🧠</span>
-          <span>8-Pod Hub</span>
-        </button>
-        <button
-          type="button"
-          class="mode-pill-btn"
-          [class.active]="viewMode() === 'corporate-floorplan'"
-          (click)="switchMode('corporate-floorplan')"
-          title="Corporate Architectural Office Floorplan"
-        >
-          <span class="btn-icon">🏢</span>
-          <span>Office Floorplan</span>
-        </button>
-      </div>
-
       <div class="agents-live-counter">
-        <span class="live-dot" [class.pulse]="sampleService.runningAgentsCount() > 0"></span>
-        <span class="counter-text"><strong>{{ sampleService.totalAgents() }} agents</strong> · {{ sampleService.runningAgentsCount() }} running</span>
+        <span class="live-dot pulse"></span>
+        <span class="counter-text">
+          <strong>{{ sampleService.totalAgents() }} agents</strong> · {{ sampleService.runningAgentsCount() }} running
+        </span>
       </div>
     </div>
   </header>
+
+  <!-- Horizontal Pod Selector Ribbon (Matching Image 1) -->
+  <div class="pods-horizontal-ribbon" role="toolbar" aria-label="Specialist Pod Ribbon">
+    @for (pod of pods(); track pod.id) {
+      <button
+        type="button"
+        class="pod-ribbon-btn"
+        [class.selected]="activePod()?.id === pod.id"
+        [style.--pod-color]="pod.colorHex"
+        (click)="selectPod(pod)"
+      >
+        <span class="ribbon-icon">{{ pod.icon }}</span>
+        <div class="ribbon-text-group">
+          <span class="ribbon-title">{{ pod.title }}</span>
+          <span class="ribbon-meta">{{ pod.agentsCount }} agents · {{ pod.runningCount }} running</span>
+        </div>
+      </button>
+    }
+  </div>
 
   <!-- Main 3D Canvas Viewport Layer -->
   <div class="three-canvas-container">
     <canvas #sceneCanvas class="webgl-canvas"></canvas>
 
-    <!-- Central Brain Overlay (Visible in Hub & Spoke mode) -->
-    @if (viewMode() === 'hub-and-spoke' && activeTab() === 'OFFICE') {
+    <!-- Central Brain Overlay (Visible in Hub & Spoke mode, matching Image 1) -->
+    @if (viewMode() === 'hub-and-spoke') {
       <div class="center-brain-pill">
         <div class="brain-glow-dot"></div>
         <div class="brain-title">THE BRAIN</div>
-        <div class="brain-sub">{{ sampleService.realNotesCount() }} docs · shared Vector RAG</div>
+        <div class="brain-sub">{{ sampleService.realNotesCount() | number }} notes · shared memory</div>
       </div>
     }
 
-    <!-- 2D HUD Overlays for Pods (Hub & Spoke Mode) -->
-    @if (viewMode() === 'hub-and-spoke' && activeTab() === 'OFFICE') {
-      <div class="floating-pods-hud">
-        @for (pod of pods(); track pod.id) {
-          <div
-            class="pod-badge"
-            [class.selected]="activePod()?.id === pod.id"
-            [style.--pod-color]="pod.colorHex"
-            (click)="selectPod(pod)"
-          >
-            <span class="pod-icon">{{ pod.icon }}</span>
-            <div class="pod-meta">
-              <span class="pod-name">{{ pod.title }}</span>
-              <span class="pod-agents">{{ pod.agentsCount }} agents · {{ pod.runningCount }} running</span>
+    <!-- Left Side Pod Detail Card (Matching Image 1 & Image 2) -->
+    @if (activePod(); as pod) {
+      <div class="left-hud-stack">
+        <aside class="pod-detail-modal">
+          <div class="modal-header">
+            <div class="header-left">
+              <span class="modal-pod-icon" [style.background]="pod.colorHex">{{ pod.icon }}</span>
+              <div>
+                <div class="modal-title">{{ pod.title }} Team</div>
+                <div class="modal-sub">
+                  <span class="live-dot"></span>
+                  {{ pod.agentsCount }} agents · lead: {{ pod.leadRole }}
+                </div>
+              </div>
             </div>
+            <button type="button" class="close-btn" (click)="selectPod(null)" title="Close card">✕</button>
+          </div>
+
+          <!-- Metric KPI Cards -->
+          <div class="kpi-row">
+            <div class="kpi-card">
+              <div class="kpi-label">Tasks today</div>
+              <div class="kpi-val">{{ sampleService.liveTasksToday() }}</div>
+              <div class="kpi-spark">📈 +24%</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Running</div>
+              <div class="kpi-val">{{ pod.runningCount }}</div>
+              <div class="kpi-spark">⚡ Active</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Avg. turnaround</div>
+              <div class="kpi-val">14m</div>
+              <div class="kpi-spark">⚡ Fast</div>
+            </div>
+          </div>
+
+          <!-- Connected MCP Tools -->
+          <div class="section-title-row">
+            <span class="section-title">CONNECTED TOOLS</span>
+            <span class="section-tag">{{ pod.connectedTools.length }} live</span>
+          </div>
+          <div class="tools-grid">
+            @for (tool of pod.connectedTools; track tool.name) {
+              <div class="tool-card">
+                <span class="tool-badge" [class.badge-a]="tool.name.startsWith('A')" [class.badge-p]="tool.name.startsWith('P')" [class.badge-c]="tool.name.startsWith('C')">
+                  {{ tool.name.slice(0, 1) }}
+                </span>
+                <div class="tool-info">
+                  <div class="tool-name">{{ tool.name }}</div>
+                  <div class="tool-status"><span class="tiny-dot"></span> Connected · {{ tool.type }}</div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Skills in Parallel -->
+          <div class="section-title-row mt-3">
+            <span class="section-title">SKILLS</span>
+            <span class="section-tag">{{ pod.skills.length }} running in parallel</span>
+          </div>
+          <div class="skills-list">
+            @for (skill of pod.skills; track skill.name) {
+              <div class="skill-row">
+                <div class="skill-label">
+                  <span class="tiny-dot"></span>
+                  <span>{{ skill.name }}</span>
+                </div>
+                <div class="skill-bar-wrap">
+                  <div class="skill-bar-fill" [style.width.%]="skill.progress"></div>
+                </div>
+                <span class="skill-pct">{{ skill.progress }}%</span>
+              </div>
+            }
+          </div>
+        </aside>
+
+        <!-- Sam · QA Coffee Break Sub-Card (Matching Image 2 directly underneath) -->
+        @if (viewMode() === 'corporate-floorplan') {
+          <div class="sam-qa-card">
+            <div class="sam-badge">SA</div>
+            <div class="sam-meta">
+              <div class="sam-name">Sam · QA</div>
+              <div class="sam-desc">Coffee break at lounge</div>
+            </div>
+            <span class="coffee-pill">Coffee</span>
           </div>
         }
       </div>
     }
 
-    <!-- Creative Pod Deep Dive Drawer (Exact match from Reel 1 screenshot) -->
-    @if (activePod(); as pod) {
-      <aside class="pod-detail-modal">
-        <div class="modal-header">
-          <div class="header-left">
-            <span class="modal-pod-icon" [style.background]="pod.colorHex">{{ pod.icon }}</span>
-            <div>
-              <div class="modal-title">{{ pod.title }} Team</div>
-              <div class="modal-sub">
-                <span class="live-dot"></span>
-                {{ pod.agentsCount }} agents · lead: {{ pod.leadRole }}
-              </div>
-            </div>
-          </div>
-          <button type="button" class="close-btn" (click)="selectPod(null)">✕</button>
-        </div>
-
-        <!-- Metric KPI Cards -->
-        <div class="kpi-row">
-          <div class="kpi-card">
-            <div class="kpi-label">Tasks today</div>
-            <div class="kpi-val">{{ sampleService.liveTasksToday() }}</div>
-            <div class="kpi-spark">📈 Real Verified</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Running</div>
-            <div class="kpi-val">{{ pod.runningCount }}</div>
-            <div class="kpi-spark">⚡ Active</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Avg. turnaround</div>
-            <div class="kpi-val">1.4s</div>
-            <div class="kpi-spark">⚡ Local NPU</div>
-          </div>
-        </div>
-
-        <!-- Connected MCP Tools -->
-        <div class="section-title-row">
-          <span class="section-title">CONNECTED TOOLS</span>
-          <span class="section-tag">{{ pod.connectedTools.length }} live</span>
-        </div>
-        <div class="tools-grid">
-          @for (tool of pod.connectedTools; track tool.name) {
-            <div class="tool-card">
-              <span class="tool-badge">{{ tool.name.slice(0, 1) }}</span>
-              <div class="tool-info">
-                <div class="tool-name">{{ tool.name }}</div>
-                <div class="tool-status"><span class="tiny-dot"></span> Connected · {{ tool.type }}</div>
-              </div>
-            </div>
-          }
-        </div>
-
-        <!-- Skills in Parallel -->
-        <div class="section-title-row mt-3">
-          <span class="section-title">SKILLS</span>
-          <span class="section-tag">{{ pod.skills.length }} running in parallel</span>
-        </div>
-        <div class="skills-list">
-          @for (skill of pod.skills; track skill.name) {
-            <div class="skill-row">
-              <div class="skill-label">
-                <span class="tiny-dot"></span>
-                <span>{{ skill.name }}</span>
-              </div>
-              <div class="skill-bar-wrap">
-                <div class="skill-bar-fill" [style.width.%]="skill.progress"></div>
-              </div>
-              <span class="skill-pct">{{ skill.progress }}%</span>
-            </div>
-          }
-        </div>
-      </aside>
-    }
-
-    <!-- Corporate Floorplan Mode HUD (Exact design from Reel 2) -->
-    @if (viewMode() === 'corporate-floorplan' && activeTab() === 'OFFICE') {
-      <!-- Left HUD: Active Tasks, Project Progress & Timeline -->
-      <aside class="floorplan-left-hud">
-        <div class="hud-stat-panel">
-          <div class="stat-box">
-            <div class="stat-label">ACTIVE AGENTS</div>
-            <div class="stat-value text-emerald">5/5</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-label">RUNNING TASKS</div>
-            <div class="stat-value text-cyan">4</div>
-          </div>
-        </div>
-
-        <div class="task-input-card">
-          <div class="card-label">NEW TASK FOR THE TEAM</div>
-          <input
-            type="text"
-            class="task-input"
-            placeholder="e.g. Create a modern e-commerce website..."
-          />
-          <button type="button" class="task-start-btn">▶ Start</button>
-        </div>
-
-        <!-- Agent Activity List (Real Specialist Agents) -->
-        <div class="activity-card">
-          <div class="card-label">ACTIVE SPECIALIST WORKFORCE</div>
-          <div class="activity-list">
-            <div class="activity-item">
-              <span class="avatar-circle bg-emerald">SY</span>
-              <div class="act-body">
-                <div class="act-name">Synthex-Dev · <span class="act-role">Fullstack WebGL</span></div>
-                <div class="act-task">Compiling Three.js isometric shaders</div>
-              </div>
-              <span class="status-chip running">Running</span>
-            </div>
-            <div class="activity-item">
-              <span class="avatar-circle bg-amber">NX</span>
-              <div class="act-body">
-                <div class="act-name">Nexus-Comms · <span class="act-role">Dispatch & Inbox</span></div>
-                <div class="act-task">Syncing operator agenda & SBI alerts</div>
-              </div>
-              <span class="status-chip running">Running</span>
-            </div>
-            <div class="activity-item">
-              <span class="avatar-circle bg-sky">AE</span>
-              <div class="act-body">
-                <div class="act-name">Aegis-Critic · <span class="act-role">AST & Zero-CVE</span></div>
-                <div class="act-task">Dual-State physical verification</div>
-              </div>
-              <span class="status-chip running">Running</span>
-            </div>
-            <div class="activity-item">
-              <span class="avatar-circle bg-fuchsia">AU</span>
-              <div class="act-body">
-                <div class="act-name">Aura-Vision · <span class="act-role">OS Perception</span></div>
-                <div class="act-task">Real-time desktop OCR & DOM inspection</div>
-              </div>
-              <span class="status-chip running">Running</span>
-            </div>
-            <div class="activity-item">
-              <span class="avatar-circle bg-purple">ST</span>
-              <div class="act-body">
-                <div class="act-name">Stark-Forge · <span class="act-role">Treasury Lead</span></div>
-                <div class="act-task">Sovereign SBI revenue reconciliation</div>
-              </div>
-              <span class="status-chip running">Running</span>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Right HUD: Agent Live Chatter Feed (Real Swarm Stream) -->
+    <!-- Corporate Floorplan Mode Right HUD: Agent Live Chatter Feed (Matching Image 2) -->
+    @if (viewMode() === 'corporate-floorplan') {
       <aside class="floorplan-right-hud">
         <div class="chatter-header">
-          <span>REAL AGENT COMMUNICATION</span>
-          <span class="channel-indicator"><span class="tiny-dot"></span> swarm-channel</span>
+          <span class="chatter-title">AGENT COMMUNICATION</span>
+          <span class="channel-indicator">+ team-channel</span>
         </div>
         <div class="chatter-feed">
-          @for (chat of sampleService.realChatMessages(); track chat.time + chat.agent) {
-            <div class="chat-row">
-              <span class="chat-agent" [style.color]="chat.color">{{ chat.agent }}</span>
-              <span class="chat-msg">{{ chat.msg }}</span>
-              <span class="chat-time">{{ chat.time }}</span>
+          <div class="chat-row">
+            <div class="chat-sender mia">Mia</div>
+            <div class="chat-text">Finalizing UI component kits for the e-commerce mockups.</div>
+            <div class="chat-time">13:24:01</div>
+          </div>
+          <div class="chat-row">
+            <div class="chat-sender max">Max</div>
+            <div class="chat-text">Building responsive navigation bar in Angular. Shaders look crisp.</div>
+            <div class="chat-time">13:24:28</div>
+          </div>
+          <div class="chat-row">
+            <div class="chat-sender sam">Sam</div>
+            <div class="chat-text">Two minutes at the coffee bar then testing end-to-end checkout.</div>
+            <div class="chat-time">13:25:12</div>
+          </div>
+          <div class="chat-row">
+            <div class="chat-sender olivia">Olivia</div>
+            <div class="chat-text">Great velocity team. Keep the pull requests coming.</div>
+            <div class="chat-time">13:25:40</div>
+          </div>
+          @for (chat of sampleService.realChatMessages(); track chat.agent + chat.time) {
+            <div class="chat-row real-swarm">
+              <div class="chat-sender" [style.color]="chat.color">{{ chat.agent }}</div>
+              <div class="chat-text">{{ chat.msg }}</div>
+              <div class="chat-time">{{ chat.time }}</div>
             </div>
           }
         </div>
       </aside>
     }
-
-    <!-- Tab 2: Full Tasks Overview -->
-    @if (activeTab() === 'TASKS') {
-      <div class="tab-content-modal">
-        <h3 class="tab-title">Active Autonomous Tasks (22 Total)</h3>
-        <div class="tasks-table-wrap">
-          <table class="hud-table">
-            <thead>
-              <tr>
-                <th>AGENT</th>
-                <th>POD / TEAM</th>
-                <th>CURRENT OBJECTIVE</th>
-                <th>MODEL</th>
-                <th>STATUS</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (agent of agents(); track agent.id) {
-                <tr>
-                  <td><strong>{{ agent.name }}</strong> ({{ agent.role }})</td>
-                  <td>{{ agent.team }}</td>
-                  <td>{{ agent.currentTask }}</td>
-                  <td><span class="engine-tag">{{ agent.modelTier | uppercase }}</span></td>
-                  <td><span class="status-chip" [class]="agent.status">{{ agent.status }}</span></td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    }
-
-    <!-- Tab 3: Calendar Jobs -->
-    @if (activeTab() === 'CALENDAR') {
-      <div class="tab-content-modal">
-        <h3 class="tab-title">Autonomous Calendar & Scheduled Cron Jobs</h3>
-        <div class="calendar-grid">
-          @for (job of calendarJobs(); track job.id) {
-            <div class="calendar-card">
-              <div class="cal-time">{{ job.time }}</div>
-              <div class="cal-title">{{ job.title }}</div>
-              <div class="cal-meta">
-                <span>Pod: {{ job.pod }}</span> ·
-                <span>Lead: {{ job.agent }}</span>
-              </div>
-              <span class="cal-status" [class]="job.status.toLowerCase()">{{ job.status }}</span>
-            </div>
-          }
-        </div>
-      </div>
-    }
-
-    <!-- Tab 4: Central Brain Shared Memory -->
-    @if (activeTab() === 'BRAIN') {
-      <div class="tab-content-modal">
-        <h3 class="tab-title">Central Brain Vector Knowledge (1,842 Shared Notes)</h3>
-        <div class="brain-notes-grid">
-          @for (note of brainNotes(); track note.id) {
-            <div class="note-card">
-              <div class="note-cat">{{ note.category }}</div>
-              <h4 class="note-title">{{ note.title }}</h4>
-              <p class="note-content">{{ note.content }}</p>
-              <div class="note-author">By {{ note.author }} ({{ note.pod }} Pod) · {{ note.timestamp }}</div>
-            </div>
-          }
-        </div>
-      </div>
-    }
   </div>
-
-  <!-- Bottom Engine Footer (Exact design from Reel 1) -->
-  <footer class="bottom-engine-bar">
-    <div class="engine-selector">
-      <span class="engine-label">RUNS ON</span>
-      <div class="engine-pills">
-        @for (spec of llmSpecs; track spec.id) {
-          <button
-            type="button"
-            class="engine-btn"
-            [class.active]="selectedEngine() === spec.id"
-            (click)="sampleService.setEngine(spec.id)"
-          >
-            {{ spec.id }}
-          </button>
-        }
-      </div>
-    </div>
-
-    <div class="bottom-right-stats">
-      <span>Speed: <strong>{{ llmSpecs[0].speed }}</strong></span>
-      <span>•</span>
-      <span>Consensus: <strong>99.4%</strong></span>
-    </div>
-  </footer>
 </div>
