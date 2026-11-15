@@ -1671,12 +1671,13 @@
   height: 100vh;
   background: var(--abhi-surface-raised, #0b1220);
   border-left: 1px solid var(--abhi-border, rgba(56, 189, 248, 0.25));
-  box-shadow: -12px 0 45px rgba(0, 0, 0, 0.75);
+  box-shadow: var(--abhi-raised-shadow, -12px 0 45px rgba(0, 0, 0, 0.75));
   display: flex;
   flex-direction: column;
   animation: themeSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
   z-index: 10000;
+  color: var(--abhi-text-primary, #ffffff);
 }
 
 @keyframes themeSlideIn {
@@ -1686,7 +1687,7 @@
 
 .theme-drawer-header {
   padding: 20px 24px;
-  background: rgba(15, 23, 42, 0.95);
+  background: var(--abhi-surface-inset, rgba(15, 23, 42, 0.95));
   border-bottom: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.08));
   display: flex;
   align-items: flex-start;
@@ -1707,7 +1708,7 @@
 .drawer-title {
   font-size: 14px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--abhi-text-primary, #ffffff);
   margin: 0;
   letter-spacing: 0.5px;
 }
