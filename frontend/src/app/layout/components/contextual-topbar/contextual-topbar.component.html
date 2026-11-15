@@ -118,6 +118,20 @@
         }
       </a>
 
+      <!-- 5. Architecture & Workflows (Full System Diagrams, ER & Resource Specs) -->
+      <a
+        routerLink="/architecture"
+        class="clean-nav-btn architecture-nav-btn"
+        [class.active]="isActive('/architecture')"
+        title="Comprehensive System Architecture, Real Execution Workflows, ER Diagrams & Resource Specs"
+      >
+        <span class="nav-btn-icon">📐</span>
+        <span class="nav-btn-text">Architecture & Workflows</span>
+        @if (isActive('/architecture')) {
+          <span class="nav-active-pip"></span>
+        }
+      </a>
+
       <!-- 7. Theme Changer -->
       <button
         type="button"

@@ -1,0 +1,461 @@
+<div class="arch-full-viewport">
+  <!-- Top Global System Architecture Header -->
+  <header class="arch-header font-monospace">
+    <div class="header-left">
+      <div class="header-badge">
+        <span class="pulse-cyan"></span>
+        <span class="system-tag">ABHI SOVEREIGN ARCHITECTURAL & WORKFLOW MATRIX</span>
+      </div>
+      <h1 class="system-title">Comprehensive System Blueprint, ER Schemas & Resource Workflows</h1>
+    </div>
+
+    <div class="header-right">
+      <div class="telemetry-pill">
+        <span class="label">ACTIVE WIN32 CONTEXT:</span>
+        <span class="val text-cyan">{{ liveTelemetry()?.active_window?.title || 'ABHI Antigravity IDE' }}</span>
+      </div>
+      <div class="telemetry-pill">
+        <span class="label">CPU:</span>
+        <span class="val text-emerald">{{ liveTelemetry()?.telemetry?.cpu_percent || 24 }}%</span>
+      </div>
+      <div class="telemetry-pill">
+        <span class="label">RAM:</span>
+        <span class="val text-emerald">{{ liveTelemetry()?.telemetry?.memory?.percent_used || 84 }}%</span>
+      </div>
+      <a routerLink="/workspace" class="return-workspace-btn" title="Return to 3D Living Command Center">
+        🛰️ COMMAND CENTER
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Body: Two-Pane Micro UI Layout (Whole Space) -->
+  <div class="arch-main-layout">
+    <!-- Left Sidebar: Side Headings / Micro UI Navigation Buttons -->
+    <aside class="arch-sidebar" role="navigation" aria-label="Architecture Categories">
+      <div class="sidebar-header font-monospace">
+        <span class="side-icon">📂</span>
+        <span>SYSTEM SUBSYSTEMS</span>
+      </div>
+
+      <nav class="side-nav-list">
+        @for (sec of sections; track sec.id) {
+          <button
+            type="button"
+            class="side-nav-btn"
+            [class.active]="selectedSectionId() === sec.id"
+            (click)="selectSection(sec.id)"
+          >
+            <span class="btn-icon">{{ sec.icon }}</span>
+            <div class="btn-text-wrap">
+              <span class="btn-tag font-monospace">{{ sec.tag }}</span>
+              <span class="btn-title">{{ sec.navTitle }}</span>
+            </div>
+            @if (selectedSectionId() === sec.id) {
+              <span class="active-indicator"></span>
+            }
+          </button>
+        }
+      </nav>
+
+      <!-- Sidebar Sovereign Badge -->
+      <div class="sidebar-footer-card font-monospace">
+        <div class="badge-row">
+          <span>OPERATOR:</span>
+          <span class="text-cyan">Mamu (Ravuvai A.)</span>
+        </div>
+        <div class="badge-row">
+          <span>SECURITY LEASE:</span>
+          <span class="text-emerald">TIER 1 SOVEREIGN</span>
+        </div>
+        <div class="badge-row">
+          <span>LOCAL RAG:</span>
+          <span class="text-amber">588 CHUNKS</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Content Area: Detailed Micro UI Space for Selected Subsystem -->
+    <main class="arch-content-viewport" role="main">
+      @let cur = currentSection();
+
+      <!-- Hero Subsystem Banner -->
+      <div class="subsystem-hero-card">
+        <div class="hero-left">
+          <div class="hero-icon-bubble">{{ cur.icon }}</div>
+          <div>
+            <div class="hero-tag font-monospace">◈ {{ cur.tag }}</div>
+            <h2 class="hero-headline">{{ cur.headline }}</h2>
+          </div>
+        </div>
+        <div class="hero-status-chip font-monospace">
+          <span class="status-dot"></span> LIVE // OPERATIONAL
+        </div>
+      </div>
+
+      <!-- 3-Column Core Information Space -->
+      <div class="micro-ui-grid">
+        <!-- Section 1: WHY WE ARE USING IT -->
+        <div class="micro-card why-card">
+          <div class="card-header">
+            <span class="card-icon">💡</span>
+            <h3 class="card-title font-monospace">WHY WE ARE USING IT</h3>
+          </div>
+          <p class="card-summary">{{ cur.whyWeUseIt.summary }}</p>
+          <ul class="points-list">
+            @for (pt of cur.whyWeUseIt.points; track pt) {
+              <li class="point-item">
+                <span class="bullet-arrow">▸</span>
+                <span>{{ pt }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+
+        <!-- Section 2: WHERE WE ARE USING IT -->
+        <div class="micro-card where-card">
+          <div class="card-header">
+            <span class="card-icon">📍</span>
+            <h3 class="card-title font-monospace">WHERE WE ARE USING IT (CODE & ENDPOINTS)</h3>
+          </div>
+          <p class="card-summary">{{ cur.whereWeUseIt.description }}</p>
+          <div class="files-list">
+            <div class="sub-label font-monospace">SOURCE FILES:</div>
+            @for (f of cur.whereWeUseIt.files; track f.path) {
+              <div class="file-item">
+                <span class="file-path font-monospace">{{ f.path }}</span>
+                <span class="file-role">{{ f.role }}</span>
+              </div>
+            }
+          </div>
+          <div class="endpoints-wrap font-monospace">
+            <div class="sub-label font-monospace">BOUND API ENDPOINTS:</div>
+            <div class="endpoint-chips">
+              @for (ep of cur.whereWeUseIt.endpoints; track ep) {
+                <span class="endpoint-pill">{{ ep }}</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: WHAT EXISTS (ALL DATA) -->
+        <div class="micro-card what-card">
+          <div class="card-header">
+            <span class="card-icon">📊</span>
+            <h3 class="card-title font-monospace">{{ cur.whatExistsAllData.title | uppercase }}</h3>
+          </div>
+          
+          <div class="metrics-row">
+            @for (m of cur.whatExistsAllData.metrics; track m.label) {
+              <div class="metric-box">
+                <div class="metric-val font-monospace">{{ m.value }}</div>
+                <div class="metric-lbl">{{ m.label }}</div>
+              </div>
+            }
+          </div>
+
+          <div class="entities-list">
+            <div class="sub-label font-monospace">ACTIVE COMPONENTS & DATA ENTITIES:</div>
+            @for (e of cur.whatExistsAllData.entities; track e.name) {
+              <div class="entity-item">
+                <div class="entity-top">
+                  <span class="entity-name">{{ e.name }}</span>
+                  <span class="entity-status font-monospace">{{ e.status }}</span>
+                </div>
+                <div class="entity-details">{{ e.details }}</div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Real Workflow / ER / Architectural Diagram Area -->
+      <section class="diagram-section-block">
+        <div class="diagram-header font-monospace">
+          <span class="diagram-icon">📐</span>
+          <span class="diagram-title">REAL SYSTEM WORKFLOW & ARCHITECTURAL SCHEMATIC</span>
+          <span class="diagram-badge">INTERACTIVE VECTOR TOPOLOGY</span>
+        </div>
+
+        <div class="diagram-canvas-wrap">
+          @switch (cur.diagramType) {
+            @case ('FLOW') {
+              <div class="diagram-schematic flow-schematic">
+                <div class="schematic-step">
+                  <div class="step-box" style="border-color: #38bdf8;">
+                    <span class="step-ic">🎙️</span>
+                    <span class="step-name font-monospace">VOICE / UI INPUT</span>
+                    <span class="step-desc">Acoustic 60fps VAD listener tuned to Mamu callsign</span>
+                  </div>
+                  <div class="step-arrow">➔</div>
+                </div>
+
+                <div class="schematic-step">
+                  <div class="step-box" style="border-color: #f59e0b;">
+                    <span class="step-ic">⚡</span>
+                    <span class="step-name font-monospace">DYNAMIC RESOLVER</span>
+                    <span class="step-desc">Zero-latency learned action cache (37 patterns)</span>
+                  </div>
+                  <div class="step-arrow">➔</div>
+                </div>
+
+                <div class="schematic-step">
+                  <div class="step-box" style="border-color: #10b981;">
+                    <span class="step-ic">📚</span>
+                    <span class="step-name font-monospace">HYBRID VECTOR RAG</span>
+                    <span class="step-desc">LanceDB 588 embedded chunks & BM25 overlap</span>
+                  </div>
+                  <div class="step-arrow">➔</div>
+                </div>
+
+                <div class="schematic-step">
+                  <div class="step-box" style="border-color: #a855f7;">
+                    <span class="step-ic">🧠</span>
+                    <span class="step-name font-monospace">COGNITIVE LLM CORE</span>
+                    <span class="step-desc">Local Ollama / Standalone AbhiNativeLLM</span>
+                  </div>
+                  <div class="step-arrow">➔</div>
+                </div>
+
+                <div class="schematic-step">
+                  <div class="step-box" style="border-color: #ec4899;">
+                    <span class="step-ic">🗺️</span>
+                    <span class="step-name font-monospace">KAHN DAG SCHEDULER</span>
+                    <span class="step-desc">Topological task dependency executor & journal</span>
+                  </div>
+                  <div class="step-arrow">➔</div>
+                </div>
+
+                <div class="schematic-step">
+                  <div class="step-box" style="border-color: #06b6d4;">
+                    <span class="step-ic">🖥️</span>
+                    <span class="step-name font-monospace">WIN32 OS & SWARM</span>
+                    <span class="step-desc">Physical keystrokes, active window & squad broadcast</span>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @case ('SWARM') {
+              <div class="diagram-schematic swarm-schematic">
+                <div class="swarm-hub-center">
+                  <div class="hub-avatar">MARK 85</div>
+                  <div class="hub-title font-monospace">COMMANDER & ARBITRATOR</div>
+                  <div class="hub-model font-monospace">Qwen 8.2B DeepSeek-R1</div>
+                </div>
+
+                <div class="swarm-orbit-grid">
+                  <div class="orbit-bot" style="border-color: #3b82f6;">
+                    <span class="bot-icon">🌐</span>
+                    <span class="bot-name">Browser Specialist</span>
+                    <span class="bot-code font-monospace">MARK L</span>
+                  </div>
+                  <div class="orbit-bot" style="border-color: #10b981;">
+                    <span class="bot-icon">🎙️</span>
+                    <span class="bot-name">Comms Officer</span>
+                    <span class="bot-code font-monospace">MARK XLII</span>
+                  </div>
+                  <div class="orbit-bot" style="border-color: #06b6d4;">
+                    <span class="bot-icon">💻</span>
+                    <span class="bot-name">OS & Code Engineer</span>
+                    <span class="bot-code font-monospace">MARK VI</span>
+                  </div>
+                  <div class="orbit-bot" style="border-color: #f59e0b;">
+                    <span class="bot-icon">⛏️</span>
+                    <span class="bot-name">Data Miner / RAG</span>
+                    <span class="bot-code font-monospace">MARK VII</span>
+                  </div>
+                  <div class="orbit-bot" style="border-color: #a855f7;">
+                    <span class="bot-icon">🤖</span>
+                    <span class="bot-name">ML Specialist</span>
+                    <span class="bot-code font-monospace">MARK XXI</span>
+                  </div>
+                  <div class="orbit-bot" style="border-color: #ec4899;">
+                    <span class="bot-icon">📊</span>
+                    <span class="bot-name">Task Strategist</span>
+                    <span class="bot-code font-monospace">MARK XVII</span>
+                  </div>
+                  <div class="orbit-bot" style="border-color: #e11d48;">
+                    <span class="bot-icon">🛡️</span>
+                    <span class="bot-name">QA Auditor & Critic</span>
+                    <span class="bot-code font-monospace">THE CRITIC</span>
+                  </div>
+                  <div class="orbit-bot" style="border-color: #64748b;">
+                    <span class="bot-icon">🔒</span>
+                    <span class="bot-name">Security Guardrail</span>
+                    <span class="bot-code font-monospace">MARK I</span>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @case ('RAG') {
+              <div class="diagram-schematic rag-schematic">
+                <div class="rag-col">
+                  <div class="rag-header-box font-monospace">01. INGESTION & CHUNKING</div>
+                  <div class="rag-pill">TREASURY (SBI Account, IFSC, UPI)</div>
+                  <div class="rag-pill">BUSINESS (Invoices & Settlements)</div>
+                  <div class="rag-pill">SOURCE CODE (584 Modules)</div>
+                  <div class="rag-pill">SKILLS (System Procedures)</div>
+                </div>
+                <div class="step-arrow">➔</div>
+                <div class="rag-col">
+                  <div class="rag-header-box font-monospace">02. 384-DIM EMBEDDING</div>
+                  <div class="rag-pill">Deterministic Normalization</div>
+                  <div class="rag-pill">L2 Distance Space</div>
+                  <div class="rag-pill">LanceDB Apache Arrow Store</div>
+                </div>
+                <div class="step-arrow">➔</div>
+                <div class="rag-col">
+                  <div class="rag-header-box font-monospace">03. HYBRID MATCHING</div>
+                  <div class="rag-pill">Dense Vector Cosine Similarity</div>
+                  <div class="rag-pill">+ BM25 Keyword Overlap Bonus</div>
+                  <div class="rag-pill">Score Threshold >= 0.52</div>
+                </div>
+                <div class="step-arrow">➔</div>
+                <div class="rag-col">
+                  <div class="rag-header-box font-monospace">04. GROUNDED OUTPUT</div>
+                  <div class="rag-pill">Accurate Coded Citations</div>
+                  <div class="rag-pill">Zero Cloud Transmission</div>
+                  <div class="rag-pill">Instant Offline Recall (18ms)</div>
+                </div>
+              </div>
+            }
+
+            @case ('DAG') {
+              <div class="diagram-schematic dag-schematic">
+                <div class="dag-tree">
+                  <div class="dag-level">
+                    <div class="dag-node root font-monospace">
+                      <span class="node-tag">GOAL ROOT</span>
+                      <span>Decompose User Directive</span>
+                    </div>
+                  </div>
+                  <div class="dag-connector-v"></div>
+                  <div class="dag-level multi">
+                    <div class="dag-node font-monospace">
+                      <span class="node-tag">STEP 1</span>
+                      <span>Check Foreground Window</span>
+                    </div>
+                    <div class="dag-node font-monospace">
+                      <span class="node-tag">STEP 2</span>
+                      <span>Retrieve RAG Guidelines</span>
+                    </div>
+                    <div class="dag-node font-monospace">
+                      <span class="node-tag">STEP 3</span>
+                      <span>Security Permission Check</span>
+                    </div>
+                  </div>
+                  <div class="dag-connector-v"></div>
+                  <div class="dag-level">
+                    <div class="dag-node terminal font-monospace">
+                      <span class="node-tag">SYNTHESIS</span>
+                      <span>Execute Physical Action & Commit Journal Audit</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @case ('LLM') {
+              <div class="diagram-schematic llm-schematic">
+                <div class="llm-tier-box primary">
+                  <div class="tier-label font-monospace">PRIMARY COGNITIVE ENGINE</div>
+                  <div class="tier-model">Ollama (abhi:latest / Qwen3 8.2B DeepSeek-R1 Distill)</div>
+                  <div class="tier-features font-monospace">
+                    <span>◈ &lt;think&gt; reasoning stream</span>
+                    <span>◈ 32k context buffer</span>
+                    <span>◈ High-fidelity code synthesis</span>
+                  </div>
+                </div>
+                <div class="failover-arrow font-monospace">
+                  <span>FAILOVER (IF OLLAMA BUSY)</span>
+                  <span>➔</span>
+                </div>
+                <div class="llm-tier-box secondary">
+                  <div class="tier-label font-monospace">STANDALONE IN-PROCESS ENGINE</div>
+                  <div class="tier-model">AbhiStandaloneEngine (Zero-Crash Fallback)</div>
+                  <div class="tier-features font-monospace">
+                    <span>◈ 100% offline uptime</span>
+                    <span>◈ Rule-based goal decomposer</span>
+                    <span>◈ Safe sovereign companion fallback</span>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @case ('WIN32') {
+              <div class="diagram-schematic win32-schematic">
+                <div class="win32-layer">
+                  <div class="layer-title font-monospace">WINDOWS USER32 & KERNEL32 SUBSYSTEM</div>
+                  <div class="win32-grid">
+                    <div class="win32-card">
+                      <span class="w-icon">🪟</span>
+                      <span class="w-name font-monospace">GetForegroundWindow()</span>
+                      <span class="w-desc">Retrieves active HWND & coordinates at 60fps</span>
+                    </div>
+                    <div class="win32-card">
+                      <span class="w-icon">⌨️</span>
+                      <span class="w-name font-monospace">SendInput() Hotkeys</span>
+                      <span class="w-desc">Direct scan-code injection for native OS commands</span>
+                    </div>
+                    <div class="win32-card">
+                      <span class="w-icon">🔊</span>
+                      <span class="w-name font-monospace">IAudioEndpointVolume</span>
+                      <span class="w-desc">Master system volume scaling and mute toggling</span>
+                    </div>
+                    <div class="win32-card">
+                      <span class="w-icon">📁</span>
+                      <span class="w-name font-monospace">Start Menu Indexer</span>
+                      <span class="w-desc">Scans 90+ shell shortcuts for 0ms binary launches</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @case ('ER') {
+              <div class="diagram-schematic er-schematic">
+                <div class="er-table-card">
+                  <div class="er-table-header font-monospace">OPERATOR_PROFILE</div>
+                  <div class="er-field"><span>PK</span> <span>operator_id: "mamu"</span></div>
+                  <div class="er-field"><span>ATTR</span> <span>full_name: "Ravuvai Ayyapparayudu"</span></div>
+                  <div class="er-field"><span>ATTR</span> <span>email: "ayyapparayudu.ravuvari@gmail.com"</span></div>
+                  <div class="er-field"><span>ATTR</span> <span>upi_id: "ayyapparayudu.5@ybl"</span></div>
+                </div>
+
+                <div class="er-rel font-monospace">1 : N ➔</div>
+
+                <div class="er-table-card">
+                  <div class="er-table-header font-monospace">BANKING_RAILS</div>
+                  <div class="er-field"><span>PK</span> <span>bank_id: "sbi_main"</span></div>
+                  <div class="er-field"><span>ATTR</span> <span>bank_name: "State Bank of India"</span></div>
+                  <div class="er-field"><span>ATTR</span> <span>account_number: "41130645649"</span></div>
+                  <div class="er-field"><span>ATTR</span> <span>ifsc_code: "SBIN0020507"</span></div>
+                </div>
+
+                <div class="er-rel font-monospace">1 : N ➔</div>
+
+                <div class="er-table-card">
+                  <div class="er-table-header font-monospace">SETTLEMENT_LEDGER</div>
+                  <div class="er-field"><span>PK</span> <span>utr_hash: "UTR-SBI-DF1669"</span></div>
+                  <div class="er-field"><span>FK</span> <span>invoice_id: "INV-2026-001"</span></div>
+                  <div class="er-field"><span>ATTR</span> <span>amount_inr: 1842500</span></div>
+                  <div class="er-field"><span>ATTR</span> <span>status: "SETTLED"</span></div>
+                </div>
+
+                <div class="er-rel font-monospace">1 : 1 ➔</div>
+
+                <div class="er-table-card">
+                  <div class="er-table-header font-monospace">RECEIPT_JOURNAL</div>
+                  <div class="er-field"><span>PK</span> <span>receipt_id: "RCP-SBI-20261115"</span></div>
+                  <div class="er-field"><span>ATTR</span> <span>storage_format: "JSON + Markdown"</span></div>
+                  <div class="er-field"><span>ATTR</span> <span>vector_chunk_id: "chk_sbi_settlement"</span></div>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </section>
+    </main>
+  </div>
+</div>

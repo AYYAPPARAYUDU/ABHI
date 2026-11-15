@@ -28,6 +28,23 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'architecture',
+    loadComponent: () =>
+      import('./features/architecture/pages/architecture-page/architecture-page.component').then(
+        (m) => m.ArchitecturePageComponent
+      )
+  },
+  {
+    path: 'workflows',
+    redirectTo: 'architecture',
+    pathMatch: 'full'
+  },
+  {
+    path: 'diagrams',
+    redirectTo: 'architecture',
+    pathMatch: 'full'
+  },
+  {
     path: 'live-status',
     redirectTo: 'workspace',
     pathMatch: 'full'
