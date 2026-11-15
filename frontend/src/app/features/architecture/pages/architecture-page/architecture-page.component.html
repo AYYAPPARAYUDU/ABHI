@@ -6,13 +6,15 @@
         <span class="pulse-cyan"></span>
         <span class="system-tag">ABHI SOVEREIGN ARCHITECTURAL & WORKFLOW MATRIX</span>
       </div>
-      <h1 class="system-title">Comprehensive System Blueprint, ER Schemas & Resource Workflows</h1>
+      <h1 class="system-title">Interactive System Topology, Kahn DAG Schematics & Real Resource Workflows</h1>
     </div>
 
     <div class="header-right">
       <div class="telemetry-pill">
         <span class="label">ACTIVE WIN32 CONTEXT:</span>
-        <span class="val text-cyan">{{ liveTelemetry()?.active_window?.title || 'ABHI Antigravity IDE' }}</span>
+        <span class="val text-cyan" [title]="liveTelemetry()?.active_window?.title || 'ABHI Workspace'">
+          {{ liveTelemetry()?.active_window?.title || 'ABHI Antigravity IDE' }}
+        </span>
       </div>
       <div class="telemetry-pill">
         <span class="label">CPU:</span>
@@ -23,17 +25,17 @@
         <span class="val text-emerald">{{ liveTelemetry()?.telemetry?.memory?.percent_used || 84 }}%</span>
       </div>
       <a routerLink="/workspace" class="return-workspace-btn" title="Return to 3D Living Command Center">
-        🛰️ COMMAND CENTER
+        🚀 COMMAND CENTER
       </a>
     </div>
   </header>
 
-  <!-- Main Body: Two-Pane Micro UI Layout (Whole Space) -->
+  <!-- Main Body: Two-Pane Micro UI Layout -->
   <div class="arch-main-layout">
-    <!-- Left Sidebar: Side Headings / Micro UI Navigation Buttons -->
+    <!-- Left Sidebar: Side Headings / Subsystem Navigation Buttons -->
     <aside class="arch-sidebar" role="navigation" aria-label="Architecture Categories">
       <div class="sidebar-header font-monospace">
-        <span class="side-icon">📂</span>
+        <span class="side-icon">📁</span>
         <span>SYSTEM SUBSYSTEMS</span>
       </div>
 
@@ -57,8 +59,8 @@
         }
       </nav>
 
-      <!-- Sidebar Sovereign Badge -->
-      <div class="sidebar-footer-card font-monospace">
+      <!-- Sidebar Sovereign Badges -->
+      <div class="sidebar-footer font-monospace">
         <div class="badge-row">
           <span>OPERATOR:</span>
           <span class="text-cyan">Mamu (Ravuvai A.)</span>
@@ -87,375 +89,802 @@
             <h2 class="hero-headline">{{ cur.headline }}</h2>
           </div>
         </div>
-        <div class="hero-status-chip font-monospace">
-          <span class="status-dot"></span> LIVE // OPERATIONAL
+        <div class="hero-right-actions">
+          <div class="hero-status-chip font-monospace">
+            <span class="status-dot"></span> LIVE // OPERATIONAL
+          </div>
         </div>
       </div>
 
-      <!-- 3-Column Core Information Space -->
+      <!-- Micro UI Space Sub-Navigation Selector -->
+      <div class="sub-tab-bar font-monospace">
+        <button
+          type="button"
+          class="sub-tab-btn"
+          [class.active]="selectedSubTab() === 'ALL'"
+          (click)="setSubTab('ALL')"
+        >
+          📑 ALL MICRO-SPACES
+        </button>
+        <button
+          type="button"
+          class="sub-tab-btn"
+          [class.active]="selectedSubTab() === 'DIAGRAM'"
+          (click)="setSubTab('DIAGRAM')"
+        >
+          🌐 REAL ANIMATED DIAGRAM
+        </button>
+        <button
+          type="button"
+          class="sub-tab-btn"
+          [class.active]="selectedSubTab() === 'WHY'"
+          (click)="setSubTab('WHY')"
+        >
+          💡 WHY WE USE IT
+        </button>
+        <button
+          type="button"
+          class="sub-tab-btn"
+          [class.active]="selectedSubTab() === 'WHERE'"
+          (click)="setSubTab('WHERE')"
+        >
+          📍 WHERE IN CODEBASE
+        </button>
+        <button
+          type="button"
+          class="sub-tab-btn"
+          [class.active]="selectedSubTab() === 'DATA'"
+          (click)="setSubTab('DATA')"
+        >
+          📊 WHAT DATA EXISTS
+        </button>
+      </div>
+
+      <!-- Real Workflow / ER / Architectural Animated Diagram Area -->
+      @if (selectedSubTab() === 'ALL' || selectedSubTab() === 'DIAGRAM') {
+        <section class="diagram-section-block">
+          <!-- Interactive Diagram Simulation Control Bar -->
+          <div class="diagram-sim-toolbar font-monospace">
+            <div class="toolbar-left">
+              <span class="toolbar-title">⚡ REAL-TIME ANIMATED CONDUIT PIPELINE</span>
+              <div class="sim-badge" [class.running]="isSimulating()">
+                <span class="sim-pulse"></span>
+                <span>{{ isSimulating() ? 'SIMULATION: RUNNING' : 'SIMULATION: PAUSED' }}</span>
+              </div>
+              <div class="stage-ticker">
+                <span class="ticker-label">ACTIVE PACKET STAGE:</span>
+                <span class="ticker-val text-cyan">STEP {{ activeSimStep() + 1 }} / 6</span>
+              </div>
+            </div>
+
+            <div class="toolbar-right">
+              <button
+                type="button"
+                class="sim-btn play-pause-btn"
+                (click)="toggleSimulation()"
+                [title]="isSimulating() ? 'Pause Simulation' : 'Resume Simulation'"
+              >
+                {{ isSimulating() ? '⏸ PAUSE' : '▶ PLAY' }}
+              </button>
+              <button
+                type="button"
+                class="sim-btn step-btn"
+                (click)="stepSimulation()"
+                title="Step forward to next pipeline node"
+              >
+                ⏭ STEP
+              </button>
+              <div class="speed-selector">
+                <button
+                  type="button"
+                  class="speed-btn"
+                  [class.active]="simSpeed() === 1"
+                  (click)="setSimSpeed(1)"
+                >
+                  1X
+                </button>
+                <button
+                  type="button"
+                  class="speed-btn"
+                  [class.active]="simSpeed() === 2"
+                  (click)="setSimSpeed(2)"
+                >
+                  2X
+                </button>
+              </div>
+              <button
+                type="button"
+                class="sim-btn test-action-btn"
+                (click)="testTriggerQuickAction('refresh_context')"
+                title="Trigger a genuine Win32 active context test probe"
+              >
+                ⚡ TEST OS PROBE
+              </button>
+            </div>
+          </div>
+
+          <!-- Dynamic SVG Diagram Canvas -->
+          <div class="diagram-canvas-wrap">
+            @switch (cur.diagramType) {
+              <!-- 1. END-TO-END EXECUTION FLOW DIAGRAM -->
+              @case ('FLOW') {
+                <div class="diagram-schematic-flow">
+                  <!-- Animated SVG Conduit Vector Layer -->
+                  <svg class="svg-conduit-overlay" viewBox="0 0 1100 220" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="flowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.8" />
+                        <stop offset="30%" stop-color="#f59e0b" stop-opacity="0.9" />
+                        <stop offset="60%" stop-color="#10b981" stop-opacity="0.9" />
+                        <stop offset="85%" stop-color="#a855f7" stop-opacity="0.9" />
+                        <stop offset="100%" stop-color="#06b6d4" stop-opacity="1" />
+                      </linearGradient>
+                      <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="3" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
+
+                    <!-- Main Flow Bus Conduits -->
+                    <path
+                      class="conduit-wire"
+                      d="M 90,110 L 270,110 L 450,110 L 630,110 L 810,110 L 990,110"
+                    />
+                    <path
+                      class="conduit-wire-active"
+                      d="M 90,110 L 270,110 L 450,110 L 630,110 L 810,110 L 990,110"
+                      stroke="url(#flowGrad)"
+                      filter="url(#glowEffect)"
+                    />
+
+                    <!-- Animated Data Particles Moving Along The Bus -->
+                    <circle class="animated-particle particle-1" r="5" fill="#38bdf8" filter="url(#glowEffect)">
+                      <animateMotion
+                        path="M 90,110 L 990,110"
+                        dur="3.6s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                    <circle class="animated-particle particle-2" r="4" fill="#10b981" filter="url(#glowEffect)">
+                      <animateMotion
+                        path="M 90,110 L 990,110"
+                        dur="3.6s"
+                        begin="1.2s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                    <circle class="animated-particle particle-3" r="4.5" fill="#ec4899" filter="url(#glowEffect)">
+                      <animateMotion
+                        path="M 90,110 L 990,110"
+                        dur="3.6s"
+                        begin="2.4s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  </svg>
+
+                  <!-- Interactive Interactive Stage Node Cards -->
+                  <div class="flow-nodes-track">
+                    <!-- Step 0: Voice Ingestion -->
+                    <div
+                      class="interactive-node"
+                      [class.active-step]="activeSimStep() === 0"
+                      (click)="inspectNode('flow_voice')"
+                    >
+                      <div class="node-badge font-monospace">STAGE 1 // PERCEPTION</div>
+                      <div class="node-icon">🎙️</div>
+                      <div class="node-title font-monospace">VOICE / UI INPUT</div>
+                      <div class="node-desc">60fps VAD acoustic filter tuned to Mamu</div>
+                      <div class="node-metric text-cyan font-monospace">0.2ms latency</div>
+                      <div class="node-pulse-ring"></div>
+                    </div>
+
+                    <!-- Step 1: Dynamic Resolver -->
+                    <div
+                      class="interactive-node"
+                      [class.active-step]="activeSimStep() === 1"
+                      (click)="inspectNode('flow_resolver')"
+                    >
+                      <div class="node-badge font-monospace">STAGE 2 // RESOLVER</div>
+                      <div class="node-icon">⚡</div>
+                      <div class="node-title font-monospace">DYNAMIC RESOLVER</div>
+                      <div class="node-desc">Zero-latency learned index (37 patterns)</div>
+                      <div class="node-metric text-amber font-monospace">0.0ms instant</div>
+                      <div class="node-pulse-ring"></div>
+                    </div>
+
+                    <!-- Step 2: Vector RAG -->
+                    <div
+                      class="interactive-node"
+                      [class.active-step]="activeSimStep() === 2"
+                      (click)="inspectNode('flow_rag')"
+                    >
+                      <div class="node-badge font-monospace">STAGE 3 // KNOWLEDGE</div>
+                      <div class="node-icon">📚</div>
+                      <div class="node-title font-monospace">LOCAL VECTOR RAG</div>
+                      <div class="node-desc">588 chunks LanceDB + BM25 re-ranker</div>
+                      <div class="node-metric text-emerald font-monospace">4.2ms search</div>
+                      <div class="node-pulse-ring"></div>
+                    </div>
+
+                    <!-- Step 3: Cognitive LLM -->
+                    <div
+                      class="interactive-node"
+                      [class.active-step]="activeSimStep() === 3"
+                      (click)="inspectNode('flow_llm')"
+                    >
+                      <div class="node-badge font-monospace">STAGE 4 // COGNITIVE</div>
+                      <div class="node-icon">🧠</div>
+                      <div class="node-title font-monospace">AbhiNativeLLM CORE</div>
+                      <div class="node-desc">Local Ollama SDK / Standalone engine</div>
+                      <div class="node-metric text-purple font-monospace">28ms inference</div>
+                      <div class="node-pulse-ring"></div>
+                    </div>
+
+                    <!-- Step 4: Kahn DAG -->
+                    <div
+                      class="interactive-node"
+                      [class.active-step]="activeSimStep() === 4"
+                      (click)="inspectNode('flow_dag')"
+                    >
+                      <div class="node-badge font-monospace">STAGE 5 // PLANNING</div>
+                      <div class="node-icon">🗺️</div>
+                      <div class="node-title font-monospace">KAHN DAG PLANNER</div>
+                      <div class="node-desc">Topological task dependency scheduler</div>
+                      <div class="node-metric text-pink font-monospace">O(V+E) resolve</div>
+                      <div class="node-pulse-ring"></div>
+                    </div>
+
+                    <!-- Step 5: Win32 OS Dispatch -->
+                    <div
+                      class="interactive-node"
+                      [class.active-step]="activeSimStep() === 5"
+                      (click)="inspectNode('flow_win32')"
+                    >
+                      <div class="node-badge font-monospace">STAGE 6 // EXECUTION</div>
+                      <div class="node-icon">🖥️</div>
+                      <div class="node-title font-monospace">WIN32 OS & SWARM</div>
+                      <div class="node-desc">Physical ctypes SendInput & #squad bus</div>
+                      <div class="node-metric text-cyan font-monospace">0.1ms dispatch</div>
+                      <div class="node-pulse-ring"></div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- 2. MULTI-AGENT SWARM (10 SPECIALISTS) ORBITAL SCHEMATIC -->
+              @case ('SWARM') {
+                <div class="diagram-schematic-swarm">
+                  <!-- Central Commander Hub -->
+                  <div
+                    class="swarm-commander-hub"
+                    [class.selected]="selectedSwarmAgentId() === 'mark85'"
+                    (click)="inspectNode('mark85')"
+                  >
+                    <div class="hub-radar-ring"></div>
+                    <div class="hub-avatar-wrap">
+                      <span class="hub-icon">🛡️</span>
+                      <span class="hub-callsign font-monospace">MARK 85</span>
+                    </div>
+                    <div class="hub-label font-monospace">COMMANDER & ARBITRATOR</div>
+                    <div class="hub-sub font-monospace text-cyan">Qwen 8.2B DeepSeek-R1</div>
+                    <div class="hub-status-chip font-monospace">CENTRAL DISPATCHER</div>
+                  </div>
+
+                  <!-- Radiating Orbital Agent Satellite Grid -->
+                  <div class="swarm-satellite-grid">
+                    <!-- Mark L: Browser -->
+                    <div
+                      class="satellite-agent-card"
+                      [class.selected]="selectedSwarmAgentId() === 'markL'"
+                      (click)="inspectNode('markL')"
+                    >
+                      <div class="agent-top">
+                        <span class="agent-avatar">🌐</span>
+                        <span class="agent-code font-monospace">MARK L</span>
+                      </div>
+                      <div class="agent-name">Browser Specialist</div>
+                      <div class="agent-specialty font-monospace">Playwright Chromium DOM</div>
+                      <div class="agent-state-pill font-monospace text-cyan">ACTIVE</div>
+                    </div>
+
+                    <!-- Mark VI: Windows OS -->
+                    <div
+                      class="satellite-agent-card"
+                      [class.selected]="selectedSwarmAgentId() === 'markVI'"
+                      (click)="inspectNode('markVI')"
+                    >
+                      <div class="agent-top">
+                        <span class="agent-avatar">🖥️</span>
+                        <span class="agent-code font-monospace">MARK VI</span>
+                      </div>
+                      <div class="agent-name">Windows OS Specialist</div>
+                      <div class="agent-specialty font-monospace">User32 ctypes & Registry</div>
+                      <div class="agent-state-pill font-monospace text-emerald">ENGAGED</div>
+                    </div>
+
+                    <!-- Mark XLIII: Vision OCR -->
+                    <div
+                      class="satellite-agent-card"
+                      [class.selected]="selectedSwarmAgentId() === 'markXLIII'"
+                      (click)="inspectNode('markXLIII')"
+                    >
+                      <div class="agent-top">
+                        <span class="agent-avatar">👁️</span>
+                        <span class="agent-code font-monospace">MARK XLIII</span>
+                      </div>
+                      <div class="agent-name">Vision & OCR Specialist</div>
+                      <div class="agent-specialty font-monospace">Screen OCR Grounding</div>
+                      <div class="agent-state-pill font-monospace text-amber">STREAMING</div>
+                    </div>
+
+                    <!-- Mark V: Vector RAG -->
+                    <div
+                      class="satellite-agent-card"
+                      [class.selected]="selectedSwarmAgentId() === 'markV'"
+                      (click)="inspectNode('markV')"
+                    >
+                      <div class="agent-top">
+                        <span class="agent-avatar">📚</span>
+                        <span class="agent-code font-monospace">MARK V</span>
+                      </div>
+                      <div class="agent-name">Vector RAG Specialist</div>
+                      <div class="agent-specialty font-monospace">588 LanceDB Chunks</div>
+                      <div class="agent-state-pill font-monospace text-emerald">ONLINE</div>
+                    </div>
+
+                    <!-- Mark VII: Task Planner -->
+                    <div
+                      class="satellite-agent-card"
+                      [class.selected]="selectedSwarmAgentId() === 'markVII'"
+                      (click)="inspectNode('markVII')"
+                    >
+                      <div class="agent-top">
+                        <span class="agent-avatar">🗺️</span>
+                        <span class="agent-code font-monospace">MARK VII</span>
+                      </div>
+                      <div class="agent-name">Task Planner & DAG</div>
+                      <div class="agent-specialty font-monospace">Kahn Topological Sort</div>
+                      <div class="agent-state-pill font-monospace text-purple">PLANNING</div>
+                    </div>
+
+                    <!-- Mark I: Security Sentinel -->
+                    <div
+                      class="satellite-agent-card"
+                      [class.selected]="selectedSwarmAgentId() === 'markI'"
+                      (click)="inspectNode('markI')"
+                    >
+                      <div class="agent-top">
+                        <span class="agent-avatar">🔒</span>
+                        <span class="agent-code font-monospace">MARK I</span>
+                      </div>
+                      <div class="agent-name">Security Sentinel</div>
+                      <div class="agent-specialty font-monospace">Token Guard & Policy</div>
+                      <div class="agent-state-pill font-monospace text-cyan">GUARDING</div>
+                    </div>
+
+                    <!-- Mark XLII: Self-Healing -->
+                    <div
+                      class="satellite-agent-card"
+                      [class.selected]="selectedSwarmAgentId() === 'markXLII'"
+                      (click)="inspectNode('markXLII')"
+                    >
+                      <div class="agent-top">
+                        <span class="agent-avatar">🔧</span>
+                        <span class="agent-code font-monospace">MARK XLII</span>
+                      </div>
+                      <div class="agent-name">Self-Healing Specialist</div>
+                      <div class="agent-specialty font-monospace">AST Code Auto-Repair</div>
+                      <div class="agent-state-pill font-monospace text-amber">STANDBY</div>
+                    </div>
+
+                    <!-- Mark XVII: Audio Speech -->
+                    <div
+                      class="satellite-agent-card"
+                      [class.selected]="selectedSwarmAgentId() === 'markXVII'"
+                      (click)="inspectNode('markXVII')"
+                    >
+                      <div class="agent-top">
+                        <span class="agent-avatar">🎙️</span>
+                        <span class="agent-code font-monospace">MARK XVII</span>
+                      </div>
+                      <div class="agent-name">Audio & Speech</div>
+                      <div class="agent-specialty font-monospace">Acoustic VAD & Coqui TTS</div>
+                      <div class="agent-state-pill font-monospace text-pink">ATTUNED</div>
+                    </div>
+
+                    <!-- Mark XXXIII: SBI Banking -->
+                    <div
+                      class="satellite-agent-card"
+                      [class.selected]="selectedSwarmAgentId() === 'markXXXIII'"
+                      (click)="inspectNode('markXXXIII')"
+                    >
+                      <div class="agent-top">
+                        <span class="agent-avatar">🏛️</span>
+                        <span class="agent-code font-monospace">MARK XXXIII</span>
+                      </div>
+                      <div class="agent-name">SBI Banking Specialist</div>
+                      <div class="agent-specialty font-monospace">SBI ****5649 Treasury</div>
+                      <div class="agent-state-pill font-monospace text-emerald">AUDITING</div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- 3. LOCAL VECTOR RAG PIPELINE SCHEMATIC -->
+              @case ('RAG') {
+                <div class="diagram-schematic-rag">
+                  <div class="rag-pipeline-grid">
+                    <!-- Stage 1: Ingestion & Tokenizer -->
+                    <div class="rag-stage-box" (click)="inspectNode('flow_rag')">
+                      <div class="stage-num font-monospace">STAGE 1</div>
+                      <div class="stage-ic">📥</div>
+                      <div class="stage-title font-monospace">QUERY & CHUNK INGESTION</div>
+                      <p class="stage-p">Splits code, docs & banking receipts into 500-token semantic chunks.</p>
+                      <div class="rag-chip font-monospace">588 Chunks Total</div>
+                    </div>
+
+                    <div class="rag-connector">
+                      <span class="connector-arrow">➔</span>
+                      <span class="connector-txt font-monospace">384-DIM EMBEDDING</span>
+                    </div>
+
+                    <!-- Stage 2: Dense-Sparse Vector Store -->
+                    <div class="rag-stage-box active-glow" (click)="inspectNode('flow_rag')">
+                      <div class="stage-num font-monospace">STAGE 2</div>
+                      <div class="stage-ic">⚡</div>
+                      <div class="stage-title font-monospace">LANCEDB HYBRID INDEX</div>
+                      <p class="stage-p">Performs sub-5ms cosine vector search combined with BM25 lexical overlap.</p>
+                      <div class="rag-chip font-monospace text-emerald">Cosine Score >= 0.65</div>
+                    </div>
+
+                    <div class="rag-connector">
+                      <span class="connector-arrow">➔</span>
+                      <span class="connector-txt font-monospace">RANKED CONTEXT</span>
+                    </div>
+
+                    <!-- Stage 3: Top-K Context Injection -->
+                    <div class="rag-stage-box" (click)="inspectNode('flow_llm')">
+                      <div class="stage-num font-monospace">STAGE 3</div>
+                      <div class="stage-ic">🧠</div>
+                      <div class="stage-title font-monospace">CONTEXT WINDOW INJECTION</div>
+                      <p class="stage-p">Injects verified snippets directly into AbhiNativeLLM prompt context.</p>
+                      <div class="rag-chip font-monospace text-cyan">Zero Hallucination</div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- 4. KAHN DAG TASK PLANNING SCHEMATIC -->
+              @case ('DAG') {
+                <div class="diagram-schematic-dag">
+                  <div class="dag-header-telemetry font-monospace">
+                    <span>ALGORITHM: KAHN'S TOPOLOGICAL RESOLUTION O(V+E)</span>
+                    <span class="text-emerald">IN-DEGREE ZERO READY QUEUE</span>
+                  </div>
+
+                  <div class="dag-graph-view">
+                    <!-- Layer 0: Root Goal -->
+                    <div class="dag-layer">
+                      <div class="dag-node-card root-node" (click)="inspectNode('flow_dag')">
+                        <span class="node-tag font-monospace">ROOT // IN_DEGREE=0</span>
+                        <span class="node-head">Master Goal Ingestion</span>
+                        <span class="node-status font-monospace text-emerald">COMPLETED</span>
+                      </div>
+                    </div>
+
+                    <!-- SVG Branching Conduits -->
+                    <div class="dag-branch-conduits font-monospace">
+                      <span>PARALLEL WORKER DISPATCH ➔➔➔</span>
+                    </div>
+
+                    <!-- Layer 1: Parallel Concurrent Workers -->
+                    <div class="dag-layer parallel-layer">
+                      <div class="dag-node-card" (click)="inspectNode('markVI')">
+                        <span class="node-tag font-monospace">NODE A // IN_DEGREE=0</span>
+                        <span class="node-head">Win32 Context Check</span>
+                        <span class="node-status font-monospace text-cyan">RUNNING</span>
+                      </div>
+                      <div class="dag-node-card" (click)="inspectNode('flow_rag')">
+                        <span class="node-tag font-monospace">NODE B // IN_DEGREE=0</span>
+                        <span class="node-head">RAG Semantic Retrieval</span>
+                        <span class="node-status font-monospace text-emerald">COMPLETED</span>
+                      </div>
+                      <div class="dag-node-card" (click)="inspectNode('markXLIII')">
+                        <span class="node-tag font-monospace">NODE C // IN_DEGREE=0</span>
+                        <span class="node-head">Visual OCR Grounding</span>
+                        <span class="node-status font-monospace text-cyan">RUNNING</span>
+                      </div>
+                    </div>
+
+                    <!-- SVG Joining Conduits -->
+                    <div class="dag-branch-conduits font-monospace">
+                      <span>DEPENDENCY JOIN RESOLUTION (IN_DEGREE 3 ➔ 0) ➔➔➔</span>
+                    </div>
+
+                    <!-- Layer 2: Final Verification & Output -->
+                    <div class="dag-layer">
+                      <div class="dag-node-card final-node" (click)="inspectNode('flow_win32')">
+                        <span class="node-tag font-monospace">VERIFICATION // IN_DEGREE=0</span>
+                        <span class="node-head">Physical OS Execution & Verification</span>
+                        <span class="node-status font-monospace text-amber">AWAITING WORKERS</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- 5. ABHI NATIVE LLM SCHEMATIC -->
+              @case ('LLM') {
+                <div class="diagram-schematic-llm">
+                  <div class="llm-layers-stack">
+                    <div class="llm-layer-bar font-monospace" (click)="inspectNode('flow_llm')">
+                      <span class="bar-name">1. PROMPT INGESTION & CONTEXT PACKER</span>
+                      <span class="bar-desc">Injects Mamu persona, active Win32 window title, and top-3 RAG chunks</span>
+                      <span class="bar-tag text-cyan">ONLINE</span>
+                    </div>
+                    <div class="llm-layer-bar font-monospace" (click)="inspectNode('flow_llm')">
+                      <span class="bar-name">2. TRANSFORMER ATTENTION & TOKEN GENERATION</span>
+                      <span class="bar-desc">Local Ollama SDK (abhi:latest / DeepSeek-R1 8B) on CPU AVX2</span>
+                      <span class="bar-tag text-emerald">28.5 MS / TOKEN</span>
+                    </div>
+                    <div class="llm-layer-bar font-monospace" (click)="inspectNode('flow_llm')">
+                      <span class="bar-name">3. STRICT JSON SCHEMA VALIDATOR & CLEANSER</span>
+                      <span class="bar-desc">Regex markdown stripper, key normalizer, schema enforcement</span>
+                      <span class="bar-tag text-amber">ZERO ERROR RATE</span>
+                    </div>
+                    <div class="llm-layer-bar font-monospace" (click)="inspectNode('flow_win32')">
+                      <span class="bar-name">4. AUTONOMOUS TOOL SYNTHESIS & EXECUTION</span>
+                      <span class="bar-desc">On-the-fly Python script sandbox or direct Win32 OS action execution</span>
+                      <span class="bar-tag text-pink">SOVEREIGN</span>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- 6. WIN32 OS & SCREEN PERCEPTION SCHEMATIC -->
+              @case ('WIN32') {
+                <div class="diagram-schematic-win32">
+                  <div class="win32-grid">
+                    <div class="win32-card" (click)="inspectNode('flow_win32')">
+                      <div class="win32-top">
+                        <span class="win32-icon">🖥️</span>
+                        <span class="win32-tag font-monospace">USER32.DLL</span>
+                      </div>
+                      <div class="win32-title font-monospace">Active Window Tracking</div>
+                      <div class="win32-val text-cyan font-monospace">
+                        {{ liveTelemetry()?.active_window?.title || 'ABHI Antigravity IDE' }}
+                      </div>
+                      <div class="win32-sub">Tracks foreground HWND, focus shifts & PID</div>
+                    </div>
+
+                    <div class="win32-card" (click)="inspectNode('flow_win32')">
+                      <div class="win32-top">
+                        <span class="win32-icon">⌨️</span>
+                        <span class="win32-tag font-monospace">CTYPES SENDINPUT</span>
+                      </div>
+                      <div class="win32-title font-monospace">Physical Keystroke Driver</div>
+                      <div class="win32-val text-emerald font-monospace">0.1ms Hotkey Dispatch</div>
+                      <div class="win32-sub">Direct keyboard scancodes (Ctrl+W, Win+D, Alt+Tab)</div>
+                    </div>
+
+                    <div class="win32-card" (click)="inspectNode('flow_win32')">
+                      <div class="win32-top">
+                        <span class="win32-icon">🔊</span>
+                        <span class="win32-tag font-monospace">COREAUDIO API</span>
+                      </div>
+                      <div class="win32-title font-monospace">Master Volume Control</div>
+                      <div class="win32-val text-amber font-monospace">IAudioEndpointVolume</div>
+                      <div class="win32-sub">Zero-lag hardware audio scaling & mute toggle</div>
+                    </div>
+
+                    <div class="win32-card" (click)="inspectNode('markXLIII')">
+                      <div class="win32-top">
+                        <span class="win32-icon">📱</span>
+                        <span class="win32-tag font-monospace">ANDROID ADB BRIDGE</span>
+                      </div>
+                      <div class="win32-title font-monospace">Mobile OS Controller</div>
+                      <div class="win32-val text-purple font-monospace">ADB Daemon Linked</div>
+                      <div class="win32-sub">Coordinates desktop with mobile WhatsApp & Gmail</div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- 7. ENTITY-RELATIONSHIP & SBI TREASURY SCHEMATIC -->
+              @case ('ER') {
+                <div class="diagram-schematic-er">
+                  <div class="er-tables-container">
+                    <!-- Entity 1: Account Master -->
+                    <div class="er-table-box" (click)="inspectNode('markXXXIII')">
+                      <div class="table-header font-monospace">
+                        <span class="tb-name">ACCOUNT_MASTER</span>
+                        <span class="tb-pk">PK: account_no</span>
+                      </div>
+                      <div class="table-rows font-monospace">
+                        <div class="row-item"><span class="f-name">account_no:</span> <span class="f-val">SBI ****5649</span></div>
+                        <div class="row-item"><span class="f-name">holder_name:</span> <span class="f-val">Ravuvai Ayyapparayudu</span></div>
+                        <div class="row-item"><span class="f-name">ifsc_code:</span> <span class="f-val">SBIN0020507</span></div>
+                        <div class="row-item"><span class="f-name">branch:</span> <span class="f-val">Spl Commercial Branch</span></div>
+                        <div class="row-item"><span class="f-name">status:</span> <span class="f-val text-emerald">VERIFIED</span></div>
+                      </div>
+                    </div>
+
+                    <div class="er-link-arrow">
+                      <span class="er-link-tag font-monospace">1 : N (Settlements)</span>
+                      <span class="er-line">➔➔➔</span>
+                    </div>
+
+                    <!-- Entity 2: Settlement Ledger -->
+                    <div class="er-table-box active-er" (click)="inspectNode('markXXXIII')">
+                      <div class="table-header font-monospace">
+                        <span class="tb-name">SETTLEMENT_LEDGER</span>
+                        <span class="tb-pk">PK: settlement_id</span>
+                      </div>
+                      <div class="table-rows font-monospace">
+                        <div class="row-item"><span class="f-name">settlement_id:</span> <span class="f-val">STL-2026-0014</span></div>
+                        <div class="row-item"><span class="f-name">fk_account:</span> <span class="f-val">SBI ****5649</span></div>
+                        <div class="row-item"><span class="f-name">utr_reference:</span> <span class="f-val">SBIN20261114001928</span></div>
+                        <div class="row-item"><span class="f-name">net_settled:</span> <span class="f-val text-emerald">₹18,42,500 INR</span></div>
+                        <div class="row-item"><span class="f-name">audit_state:</span> <span class="f-val text-cyan">IMMUTABLE_LOCKED</span></div>
+                      </div>
+                    </div>
+
+                    <div class="er-link-arrow">
+                      <span class="er-link-tag font-monospace">1 : 1 (Invoices)</span>
+                      <span class="er-line">➔➔➔</span>
+                    </div>
+
+                    <!-- Entity 3: Invoices -->
+                    <div class="er-table-box" (click)="inspectNode('markXXXIII')">
+                      <div class="table-header font-monospace">
+                        <span class="tb-name">COMMERCIAL_INVOICE</span>
+                        <span class="tb-pk">PK: invoice_no</span>
+                      </div>
+                      <div class="table-rows font-monospace">
+                        <div class="row-item"><span class="f-name">invoice_no:</span> <span class="f-val">INV-2026-0089</span></div>
+                        <div class="row-item"><span class="f-name">client_party:</span> <span class="f-val">Scale AI Systems</span></div>
+                        <div class="row-item"><span class="f-name">contract_type:</span> <span class="f-val">Autonomous Copilot Svc</span></div>
+                        <div class="row-item"><span class="f-name">tax_id:</span> <span class="f-val">GSTIN-37AABCA1234F</span></div>
+                        <div class="row-item"><span class="f-name">payment_state:</span> <span class="f-val text-emerald">PAID & CLEARED</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+            }
+          </div>
+
+          <!-- Interactive Node Deep-Inspection HUD (Dynamic Details upon clicking any node) -->
+          @if (activeInspectorNode(); as insp) {
+            <div class="node-inspector-hud font-monospace">
+              <div class="hud-top">
+                <div class="hud-identity">
+                  <span class="hud-chip">FOCUSED NODE INSPECTION</span>
+                  <h4 class="hud-title">{{ insp.name }}</h4>
+                  <span class="hud-subsystem text-cyan">{{ insp.subsystem }}</span>
+                </div>
+                <div class="hud-meta">
+                  <div class="hud-stat">
+                    <span class="stat-lbl">LATENCY:</span>
+                    <span class="stat-val text-emerald">{{ insp.latency }}</span>
+                  </div>
+                  <div class="hud-stat">
+                    <span class="stat-lbl">STATUS:</span>
+                    <span class="stat-val text-cyan">{{ insp.status }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hud-body">
+                <div class="hud-prop-grid">
+                  <div class="hud-prop">
+                    <span class="prop-lbl">SOURCE CODE LOCATION:</span>
+                    <span class="prop-val text-amber">{{ insp.filePath }}</span>
+                  </div>
+                  <div class="hud-prop">
+                    <span class="prop-lbl">INPUT PAYLOAD:</span>
+                    <span class="prop-val">{{ insp.inputData }}</span>
+                  </div>
+                  <div class="hud-prop">
+                    <span class="prop-lbl">OUTPUT TELEMETRY:</span>
+                    <span class="prop-val">{{ insp.outputData }}</span>
+                  </div>
+                  <div class="hud-prop">
+                    <span class="prop-lbl">ARCHITECTURAL RATIONALE:</span>
+                    <span class="prop-val text-cyan">{{ insp.rationale }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+        </section>
+      }
+
+      <!-- 3-Column Core Micro-Spaces Information Layout -->
       <div class="micro-ui-grid">
         <!-- Section 1: WHY WE ARE USING IT -->
-        <div class="micro-card why-card">
-          <div class="card-header">
-            <span class="card-icon">💡</span>
-            <h3 class="card-title font-monospace">WHY WE ARE USING IT</h3>
+        @if (selectedSubTab() === 'ALL' || selectedSubTab() === 'WHY') {
+          <div class="micro-card why-card" [class.full-width]="selectedSubTab() === 'WHY'">
+            <div class="card-header">
+              <span class="card-icon">💡</span>
+              <h3 class="card-title font-monospace">WHY WE ARE USING IT (RATIONALE)</h3>
+            </div>
+            <p class="card-summary">{{ cur.whyWeUseIt.summary }}</p>
+            <ul class="points-list">
+              @for (pt of cur.whyWeUseIt.points; track pt) {
+                <li class="point-item">
+                  <span class="bullet-arrow">▸</span>
+                  <span>{{ pt }}</span>
+                </li>
+              }
+            </ul>
           </div>
-          <p class="card-summary">{{ cur.whyWeUseIt.summary }}</p>
-          <ul class="points-list">
-            @for (pt of cur.whyWeUseIt.points; track pt) {
-              <li class="point-item">
-                <span class="bullet-arrow">▸</span>
-                <span>{{ pt }}</span>
-              </li>
-            }
-          </ul>
-        </div>
+        }
 
         <!-- Section 2: WHERE WE ARE USING IT -->
-        <div class="micro-card where-card">
-          <div class="card-header">
-            <span class="card-icon">📍</span>
-            <h3 class="card-title font-monospace">WHERE WE ARE USING IT (CODE & ENDPOINTS)</h3>
-          </div>
-          <p class="card-summary">{{ cur.whereWeUseIt.description }}</p>
-          <div class="files-list">
-            <div class="sub-label font-monospace">SOURCE FILES:</div>
-            @for (f of cur.whereWeUseIt.files; track f.path) {
-              <div class="file-item">
-                <span class="file-path font-monospace">{{ f.path }}</span>
-                <span class="file-role">{{ f.role }}</span>
+        @if (selectedSubTab() === 'ALL' || selectedSubTab() === 'WHERE') {
+          <div class="micro-card where-card" [class.full-width]="selectedSubTab() === 'WHERE'">
+            <div class="card-header">
+              <span class="card-icon">📍</span>
+              <h3 class="card-title font-monospace">WHERE WE ARE USING IT (CODE & ENDPOINTS)</h3>
+            </div>
+            <p class="card-summary">{{ cur.whereWeUseIt.description }}</p>
+            <div class="files-list">
+              <div class="sub-label font-monospace">SOURCE FILES & IMPLEMENTATIONS:</div>
+              @for (f of cur.whereWeUseIt.files; track f.path) {
+                <div class="file-item">
+                  <span class="file-path font-monospace">{{ f.path }}</span>
+                  <span class="file-role">{{ f.role }}</span>
+                </div>
+              }
+            </div>
+            <div class="endpoints-wrap font-monospace">
+              <div class="sub-label font-monospace">BOUND API ENDPOINTS:</div>
+              <div class="endpoint-chips">
+                @for (ep of cur.whereWeUseIt.endpoints; track ep) {
+                  <span class="endpoint-pill">{{ ep }}</span>
+                }
               </div>
-            }
+            </div>
           </div>
-          <div class="endpoints-wrap font-monospace">
-            <div class="sub-label font-monospace">BOUND API ENDPOINTS:</div>
-            <div class="endpoint-chips">
-              @for (ep of cur.whereWeUseIt.endpoints; track ep) {
-                <span class="endpoint-pill">{{ ep }}</span>
+        }
+
+        <!-- Section 3: WHAT EXISTS (ALL DATA) -->
+        @if (selectedSubTab() === 'ALL' || selectedSubTab() === 'DATA') {
+          <div class="micro-card what-card" [class.full-width]="selectedSubTab() === 'DATA'">
+            <div class="card-header">
+              <span class="card-icon">📊</span>
+              <h3 class="card-title font-monospace">{{ cur.whatExistsAllData.title | uppercase }}</h3>
+            </div>
+
+            <div class="metrics-grid font-monospace">
+              @for (m of cur.whatExistsAllData.metrics; track m.label) {
+                <div class="metric-box">
+                  <div class="metric-val text-cyan">{{ m.value }}</div>
+                  <div class="metric-lbl">{{ m.label }}</div>
+                </div>
+              }
+            </div>
+
+            <div class="entities-list">
+              <div class="sub-label font-monospace">ACTIVE COMPONENTS & DATA ENTITIES:</div>
+              @for (e of cur.whatExistsAllData.entities; track e.name) {
+                <div class="entity-item">
+                  <div class="entity-top">
+                    <span class="entity-name">{{ e.name }}</span>
+                    <span class="entity-status font-monospace">{{ e.status }}</span>
+                  </div>
+                  <div class="entity-details">{{ e.details }}</div>
+                </div>
               }
             </div>
           </div>
-        </div>
-
-        <!-- Section 3: WHAT EXISTS (ALL DATA) -->
-        <div class="micro-card what-card">
-          <div class="card-header">
-            <span class="card-icon">📊</span>
-            <h3 class="card-title font-monospace">{{ cur.whatExistsAllData.title | uppercase }}</h3>
-          </div>
-          
-          <div class="metrics-row">
-            @for (m of cur.whatExistsAllData.metrics; track m.label) {
-              <div class="metric-box">
-                <div class="metric-val font-monospace">{{ m.value }}</div>
-                <div class="metric-lbl">{{ m.label }}</div>
-              </div>
-            }
-          </div>
-
-          <div class="entities-list">
-            <div class="sub-label font-monospace">ACTIVE COMPONENTS & DATA ENTITIES:</div>
-            @for (e of cur.whatExistsAllData.entities; track e.name) {
-              <div class="entity-item">
-                <div class="entity-top">
-                  <span class="entity-name">{{ e.name }}</span>
-                  <span class="entity-status font-monospace">{{ e.status }}</span>
-                </div>
-                <div class="entity-details">{{ e.details }}</div>
-              </div>
-            }
-          </div>
-        </div>
+        }
       </div>
-
-      <!-- Real Workflow / ER / Architectural Diagram Area -->
-      <section class="diagram-section-block">
-        <div class="diagram-header font-monospace">
-          <span class="diagram-icon">📐</span>
-          <span class="diagram-title">REAL SYSTEM WORKFLOW & ARCHITECTURAL SCHEMATIC</span>
-          <span class="diagram-badge">INTERACTIVE VECTOR TOPOLOGY</span>
-        </div>
-
-        <div class="diagram-canvas-wrap">
-          @switch (cur.diagramType) {
-            @case ('FLOW') {
-              <div class="diagram-schematic flow-schematic">
-                <div class="schematic-step">
-                  <div class="step-box" style="border-color: #38bdf8;">
-                    <span class="step-ic">🎙️</span>
-                    <span class="step-name font-monospace">VOICE / UI INPUT</span>
-                    <span class="step-desc">Acoustic 60fps VAD listener tuned to Mamu callsign</span>
-                  </div>
-                  <div class="step-arrow">➔</div>
-                </div>
-
-                <div class="schematic-step">
-                  <div class="step-box" style="border-color: #f59e0b;">
-                    <span class="step-ic">⚡</span>
-                    <span class="step-name font-monospace">DYNAMIC RESOLVER</span>
-                    <span class="step-desc">Zero-latency learned action cache (37 patterns)</span>
-                  </div>
-                  <div class="step-arrow">➔</div>
-                </div>
-
-                <div class="schematic-step">
-                  <div class="step-box" style="border-color: #10b981;">
-                    <span class="step-ic">📚</span>
-                    <span class="step-name font-monospace">HYBRID VECTOR RAG</span>
-                    <span class="step-desc">LanceDB 588 embedded chunks & BM25 overlap</span>
-                  </div>
-                  <div class="step-arrow">➔</div>
-                </div>
-
-                <div class="schematic-step">
-                  <div class="step-box" style="border-color: #a855f7;">
-                    <span class="step-ic">🧠</span>
-                    <span class="step-name font-monospace">COGNITIVE LLM CORE</span>
-                    <span class="step-desc">Local Ollama / Standalone AbhiNativeLLM</span>
-                  </div>
-                  <div class="step-arrow">➔</div>
-                </div>
-
-                <div class="schematic-step">
-                  <div class="step-box" style="border-color: #ec4899;">
-                    <span class="step-ic">🗺️</span>
-                    <span class="step-name font-monospace">KAHN DAG SCHEDULER</span>
-                    <span class="step-desc">Topological task dependency executor & journal</span>
-                  </div>
-                  <div class="step-arrow">➔</div>
-                </div>
-
-                <div class="schematic-step">
-                  <div class="step-box" style="border-color: #06b6d4;">
-                    <span class="step-ic">🖥️</span>
-                    <span class="step-name font-monospace">WIN32 OS & SWARM</span>
-                    <span class="step-desc">Physical keystrokes, active window & squad broadcast</span>
-                  </div>
-                </div>
-              </div>
-            }
-
-            @case ('SWARM') {
-              <div class="diagram-schematic swarm-schematic">
-                <div class="swarm-hub-center">
-                  <div class="hub-avatar">MARK 85</div>
-                  <div class="hub-title font-monospace">COMMANDER & ARBITRATOR</div>
-                  <div class="hub-model font-monospace">Qwen 8.2B DeepSeek-R1</div>
-                </div>
-
-                <div class="swarm-orbit-grid">
-                  <div class="orbit-bot" style="border-color: #3b82f6;">
-                    <span class="bot-icon">🌐</span>
-                    <span class="bot-name">Browser Specialist</span>
-                    <span class="bot-code font-monospace">MARK L</span>
-                  </div>
-                  <div class="orbit-bot" style="border-color: #10b981;">
-                    <span class="bot-icon">🎙️</span>
-                    <span class="bot-name">Comms Officer</span>
-                    <span class="bot-code font-monospace">MARK XLII</span>
-                  </div>
-                  <div class="orbit-bot" style="border-color: #06b6d4;">
-                    <span class="bot-icon">💻</span>
-                    <span class="bot-name">OS & Code Engineer</span>
-                    <span class="bot-code font-monospace">MARK VI</span>
-                  </div>
-                  <div class="orbit-bot" style="border-color: #f59e0b;">
-                    <span class="bot-icon">⛏️</span>
-                    <span class="bot-name">Data Miner / RAG</span>
-                    <span class="bot-code font-monospace">MARK VII</span>
-                  </div>
-                  <div class="orbit-bot" style="border-color: #a855f7;">
-                    <span class="bot-icon">🤖</span>
-                    <span class="bot-name">ML Specialist</span>
-                    <span class="bot-code font-monospace">MARK XXI</span>
-                  </div>
-                  <div class="orbit-bot" style="border-color: #ec4899;">
-                    <span class="bot-icon">📊</span>
-                    <span class="bot-name">Task Strategist</span>
-                    <span class="bot-code font-monospace">MARK XVII</span>
-                  </div>
-                  <div class="orbit-bot" style="border-color: #e11d48;">
-                    <span class="bot-icon">🛡️</span>
-                    <span class="bot-name">QA Auditor & Critic</span>
-                    <span class="bot-code font-monospace">THE CRITIC</span>
-                  </div>
-                  <div class="orbit-bot" style="border-color: #64748b;">
-                    <span class="bot-icon">🔒</span>
-                    <span class="bot-name">Security Guardrail</span>
-                    <span class="bot-code font-monospace">MARK I</span>
-                  </div>
-                </div>
-              </div>
-            }
-
-            @case ('RAG') {
-              <div class="diagram-schematic rag-schematic">
-                <div class="rag-col">
-                  <div class="rag-header-box font-monospace">01. INGESTION & CHUNKING</div>
-                  <div class="rag-pill">TREASURY (SBI Account, IFSC, UPI)</div>
-                  <div class="rag-pill">BUSINESS (Invoices & Settlements)</div>
-                  <div class="rag-pill">SOURCE CODE (584 Modules)</div>
-                  <div class="rag-pill">SKILLS (System Procedures)</div>
-                </div>
-                <div class="step-arrow">➔</div>
-                <div class="rag-col">
-                  <div class="rag-header-box font-monospace">02. 384-DIM EMBEDDING</div>
-                  <div class="rag-pill">Deterministic Normalization</div>
-                  <div class="rag-pill">L2 Distance Space</div>
-                  <div class="rag-pill">LanceDB Apache Arrow Store</div>
-                </div>
-                <div class="step-arrow">➔</div>
-                <div class="rag-col">
-                  <div class="rag-header-box font-monospace">03. HYBRID MATCHING</div>
-                  <div class="rag-pill">Dense Vector Cosine Similarity</div>
-                  <div class="rag-pill">+ BM25 Keyword Overlap Bonus</div>
-                  <div class="rag-pill">Score Threshold >= 0.52</div>
-                </div>
-                <div class="step-arrow">➔</div>
-                <div class="rag-col">
-                  <div class="rag-header-box font-monospace">04. GROUNDED OUTPUT</div>
-                  <div class="rag-pill">Accurate Coded Citations</div>
-                  <div class="rag-pill">Zero Cloud Transmission</div>
-                  <div class="rag-pill">Instant Offline Recall (18ms)</div>
-                </div>
-              </div>
-            }
-
-            @case ('DAG') {
-              <div class="diagram-schematic dag-schematic">
-                <div class="dag-tree">
-                  <div class="dag-level">
-                    <div class="dag-node root font-monospace">
-                      <span class="node-tag">GOAL ROOT</span>
-                      <span>Decompose User Directive</span>
-                    </div>
-                  </div>
-                  <div class="dag-connector-v"></div>
-                  <div class="dag-level multi">
-                    <div class="dag-node font-monospace">
-                      <span class="node-tag">STEP 1</span>
-                      <span>Check Foreground Window</span>
-                    </div>
-                    <div class="dag-node font-monospace">
-                      <span class="node-tag">STEP 2</span>
-                      <span>Retrieve RAG Guidelines</span>
-                    </div>
-                    <div class="dag-node font-monospace">
-                      <span class="node-tag">STEP 3</span>
-                      <span>Security Permission Check</span>
-                    </div>
-                  </div>
-                  <div class="dag-connector-v"></div>
-                  <div class="dag-level">
-                    <div class="dag-node terminal font-monospace">
-                      <span class="node-tag">SYNTHESIS</span>
-                      <span>Execute Physical Action & Commit Journal Audit</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            }
-
-            @case ('LLM') {
-              <div class="diagram-schematic llm-schematic">
-                <div class="llm-tier-box primary">
-                  <div class="tier-label font-monospace">PRIMARY COGNITIVE ENGINE</div>
-                  <div class="tier-model">Ollama (abhi:latest / Qwen3 8.2B DeepSeek-R1 Distill)</div>
-                  <div class="tier-features font-monospace">
-                    <span>◈ &lt;think&gt; reasoning stream</span>
-                    <span>◈ 32k context buffer</span>
-                    <span>◈ High-fidelity code synthesis</span>
-                  </div>
-                </div>
-                <div class="failover-arrow font-monospace">
-                  <span>FAILOVER (IF OLLAMA BUSY)</span>
-                  <span>➔</span>
-                </div>
-                <div class="llm-tier-box secondary">
-                  <div class="tier-label font-monospace">STANDALONE IN-PROCESS ENGINE</div>
-                  <div class="tier-model">AbhiStandaloneEngine (Zero-Crash Fallback)</div>
-                  <div class="tier-features font-monospace">
-                    <span>◈ 100% offline uptime</span>
-                    <span>◈ Rule-based goal decomposer</span>
-                    <span>◈ Safe sovereign companion fallback</span>
-                  </div>
-                </div>
-              </div>
-            }
-
-            @case ('WIN32') {
-              <div class="diagram-schematic win32-schematic">
-                <div class="win32-layer">
-                  <div class="layer-title font-monospace">WINDOWS USER32 & KERNEL32 SUBSYSTEM</div>
-                  <div class="win32-grid">
-                    <div class="win32-card">
-                      <span class="w-icon">🪟</span>
-                      <span class="w-name font-monospace">GetForegroundWindow()</span>
-                      <span class="w-desc">Retrieves active HWND & coordinates at 60fps</span>
-                    </div>
-                    <div class="win32-card">
-                      <span class="w-icon">⌨️</span>
-                      <span class="w-name font-monospace">SendInput() Hotkeys</span>
-                      <span class="w-desc">Direct scan-code injection for native OS commands</span>
-                    </div>
-                    <div class="win32-card">
-                      <span class="w-icon">🔊</span>
-                      <span class="w-name font-monospace">IAudioEndpointVolume</span>
-                      <span class="w-desc">Master system volume scaling and mute toggling</span>
-                    </div>
-                    <div class="win32-card">
-                      <span class="w-icon">📁</span>
-                      <span class="w-name font-monospace">Start Menu Indexer</span>
-                      <span class="w-desc">Scans 90+ shell shortcuts for 0ms binary launches</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            }
-
-            @case ('ER') {
-              <div class="diagram-schematic er-schematic">
-                <div class="er-table-card">
-                  <div class="er-table-header font-monospace">OPERATOR_PROFILE</div>
-                  <div class="er-field"><span>PK</span> <span>operator_id: "mamu"</span></div>
-                  <div class="er-field"><span>ATTR</span> <span>full_name: "Ravuvai Ayyapparayudu"</span></div>
-                  <div class="er-field"><span>ATTR</span> <span>email: "ayyapparayudu.ravuvari@gmail.com"</span></div>
-                  <div class="er-field"><span>ATTR</span> <span>upi_id: "ayyapparayudu.5@ybl"</span></div>
-                </div>
-
-                <div class="er-rel font-monospace">1 : N ➔</div>
-
-                <div class="er-table-card">
-                  <div class="er-table-header font-monospace">BANKING_RAILS</div>
-                  <div class="er-field"><span>PK</span> <span>bank_id: "sbi_main"</span></div>
-                  <div class="er-field"><span>ATTR</span> <span>bank_name: "State Bank of India"</span></div>
-                  <div class="er-field"><span>ATTR</span> <span>account_number: "41130645649"</span></div>
-                  <div class="er-field"><span>ATTR</span> <span>ifsc_code: "SBIN0020507"</span></div>
-                </div>
-
-                <div class="er-rel font-monospace">1 : N ➔</div>
-
-                <div class="er-table-card">
-                  <div class="er-table-header font-monospace">SETTLEMENT_LEDGER</div>
-                  <div class="er-field"><span>PK</span> <span>utr_hash: "UTR-SBI-DF1669"</span></div>
-                  <div class="er-field"><span>FK</span> <span>invoice_id: "INV-2026-001"</span></div>
-                  <div class="er-field"><span>ATTR</span> <span>amount_inr: 1842500</span></div>
-                  <div class="er-field"><span>ATTR</span> <span>status: "SETTLED"</span></div>
-                </div>
-
-                <div class="er-rel font-monospace">1 : 1 ➔</div>
-
-                <div class="er-table-card">
-                  <div class="er-table-header font-monospace">RECEIPT_JOURNAL</div>
-                  <div class="er-field"><span>PK</span> <span>receipt_id: "RCP-SBI-20261115"</span></div>
-                  <div class="er-field"><span>ATTR</span> <span>storage_format: "JSON + Markdown"</span></div>
-                  <div class="er-field"><span>ATTR</span> <span>vector_chunk_id: "chk_sbi_settlement"</span></div>
-                </div>
-              </div>
-            }
-          }
-        </div>
-      </section>
     </main>
   </div>
 </div>
