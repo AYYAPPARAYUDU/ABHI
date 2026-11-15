@@ -65,6 +65,113 @@
   z-index: 50;
 }
 
+/* 3D Architectural Node Topology Ribbon */
+.architectural-node-topology-bar {
+  position: absolute;
+  top: clamp(55px, 7vh, 68px);
+  left: clamp(10px, 1.5vw, 20px);
+  right: clamp(10px, 1.5vw, 20px);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 45;
+  pointer-events: auto;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.architectural-node-topology-bar::-webkit-scrollbar {
+  height: 3px;
+}
+
+.architectural-node-topology-bar::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.3);
+  border-radius: 3px;
+}
+
+.arch-topology-node-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(10, 20, 40, 0.82);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(12px);
+  flex-shrink: 0;
+  text-align: left;
+}
+
+.arch-topology-node-card:hover {
+  background: rgba(15, 30, 60, 0.92);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0, 240, 255, 0.2);
+}
+
+.arch-topology-node-card.active {
+  background: rgba(20, 45, 90, 0.95);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
+}
+
+.node-icon-ring {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.node-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.node-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.node-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.03em;
+}
+
+.node-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  animation: pulse-node 1.8s infinite;
+}
+
+@keyframes pulse-node {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.node-metric {
+  font-size: 9.5px;
+  color: #38bdf8;
+  opacity: 0.9;
+}
+
+.sbi-live-badge {
+  background: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+.arch-node-popup {
+  z-index: 100 !important;
+}
+
 .hud-brand-group {
   display: flex;
   align-items: center;

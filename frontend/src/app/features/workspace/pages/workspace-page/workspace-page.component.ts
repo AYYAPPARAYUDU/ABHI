@@ -8,7 +8,7 @@ import { AgentCommandService } from '../../../../core/services/agent-command.ser
 import { getApiUrl } from '../../../../core/config/api-config';
 import { BusinessService } from '../../../business/services/business.service';
 
-export type WorkspaceViewMode = 'colony' | 'live-business';
+export type WorkspaceViewMode = 'colony' | 'live-business' | 'live-monitors';
 
 interface SmallLLMBrain {
   id: string;
@@ -66,6 +66,10 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
 
   // Workspace Multi-View Mode ('colony' preserved as default)
   readonly activeWorkspaceMode = signal<WorkspaceViewMode>('colony');
+
+  // Unified 3D Architectural Topology & Live Telemetry
+  readonly architecturalData = signal<any>(null);
+  readonly selectedArchNode = signal<any>(null);
 
   readonly agents = this.threeScene.agents;
   readonly selectedAgent = this.threeScene.selectedAgent;
@@ -176,6 +180,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
   constructor() {}
 
   ngOnInit(): void {
+    this.fetchArchitecturalLiveStatus();
     this.fetchActiveContext();
     this.fetchFamilyStatus();
     this.fetchChannelMessages();
@@ -187,15 +192,16 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
       this.cdr.markForCheck();
     });
 
-    // Poll at 3s cadence with memoized comparisons to prevent redundant change detection
+    // Poll at 2.5s cadence with memoized comparisons to prevent redundant change detection
     this.syncTimer = setInterval(() => {
+      this.fetchArchitecturalLiveStatus();
       this.fetchActiveContext();
       this.fetchFamilyStatus();
       this.fetchChannelMessages();
       if (this.activeWorkspaceMode() === 'live-business') {
         this.refreshLiveBusinessData();
       }
-    }, 3000);
+    }, 2500);
   }
 
   ngAfterViewInit(): void {
@@ -416,6 +422,51 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
     } catch {
       // Offline fallback
     }
+  }
+
+  async fetchArchitecturalLiveStatus(): Promise<void> {
+    try {
+      const res = await fetch(getApiUrl('/api/v1/monitors/architectural-live-status'));
+      if (res.ok) {
+        const data = await res.json();
+        this.architecturalData.set(data);
+        if (data.treasury) {
+          this.treasuryOverview.set(data.treasury);
+        }
+        if (data.desktop && data.desktop.active_window_title) {
+          this.activeWindow.set(data.desktop.active_window_title);
+        }
+        if (data.system_resources) {
+          this.systemTelemetry.set({
+            cpu: data.system_resources.cpu_percent,
+            mem_used: data.system_resources.ram_used_gb,
+            mem_total: data.system_resources.ram_total_gb,
+            mem_pct: data.system_resources.ram_percent,
+            battery_pct: null,
+            open_windows_count: data.desktop?.installed_apps_count || 12,
+            resolution: data.desktop?.resolution || '1280x800'
+          });
+        }
+        this.cdr.markForCheck();
+      }
+    } catch (e) {
+      // Retain active signals
+    }
+  }
+
+  selectArchNode(node: any): void {
+    this.selectedArchNode.set(node);
+    if (node.id === 'node_treasury') {
+      this.refreshLiveBusinessData();
+    } else if (node.id === 'node_monitors') {
+      this.fetchAgentLiveScreen('agent_1_commander');
+    }
+    this.cdr.markForCheck();
+  }
+
+  closeArchNodeDrawer(): void {
+    this.selectedArchNode.set(null);
+    this.cdr.markForCheck();
   }
 
   async fetchActiveContext(): Promise<void> {
