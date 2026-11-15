@@ -30,10 +30,10 @@
     </div>
   }
 
-  <!-- Main System & Responsive Navigation Bar (Bootstrap 5 Flex Grid) -->
-  <div class="bar-main-row container-fluid px-3 px-xl-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
-    <!-- Left: Brand Identity, Active Window & Status Indicator -->
-    <div class="bar-left d-flex align-items-center gap-2 gap-md-3">
+  <!-- Main System & Responsive Navigation Bar (Strictly Single-Row No-Wrap Architecture) -->
+  <div class="bar-main-row">
+    <!-- Left: Brand Identity, Active Status & SBI Pill -->
+    <div class="bar-left">
       <!-- High-Tech Brand Pill (VisionOS Spatial Design) -->
       <a routerLink="/home" class="hud-brand-pill" title="Return to Central AI Workspace">
         <div class="brand-orb-icon">
@@ -41,28 +41,26 @@
         </div>
         <div class="brand-text-block">
           <span class="brand-title">ABHI</span>
-          <span class="brand-sub d-none d-sm-inline">{{ currentRouteTitle() }}</span>
+          <span class="brand-sub d-none d-xxl-inline">{{ currentRouteTitle() }}</span>
         </div>
       </a>
 
       <!-- Status Indicator Tag -->
-      <div class="status-indicator-tag d-none d-md-flex" [class.working]="isWorking()" [title]="'System Status: ' + systemStatusLabel()">
+      <div class="status-indicator-tag d-none d-sm-flex" [class.working]="isWorking()" [title]="'System Status: ' + systemStatusLabel()">
         <span class="pulse-dot"></span>
         <span class="status-label font-monospace">{{ systemStatusLabel() }}</span>
       </div>
 
-      <!-- SBI Sovereign Settlement Pill -->
-      <a routerLink="/business" class="topbar-sbi-pill font-monospace d-none d-lg-flex" title="Sovereign Business & State Bank of India Settlement Ledger (ayyapparayudu.5@ybl)">
+      <!-- SBI Sovereign Settlement Pill (Compact) -->
+      <a routerLink="/business" class="topbar-sbi-pill font-monospace d-none d-xl-flex" title="Sovereign Business & State Bank of India Settlement Ledger (ayyapparayudu.5@ybl)">
         <span class="sbi-ic">🏛️</span>
-        <span class="sbi-acc text-cyan">SBI: ****5649</span>
-        <span class="sbi-sep">·</span>
-        <span class="sbi-name">Ravuvai A.</span>
+        <span class="sbi-acc text-cyan">SBI: 5649</span>
       </a>
 
-      <!-- Mobile Navigation Hamburger (Visible on < 1200px) -->
+      <!-- Mobile Navigation Hamburger (Visible on < 1024px) -->
       <button
         type="button"
-        class="mobile-menu-toggler d-xl-none"
+        class="mobile-menu-toggler d-lg-none"
         (click)="toggleMobileNav()"
         aria-label="Toggle Navigation Menu"
         title="Open Navigation"
@@ -71,8 +69,8 @@
       </button>
     </div>
 
-    <!-- Center: Clean Primary Navbar with Direct Links -->
-    <nav class="clean-main-navbar d-none d-xl-flex align-items-center gap-1" role="navigation" aria-label="Main Navigation">
+    <!-- Center: Clean Primary Navbar with Compact Direct Links (Single-Row Rail) -->
+    <nav class="clean-main-navbar d-none d-lg-flex" role="navigation" aria-label="Main Navigation">
       <!-- 1. Home -->
       <a routerLink="/home" class="clean-nav-btn" [class.active]="isActive('/home')" title="Era AI Sovereign HUD">
         <span class="nav-btn-icon">🖥️</span>
@@ -94,17 +92,17 @@
         @if (isActive('/business')) { <span class="nav-active-pip"></span> }
       </a>
 
-      <!-- 4. Command Center -->
-      <a routerLink="/workspace" class="clean-nav-btn" [class.active]="isActive('/workspace')" title="3D Architectural Command Center & Multi-Agent Swarm">
+      <!-- 4. Workspace (Colony Command Center) -->
+      <a routerLink="/workspace" class="clean-nav-btn" [class.active]="isActive('/workspace')" title="3D Workspace Colony & Multi-Agent Swarm">
         <span class="nav-btn-icon">🛰️</span>
-        <span class="nav-btn-text">Command Center</span>
+        <span class="nav-btn-text">Workspace</span>
         @if (isActive('/workspace')) { <span class="nav-active-pip"></span> }
       </a>
 
-      <!-- 5. Architecture & Workflows -->
-      <a routerLink="/architecture" class="clean-nav-btn architecture-nav-btn" [class.active]="isActive('/architecture')" title="System Architecture, Execution Workflows, ER Diagrams & Resource Specs">
+      <!-- 5. Architecture & Workflows (Compact label) -->
+      <a routerLink="/architecture" class="clean-nav-btn architecture-nav-btn" [class.active]="isActive('/architecture')" title="System Architecture, Execution Workflows & ER Schemas">
         <span class="nav-btn-icon">🗺️</span>
-        <span class="nav-btn-text">Architecture & Workflows</span>
+        <span class="nav-btn-text">Architecture</span>
         @if (isActive('/architecture')) { <span class="nav-active-pip"></span> }
       </a>
 
@@ -138,24 +136,24 @@
       </a>
     </nav>
 
-    <!-- Right: Companion Controls (Compact Theme Icon Button, Mobile, Voice, Lang, E-STOP) -->
-    <div class="bar-right d-flex align-items-center gap-2">
+    <!-- Right: Companion Controls (Compact, Unified Single-Row Tray) -->
+    <div class="bar-right">
       <!-- COMPACT THEME CUSTOMIZER ICON TRIGGER -->
       <button
         type="button"
         class="topbar-tool-btn theme-icon-trigger"
         [class.active]="isThemeDrawerOpen()"
         (click)="toggleThemeDrawer($event)"
-        [title]="'Theme: ' + themeService.activeTheme().label + ' (Click to open theme customizer)'"
+        [title]="'Theme: ' + themeService.activeTheme().label + ' (Click to open theme studio)'"
       >
         <span class="btn-icon">🎨</span>
         <span class="theme-color-indicator" [style.background]="themeService.activeTheme().colors.accentPrimary"></span>
       </button>
 
-      <!-- Mobile Controller Hub Trigger -->
+      <!-- Mobile Controller Hub Trigger (Compact) -->
       <button
         type="button"
-        class="topbar-tool-btn mobile-hub-btn d-none d-sm-flex"
+        class="topbar-tool-btn mobile-hub-btn"
         appAnimeInteractive
         [appAnimeType]="'button'"
         [class.connected]="isMobileConnected()"
@@ -163,23 +161,23 @@
         [title]="mobileTooltip()"
       >
         <span class="btn-icon">📱</span>
-        <span class="btn-text d-none d-md-inline">{{ mobileLabel() }}</span>
+        <span class="btn-text d-none d-xxl-inline">Mobile</span>
         @if (isMobileConnected()) {
           <span class="topbar-pulse-dot"></span>
         }
       </button>
 
-      <!-- Voice & Biometrics Center Trigger -->
+      <!-- Voice & Biometrics Center Trigger (Compact) -->
       <button
         type="button"
-        class="topbar-tool-btn voice-center-btn d-none d-md-flex"
+        class="topbar-tool-btn voice-center-btn"
         appAnimeInteractive
         [appAnimeType]="'button'"
         (click)="openVoiceCenter()"
         title="Voice & Biometrics Command Center"
       >
         <span class="btn-icon">⚙️</span>
-        <span class="btn-text d-none d-lg-inline">Voice Hub</span>
+        <span class="btn-text d-none d-xxl-inline">Voice</span>
       </button>
 
       <!-- Voice Audio Speech Synthesis Toggle -->
@@ -208,7 +206,7 @@
           [title]="'Active Language: ' + getLanguageLabel(speechVoice.selectedLanguage())"
         >
           <span class="btn-icon">{{ getLanguageFlag(speechVoice.selectedLanguage()) }}</span>
-          <span class="btn-text font-monospace d-none d-sm-inline">{{ getLanguageShort(speechVoice.selectedLanguage()) }}</span>
+          <span class="btn-text font-monospace d-none d-xl-inline">{{ getLanguageShort(speechVoice.selectedLanguage()) }}</span>
           <span class="dropdown-arrow">▾</span>
         </button>
         @if (isLangDropdownOpen()) {
@@ -293,7 +291,7 @@
         }
       </div>
 
-      <!-- Immediate Emergency Stop Trigger -->
+      <!-- Immediate Emergency Stop Trigger (Compact Pill) -->
       @if (stateService.safety().emergencyStopped) {
         <button
           type="button"
@@ -301,7 +299,8 @@
           disabled
           title="System Emergency Stopped"
         >
-          STOPPED
+          <span class="btn-icon">🛑</span>
+          <span class="btn-text d-none d-sm-inline">STOPPED</span>
         </button>
       } @else {
         <button
@@ -310,13 +309,14 @@
           (click)="stateService.triggerEmergencyStop()"
           title="Immediate Emergency Stop"
         >
-          E-STOP
+          <span class="btn-icon">🛑</span>
+          <span class="btn-text d-none d-sm-inline">E-STOP</span>
         </button>
       }
     </div>
   </div>
 
-  <!-- RESPONSIVE MOBILE NAVIGATION SHEET (DROPDOWN DRAWER FOR < 1200PX) -->
+  <!-- RESPONSIVE MOBILE NAVIGATION SHEET (DROPDOWN DRAWER FOR < 1024PX) -->
   @if (isMobileNavOpen()) {
     <div class="mobile-nav-backdrop" (click)="closeMobileNav()">
       <div class="mobile-nav-sheet" (click)="$event.stopPropagation()">
@@ -349,14 +349,14 @@
           <a routerLink="/workspace" class="mobile-nav-item" (click)="closeMobileNav()">
             <span class="item-icon">🛰️</span>
             <div class="item-text">
-              <span class="item-title">Command Center</span>
+              <span class="item-title">Workspace</span>
               <span class="item-desc">3D Workspace & Multi-Agent Swarm</span>
             </div>
           </a>
           <a routerLink="/architecture" class="mobile-nav-item" (click)="closeMobileNav()">
             <span class="item-icon">🗺️</span>
             <div class="item-text">
-              <span class="item-title">Architecture & Workflows</span>
+              <span class="item-title">Architecture</span>
               <span class="item-desc">System Blueprint & Schematics</span>
             </div>
           </a>

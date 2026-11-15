@@ -6,11 +6,10 @@ import { ThreeSceneManagerService, AgentNode } from '../../../../shared/3d/three
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { AgentCommandService } from '../../../../core/services/agent-command.service';
 import { getApiUrl } from '../../../../core/config/api-config';
-import { BusinessService } from '../../../business/services/business.service';
 import { AgentOfficePageComponent } from '../../../agent-office/pages/agent-office-page/agent-office-page.component';
 import { HubSpokePageComponent } from '../../../hub-spoke/pages/hub-spoke-page/hub-spoke-page.component';
 
-export type WorkspaceViewMode = 'colony' | 'hub-spoke' | 'agent-works' | 'live-business';
+export type WorkspaceViewMode = 'colony' | 'hub-spoke' | 'agent-works';
 
 interface SmallLLMBrain {
   id: string;
@@ -63,7 +62,6 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
   readonly threeScene = inject(ThreeSceneManagerService);
   readonly speechVoice = inject(SpeechVoiceService);
   readonly commandService = inject(AgentCommandService);
-  readonly businessService = inject(BusinessService);
   readonly cdr = inject(ChangeDetectorRef);
 
   // Workspace Multi-View Mode ('colony' preserved as default)
@@ -76,34 +74,6 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
   readonly agents = this.threeScene.agents;
   readonly selectedAgent = this.threeScene.selectedAgent;
   readonly activeStation = signal<AgentNode | null>(null);
-
-  // Live Real-World Business / Treasury State
-  readonly treasuryOverview = signal<any>({
-    settled_revenue_inr: 1842500,
-    settled_revenue_usd: 21057.14,
-    total_invoiced_inr: 1842500,
-    pending_invoices_count: 0,
-    settled_transactions_count: 14,
-    bank_name: 'State Bank of India',
-    account_number_masked: 'SBI ****5649',
-    account_holder: 'Ravuvai Ayyapparayudu',
-    ifsc_code: 'SBIN0020507',
-    upi_id: 'ayyapparayudu.5@ybl'
-  });
-  readonly settlementLedger = signal<any[]>([]);
-  readonly treasuryReceipts = signal<any[]>([]);
-  readonly liveProjects = signal<any[]>([]);
-  readonly isSettlingSbi = signal<boolean>(false);
-  readonly sbiSettlementStatus = signal<string | null>(null);
-  readonly isExecutingProjectStep = signal<boolean>(false);
-  readonly selectedLedgerTab = signal<'LEDGER' | 'RECEIPTS' | 'PROJECTS' | 'ACTIONS'>('LEDGER');
-
-  newInvoiceClient = 'Global AI Enterprise Solutions';
-  newInvoiceService = 'Autonomous Multi-Agent Cluster & Continuous Integration';
-  newInvoiceAmount = 45000;
-  newUtrNumber = '';
-  newUtrAmount = 18500;
-  newUtrPayer = 'Scale AI Cloud Systems';
 
   // Deliberation state
   readonly isDeliberating = signal(false);
@@ -207,9 +177,6 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
       this.fetchActiveContext();
       this.fetchFamilyStatus();
       this.fetchChannelMessages();
-      if (this.activeWorkspaceMode() === 'live-business') {
-        this.refreshLiveBusinessData();
-      }
     }, 2500);
   }
 
@@ -439,9 +406,6 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
       if (res.ok) {
         const data = await res.json();
         this.architecturalData.set(data);
-        if (data.treasury) {
-          this.treasuryOverview.set(data.treasury);
-        }
         if (data.desktop && data.desktop.active_window_title) {
           this.activeWindow.set(data.desktop.active_window_title);
         }
@@ -465,9 +429,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
 
   selectArchNode(node: any): void {
     this.selectedArchNode.set(node);
-    if (node.id === 'node_treasury') {
-      this.refreshLiveBusinessData();
-    } else if (node.id === 'node_monitors') {
+    if (node.id === 'node_monitors') {
       this.fetchAgentLiveScreen('agent_1_commander');
     }
     this.cdr.markForCheck();
@@ -911,129 +873,8 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
           this.threeScene.onResize(rect.width, rect.height);
         }
       }, 60);
-    } else if (mode === 'live-business') {
-      this.refreshLiveBusinessData();
     }
     this.cdr.markForCheck();
-  }
-
-  refreshLiveBusinessData(): void {
-    this.businessService.fetchTreasuryOverview().subscribe({
-      next: (data) => {
-        if (data) {
-          this.treasuryOverview.set(data);
-          if (data.recent_settlements && Array.isArray(data.recent_settlements) && data.recent_settlements.length > 0) {
-            this.settlementLedger.set(data.recent_settlements);
-          }
-          this.cdr.markForCheck();
-        }
-      }
-    });
-
-    this.businessService.fetchTreasuryReceipts().subscribe({
-      next: (receipts) => {
-        if (receipts && receipts.length > 0) {
-          this.treasuryReceipts.set(receipts);
-          this.cdr.markForCheck();
-        }
-      }
-    });
-
-    this.businessService.fetchProjects().subscribe({
-      next: (projs) => {
-        if (projs && projs.length > 0) {
-          this.liveProjects.set(projs);
-          this.cdr.markForCheck();
-        }
-      }
-    });
-  }
-
-  async triggerAutomatedSbiSettlement(): Promise<void> {
-    if (this.isSettlingSbi()) return;
-    this.isSettlingSbi.set(true);
-    this.sbiSettlementStatus.set('Initiating automated SBI settlement via UPI (ayyapparayudu.5@ybl)...');
-    this.cdr.markForCheck();
-
-    const utr = this.newUtrNumber.trim() || `SBIN${new Date().toISOString().slice(2, 10).replace(/-/g, '')}${Math.floor(100000 + Math.random() * 900000)}`;
-    const amount = Number(this.newUtrAmount) || 18500;
-    const payer = this.newUtrPayer.trim() || 'Scale AI Cloud Systems';
-
-    this.businessService.verifySbiSettlement({
-      utr_number: utr,
-      amount_inr: amount,
-      payer_name: payer
-    }).subscribe({
-      next: (res) => {
-        this.isSettlingSbi.set(false);
-        this.sbiSettlementStatus.set(`✓ Settled ₹${amount.toLocaleString('en-IN')} to SBI ****5649 (UTR: ${utr}). Dual-state cryptographic receipt sealed.`);
-        this.newUtrNumber = '';
-        this.refreshLiveBusinessData();
-        this.cdr.markForCheck();
-        if (this.voiceStreamEnabled()) {
-          this.speechVoice.speak(`Automated payout of rupees ${amount} verified and settled to State Bank of India account.`);
-        }
-      },
-      error: () => {
-        this.isSettlingSbi.set(false);
-        const fallbackRecord = {
-          transaction_id: utr,
-          utr_number: utr,
-          amount_inr: amount,
-          amount_usd: Math.round(amount / 87.5),
-          client_name: payer,
-          beneficiary_account: 'SBI ****5649',
-          account_holder: 'Ravuvai Ayyapparayudu',
-          ifsc: 'SBIN0020507',
-          channel: 'UPI (ayyapparayudu.5@ybl)',
-          settled_at: new Date().toISOString(),
-          status: 'SETTLED_TO_SBI_ACCOUNT'
-        };
-        this.settlementLedger.update(list => [fallbackRecord, ...list]);
-        this.treasuryOverview.update(ov => ({
-          ...ov,
-          settled_revenue_inr: (ov.settled_revenue_inr || ov.total_settled_revenue_inr || 1842500) + amount,
-          total_settled_revenue_inr: (ov.total_settled_revenue_inr || ov.settled_revenue_inr || 1842500) + amount,
-          settled_transactions_count: (ov.settled_transactions_count || 14) + 1
-        }));
-        this.sbiSettlementStatus.set(`✓ Settled ₹${amount.toLocaleString('en-IN')} to SBI ****5649 (UTR: ${utr}) [Cryptographic WAL Sealed]`);
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  async executeAutomatedProjectStep(projectId: string): Promise<void> {
-    this.isExecutingProjectStep.set(true);
-    this.businessService.executeNextStep(projectId, false).subscribe({
-      next: () => {
-        this.isExecutingProjectStep.set(false);
-        this.refreshLiveBusinessData();
-        if (this.voiceStreamEnabled()) {
-          this.speechVoice.speak('Autonomous business project milestone executed.');
-        }
-      },
-      error: () => {
-        this.isExecutingProjectStep.set(false);
-      }
-    });
-  }
-
-  async generateSbiInvoice(): Promise<void> {
-    if (!this.newInvoiceClient || !this.newInvoiceAmount) return;
-    this.businessService.createTreasuryInvoice({
-      client_name: this.newInvoiceClient,
-      service_description: this.newInvoiceService,
-      amount_inr: this.newInvoiceAmount,
-      mark_as_settled: false
-    }).subscribe({
-      next: () => {
-        this.sbiSettlementStatus.set('✓ Tax Invoice generated with direct UPI (ayyapparayudu.5@ybl) and SBI settlement route.');
-        this.refreshLiveBusinessData();
-      },
-      error: () => {
-        this.sbiSettlementStatus.set('✓ Tax Invoice draft recorded in sovereign treasury.');
-      }
-    });
   }
 
   private hasListChanged<T>(prev: T[], next: T[], keyFn: (item: T) => any): boolean {

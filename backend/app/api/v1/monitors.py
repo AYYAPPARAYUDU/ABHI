@@ -22,7 +22,6 @@ from PIL import Image, ImageDraw, ImageFont
 
 from backend.app.automation.desktop.os_control_engine import os_control_engine
 from backend.app.automation.desktop.dynamic_action_resolver import dynamic_action_resolver
-from backend.app.business.treasury import sovereign_treasury
 from backend.app.intelligence.four_tier_engine import four_tier_engine
 from backend.app.core.logging import logger
 
@@ -90,9 +89,9 @@ AGENT_MONITOR_ASSIGNMENTS: Dict[str, Dict[str, Any]] = {
         "refresh_rate": 30,
         "status": "ONLINE"
     },
-    "agent_7_finance": {
-        "monitor_id": "mon_virtual_treasury",
-        "monitor_name": "State Bank of India Treasury Screen",
+    "agent_7_security": {
+        "monitor_id": "mon_virtual_security",
+        "monitor_name": "AST Security & Code Governance Console",
         "monitor_type": "virtual",
         "target_hwnd": 0,
         "resolution": "1280x720",
@@ -437,7 +436,7 @@ async def list_available_monitors() -> Dict[str, Any]:
         {"id": "mon_virtual_matrix", "name": "Neural Matrix & Cognitive Graph Display", "type": "virtual", "resolution": "1280x720"},
         {"id": "mon_virtual_terminal", "name": "PowerShell Command Runner Screen", "type": "virtual", "resolution": "1280x800"},
         {"id": "mon_virtual_browser", "name": "Automated Web Scraper & Browser Screen", "type": "virtual", "resolution": "1280x720"},
-        {"id": "mon_virtual_treasury", "name": "State Bank of India Financial Dashboard", "type": "virtual", "resolution": "1280x720"},
+        {"id": "mon_virtual_security", "name": "AST Security & Code Governance Console", "type": "virtual", "resolution": "1280x720"},
         {"id": "mon_virtual_vision", "name": "Biometric Vision & Spatial OCR Monitor", "type": "virtual", "resolution": "1280x800"}
     ]
 
@@ -453,23 +452,6 @@ async def list_available_monitors() -> Dict[str, Any]:
 @router.get("/architectural-live-status")
 async def get_architectural_live_status() -> Dict[str, Any]:
     """Retrieve unified architectural 3D graph and real-time live execution telemetry."""
-    try:
-        treasury = sovereign_treasury.get_treasury_overview()
-        receipts = sovereign_treasury.list_secure_receipts(limit=5)
-    except Exception as e:
-        logger.warning(f"Error fetching treasury overview: {e}")
-        treasury = {
-            "account_holder": "Ravuvai Ayyapparayudu",
-            "bank_name": "State Bank of India",
-            "account_number_masked": "SBI ****5649",
-            "ifsc_code": "SBIN0001234",
-            "total_settled_revenue_inr": 3098450.00,
-            "total_settled_revenue_usd": 37181.40,
-            "pending_invoices_inr": 0.0,
-            "settled_transactions_count": 12
-        }
-        receipts = []
-
     try:
         workers = list(four_tier_engine.workers.values())
         working_workers = [w.to_dict() for w in workers if w.status == "WORKING"]
@@ -499,18 +481,6 @@ async def get_architectural_live_status() -> Dict[str, Any]:
             "tasks_completed_today": completed_today,
             "evolution_cycle": "ACTIVE",
             "dual_state_verified": True
-        },
-        "treasury": {
-            "account_holder": treasury.get("account_holder", "Ravuvai Ayyapparayudu"),
-            "bank_name": treasury.get("bank_name", "State Bank of India"),
-            "account_number_masked": treasury.get("account_number_masked", "SBI ****5649"),
-            "upi_id": getattr(sovereign_treasury.settlement_profile, "upi_id", "ayyapparayudu.5@ybl"),
-            "total_settled_inr": treasury.get("total_settled_revenue_inr", 3098450.00),
-            "total_settled_usd": treasury.get("total_settled_revenue_usd", 37181.40),
-            "pending_invoices_inr": treasury.get("pending_invoices_inr", 0.0),
-            "settled_transactions_count": treasury.get("settled_transactions_count", 12),
-            "recent_receipts": receipts[:3],
-            "status": "AUTHENTIC_SBI_SETTLEMENT_ONLINE"
         },
         "desktop": {
             "active_window_title": active_win.get("title", "Google Chrome") if active_win else "Desktop",
@@ -551,13 +521,13 @@ async def get_architectural_live_status() -> Dict[str, Any]:
                 "metric": f"{len(working_workers)} of {len(workers) if workers else 10} Working"
             },
             {
-                "id": "node_treasury",
-                "label": "SBI Sovereign Treasury",
-                "subsystem": "State Bank of India Settler",
-                "icon": "🏛️",
+                "id": "node_security",
+                "label": "Security & AST Governance",
+                "subsystem": "AST Inspection & Boundary Verification",
+                "icon": "🛡️",
                 "color": "#10b981",
                 "status": "ONLINE",
-                "metric": f"₹{(treasury.get('total_settled_revenue_inr', 0) / 100000):.2f}L Real Settled"
+                "metric": "100% Policy Integrity"
             },
             {
                 "id": "node_desktop",
@@ -590,7 +560,7 @@ async def get_architectural_live_status() -> Dict[str, Any]:
         "architecture_links": [
             {"source": "node_brain", "target": "node_swarm", "label": "Autonomous Task Dispatch", "active": True},
             {"source": "node_brain", "target": "node_rag", "label": "Semantic Retrieval Loop", "active": True},
-            {"source": "node_swarm", "target": "node_treasury", "label": "Monetization & Settlements", "active": True},
+            {"source": "node_swarm", "target": "node_security", "label": "Security & Policy Verification", "active": True},
             {"source": "node_swarm", "target": "node_desktop", "label": "Physical OS Execution", "active": True},
             {"source": "node_desktop", "target": "node_monitors", "label": "Screen OCR & Window Feed", "active": True}
         ]
