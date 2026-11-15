@@ -28,25 +28,13 @@
       <button
         type="button"
         class="tab-pill-btn"
-        [class.active]="activeWorkspaceMode() === 'live-agents'"
-        (click)="setWorkspaceMode('live-agents')"
-        title="Live Agents 8-Pod Hub & Spoke 3D Architecture"
-      >
-        <span class="pill-icon">🧠</span>
-        <span class="pill-label">Live Agents HQ</span>
-        <span class="pill-badge-hub">8-POD HUB</span>
-      </button>
-
-      <button
-        type="button"
-        class="tab-pill-btn"
         [class.active]="activeWorkspaceMode() === 'agent-works'"
         (click)="setWorkspaceMode('agent-works')"
-        title="Corporate Architectural Office Floorplan"
+        title="3D AI Agent Corporate Office Floorplan (Claw3D / Agent Office)"
       >
         <span class="pill-icon">🏢</span>
-        <span class="pill-label">Agent Works & Floorplan</span>
-        <span class="pill-badge-office">LIVE OFFICE</span>
+        <span class="pill-label">3D Agent Office</span>
+        <span class="pill-badge-office">LIVE 3D OFFICE</span>
       </button>
 
       <button
@@ -564,17 +552,10 @@
   }
   </div> <!-- colony-view-wrapper end -->
 
-  <!-- View 2: Live Agents 3D HQ (8-Pod Hub & Spoke Architecture) -->
-  @if (activeWorkspaceMode() === 'live-agents') {
-    <div class="embedded-view-container" role="region" aria-label="Live Agents 3D HQ">
-      <app-sample-page [initialMode]="'hub-and-spoke'" (modeChange)="setWorkspaceMode($event)"></app-sample-page>
-    </div>
-  }
-
-  <!-- View 3: Agent Works & Floorplan (Corporate Architectural Floorplan) -->
+  <!-- View 2: Agent Works & 3D Office Floorplan (Claw3D / Agent Office Architecture) -->
   @if (activeWorkspaceMode() === 'agent-works') {
-    <div class="embedded-view-container" role="region" aria-label="Agent Works Floorplan Office">
-      <app-sample-page [initialMode]="'corporate-floorplan'" (modeChange)="setWorkspaceMode($event)"></app-sample-page>
+    <div class="embedded-view-container" role="region" aria-label="3D AI Agent Office Floorplan">
+      <app-agent-office-page></app-agent-office-page>
     </div>
   }
 

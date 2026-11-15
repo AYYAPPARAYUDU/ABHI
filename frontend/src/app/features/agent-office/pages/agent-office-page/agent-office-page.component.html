@@ -1,0 +1,281 @@
+<div class="agent-office-container" role="region" aria-label="3D AI Agent Office Command Center">
+  <!-- Central 3D Interactive WebGL Canvas Viewport -->
+  <div class="office-viewport-canvas-wrapper">
+    <canvas #officeCanvas class="office-three-canvas"></canvas>
+
+    <!-- Camera Navigation Quick-Bar (Bottom Center Floating) -->
+    <div class="camera-presets-bar">
+      <button
+        type="button"
+        class="cam-btn"
+        (click)="setCameraPreset('isometric')"
+        title="Full Isometric Office View"
+      >
+        <span>📐</span> Isometric
+      </button>
+      <button
+        type="button"
+        class="cam-btn"
+        (click)="setCameraPreset('bullpen')"
+        title="Focus on Bullpen Workstations"
+      >
+        <span>💻</span> Bullpen
+      </button>
+      <button
+        type="button"
+        class="cam-btn"
+        (click)="setCameraPreset('lounge')"
+        title="Focus on Coffee Bar & Lounge"
+      >
+        <span>☕</span> Lounge
+      </button>
+      <button
+        type="button"
+        class="cam-btn"
+        (click)="setCameraPreset('manager')"
+        title="Focus on Executive Manager Office"
+      >
+        <span>👔</span> Manager
+      </button>
+    </div>
+  </div>
+
+  <!-- FLOATING LEFT HUD PANEL (Matches Reference Image media_1794747941448_71e02e55.jpg) -->
+  <aside class="office-left-panel" aria-label="Team Operations & Activity">
+    <!-- 1. Quad Metric KPI Cards (2x2 Grid) -->
+    <div class="quad-kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-label">ACTIVE AGENTS</span>
+        <div class="kpi-value text-green">
+          {{ activeAgentsCount() }}/{{ totalAgentsCount() }}
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">RUNNING TASKS</span>
+        <div class="kpi-value">
+          {{ runningTasksCount() }}
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">COMPLETED TASKS</span>
+        <div class="kpi-value">
+          {{ completedTasksCount() }}
+        </div>
+      </div>
+
+      <div class="kpi-card">
+        <span class="kpi-label">PROJECT PROGRESS</span>
+        <div class="kpi-value text-blue">
+          {{ projectProgress() }}%
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Active Project Bar -->
+    <div class="active-project-card">
+      <div class="project-info">
+        <span class="project-name">{{ activeProjectTitle() }}</span>
+        <span
+          class="project-status-pill"
+          [class.idle]="activeProjectStatus() === 'IDLE'"
+          [class.active]="activeProjectStatus() === 'IN PROGRESS'"
+          [class.completed]="activeProjectStatus() === 'COMPLETED'"
+        >
+          {{ activeProjectStatus() }}
+        </span>
+      </div>
+      @if (activeProjectStatus() === 'IN PROGRESS') {
+        <div class="project-progress-bar-track">
+          <div class="project-progress-bar-fill" [style.width.%]="projectProgress()"></div>
+        </div>
+      }
+    </div>
+
+    <!-- 3. New Task For The Team -->
+    <div class="new-task-section">
+      <h3 class="section-heading">NEW TASK FOR THE TEAM</h3>
+      <div class="task-input-wrapper">
+        <input
+          type="text"
+          class="team-task-input"
+          placeholder="e.g. Create a modern e-commerce website"
+          [(ngModel)]="teamTaskInput"
+          (keydown.enter)="startTeamTask()"
+          [disabled]="isExecutingTeamTask()"
+        />
+        <button
+          type="button"
+          class="task-start-btn"
+          (click)="startTeamTask()"
+          [disabled]="isExecutingTeamTask() || !teamTaskInput.trim()"
+        >
+          @if (isExecutingTeamTask()) {
+            <span class="spinner-dot"></span>
+          } @else {
+            ▶ Start
+          }
+        </button>
+      </div>
+
+      <!-- Quick Preset Suggestions -->
+      <div class="preset-suggestions">
+        <button
+          type="button"
+          class="preset-chip-btn"
+          (click)="setPresetTask('Create a modern e-commerce website')"
+        >
+          Create a modern e-commerce website
+        </button>
+        <button
+          type="button"
+          class="preset-chip-btn"
+          (click)="setPresetTask('Build an analytics dashboard with charts')"
+        >
+          Build an analytics dashboard with charts
+        </button>
+        <button
+          type="button"
+          class="preset-chip-btn"
+          (click)="setPresetTask('Landing page for a coffee brand')"
+        >
+          Landing page for a coffee brand
+        </button>
+      </div>
+    </div>
+
+    <!-- 4. Agent Activity List -->
+    <div class="agent-activity-section">
+      <h3 class="section-heading">AGENT ACTIVITY</h3>
+      <div class="agent-list">
+        @for (agent of agents; track agent.id) {
+          <div
+            class="agent-activity-card"
+            [class.selected]="selectedAgent()?.id === agent.id"
+            (click)="focusAgent(agent)"
+            [title]="'Click to focus 3D camera on ' + agent.name + '\'s desk'"
+          >
+            <div class="agent-avatar" [style.backgroundColor]="agent.avatarBg">
+              {{ agent.avatarLetter }}
+            </div>
+            <div class="agent-details">
+              <div class="agent-name-role">
+                <span class="name">{{ agent.name }}</span>
+                <span class="role-sep">·</span>
+                <span class="role">{{ agent.role }}</span>
+              </div>
+              <div class="agent-current-action">
+                {{ agent.currentAction }}
+              </div>
+            </div>
+            <div
+              class="agent-status-pill"
+              [class.idle]="agent.status === 'Idle'"
+              [class.active]="agent.status === 'Active'"
+            >
+              <span class="status-dot"></span>
+              {{ agent.status }}
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- 5. Task Timeline -->
+    <div class="task-timeline-section">
+      <h3 class="section-heading">TASK TIMELINE</h3>
+      @if (taskTimeline().length === 0) {
+        <p class="timeline-empty-msg">
+          Tasks appear here once the manager splits the project
+        </p>
+      } @else {
+        <div class="timeline-stepper">
+          @for (step of taskTimeline(); track step.step) {
+            <div class="timeline-step-row" [class]="'step-' + step.status">
+              <div class="step-indicator">
+                <div class="step-circle">{{ step.step }}</div>
+                <div class="step-connector"></div>
+              </div>
+              <div class="step-body">
+                <div class="step-header">
+                  <span class="step-title">{{ step.title }}</span>
+                  <span class="step-owner-tag font-monospace">{{ step.owner }}</span>
+                </div>
+                <p class="step-desc">{{ step.detail }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </aside>
+
+  <!-- FLOATING RIGHT HUD PANEL: AGENT COMMUNICATION (Matches Reference Image) -->
+  <aside class="office-right-panel" aria-label="Agent Communication Feed">
+    <div class="comm-header">
+      <h3 class="comm-title">AGENT COMMUNICATION</h3>
+      <span class="comm-channel">
+        <span class="channel-dot"></span> team channel
+      </span>
+    </div>
+
+    <div class="comm-message-feed">
+      @for (msg of teamChannelMessages(); track msg.id) {
+        <div class="comm-message-row">
+          <div class="msg-author-row">
+            <span class="msg-sender" [style.color]="msg.color">{{ msg.sender }}</span>
+            <span class="msg-time">{{ msg.time }}</span>
+          </div>
+          <div class="msg-body">
+            {{ msg.message }}
+          </div>
+        </div>
+      }
+    </div>
+  </aside>
+
+  <!-- Focused Agent Station Modal (Drawer when clicking an agent) -->
+  @if (selectedAgent(); as curAgent) {
+    <div class="agent-detail-dock">
+      <div class="dock-header">
+        <div class="dock-identity">
+          <div class="dock-avatar" [style.backgroundColor]="curAgent.avatarBg">
+            {{ curAgent.avatarLetter }}
+          </div>
+          <div>
+            <div class="dock-name-row">
+              <span class="dock-name">{{ curAgent.name }}</span>
+              <span class="dock-mark font-monospace">{{ curAgent.suitMark }}</span>
+              <span class="dock-status-badge">{{ curAgent.status }}</span>
+            </div>
+            <p class="dock-role">{{ curAgent.role }} // {{ curAgent.department }}</p>
+          </div>
+        </div>
+        <div class="dock-controls">
+          <button type="button" class="dock-cam-btn" (click)="focusAgent(curAgent)">
+            🎯 Recenter Camera
+          </button>
+          <button type="button" class="dock-close-btn" (click)="selectedAgent.set(null)">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div class="dock-body-grid">
+        <div class="dock-col">
+          <span class="dock-label">COGNITIVE MODEL ENGINE</span>
+          <p class="dock-val text-cyan font-monospace">{{ curAgent.modelName }}</p>
+        </div>
+        <div class="dock-col">
+          <span class="dock-label">CURRENT MISSION SUMMARY</span>
+          <p class="dock-val">{{ curAgent.currentWorkSummary }}</p>
+        </div>
+        <div class="dock-col">
+          <span class="dock-label">STATION 3D COORDINATES</span>
+          <p class="dock-val font-monospace">X: {{ curAgent.deskPos[0] }}m · Y: 0m · Z: {{ curAgent.deskPos[2] }}m</p>
+        </div>
+      </div>
+    </div>
+  }
+</div>

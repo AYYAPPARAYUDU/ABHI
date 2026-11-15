@@ -28,6 +28,18 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'agent-office',
+    loadComponent: () =>
+      import('./features/agent-office/pages/agent-office-page/agent-office-page.component').then(
+        (m) => m.AgentOfficePageComponent
+      )
+  },
+  {
+    path: 'office',
+    redirectTo: 'agent-office',
+    pathMatch: 'full'
+  },
+  {
     path: 'architecture',
     loadComponent: () =>
       import('./features/architecture/pages/architecture-page/architecture-page.component').then(

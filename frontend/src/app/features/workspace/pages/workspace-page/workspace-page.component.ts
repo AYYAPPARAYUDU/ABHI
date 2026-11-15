@@ -7,9 +7,9 @@ import { SpeechVoiceService } from '../../../../core/services/speech-voice.servi
 import { AgentCommandService } from '../../../../core/services/agent-command.service';
 import { getApiUrl } from '../../../../core/config/api-config';
 import { BusinessService } from '../../../business/services/business.service';
-import { SamplePageComponent } from '../../../sample/pages/sample-page/sample-page.component';
+import { AgentOfficePageComponent } from '../../../agent-office/pages/agent-office-page/agent-office-page.component';
 
-export type WorkspaceViewMode = 'colony' | 'live-agents' | 'agent-works' | 'live-business';
+export type WorkspaceViewMode = 'colony' | 'agent-works' | 'live-business';
 
 interface SmallLLMBrain {
   id: string;
@@ -50,7 +50,7 @@ interface ChannelMessage {
 @Component({
   selector: 'app-workspace-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, SamplePageComponent],
+  imports: [CommonModule, FormsModule, AgentOfficePageComponent],
   templateUrl: './workspace-page.component.html',
   styleUrl: './workspace-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
