@@ -3394,18 +3394,26 @@
 
 /* Agent Work & Intelligence Drawer Styling */
 .agent-work-drawer {
-  width: min(520px, 94vw);
-  max-width: 520px;
-  background: rgba(10, 16, 28, 0.94);
-  backdrop-filter: blur(24px);
+  width: min(780px, 95vw);
+  max-width: 780px;
+  background: rgba(10, 16, 28, 0.95);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   border-width: 1px;
   border-style: solid;
-  border-radius: 16px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+  border-radius: 18px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), 0 0 24px rgba(56, 189, 248, 0.12);
   display: flex;
   flex-direction: column;
   z-index: 50;
   overflow: hidden;
+}
+
+.status-dot-mini {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
 }
 
 .popup-title-top {

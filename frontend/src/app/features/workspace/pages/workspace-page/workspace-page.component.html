@@ -355,133 +355,205 @@
     </aside>
   }
 
-  <!-- Floating Dynamic Right-Side Agent Intelligence & Work Drawer -->
+  <!-- Floating Dynamic Right-Side Agent Intelligence & Work Drawer (Bootstrap Grid & Flex Redesign) -->
   @if ((activeStation() || selectedAgent()); as current) {
     <aside class="station-side-popup agent-work-drawer" [style.borderColor]="current.color" role="dialog" aria-label="Agent Work and Intelligence Drawer">
-      <!-- Header with Agent Profile & Status -->
-      <div class="popup-header">
-        <div class="popup-agent-info">
-          <div class="popup-avatar" [style.borderColor]="current.color" [style.boxShadow]="'0 0 16px ' + current.color + '44'">
+      <!-- 1. Header with Agent Profile, Model & Live Status -->
+      <div class="popup-header d-flex justify-content-between align-items-center p-3 border-bottom">
+        <div class="d-flex align-items-center gap-3">
+          <div class="popup-avatar rounded-circle d-flex align-items-center justify-content-center" [style.borderColor]="current.color" [style.boxShadow]="'0 0 16px ' + current.color + '44'">
             <span class="avatar-icon">{{ current.icon }}</span>
           </div>
-          <div class="popup-title-row">
-            <div class="popup-title-top">
-              <h2 class="popup-agent-name">{{ agentWork()?.name || current.name }}</h2>
-              <span class="popup-model-badge font-monospace">{{ agentWork()?.model_name || 'LLM Qwen 8B DeepSeek' }}</span>
-            </div>
-            <div class="popup-status-cluster font-monospace">
-              <span class="popup-status-badge" [style.borderColor]="current.color" [style.color]="current.color">
-                ● {{ agentWork()?.status_label || 'ACTIVE // COLLABORATING' }}
-              </span>
-              <span class="popup-synaptic-badge">
-                🔗 {{ agentWork()?.synaptic_bond || 99 }}% SYNC
+          <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <h2 class="popup-agent-name mb-0 fw-bold">{{ agentWork()?.name || current.name }}</h2>
+              <span class="badge bg-dark-subtle text-cyan border border-info-subtle font-monospace">
+                {{ agentWork()?.model_name || 'LLM Qwen 8B DeepSeek' }}
               </span>
             </div>
-            <div class="popup-agent-sub font-monospace">{{ agentWork()?.suit_mark || current.codename }} // {{ current.subsystem }}</div>
+            <div class="d-flex align-items-center gap-2 mt-1 font-monospace small">
+              <span class="text-secondary">{{ agentWork()?.suit_mark || current.codename }}</span>
+              <span class="text-muted">·</span>
+              <span class="text-info">{{ current.subsystem }}</span>
+            </div>
           </div>
         </div>
-        <div class="popup-header-actions">
+
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace py-1 px-2 d-flex align-items-center gap-1">
+            <span class="pulse-green-dot"></span> {{ agentWork()?.status_label || 'ACTIVE' }}
+          </span>
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-monospace py-1 px-2">
+            🔗 {{ agentWork()?.synaptic_bond || 99 }}% SYNC
+          </span>
           <button
             type="button"
-            class="popup-close-btn"
+            class="btn btn-sm btn-outline-secondary rounded-circle ms-2"
             (click)="closeStationDrawer()"
             aria-label="Close Agent Drawer"
           >✕</button>
         </div>
       </div>
 
-      <!-- Agent Work Body (Zero Confusion, Human-Understandable) -->
-      <div class="popup-body agent-work-body">
+      <!-- 2. Agent Work Body with Bootstrap Grid & Flexbox -->
+      <div class="popup-body agent-work-body p-3">
         @if (isLoadingAgentWork()) {
-          <div class="agent-work-loading font-monospace">
-            <span class="spinner-dot"></span> Synchronizing work stream for {{ current.name }}...
+          <div class="agent-work-loading font-monospace text-center py-4 text-info">
+            <span class="spinner-dot"></span> Synchronizing live squad telemetry for {{ current.name }}...
           </div>
         } @else {
-          <!-- 1. Current Active Mission & Work Highlight -->
-          <div class="agent-mission-card" [style.borderLeftColor]="current.color">
-            <div class="card-section-label font-monospace">◈ CURRENT MISSION & OBJECTIVE</div>
-            <div class="card-mission-title">{{ agentWork()?.current_mission || current.role }}</div>
-            <div class="card-mission-activity font-monospace">{{ agentWork()?.current_activity || 'Operating at peak neural performance.' }}</div>
+          <!-- Quick 4-Stat Metric Row (Bootstrap Flex / Grid) -->
+          <div class="row g-2 mb-3">
+            <div class="col-6 col-md-3">
+              <div class="p-2 rounded-3 bg-dark-subtle border border-secondary-subtle">
+                <div class="text-secondary small fw-bold font-monospace">STATUS</div>
+                <div class="text-success fw-bold font-monospace small d-flex align-items-center gap-1 mt-1">
+                  <span class="status-dot-mini bg-success"></span> Operational
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-2 rounded-3 bg-dark-subtle border border-secondary-subtle">
+                <div class="text-secondary small fw-bold font-monospace">SYNAPTIC SYNC</div>
+                <div class="text-primary fw-bold font-monospace small mt-1">
+                  {{ agentWork()?.synaptic_bond || 99.1 }}% Bound
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-2 rounded-3 bg-dark-subtle border border-secondary-subtle">
+                <div class="text-secondary small fw-bold font-monospace">MODEL ENGINE</div>
+                <div class="text-info fw-bold font-monospace small mt-1 text-truncate">
+                  {{ (agentWork()?.model_name || 'Qwen 8B').split(' ')[0] }}
+                </div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="p-2 rounded-3 bg-dark-subtle border border-secondary-subtle">
+                <div class="text-secondary small fw-bold font-monospace">DISPATCH</div>
+                <div class="text-warning fw-bold font-monospace small mt-1">
+                  0ms Native Win32
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- 2. Execution Pipeline Roadmap -->
-          <div class="work-section-block">
-            <div class="section-tag-header">
-              <span class="tag-icon">⚡</span>
-              <span class="tag-title">AUTONOMOUS EXECUTION ROADMAP</span>
-            </div>
-            <div class="execution-pipeline-grid">
-              @for (st of agentWork()?.execution_steps; track st.step) {
-                <div class="pipeline-step-node" [class.completed]="st.status === 'completed'" [class.active]="st.status === 'active'">
-                  <div class="step-num font-monospace">0{{ st.step }}</div>
-                  <div class="step-content">
-                    <div class="step-title font-monospace">{{ st.title }}</div>
-                    <div class="step-detail">{{ st.detail }}</div>
+          <!-- Two-Column Bootstrap Layout: Left (Objective + Pipeline), Right (Tools + Deliverables) -->
+          <div class="row g-3">
+            <!-- Left Column: Objective & Pipeline -->
+            <div class="col-12 col-lg-6 d-flex flex-column gap-3">
+              <!-- Card: Current Mission & Objective -->
+              <div class="card bg-dark-subtle border-0 rounded-3 p-3 shadow-sm" [style.borderLeft]="'4px solid ' + current.color">
+                <div class="d-flex align-items-center gap-1 text-secondary small fw-bold font-monospace mb-1">
+                  <span>◈</span> CURRENT MISSION & OBJECTIVE
+                </div>
+                <h5 class="fw-bold text-light mb-1">{{ agentWork()?.current_mission || current.role }}</h5>
+                <p class="text-secondary small mb-0 font-monospace">
+                  {{ agentWork()?.current_activity || 'Operating at peak neural performance.' }}
+                </p>
+              </div>
+
+              <!-- Card: Autonomous Execution Roadmap -->
+              <div class="card bg-dark-subtle border-0 rounded-3 p-3 shadow-sm">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <div class="d-flex align-items-center gap-1 text-secondary small fw-bold font-monospace">
+                    <span>⚡</span> EXECUTION ROADMAP
                   </div>
-                  <div class="step-status-chip font-monospace">{{ st.status | uppercase }}</div>
+                  <span class="badge bg-secondary-subtle text-secondary font-monospace small">4 Steps</span>
                 </div>
-              }
-            </div>
-          </div>
 
-          <!-- 3. Active Resources & Tools Used -->
-          <div class="work-section-block">
-            <div class="section-tag-header">
-              <span class="tag-icon">🛠️</span>
-              <span class="tag-title">INTEGRATED RESOURCES & TOOLS</span>
-            </div>
-            <div class="tools-badges-wrap font-monospace">
-              @for (tool of agentWork()?.tools; track tool) {
-                <span class="tool-tag-pill" [style.borderColor]="current.color + '55'">
-                  ◈ {{ tool }}
-                </span>
-              }
-            </div>
-          </div>
-
-          <!-- 4. Today's Delivered Accomplishments -->
-          <div class="work-section-block">
-            <div class="section-tag-header">
-              <span class="tag-icon">📋</span>
-              <span class="tag-title">TODAY'S DELIVERABLES & ACCOMPLISHMENTS</span>
-            </div>
-            <div class="deliverables-list">
-              @for (item of agentWork()?.today_work; track item) {
-                <div class="deliverable-item">
-                  <span class="deliverable-check" [style.color]="current.color">✓</span>
-                  <span class="deliverable-text">{{ item }}</span>
+                <div class="d-flex flex-column gap-2">
+                  @for (st of agentWork()?.execution_steps; track st.step) {
+                    <div
+                      class="p-2 rounded-2 border d-flex align-items-center justify-content-between gap-2"
+                      [class.border-success-subtle]="st.status === 'completed'"
+                      [class.bg-success-subtle]="st.status === 'completed'"
+                      [class.border-info]="st.status === 'active'"
+                      [class.bg-info-subtle]="st.status === 'active'"
+                      [class.border-secondary-subtle]="st.status === 'ready' || st.status === 'pending'"
+                    >
+                      <div class="d-flex align-items-center gap-2 min-w-0">
+                        <span class="badge bg-dark text-light font-monospace">0{{ st.step }}</span>
+                        <div class="text-truncate">
+                          <div class="fw-semibold small text-light text-truncate">{{ st.title }}</div>
+                          <div class="text-secondary text-truncate" style="font-size: 10px;">{{ st.detail }}</div>
+                        </div>
+                      </div>
+                      <span
+                        class="badge font-monospace flex-shrink-0"
+                        [class.bg-success]="st.status === 'completed'"
+                        [class.bg-info]="st.status === 'active'"
+                        [class.bg-secondary]="st.status === 'ready' || st.status === 'pending'"
+                        style="font-size: 9px;"
+                      >
+                        {{ st.status | uppercase }}
+                      </span>
+                    </div>
+                  }
                 </div>
-              }
+              </div>
+            </div>
+
+            <!-- Right Column: Tools & Deliverables -->
+            <div class="col-12 col-lg-6 d-flex flex-column gap-3">
+              <!-- Card: Integrated Resources & Tools -->
+              <div class="card bg-dark-subtle border-0 rounded-3 p-3 shadow-sm">
+                <div class="d-flex align-items-center gap-1 text-secondary small fw-bold font-monospace mb-2">
+                  <span>🛠️</span> INTEGRATED CAPABILITIES & TOOLS
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                  @for (tool of agentWork()?.tools; track tool) {
+                    <span class="badge bg-dark text-info-emphasis border border-secondary-subtle p-2 font-monospace">
+                      ◈ {{ tool }}
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <!-- Card: Today's Deliverables & Accomplishments -->
+              <div class="card bg-dark-subtle border-0 rounded-3 p-3 shadow-sm">
+                <div class="d-flex align-items-center gap-1 text-secondary small fw-bold font-monospace mb-2">
+                  <span>📋</span> TODAY'S ACCOMPLISHMENTS
+                </div>
+                <div class="d-flex flex-column gap-2">
+                  @for (item of agentWork()?.today_work; track item) {
+                    <div class="p-2 rounded-2 bg-dark border border-secondary-subtle d-flex align-items-start gap-2">
+                      <span class="text-success fw-bold">✓</span>
+                      <span class="text-light small font-monospace lh-sm">{{ item }}</span>
+                    </div>
+                  }
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- 5. Direct Directive Input to this Specialist -->
-          <div class="work-section-block direct-directive-box">
-            <div class="section-tag-header">
-              <span class="tag-icon">🎯</span>
-              <span class="tag-title">ASSIGN DIRECT DIRECTIVE TO {{ current.name | uppercase }}</span>
+          <!-- Bottom: Direct Directive Input to this Specialist -->
+          <div class="mt-3 p-3 rounded-3 bg-dark-subtle border border-secondary-subtle">
+            <div class="d-flex align-items-center gap-1 text-secondary small fw-bold font-monospace mb-2">
+              <span>🎯</span> ASSIGN DIRECT DIRECTIVE TO {{ current.name | uppercase }}
             </div>
-            <div class="direct-input-row">
+            <div class="input-group">
               <input
                 type="text"
                 [(ngModel)]="directAgentTaskInput"
                 (keyup.enter)="submitDirectAgentTask(current.id)"
                 [placeholder]="'Give instruction to ' + current.name + ' (e.g. audit memory, synthesize code, check task)...'"
-                class="direct-task-input font-monospace"
+                class="form-control bg-dark text-light border-secondary font-monospace small"
               />
               <button
                 type="button"
-                class="direct-task-btn font-monospace"
+                class="btn font-monospace fw-bold px-4"
                 [disabled]="isExecutingAgentTask() || !directAgentTaskInput.trim()"
                 (click)="submitDirectAgentTask(current.id)"
                 [style.background]="current.color"
+                [style.color]="'#ffffff'"
               >
                 {{ isExecutingAgentTask() ? 'EXECUTING...' : 'DISPATCH' }}
               </button>
             </div>
             @if (agentTaskReceipt()) {
-              <div class="direct-task-receipt font-monospace">
-                <span class="receipt-icon">◈</span> {{ agentTaskReceipt() }}
+              <div class="mt-2 text-info small font-monospace">
+                <span>◈</span> {{ agentTaskReceipt() }}
               </div>
             }
           </div>
