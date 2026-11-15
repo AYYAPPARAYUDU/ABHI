@@ -479,8 +479,8 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
     if (!this.camera || !this.controls) return;
 
     if (preset === 'isometric') {
-      this.cameraTargetPos = new THREE.Vector3(32, 28, 32);
-      this.cameraTargetLookAt = new THREE.Vector3(0, 1.5, 0);
+      this.cameraTargetPos = new THREE.Vector3(44, 40, 44);
+      this.cameraTargetLookAt = new THREE.Vector3(0, 1.2, 0);
     } else if (preset === 'bullpen') {
       this.cameraTargetPos = new THREE.Vector3(18, 12, 12);
       this.cameraTargetLookAt = new THREE.Vector3(11, 2, -3);
@@ -532,9 +532,9 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
     this.scene.background = new THREE.Color(0x060911);
     this.scene.fog = new THREE.FogExp2(0x060911, 0.007);
 
-    // 2. Camera (Isometric angle)
-    this.camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 1000);
-    this.camera.position.set(34, 30, 34);
+    // 2. Camera (Wide Isometric angle so the full office, perimeter pines, and sidewalks fit on any screen)
+    this.camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 1000);
+    this.camera.position.set(44, 40, 44);
 
     // 3. Renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -553,9 +553,9 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.maxPolarAngle = Math.PI / 2.08; // Prevent going below floor
-    this.controls.minDistance = 8;
-    this.controls.maxDistance = 75;
-    this.controls.target.set(0, 1.5, 0);
+    this.controls.minDistance = 6;
+    this.controls.maxDistance = 140;
+    this.controls.target.set(0, 1.2, 0);
     this.controls.update();
 
     // 5. Lighting

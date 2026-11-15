@@ -2655,12 +2655,17 @@ export class ThreeSceneManagerService {
       this.isDragging = false;
     });
 
-    // Camera Zoom
+    // Smooth Interactive Camera Zoom with Mouse Wheel (Full Macro to Close-Up Inspection)
     canvas.addEventListener('wheel', (e) => {
-      if (this.camera) {
-        this.camera.position.z = Math.min(Math.max(this.camera.position.z + e.deltaY * 0.015, 10), 34);
-      }
-    });
+      e.preventDefault();
+      const zoomFactor = 1 + (e.deltaY > 0 ? 0.08 : -0.08);
+      const look = this.targetCameraLookAt;
+      const offset = this.targetCameraPos.clone().sub(look);
+      const currentDist = offset.length();
+      const newDist = Math.min(Math.max(currentDist * zoomFactor, 7.0), 65.0);
+      offset.setLength(newDist);
+      this.targetCameraPos.copy(look).add(offset);
+    }, { passive: false });
 
     // RAYCAST CLICK HANDLER (Direct clicks on the Central Core, Orbiting Agents, or Colony Stations)
     canvas.addEventListener('click', (e) => {
@@ -3571,8 +3576,9 @@ export class ThreeSceneManagerService {
   getBaseCameraForMode(mode: SpatialEnvironmentMode): { pos: THREE.Vector3; lookAt: THREE.Vector3 } {
     if (mode === 'WORKSPACE') {
       return {
-        pos: new THREE.Vector3(0, 7.5, 21.5),
-        lookAt: new THREE.Vector3(0, -3.8, 0),
+        // Zoomed out wide isometric perspective so all 10 colony stations and perimeter rings fit fully on any screen
+        pos: new THREE.Vector3(0, 16.0, 32.5),
+        lookAt: new THREE.Vector3(0, -2.0, 0),
       };
     } else if (mode === 'AUTOMATION') {
       return {
@@ -3595,10 +3601,11 @@ export class ThreeSceneManagerService {
         lookAt: new THREE.Vector3(0, 0, 0),
       };
     } else {
-      // MAIN_AGENT / DEFAULT (Exact Image 5 centered framing)
+      // MAIN_AGENT / CORE / DEFAULT
+      // Zoomed out to frame the entire Arc Reactor & outer orbital rings comfortably on all screen resolutions
       return {
-        pos: new THREE.Vector3(0, 3.2, 21.0),
-        lookAt: new THREE.Vector3(0, -0.8, 0),
+        pos: new THREE.Vector3(0, 4.4, 27.5),
+        lookAt: new THREE.Vector3(0, -0.6, 0),
       };
     }
   }

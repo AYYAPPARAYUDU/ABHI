@@ -462,8 +462,8 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
   // --- Reset to Full Hub Overview ---
   resetToHubOverview(): void {
     this.selectedPod.set(null);
-    this.cameraTargetPos = new THREE.Vector3(28, 30, 28);
-    this.cameraTargetLookAt = new THREE.Vector3(0, 1.5, 0);
+    this.cameraTargetPos = new THREE.Vector3(38, 40, 38);
+    this.cameraTargetLookAt = new THREE.Vector3(0, 1.2, 0);
   }
 
   // --- Focus Directly on Central Brain ---
@@ -515,9 +515,9 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.scene.background = new THREE.Color(0x080c14); // Deep space dark-slate
     this.scene.fog = new THREE.FogExp2(0x080c14, 0.0075);
 
-    // 2. Camera (Locked isometric high angle)
-    this.camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 1000);
-    this.camera.position.set(28, 30, 28);
+    // 2. Camera (Wide isometric angle so all 8 pods are clearly visible on all screens)
+    this.camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 1000);
+    this.camera.position.set(38, 40, 38);
 
     // 3. Renderer
     this.renderer = new THREE.WebGLRenderer({
@@ -535,9 +535,9 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.maxPolarAngle = Math.PI / 2.1;
-    this.controls.minDistance = 8;
-    this.controls.maxDistance = 85;
-    this.controls.target.set(0, 1.5, 0);
+    this.controls.minDistance = 6;
+    this.controls.maxDistance = 140;
+    this.controls.target.set(0, 1.2, 0);
     this.controls.update();
 
     // 5. Lighting

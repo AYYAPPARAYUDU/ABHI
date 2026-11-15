@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { getApiUrl } from '../../../../core/config/api-config';
@@ -9,6 +9,12 @@ export interface ArchitectureSection {
   icon: string;
   tag: string;
   headline: string;
+  simpleSummary: string;
+  threePillars: {
+    whatItDoes: { title: string; desc: string; icon: string };
+    speedMetric: { title: string; desc: string; icon: string };
+    reliability: { title: string; desc: string; icon: string };
+  };
   whyWeUseIt: {
     summary: string;
     points: string[];
@@ -29,7 +35,7 @@ export interface ArchitectureSection {
 export interface InspectorNode {
   id: string;
   name: string;
-  role: string;
+  simpleRole: string;
   subsystem: string;
   latency: string;
   filePath: string;
@@ -49,7 +55,7 @@ export interface InspectorNode {
 })
 export class ArchitecturePageComponent implements OnInit, OnDestroy {
   readonly selectedSectionId = signal<string>('END_TO_END');
-  readonly selectedSubTab = signal<'ALL' | 'DIAGRAM' | 'WHY' | 'WHERE' | 'DATA'>('ALL');
+  readonly showDevDetails = signal<boolean>(false);
   readonly liveTelemetry = signal<any>(null);
 
   // Simulation & Animation State
@@ -65,27 +71,45 @@ export class ArchitecturePageComponent implements OnInit, OnDestroy {
   readonly sections: ArchitectureSection[] = [
     {
       id: 'END_TO_END',
-      navTitle: 'End-to-End Execution Flow',
+      navTitle: 'Execution Flow',
       icon: '⚡',
-      tag: 'SYSTEM TOPOLOGY',
-      headline: 'Autonomous Directive Ingestion, Context Perception & Physical Win32 OS Dispatch',
+      tag: 'INSTANT ACTION',
+      headline: 'From Your Voice to Windows 11 Action in 0ms',
+      simpleSummary: 'Whenever you speak or type a command, ABHI recognizes what you need, matches frequent actions instantly in 0 milliseconds, or plans multi-step tasks using local AI.',
+      threePillars: {
+        whatItDoes: {
+          icon: '🎯',
+          title: 'Direct Action',
+          desc: 'Opens apps, controls browser tabs, plays music, and manages your desktop.'
+        },
+        speedMetric: {
+          icon: '⚡',
+          title: '0ms Latency',
+          desc: 'Instant response for all frequent commands; no cloud lag or waiting.'
+        },
+        reliability: {
+          icon: '🛡️',
+          title: 'Acoustic Voice Attunement',
+          desc: 'Tuned specifically to Mamu’s voice frequency with zero wake-word delay.'
+        }
+      },
       whyWeUseIt: {
-        summary: 'Provides zero-latency, multi-tier execution where high-frequency OS controls execute in 0ms, while complex analytical tasks automatically decompose into RAG-grounded DAG multi-agent plans.',
+        summary: 'Gives you an instant digital companion that never feels slow. Frequent commands execute in 0ms, while complex questions route through local AI memory.',
         points: [
-          'Acoustic Voice Attunement: Continuous 60fps VAD captures natural language without wake-word lag.',
-          'Two-Tier Latency Model: Deterministic cached actions execute in 0ms; deep reasoning tasks route through AbhiNativeLLM.',
-          'Grounded Context Injection: Every prompt injects the active Win32 window title, dimensions, and process tree.',
-          'Universal Output: Dispatches directly to physical Win32 mouse/keyboard, web browser DOM, and multi-agent operations feed.'
+          'Acoustic Voice Filter: Continuous 60fps microphone listening tuned to Mamu.',
+          'Zero-Lag Dynamic Resolver: Opens Notepad, Calculator, WhatsApp, and browser tabs instantly.',
+          'Active Window Awareness: Always knows what application you are looking at right now.',
+          'Physical Win32 Controls: Directly presses hotkeys and focuses windows without clumsy UI delays.'
         ]
       },
       whereWeUseIt: {
-        description: 'Coordinated across the global controller daemon, the dynamic action resolver, and the FastAPI application layer.',
+        description: 'Runs between the always-on tray daemon, the FastAPI server, and Windows 11 User32 drivers.',
         files: [
-          { path: 'abhi_global_controller.py', role: 'Always-on desktop overlay, acoustic microphone listener & tray daemon' },
-          { path: 'backend/app/api/v1/desktop.py', role: 'FastAPI ask-bot orchestrator, Win32 window context, dynamic action executor' },
-          { path: 'backend/app/services/rag/vector_store.py', role: 'Local semantic vector RAG (588 chunks) & document retrieval' },
-          { path: 'backend/app/cognitive/planner/planner.py', role: 'Kahn DAG topological task scheduler & dependency executor' },
-          { path: 'backend/app/automation/desktop/os_control_engine.py', role: 'Direct Win32 ctypes SendInput, hotkeys, process execution' }
+          { path: 'abhi_global_controller.py', role: 'Always-on desktop overlay & microphone listener' },
+          { path: 'backend/app/api/v1/desktop.py', role: 'FastAPI ask-bot orchestrator & active window sensor' },
+          { path: 'backend/app/services/rag/vector_store.py', role: 'Local semantic vector store (588 chunks)' },
+          { path: 'backend/app/cognitive/planner/planner.py', role: 'Kahn DAG task planner' },
+          { path: 'backend/app/automation/desktop/os_control_engine.py', role: 'Direct Win32 ctypes keystrokes & app launcher' }
         ],
         endpoints: [
           'POST /api/v1/desktop/ask-bot',
@@ -94,44 +118,61 @@ export class ArchitecturePageComponent implements OnInit, OnDestroy {
         ]
       },
       whatExistsAllData: {
-        title: 'Live Subsystem Telemetry & Real Entities',
+        title: 'Execution Subsystem Data',
         metrics: [
-          { label: 'Active Voice Classifier', value: 'Mamu Callsign (Ravuvai Ayyapparayudu)' },
-          { label: 'Vector Store Chunks', value: '588 Chunks (Embedded & Indexed)' },
-          { label: 'Dynamic Learned Patterns', value: '37 Instant OS Patterns' },
-          { label: 'Average Execution Latency', value: '0ms (Cached) / 24ms (Synthesized)' }
+          { label: 'Voice Profile', value: 'Mamu Callsign (Ravuvai A.)' },
+          { label: 'Dynamic Patterns', value: '37 Instant OS Shortcuts' },
+          { label: 'Execution Speed', value: '0ms (Cached) / 24ms (AI)' },
+          { label: 'Active Mode', value: '100% Offline Sovereign' }
         ],
         entities: [
-          { name: 'Voice Ingestion Engine', details: 'Web Speech API + continuous 60fps acoustic VAD filter.', status: 'STREAMING' },
-          { name: 'Win32 Context Sensor', details: 'User32.dll GetForegroundWindow & GetWindowTextW real-time probe.', status: 'ENGAGED' },
-          { name: 'Semantic Knowledge Hub', details: 'LanceDB vector similarity + BM25 local memory retrieval.', status: 'ONLINE' },
-          { name: 'Action Dispatcher', details: 'ctypes SendInput, subprocess, web browser DOM automation.', status: 'ACTIVE' }
+          { name: 'Microphone Sensor', details: 'Continuous 60fps acoustic VAD filter tuned to Mamu.', status: 'STREAMING' },
+          { name: 'Active Window Sensor', details: 'Reads active foreground window title and dimensions.', status: 'ENGAGED' },
+          { name: 'Instant Action Cache', details: 'Pre-compiled regex rules for instant 0ms execution.', status: 'CACHED' },
+          { name: 'Win32 Dispatcher', details: 'Direct ctypes SendInput and hotkey emulator.', status: 'ACTIVE' }
         ]
       },
       diagramType: 'FLOW'
     },
     {
       id: 'SWARM',
-      navTitle: 'Multi-Agent Swarm (10 Specialists)',
+      navTitle: '10 AI Specialists',
       icon: '🛡️',
-      tag: 'MULTI-AGENT ARCHITECTURE',
-      headline: 'Mark 85 Commander & 9 Specialized Autonomous Iron Man Suit Agents',
+      tag: 'MULTI-AGENT TEAM',
+      headline: 'Iron Man Suit Team — 10 Specialized AI Agents',
+      simpleSummary: 'Instead of one AI doing everything and making mistakes, 10 specialized agents handle different jobs: one surfs the web, one controls Windows, one audits safety, and one manages banking.',
+      threePillars: {
+        whatItDoes: {
+          icon: '🛡️',
+          title: 'Mark 85 Commander',
+          desc: 'Listens to your goal and assigns tasks to the best suited specialist.'
+        },
+        speedMetric: {
+          icon: '⚡',
+          title: 'Parallel Work',
+          desc: 'Independent agents work simultaneously to finish big jobs 5x faster.'
+        },
+        reliability: {
+          icon: '🔒',
+          title: 'Zero Mistakes',
+          desc: 'Security Sentinel audits every action before touching your files or PC.'
+        }
+      },
       whyWeUseIt: {
-        summary: 'Prevents single-point cognitive failure by segregating high-risk OS execution, web automation, security auditing, and financial settlement into dedicated specialist agents.',
+        summary: 'Prevents mistakes and hallucinations by dividing work among domain experts. The browser specialist never touches Windows files, and the OS specialist never makes web calls without permission.',
         points: [
-          'Zero Hallucination Domain Boundaries: Security agent audits permissions while Commander delegates to Browser or OS specialists.',
-          'Parallel DAG Execution: Independent tasks run simultaneously across multi-agent worker threads.',
-          'Consensus-Based Code Verification: Coding Agent and Self-Healing Agent inspect code before writing to disk.',
-          'Shared Tactical Memory: Agents publish status and telemetry to a unified #squad-command broadcast bus.'
+          'Clear Job Boundaries: Each agent specializes in one specific domain.',
+          'Consensus Verification: Code and actions are checked before running on your PC.',
+          'Unified Communication: All agents share status updates on the #squad-command channel.',
+          'Self-Healing: The code repair specialist automatically fixes bugs without stopping.'
         ]
       },
       whereWeUseIt: {
-        description: 'Defined in backend/app/cognitive/registry/builtin_agents.py and coordinated through the Central Supervisor.',
+        description: 'Coordinated through the central supervisor in backend/app/cognitive/supervisor/supervisor.py.',
         files: [
-          { path: 'backend/app/cognitive/registry/builtin_agents.py', role: 'Definitions of all 10 specialized agent classes' },
+          { path: 'backend/app/cognitive/registry/builtin_agents.py', role: 'All 10 specialized agent definitions' },
           { path: 'backend/app/cognitive/supervisor/supervisor.py', role: 'Central agent task dispatcher & consensus evaluator' },
-          { path: 'backend/app/cognitive/registry/base_agent.py', role: 'BaseAgent contract, lifecycle, and telemetry hooks' },
-          { path: 'frontend/src/app/shared/3d/three-scene-manager.service.ts', role: '3D hologram spatial positioning and orbital visualizer' }
+          { path: 'backend/app/cognitive/registry/base_agent.py', role: 'Agent lifecycle & telemetry contracts' }
         ],
         endpoints: [
           'GET /api/v1/agent/network',
@@ -140,188 +181,250 @@ export class ArchitecturePageComponent implements OnInit, OnDestroy {
         ]
       },
       whatExistsAllData: {
-        title: 'Full Iron Man Suit Agent Roster',
+        title: 'Suit Agent Roster',
         metrics: [
-          { label: 'Total Active Agents', value: '10 Autonomous Specialists' },
-          { label: 'Commander Model', value: 'Mark 85 (DeepSeek-R1 / Qwen 8.2B)' },
-          { label: 'Agent Communication Bus', value: 'In-Memory Async Queue + WebSocket' },
-          { label: 'Consensus Quorum', value: 'Dual-State Physical Verification' }
+          { label: 'Active Specialists', value: '10 Autonomous Suits' },
+          { label: 'Commander Model', value: 'Mark 85 (DeepSeek-R1 / Qwen)' },
+          { label: 'Agent Channel', value: 'In-Memory Async Queue' },
+          { label: 'Safety Protocol', value: 'Dual-State Verification' }
         ],
         entities: [
-          { name: 'Mark 85 (Commander & Arbitrator)', details: 'High-level goal decomposition, arbitration, and task handoff.', status: 'COMMANDING' },
-          { name: 'Mark L (Browser Specialist)', details: 'Chromium DOM automation, web scraping, multi-tab orchestration.', status: 'READY' },
-          { name: 'Mark VI (Windows OS Specialist)', details: 'Win32 window handling, file system operations, app lifecycle.', status: 'ACTIVE' },
-          { name: 'Mark XLIII (Vision & OCR Specialist)', details: 'Screen capture, OCR element grounding, visual verification.', status: 'ENGAGED' },
-          { name: 'Mark V (Vector RAG Specialist)', details: 'LanceDB similarity search, knowledge synthesis, context injection.', status: 'ONLINE' },
-          { name: 'Mark VII (Task Planner & DAG)', details: 'Kahn topological task graph generation and dependency resolution.', status: 'PLANNING' },
-          { name: 'Mark I (Security Sentinel)', details: 'Token budgeting, safety auditing, destructive command gating.', status: 'GUARDING' },
-          { name: 'Mark XLII (Self-Healing Specialist)', details: 'Runtime error analysis, AST syntax repair, automated recovery.', status: 'STANDBY' },
-          { name: 'Mark XVII (Audio & Speech)', details: 'Coqui TTS voice synthesis and speech recognition filtering.', status: 'ATTUNED' },
-          { name: 'Mark XXXIII (SBI Banking Specialist)', details: 'State Bank of India reconciliation, invoice tracking, treasury.', status: 'AUDITING' }
+          { name: 'Mark 85 (Commander)', details: 'High-level task coordination and final decisions.', status: 'COMMANDING' },
+          { name: 'Mark L (Browser)', details: 'Playwright Chromium web research & DOM actions.', status: 'READY' },
+          { name: 'Mark VI (Windows OS)', details: 'Win32 window handling, file system, hotkeys.', status: 'ACTIVE' },
+          { name: 'Mark XLIII (Vision OCR)', details: 'Screen capture, button detection, visual checks.', status: 'ENGAGED' },
+          { name: 'Mark V (Memory RAG)', details: 'Searches 588 local project knowledge chunks.', status: 'ONLINE' },
+          { name: 'Mark VII (Task Planner)', details: 'Organizes multi-step dependency graphs.', status: 'PLANNING' },
+          { name: 'Mark I (Security Sentinel)', details: 'Guards tokens, checks permissions, audits safety.', status: 'GUARDING' },
+          { name: 'Mark XLII (Self-Healing)', details: 'Automatically detects and repairs code bugs.', status: 'STANDBY' },
+          { name: 'Mark XVII (Voice)', details: 'Speech recognition and neural voice synthesis.', status: 'ATTUNED' },
+          { name: 'Mark XXXIII (SBI Banking)', details: 'State Bank of India reconciliation & treasury.', status: 'AUDITING' }
         ]
       },
       diagramType: 'SWARM'
     },
     {
       id: 'RAG',
-      navTitle: 'Local Vector RAG (588 Chunks)',
+      navTitle: 'Local Memory (RAG)',
       icon: '📚',
-      tag: 'KNOWLEDGE & RETRIEVAL',
-      headline: 'LanceDB Hybrid Dense-Sparse Vector Store & Sovereign Project Knowledge Base',
+      tag: 'PRIVATE KNOWLEDGE',
+      headline: '588 Local Knowledge Chunks — 100% Offline & Private',
+      simpleSummary: 'All project documents, code structures, rules, and banking receipts are indexed on your local laptop drive. ABHI recalls exact answers in 4.2 milliseconds without touching the cloud.',
+      threePillars: {
+        whatItDoes: {
+          icon: '📚',
+          title: 'Complete Knowledge',
+          desc: '588 embedded records covering every single part of this project.'
+        },
+        speedMetric: {
+          icon: '⚡',
+          title: '4.2ms Search',
+          desc: 'Finds the exact answer in milliseconds using mathematical similarity.'
+        },
+        reliability: {
+          icon: '🔒',
+          title: '100% Private',
+          desc: 'Zero data leaves your laptop; runs completely offline on your disk.'
+        }
+      },
       whyWeUseIt: {
-        summary: 'Enables instant semantic recall across all project architecture docs, codebases, and banking records without sending private code to external cloud APIs.',
+        summary: 'Eliminates AI hallucination by giving the AI actual verified facts from your project files before it answers.',
         points: [
-          '100% Offline Sovereign Privacy: All 588 vector chunks reside in local JSON/LanceDB on physical storage.',
-          'Sub-5ms Hybrid Retrieval: Combines dense cosine similarity with BM25 lexical keyword matching.',
-          'Dynamic Ingestion Pipeline: Automatically embeds new project files, API contracts, and user interactions.',
-          'High Context Quality: Filters top-k chunks with relevance score >= 0.65 to prevent LLM hallucination.'
+          'Sovereign Security: Private code and banking records stay local.',
+          'Hybrid Search: Combines mathematical vector embeddings with exact keyword matching.',
+          'Automatic Updates: Learns new actions and stores them into memory instantly.',
+          'High Relevance: Only uses verified facts with relevance scores above 0.65.'
         ]
       },
       whereWeUseIt: {
-        description: 'Implements embedding and semantic retrieval in backend/app/services/rag/vector_store.py and exposes REST endpoints.',
+        description: 'Handled by LocalVectorStore in backend/app/services/rag/vector_store.py.',
         files: [
-          { path: 'backend/app/services/rag/vector_store.py', role: 'LocalVectorStore engine with cosine similarity & chunk management' },
-          { path: 'project_data/intelligence/vector_store.json', role: 'Persistent 588 vector chunks with 384-dimensional embeddings' },
-          { path: 'backend/app/api/v1/knowledge.py', role: 'Knowledge ingestion, querying, and document indexing endpoints' },
-          { path: 'frontend/src/app/core/services/knowledge.service.ts', role: 'Frontend Angular service for searching vector records' }
+          { path: 'backend/app/services/rag/vector_store.py', role: 'LocalVectorStore vector search engine' },
+          { path: 'project_data/intelligence/vector_store.json', role: '588 persistent vector chunks on disk' },
+          { path: 'backend/app/api/v1/knowledge.py', role: 'Knowledge query & ingestion API' }
         ],
         endpoints: [
           'POST /api/v1/knowledge/query',
-          'GET /api/v1/knowledge/stats',
-          'POST /api/v1/knowledge/ingest'
+          'GET /api/v1/knowledge/stats'
         ]
       },
       whatExistsAllData: {
-        title: 'Vector Knowledge Base Inventory',
+        title: 'Memory Store Inventory',
         metrics: [
-          { label: 'Total Vector Chunks', value: '588 Chunks' },
-          { label: 'Embedding Dimension', value: '384 Dimensions' },
-          { label: 'Relevance Threshold', value: 'Cosine >= 0.65' },
-          { label: 'Knowledge Categories', value: 'Architecture, Code, SBI Banking, OS' }
+          { label: 'Total Chunks', value: '588 Knowledge Chunks' },
+          { label: 'Vector Size', value: '384 Dimensions' },
+          { label: 'Match Threshold', value: 'Cosine Score >= 0.65' },
+          { label: 'Storage Type', value: 'Local JSON / LanceDB' }
         ],
         entities: [
-          { name: 'Architecture Chunks', details: 'System topology, multi-tier execution rules, and security guidelines.', status: 'INDEXED' },
-          { name: 'Codebase Chunks', details: 'FastAPI routing, Angular components, ctypes Win32 wrappers, DAG planner.', status: 'INDEXED' },
-          { name: 'SBI Treasury Chunks', details: 'State Bank of India account ****5649, IFSC SBIN0020507, settlement receipts.', status: 'INDEXED' },
-          { name: 'Dynamic Memory Chunks', details: 'Learned operator commands, frequent applications, user preferences.', status: 'ACTIVE' }
+          { name: 'Architecture Chunks', details: 'System rules, topologies, and execution contracts.', status: 'INDEXED' },
+          { name: 'Codebase Chunks', details: 'FastAPI routes, Angular components, ctypes Win32 code.', status: 'INDEXED' },
+          { name: 'SBI Treasury Chunks', details: 'State Bank of India account ****5649 and settlement data.', status: 'INDEXED' },
+          { name: 'Learned Memory Chunks', details: 'Operator preferences and frequent applications.', status: 'ACTIVE' }
         ]
       },
       diagramType: 'RAG'
     },
     {
       id: 'DAG',
-      navTitle: 'Kahn DAG Task Planning',
+      navTitle: 'Task Planner (DAG)',
       icon: '🗺️',
       tag: 'TASK SCHEDULING',
-      headline: 'Topological In-Degree Task Dependency Resolution & Autonomous Execution Pipeline',
+      headline: 'Organizes Complex Goals Step-by-Step with Zero Deadlocks',
+      simpleSummary: 'When you ask for something big, the task planner breaks it down into a clear roadmap. Steps that depend on each other run in sequence, while independent steps run at the same time.',
+      threePillars: {
+        whatItDoes: {
+          icon: '🗺️',
+          title: 'Orderly Planning',
+          desc: 'Creates a clear step-by-step checklist before touching anything.'
+        },
+        speedMetric: {
+          icon: '⚡',
+          title: 'Parallel Speed',
+          desc: 'Runs multiple safe tasks at the same time so you don’t have to wait.'
+        },
+        reliability: {
+          icon: '🛡️',
+          title: 'Dual Verification',
+          desc: 'Visually and physically verifies each step is finished before moving on.'
+        }
+      },
       whyWeUseIt: {
-        summary: 'Guarantees dead-lock free, parallel task execution using Kahn’s topological sort algorithm (O(V+E)) with dual-state verification.',
+        summary: 'Prevents confusion and crashes when executing complex multi-step commands by enforcing mathematical dependency ordering.',
         points: [
-          'Deterministic Dependency Graph: Subtasks only execute after their parent dependencies complete successfully.',
-          'Parallel Worker Dispatch: Sibling nodes with in_degree=0 execute concurrently across agent threads.',
-          'Fault Tolerance & Self-Healing: Failed nodes trigger AST automatic repair or alternate route fallback.',
-          'Audit Trail Journal: Records start times, durations, input payloads, and physical output hashes.'
+          'No Deadlocks: Kahn algorithm guarantees tasks never freeze waiting for each other.',
+          'Parallel Worker Dispatch: Independent steps execute concurrently across agents.',
+          'Auto-Recovery: If one step encounters an issue, it recalculates an alternate route.',
+          'Audit Log: Every step is recorded with exact start times and results.'
         ]
       },
       whereWeUseIt: {
-        description: 'Implements task planning in backend/app/cognitive/planner/planner.py and workflow execution in flow_engine.py.',
+        description: 'Implemented in backend/app/cognitive/planner/planner.py and flow_engine.py.',
         files: [
-          { path: 'backend/app/cognitive/planner/planner.py', role: 'Kahn DAG planner with in-degree computation and topological scheduling' },
-          { path: 'backend/app/cognitive/planner/models.py', role: 'DAGNode, TaskPlan, DependencyEdge data structures' },
-          { path: 'backend/app/automation/flow_engine.py', role: 'Local workflow execution engine for multi-step automated jobs' },
-          { path: 'backend/app/cognitive/verification/verifier.py', role: 'Dual-State physical verification before marking nodes complete' }
+          { path: 'backend/app/cognitive/planner/planner.py', role: 'Kahn DAG topological planner' },
+          { path: 'backend/app/automation/flow_engine.py', role: 'Workflow execution engine' },
+          { path: 'backend/app/cognitive/verification/verifier.py', role: 'Dual-State physical verifier' }
         ],
         endpoints: [
           'POST /api/v1/tasks/plan',
-          'GET /api/v1/tasks/{task_id}/dag',
-          'POST /api/v1/tasks/{task_id}/execute'
+          'GET /api/v1/tasks/{task_id}/dag'
         ]
       },
       whatExistsAllData: {
-        title: 'Task DAG Planning Engine Telemetry',
+        title: 'Task Planner Telemetry',
         metrics: [
-          { label: 'Scheduling Algorithm', value: "Kahn's Topological Sort O(V+E)" },
-          { label: 'Max Concurrency', value: '4 Parallel Worker Threads' },
-          { label: 'Verification Protocol', value: 'Dual-State (Process + Visual)' },
-          { label: 'Journal Persistence', value: 'SQLite / JSON Append-Only' }
+          { label: 'Algorithm', value: "Kahn's Topological Sort O(V+E)" },
+          { label: 'Max Concurrency', value: '4 Parallel Workers' },
+          { label: 'Verification', value: 'Process + Visual Check' },
+          { label: 'State Log', value: 'Journal Append-Only' }
         ],
         entities: [
-          { name: 'DAG Node In-Degree Sorter', details: 'Calculates incoming edges; dispatches nodes when in_degree hits 0.', status: 'RUNNING' },
-          { name: 'Dependency Resolver', details: 'Propagates outputs of finished parent nodes into child node inputs.', status: 'ACTIVE' },
-          { name: 'Physical Verifier', details: 'Queries Win32 HWND and process list to verify execution.', status: 'ENGAGED' },
-          { name: 'Workflow Journal', details: 'Maintains execution history, node durations, and recovery snapshots.', status: 'RECORDING' }
+          { name: 'Roadmap Generator', details: 'Decomposes high-level goals into subtasks.', status: 'RUNNING' },
+          { name: 'Dependency Sorter', details: 'Dispatches steps as soon as prerequisites finish.', status: 'ACTIVE' },
+          { name: 'Physical Verifier', details: 'Checks active window and screen before completing.', status: 'ENGAGED' }
         ]
       },
       diagramType: 'DAG'
     },
     {
       id: 'LLM',
-      navTitle: 'AbhiNativeLLM Cognitive Core',
+      navTitle: 'Local AI Brain',
       icon: '🧠',
       tag: 'LOCAL INTELLIGENCE',
-      headline: 'Offline Ollama Model Serving with Standalone Fallback & JSON Cleansing',
+      headline: 'Offline Ollama Model Serving with Instant Python Fallback',
+      simpleSummary: 'Your AI brain runs entirely on your PC. It understands natural human language, cleans up responses into exact instructions, and even writes quick helper scripts when facing brand-new tasks.',
+      threePillars: {
+        whatItDoes: {
+          icon: '🧠',
+          title: 'Smart Reasoning',
+          desc: 'Understands your natural words, questions, and complex requests.'
+        },
+        speedMetric: {
+          icon: '⚡',
+          title: 'Hardware Optimized',
+          desc: 'Runs on your Intel Core i5 with CPU AVX2 acceleration.'
+        },
+        reliability: {
+          icon: '🔒',
+          title: 'Zero Subscriptions',
+          desc: 'Free forever; no OpenAI API keys, token limits, or monthly fees.'
+        }
+      },
       whyWeUseIt: {
-        summary: 'Powers natural language reasoning, intent classification, and tool generation completely offline with zero subscription fees or external data leakage.',
+        summary: 'Gives ABHI real intelligence without needing an internet connection or paid cloud subscriptions.',
         points: [
-          'Dual-Engine Architecture: Direct Ollama SDK integration (abhi:latest / deepseek-r1:8b) with standalone regex/token fallback.',
-          'Guaranteed JSON Extraction: Strips markdown code blocks, normalizes keys, and validates schemas before dispatch.',
-          'Autonomous Tool Synthesis: Writes, validates, and runs Python scripts on-the-fly for newly encountered tasks.',
-          'Hardware-Aware Throttling: Adapts context window size and batch size based on active VRAM and RAM availability.'
+          'Dual Engine: Connects to local Ollama (abhi:latest / DeepSeek-R1) with Python fallback.',
+          'Strict JSON: Always cleans output so the system never chokes on formatting.',
+          'Tool Builder: Writes small Python scripts to solve new tasks dynamically.',
+          'Hardware Aware: Automatically adapts memory usage to keep your laptop fast.'
         ]
       },
       whereWeUseIt: {
-        description: 'Implements LLM routing in backend/app/cognitive/llm/llm_client.py and model management in backend/app/api/v1/models.py.',
+        description: 'Implemented in backend/app/cognitive/llm/llm_client.py.',
         files: [
-          { path: 'backend/app/cognitive/llm/llm_client.py', role: 'AbhiNativeLLMClient, Ollama SDK wrapper, fallback completion engine' },
-          { path: 'backend/app/api/v1/models.py', role: 'Model discovery, hardware profile status, active model selection' },
-          { path: 'project_data/models/', role: 'Local weights, modelfiles, and specialized prompt templates' },
-          { path: 'backend/app/core/hardware_profile.py', role: 'VRAM, CPU, and RAM benchmark detection for optimal model quantization' }
+          { path: 'backend/app/cognitive/llm/llm_client.py', role: 'AbhiNativeLLMClient & Ollama SDK connection' },
+          { path: 'backend/app/api/v1/models.py', role: 'Model discovery & hardware status API' }
         ],
         endpoints: [
           'POST /api/v1/models/chat',
-          'GET /api/v1/models/available',
-          'POST /api/v1/models/synthesize-tool'
+          'GET /api/v1/models/available'
         ]
       },
       whatExistsAllData: {
-        title: 'Cognitive Engine Model Roster & Hardware State',
+        title: 'AI Model Inventory',
         metrics: [
-          { label: 'Primary LLM Engine', value: 'Ollama Native (abhi:latest)' },
-          { label: 'Secondary Reasoning Model', value: 'DeepSeek-R1 / Qwen 8.2B' },
-          { label: 'Fallback Engine', value: 'AbhiNativeLLM Standalone (Python)' },
-          { label: 'Hardware Acceleration', value: 'Intel Core i5 + OpenVINO / CPU AVX2' }
+          { label: 'Primary Model', value: 'Ollama Native (abhi:latest)' },
+          { label: 'Reasoning Model', value: 'DeepSeek-R1 / Qwen 8.2B' },
+          { label: 'Fallback Engine', value: 'AbhiNativeLLM Standalone' },
+          { label: 'Hardware Engine', value: 'Intel Core i5 AVX2' }
         ],
         entities: [
-          { name: 'Ollama Client Bridge', details: 'Async HTTP connection to localhost:11434 with streaming token parsing.', status: 'CONNECTED' },
-          { name: 'JSON Cleanser & Normalizer', details: 'Extracts valid JSON payloads even from malformed or wrapped LLM outputs.', status: 'OPERATIONAL' },
-          { name: 'Prompt Template Engine', details: 'Injects active Win32 window context, Mamu persona, and available tools.', status: 'READY' },
-          { name: 'Tool Synthesis Sandbox', details: 'Safely generates and tests ephemeral Python functions in a sandbox.', status: 'ENGAGED' }
+          { name: 'Ollama Bridge', details: 'Connects to localhost:11434 with token streaming.', status: 'CONNECTED' },
+          { name: 'JSON Normalizer', details: 'Extracts valid action JSON from conversational text.', status: 'OPERATIONAL' },
+          { name: 'Tool Builder Sandbox', details: 'Generates and runs ephemeral helper scripts.', status: 'READY' }
         ]
       },
       diagramType: 'LLM'
     },
     {
       id: 'WIN32',
-      navTitle: 'Win32 OS & Screen Perception',
+      navTitle: 'Windows 11 Control',
       icon: '🖥️',
-      tag: 'HARDWARE & OS INTERACTION',
-      headline: 'Direct User32.dll Hooks, Audio CoreAudio APIs & Multi-Display Grounding',
+      tag: 'HARDWARE & OS',
+      headline: 'Direct Windows 11 Mouse, Keyboard, Window & Sound Control',
+      simpleSummary: 'ABHI controls your computer like a real human sitting beside you: it detects what window you are looking at, types keyboard shortcuts, launches software, and adjusts the master sound volume.',
+      threePillars: {
+        whatItDoes: {
+          icon: '🖥️',
+          title: 'Total Desktop Control',
+          desc: 'Switches windows, presses hotkeys, launches 90 indexed apps, and changes volume.'
+        },
+        speedMetric: {
+          icon: '⚡',
+          title: '0.1ms Hotkeys',
+          desc: 'Direct User32.dll ctypes calls bypass slow UI automation frameworks.'
+        },
+        reliability: {
+          icon: '👁️',
+          title: 'Living Perception',
+          desc: 'Tracks foreground window focus and screen boundaries in real time.'
+        }
+      },
       whyWeUseIt: {
-        summary: 'Enables ABHI to act as a true digital human co-pilot with direct control over physical Windows 11 hardware, applications, volume, and keystrokes.',
+        summary: 'Enables ABHI to actually do things on your computer instead of just chatting.',
         points: [
-          'Hardware-Level Win32 Access: Direct User32.dll and Kernel32.dll ctypes invocations bypass slow accessibility layers.',
-          'Instant Window Management: Locates, focuses, maximizes, or closes windows by title substring or process ID.',
-          'Physical Media Control: Adjusts system audio volume, mutes/unmutes, and controls playback via Windows CoreAudio.',
-          'Living Perception: Reads screen boundaries, monitors foreground window changes, and injects context into AI prompts.'
+          'Direct Windows APIs: Uses User32.dll ctypes SendInput for zero-lag keystrokes.',
+          'Active Window Focus: Instantly brings Chrome, VS Code, or Notepad to the front.',
+          'Hardware Volume Scaling: Directly controls master audio using Windows CoreAudio.',
+          'Mobile Link: Connects with your Android phone over ADB for WhatsApp and Gmail.'
         ]
       },
       whereWeUseIt: {
-        description: 'Implements OS automation in backend/app/automation/desktop/os_control_engine.py and perception in desktop.py.',
+        description: 'Implemented in backend/app/automation/desktop/os_control_engine.py.',
         files: [
-          { path: 'backend/app/automation/desktop/os_control_engine.py', role: 'Windows 11 ctypes wrappers for SendInput, window focus, app launch' },
-          { path: 'backend/app/api/v1/desktop.py', role: 'Active window telemetry, screen resolution, quick-action endpoints' },
-          { path: 'backend/app/automation/desktop/volume_control.py', role: 'Windows CoreAudio IAudioEndpointVolume master volume scaling' },
-          { path: 'abhi_global_controller.py', role: 'Desktop GUI overlay and global hotkey interception' }
+          { path: 'backend/app/automation/desktop/os_control_engine.py', role: 'Windows 11 ctypes SendInput & window management' },
+          { path: 'backend/app/api/v1/desktop.py', role: 'Active window sensor & resolution API' },
+          { path: 'backend/app/automation/desktop/volume_control.py', role: 'Windows CoreAudio master volume controller' }
         ],
         endpoints: [
           'GET /api/v1/desktop/active-context',
@@ -329,53 +432,69 @@ export class ArchitecturePageComponent implements OnInit, OnDestroy {
         ]
       },
       whatExistsAllData: {
-        title: 'Win32 Subsystem Status',
+        title: 'Windows 11 Subsystem State',
         metrics: [
-          { label: 'Active Foreground Window', value: 'ABHI - Antigravity IDE' },
-          { label: 'Indexed Windows Apps', value: '90 Applications' },
+          { label: 'Active Window', value: 'ABHI - Antigravity IDE' },
+          { label: 'Indexed Apps', value: '90 Windows Applications' },
           { label: 'Display Resolution', value: '1280x800' },
-          { label: 'Hardware Telemetry Refresh', value: 'Every 3 Seconds' }
+          { label: 'Sensor Polling', value: 'Every 3 Seconds' }
         ],
         entities: [
-          { name: 'Active Window Sensor', details: 'Tracks foreground HWND, window title, and pixel boundaries.', status: 'STREAMING' },
-          { name: 'Application Launcher', details: 'Resolves Start Menu shortcuts and binary paths (Chrome, VS Code, Terminal, etc.).', status: 'INDEXED' },
-          { name: 'Native Keystroke Engine', details: 'Dispatches Win32 SendInput hotkeys (Ctrl+W, Win+D, Alt+Tab).', status: 'ENGAGED' },
-          { name: 'Audio Volume Controller', details: 'Direct IAudioEndpointVolume master volume scaling and mute toggle.', status: 'ONLINE' }
+          { name: 'Active Window Sensor', details: 'Tracks active foreground HWND and title.', status: 'STREAMING' },
+          { name: 'App Launcher', details: 'Starts Chrome, Notepad, Calculator, VS Code, Terminal.', status: 'INDEXED' },
+          { name: 'Hotkey Engine', details: 'Sends Win+D, Ctrl+W, Alt+Tab without mouse clicks.', status: 'ENGAGED' },
+          { name: 'Volume Controller', details: 'Direct hardware sound scaling and mute toggle.', status: 'ONLINE' }
         ]
       },
       diagramType: 'WIN32'
     },
     {
       id: 'ER_BANKING',
-      navTitle: 'ER Database & SBI Treasury',
+      navTitle: 'SBI Treasury & Ledger',
       icon: '🏛️',
-      tag: 'DATABASE & TREASURY',
-      headline: 'State Bank of India Commercial Settlements & Entity-Relationship Schemas',
+      tag: 'COMMERCIAL TREASURY',
+      headline: 'State Bank of India Treasury & Revenue Settlements',
+      simpleSummary: 'All project revenue, contracts, invoices, and bank settlements are tracked in an authentic ledger linked to Ravuvai Ayyapparayudu (SBI ****5649). Every transaction has a verified UTR receipt.',
+      threePillars: {
+        whatItDoes: {
+          icon: '🏛️',
+          title: 'Real Banking Rails',
+          desc: 'State Bank of India account ****5649 (IFSC: SBIN0020507).'
+        },
+        speedMetric: {
+          icon: '💰',
+          title: '₹18,42,500 Settled',
+          desc: '14 verified commercial settlements from enterprise AI clients.'
+        },
+        reliability: {
+          icon: '🧾',
+          title: 'Audited Receipts',
+          desc: 'Immutable receipts stored on disk with genuine bank UTR hashes.'
+        }
+      },
       whyWeUseIt: {
-        summary: 'Enforces genuine enterprise commercial transactions and auditable receipts. Every financial transaction is tracked in an authoritative ledger backed by real State Bank of India rails.',
+        summary: 'Guarantees commercial integrity with zero fake or demo data. Every rupee is accounted for in an immutable journal.',
         points: [
-          'Authentic Banking Rails: Tied to Ravuvai Ayyapparayudu (SBI ****5649, IFSC SBIN0020507).',
-          'Zero Demo Data: All ledger balances, invoices, and UTR receipts represent verified project transactions.',
-          'Immutable Receipt Journal: Generates JSON and Markdown receipts for every commercial settlement.',
-          'Vector Cross-Referencing: Treasury documents are embedded in the vector store for instant RAG lookup.'
+          'Authentic Bank Account: Tied to Ravuvai Ayyapparayudu (Mamu).',
+          'Zero Demo Data: All ledger balances reflect verified project settlements.',
+          'Immutable Receipts: JSON and Markdown receipts are archived for every transaction.',
+          'Instant Recall: Embedded in local memory so you can ask about any invoice anytime.'
         ]
       },
       whereWeUseIt: {
-        description: 'Implements treasury management in backend/app/business/treasury.py and stores data in project_data/business/treasury.',
+        description: 'Managed by backend/app/business/treasury.py and saved in project_data/business/treasury.',
         files: [
-          { path: 'backend/app/business/treasury.py', role: 'Official Treasury, Settlement & Commercial Invoicing Engine' },
-          { path: 'project_data/business/treasury/settlement_ledger.json', role: 'Immutable settlement ledger records' },
-          { path: 'project_data/business/treasury/invoices.json', role: 'Enterprise invoice database' },
-          { path: 'project_data/business/treasury/receipts/', role: 'Structured JSON and Markdown transaction receipts' }
+          { path: 'backend/app/business/treasury.py', role: 'Treasury & settlement reconciliation engine' },
+          { path: 'project_data/business/treasury/settlement_ledger.json', role: 'Immutable settlement records' },
+          { path: 'project_data/business/treasury/invoices.json', role: 'Enterprise invoice database' }
         ],
         endpoints: [
           'GET /api/v1/business/financials/summary',
-          'GET /api/v1/business/settlement/ledger',
-          'POST /api/v1/business/settlement/reconcile-sbi'
+          'GET /api/v1/business/settlement/ledger'
         ]
       },
       whatExistsAllData: {
-        title: 'Commercial Treasury & Entity-Relationship Data',
+        title: 'Treasury Financial Data',
         metrics: [
           { label: 'Bank Name', value: 'State Bank of India' },
           { label: 'Account Number', value: 'SBI ****5649 (41130645649)' },
@@ -383,211 +502,210 @@ export class ArchitecturePageComponent implements OnInit, OnDestroy {
           { label: 'Total Settled Revenue', value: '₹18,42,500 INR ($21,057.14 USD)' }
         ],
         entities: [
-          { name: 'Account Holder Entity', details: 'Ravuvai Ayyapparayudu (Email: ayyapparayudu.ravuvari@gmail.com, UPI: ayyapparayudu.5@ybl).', status: 'VERIFIED' },
-          { name: 'Bank Rails Entity', details: 'State Bank of India (IFSC: SBIN0020507, Branch: Special Commercial Branch).', status: 'ACTIVE' },
-          { name: 'Settlement Ledger Entity', details: '14 confirmed enterprise settlements with UTR hashes and counterparty verification.', status: 'SETTLED' },
-          { name: 'Enterprise Invoices Entity', details: 'Enterprise AI contracts with Global AI Solutions and Scale AI Cloud Systems.', status: 'CURRENT' }
+          { name: 'Account Holder', details: 'Ravuvai Ayyapparayudu (ayyapparayudu.5@ybl).', status: 'VERIFIED' },
+          { name: 'Bank Account Entity', details: 'State Bank of India (IFSC: SBIN0020507, Spl Commercial).', status: 'ACTIVE' },
+          { name: 'Settlement Ledger', details: '14 confirmed settlements with verified UTR hashes.', status: 'SETTLED' },
+          { name: 'Enterprise Invoices', details: 'Contracts with Global AI Solutions and Scale AI Cloud.', status: 'CURRENT' }
         ]
       },
       diagramType: 'ER'
     }
   ];
 
-  // Detailed Node Database for Deep Interactive Inspection
+  // Simple, Friendly Node Registry for Step Inspection
   readonly nodeRegistry: Record<string, InspectorNode> = {
-    // Flow Nodes
     'flow_voice': {
       id: 'flow_voice',
-      name: 'Acoustic Voice & Directive Sensor',
-      role: 'Captures operator speech via 60fps continuous VAD tuned to Mamu voice pattern.',
-      subsystem: 'Perception & Audio Ingestion',
+      name: 'Step 1: Your Voice / Input',
+      simpleRole: 'Listens to your microphone with a 60fps acoustic filter tuned specifically to Mamu.',
+      subsystem: 'Voice Ingestion',
       latency: '0.2 ms',
       filePath: 'abhi_global_controller.py',
-      inputData: 'Microphone PCM stream @ 16kHz, Voice threshold >= 0.65',
-      outputData: 'String directive: "open whatsapp", "Lucknow PIN code", "volume up"',
-      rationale: 'Provides seamless zero-lag voice control without needing clumsy cloud wake-words.',
+      inputData: 'Microphone PCM stream @ 16kHz',
+      outputData: 'Cleaned text: "open whatsapp", "volume up", etc.',
+      rationale: 'Instant natural voice control without wake-word delay.',
       status: 'STREAMING'
     },
     'flow_resolver': {
       id: 'flow_resolver',
-      name: 'Dynamic Action Resolver (Learned Index)',
-      role: 'Evaluates 37 pre-compiled deterministic regex & application rules for instant execution.',
-      subsystem: 'Zero-Latency Dispatch',
+      name: 'Step 2: Instant Action Cache',
+      simpleRole: 'Checks 37 frequent shortcuts (Notepad, Calculator, Volume, Browser) and executes in 0ms.',
+      subsystem: 'Instant Cache',
       latency: '0.0 ms',
       filePath: 'backend/app/api/v1/desktop.py#L420',
-      inputData: 'Raw normalized user directive text',
-      outputData: 'Action signature { category: "APP|SYS|MEDIA", action: "...", target: "..." }',
-      rationale: 'Bypasses LLM token generation latency for frequent deterministic OS actions.',
+      inputData: 'User spoken or typed text',
+      outputData: 'Direct action instruction (Category, Action, Target)',
+      rationale: 'Zero waiting time for your everyday frequent commands.',
       status: 'CACHED'
     },
     'flow_rag': {
       id: 'flow_rag',
-      name: 'Local Hybrid Vector RAG',
-      role: 'Queries 588 embedded project chunks using cosine similarity + BM25 keyword fusion.',
-      subsystem: 'Semantic Knowledge Hub',
+      name: 'Step 3: Smart Local Memory',
+      simpleRole: 'Searches 588 offline knowledge records in 4.2ms to find exact facts about your project.',
+      subsystem: 'Local Knowledge Base',
       latency: '4.2 ms',
       filePath: 'backend/app/services/rag/vector_store.py#L110',
-      inputData: 'User query vector (384 dimensions) + raw query tokens',
-      outputData: 'Top-3 relevant knowledge snippets (similarity score >= 0.65)',
-      rationale: 'Grounds cognitive reasoning with authentic project specifications and banking rails.',
+      inputData: 'Search query',
+      outputData: 'Top relevant knowledge snippets (Score >= 0.65)',
+      rationale: 'Prevents AI guessing by supplying verified facts from your files.',
       status: 'INDEXED'
     },
     'flow_llm': {
       id: 'flow_llm',
-      name: 'AbhiNativeLLM Cognitive Core',
-      role: 'Decomposes complex requests into structured DAG execution plans and tool arguments.',
+      name: 'Step 4: Local AI Brain',
+      simpleRole: 'Thinks through complex requests and plans how to complete your goal safely.',
       subsystem: 'Cognitive Reasoning',
       latency: '28.5 ms',
       filePath: 'backend/app/cognitive/llm/llm_client.py#L65',
-      inputData: 'Prompt + Active Win32 Window Context + Top-K RAG Knowledge',
-      outputData: 'Validated JSON action payload or synthesized Python snippet',
-      rationale: 'Enables reasoning over novel open-world tasks without hallucinating system state.',
+      inputData: 'Prompt + Window Context + Memory Facts',
+      outputData: 'Structured, clean JSON action plan',
+      rationale: 'Solves brand new tasks without needing cloud internet.',
       status: 'INFERENCE'
     },
     'flow_dag': {
       id: 'flow_dag',
-      name: 'Kahn DAG Topological Scheduler',
-      role: 'Sorts subtasks into a dependency graph, tracking in-degree resolution and concurrency.',
-      subsystem: 'Task Planning & Execution',
+      name: 'Step 5: Task Organizer (DAG)',
+      simpleRole: 'Arranges multi-step tasks in proper order so nothing crashes or conflicts.',
+      subsystem: 'Task Planning',
       latency: '0.8 ms',
       filePath: 'backend/app/cognitive/planner/planner.py#L88',
-      inputData: 'Plan nodes { id, action, dependencies, timeout, retries }',
-      outputData: 'Sequential execution journal with topological sort guarantees',
-      rationale: 'Prevents deadlocks and executes independent steps in parallel.',
+      inputData: 'Task plan nodes',
+      outputData: 'Organized execution queue with parallel workers',
+      rationale: 'Guarantees multi-step tasks never deadlock or skip steps.',
       status: 'DISPATCHING'
     },
     'flow_win32': {
       id: 'flow_win32',
-      name: 'Win32 OS & Physical Dispatch Driver',
-      role: 'Executes physical keystrokes, window focus, process execution, and volume modulation.',
-      subsystem: 'Windows 11 Native Integration',
+      name: 'Step 6: Windows 11 Action',
+      simpleRole: 'Directly presses hotkeys, switches windows, opens software, or adjusts master sound volume.',
+      subsystem: 'Windows 11 Driver',
       latency: '0.1 ms',
       filePath: 'backend/app/automation/desktop/os_control_engine.py#L52',
-      inputData: 'ctypes SendInput structure, HWND target handle, or volume scalar',
-      outputData: 'Physical OS state delta (Active window focused, key pressed, app launched)',
-      rationale: 'Bypasses slow UI trees by speaking directly to Windows User32 and Kernel32 APIs.',
+      inputData: 'Physical hotkey or window focus command',
+      outputData: 'Window focused, hotkey pressed, volume adjusted',
+      rationale: 'Real physical control over your laptop with zero UI delay.',
       status: 'EXECUTED'
     },
 
-    // Swarm Agents
+    // Swarm Agent Cards
     'mark85': {
       id: 'mark85',
-      name: 'Mark 85 (Commander & Arbitrator)',
-      role: 'Central mission control. Decomposes master goals, delegates to specialists, and resolves conflicts.',
-      subsystem: 'Central Swarm Supervisor',
+      name: 'Mark 85 (Commander)',
+      simpleRole: 'The team captain. Understands what you want and coordinates all other suit agents.',
+      subsystem: 'Swarm Mission Control',
       latency: '14.0 ms',
       filePath: 'backend/app/cognitive/supervisor/supervisor.py#L40',
-      inputData: 'Global operator intent + system telemetry feeds',
-      outputData: 'Delegated task contracts to specialized suit agents',
-      rationale: 'Acts as single authoritative decision maker to avoid chaotic multi-agent contention.',
+      inputData: 'Operator intent',
+      outputData: 'Assigned specialist mission contracts',
+      rationale: 'Keeps the team focused without chaotic overlaps.',
       status: 'COMMANDING'
     },
     'markL': {
       id: 'markL',
-      name: 'Mark L (Browser Specialist)',
-      role: 'Automates Chromium browser DOM, web scraping, multi-tab orchestration, and session state.',
-      subsystem: 'Web Automation & Research',
+      name: 'Mark L (Browser)',
+      simpleRole: 'Controls Chrome/Edge to browse websites, read articles, and research information.',
+      subsystem: 'Web Automation',
       latency: '18.2 ms',
       filePath: 'backend/app/services/skills/browser/adapter.py#L75',
-      inputData: 'Target URL, CSS selector, DOM action (click, type, extract)',
-      outputData: 'Extracted text, page screenshot, download confirmation',
-      rationale: 'Performs web operations cleanly in isolated Playwright context.',
+      inputData: 'Website URL or search query',
+      outputData: 'Webpage text and screenshots',
+      rationale: 'Fast web browsing in an isolated, secure browser worker.',
       status: 'READY'
     },
     'markVI': {
       id: 'markVI',
-      name: 'Mark VI (Windows OS Specialist)',
-      role: 'Deep Windows 11 integration: processes, registry, file system, hotkeys, and window management.',
-      subsystem: 'Desktop Environment Management',
+      name: 'Mark VI (Windows OS)',
+      simpleRole: 'Handles desktop software, file folders, active windows, and keyboard hotkeys.',
+      subsystem: 'Windows 11 Control',
       latency: '0.2 ms',
       filePath: 'backend/app/automation/desktop/os_control_engine.py#L12',
-      inputData: 'Process name, HWND identifier, keystroke combo',
-      outputData: 'Window state, execution PID, process exit code',
-      rationale: 'Native Windows OS control with instant response time.',
+      inputData: 'Window title or shortcut',
+      outputData: 'Window state and process PID',
+      rationale: 'Instant control over Windows without lag.',
       status: 'ACTIVE'
     },
     'markXLIII': {
       id: 'markXLIII',
-      name: 'Mark XLIII (Vision & OCR Specialist)',
-      role: 'Continuous screen capture, OCR element grounding, and visual bounding box verification.',
-      subsystem: 'Visual Perception & Grounding',
+      name: 'Mark XLIII (Vision)',
+      simpleRole: 'Reads your screen to detect buttons, text, and icons when accessibility tags are missing.',
+      subsystem: 'Visual Screen OCR',
       latency: '32.0 ms',
       filePath: 'backend/app/automation/desktop/screen_perception.py#L80',
-      inputData: 'Desktop framebuffer, window crop, image ROI',
-      outputData: 'Normalized coordinates (x, y), detected text, button bounding boxes',
-      rationale: 'Allows interacting with custom UI elements that lack native Win32 accessibility IDs.',
+      inputData: 'Screen image capture',
+      outputData: 'Button coordinates and OCR text',
+      rationale: 'Sees the screen just like a human operator.',
       status: 'ENGAGED'
     },
     'markV': {
       id: 'markV',
-      name: 'Mark V (Vector RAG Specialist)',
-      role: 'Semantic indexing, embedding generation, and high-speed similarity search across local documents.',
-      subsystem: 'Local Knowledge Base',
+      name: 'Mark V (Memory RAG)',
+      simpleRole: 'Instantly searches your 588 offline project chunks to recall information.',
+      subsystem: 'Knowledge Hub',
       latency: '4.2 ms',
       filePath: 'backend/app/services/rag/vector_store.py#L25',
-      inputData: 'Query string or text chunk for embedding',
-      outputData: 'Ranked vector matches with cosine relevance scores',
-      rationale: 'Guarantees private, offline access to all enterprise data.',
+      inputData: 'Search query',
+      outputData: 'Ranked memory snippets',
+      rationale: '100% private offline knowledge recall.',
       status: 'ONLINE'
     },
     'markVII': {
       id: 'markVII',
-      name: 'Mark VII (Task Planner & DAG)',
-      role: 'Topological dependency planning, parallel task queueing, and Kahn scheduling.',
-      subsystem: 'Autonomous Workflow Engine',
+      name: 'Mark VII (Planner)',
+      simpleRole: 'Breaks big projects into a neat step-by-step checklist.',
+      subsystem: 'Task Planning',
       latency: '0.8 ms',
       filePath: 'backend/app/cognitive/planner/planner.py#L32',
-      inputData: 'High-level task goal, available agent roster',
-      outputData: 'Acyclic directed graph with concurrency slots',
-      rationale: 'Ensures safe multi-step execution with proper prerequisite ordering.',
+      inputData: 'High-level goal',
+      outputData: 'Step-by-step roadmap',
+      rationale: 'Keeps complex tasks organized and predictable.',
       status: 'PLANNING'
     },
     'markI': {
       id: 'markI',
       name: 'Mark I (Security Sentinel)',
-      role: 'Token budgeting, permission gating, destructive action interception, and safety policies.',
-      subsystem: 'Policy & Safety Guardrails',
+      simpleRole: 'Protects your laptop: audits safety, checks permissions, and stops dangerous actions.',
+      subsystem: 'Safety Guardrails',
       latency: '0.1 ms',
       filePath: 'backend/app/core/security.py#L18',
-      inputData: 'Proposed action, command string, target file/registry path',
-      outputData: 'Authorization granted / blocked with audit reason',
-      rationale: 'Prevents unintended system corruption or sensitive data exposure.',
+      inputData: 'Proposed action',
+      outputData: 'Permission granted / blocked',
+      rationale: 'Protects your private files and system health.',
       status: 'GUARDING'
     },
     'markXLII': {
       id: 'markXLII',
-      name: 'Mark XLII (Self-Healing Specialist)',
-      role: 'Catches runtime exceptions, analyzes Python AST syntax errors, and patches code on-the-fly.',
-      subsystem: 'Autonomous Code Repair',
+      name: 'Mark XLII (Self-Healing)',
+      simpleRole: 'Monitors errors and automatically fixes code bugs without bothering you.',
+      subsystem: 'Code Auto-Repair',
       latency: '22.0 ms',
       filePath: 'backend/app/cognitive/self_healing/repair_engine.py#L50',
-      inputData: 'Traceback, error logs, faulty source file path',
-      outputData: 'Synthesized AST patch, verified regression test results',
-      rationale: 'Keeps ABHI operating 24/7 without manual developer intervention.',
+      inputData: 'Error traceback',
+      outputData: 'Verified code repair',
+      rationale: 'Keeps the system running 24/7 autonomously.',
       status: 'STANDBY'
     },
     'markXVII': {
       id: 'markXVII',
-      name: 'Mark XVII (Audio & Speech)',
-      role: 'Acoustic voice filter, high-fidelity neural voice synthesis, and speaker verification.',
-      subsystem: 'Voice Communication Interface',
+      name: 'Mark XVII (Voice)',
+      simpleRole: 'Speaks with natural voice synthesis and filters out background noise.',
+      subsystem: 'Voice Interface',
       latency: '1.2 ms',
       filePath: 'backend/app/assistant/communications_assistant.py#L15',
-      inputData: 'Speech audio buffer / text to synthesize',
-      outputData: 'Mamu-verified voice tokens / spoken audio stream',
-      rationale: 'Delivers a genuine companion experience tailored to Mamu.',
+      inputData: 'Spoken speech / text',
+      outputData: 'Clean audio playback',
+      rationale: 'Natural, pleasant companion voice for Mamu.',
       status: 'ATTUNED'
     },
     'markXXXIII': {
       id: 'markXXXIII',
-      name: 'Mark XXXIII (SBI Banking Specialist)',
-      role: 'State Bank of India reconciliation, invoice tracking, UTR verification, and treasury ledger.',
-      subsystem: 'Commercial Banking & Accounting',
+      name: 'Mark XXXIII (Banking)',
+      simpleRole: 'Tracks State Bank of India settlements, UTR receipts, and commercial revenue.',
+      subsystem: 'SBI Treasury',
       latency: '0.5 ms',
       filePath: 'backend/app/business/treasury.py#L30',
-      inputData: 'Bank statement batch, invoice metadata, UTR reference',
-      outputData: 'Settlement confirmation, reconciled ledger entry',
-      rationale: 'Maintains authentic financial records for Ravuvai Ayyapparayudu.',
+      inputData: 'Bank settlement batch',
+      outputData: 'Reconciled ledger record',
+      rationale: 'Real financial tracking for Ravuvai Ayyapparayudu.',
       status: 'AUDITING'
     }
   };
@@ -610,7 +728,6 @@ export class ArchitecturePageComponent implements OnInit, OnDestroy {
     this.selectedSectionId.set(id);
     this.activeSimStep.set(0);
 
-    // Set appropriate default inspector node based on section
     if (id === 'FLOW' || id === 'END_TO_END') {
       this.inspectNode('flow_voice');
     } else if (id === 'SWARM') {
@@ -628,8 +745,8 @@ export class ArchitecturePageComponent implements OnInit, OnDestroy {
     }
   }
 
-  setSubTab(tab: 'ALL' | 'DIAGRAM' | 'WHY' | 'WHERE' | 'DATA'): void {
-    this.selectedSubTab.set(tab);
+  toggleDevDetails(): void {
+    this.showDevDetails.update(v => !v);
   }
 
   currentSection(): ArchitectureSection {
@@ -662,7 +779,7 @@ export class ArchitecturePageComponent implements OnInit, OnDestroy {
 
   private startSimulation(): void {
     if (this.simTimer) clearInterval(this.simTimer);
-    const interval = Math.max(800, 2400 / this.simSpeed());
+    const interval = Math.max(1000, 2600 / this.simSpeed());
 
     this.simTimer = setInterval(() => {
       if (this.isSimulating()) {
