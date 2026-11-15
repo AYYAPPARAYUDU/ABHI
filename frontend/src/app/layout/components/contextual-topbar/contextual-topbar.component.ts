@@ -6,7 +6,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs/operators';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
 import { UserExperienceMode } from '../../../core/models/agent-experience.model';
-import { ThemeService } from '../../../core/services/theme.service';
+import { ThemeService, AbhiTheme } from '../../../core/services/theme.service';
 import { SpeechVoiceService, AppLanguage } from '../../../core/services/speech-voice.service';
 import { CommunicationsAssistantService } from '../../../core/services/communications-assistant.service';
 import { AgentCommandService } from '../../../core/services/agent-command.service';
@@ -50,6 +50,12 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
   readonly mobileStatus = signal<any>(null);
   private mobilePollInterval: any = null;
 
+  // Theme Side Popup & Mobile Navigation Signals
+  readonly isThemeDrawerOpen = signal<boolean>(false);
+  readonly isMobileNavOpen = signal<boolean>(false);
+  readonly glowMode = signal<'SOFT' | 'VIVID' | 'MINIMAL'>('SOFT');
+  readonly contrastMode = signal<'NORMAL' | 'HIGH'>('NORMAL');
+
   readonly isMobileConnected = computed(() => this.mobileStatus()?.connected === true);
   readonly mobileLabel = computed(() => {
     const m = this.mobileStatus();
@@ -58,6 +64,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
     const bat = m.battery?.level;
     return `${dev}${bat ? ' ' + bat + '%' : ''}`;
   });
+
   readonly mobileTooltip = computed(() => {
     const m = this.mobileStatus();
     if (!m || !m.connected) return 'Mobile Controller: ADB Ready on tcp:5037. Connect phone via USB or Wi-Fi to automate.';
@@ -92,6 +99,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
     if (url.startsWith('/automation')) return 'Physical OS Automation';
     if (url.startsWith('/decision-pipeline')) return 'Decision Pipeline';
     if (url.startsWith('/intelligence')) return 'Neural & Intelligence';
+    if (url.startsWith('/architecture')) return 'Architecture & Workflows';
     if (url.startsWith('/applications')) return 'Windows OS Applications';
     if (url.startsWith('/browser')) return 'AI Browser Automation';
     if (url.startsWith('/media-library')) return 'Multimodal Media Library';
@@ -133,6 +141,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
     if (event?.currentTarget) {
       this.animService.tactileClick(event.currentTarget as HTMLElement);
     }
+    this.closeMobileNav();
     this.router.navigateByUrl(route);
   }
 
@@ -165,15 +174,66 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
       'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30"><rect width="100%" height="100%" fill="%2300f0ff"/><text x="50%" y="55%" fill="%23000" font-size="12" font-family="sans-serif" font-weight="bold" dominant-baseline="middle" text-anchor="middle">AR</text></svg>';
   }
 
+  // Theme Side Drawer Controls
   cycleTheme(event?: MouseEvent): void {
+    this.toggleThemeDrawer(event);
+  }
+
+  toggleThemeDrawer(event?: MouseEvent): void {
+    if (event) {
+      event.stopPropagation();
+      if (event.currentTarget) {
+        this.animService.tactileClick(event.currentTarget as HTMLElement);
+      }
+    }
+    this.isThemeDrawerOpen.update((v) => !v);
+  }
+
+  closeThemeDrawer(): void {
+    this.isThemeDrawerOpen.set(false);
+  }
+
+  selectThemePreset(presetId: string, event?: MouseEvent): void {
     if (event?.currentTarget) {
       this.animService.tactileClick(event.currentTarget as HTMLElement);
     }
-    const presets = this.themeService.availablePresets;
-    const currentId = this.themeService.activeTheme().id;
-    const idx = presets.findIndex((p) => p.id === currentId);
-    const nextIdx = (idx + 1) % presets.length;
-    this.themeService.setPreset(presets[nextIdx].id);
+    this.themeService.setPreset(presetId);
+  }
+
+  setGlowMode(mode: 'SOFT' | 'VIVID' | 'MINIMAL'): void {
+    this.glowMode.set(mode);
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      if (mode === 'VIVID') {
+        root.style.setProperty('--abhi-glow-intensity', '1.5');
+      } else if (mode === 'MINIMAL') {
+        root.style.setProperty('--abhi-glow-intensity', '0.1');
+      } else {
+        root.style.setProperty('--abhi-glow-intensity', '1.0');
+      }
+    }
+  }
+
+  setContrastMode(mode: 'NORMAL' | 'HIGH'): void {
+    this.contrastMode.set(mode);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-contrast', mode.toLowerCase());
+    }
+  }
+
+  resetThemeToDefault(): void {
+    this.themeService.resetToDefault();
+    this.glowMode.set('SOFT');
+    this.contrastMode.set('NORMAL');
+  }
+
+  // Mobile Navigation Sheet Controls
+  toggleMobileNav(): void {
+    this.isMobileNavOpen.update((v) => !v);
+  }
+
+  closeMobileNav(): void {
+    this.isMobileNavOpen.set(false);
   }
 
   setMode(mode: UserExperienceMode): void {
@@ -209,7 +269,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
 
   toggleLangDropdown(event?: MouseEvent): void {
     if (event) event.stopPropagation();
-    this.isLangDropdownOpen.update(v => !v);
+    this.isLangDropdownOpen.update((v) => !v);
   }
 
   closeLangDropdown(): void {

@@ -30,10 +30,10 @@
     </div>
   }
 
-  <!-- Main System & Clean Navigation Row -->
-  <div class="bar-main-row">
-    <!-- Left: Brand Identity & Status -->
-    <div class="bar-left">
+  <!-- Main System & Responsive Navigation Bar (Bootstrap 5 Flex Grid) -->
+  <div class="bar-main-row container-fluid px-3 px-xl-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+    <!-- Left: Brand Identity, Active Window & Status Indicator -->
+    <div class="bar-left d-flex align-items-center gap-2 gap-md-3">
       <!-- High-Tech Brand Pill (VisionOS Spatial Design) -->
       <a routerLink="/home" class="hud-brand-pill" title="Return to Central AI Workspace">
         <div class="brand-orb-icon">
@@ -41,110 +41,74 @@
         </div>
         <div class="brand-text-block">
           <span class="brand-title">ABHI</span>
-          <span class="brand-sub">{{ currentRouteTitle() }}</span>
+          <span class="brand-sub d-none d-sm-inline">{{ currentRouteTitle() }}</span>
         </div>
       </a>
 
       <!-- Status Indicator Tag -->
-      <div class="status-indicator-tag" [class.working]="isWorking()" [title]="'System Status: ' + systemStatusLabel()">
+      <div class="status-indicator-tag d-none d-md-flex" [class.working]="isWorking()" [title]="'System Status: ' + systemStatusLabel()">
         <span class="pulse-dot"></span>
-        <span class="status-label">{{ systemStatusLabel() }}</span>
+        <span class="status-label font-monospace">{{ systemStatusLabel() }}</span>
       </div>
 
       <!-- SBI Sovereign Settlement Pill -->
-      <a routerLink="/business" class="topbar-sbi-pill font-monospace" title="Click to view Sovereign Business & State Bank of India Settlement Ledger (ayyapparayudu.5@ybl)">
+      <a routerLink="/business" class="topbar-sbi-pill font-monospace d-none d-lg-flex" title="Sovereign Business & State Bank of India Settlement Ledger (ayyapparayudu.5@ybl)">
         <span class="sbi-ic">🏛️</span>
         <span class="sbi-acc text-cyan">SBI: ****5649</span>
         <span class="sbi-sep">·</span>
         <span class="sbi-name">Ravuvai A.</span>
       </a>
-    </div>
 
-    <!-- Center: Clean Primary Navbar with Direct Access to All Main Subsystems -->
-    <nav class="clean-main-navbar" role="navigation" aria-label="Main System Navigation">
-      <!-- 1. Home (Era AI VisionOS HUD) -->
-      <a
-        routerLink="/home"
-        class="clean-nav-btn"
-        [class.active]="isActive('/home')"
-        title="Era AI Sovereign HUD & Geolocation Command Center"
-      >
-        <span class="nav-btn-icon">🖥️</span>
-        <span class="nav-btn-text">Home</span>
-        @if (isActive('/home')) {
-          <span class="nav-active-pip"></span>
-        }
-      </a>
-
-      <!-- 2. 3D Core (Arc Reactor Intelligence Core) -->
-      <a
-        routerLink="/core"
-        class="clean-nav-btn core-nav-btn"
-        [class.active]="isActive('/core')"
-        title="Living 3D Arc Reactor Intelligence Core, Singularity & DP/DL Predictor"
-      >
-        <span class="nav-btn-icon">🌀</span>
-        <span class="nav-btn-text">Core</span>
-        @if (isActive('/core')) {
-          <span class="nav-active-pip"></span>
-        }
-      </a>
-
-      <!-- 3. Business (SBI Revenue & Sovereign Commercial Ledger) -->
-      <a
-        routerLink="/business"
-        class="clean-nav-btn business-nav-btn"
-        [class.active]="isActive('/business')"
-        title="Sovereign Commercial Business, 3D LLM Constellation & SBI Invoicing (ayyapparayudu.5@ybl)"
-      >
-        <span class="nav-btn-icon">🏛️</span>
-        <span class="nav-btn-text">Business</span>
-        @if (isActive('/business')) {
-          <span class="nav-active-pip"></span>
-        }
-      </a>
-
-      <!-- 4. Workspace (Master 3D Architectural Command Center & Live Multi-Agent Swarm) -->
-      <a
-        routerLink="/workspace"
-        class="clean-nav-btn"
-        [class.active]="isActive('/workspace')"
-        title="Unified 3D Architectural Command Center, Live Multi-Agent Stream & Physical Telemetry"
-      >
-        <span class="nav-btn-icon">🛰️</span>
-        <span class="nav-btn-text">Command Center</span>
-        @if (isActive('/workspace')) {
-          <span class="nav-active-pip"></span>
-        }
-      </a>
-
-      <!-- 5. Architecture & Workflows (Full System Diagrams, ER & Resource Specs) -->
-      <a
-        routerLink="/architecture"
-        class="clean-nav-btn architecture-nav-btn"
-        [class.active]="isActive('/architecture')"
-        title="Comprehensive System Architecture, Real Execution Workflows, ER Diagrams & Resource Specs"
-      >
-        <span class="nav-btn-icon">📐</span>
-        <span class="nav-btn-text">Architecture & Workflows</span>
-        @if (isActive('/architecture')) {
-          <span class="nav-active-pip"></span>
-        }
-      </a>
-
-      <!-- 7. Theme Changer -->
+      <!-- Mobile Navigation Hamburger (Visible on < 1200px) -->
       <button
         type="button"
-        class="clean-nav-btn theme-nav-btn"
-        (click)="cycleTheme($event)"
-        [title]="'Cycle Theme: ' + themeService.activeTheme().label + ' (Click to Switch)'"
+        class="mobile-menu-toggler d-xl-none"
+        (click)="toggleMobileNav()"
+        aria-label="Toggle Navigation Menu"
+        title="Open Navigation"
       >
-        <span class="nav-btn-icon">🎨</span>
-        <span class="nav-btn-text">Theme</span>
-        <span class="theme-tag font-monospace">{{ themeService.activeTheme().label }}</span>
+        <span class="toggler-icon">☰</span>
       </button>
+    </div>
 
-      <!-- 8. Brain -->
+    <!-- Center: Clean Primary Navbar with Direct Links -->
+    <nav class="clean-main-navbar d-none d-xl-flex align-items-center gap-1" role="navigation" aria-label="Main Navigation">
+      <!-- 1. Home -->
+      <a routerLink="/home" class="clean-nav-btn" [class.active]="isActive('/home')" title="Era AI Sovereign HUD">
+        <span class="nav-btn-icon">🖥️</span>
+        <span class="nav-btn-text">Home</span>
+        @if (isActive('/home')) { <span class="nav-active-pip"></span> }
+      </a>
+
+      <!-- 2. Core (Arc Reactor) -->
+      <a routerLink="/core" class="clean-nav-btn core-nav-btn" [class.active]="isActive('/core')" title="3D Arc Reactor Intelligence Core">
+        <span class="nav-btn-icon">🌀</span>
+        <span class="nav-btn-text">Core</span>
+        @if (isActive('/core')) { <span class="nav-active-pip"></span> }
+      </a>
+
+      <!-- 3. Business (SBI Treasury) -->
+      <a routerLink="/business" class="clean-nav-btn business-nav-btn" [class.active]="isActive('/business')" title="Sovereign Commercial Business & SBI Invoicing">
+        <span class="nav-btn-icon">🏛️</span>
+        <span class="nav-btn-text">Business</span>
+        @if (isActive('/business')) { <span class="nav-active-pip"></span> }
+      </a>
+
+      <!-- 4. Command Center -->
+      <a routerLink="/workspace" class="clean-nav-btn" [class.active]="isActive('/workspace')" title="3D Architectural Command Center & Multi-Agent Swarm">
+        <span class="nav-btn-icon">🛰️</span>
+        <span class="nav-btn-text">Command Center</span>
+        @if (isActive('/workspace')) { <span class="nav-active-pip"></span> }
+      </a>
+
+      <!-- 5. Architecture & Workflows -->
+      <a routerLink="/architecture" class="clean-nav-btn architecture-nav-btn" [class.active]="isActive('/architecture')" title="System Architecture, Execution Workflows, ER Diagrams & Resource Specs">
+        <span class="nav-btn-icon">🗺️</span>
+        <span class="nav-btn-text">Architecture & Workflows</span>
+        @if (isActive('/architecture')) { <span class="nav-active-pip"></span> }
+      </a>
+
+      <!-- 6. Brain -->
       <button
         type="button"
         class="clean-nav-btn brain-nav-btn"
@@ -158,13 +122,13 @@
         }
       </button>
 
-      <!-- 9. Gallery -->
+      <!-- 7. Gallery -->
       <a
         routerLink="/media"
         [queryParams]="{ tab: 'vault' }"
         class="clean-nav-btn gallery-nav-btn"
         [class.active]="isActive('/media')"
-        title="Media & Security Vault Gallery (Generated Images, Videos & Intruder Snapshots)"
+        title="Media & Security Vault Gallery"
       >
         <span class="nav-btn-icon">🖼️</span>
         <span class="nav-btn-text">Gallery</span>
@@ -174,12 +138,24 @@
       </a>
     </nav>
 
-    <!-- Right: Companion Controls (Mobile Mirror, Voice Hub, Alexa, Audio, Language, E-STOP) -->
-    <div class="bar-right">
-      <!-- Mobile Controller & Screen Mirror Hub Trigger -->
+    <!-- Right: Companion Controls (Compact Theme Icon Button, Mobile, Voice, Lang, E-STOP) -->
+    <div class="bar-right d-flex align-items-center gap-2">
+      <!-- COMPACT THEME CUSTOMIZER ICON TRIGGER -->
       <button
         type="button"
-        class="topbar-tool-btn mobile-hub-btn"
+        class="topbar-tool-btn theme-icon-trigger"
+        [class.active]="isThemeDrawerOpen()"
+        (click)="toggleThemeDrawer($event)"
+        [title]="'Theme: ' + themeService.activeTheme().label + ' (Click to open theme customizer)'"
+      >
+        <span class="btn-icon">🎨</span>
+        <span class="theme-color-indicator" [style.background]="themeService.activeTheme().colors.accentPrimary"></span>
+      </button>
+
+      <!-- Mobile Controller Hub Trigger -->
+      <button
+        type="button"
+        class="topbar-tool-btn mobile-hub-btn d-none d-sm-flex"
         appAnimeInteractive
         [appAnimeType]="'button'"
         [class.connected]="isMobileConnected()"
@@ -187,26 +163,24 @@
         [title]="mobileTooltip()"
       >
         <span class="btn-icon">📱</span>
-        <span class="btn-text">{{ mobileLabel() }}</span>
+        <span class="btn-text d-none d-md-inline">{{ mobileLabel() }}</span>
         @if (isMobileConnected()) {
           <span class="topbar-pulse-dot"></span>
         }
       </button>
 
-      <!-- Voice & Biometrics Center Trigger (Wake-word, Barge-in, Biometrics) -->
+      <!-- Voice & Biometrics Center Trigger -->
       <button
         type="button"
-        class="topbar-tool-btn voice-center-btn"
+        class="topbar-tool-btn voice-center-btn d-none d-md-flex"
         appAnimeInteractive
         [appAnimeType]="'button'"
         (click)="openVoiceCenter()"
-        title="Open Voice & Biometrics Command Center (Hey Mamu, Barge-in, Owner Voice, TTS tuning)"
+        title="Voice & Biometrics Command Center"
       >
         <span class="btn-icon">⚙️</span>
-        <span class="btn-text">Voice Hub</span>
+        <span class="btn-text d-none d-lg-inline">Voice Hub</span>
       </button>
-
-
 
       <!-- Voice Audio Speech Synthesis Toggle -->
       <button
@@ -217,10 +191,9 @@
         [class.muted]="speechVoice.isMuted()"
         [class.speaking]="speechVoice.isSpeaking()"
         (click)="toggleVoiceAudio()"
-        [title]="speechVoice.isMuted() ? 'Voice Audio Muted (Click to Unmute)' : 'Voice Audio Active (Click to Mute)'"
+        [title]="speechVoice.isMuted() ? 'Voice Muted (Click to Unmute)' : 'Voice Active (Click to Mute)'"
       >
         <span class="btn-icon">{{ speechVoice.isMuted() ? '🔇' : (speechVoice.isSpeaking() ? '🗣️' : '🔊') }}</span>
-        <span class="btn-text">{{ speechVoice.isMuted() ? 'Muted' : (speechVoice.isSpeaking() ? 'Speaking' : 'Voice') }}</span>
       </button>
 
       <!-- Universal Language Selector Dropdown -->
@@ -232,15 +205,15 @@
           [appAnimeType]="'button'"
           [class.active]="isLangDropdownOpen()"
           (click)="toggleLangDropdown($event)"
-          [title]="'Active Language: ' + getLanguageLabel(speechVoice.selectedLanguage()) + ' (Click to change)'"
+          [title]="'Active Language: ' + getLanguageLabel(speechVoice.selectedLanguage())"
         >
           <span class="btn-icon">{{ getLanguageFlag(speechVoice.selectedLanguage()) }}</span>
-          <span class="btn-text font-monospace">{{ getLanguageShort(speechVoice.selectedLanguage()) }}</span>
+          <span class="btn-text font-monospace d-none d-sm-inline">{{ getLanguageShort(speechVoice.selectedLanguage()) }}</span>
           <span class="dropdown-arrow">▾</span>
         </button>
         @if (isLangDropdownOpen()) {
           <div class="lang-dropdown-menu" (click)="$event.stopPropagation()">
-            <div class="lang-dropdown-header">SELECT LANGUAGE / భాష / भाषा</div>
+            <div class="lang-dropdown-header font-monospace">SELECT LANGUAGE / భాష / भाषा</div>
             <button
               type="button"
               class="lang-item-btn"
@@ -324,7 +297,7 @@
       @if (stateService.safety().emergencyStopped) {
         <button
           type="button"
-          class="estop-btn e-stop-btn active"
+          class="estop-btn active"
           disabled
           title="System Emergency Stopped"
         >
@@ -333,7 +306,7 @@
       } @else {
         <button
           type="button"
-          class="estop-btn e-stop-btn"
+          class="estop-btn"
           (click)="stateService.triggerEmergencyStop()"
           title="Immediate Emergency Stop"
         >
@@ -343,6 +316,182 @@
     </div>
   </div>
 
+  <!-- RESPONSIVE MOBILE NAVIGATION SHEET (DROPDOWN DRAWER FOR < 1200PX) -->
+  @if (isMobileNavOpen()) {
+    <div class="mobile-nav-backdrop" (click)="closeMobileNav()">
+      <div class="mobile-nav-sheet" (click)="$event.stopPropagation()">
+        <div class="mobile-nav-header">
+          <span class="mobile-nav-title font-monospace">🚀 SYSTEM NAVIGATION</span>
+          <button type="button" class="mobile-nav-close-btn" (click)="closeMobileNav()">✕</button>
+        </div>
+        <div class="mobile-nav-links">
+          <a routerLink="/home" class="mobile-nav-item" (click)="closeMobileNav()">
+            <span class="item-icon">🖥️</span>
+            <div class="item-text">
+              <span class="item-title">Home</span>
+              <span class="item-desc">Era AI Sovereign HUD</span>
+            </div>
+          </a>
+          <a routerLink="/core" class="mobile-nav-item" (click)="closeMobileNav()">
+            <span class="item-icon">🌀</span>
+            <div class="item-text">
+              <span class="item-title">Core</span>
+              <span class="item-desc">3D Arc Reactor Intelligence</span>
+            </div>
+          </a>
+          <a routerLink="/business" class="mobile-nav-item" (click)="closeMobileNav()">
+            <span class="item-icon">🏛️</span>
+            <div class="item-text">
+              <span class="item-title">Business</span>
+              <span class="item-desc">State Bank of India Treasury</span>
+            </div>
+          </a>
+          <a routerLink="/workspace" class="mobile-nav-item" (click)="closeMobileNav()">
+            <span class="item-icon">🛰️</span>
+            <div class="item-text">
+              <span class="item-title">Command Center</span>
+              <span class="item-desc">3D Workspace & Multi-Agent Swarm</span>
+            </div>
+          </a>
+          <a routerLink="/architecture" class="mobile-nav-item" (click)="closeMobileNav()">
+            <span class="item-icon">🗺️</span>
+            <div class="item-text">
+              <span class="item-title">Architecture & Workflows</span>
+              <span class="item-desc">System Blueprint & Schematics</span>
+            </div>
+          </a>
+          <a routerLink="/media" [queryParams]="{ tab: 'vault' }" class="mobile-nav-item" (click)="closeMobileNav()">
+            <span class="item-icon">🖼️</span>
+            <div class="item-text">
+              <span class="item-title">Gallery</span>
+              <span class="item-desc">Media & Security Vault</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- HIGH-TECH THEME CUSTOMIZER SIDE POPUP / DRAWER -->
+  @if (isThemeDrawerOpen()) {
+    <div class="theme-drawer-backdrop" (click)="closeThemeDrawer()">
+      <aside class="theme-drawer-panel" (click)="$event.stopPropagation()" role="dialog" aria-label="Theme Customizer">
+        <!-- Drawer Header -->
+        <div class="theme-drawer-header">
+          <div class="drawer-title-group">
+            <span class="drawer-icon">🎨</span>
+            <div>
+              <h2 class="drawer-title font-monospace">DYNAMIC THEME CUSTOMIZER</h2>
+              <p class="drawer-sub">Choose from 7 humanized design palettes with live preview across all apps</p>
+            </div>
+          </div>
+          <button type="button" class="drawer-close-btn" (click)="closeThemeDrawer()" aria-label="Close Theme Panel">✕</button>
+        </div>
+
+        <!-- Drawer Body -->
+        <div class="theme-drawer-body">
+          <div class="drawer-section-label font-monospace">AVAILABLE HUMANIZED PALETTES</div>
+
+          <!-- 7 Theme Preset Cards -->
+          <div class="theme-presets-grid">
+            @for (preset of themeService.availablePresets; track preset.id) {
+              <div
+                class="theme-preset-card"
+                [class.active]="themeService.activeTheme().id === preset.id"
+                (click)="selectThemePreset(preset.id, $event)"
+              >
+                <!-- Color Swatches Row -->
+                <div class="swatches-row">
+                  <span class="swatch" [style.background]="preset.colors.background" title="Background"></span>
+                  <span class="swatch" [style.background]="preset.colors.surfaceRaised" title="Surface Card"></span>
+                  <span class="swatch" [style.background]="preset.colors.accentPrimary" title="Accent Brand"></span>
+                  <span class="swatch" [style.background]="preset.colors.textPrimary" title="Primary Text"></span>
+                </div>
+
+                <div class="preset-meta">
+                  <span class="preset-name">{{ preset.label }}</span>
+                  @if (themeService.activeTheme().id === preset.id) {
+                    <span class="preset-active-chip font-monospace">✓ ACTIVE</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Advanced Styling Controls -->
+          <div class="drawer-section-label font-monospace mt-4">ADVANCED VISUAL OPTIONS</div>
+
+          <!-- Ambient Glow Setting -->
+          <div class="advanced-option-card">
+            <div class="option-header">
+              <span class="option-title font-monospace">CORE AMBIENT GLOW</span>
+              <span class="option-desc">Adjust spatial lighting and neon aura intensity</span>
+            </div>
+            <div class="segmented-control font-monospace">
+              <button
+                type="button"
+                class="segment-btn"
+                [class.active]="glowMode() === 'SOFT'"
+                (click)="setGlowMode('SOFT')"
+              >
+                SOFT GLOW
+              </button>
+              <button
+                type="button"
+                class="segment-btn"
+                [class.active]="glowMode() === 'VIVID'"
+                (click)="setGlowMode('VIVID')"
+              >
+                VIVID NEON
+              </button>
+              <button
+                type="button"
+                class="segment-btn"
+                [class.active]="glowMode() === 'MINIMAL'"
+                (click)="setGlowMode('MINIMAL')"
+              >
+                ZERO GLOW
+              </button>
+            </div>
+          </div>
+
+          <!-- Contrast Setting -->
+          <div class="advanced-option-card mt-3">
+            <div class="option-header">
+              <span class="option-title font-monospace">DISPLAY CONTRAST</span>
+              <span class="option-desc">Enhances text and border visibility for bright environments</span>
+            </div>
+            <div class="segmented-control font-monospace">
+              <button
+                type="button"
+                class="segment-btn"
+                [class.active]="contrastMode() === 'NORMAL'"
+                (click)="setContrastMode('NORMAL')"
+              >
+                STANDARD
+              </button>
+              <button
+                type="button"
+                class="segment-btn"
+                [class.active]="contrastMode() === 'HIGH'"
+                (click)="setContrastMode('HIGH')"
+              >
+                HIGH CONTRAST
+              </button>
+            </div>
+          </div>
+
+          <!-- Reset Button -->
+          <div class="drawer-footer-actions mt-4">
+            <button type="button" class="reset-theme-btn font-monospace" (click)="resetThemeToDefault()">
+              ↺ RESET TO DEFAULT (OBSIDIAN CYAN)
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  }
+
   <!-- Interactive 3D Biometric Face Scanner Modal Overlay -->
   @if (stateService.showScannerModal()) {
     <div class="biometric-modal-backdrop" (click)="stateService.closeBiometricScanner()">
@@ -351,83 +500,6 @@
           [isModal]="true"
           (closeRequested)="stateService.closeBiometricScanner()"
         ></app-biometric-face-scanner>
-      </div>
-    </div>
-  }
-
-  <!-- Interactive Multi-LLM Swarm Dialogue & Inter-Agent Chat History Modal Overlay -->
-  @if (stateService.showSwarmDialogueModal()) {
-    <div class="swarm-dialogue-backdrop" (click)="stateService.closeSwarmDialogue()">
-      <div class="swarm-dialogue-panel" (click)="$event.stopPropagation()" role="dialog" aria-label="Swarm Dialogue">
-        <div class="dialogue-header">
-          <div class="dialogue-title-group">
-            <span class="dialogue-icon">⚡</span>
-            <div>
-              <div class="dialogue-title-line">
-                <h2 class="dialogue-title">MULTI-AGENT SWARM LIVE CHAT & CONVERSATION HISTORY</h2>
-                <span class="swarm-status-badge">● {{ stateService.swarmStatus() }} · 8 SPECIALIST BRAINS</span>
-              </div>
-              <p class="dialogue-sub">Live Inter-Agent Thought Stream · Non-Blocking Deliberations · Silent Collaboration</p>
-            </div>
-          </div>
-          <div class="dialogue-header-actions">
-            <button
-              type="button"
-              class="dialogue-action-btn trigger-btn"
-              (click)="stateService.triggerSwarmDeliberation()"
-              title="Trigger a live multi-agent family negotiation"
-            >
-              ⚡ Deliberate
-            </button>
-            <button
-              type="button"
-              class="dialogue-action-btn refresh-btn"
-              (click)="stateService.refreshSwarmDialogue()"
-              title="Refresh conversation stream"
-            >
-              🔄 Refresh
-            </button>
-            <button
-              type="button"
-              class="dialogue-action-btn clear-btn"
-              (click)="stateService.clearSwarmDialogue()"
-              title="Clear dialogue transcript"
-            >
-              🗑️ Clear
-            </button>
-            <button
-              type="button"
-              class="dialogue-close-btn"
-              (click)="stateService.closeSwarmDialogue()"
-              title="Close Swarm Chat"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-
-        <div class="dialogue-body">
-          @if (stateService.swarmDialogueList().length === 0) {
-            <div class="dialogue-empty">
-              <span>🤝 All 9 Specialized Agents (Command, Execution, Intelligence, Quality & Governance) are synchronized with abhi:latest. Submit any goal or prompt to view real-time inter-agent deliberation.</span>
-              <button type="button" class="empty-trigger-btn" (click)="stateService.triggerSwarmDeliberation()">⚡ Trigger Test Deliberation</button>
-            </div>
-          } @else {
-            <div class="dialogue-list">
-              @for (item of stateService.swarmDialogueList(); track item.id || $index) {
-                <div class="dialogue-item" [attr.data-sender]="item.sender_id">
-                  <div class="dialogue-item-header">
-                    <span class="agent-badge">{{ item.sender_name }}</span>
-                    <span class="arrow-sym">➔</span>
-                    <span class="recipient-badge">{{ item.recipient }}</span>
-                    <span class="dialogue-sentiment font-monospace">{{ item.sentiment }}</span>
-                  </div>
-                  <div class="dialogue-message">"{{ item.message }}"</div>
-                </div>
-              }
-            </div>
-          }
-        </div>
       </div>
     </div>
   }
