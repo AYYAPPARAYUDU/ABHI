@@ -11,7 +11,6 @@ import { SpeechVoiceService, AppLanguage } from '../../../core/services/speech-v
 import { CommunicationsAssistantService } from '../../../core/services/communications-assistant.service';
 import { AgentCommandService } from '../../../core/services/agent-command.service';
 import { AnimeAnimationService } from '../../../core/services/anime-animation.service';
-import { AnimeInteractiveDirective } from '../../../shared/directives/anime-interactive.directive';
 import { BiometricFaceScannerComponent } from '../../../features/perception/components/biometric-face-scanner/biometric-face-scanner.component';
 import { MediaService } from '../../../features/media/services/media.service';
 import { MobileScreenHubComponent } from '../../../features/automation/components/mobile-screen-hub/mobile-screen-hub.component';
@@ -23,7 +22,6 @@ import { VoiceSettingsCenterComponent } from '../../../shared/ui/voice-settings-
   imports: [
     CommonModule,
     RouterModule,
-    AnimeInteractiveDirective,
     BiometricFaceScannerComponent,
     MobileScreenHubComponent,
     VoiceSettingsCenterComponent
@@ -145,16 +143,41 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
     this.router.navigateByUrl(route);
   }
 
+  private documentClickHandler = (event: MouseEvent) => {
+    if (this.isLangDropdownOpen()) {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.lang-selector-wrapper')) {
+        this.closeLangDropdown();
+      }
+    }
+  };
+
+  private documentKeydownHandler = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      if (this.isThemeDrawerOpen()) this.closeThemeDrawer();
+      if (this.isMobileNavOpen()) this.closeMobileNav();
+      if (this.isLangDropdownOpen()) this.closeLangDropdown();
+    }
+  };
+
   ngOnInit(): void {
     this.fetchMobileStatus();
     this.mobilePollInterval = setInterval(() => this.fetchMobileStatus(), 8000);
     this.mediaService.fetchVault().subscribe({ error: () => {} });
+    if (typeof document !== 'undefined') {
+      document.addEventListener('click', this.documentClickHandler);
+      document.addEventListener('keydown', this.documentKeydownHandler);
+    }
   }
 
   ngOnDestroy(): void {
     if (this.mobilePollInterval) {
       clearInterval(this.mobilePollInterval);
       this.mobilePollInterval = null;
+    }
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('click', this.documentClickHandler);
+      document.removeEventListener('keydown', this.documentKeydownHandler);
     }
   }
 

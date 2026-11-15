@@ -1,652 +1,593 @@
-<header class="contextual-bar" role="banner" [class.main-agent-active]="isActive('/home')">
-  <!-- Integrated Global Safety / Authorization Alert Stripe -->
+<header class="abhi-topbar-wrapper" role="banner" [class.main-agent-active]="isActive('/home')">
+  <!-- 1. Integrated Global Safety / Emergency Alert Banner (Shown only when safety is tripped) -->
   @if (safety().emergencyStopped || safety().consentPending || safety().isPaused) {
     <div
-      class="topbar-safety-alert"
+      class="topbar-safety-alert-stripe"
       [ngClass]="safety().emergencyStopped ? 'alert-estop' : safety().consentPending ? 'alert-consent' : 'alert-paused'"
       role="alert"
     >
-      <div class="safety-alert-msg">
+      <div class="safety-alert-msg d-flex align-items-center gap-2">
         <span class="safety-icon">{{ safety().emergencyStopped ? '🛑' : safety().consentPending ? '⚠️' : '⏸️' }}</span>
         <span class="safety-text font-monospace">
           {{
             safety().emergencyStopped
-              ? 'EMERGENCY STOP ENGAGED — AUTOMATION LEASE REVOKED.'
+              ? 'EMERGENCY STOP ENGAGED — AUTONOMOUS REVENUE & AGENT LEASES REVOKED.'
               : safety().consentPending
-              ? 'TIER 3 AUTHORIZATION PENDING — OPERATOR APPROVAL REQUIRED.'
-              : 'EXECUTION PAUSED / CONTENTION DETECTED.'
+              ? 'TIER 3 AUTHORIZATION REQUIRED — OPERATOR CLEARANCE PENDING.'
+              : 'EXECUTION PAUSED / RESOURCE CONTENTION DETECTED.'
           }}
         </span>
       </div>
       @if (safety().consentPending) {
         <button
           type="button"
-          class="safety-review-btn font-monospace"
+          class="safety-review-action-btn font-monospace"
           (click)="openConsentModal()"
         >
-          REVIEW AUTHORIZATION
+          AUTHORIZE
         </button>
       }
     </div>
   }
 
-  <!-- Main System & Responsive Navigation Bar (Strictly Single-Row No-Wrap Architecture) -->
-  <div class="bar-main-row">
-    <!-- Left: Brand Identity, Active Status & SBI Pill -->
-    <div class="bar-left">
-      <!-- High-Tech Brand Pill (VisionOS Spatial Design) -->
-      <a routerLink="/home" class="hud-brand-pill" title="Return to Central AI Workspace">
-        <div class="brand-orb-icon">
-          <span class="orb-core-dot"></span>
-        </div>
-        <div class="brand-text-block">
-          <span class="brand-title">ABHI</span>
-          <span class="brand-sub d-none d-xxl-inline">{{ currentRouteTitle() }}</span>
-        </div>
-      </a>
+  <!-- 2. Master Responsive Single-Row Navbar (Bootstrap 5 Flex Grid) -->
+  <nav class="navbar navbar-expand-lg abhi-navbar-container p-0" role="navigation" aria-label="Main Sovereign Navigation">
+    <div class="container-fluid d-flex align-items-center justify-content-between flex-nowrap px-2 px-md-3 h-100">
 
-      <!-- Status Indicator Tag -->
-      <div class="status-indicator-tag d-none d-sm-flex" [class.working]="isWorking()" [title]="'System Status: ' + systemStatusLabel()">
-        <span class="pulse-dot"></span>
-        <span class="status-label font-monospace">{{ systemStatusLabel() }}</span>
-      </div>
-
-      <!-- Mobile Navigation Hamburger (Visible on < 1024px) -->
-      <button
-        type="button"
-        class="mobile-menu-toggler d-lg-none"
-        (click)="toggleMobileNav()"
-        aria-label="Toggle Navigation Menu"
-        title="Open Navigation"
-      >
-        <span class="toggler-icon">☰</span>
-      </button>
-    </div>
-
-    <!-- Center: Clean Primary Navbar with Compact Direct Links (Single-Row Rail) -->
-    <nav class="clean-main-navbar d-none d-lg-flex" role="navigation" aria-label="Main Navigation">
-      <!-- 1. Home -->
-      <a routerLink="/home" class="clean-nav-btn" [class.active]="isActive('/home')" title="Era AI Sovereign HUD">
-        <span class="nav-btn-icon">🖥️</span>
-        <span class="nav-btn-text">Home</span>
-        @if (isActive('/home')) { <span class="nav-active-pip"></span> }
-      </a>
-
-      <!-- 2. Core (Arc Reactor) -->
-      <a routerLink="/core" class="clean-nav-btn core-nav-btn" [class.active]="isActive('/core')" title="3D Arc Reactor Intelligence Core">
-        <span class="nav-btn-icon">🌀</span>
-        <span class="nav-btn-text">Core</span>
-        @if (isActive('/core')) { <span class="nav-active-pip"></span> }
-      </a>
-
-      <!-- 3. Business (SBI Treasury) -->
-      <a routerLink="/business" class="clean-nav-btn business-nav-btn" [class.active]="isActive('/business')" title="Sovereign Commercial Business & SBI Invoicing">
-        <span class="nav-btn-icon">🏛️</span>
-        <span class="nav-btn-text">Business</span>
-        @if (isActive('/business')) { <span class="nav-active-pip"></span> }
-      </a>
-
-      <!-- 4. Workspace (Colony Command Center) -->
-      <a routerLink="/workspace" class="clean-nav-btn" [class.active]="isActive('/workspace')" title="3D Workspace Colony & Multi-Agent Swarm">
-        <span class="nav-btn-icon">🛰️</span>
-        <span class="nav-btn-text">Workspace</span>
-        @if (isActive('/workspace')) { <span class="nav-active-pip"></span> }
-      </a>
-
-      <!-- 5. Architecture & Workflows (Compact label) -->
-      <a routerLink="/architecture" class="clean-nav-btn architecture-nav-btn" [class.active]="isActive('/architecture')" title="System Architecture, Execution Workflows & ER Schemas">
-        <span class="nav-btn-icon">🗺️</span>
-        <span class="nav-btn-text">Architecture</span>
-        @if (isActive('/architecture')) { <span class="nav-active-pip"></span> }
-      </a>
-
-      <!-- 6. Brain -->
-      <button
-        type="button"
-        class="clean-nav-btn brain-nav-btn"
-        (click)="assistantService.openModal()"
-        [title]="'3D Holographic Brain & Communications Assistant: ' + (assistantService.brainStatus()?.version || 'Ready')"
-      >
-        <span class="nav-btn-icon">🧠</span>
-        <span class="nav-btn-text">Brain</span>
-        @if (!assistantService.isConfigured()) {
-          <span class="brain-alert-dot" title="Setup Required">!</span>
-        }
-      </button>
-
-      <!-- 7. Gallery -->
-      <a
-        routerLink="/media"
-        [queryParams]="{ tab: 'vault' }"
-        class="clean-nav-btn gallery-nav-btn"
-        [class.active]="isActive('/media')"
-        title="Media & Security Vault Gallery"
-      >
-        <span class="nav-btn-icon">🖼️</span>
-        <span class="nav-btn-text">Gallery</span>
-        @if (mediaVaultCount() > 0) {
-          <span class="vault-count-pip font-monospace">{{ mediaVaultCount() }}</span>
-        }
-      </a>
-    </nav>
-
-    <!-- Right: Companion Controls (Compact, Unified Single-Row Tray) -->
-    <div class="bar-right">
-      <!-- COMPACT THEME CUSTOMIZER ICON TRIGGER -->
-      <button
-        type="button"
-        class="topbar-tool-btn theme-icon-trigger"
-        [class.active]="isThemeDrawerOpen()"
-        (click)="toggleThemeDrawer($event)"
-        [title]="'Theme: ' + themeService.activeTheme().label + ' (Click to open theme studio)'"
-      >
-        <span class="btn-icon">🎨</span>
-        <span class="theme-color-indicator" [style.background]="themeService.activeTheme().colors.accentPrimary"></span>
-      </button>
-
-      <!-- Mobile Controller Hub Trigger (Compact) -->
-      <button
-        type="button"
-        class="topbar-tool-btn mobile-hub-btn"
-        appAnimeInteractive
-        [appAnimeType]="'button'"
-        [class.connected]="isMobileConnected()"
-        (click)="openMobileHub()"
-        [title]="mobileTooltip()"
-      >
-        <span class="btn-icon">📱</span>
-        <span class="btn-text d-none d-xxl-inline">Mobile</span>
-        @if (isMobileConnected()) {
-          <span class="topbar-pulse-dot"></span>
-        }
-      </button>
-
-      <!-- Voice & Biometrics Center Trigger (Compact) -->
-      <button
-        type="button"
-        class="topbar-tool-btn voice-center-btn"
-        appAnimeInteractive
-        [appAnimeType]="'button'"
-        (click)="openVoiceCenter()"
-        title="Voice & Biometrics Command Center"
-      >
-        <span class="btn-icon">⚙️</span>
-        <span class="btn-text d-none d-xxl-inline">Voice</span>
-      </button>
-
-      <!-- Voice Audio Speech Synthesis Toggle -->
-      <button
-        type="button"
-        class="topbar-tool-btn voice-audio-btn"
-        appAnimeInteractive
-        [appAnimeType]="'button'"
-        [class.muted]="speechVoice.isMuted()"
-        [class.speaking]="speechVoice.isSpeaking()"
-        (click)="toggleVoiceAudio()"
-        [title]="speechVoice.isMuted() ? 'Voice Muted (Click to Unmute)' : 'Voice Active (Click to Mute)'"
-      >
-        <span class="btn-icon">{{ speechVoice.isMuted() ? '🔇' : (speechVoice.isSpeaking() ? '🗣️' : '🔊') }}</span>
-      </button>
-
-      <!-- Universal Language Selector Dropdown -->
-      <div class="lang-selector-container">
+      <!-- LEFT: Brand Identity & Active Colony Status -->
+      <div class="navbar-left-cluster d-flex align-items-center gap-2 flex-shrink-0">
+        <!-- Mobile Menu Hamburger Toggler (< 992px) -->
         <button
           type="button"
-          class="topbar-tool-btn lang-select-btn"
-          appAnimeInteractive
-          [appAnimeType]="'button'"
-          [class.active]="isLangDropdownOpen()"
-          (click)="toggleLangDropdown($event)"
-          [title]="'Active Language: ' + getLanguageLabel(speechVoice.selectedLanguage())"
+          class="mobile-nav-hamburger-btn d-lg-none"
+          (click)="toggleMobileNav()"
+          aria-label="Toggle Navigation"
+          title="Open Navigation Menu"
         >
-          <span class="btn-icon">{{ getLanguageFlag(speechVoice.selectedLanguage()) }}</span>
-          <span class="btn-text font-monospace d-none d-xl-inline">{{ getLanguageShort(speechVoice.selectedLanguage()) }}</span>
-          <span class="dropdown-arrow">▾</span>
+          <span class="hamburger-icon">☰</span>
         </button>
-        @if (isLangDropdownOpen()) {
-          <div class="lang-dropdown-menu" (click)="$event.stopPropagation()">
-            <div class="lang-dropdown-header font-monospace">SELECT LANGUAGE / భాష / भाषा</div>
-            <button
-              type="button"
-              class="lang-item-btn"
-              [class.selected]="speechVoice.selectedLanguage() === 'auto'"
-              (click)="selectLanguage('auto', $event)"
-            >
-              <span class="lang-flag">🌐</span>
-              <div class="lang-meta">
-                <span class="lang-name">Auto Detect</span>
-                <span class="lang-desc">Multi-lingual recognition</span>
-              </div>
-              @if (speechVoice.selectedLanguage() === 'auto') {
-                <span class="lang-check">✓</span>
-              }
-            </button>
-            <button
-              type="button"
-              class="lang-item-btn"
-              [class.selected]="speechVoice.selectedLanguage() === 'en'"
-              (click)="selectLanguage('en', $event)"
-            >
-              <span class="lang-flag">🇬🇧</span>
-              <div class="lang-meta">
-                <span class="lang-name">English</span>
-                <span class="lang-desc">UK / US Natural Voice</span>
-              </div>
-              @if (speechVoice.selectedLanguage() === 'en') {
-                <span class="lang-check">✓</span>
-              }
-            </button>
-            <button
-              type="button"
-              class="lang-item-btn"
-              [class.selected]="speechVoice.selectedLanguage() === 'te'"
-              (click)="selectLanguage('te', $event)"
-            >
-              <span class="lang-flag">🇮🇳</span>
-              <div class="lang-meta">
-                <span class="lang-name">తెలుగు (Telugu)</span>
-                <span class="lang-desc">మోహన్ / శ్రుతి సహజ వాయిస్</span>
-              </div>
-              @if (speechVoice.selectedLanguage() === 'te') {
-                <span class="lang-check">✓</span>
-              }
-            </button>
-            <button
-              type="button"
-              class="lang-item-btn"
-              [class.selected]="speechVoice.selectedLanguage() === 'hi'"
-              (click)="selectLanguage('hi', $event)"
-            >
-              <span class="lang-flag">🇮🇳</span>
-              <div class="lang-meta">
-                <span class="lang-name">हिंदी (Hindi)</span>
-                <span class="lang-desc">मधुर / स्वरा नेचुरल वॉइस</span>
-              </div>
-              @if (speechVoice.selectedLanguage() === 'hi') {
-                <span class="lang-check">✓</span>
-              }
-            </button>
-            <button
-              type="button"
-              class="lang-item-btn"
-              [class.selected]="speechVoice.selectedLanguage() === 'ta'"
-              (click)="selectLanguage('ta', $event)"
-            >
-              <span class="lang-flag">🇮🇳</span>
-              <div class="lang-meta">
-                <span class="lang-name">தமிழ் (Tamil)</span>
-                <span class="lang-desc">வள்ளுவர் / பல்லவி வாய்ஸ்</span>
-              </div>
-              @if (speechVoice.selectedLanguage() === 'ta') {
-                <span class="lang-check">✓</span>
-              }
-            </button>
+
+        <!-- Brand Identity Pill -->
+        <a routerLink="/home" class="brand-identity-capsule" title="Return to Sovereign HUD Home">
+          <div class="brand-orb-core">
+            <span class="brand-orb-center"></span>
           </div>
-        }
-      </div>
+          <div class="brand-text-block d-flex flex-column">
+            <span class="brand-title-text">ABHI</span>
+            <span class="brand-route-badge d-none d-xxl-inline font-monospace">{{ currentRouteTitle() }}</span>
+          </div>
+        </a>
 
-      <!-- Immediate Emergency Stop Trigger (Compact Pill) -->
-      @if (stateService.safety().emergencyStopped) {
-        <button
-          type="button"
-          class="estop-btn active"
-          disabled
-          title="System Emergency Stopped"
+        <!-- System Autonomous State Tag -->
+        <div
+          class="system-status-pill font-monospace d-none d-sm-flex align-items-center gap-1"
+          [class.working]="isWorking()"
+          [title]="'System Telemetry: ' + systemStatusLabel()"
         >
-          <span class="btn-icon">🛑</span>
-          <span class="btn-text d-none d-sm-inline">STOPPED</span>
-        </button>
-      } @else {
-        <button
-          type="button"
-          class="estop-btn"
-          (click)="stateService.triggerEmergencyStop()"
-          title="Immediate Emergency Stop"
-        >
-          <span class="btn-icon">🛑</span>
-          <span class="btn-text d-none d-sm-inline">E-STOP</span>
-        </button>
-      }
-    </div>
-  </div>
-
-  <!-- RESPONSIVE MOBILE NAVIGATION SHEET (DROPDOWN DRAWER FOR < 1024PX) -->
-  @if (isMobileNavOpen()) {
-    <div class="mobile-nav-backdrop" (click)="closeMobileNav()">
-      <div class="mobile-nav-sheet" (click)="$event.stopPropagation()">
-        <div class="mobile-nav-header">
-          <span class="mobile-nav-title font-monospace">🚀 SYSTEM NAVIGATION</span>
-          <button type="button" class="mobile-nav-close-btn" (click)="closeMobileNav()">✕</button>
-        </div>
-        <div class="mobile-nav-links">
-          <a routerLink="/home" class="mobile-nav-item" (click)="closeMobileNav()">
-            <span class="item-icon">🖥️</span>
-            <div class="item-text">
-              <span class="item-title">Home</span>
-              <span class="item-desc">Era AI Sovereign HUD</span>
-            </div>
-          </a>
-          <a routerLink="/core" class="mobile-nav-item" (click)="closeMobileNav()">
-            <span class="item-icon">🌀</span>
-            <div class="item-text">
-              <span class="item-title">Core</span>
-              <span class="item-desc">3D Arc Reactor Intelligence</span>
-            </div>
-          </a>
-          <a routerLink="/business" class="mobile-nav-item" (click)="closeMobileNav()">
-            <span class="item-icon">🏛️</span>
-            <div class="item-text">
-              <span class="item-title">Business</span>
-              <span class="item-desc">State Bank of India Treasury</span>
-            </div>
-          </a>
-          <a routerLink="/workspace" class="mobile-nav-item" (click)="closeMobileNav()">
-            <span class="item-icon">🛰️</span>
-            <div class="item-text">
-              <span class="item-title">Workspace</span>
-              <span class="item-desc">3D Workspace & Multi-Agent Swarm</span>
-            </div>
-          </a>
-          <a routerLink="/architecture" class="mobile-nav-item" (click)="closeMobileNav()">
-            <span class="item-icon">🗺️</span>
-            <div class="item-text">
-              <span class="item-title">Architecture</span>
-              <span class="item-desc">System Blueprint & Schematics</span>
-            </div>
-          </a>
-          <a routerLink="/media" [queryParams]="{ tab: 'vault' }" class="mobile-nav-item" (click)="closeMobileNav()">
-            <span class="item-icon">🖼️</span>
-            <div class="item-text">
-              <span class="item-title">Gallery</span>
-              <span class="item-desc">Media & Security Vault</span>
-            </div>
-          </a>
+          <span class="status-pulse-pip"></span>
+          <span class="status-text">{{ systemStatusLabel() }}</span>
         </div>
       </div>
-    </div>
-  }
 
-  <!-- HIGH-TECH THEME CUSTOMIZER SIDE POPUP / DRAWER -->
-  @if (isThemeDrawerOpen()) {
-    <div class="theme-drawer-backdrop" (click)="closeThemeDrawer()">
-      <aside class="theme-drawer-panel" (click)="$event.stopPropagation()" role="dialog" aria-label="Theme Customizer">
-        <!-- Drawer Header -->
-        <div class="theme-drawer-header">
-          <div class="drawer-title-group">
-            <span class="drawer-icon">🎨</span>
-            <div>
-              <h2 class="drawer-title font-monospace">DYNAMIC THEME STUDIO</h2>
-              <p class="drawer-sub">Humanized Modern Design Palettes · Real-Time Universal Propagation</p>
-            </div>
-          </div>
-          <button type="button" class="drawer-close-btn" (click)="closeThemeDrawer()" aria-label="Close Theme Panel">✕</button>
-        </div>
+      <!-- CENTER: Sovereign Navigation Rail (Strictly Single Row, Centered, Never Wraps) -->
+      <div class="navbar-center-cluster d-none d-lg-flex align-items-center justify-content-center flex-grow-1 mx-2">
+        <div class="sovereign-nav-rail d-flex align-items-center gap-1">
+          <!-- 1. Home -->
+          <a routerLink="/home" class="rail-nav-link" [class.active]="isActive('/home')" title="Era AI Sovereign HUD">
+            <span class="nav-icon">🖥️</span>
+            <span class="nav-label">Home</span>
+            @if (isActive('/home')) { <span class="active-glow-pip"></span> }
+          </a>
 
-        <!-- Drawer Body -->
-        <div class="theme-drawer-body">
-          <!-- 1. Quick Mode Segmented Bar (Direct Access to Image 2 Reference Styles) -->
-          <div class="drawer-section-label font-monospace">FEATURED DESIGN STYLES</div>
-          <div class="quick-modes-grid">
-            <button
-              type="button"
-              class="quick-mode-pill"
-              [class.active]="themeService.activeTheme().id === 'obsidian-dark'"
-              (click)="selectThemeMode('dark')"
-            >
-              <span class="mode-icon">🌙</span>
-              <div class="mode-meta">
-                <span class="mode-name">Obsidian Dark</span>
-                <span class="mode-sub">Pro Developer HUD</span>
-              </div>
-            </button>
+          <!-- 2. Core -->
+          <a routerLink="/core" class="rail-nav-link" [class.active]="isActive('/core')" title="3D Arc Reactor Intelligence Core">
+            <span class="nav-icon">🌀</span>
+            <span class="nav-label">Core</span>
+            @if (isActive('/core')) { <span class="active-glow-pip"></span> }
+          </a>
 
-            <button
-              type="button"
-              class="quick-mode-pill"
-              [class.active]="themeService.activeTheme().id === 'modern-light'"
-              (click)="selectThemeMode('light')"
-            >
-              <span class="mode-icon">☀️</span>
-              <div class="mode-meta">
-                <span class="mode-name">Modern Light</span>
-                <span class="mode-sub">Clean SaaS #2563EB</span>
-              </div>
-            </button>
+          <!-- 3. Business -->
+          <a routerLink="/business" class="rail-nav-link" [class.active]="isActive('/business')" title="Sovereign Business, n8n Hub & SBI Treasury">
+            <span class="nav-icon">🏛️</span>
+            <span class="nav-label">Business</span>
+            @if (isActive('/business')) { <span class="active-glow-pip"></span> }
+          </a>
 
-            <button
-              type="button"
-              class="quick-mode-pill"
-              [class.active]="themeService.activeTheme().id === 'warm-neutral'"
-              (click)="selectThemeMode('warm')"
-            >
-              <span class="mode-icon">🌾</span>
-              <div class="mode-meta">
-                <span class="mode-name">Warm Fintech</span>
-                <span class="mode-sub">Ivory & Forest Emerald</span>
-              </div>
-            </button>
+          <!-- 4. Workspace -->
+          <a routerLink="/workspace" class="rail-nav-link" [class.active]="isActive('/workspace')" title="3D Workspace Colony & Autonomous Swarm">
+            <span class="nav-icon">🛰️</span>
+            <span class="nav-label">Workspace</span>
+            @if (isActive('/workspace')) { <span class="active-glow-pip"></span> }
+          </a>
 
-            <button
-              type="button"
-              class="quick-mode-pill"
-              [class.active]="themeService.activeTheme().id === 'cyber-neon'"
-              (click)="selectThemeMode('cyber')"
-            >
-              <span class="mode-icon">⚡</span>
-              <div class="mode-meta">
-                <span class="mode-name">Cyber Neon</span>
-                <span class="mode-sub">Cosmic Violet #7C3AED</span>
-              </div>
-            </button>
-          </div>
+          <!-- 5. Architecture -->
+          <a routerLink="/architecture" class="rail-nav-link" [class.active]="isActive('/architecture')" title="System Architecture, Execution Workflows & ER Schemas">
+            <span class="nav-icon">🗺️</span>
+            <span class="nav-label">Architecture</span>
+            @if (isActive('/architecture')) { <span class="active-glow-pip"></span> }
+          </a>
 
-          <!-- 2. Live Interactive Component Preview (As Specified in Image 2) -->
-          <div class="drawer-section-label font-monospace mt-3">LIVE INTERACTIVE PALETTE PREVIEW</div>
-          <div class="live-sample-preview-box">
-            <div class="preview-row align-items-center">
-              <button
-                type="button"
-                class="preview-primary-btn"
-                [style.background]="themeService.activeTheme().colors.accentPrimary"
-                [style.color]="'#ffffff'"
-              >
-                Primary Button
-              </button>
-              <button type="button" class="preview-soft-btn">
-                Soft Button
-              </button>
-              <div class="preview-toggle-mock active">
-                <span class="toggle-circle"></span>
-              </div>
-            </div>
-
-            <div class="preview-row mt-2">
-              <div class="preview-input-box">
-                <span class="input-placeholder">Input Field · Focused State</span>
-              </div>
-              <span class="preview-badge success">
-                ● Active
-              </span>
-              <span class="preview-badge warning">
-                ▲ Warning
-              </span>
-            </div>
-          </div>
-
-          <!-- 3. Accent Color Fine-Tuner -->
-          <div class="drawer-section-label font-monospace mt-3">ACCENT COLOR CUSTOMIZER</div>
-          <div class="accent-swatches-strip">
-            @for (acc of accentSwatches; track acc) {
-              <button
-                type="button"
-                class="accent-circle-btn"
-                [style.background]="acc"
-                [class.active]="themeService.activeTheme().colors.accentPrimary.toLowerCase() === acc.toLowerCase()"
-                (click)="selectAccentColor(acc)"
-                [title]="'Select Accent Color ' + acc"
-              >
-                @if (themeService.activeTheme().colors.accentPrimary.toLowerCase() === acc.toLowerCase()) {
-                  <span class="accent-check">✓</span>
-                }
-              </button>
+          <!-- 6. Brain -->
+          <button
+            type="button"
+            class="rail-nav-link rail-button-link"
+            (click)="assistantService.openModal()"
+            title="3D Holographic Brain & Communications Assistant"
+          >
+            <span class="nav-icon">🧠</span>
+            <span class="nav-label">Brain</span>
+            @if (!assistantService.isConfigured()) {
+              <span class="brain-alert-badge" title="Configuration Alert">!</span>
             }
+          </button>
+
+          <!-- 7. Gallery -->
+          <a
+            routerLink="/media"
+            [queryParams]="{ tab: 'vault' }"
+            class="rail-nav-link"
+            [class.active]="isActive('/media')"
+            title="Media Studio & Security Vault Gallery"
+          >
+            <span class="nav-icon">🖼️</span>
+            <span class="nav-label">Gallery</span>
+            @if (mediaVaultCount() > 0) {
+              <span class="vault-count-badge font-monospace">{{ mediaVaultCount() }}</span>
+            }
+          </a>
+        </div>
+      </div>
+
+      <!-- RIGHT: Companion Utility Controls (Compact, Single-Row Tray) -->
+      <div class="navbar-right-cluster d-flex align-items-center gap-1 gap-sm-2 flex-shrink-0">
+
+        <!-- COMPACT THEME STUDIO TRIGGER (Just the icon, small, elegant with color indicator) -->
+        <button
+          type="button"
+          class="topbar-tool-btn theme-studio-trigger"
+          [class.active]="isThemeDrawerOpen()"
+          (click)="toggleThemeDrawer($event)"
+          [title]="'Theme: ' + themeService.activeTheme().label + ' (Click to open Dynamic Theme Studio)'"
+          aria-label="Open Theme Studio"
+        >
+          <span class="tool-icon">🎨</span>
+          <span class="theme-accent-ring" [style.background]="themeService.activeTheme().colors.accentPrimary"></span>
+        </button>
+
+        <!-- Voice Audio Speech Synthesis Mute / Unmute -->
+        <button
+          type="button"
+          class="topbar-tool-btn voice-audio-toggle"
+          [class.muted]="speechVoice.isMuted()"
+          [class.speaking]="speechVoice.isSpeaking()"
+          (click)="toggleVoiceAudio()"
+          [title]="speechVoice.isMuted() ? 'Voice Muted (Click to Unmute)' : 'Voice Audio Active (Click to Mute)'"
+          aria-label="Toggle Voice Audio"
+        >
+          <span class="tool-icon">{{ speechVoice.isMuted() ? '🔇' : (speechVoice.isSpeaking() ? '🗣️' : '🔊') }}</span>
+        </button>
+
+        <!-- Voice & Biometrics Center Trigger -->
+        <button
+          type="button"
+          class="topbar-tool-btn voice-center-trigger"
+          (click)="openVoiceCenter()"
+          title="Voice & Biometrics Command Center"
+          aria-label="Voice & Biometrics Command Center"
+        >
+          <span class="tool-icon">⚙️</span>
+        </button>
+
+        <!-- Mobile ADB Controller Hub -->
+        <button
+          type="button"
+          class="topbar-tool-btn mobile-hub-trigger"
+          [class.connected]="isMobileConnected()"
+          (click)="openMobileHub()"
+          [title]="mobileTooltip()"
+          aria-label="Mobile ADB Controller Hub"
+        >
+          <span class="tool-icon">📱</span>
+          @if (isMobileConnected()) {
+            <span class="mobile-connected-pip"></span>
+          }
+        </button>
+
+        <!-- Universal Multilingual Language Selector -->
+        <div class="lang-selector-wrapper">
+          <button
+            type="button"
+            class="topbar-tool-btn lang-select-trigger"
+            [class.active]="isLangDropdownOpen()"
+            (click)="toggleLangDropdown($event)"
+            [title]="'Active Language: ' + getLanguageLabel(speechVoice.selectedLanguage())"
+            aria-label="Select Language"
+          >
+            <span class="lang-flag-icon">{{ getLanguageFlag(speechVoice.selectedLanguage()) }}</span>
+            <span class="lang-code-text font-monospace d-none d-xl-inline">{{ getLanguageShort(speechVoice.selectedLanguage()) }}</span>
+            <span class="dropdown-caret">▾</span>
+          </button>
+
+          @if (isLangDropdownOpen()) {
+            <div class="lang-dropdown-sheet" (click)="$event.stopPropagation()">
+              <div class="lang-sheet-header font-monospace">SELECT LANGUAGE / భాష / भाषा</div>
+              <button
+                type="button"
+                class="lang-menu-item"
+                [class.selected]="speechVoice.selectedLanguage() === 'auto'"
+                (click)="selectLanguage('auto', $event)"
+              >
+                <span class="flag">🌐</span>
+                <div class="lang-item-meta">
+                  <span class="title">Auto Detect</span>
+                  <span class="sub">Multi-lingual Neural</span>
+                </div>
+                @if (speechVoice.selectedLanguage() === 'auto') { <span class="check">✓</span> }
+              </button>
+              <button
+                type="button"
+                class="lang-menu-item"
+                [class.selected]="speechVoice.selectedLanguage() === 'en'"
+                (click)="selectLanguage('en', $event)"
+              >
+                <span class="flag">🇬🇧</span>
+                <div class="lang-item-meta">
+                  <span class="title">English</span>
+                  <span class="sub">UK / US Natural Voice</span>
+                </div>
+                @if (speechVoice.selectedLanguage() === 'en') { <span class="check">✓</span> }
+              </button>
+              <button
+                type="button"
+                class="lang-menu-item"
+                [class.selected]="speechVoice.selectedLanguage() === 'te'"
+                (click)="selectLanguage('te', $event)"
+              >
+                <span class="flag">🇮🇳</span>
+                <div class="lang-item-meta">
+                  <span class="title">తెలుగు (Telugu)</span>
+                  <span class="sub">మోహన్ / శ్రుతి సహజ వాయిస్</span>
+                </div>
+                @if (speechVoice.selectedLanguage() === 'te') { <span class="check">✓</span> }
+              </button>
+              <button
+                type="button"
+                class="lang-menu-item"
+                [class.selected]="speechVoice.selectedLanguage() === 'hi'"
+                (click)="selectLanguage('hi', $event)"
+              >
+                <span class="flag">🇮🇳</span>
+                <div class="lang-item-meta">
+                  <span class="title">हिंदी (Hindi)</span>
+                  <span class="sub">मधुर / स्वरा नेचुरल वॉइस</span>
+                </div>
+                @if (speechVoice.selectedLanguage() === 'hi') { <span class="check">✓</span> }
+              </button>
+              <button
+                type="button"
+                class="lang-menu-item"
+                [class.selected]="speechVoice.selectedLanguage() === 'ta'"
+                (click)="selectLanguage('ta', $event)"
+              >
+                <span class="flag">🇮🇳</span>
+                <div class="lang-item-meta">
+                  <span class="title">தமிழ் (Tamil)</span>
+                  <span class="sub">வள்ளுவர் / பல்லவி வாய்ஸ்</span>
+                </div>
+                @if (speechVoice.selectedLanguage() === 'ta') { <span class="check">✓</span> }
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- Immediate Emergency Stop Trigger (Compact Pill) -->
+        @if (stateService.safety().emergencyStopped) {
+          <button
+            type="button"
+            class="topbar-estop-btn active"
+            disabled
+            title="System Emergency Stopped — All Leases Revoked"
+          >
+            <span class="estop-icon">🛑</span>
+            <span class="estop-label d-none d-sm-inline">STOPPED</span>
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="topbar-estop-btn"
+            (click)="stateService.triggerEmergencyStop()"
+            title="Immediate Emergency Stop"
+          >
+            <span class="estop-icon">🛑</span>
+            <span class="estop-label d-none d-sm-inline">E-STOP</span>
+          </button>
+        }
+      </div>
+
+    </div>
+  </nav>
+
+  <!-- 3. Overlays Container (display: contents so it never disturbs topbar flex layout) -->
+  <div class="topbar-overlays-container">
+    <!-- Responsive Mobile Navigation Sheet (For < 992px) -->
+    @if (isMobileNavOpen()) {
+      <div class="mobile-nav-backdrop" (click)="closeMobileNav()">
+        <div class="mobile-nav-sheet" (click)="$event.stopPropagation()">
+          <div class="mobile-nav-header d-flex align-items-center justify-content-between">
+            <span class="mobile-nav-title font-monospace">🚀 SYSTEM NAVIGATION</span>
+            <button type="button" class="mobile-nav-close-btn" (click)="closeMobileNav()">✕</button>
+          </div>
+          <div class="mobile-nav-links">
+            <a routerLink="/home" class="mobile-nav-item" (click)="closeMobileNav()">
+              <span class="item-icon">🖥️</span>
+              <div class="item-text">
+                <span class="item-title">Home</span>
+                <span class="item-desc">Era AI Sovereign HUD</span>
+              </div>
+            </a>
+            <a routerLink="/core" class="mobile-nav-item" (click)="closeMobileNav()">
+              <span class="item-icon">🌀</span>
+              <div class="item-text">
+                <span class="item-title">Core</span>
+                <span class="item-desc">3D Arc Reactor Intelligence</span>
+              </div>
+            </a>
+            <a routerLink="/business" class="mobile-nav-item" (click)="closeMobileNav()">
+              <span class="item-icon">🏛️</span>
+              <div class="item-text">
+                <span class="item-title">Business</span>
+                <span class="item-desc">SBI Treasury & n8n Automation</span>
+              </div>
+            </a>
+            <a routerLink="/workspace" class="mobile-nav-item" (click)="closeMobileNav()">
+              <span class="item-icon">🛰️</span>
+              <div class="item-text">
+                <span class="item-title">Workspace</span>
+                <span class="item-desc">3D Workspace & Swarm Colony</span>
+              </div>
+            </a>
+            <a routerLink="/architecture" class="mobile-nav-item" (click)="closeMobileNav()">
+              <span class="item-icon">🗺️</span>
+              <div class="item-text">
+                <span class="item-title">Architecture</span>
+                <span class="item-desc">System Blueprint & Workflows</span>
+              </div>
+            </a>
+            <a routerLink="/media" [queryParams]="{ tab: 'vault' }" class="mobile-nav-item" (click)="closeMobileNav()">
+              <span class="item-icon">🖼️</span>
+              <div class="item-text">
+                <span class="item-title">Gallery</span>
+                <span class="item-desc">Media Studio & Security Vault</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- High-Tech Dynamic Theme Studio Side Drawer -->
+    @if (isThemeDrawerOpen()) {
+      <div class="theme-drawer-backdrop" (click)="closeThemeDrawer()">
+        <aside class="theme-drawer-panel" (click)="$event.stopPropagation()" role="dialog" aria-label="Dynamic Theme Studio">
+          <!-- Drawer Header -->
+          <div class="theme-drawer-header d-flex align-items-center justify-content-between">
+            <div class="drawer-title-group d-flex align-items-center gap-2">
+              <span class="drawer-header-icon">🎨</span>
+              <div>
+                <h2 class="drawer-heading font-monospace m-0">DYNAMIC THEME STUDIO</h2>
+                <p class="drawer-subheading m-0">Humanized Design Palettes · Instant Universal Reactive Switching</p>
+              </div>
+            </div>
+            <button type="button" class="drawer-close-btn" (click)="closeThemeDrawer()" aria-label="Close Theme Panel">✕</button>
           </div>
 
-          <!-- 4. All Humanized Presets -->
-          <div class="drawer-section-label font-monospace mt-3">ALL AVAILABLE PALETTES</div>
-          <div class="theme-presets-grid">
-            @for (preset of themeService.availablePresets; track preset.id) {
-              <div
-                class="theme-preset-card"
-                [class.active]="themeService.activeTheme().id === preset.id"
-                (click)="selectThemePreset(preset.id, $event)"
+          <!-- Drawer Body -->
+          <div class="theme-drawer-body">
+            <!-- 1. Quick Mode Segmented Cards (User Specification) -->
+            <div class="drawer-section-label font-monospace">PRIMARY HUMANIZED STYLES</div>
+            <div class="quick-modes-grid">
+              <button
+                type="button"
+                class="quick-mode-card"
+                [class.active]="themeService.activeTheme().id === 'obsidian-dark'"
+                (click)="selectThemeMode('dark')"
               >
-                <!-- Color Swatches Row -->
-                <div class="swatches-row">
-                  <span class="swatch" [style.background]="preset.colors.background" title="Background"></span>
-                  <span class="swatch" [style.background]="preset.colors.surfaceRaised" title="Surface Card"></span>
-                  <span class="swatch" [style.background]="preset.colors.accentPrimary" title="Accent Brand"></span>
-                  <span class="swatch" [style.background]="preset.colors.textPrimary" title="Primary Text"></span>
+                <div class="mode-card-header d-flex align-items-center justify-content-between">
+                  <span class="mode-icon">🌙</span>
+                  <span class="color-swatch-pip" style="background: #3882f6;"></span>
                 </div>
+                <div class="mode-meta">
+                  <span class="mode-title">Obsidian Dark</span>
+                  <span class="mode-desc">Pro Developer HUD</span>
+                </div>
+              </button>
 
-                <div class="preset-meta">
-                  <div>
+              <button
+                type="button"
+                class="quick-mode-card"
+                [class.active]="themeService.activeTheme().id === 'modern-light'"
+                (click)="selectThemeMode('light')"
+              >
+                <div class="mode-card-header d-flex align-items-center justify-content-between">
+                  <span class="mode-icon">☀️</span>
+                  <span class="color-swatch-pip" style="background: #2563eb;"></span>
+                </div>
+                <div class="mode-meta">
+                  <span class="mode-title">Modern Light</span>
+                  <span class="mode-desc">Clean SaaS #2563EB</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                class="quick-mode-card"
+                [class.active]="themeService.activeTheme().id === 'warm-neutral'"
+                (click)="selectThemeMode('warm')"
+              >
+                <div class="mode-card-header d-flex align-items-center justify-content-between">
+                  <span class="mode-icon">🌾</span>
+                  <span class="color-swatch-pip" style="background: #0d7a57;"></span>
+                </div>
+                <div class="mode-meta">
+                  <span class="mode-title">Warm Fintech</span>
+                  <span class="mode-desc">Ivory & Forest Emerald</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                class="quick-mode-card"
+                [class.active]="themeService.activeTheme().id === 'cyber-neon'"
+                (click)="selectThemeMode('cyber')"
+              >
+                <div class="mode-card-header d-flex align-items-center justify-content-between">
+                  <span class="mode-icon">⚡</span>
+                  <span class="color-swatch-pip" style="background: #7c3aed;"></span>
+                </div>
+                <div class="mode-meta">
+                  <span class="mode-title">Cyber Neon</span>
+                  <span class="mode-desc">Cosmic Violet #7C3AED</span>
+                </div>
+              </button>
+            </div>
+
+            <!-- 2. Live Interactive Component Preview -->
+            <div class="drawer-section-label font-monospace mt-3">LIVE INTERACTIVE PALETTE PREVIEW</div>
+            <div class="live-sample-preview-card">
+              <div class="preview-row d-flex align-items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  class="preview-primary-btn"
+                  [style.background]="themeService.activeTheme().colors.accentPrimary"
+                  [style.color]="themeService.isLightMode() ? '#ffffff' : '#ffffff'"
+                >
+                  Primary Action
+                </button>
+                <button type="button" class="preview-soft-btn">Secondary</button>
+                <div class="preview-toggle-mock">
+                  <div class="toggle-circle"></div>
+                </div>
+              </div>
+              <div class="preview-row d-flex align-items-center gap-2 mt-2">
+                <input type="text" class="preview-input-box" value="Active Reactive Theme: {{ themeService.activeTheme().label }}" readonly />
+                <span class="preview-badge success">● ONLINE</span>
+              </div>
+            </div>
+
+            <!-- 3. Accent Color Tint Swatches -->
+            <div class="drawer-section-label font-monospace mt-3">ACCENT COLOR CUSTOMIZER</div>
+            <div class="accent-swatches-strip d-flex align-items-center gap-2 flex-wrap">
+              @for (color of accentSwatches; track color) {
+                <button
+                  type="button"
+                  class="accent-circle-btn"
+                  [style.background]="color"
+                  [class.active]="themeService.activeTheme().colors.accentPrimary === color"
+                  (click)="selectAccentColor(color)"
+                  [title]="'Select Accent: ' + color"
+                >
+                  @if (themeService.activeTheme().colors.accentPrimary === color) {
+                    <span class="accent-check">✓</span>
+                  }
+                </button>
+              }
+            </div>
+
+            <!-- 4. Complete Preset Themes Collection -->
+            <div class="drawer-section-label font-monospace mt-3">FULL PRESET THEMES PALETTES</div>
+            <div class="theme-presets-grid">
+              @for (preset of themeService.availablePresets; track preset.id) {
+                <div
+                  class="theme-preset-card"
+                  [class.active]="themeService.activeTheme().id === preset.id"
+                  (click)="selectThemePreset(preset.id, $event)"
+                >
+                  <div class="preset-meta d-flex align-items-center justify-content-between">
                     <span class="preset-name">{{ preset.label }}</span>
-                    @if (preset.category) {
-                      <span class="preset-category-tag font-monospace">{{ preset.category }}</span>
+                    @if (themeService.activeTheme().id === preset.id) {
+                      <span class="preset-active-chip">ACTIVE</span>
                     }
                   </div>
-                  @if (themeService.activeTheme().id === preset.id) {
-                    <span class="preset-active-chip font-monospace">✓ ACTIVE</span>
-                  }
+                  <div class="swatches-row d-flex align-items-center gap-1 mt-1">
+                    <span class="swatch" [style.background]="preset.colors.background" title="Background"></span>
+                    <span class="swatch" [style.background]="preset.colors.surfaceRaised" title="Surface"></span>
+                    <span class="swatch" [style.background]="preset.colors.accentPrimary" title="Accent Primary"></span>
+                    <span class="swatch" [style.background]="preset.colors.accentSecondary" title="Accent Secondary"></span>
+                    <span class="preset-category-tag font-monospace ms-auto">{{ preset.category || 'THEME' }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <!-- 5. Advanced Ergonomics: Glow, Contrast & Density -->
+            <div class="drawer-section-label font-monospace mt-3">VISUAL ERGONOMICS & COMFORT</div>
+            <div class="advanced-ergonomics-stack d-flex flex-column gap-2">
+              <!-- Glow Control -->
+              <div class="ergonomic-control-row">
+                <div class="control-header d-flex justify-content-between align-items-center mb-1">
+                  <span class="control-title">Glow Intensity</span>
+                  <span class="control-active-val font-monospace">{{ themeService.glowMode() }}</span>
+                </div>
+                <div class="segmented-pill-bar">
+                  <button type="button" class="segment-btn" [class.active]="themeService.glowMode() === 'MINIMAL'" (click)="setGlowMode('MINIMAL')">MINIMAL</button>
+                  <button type="button" class="segment-btn" [class.active]="themeService.glowMode() === 'SOFT'" (click)="setGlowMode('SOFT')">SOFT</button>
+                  <button type="button" class="segment-btn" [class.active]="themeService.glowMode() === 'VIVID'" (click)="setGlowMode('VIVID')">VIVID</button>
                 </div>
               </div>
-            }
-          </div>
 
-          <!-- 5. Advanced Visual Studio Options -->
-          <div class="drawer-section-label font-monospace mt-3">ADVANCED VISUAL OPTIONS</div>
+              <!-- Contrast Control -->
+              <div class="ergonomic-control-row">
+                <div class="control-header d-flex justify-content-between align-items-center mb-1">
+                  <span class="control-title">UI Contrast</span>
+                  <span class="control-active-val font-monospace">{{ themeService.contrastMode() }}</span>
+                </div>
+                <div class="segmented-pill-bar">
+                  <button type="button" class="segment-btn" [class.active]="themeService.contrastMode() === 'NORMAL'" (click)="setContrastMode('NORMAL')">STANDARD</button>
+                  <button type="button" class="segment-btn" [class.active]="themeService.contrastMode() === 'HIGH'" (click)="setContrastMode('HIGH')">HIGH CONTRAST</button>
+                </div>
+              </div>
 
-          <!-- Ambient Glow Setting -->
-          <div class="advanced-option-card">
-            <div class="option-header">
-              <span class="option-title font-monospace">CORE AMBIENT GLOW</span>
-              <span class="option-desc">Adjust spatial lighting and neon aura intensity</span>
+              <!-- Density Control -->
+              <div class="ergonomic-control-row">
+                <div class="control-header d-flex justify-content-between align-items-center mb-1">
+                  <span class="control-title">Display Density</span>
+                  <span class="control-active-val font-monospace">{{ themeService.densityMode() }}</span>
+                </div>
+                <div class="segmented-pill-bar">
+                  <button type="button" class="segment-btn" [class.active]="themeService.densityMode() === 'COMPACT'" (click)="setDensityMode('COMPACT')">COMPACT (0.9x)</button>
+                  <button type="button" class="segment-btn" [class.active]="themeService.densityMode() === 'BALANCED'" (click)="setDensityMode('BALANCED')">BALANCED (1.0x)</button>
+                  <button type="button" class="segment-btn" [class.active]="themeService.densityMode() === 'RELAXED'" (click)="setDensityMode('RELAXED')">RELAXED (1.1x)</button>
+                </div>
+              </div>
             </div>
-            <div class="segmented-control font-monospace">
-              <button
-                type="button"
-                class="segment-btn"
-                [class.active]="themeService.glowMode() === 'SOFT'"
-                (click)="setGlowMode('SOFT')"
-              >
-                SOFT GLOW
-              </button>
-              <button
-                type="button"
-                class="segment-btn"
-                [class.active]="themeService.glowMode() === 'VIVID'"
-                (click)="setGlowMode('VIVID')"
-              >
-                VIVID NEON
-              </button>
-              <button
-                type="button"
-                class="segment-btn"
-                [class.active]="themeService.glowMode() === 'MINIMAL'"
-                (click)="setGlowMode('MINIMAL')"
-              >
-                ZERO GLOW
+
+            <!-- Reset Button -->
+            <div class="drawer-footer-actions mt-4 mb-2">
+              <button type="button" class="reset-theme-btn font-monospace" (click)="resetThemeToDefault()">
+                ↺ RESTORE RECOMMENDED (OBSIDIAN DARK)
               </button>
             </div>
           </div>
-
-          <!-- Contrast Setting -->
-          <div class="advanced-option-card mt-2">
-            <div class="option-header">
-              <span class="option-title font-monospace">DISPLAY CONTRAST</span>
-              <span class="option-desc">Enhances text and border visibility for pro sunlight/DPI</span>
-            </div>
-            <div class="segmented-control font-monospace">
-              <button
-                type="button"
-                class="segment-btn"
-                [class.active]="themeService.contrastMode() === 'NORMAL'"
-                (click)="setContrastMode('NORMAL')"
-              >
-                STANDARD GLASS
-              </button>
-              <button
-                type="button"
-                class="segment-btn"
-                [class.active]="themeService.contrastMode() === 'HIGH'"
-                (click)="setContrastMode('HIGH')"
-              >
-                HIGH CONTRAST
-              </button>
-            </div>
-          </div>
-
-          <!-- Density Setting -->
-          <div class="advanced-option-card mt-2">
-            <div class="option-header">
-              <span class="option-title font-monospace">UI DENSITY & SCALING</span>
-              <span class="option-desc">Adjust layout spacing for developer compactness or comfortable touch</span>
-            </div>
-            <div class="segmented-control font-monospace">
-              <button
-                type="button"
-                class="segment-btn"
-                [class.active]="themeService.densityMode() === 'COMPACT'"
-                (click)="setDensityMode('COMPACT')"
-              >
-                COMPACT (0.9x)
-              </button>
-              <button
-                type="button"
-                class="segment-btn"
-                [class.active]="themeService.densityMode() === 'BALANCED'"
-                (click)="setDensityMode('BALANCED')"
-              >
-                BALANCED (1.0x)
-              </button>
-              <button
-                type="button"
-                class="segment-btn"
-                [class.active]="themeService.densityMode() === 'RELAXED'"
-                (click)="setDensityMode('RELAXED')"
-              >
-                RELAXED (1.1x)
-              </button>
-            </div>
-          </div>
-
-          <!-- Reset Button -->
-          <div class="drawer-footer-actions mt-4">
-            <button type="button" class="reset-theme-btn font-monospace" (click)="resetThemeToDefault()">
-              ↺ RESTORE RECOMMENDED (OBSIDIAN DARK)
-            </button>
-          </div>
-        </div>
-      </aside>
-    </div>
-  }
-
-  <!-- Interactive 3D Biometric Face Scanner Modal Overlay -->
-  @if (stateService.showScannerModal()) {
-    <div class="biometric-modal-backdrop" (click)="stateService.closeBiometricScanner()">
-      <div class="biometric-modal-card" (click)="$event.stopPropagation()">
-        <app-biometric-face-scanner
-          [isModal]="true"
-          (closeRequested)="stateService.closeBiometricScanner()"
-        ></app-biometric-face-scanner>
+        </aside>
       </div>
-    </div>
-  }
+    }
 
-  <!-- Mobile Device & Screen Mirror Hub Modal -->
-  <app-mobile-screen-hub #mobileHub></app-mobile-screen-hub>
+    <!-- 3D Face Scanner Modal Overlay -->
+    @if (stateService.showScannerModal()) {
+      <div class="biometric-modal-backdrop" (click)="stateService.closeBiometricScanner()">
+        <div class="biometric-modal-card" (click)="$event.stopPropagation()">
+          <app-biometric-face-scanner
+            [isModal]="true"
+            (closeRequested)="stateService.closeBiometricScanner()"
+          ></app-biometric-face-scanner>
+        </div>
+      </div>
+    }
 
-  <!-- Voice & Biometrics Center Modal -->
-  <app-voice-settings-center #voiceCenter></app-voice-settings-center>
+    <!-- Mobile Device & Screen Mirror Hub Modal -->
+    <app-mobile-screen-hub #mobileHub></app-mobile-screen-hub>
+
+    <!-- Voice & Biometrics Center Modal -->
+    <app-voice-settings-center #voiceCenter></app-voice-settings-center>
+  </div>
 </header>
