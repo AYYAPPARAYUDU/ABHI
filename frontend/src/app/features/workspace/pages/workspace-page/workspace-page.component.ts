@@ -8,8 +8,9 @@ import { AgentCommandService } from '../../../../core/services/agent-command.ser
 import { getApiUrl } from '../../../../core/config/api-config';
 import { BusinessService } from '../../../business/services/business.service';
 import { AgentOfficePageComponent } from '../../../agent-office/pages/agent-office-page/agent-office-page.component';
+import { HubSpokePageComponent } from '../../../hub-spoke/pages/hub-spoke-page/hub-spoke-page.component';
 
-export type WorkspaceViewMode = 'colony' | 'agent-works' | 'live-business';
+export type WorkspaceViewMode = 'colony' | 'hub-spoke' | 'agent-works' | 'live-business';
 
 interface SmallLLMBrain {
   id: string;
@@ -50,7 +51,7 @@ interface ChannelMessage {
 @Component({
   selector: 'app-workspace-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AgentOfficePageComponent],
+  imports: [CommonModule, FormsModule, AgentOfficePageComponent, HubSpokePageComponent],
   templateUrl: './workspace-page.component.html',
   styleUrl: './workspace-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush

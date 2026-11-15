@@ -28,6 +28,18 @@
       <button
         type="button"
         class="tab-pill-btn"
+        [class.active]="activeWorkspaceMode() === 'hub-spoke'"
+        (click)="setWorkspaceMode('hub-spoke')"
+        title="3D Radial Hub & Spoke AI Agent HQ (Bexruz Khamidullaev / Agents Office v3)"
+      >
+        <span class="pill-icon">🧠</span>
+        <span class="pill-label">8-Pod Hub & Spoke HQ</span>
+        <span class="pill-badge-hub">AGENT HQ</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-pill-btn"
         [class.active]="activeWorkspaceMode() === 'agent-works'"
         (click)="setWorkspaceMode('agent-works')"
         title="3D AI Agent Corporate Office Floorplan (Claw3D / Agent Office)"
@@ -552,7 +564,14 @@
   }
   </div> <!-- colony-view-wrapper end -->
 
-  <!-- View 2: Agent Works & 3D Office Floorplan (Claw3D / Agent Office Architecture) -->
+  <!-- View 2: 8-Pod Radial Hub & Spoke AI Agent HQ (Bexruz Khamidullaev Architecture) -->
+  @if (activeWorkspaceMode() === 'hub-spoke') {
+    <div class="embedded-view-container" role="region" aria-label="8-Pod Hub & Spoke Command HQ">
+      <app-hub-spoke-page></app-hub-spoke-page>
+    </div>
+  }
+
+  <!-- View 3: Agent Works & 3D Office Floorplan (Claw3D / Agent Office Architecture) -->
   @if (activeWorkspaceMode() === 'agent-works') {
     <div class="embedded-view-container" role="region" aria-label="3D AI Agent Office Floorplan">
       <app-agent-office-page></app-agent-office-page>

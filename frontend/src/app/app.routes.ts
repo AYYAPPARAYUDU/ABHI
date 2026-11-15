@@ -35,6 +35,18 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'hub-spoke',
+    loadComponent: () =>
+      import('./features/hub-spoke/pages/hub-spoke-page/hub-spoke-page.component').then(
+        (m) => m.HubSpokePageComponent
+      )
+  },
+  {
+    path: 'agent-hq',
+    redirectTo: 'hub-spoke',
+    pathMatch: 'full'
+  },
+  {
     path: 'office',
     redirectTo: 'agent-office',
     pathMatch: 'full'

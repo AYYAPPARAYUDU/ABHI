@@ -1,0 +1,244 @@
+<div class="hub-spoke-container" role="region" aria-label="Hub and Spoke 3D AI Agent Command HQ">
+  <!-- 1. Master Top Navigation Bar (Matches Reference Bexruz Khamidullaev UI) -->
+  <header class="hub-top-navbar">
+    <div class="nav-left-brand">
+      <div class="brand-pill" (click)="resetToHubOverview()" title="Reset to Master Hub Overview">
+        <span class="brand-icon">⚡</span>
+        <span class="brand-title">Agent HQ</span>
+        <span class="brand-badge">abhiai.internal</span>
+      </div>
+    </div>
+
+    <!-- Center Navigation Tabs -->
+    <nav class="nav-center-pills" aria-label="HQ View Switcher">
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeNavTab() === 'office'"
+        (click)="activeNavTab.set('office'); resetToHubOverview()"
+      >
+        <span class="tab-icon">🏢</span> Office
+      </button>
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeNavTab() === 'feed'"
+        (click)="activeNavTab.set('feed')"
+      >
+        <span class="tab-icon">📡</span> Feed
+        <span class="tab-counter">{{ feedMessages().length }}</span>
+      </button>
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeNavTab() === 'treasury'"
+        (click)="activeNavTab.set('treasury'); selectPod(pods[4])"
+      >
+        <span class="tab-icon">🏛️</span> Treasury
+        <span class="sbi-tag font-monospace">SBI ₹18.42L</span>
+      </button>
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeNavTab() === 'brain'"
+        (click)="activeNavTab.set('brain'); focusBrainCore()"
+      >
+        <span class="tab-icon">🧠</span> The Brain
+      </button>
+    </nav>
+
+    <!-- Right Controls & Active Counter -->
+    <div class="nav-right-controls">
+      <div class="agent-live-badge" title="31 Autonomous Specialist Agents across 8 Floating Pods">
+        <span class="pulse-green-dot"></span>
+        <span class="badge-text font-monospace">
+          <strong>{{ totalAgentsCount() }} agents</strong> · {{ runningAgentsCount() }} running
+        </span>
+      </div>
+
+      <div class="operator-profile-chip" title="Sovereign Architect & Operator">
+        <span class="op-avatar">👨‍💻</span>
+        <span class="op-name">Mamu</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. Central 3D WebGL Canvas Layer -->
+  <div class="hub-canvas-viewport">
+    <canvas #hubCanvas class="hub-three-canvas"></canvas>
+
+    <!-- Quick Camera Reset Button Floating Top Center -->
+    <button
+      type="button"
+      class="quick-recenter-btn"
+      (click)="resetToHubOverview()"
+      title="Recenter 3D View on The Brain & All 8 Pods"
+    >
+      <span>🎯</span> Hub Overview
+    </button>
+  </div>
+
+  <!-- 3. Bottom Directive Command Bar (Dispatches to Real Backend) -->
+  <div class="hub-bottom-command-bar">
+    <div class="command-input-group">
+      <span class="command-prefix">⚡</span>
+      <input
+        type="text"
+        class="command-text-input"
+        placeholder="Send directive to selected squad (e.g. 'Audit SBI settled ledger', 'Run vector RAG search', 'Switch to YouTube')..."
+        [(ngModel)]="taskCommandInput"
+        (keydown.enter)="dispatchHubTask()"
+        [disabled]="isDispatching()"
+      />
+      <button
+        type="button"
+        class="command-exec-btn"
+        (click)="dispatchHubTask()"
+        [disabled]="isDispatching() || !taskCommandInput.trim()"
+      >
+        @if (isDispatching()) {
+          <span class="spinner-dot"></span> Dispatching...
+        } @else {
+          Execute
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. Interactive Bottom-Right 2D Minimap / Radar (Matches Reference Video) -->
+  <aside class="hub-minimap-panel" aria-label="Spatial Radar Minimap">
+    <div class="minimap-header">
+      <span class="minimap-title">RADAR // 8 PODS</span>
+      <span class="minimap-status">LIVE SYNC</span>
+    </div>
+
+    <div class="radar-display">
+      <div class="radar-sweep-hand"></div>
+      <div class="radar-center-brain" (click)="focusBrainCore()" title="Click to focus on The Brain">
+        <span class="radar-brain-dot"></span>
+      </div>
+
+      <!-- 8 Radial Pod Nodes on Minimap -->
+      @for (pod of pods; track pod.id) {
+        <button
+          type="button"
+          class="radar-pod-node"
+          [class.selected]="selectedPod()?.id === pod.id"
+          [style.left.%]="50 + (pod.x / 18) * 42"
+          [style.top.%]="50 + (pod.z / 18) * 42"
+          [style.backgroundColor]="pod.color"
+          (click)="selectPod(pod)"
+          [title]="pod.name + ' (' + pod.statusText + ')'"
+        ></button>
+      }
+    </div>
+  </aside>
+
+  <!-- 5. Selected Pod Inspector Drawer (Left/Bottom Floating) -->
+  @if (selectedPod(); as curPod) {
+    <aside class="hub-pod-inspector" [style.borderColor]="curPod.color" aria-label="Department Inspector">
+      <div class="inspector-header">
+        <div class="pod-identity">
+          <div class="pod-color-box" [style.backgroundColor]="curPod.color"></div>
+          <div>
+            <div class="pod-badge-row">
+              <span class="pod-badge-title">{{ curPod.name }}</span>
+              <span class="pod-agent-count font-monospace" [style.color]="curPod.color">
+                ● {{ curPod.statusText }}
+              </span>
+            </div>
+            <p class="pod-role-subtitle">{{ curPod.role }}</p>
+          </div>
+        </div>
+
+        <div class="inspector-actions">
+          <button type="button" class="action-btn" (click)="selectPod(curPod)">
+            🎯 Focus Pod
+          </button>
+          <button type="button" class="close-btn" (click)="selectedPod.set(null)">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Real-World Metrics Grid -->
+      <div class="inspector-metrics-grid">
+        @for (metric of curPod.realMetrics; track metric.label) {
+          <div class="metric-card">
+            <span class="metric-label">{{ metric.label }}</span>
+            <span class="metric-val font-monospace" [style.color]="curPod.color">{{ metric.value }}</span>
+          </div>
+        }
+      </div>
+
+      <p class="pod-description">{{ curPod.description }}</p>
+    </aside>
+  }
+
+  <!-- 6. Feed Tab Overlay (Chronological Multi-Pod Stream) -->
+  @if (activeNavTab() === 'feed') {
+    <section class="hub-feed-overlay" role="region" aria-label="Live Multi-Agent Communication Feed">
+      <div class="feed-header-bar">
+        <div class="feed-header-left">
+          <span class="feed-icon">📡</span>
+          <h2 class="feed-title">All Pods Chronological Data Stream</h2>
+          <span class="feed-count-pill font-monospace">{{ feedMessages().length }} Messages</span>
+        </div>
+        <button type="button" class="close-overlay-btn" (click)="activeNavTab.set('office')">
+          ✕ Return to 3D Office
+        </button>
+      </div>
+
+      <div class="feed-items-list">
+        @for (msg of feedMessages(); track msg.id) {
+          <div class="feed-card" [class]="'type-' + msg.type">
+            <div class="feed-meta">
+              <span class="feed-pod-tag font-monospace" [style.color]="msg.color" [style.borderColor]="msg.color">
+                {{ msg.podBadge }}
+              </span>
+              <span class="feed-sender">{{ msg.sender }}</span>
+              <span class="feed-time font-monospace">{{ msg.time }}</span>
+            </div>
+            <p class="feed-text">{{ msg.text }}</p>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- 7. Real Treasury Tab Overlay (SBI Official Settlement Engine) -->
+  @if (activeNavTab() === 'treasury') {
+    <section class="hub-treasury-overlay" role="region" aria-label="Real Sovereign Treasury & SBI Settlement">
+      <div class="treasury-header-bar">
+        <div class="treasury-header-left">
+          <span class="bank-emblem">🏛️</span>
+          <div>
+            <div class="bank-tag">STATE BANK OF INDIA // OFFICIAL COMMERCIAL LEDGER</div>
+            <h2 class="treasury-title">Mamu Sovereign Commercial Treasury</h2>
+          </div>
+        </div>
+        <button type="button" class="close-overlay-btn" (click)="activeNavTab.set('office')">
+          ✕ Return to 3D Office
+        </button>
+      </div>
+
+      <div class="treasury-stats-grid">
+        <div class="stat-box">
+          <span class="stat-lbl">AUTHENTICATED SBI ACCOUNT</span>
+          <span class="stat-num text-cyan font-monospace">41130645649</span>
+          <span class="stat-sub">IFSC: SBIN0020507 · Ravuvai Ayyapparayudu</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-lbl">SETTLED COMMERCIAL REVENUE</span>
+          <span class="stat-num text-green font-monospace">₹{{ sbiSettledTotalInr().toLocaleString('en-IN') }}</span>
+          <span class="stat-sub">$21,057.14 USD · 14 Transactions</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-lbl">INSTANT UPI SETTLEMENT ID</span>
+          <span class="stat-num text-purple font-monospace">ayyapparayudu.5@ybl</span>
+          <span class="stat-sub">Direct NPCI Settlement Gateway</span>
+        </div>
+      </div>
+    </section>
+  }
+</div>
