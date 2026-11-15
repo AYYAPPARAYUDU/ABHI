@@ -1,0 +1,698 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #070b16;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Inter, sans-serif;
+}
+
+.sample-viewport-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* =========================================================================
+   TOP NAVIGATION BAR (MATCHING IMAGE 1 & IMAGE 2)
+   ========================================================================= */
+
+.top-nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 18px;
+  background: rgba(9, 14, 26, 0.94);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 50;
+  gap: 16px;
+  min-height: 52px;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-icon {
+  font-size: 18px;
+  color: #38bdf8;
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.6));
+}
+
+.brand-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.profile-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  color: #e2e8f0;
+  cursor: pointer;
+}
+
+.profile-avatar {
+  font-size: 13px;
+}
+
+.dropdown-arrow {
+  font-size: 9px;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+/* Center View Switcher Tabs */
+.nav-center-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.65);
+  padding: 3px 6px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.tab-pill-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  color: #94a3b8;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.tab-pill-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tab-pill-btn.active {
+  background: rgba(14, 165, 233, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+.pill-icon {
+  font-size: 13px;
+}
+
+.pill-badge-hub {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(14, 165, 233, 0.25);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.pill-badge-office {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.pill-badge-sbi {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.icon-only-pill {
+  color: #64748b;
+}
+
+/* Nav Right */
+.nav-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.agents-live-counter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: #cbd5e1;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 4px 12px;
+  border-radius: 9999px;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.live-dot.pulse {
+  animation: pulseBeacon 1.8s infinite;
+}
+
+@keyframes pulseBeacon {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* =========================================================================
+   HORIZONTAL POD SELECTOR RIBBON (IMAGE 1 MATCH)
+   ========================================================================= */
+
+.pods-horizontal-ribbon {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: rgba(10, 15, 28, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  z-index: 40;
+  overflow-x: auto;
+}
+
+.pod-sliding-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.2), inset 0 0 10px rgba(0, 240, 255, 0.15);
+  border-radius: 8px;
+  z-index: 1;
+}
+
+.pod-ribbon-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid var(--pod-color, #38bdf8);
+  border-radius: 12px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #f8fafc;
+  flex-shrink: 0;
+}
+
+.pod-ribbon-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.pod-ribbon-btn.selected {
+  background: rgba(15, 23, 42, 0.95);
+  box-shadow: 0 0 16px var(--pod-color, #38bdf8), inset 0 0 10px rgba(255, 255, 255, 0.04);
+  border-width: 1.5px;
+}
+
+.ribbon-icon {
+  font-size: 15px;
+}
+
+.ribbon-text-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.ribbon-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.ribbon-meta {
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.2;
+}
+
+/* =========================================================================
+   CANVAS VIEWPORT & OVERLAYS
+   ========================================================================= */
+
+.three-canvas-container {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.webgl-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Central Brain Tag */
+.center-brain-pill {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -130%);
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 9999px;
+  padding: 6px 16px;
+  text-align: center;
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.3);
+  pointer-events: none;
+  z-index: 10;
+}
+
+.brain-glow-dot {
+  width: 6px;
+  height: 6px;
+  background: #38bdf8;
+  border-radius: 50%;
+  margin: 0 auto 3px auto;
+  box-shadow: 0 0 10px #38bdf8;
+}
+
+.brain-title {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #38bdf8;
+}
+
+.brain-sub {
+  font-size: 9px;
+  color: #94a3b8;
+}
+
+/* Left Stack: Pod Detail Card + Sam QA Sub-Card */
+.left-hud-stack {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 25;
+}
+
+/* Pod Detail Modal / Drawer */
+.pod-detail-modal {
+  width: 100%;
+  background: rgba(12, 18, 34, 0.94);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-pod-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.modal-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.modal-sub {
+  font-size: 10.5px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.close-btn:hover {
+  color: #ffffff;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.kpi-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.kpi-label {
+  font-size: 9.5px;
+  color: #94a3b8;
+}
+
+.kpi-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 2px 0;
+}
+
+.kpi-spark {
+  font-size: 9px;
+  color: #10b981;
+}
+
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #64748b;
+}
+
+.section-tag {
+  font-size: 9px;
+  color: #38bdf8;
+}
+
+.tools-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.tool-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+
+.tool-badge {
+  width: 22px;
+  height: 22px;
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tool-badge.badge-p {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+}
+
+.tool-badge.badge-c {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+}
+
+.tool-info {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tool-name {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tool-status {
+  font-size: 8.5px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tiny-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skill-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+}
+
+.skill-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 125px;
+  color: #cbd5e1;
+}
+
+.skill-bar-wrap {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.skill-bar-fill {
+  height: 100%;
+  background: #38bdf8;
+  border-radius: 2px;
+}
+
+.skill-pct {
+  font-size: 9px;
+  color: #94a3b8;
+  width: 26px;
+  text-align: right;
+}
+
+/* Sam · QA Sub-Card (Image 2 Match) */
+.sam-qa-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(12, 18, 34, 0.94);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 8px 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.sam-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  color: #ffffff;
+  font-size: 10.5px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sam-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sam-name {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.sam-desc {
+  font-size: 9.5px;
+  color: #94a3b8;
+}
+
+.coffee-pill {
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+/* =========================================================================
+   CORPORATE FLOORPLAN RIGHT HUD: AGENT COMMUNICATION (IMAGE 2 MATCH)
+   ========================================================================= */
+
+.floorplan-right-hud {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 330px;
+  max-height: calc(100% - 40px);
+  background: rgba(12, 18, 34, 0.94);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 25;
+  overflow-y: auto;
+}
+
+.chatter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 8px;
+}
+
+.channel-indicator {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.chatter-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chat-sender {
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.chat-sender.mia { color: #ec4899; }
+.chat-sender.max { color: #38bdf8; }
+.chat-sender.sam { color: #a855f7; }
+.chat-sender.olivia { color: #f59e0b; }
+
+.chat-text {
+  font-size: 11px;
+  color: #cbd5e1;
+  line-height: 1.4;
+}
+
+.chat-time {
+  font-size: 9px;
+  color: #64748b;
+  align-self: flex-end;
+}

@@ -1,54 +1,76 @@
 <div class="workspace-spatial-container" role="region" aria-label="3D Cybernetic Bot Workspace">
-  <!-- Master Workspace Viewport Mode Switcher (Visible in Colony & Business Views) -->
-  @if (activeWorkspaceMode() === 'colony' || activeWorkspaceMode() === 'live-business') {
-    <header class="workspace-top-nav-bar">
-      <div class="nav-left">
-        <div class="brand-badge">
-          <span class="brand-icon">⬢</span>
-          <span class="brand-title">ABHI Command Center</span>
-        </div>
-        <div class="profile-chip" title="Sovereign Architect & Operator">
-          <span class="profile-avatar">👨‍💻</span>
-          <span class="profile-name">Ayyappa Rayudu (Mamu)</span>
-          <span class="dropdown-arrow">▾</span>
-        </div>
+  <!-- Master Workspace Viewport Mode Switcher (Visible in all Workspace Views) -->
+  <header class="workspace-top-nav-bar">
+    <div class="nav-left">
+      <div class="brand-badge">
+        <span class="brand-icon">⬢</span>
+        <span class="brand-title">ABHI Command Center</span>
       </div>
-
-      <nav class="nav-center-tabs" aria-label="Workspace View Selector">
-        <button
-          type="button"
-          class="tab-pill-btn"
-          [class.active]="activeWorkspaceMode() === 'colony'"
-          (click)="setWorkspaceMode('colony')"
-          title="3D Living Architectural Command Center & Multi-Agent Swarm"
-        >
-          <span class="pill-icon">🛰️</span>
-          <span class="pill-label">3D Architectural Colony</span>
-        </button>
-
-        <button
-          type="button"
-          class="tab-pill-btn"
-          [class.active]="activeWorkspaceMode() === 'live-business'"
-          (click)="setWorkspaceMode('live-business')"
-          title="Real-World SBI Settlement & Sovereign Business Treasury"
-        >
-          <span class="pill-icon">🏛️</span>
-          <span class="pill-label">Live Business & SBI Settlement</span>
-          <span class="pill-badge-sbi">REAL SBI</span>
-        </button>
-      </nav>
-
-      <div class="nav-right">
-        <div class="agents-live-counter" title="Live Operating System Telemetry">
-          <span class="live-dot pulse"></span>
-          <span class="counter-text font-monospace">
-            <strong>CPU: {{ systemTelemetry()?.cpu || 0 }}%</strong> · RAM: {{ systemTelemetry()?.mem_pct || 0 }}% · {{ systemTelemetry()?.open_windows_count || 0 }} Wins
-          </span>
-        </div>
+      <div class="profile-chip" title="Sovereign Architect & Operator">
+        <span class="profile-avatar">👨‍💻</span>
+        <span class="profile-name">Ayyappa Rayudu (Mamu)</span>
+        <span class="dropdown-arrow">▾</span>
       </div>
-    </header>
-  }
+    </div>
+
+    <nav class="nav-center-tabs" aria-label="Workspace View Selector">
+      <button
+        type="button"
+        class="tab-pill-btn"
+        [class.active]="activeWorkspaceMode() === 'colony'"
+        (click)="setWorkspaceMode('colony')"
+        title="3D Living Architectural Command Center & Multi-Agent Swarm"
+      >
+        <span class="pill-icon">🛰️</span>
+        <span class="pill-label">3D Architectural Colony</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-pill-btn"
+        [class.active]="activeWorkspaceMode() === 'live-agents'"
+        (click)="setWorkspaceMode('live-agents')"
+        title="Live Agents 8-Pod Hub & Spoke 3D Architecture"
+      >
+        <span class="pill-icon">🧠</span>
+        <span class="pill-label">Live Agents HQ</span>
+        <span class="pill-badge-hub">8-POD HUB</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-pill-btn"
+        [class.active]="activeWorkspaceMode() === 'agent-works'"
+        (click)="setWorkspaceMode('agent-works')"
+        title="Corporate Architectural Office Floorplan"
+      >
+        <span class="pill-icon">🏢</span>
+        <span class="pill-label">Agent Works & Floorplan</span>
+        <span class="pill-badge-office">LIVE OFFICE</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-pill-btn"
+        [class.active]="activeWorkspaceMode() === 'live-business'"
+        (click)="setWorkspaceMode('live-business')"
+        title="Real-World SBI Settlement & Sovereign Business Treasury"
+      >
+        <span class="pill-icon">🏛️</span>
+        <span class="pill-label">Live Business & SBI Settlement</span>
+        <span class="pill-badge-sbi">REAL SBI</span>
+      </button>
+    </nav>
+
+    <div class="nav-right">
+      <div class="agents-live-counter" title="Live Operating System Telemetry">
+        <span class="live-dot pulse"></span>
+        <span class="counter-text font-monospace">
+          <strong>CPU: {{ systemTelemetry()?.cpu || 0 }}%</strong> · RAM: {{ systemTelemetry()?.mem_pct || 0 }}% · {{ systemTelemetry()?.open_windows_count || 0 }} Wins
+        </span>
+      </div>
+    </div>
+  </header>
 
   <!-- View 1: 3D Colony (Default, preserved) -->
   <div class="colony-view-wrapper" [class.d-none]="activeWorkspaceMode() !== 'colony'">
@@ -333,771 +355,135 @@
     </aside>
   }
 
-  <!-- Floating Dynamic Right-Side Agent Intelligence Popup -->
+  <!-- Floating Dynamic Right-Side Agent Intelligence & Work Drawer -->
   @if ((activeStation() || selectedAgent()); as current) {
-    <aside class="station-side-popup" [class.wide-screen]="isWideScreen()" [style.borderColor]="current.color" role="dialog" aria-label="Specialist Agent Intelligence">
-      <!-- Popup Header with Live Indicator -->
+    <aside class="station-side-popup agent-work-drawer" [style.borderColor]="current.color" role="dialog" aria-label="Agent Work and Intelligence Drawer">
+      <!-- Header with Agent Profile & Status -->
       <div class="popup-header">
         <div class="popup-agent-info">
-          <div class="popup-avatar" [style.borderColor]="current.color" [style.boxShadow]="'0 0 16px ' + current.color + '55'">
-            {{ current.icon }}
-            <span class="avatar-live-pulse" [style.backgroundColor]="current.color"></span>
+          <div class="popup-avatar" [style.borderColor]="current.color" [style.boxShadow]="'0 0 16px ' + current.color + '44'">
+            <span class="avatar-icon">{{ current.icon }}</span>
           </div>
-          <div>
-            <div class="popup-title-row">
-              <h2 class="popup-agent-name">{{ current.name }}</h2>
+          <div class="popup-title-row">
+            <div class="popup-title-top">
+              <h2 class="popup-agent-name">{{ agentWork()?.name || current.name }}</h2>
+              <span class="popup-model-badge font-monospace">{{ agentWork()?.model_name || 'LLM Qwen 8B DeepSeek' }}</span>
+            </div>
+            <div class="popup-status-cluster font-monospace">
               <span class="popup-status-badge" [style.borderColor]="current.color" [style.color]="current.color">
-                ● LIVE
+                ● {{ agentWork()?.status_label || 'ACTIVE // COLLABORATING' }}
+              </span>
+              <span class="popup-synaptic-badge">
+                🔗 {{ agentWork()?.synaptic_bond || 99 }}% SYNC
               </span>
             </div>
-            <div class="popup-agent-sub font-monospace">{{ current.codename }} // {{ current.subsystem }}</div>
+            <div class="popup-agent-sub font-monospace">{{ agentWork()?.suit_mark || current.codename }} // {{ current.subsystem }}</div>
           </div>
         </div>
         <div class="popup-header-actions">
           <button
             type="button"
-            class="header-screen-toggle-btn"
-            [class.active]="isWideScreen()"
-            (click)="isWideScreen.set(!isWideScreen())"
-            title="Toggle Wide Digital Monitor View"
-          >
-            {{ isWideScreen() ? '🗗 COMPACT' : '🗖 WIDE' }}
-          </button>
-          <button type="button" class="popup-close-btn" (click)="closeStationDrawer()" aria-label="Close Popup">✕</button>
+            class="popup-close-btn"
+            (click)="closeStationDrawer()"
+            aria-label="Close Agent Drawer"
+          >✕</button>
         </div>
       </div>
 
-      <!-- Tab Navigation Ribbon -->
-      <div class="popup-tabs-bar">
-        <button
-          type="button"
-          class="popup-tab-btn premier-screen-tab"
-          [class.active]="activePopupTab() === 'DIGITAL_SCREEN'"
-          (click)="activePopupTab.set('DIGITAL_SCREEN')"
-        >
-          🖥️ Live Screen & Monitors
-        </button>
-        <button
-          type="button"
-          class="popup-tab-btn"
-          [class.active]="activePopupTab() === 'MISSION_WORK'"
-          (click)="activePopupTab.set('MISSION_WORK')"
-        >
-          ✦ Mission & How It Works
-        </button>
-        <button
-          type="button"
-          class="popup-tab-btn"
-          [class.active]="activePopupTab() === 'LIVE_TELEMETRY'"
-          (click)="activePopupTab.set('LIVE_TELEMETRY')"
-        >
-          📊 Live Telemetry & Status
-        </button>
-        <button
-          type="button"
-          class="popup-tab-btn"
-          [class.active]="activePopupTab() === 'ML_PREDICTIONS'"
-          (click)="activePopupTab.set('ML_PREDICTIONS')"
-        >
-          📈 ML Predictions & Graphs
-        </button>
-        <button
-          type="button"
-          class="popup-tab-btn"
-          [class.active]="activePopupTab() === 'CHAT'"
-          (click)="activePopupTab.set('CHAT')"
-        >
-          💬 Synaptic Chat
-        </button>
-      </div>
+      <!-- Agent Work Body (Zero Confusion, Human-Understandable) -->
+      <div class="popup-body agent-work-body">
+        @if (isLoadingAgentWork()) {
+          <div class="agent-work-loading font-monospace">
+            <span class="spinner-dot"></span> Synchronizing work stream for {{ current.name }}...
+          </div>
+        } @else {
+          <!-- 1. Current Active Mission & Work Highlight -->
+          <div class="agent-mission-card" [style.borderLeftColor]="current.color">
+            <div class="card-section-label font-monospace">◈ CURRENT MISSION & OBJECTIVE</div>
+            <div class="card-mission-title">{{ agentWork()?.current_mission || current.role }}</div>
+            <div class="card-mission-activity font-monospace">{{ agentWork()?.current_activity || 'Operating at peak neural performance.' }}</div>
+          </div>
 
-      <!-- Action Feedback Toast -->
-      @if (realActionStatus()) {
-        <div class="station-action-status-banner real-action-toast">
-          ⚡ {{ realActionStatus() }}
-        </div>
-      }
-      @if (stationActionStatus()) {
-        <div class="station-action-status-banner">
-          {{ stationActionStatus() }}
-        </div>
-      }
+          <!-- 2. Execution Pipeline Roadmap -->
+          <div class="work-section-block">
+            <div class="section-tag-header">
+              <span class="tag-icon">⚡</span>
+              <span class="tag-title">AUTONOMOUS EXECUTION ROADMAP</span>
+            </div>
+            <div class="execution-pipeline-grid">
+              @for (st of agentWork()?.execution_steps; track st.step) {
+                <div class="pipeline-step-node" [class.completed]="st.status === 'completed'" [class.active]="st.status === 'active'">
+                  <div class="step-num font-monospace">0{{ st.step }}</div>
+                  <div class="step-content">
+                    <div class="step-title font-monospace">{{ st.title }}</div>
+                    <div class="step-detail">{{ st.detail }}</div>
+                  </div>
+                  <div class="step-status-chip font-monospace">{{ st.status | uppercase }}</div>
+                </div>
+              }
+            </div>
+          </div>
 
-      <div class="popup-body">
-        <!-- ============================================================== -->
-        <!-- TAB 0: LIVE DIGITAL SCREEN & MONITORS -->
-        <!-- ============================================================== -->
-        @if (activePopupTab() === 'DIGITAL_SCREEN') {
-          <div class="popup-tab-pane digital-screen-pane">
-            <!-- Screen Control Ribbon -->
-            <div class="screen-control-bar">
-              <div class="monitor-meta-info">
-                <span class="live-dot-pulse"></span>
-                <span class="monitor-badge-label font-monospace">
-                  {{ monitorFeed()?.assigned_monitor?.monitor_name || 'PHYSICAL DISPLAY 1 (PRIMARY DESKTOP)' }}
+          <!-- 3. Active Resources & Tools Used -->
+          <div class="work-section-block">
+            <div class="section-tag-header">
+              <span class="tag-icon">🛠️</span>
+              <span class="tag-title">INTEGRATED RESOURCES & TOOLS</span>
+            </div>
+            <div class="tools-badges-wrap font-monospace">
+              @for (tool of agentWork()?.tools; track tool) {
+                <span class="tool-tag-pill" [style.borderColor]="current.color + '55'">
+                  ◈ {{ tool }}
                 </span>
-                <span class="resolution-chip font-monospace">
-                  {{ monitorFeed()?.assigned_monitor?.resolution || '1280x800' }} @ 60 FPS
-                </span>
-              </div>
-
-              <div class="screen-actions-cluster">
-                <button
-                  type="button"
-                  class="screen-action-btn"
-                  [class.active]="autoStreamEnabled()"
-                  (click)="autoStreamEnabled.set(!autoStreamEnabled())"
-                  title="Toggle Real-Time Screen Auto-Stream"
-                >
-                  {{ autoStreamEnabled() ? '🔴 STREAM LIVE' : '⏸ STREAM PAUSED' }}
-                </button>
-                <button
-                  type="button"
-                  class="screen-action-btn"
-                  [disabled]="isLoadingScreen()"
-                  (click)="fetchAgentLiveScreen(current.id)"
-                  title="Capture Fresh Real-World Screen Frame"
-                >
-                  {{ isLoadingScreen() ? 'CAPTURING...' : '📸 SNAP FRAME' }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Digital CRT/OLED Glass Monitor Display -->
-            <div class="digital-bezel-frame" [style.borderColor]="current.color">
-              <div class="screen-scanlines-layer"></div>
-
-              @if (monitorFeed()?.screen_base64) {
-                <div class="interactive-screen-canvas" (click)="onScreenCanvasClick($event, current.id)">
-                  <img
-                    [src]="monitorFeed()?.screen_base64"
-                    [alt]="'Live Monitor Screen of ' + current.name"
-                    class="monitor-live-image"
-                  />
-                  <div class="live-cursor-hud font-monospace">
-                    <span>🖱️ CLICK ON SCREEN TO DISPATCH NATIVE WIN32 MOUSE EVENT</span>
-                  </div>
-                </div>
-              } @else {
-                <div class="screen-loading-box">
-                  <div class="radar-spinner" [style.borderColor]="current.color"></div>
-                  <span class="loading-label font-monospace">ACQUIRING REAL-WORLD LIVE SCREEN STREAM FOR {{ current.name }}...</span>
-                </div>
               }
-            </div>
-
-            <!-- Monitor Assignment Ribbon ("ASSIGN MONITORS") -->
-            <div class="screen-section-block">
-              <div class="section-tag-header">
-                <span class="tag-icon">🖥️</span>
-                <span class="tag-title">ASSIGN MONITOR / WINDOW (SELECT DISPLAY TO ROUTE TO THIS AGENT)</span>
-              </div>
-
-              <div class="monitor-assignment-grid">
-                <!-- Physical Monitors -->
-                @for (mon of availableMonitors()?.physical_monitors; track mon.id) {
-                  <button
-                    type="button"
-                    class="assign-chip-btn"
-                    [class.assigned]="monitorFeed()?.assigned_monitor?.monitor_id === mon.id"
-                    (click)="assignMonitorToAgent(current.id, mon)"
-                    title="Assign primary physical desktop screen"
-                  >
-                    <span>🖥️ {{ mon.name }}</span>
-                    <span class="chip-res font-monospace">({{ mon.resolution }})</span>
-                  </button>
-                }
-
-                <!-- Active Windows on Host -->
-                @for (win of availableMonitors()?.application_windows; track win.id) {
-                  <button
-                    type="button"
-                    class="assign-chip-btn"
-                    [class.assigned]="monitorFeed()?.assigned_monitor?.target_hwnd === win.hwnd"
-                    (click)="assignMonitorToAgent(current.id, win)"
-                    [title]="'Route window HWND ' + win.hwnd + ' (' + win.name + ')'"
-                  >
-                    <span>🪟 {{ win.name }}</span>
-                  </button>
-                }
-
-                <!-- Virtual Displays -->
-                @for (vir of availableMonitors()?.virtual_displays; track vir.id) {
-                  <button
-                    type="button"
-                    class="assign-chip-btn"
-                    [class.assigned]="monitorFeed()?.assigned_monitor?.monitor_id === vir.id"
-                    (click)="assignMonitorToAgent(current.id, vir)"
-                  >
-                    <span>⚡ {{ vir.name }}</span>
-                  </button>
-                }
-              </div>
-            </div>
-
-            <!-- Real-World Action Controller ("DO ALL THINGS IN REAL WORLD") -->
-            <div class="screen-section-block">
-              <div class="section-tag-header">
-                <span class="tag-icon">⚡</span>
-                <span class="tag-title">DO ALL THINGS IN REAL WORLD // HOST OS CONTROLLER</span>
-              </div>
-
-              <!-- Quick Real Actions -->
-              <div class="real-actions-row">
-                <button
-                  type="button"
-                  class="real-act-btn"
-                  (click)="executeRealAction(current.id, 'focus')"
-                  title="Bring this assigned window to front"
-                >
-                  🪟 Bring Window To Front
-                </button>
-                <button
-                  type="button"
-                  class="real-act-btn"
-                  (click)="executeRealAction(current.id, 'hotkey', { key_combo: 'alt+tab' })"
-                  title="Send Alt+Tab to cycle active applications"
-                >
-                  🔄 Alt + Tab
-                </button>
-                <button
-                  type="button"
-                  class="real-act-btn"
-                  (click)="executeRealAction(current.id, 'hotkey', { key_combo: 'win+d' })"
-                  title="Show / Minimize to Windows Desktop"
-                >
-                  💻 Show Desktop
-                </button>
-                <button
-                  type="button"
-                  class="real-act-btn"
-                  (click)="executeRealAction(current.id, 'hotkey', { key_combo: 'ctrl+shift+esc' })"
-                  title="Open Windows Task Manager"
-                >
-                  📊 Task Manager
-                </button>
-              </div>
-
-              <!-- Direct Real-World PowerShell Execution Runner -->
-              <div class="real-command-box">
-                <div class="cmd-label font-monospace">DIRECT POWERSHELL RUNNER IN REAL WORLD:</div>
-                <div class="cmd-input-row">
-                  <input
-                    type="text"
-                    class="cmd-input font-monospace"
-                    [(ngModel)]="realPowerShellCmd"
-                    placeholder="Enter PowerShell command to execute in real world..."
-                    (keyup.enter)="executeRealAction(current.id, 'run_command', { text: realPowerShellCmd })"
-                  />
-                  <button
-                    type="button"
-                    class="cmd-send-btn font-monospace"
-                    [disabled]="isExecutingRealAction()"
-                    (click)="executeRealAction(current.id, 'run_command', { text: realPowerShellCmd })"
-                  >
-                    {{ isExecutingRealAction() ? 'RUNNING...' : '▶ EXECUTE' }}
-                  </button>
-                </div>
-              </div>
-
-              <!-- Launch Real Application -->
-              <div class="real-app-launch-row">
-                <span class="launch-label font-monospace">LAUNCH APP:</span>
-                <button type="button" class="app-quick-pill" (click)="executeRealAction(current.id, 'launch', { app_name: 'chrome' })">🌐 Chrome</button>
-                <button type="button" class="app-quick-pill" (click)="executeRealAction(current.id, 'launch', { app_name: 'notepad' })">📝 Notepad</button>
-                <button type="button" class="app-quick-pill" (click)="executeRealAction(current.id, 'launch', { app_name: 'calculator' })">🧮 Calculator</button>
-                <button type="button" class="app-quick-pill" (click)="executeRealAction(current.id, 'launch', { app_name: 'terminal' })">💻 Terminal</button>
-                <button type="button" class="app-quick-pill" (click)="executeRealAction(current.id, 'launch', { app_name: 'explorer' })">📁 Explorer</button>
-              </div>
-            </div>
-
-            <!-- Live What They Are Working On Real-World Log -->
-            <div class="screen-section-block">
-              <div class="section-tag-header">
-                <span class="tag-icon">📋</span>
-                <span class="tag-title">WHAT THIS AGENT IS WORKING ON (REAL-WORLD AUDIT LOG)</span>
-              </div>
-
-              <div class="activity-feed-list font-monospace">
-                @for (act of monitorFeed()?.recent_activities; track $index) {
-                  <div class="activity-log-item">
-                    <span class="act-time">[{{ act.time }}]</span>
-                    <span class="act-type" [style.color]="current.color">[{{ act.action }}]</span>
-                    <span class="act-detail">{{ act.detail }}</span>
-                  </div>
-                }
-              </div>
             </div>
           </div>
-        }
-        <!-- ============================================================== -->
-        <!-- TAB 1: MISSION & HOW IT WORKS ("whr it do" & "hwo it work") -->
-        <!-- ============================================================== -->
-        @if (activePopupTab() === 'MISSION_WORK') {
-          <div class="popup-tab-pane">
-            <!-- Where It Operates & What It Does -->
-            <div class="popup-section">
-              <div class="section-tag-header">
-                <span class="tag-icon">📍</span>
-                <span class="tag-title">WHERE IT OPERATES & DOMAIN BOUNDARY</span>
-              </div>
-              <div class="domain-box font-monospace">
-                {{ currentAgentDetails()?.where_it_works || current.subsystem }}
-              </div>
-              <div class="mission-text font-monospace">
-                {{ currentAgentDetails()?.role || current.role }}
-              </div>
+
+          <!-- 4. Today's Delivered Accomplishments -->
+          <div class="work-section-block">
+            <div class="section-tag-header">
+              <span class="tag-icon">📋</span>
+              <span class="tag-title">TODAY'S DELIVERABLES & ACCOMPLISHMENTS</span>
             </div>
-
-            <!-- Capabilities Grid -->
-            <div class="popup-section">
-              <div class="section-tag-header">
-                <span class="tag-icon">⚡</span>
-                <span class="tag-title">ACTIVE CAPABILITIES & SPECIALIZATIONS</span>
-              </div>
-              <div class="caps-tags-cloud">
-                @for (cap of currentAgentDetails()?.capabilities; track cap) {
-                  <span class="cap-tag-pill" [style.borderColor]="current.color + '44'">✦ {{ cap }}</span>
-                }
-              </div>
-            </div>
-
-            <!-- How It Works: Autonomous Execution Pipeline -->
-            <div class="popup-section">
-              <div class="section-tag-header">
-                <span class="tag-icon">⚙️</span>
-                <span class="tag-title">HOW IT WORKS (EXECUTION PIPELINE)</span>
-              </div>
-              <div class="pipeline-desc font-monospace">
-                {{ currentAgentDetails()?.how_it_works || current.description }}
-              </div>
-
-              <!-- 4-Step Pipeline Flow -->
-              <div class="pipeline-steps-grid">
-                @for (stage of currentAgentDetails()?.pipeline_stages || ['1. Perception & Intent', '2. LLM Reasoning', '3. Sandboxed Tools', '4. Physical Proof']; track $index) {
-                  <div class="stage-step-card">
-                    <span class="step-num">{{ $index + 1 }}</span>
-                    <span class="step-title font-monospace">{{ stage }}</span>
-                  </div>
-                }
-              </div>
-
-              <!-- Real Tools & Driver Integrations -->
-              @if (currentAgentDetails()?.tools?.length) {
-                <div class="tools-integrated-row">
-                  <span class="tools-label font-monospace">INTEGRATED TOOLS:</span>
-                  @for (t of currentAgentDetails()?.tools; track t) {
-                    <span class="tool-badge font-monospace">{{ t }}</span>
-                  }
-                </div>
-              }
-            </div>
-
-            <!-- 5 Human-Like Perceptive Senses -->
-            @if (currentAgentDetails()?.human_senses; as senses) {
-              <div class="popup-section senses-card">
-                <div class="section-tag-header">
-                  <span class="tag-icon">🧬</span>
-                  <span class="tag-title">5 HUMAN-LIKE PERCEPTIVE SENSES</span>
-                </div>
-                <div class="senses-grid">
-                  <div class="sense-item">
-                    <span class="sense-icon">👁️</span>
-                    <div class="sense-body">
-                      <span class="sense-title font-monospace">SIGHT (VISUAL)</span>
-                      <span class="sense-val font-monospace">{{ senses.sight?.focus || senses.sight?.channel }}</span>
-                      <span class="sense-sub font-monospace">{{ senses.sight?.status || senses.sight?.screen_state }}</span>
-                    </div>
-                  </div>
-                  <div class="sense-item">
-                    <span class="sense-icon">👂</span>
-                    <div class="sense-body">
-                      <span class="sense-title font-monospace">HEARING (AUDITORY)</span>
-                      <span class="sense-val font-monospace">{{ senses.hearing?.speech_floor || senses.hearing?.floor_arbitration }}</span>
-                      <span class="sense-sub font-monospace">{{ senses.hearing?.status || 'Turn-Taking Acoustic Floor Active' }}</span>
-                    </div>
-                  </div>
-                  <div class="sense-item">
-                    <span class="sense-icon">⚡</span>
-                    <div class="sense-body">
-                      <span class="sense-title font-monospace">PHYSICAL (PROPRIOCEPTION)</span>
-                      <span class="sense-val font-monospace">CPU {{ senses.physical?.thread_cpu || senses.physical?.cpu_load }} // Thermals {{ senses.physical?.thermals }}</span>
-                      <span class="sense-sub font-monospace">VRAM {{ senses.physical?.vram || senses.physical?.ram_usage }}</span>
-                    </div>
-                  </div>
-                  <div class="sense-item">
-                    <span class="sense-icon">⏳</span>
-                    <div class="sense-body">
-                      <span class="sense-title font-monospace">TEMPORAL (CIRCADIAN)</span>
-                      <span class="sense-val font-monospace">{{ senses.temporal?.status || senses.temporal?.circadian_rhythm }}</span>
-                      <span class="sense-sub font-monospace">Tick: {{ senses.temporal?.local_time || senses.temporal?.cycle_rate }}</span>
-                    </div>
-                  </div>
-                  <div class="sense-item wide">
-                    <span class="sense-icon">🤝</span>
-                    <div class="sense-body">
-                      <span class="sense-title font-monospace">SOCIAL (SQUAD BOND & NEGOTIATION)</span>
-                      <span class="sense-val font-monospace">{{ senses.social?.negotiation_protocol || senses.social?.floor_policy }}</span>
-                      <span class="sense-sub font-monospace">{{ senses.social?.relationship || ('Consensus ' + senses.social?.consensus_score) }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- Voice Explanation & Briefing -->
-            @if (currentAgentDetails()?.spoken_explanation) {
-              <div class="popup-section voice-intro-box">
-                <div class="voice-intro-header">
-                  <span class="voice-pulse-icon">🗣️</span>
-                  <span class="tag-title">AGENT SELF-EXPLANATION & AUDIO BRIEFING</span>
-                </div>
-                <div class="voice-quote font-monospace">
-                  "{{ currentAgentDetails()?.spoken_explanation }}"
-                </div>
-                <button
-                  type="button"
-                  class="voice-explain-aloud-btn"
-                  (click)="reExplainAgent(current)"
-                  title="Ask agent to explain itself aloud with voice"
-                >
-                  🎙️ Speak Explanation Aloud
-                </button>
-              </div>
-            }
-          </div>
-        }
-
-        <!-- ============================================================== -->
-        <!-- TAB 2: LIVE TELEMETRY & DYNAMIC STATUS ("presend live status") -->
-        <!-- ============================================================== -->
-        @if (activePopupTab() === 'LIVE_TELEMETRY') {
-          <div class="popup-tab-pane">
-            <!-- Dynamic LLM Architecture & Parameters -->
-            <div class="popup-section">
-              <div class="section-tag-header">
-                <span class="tag-icon">🧠</span>
-                <span class="tag-title">SPECIALIST LLM MODEL & INFERENCE SPECS</span>
-              </div>
-              <div class="dynamic-metrics-grid">
-                <div class="metric-card wide">
-                  <span class="m-label font-monospace">ASSIGNED LOCAL MODEL</span>
-                  <span class="m-val text-cyan font-monospace">{{ currentAgentDetails()?.model_name || 'abhi:specialist@8b' }}</span>
-                  <span class="m-sub font-monospace">Quantization: {{ currentAgentDetails()?.quantization || 'Q4_K_M GGUF' }}</span>
-                </div>
-                <div class="metric-card">
-                  <span class="m-label font-monospace">INFERENCE SPEED</span>
-                  <span class="m-val text-emerald font-monospace">{{ currentAgentDetails()?.live_telemetry?.inference_speed_tok_s || 38.4 }} tok/s</span>
-                  <span class="m-sub font-monospace">Local RTX Acceleration</span>
-                </div>
-                <div class="metric-card">
-                  <span class="m-label font-monospace">THREAD CPU / MEM</span>
-                  <span class="m-val text-amber font-monospace">{{ currentAgentDetails()?.live_telemetry?.agent_thread_cpu || 4.2 }}% CPU</span>
-                  <span class="m-sub font-monospace">{{ currentAgentDetails()?.live_telemetry?.ram_allocated_mb || 240 }} MB VRAM</span>
-                </div>
-              </div>
-
-              <!-- Active Context Memory Bar -->
-              <div class="context-bar-card">
-                <div class="context-header-row font-monospace">
-                  <span>ACTIVE TOKEN CONTEXT WINDOW:</span>
-                  <span class="text-cyan">{{ currentAgentDetails()?.live_telemetry?.context_tokens_active | number }} / 32,768 TOKENS ({{ currentAgentDetails()?.live_telemetry?.context_utilization_pct || 11.2 }}%)</span>
-                </div>
-                <div class="context-progress-track">
-                  <div
-                    class="context-progress-fill"
-                    [style.width.%]="currentAgentDetails()?.live_telemetry?.context_utilization_pct || 12"
-                    [style.backgroundColor]="current.color"
-                  ></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Host System Physical State -->
-            <div class="popup-section">
-              <div class="section-tag-header">
-                <span class="tag-icon">💻</span>
-                <span class="tag-title">HOST SYSTEM PHYSICAL STATUS (LIVE HARDWARE)</span>
-              </div>
-              <div class="host-telemetry-strip font-monospace">
-                <div class="host-stat-item">
-                  <span class="host-k">HOST CPU:</span>
-                  <span class="host-v">{{ currentAgentDetails()?.live_telemetry?.cpu_percent || 6.2 }}%</span>
-                </div>
-                <div class="host-stat-item">
-                  <span class="host-k">RAM USAGE:</span>
-                  <span class="host-v">{{ currentAgentDetails()?.live_telemetry?.used_ram_gb || 14.2 }} GB / {{ currentAgentDetails()?.live_telemetry?.total_ram_gb || 32.0 }} GB ({{ currentAgentDetails()?.live_telemetry?.ram_percent || 44 }}%)</span>
-                </div>
-                <div class="host-stat-item">
-                  <span class="host-k">ACTIVE HANDLES:</span>
-                  <span class="host-v">{{ currentAgentDetails()?.live_telemetry?.active_processes || 280 }}</span>
-                </div>
-                <div class="host-stat-item">
-                  <span class="host-k">SYNAPSE BOND:</span>
-                  <span class="host-v text-emerald">100% Empirically Verified</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Today's Live Action History -->
-            <div class="popup-section">
-              <div class="section-header-row">
-                <div class="section-tag-header">
-                  <span class="tag-icon">📋</span>
-                  <span class="tag-title">TODAY'S DYNAMIC ACTIONS & DISPATCH LOG</span>
-                </div>
-                <span class="badge-count font-monospace">{{ currentAgentDetails()?.today_work?.length || 4 }} ITEMS</span>
-              </div>
-              <div class="today-work-list">
-                @for (task of currentAgentDetails()?.today_work; track $index) {
-                  <div class="today-work-item">
-                    <span class="work-check">✓</span>
-                    <span class="work-text font-monospace">{{ task }}</span>
-                  </div>
-                }
-              </div>
-            </div>
-
-            <!-- Station Functional Actions -->
-            <div class="popup-section">
-              <div class="section-tag-header">
-                <span class="tag-icon">⚡</span>
-                <span class="tag-title">STATION CONTROLS & DIAGNOSTICS</span>
-              </div>
-              <div class="station-actions-row">
-                <button type="button" class="station-act-btn recalibrate" (click)="recalibrateStation(current)" title="Calibrate local neural synapse weights">
-                  ⚡ Recalibrate
-                </button>
-                <button type="button" class="station-act-btn synthesize" (click)="synthesizeSkill(current)" title="Trigger daily knowledge upgrade cycle">
-                  🧬 Synthesize Skill
-                </button>
-                <button type="button" class="station-act-btn diagnostics" (click)="runDiagnostics(current)" title="Run real hardware & memory audit">
-                  🩺 Diagnostics
-                </button>
-              </div>
-            </div>
-
-            <!-- Task Delegation Input -->
-            <div class="popup-section">
-              <div class="section-tag-header">
-                <span class="tag-icon">🎯</span>
-                <span class="tag-title">ASSIGN DIRECTIVE TO THIS AGENT</span>
-              </div>
-              <div class="delegation-form">
-                <input
-                  type="text"
-                  class="delegation-input font-monospace"
-                  [(ngModel)]="delegationGoal"
-                  name="stationGoal"
-                  [placeholder]="'Assign directive to ' + current.name + '...'"
-                  [disabled]="isDelegating()"
-                />
-                <button
-                  type="button"
-                  class="delegation-btn"
-                  (click)="delegateTaskToStation(current)"
-                  [disabled]="!delegationGoal.trim() || isDelegating()"
-                >
-                  {{ isDelegating() ? '...' : 'DISPATCH' }}
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- ============================================================== -->
-        <!-- TAB 2.5: ML PREDICTIONS & DYNAMIC GRAPHICAL REPRESENTATION     -->
-        <!-- ============================================================== -->
-        @if (activePopupTab() === 'ML_PREDICTIONS') {
-          <div class="popup-tab-pane ml-predictions-pane">
-            <!-- 1. Holt-Winters Resource Forecasting with 95% Confidence Bounds -->
-            <div class="popup-section">
-              <div class="section-tag-header">
-                <span class="tag-icon">📈</span>
-                <span class="tag-title">TIME SERIES FORECASTING (HOLT-WINTERS + AR-2)</span>
-              </div>
-              <div class="ml-card-formula font-monospace">
-                Formula: ŷ_(t+h) = ℓ_t + h·b_t + φ_1·e_t (Chronological Split: 80% Train, 20% Val)
-              </div>
-              @if (mlSuiteData()?.models?.forecast_cpu; as fc) {
-                <div class="ml-metrics-badge-row font-monospace">
-                  <span class="ml-badge">MAE: {{ fc.metrics?.mae }}%</span>
-                  <span class="ml-badge">RMSE: {{ fc.metrics?.rmse }}%</span>
-                  <span class="ml-badge">Horizon: 15 Steps (+45s)</span>
-                  <span class="ml-badge text-cyan">95% CI Bounds</span>
-                </div>
-
-                <!-- Graphical Bar & Interval Forecast Representation -->
-                <div class="forecast-bars-container">
-                  <div class="forecast-bars-legend font-monospace">
-                    <span><span class="legend-dot hist"></span> Observed Host Load</span>
-                    <span><span class="legend-dot pred"></span> Forecast Model</span>
-                    <span><span class="legend-dot ci"></span> 95% Confidence Bounds</span>
-                  </div>
-                  <div class="forecast-chart-visual">
-                    @for (val of fc.chart?.forecast_values; track $index) {
-                      <div class="forecast-column">
-                        <span class="fc-bound-top font-monospace">{{ fc.chart?.confidence_upper?.[$index] }}%</span>
-                        <div class="fc-bar-track">
-                          <div
-                            class="fc-bar-ci"
-                            [style.bottom.%]="fc.chart?.confidence_lower?.[$index]"
-                            [style.height.%]="(fc.chart?.confidence_upper?.[$index] || 0) - (fc.chart?.confidence_lower?.[$index] || 0)"
-                          ></div>
-                          <div
-                            class="fc-bar-fill"
-                            [style.height.%]="val"
-                            [style.backgroundColor]="current.color"
-                          ></div>
-                        </div>
-                        <span class="fc-val font-monospace">{{ val }}%</span>
-                        <span class="fc-label font-monospace">+{{ ($index + 1) * 3 }}s</span>
-                      </div>
-                    }
-                  </div>
-                </div>
-              }
-            </div>
-
-            <!-- 2. Ridge Regression: Task Latency & Memory Footprint -->
-            <div class="popup-section">
-              <div class="section-tag-header">
-                <span class="tag-icon">⚡</span>
-                <span class="tag-title">RIDGE REGRESSION (L2 REGULARIZED TASK ESTIMATION)</span>
-              </div>
-              <div class="ml-card-formula font-monospace">
-                Objective: min ||y - Xw||² + λ||w||² ⟹ w = (XᵀX + λI)⁻¹ Xᵀy
-              </div>
-              @if (mlSuiteData()?.models?.task_regression; as reg) {
-                <div class="dynamic-metrics-grid">
-                  <div class="metric-card">
-                    <span class="m-label font-monospace">PREDICTED LATENCY</span>
-                    <span class="m-val text-cyan font-monospace">{{ reg.predictions?.expected_latency_seconds }}s</span>
-                    <span class="m-sub font-monospace">R² Fit: {{ reg.metrics?.r2_score }}</span>
-                  </div>
-                  <div class="metric-card">
-                    <span class="m-label font-monospace">RAM FOOTPRINT</span>
-                    <span class="m-val text-emerald font-monospace">{{ reg.predictions?.expected_ram_mb }} MB</span>
-                    <span class="m-sub font-monospace">λ = {{ reg.metrics?.l2_lambda }} L2 Penalty</span>
-                  </div>
-                  <div class="metric-card">
-                    <span class="m-label font-monospace">THERMAL DELTA</span>
-                    <span class="m-val text-amber font-monospace">+{{ reg.predictions?.estimated_thermal_delta_c }}°C</span>
-                    <span class="m-sub font-monospace">Joule Dissipation</span>
-                  </div>
-                </div>
-              }
-            </div>
-
-            <!-- 3. Softmax Multi-Class Intent Classification Radar Distribution -->
-            <div class="popup-section">
-              <div class="section-tag-header">
-                <span class="tag-icon">🎯</span>
-                <span class="tag-title">SOFTMAX MULTI-CLASS INTENT CLASSIFICATION</span>
-              </div>
-              <div class="ml-card-formula font-monospace">
-                Softmax: P(y=k|x) = exp(w_kᵀ x + b_k) / ∑_j exp(w_jᵀ x + b_j)
-              </div>
-              @if (mlSuiteData()?.models?.intent_classification; as ic) {
-                <div class="classification-bars-list">
-                  @for (squad of ic.chart?.labels; track squad; let idx = $index) {
-                    <div class="class-prob-row">
-                      <div class="class-prob-meta font-monospace">
-                        <span class="class-squad-name">{{ squad }}</span>
-                        <span class="class-pct text-cyan">{{ ic.chart?.values?.[idx] }}%</span>
-                      </div>
-                      <div class="class-track">
-                        <div
-                          class="class-fill"
-                          [style.width.%]="ic.chart?.values?.[idx]"
-                          [style.backgroundColor]="squad.includes(current.name) || current.subsystem.includes(squad) ? current.color : '#38bdf8'"
-                        ></div>
-                      </div>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-
-            <!-- 4. K-Means Operational Regime & Anomaly Detector -->
-            <div class="popup-section">
-              <div class="section-tag-header">
-                <span class="tag-icon">🧬</span>
-                <span class="tag-title">K-MEANS OPERATIONAL CLUSTERING (LLOYD'S ALGORITHM)</span>
-              </div>
-              <div class="ml-card-formula font-monospace">
-                Inertia WCSS: argmin ∑_i ∑_x ||x - μ_i||² = {{ mlSuiteData()?.models?.state_clustering?.inertia_wcss || 42.1 }}
-              </div>
-              @if (mlSuiteData()?.models?.state_clustering; as cl) {
-                <div class="dynamic-metrics-grid">
-                  <div class="metric-card">
-                    <span class="m-label font-monospace">CURRENT REGIME</span>
-                    <span class="m-val text-emerald font-monospace">{{ cl.current_state?.assigned_regime }}</span>
-                    <span class="m-sub font-monospace">CPU {{ cl.current_state?.cpu_percent }}% / RAM {{ cl.current_state?.ram_percent }}%</span>
-                  </div>
-                  <div class="metric-card">
-                    <span class="m-label font-monospace">Z-SCORE STRESS</span>
-                    <span class="m-val text-cyan font-monospace">{{ cl.current_state?.z_score }}σ</span>
-                    <span class="m-sub font-monospace">Normal Distribution</span>
-                  </div>
-                  <div class="metric-card">
-                    <span class="m-label font-monospace">THERMAL ANOMALY</span>
-                    <span class="m-val" [class.text-emerald]="!cl.current_state?.is_thermal_anomaly" [class.text-rose]="cl.current_state?.is_thermal_anomaly">
-                      {{ cl.current_state?.is_thermal_anomaly ? '⚠️ ANOMALY DETECTED' : '✓ HEALTHY NOMINAL' }}
-                    </span>
-                    <span class="m-sub font-monospace">Continuous Safety Guard</span>
-                  </div>
-                </div>
-
-                <!-- Cluster Centroids Table -->
-                <div class="clusters-table-wrap font-monospace">
-                  <div class="cluster-row header">
-                    <span>REGIME</span>
-                    <span>CENTROID CPU</span>
-                    <span>CENTROID RAM</span>
-                    <span>SAMPLES</span>
-                  </div>
-                  @for (c of cl.clusters; track c.cluster_id) {
-                    <div class="cluster-row">
-                      <span class="text-cyan">● {{ c.label }}</span>
-                      <span>{{ c.centroid_cpu }}%</span>
-                      <span>{{ c.centroid_ram }}%</span>
-                      <span class="text-amber">{{ c.point_count }} pts</span>
-                    </div>
-                  }
+            <div class="deliverables-list">
+              @for (item of agentWork()?.today_work; track item) {
+                <div class="deliverable-item">
+                  <span class="deliverable-check" [style.color]="current.color">✓</span>
+                  <span class="deliverable-text">{{ item }}</span>
                 </div>
               }
             </div>
           </div>
-        }
 
-        <!-- ============================================================== -->
-        <!-- TAB 3: SYNAPTIC CHAT WITH THIS LLM -->
-        <!-- ============================================================== -->
-        @if (activePopupTab() === 'CHAT') {
-          <div class="popup-tab-pane chat-pane">
-            <div class="brain-chat-box">
-              @for (msg of brainChatMessages(); track $index) {
-                <div class="chat-item" [class.user]="msg.sender === 'MAMU' || msg.sender === 'OPERATOR'">
-                  <div class="chat-meta font-monospace">{{ msg.sender === 'MAMU' ? '❤️ MAMU (YOU)' : msg.sender }} · {{ msg.time }}</div>
-                  <div class="chat-content font-monospace">{{ msg.text }}</div>
-                </div>
-              }
+          <!-- 5. Direct Directive Input to this Specialist -->
+          <div class="work-section-block direct-directive-box">
+            <div class="section-tag-header">
+              <span class="tag-icon">🎯</span>
+              <span class="tag-title">ASSIGN DIRECT DIRECTIVE TO {{ current.name | uppercase }}</span>
             </div>
-
-            <form class="brain-chat-form" (ngSubmit)="sendBrainChat(current)">
+            <div class="direct-input-row">
               <input
                 type="text"
-                class="brain-chat-input font-monospace"
-                [(ngModel)]="brainChatInput"
-                name="brainMsg"
-                [placeholder]="'Message ' + current.name + ' LLM...'"
-                [disabled]="isSendingBrainChat()"
+                [(ngModel)]="directAgentTaskInput"
+                (keyup.enter)="submitDirectAgentTask(current.id)"
+                [placeholder]="'Give instruction to ' + current.name + ' (e.g. audit memory, synthesize code, check task)...'"
+                class="direct-task-input font-monospace"
               />
-              <button type="submit" class="brain-chat-send" [disabled]="!brainChatInput.trim() || isSendingBrainChat()">
-                {{ isSendingBrainChat() ? '...' : 'SEND' }}
+              <button
+                type="button"
+                class="direct-task-btn font-monospace"
+                [disabled]="isExecutingAgentTask() || !directAgentTaskInput.trim()"
+                (click)="submitDirectAgentTask(current.id)"
+                [style.background]="current.color"
+              >
+                {{ isExecutingAgentTask() ? 'EXECUTING...' : 'DISPATCH' }}
               </button>
-            </form>
+            </div>
+            @if (agentTaskReceipt()) {
+              <div class="direct-task-receipt font-monospace">
+                <span class="receipt-icon">◈</span> {{ agentTaskReceipt() }}
+              </div>
+            }
           </div>
         }
       </div>
@@ -1178,7 +564,21 @@
   }
   </div> <!-- colony-view-wrapper end -->
 
-  <!-- View 2: Live Business & Real Automated Settlement Engine -->
+  <!-- View 2: Live Agents 3D HQ (8-Pod Hub & Spoke Architecture) -->
+  @if (activeWorkspaceMode() === 'live-agents') {
+    <div class="embedded-view-container" role="region" aria-label="Live Agents 3D HQ">
+      <app-sample-page [initialMode]="'hub-and-spoke'" (modeChange)="setWorkspaceMode($event)"></app-sample-page>
+    </div>
+  }
+
+  <!-- View 3: Agent Works & Floorplan (Corporate Architectural Floorplan) -->
+  @if (activeWorkspaceMode() === 'agent-works') {
+    <div class="embedded-view-container" role="region" aria-label="Agent Works Floorplan Office">
+      <app-sample-page [initialMode]="'corporate-floorplan'" (modeChange)="setWorkspaceMode($event)"></app-sample-page>
+    </div>
+  }
+
+  <!-- View 4: Live Business & Real Automated Settlement Engine -->
   @if (activeWorkspaceMode() === 'live-business') {
     <div class="business-view-container" role="region" aria-label="Real Sovereign Business & Treasury Command Center">
       <!-- Executive Banking & Sovereign Treasury Banner -->

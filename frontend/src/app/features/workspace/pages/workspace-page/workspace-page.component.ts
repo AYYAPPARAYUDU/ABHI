@@ -7,8 +7,9 @@ import { SpeechVoiceService } from '../../../../core/services/speech-voice.servi
 import { AgentCommandService } from '../../../../core/services/agent-command.service';
 import { getApiUrl } from '../../../../core/config/api-config';
 import { BusinessService } from '../../../business/services/business.service';
+import { SamplePageComponent } from '../../../sample/pages/sample-page/sample-page.component';
 
-export type WorkspaceViewMode = 'colony' | 'live-business' | 'live-monitors';
+export type WorkspaceViewMode = 'colony' | 'live-agents' | 'agent-works' | 'live-business';
 
 interface SmallLLMBrain {
   id: string;
@@ -49,7 +50,7 @@ interface ChannelMessage {
 @Component({
   selector: 'app-workspace-page',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SamplePageComponent],
   templateUrl: './workspace-page.component.html',
   styleUrl: './workspace-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -129,13 +130,20 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
   readonly brainChatMessages = signal<{ sender: string; text: string; time: string }[]>([]);
   readonly isSendingBrainChat = signal(false);
 
-  // Station Action Status & Popup Tabs
-  readonly activePopupTab = signal<'DIGITAL_SCREEN' | 'MISSION_WORK' | 'LIVE_TELEMETRY' | 'ML_PREDICTIONS' | 'CHAT'>('DIGITAL_SCREEN');
+  // Agent Work & Intelligence Signals (Executive, Easy to Understand)
+  readonly agentWork = signal<any>(null);
+  readonly isLoadingAgentWork = signal<boolean>(false);
+  directAgentTaskInput = '';
+  readonly isExecutingAgentTask = signal<boolean>(false);
+  readonly agentTaskReceipt = signal<string | null>(null);
+
+  // Backward-compatible stubs for existing handlers
+  readonly activePopupTab = signal<'DIGITAL_SCREEN' | 'MISSION_WORK' | 'LIVE_TELEMETRY' | 'ML_PREDICTIONS' | 'CHAT'>('MISSION_WORK');
   readonly monitorFeed = signal<any>(null);
   readonly availableMonitors = signal<any>({ physical_monitors: [], application_windows: [], virtual_displays: [], current_assignments: {} });
   readonly isLoadingScreen = signal<boolean>(false);
   readonly isAssigningMonitor = signal<boolean>(false);
-  readonly autoStreamEnabled = signal<boolean>(true);
+  readonly autoStreamEnabled = signal<boolean>(false);
   readonly isExecutingRealAction = signal<boolean>(false);
   readonly realActionStatus = signal<string | null>(null);
   readonly isWideScreen = signal<boolean>(true);
@@ -590,9 +598,9 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
       this.threeScene.focusAgent(agent);
     }
     this.stationActionStatus.set(null);
-    this.loadMlSuite();
-    this.fetchAvailableMonitors();
-    this.fetchAgentLiveScreen(agent.id);
+    this.agentTaskReceipt.set(null);
+    this.directAgentTaskInput = '';
+    this.fetchAgentWork(agent.id);
     this.cdr.markForCheck();
 
     // O(1) LRU Cache check for instantaneous zero-stutter popup display
@@ -670,6 +678,49 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
   onPillLeave(): void {
     this.threeScene.hoveredAgent.set(null);
     this.threeScene.updateBillboardLabelVisibility();
+  }
+
+  async fetchAgentWork(agentId: string): Promise<void> {
+    this.isLoadingAgentWork.set(true);
+    try {
+      const res = await fetch(getApiUrl(`/api/v1/agent-gateway/swarm/agent-work/${agentId}`));
+      if (res.ok) {
+        const json = await res.json();
+        this.agentWork.set(json);
+      }
+    } catch (e) {
+      console.warn('Could not fetch agent work:', e);
+    } finally {
+      this.isLoadingAgentWork.set(false);
+      this.cdr.markForCheck();
+    }
+  }
+
+  async submitDirectAgentTask(agentId: string): Promise<void> {
+    const q = this.directAgentTaskInput.trim();
+    if (!q || this.isExecutingAgentTask()) return;
+    this.isExecutingAgentTask.set(true);
+    this.agentTaskReceipt.set(`Dispatching directive to ${agentId}...`);
+    try {
+      const res = await fetch(getApiUrl('/api/v1/desktop/ask-bot'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: q })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        this.agentTaskReceipt.set(data.reply || 'Directive executed successfully.');
+        this.directAgentTaskInput = '';
+        await this.fetchAgentWork(agentId);
+      } else {
+        this.agentTaskReceipt.set('Execution error from agent gateway.');
+      }
+    } catch {
+      this.agentTaskReceipt.set('Failed to connect to agent core.');
+    } finally {
+      this.isExecutingAgentTask.set(false);
+      this.cdr.markForCheck();
+    }
   }
 
   closeStationDrawer(): void {

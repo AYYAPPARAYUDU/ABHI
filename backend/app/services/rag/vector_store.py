@@ -3,6 +3,8 @@
 import os
 import re
 import uuid
+import time
+import json
 from typing import Any, Dict, List, Optional
 try:
     import lancedb
@@ -56,6 +58,55 @@ class LocalVectorStore:
         else:
             self.db = None
             self.table = None
+        self._seed_from_project_intelligence()
+
+    def _seed_from_project_intelligence(self):
+        """Seed vector knowledge from project_data/intelligence/vector_store.json if store is empty."""
+        try:
+            if self.count_chunks() > 0:
+                return
+            candidates = [
+                os.path.join(os.getcwd(), "project_data", "intelligence", "vector_store.json"),
+                os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))), "project_data", "intelligence", "vector_store.json"),
+                os.path.join(r"c:\Users\AYYAPPA RAYUDU\OneDrive\Desktop\ABHI", "project_data", "intelligence", "vector_store.json")
+            ]
+            seed_file = next((p for p in candidates if os.path.exists(p)), None)
+            if not seed_file:
+                return
+
+            with open(seed_file, "r", encoding="utf-8") as f:
+                raw_docs = json.load(f)
+
+            chunks = []
+            now_ts = int(time.time() * 1000)
+            for idx, doc in enumerate(raw_docs):
+                text = doc.get("content", "")
+                if not text:
+                    continue
+                cid = doc.get("doc_id", f"chk_seed_{idx}")
+                source = doc.get("title", "Project Knowledge")
+                tags = doc.get("category", "SYSTEM")
+                vec = self._generate_embedding(text)
+                chunks.append({
+                    "chunk_id": cid,
+                    "source": source,
+                    "text": text,
+                    "tags": tags,
+                    "created_at_ts": now_ts,
+                    "vector": vec
+                })
+
+            if chunks:
+                if self.table:
+                    try:
+                        self.table.add(chunks)
+                    except Exception:
+                        self._in_memory_records.extend(chunks)
+                else:
+                    self._in_memory_records.extend(chunks)
+                logger.info(f"Seeded {len(chunks)} knowledge chunks from '{seed_file}' into vector store.")
+        except Exception as e:
+            logger.warning(f"Failed to seed vector store from project data: {e}")
 
     def _ensure_table(self):
         """Create or connect to the LanceDB knowledge table."""

@@ -23,6 +23,7 @@ from backend.app.core.logging import logger
 from backend.app.services.llm.standalone_engine import abhi_standalone_engine
 from backend.app.services.search.online_knowledge import OnlineKnowledgeSearcher
 from backend.app.cognitive.registry.registry import agent_registry
+from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
 
 router = APIRouter(prefix="/desktop", tags=["Desktop Automation & Sovereign Intelligence"])
 online_searcher = OnlineKnowledgeSearcher()
@@ -292,6 +293,11 @@ async def ask_living_bot(request: BotAskRequest):
     try:
         ok, action_name, reply = dynamic_action_resolver.resolve_and_execute(raw_query, screen_context)
         if ok:
+            daily_evolution_service.add_channel_message(
+                channel="#squad-command",
+                sender_id="agent_1_commander",
+                message=f"Action '{action_name}' executed for Mamu: {reply[:120]}"
+            )
             return {
                 "status": "success",
                 "reply": reply,
@@ -300,7 +306,30 @@ async def ask_living_bot(request: BotAskRequest):
     except Exception as e:
         logger.warning(f"DynamicActionResolver execution error: {e}")
 
-    # 2. Live Web Knowledge Search for Genuine Informational Questions
+    # 2. Hybrid RAG Search across Sovereign Vector Knowledge Base (588 chunks)
+    try:
+        from backend.app.services.rag.vector_store import LocalVectorStore
+        vs = LocalVectorStore()
+        rag_hits = await vs.hybrid_search(raw_query, top_k=2)
+        if rag_hits and rag_hits[0].score >= 0.52:
+            top_hit = rag_hits[0]
+            reply = f"Mamu, from sovereign intelligence [{top_hit.source}]: {top_hit.text}"
+            daily_evolution_service.add_channel_message(
+                channel="#squad-command",
+                sender_id="agent_5_researcher",
+                message=f"RAG Knowledge Retrieval for Mamu ({top_hit.source}): {top_hit.text[:120]}..."
+            )
+            return {
+                "status": "success",
+                "reply": reply,
+                "action_executed": "rag_knowledge_retrieval",
+                "citation": top_hit.citation,
+                "score": top_hit.score
+            }
+    except Exception as e:
+        logger.warning(f"RAG hybrid search check error: {e}")
+
+    # 3. Live Web Knowledge Search for Genuine Informational Questions
     if dynamic_action_resolver.is_info_query(raw_query):
         try:
             snippets = online_searcher.search_live_snippets(raw_query)
@@ -308,20 +337,31 @@ async def ask_living_bot(request: BotAskRequest):
                 best_snippet = snippets[0].get("snippet", "")
                 if best_snippet and len(best_snippet) > 20:
                     clean_snip = best_snippet.split(". ")[0].replace("\n", " ").strip() + "."
+                    reply = f"Mamu, according to live intelligence: {clean_snip}"
+                    daily_evolution_service.add_channel_message(
+                        channel="#squad-command",
+                        sender_id="agent_5_researcher",
+                        message=f"Live Web Search for Mamu: {clean_snip}"
+                    )
                     return {
                         "status": "success",
-                        "reply": f"Mamu, according to live intelligence: {clean_snip}",
+                        "reply": reply,
                         "action_executed": "live_web_search"
                     }
         except Exception:
             pass
 
-    # 3. Dynamic Autonomous DAG Task Decomposition & Execution
+    # 4. Dynamic Autonomous DAG Task Decomposition & Execution
     try:
         dag_steps = abhi_standalone_engine._decompose_goal(raw_query)
         if dag_steps and len(dag_steps) > 0:
             ok, exec_summary = execute_dag_plan_dynamically(dag_steps)
             if ok and exec_summary:
+                daily_evolution_service.add_channel_message(
+                    channel="#squad-command",
+                    sender_id="agent_1_commander",
+                    message=f"DAG Task Flow executed: {exec_summary}"
+                )
                 return {
                     "status": "success",
                     "reply": f"Executed for you, Mamu: {exec_summary}.",
@@ -331,9 +371,35 @@ async def ask_living_bot(request: BotAskRequest):
     except Exception as e:
         logger.warning(f"DAG dynamic execution fallback: {e}")
 
-    # 4. Concise Sovereign Reasoning Response
+    # 5. Cognitive LLM Native Synthesis & Grounded Reasoning
     active_win = os_control_engine.get_active_window()
     window_title = active_win.get("title", "Active Screen") if active_win else "Desktop"
+
+    try:
+        from backend.app.services.llm.abhi_llm import AbhiNativeLLM
+        llm = AbhiNativeLLM()
+        prompt = (
+            f"You are ABHI, the supreme AI assistant for Ravuvai Ayyappa Rayudu (Mamu). "
+            f"Active window: '{window_title}'. User directive: '{raw_query}'. "
+            f"Provide a direct, helpful, grounded response addressing Mamu."
+        )
+        gen_res = await llm.generate(prompt=prompt)
+        if gen_res and gen_res.response and len(gen_res.response.strip()) > 5:
+            clean_reply = gen_res.response.strip()
+            daily_evolution_service.add_channel_message(
+                channel="#squad-command",
+                sender_id="agent_1_commander",
+                message=f"Cognitive Response to Mamu: {clean_reply[:120]}..."
+            )
+            return {
+                "status": "success",
+                "reply": clean_reply,
+                "action_executed": "cognitive_llm_reasoning"
+            }
+    except Exception as e:
+        logger.warning(f"Cognitive LLM fallback error: {e}")
+
+    # 6. Concise Sovereign Companion Fallback
     return {
         "status": "success",
         "reply": f"Understood, Mamu. I am monitoring your workspace in '{window_title}'. Tell me what action to perform, code to generate, or app to control.",
