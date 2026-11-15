@@ -6,6 +6,7 @@ import { AgentApiService } from '../../../../core/api/agent-api.service';
 import { getApiUrl } from '../../../../core/config/api-config';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
+import { BusinessService } from '../../services/business.service';
 
 export interface SpecialistWorker {
   agent_id: string;
@@ -31,13 +32,14 @@ export interface SpecialistWorker {
 export class BusinessPageComponent implements OnInit, OnDestroy {
   readonly agentApi = inject(AgentApiService);
   readonly speechVoice = inject(SpeechVoiceService);
+  readonly businessService = inject(BusinessService);
   private readonly threeScene = inject(ThreeSceneManagerService);
   private readonly hostEl = inject(ElementRef);
 
   readonly toastMessage = signal<string | null>(null);
 
-  // Active view tab: Commercial Swarm Agents vs SBI Settlement vs Affiliate Hub vs Invoices vs Receipts
-  readonly activeTab = signal<'agents' | 'overview' | 'affiliate' | 'invoices' | 'receipts'>('agents');
+  // Active view tab: Executive Overview | n8n Workflows | Credentials Vault | Swarm Agents | Affiliate Hub | Invoices | Receipts
+  readonly activeTab = signal<'overview' | 'n8n' | 'vault' | 'agents' | 'affiliate' | 'invoices' | 'receipts'>('overview');
 
   // Authoritative State Bank of India Settlement Channel (Mamu)
   readonly sbiProfile = {
@@ -88,6 +90,26 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
   readonly receiptsList = signal<any[]>([]);
   readonly selectedReceipt = signal<any | null>(null);
 
+  // Credentials & API Vault State (Table Structure)
+  readonly vaultCredentials = signal<any[]>([]);
+  readonly showSecretMap = signal<Record<string, boolean>>({});
+  readonly selectedVaultCategory = signal<string>('ALL');
+  readonly showAddCredentialModal = signal<boolean>(false);
+  readonly isSavingCredential = signal<boolean>(false);
+
+  newCredServiceName = '';
+  newCredCategory = 'AUTOMATION';
+  newCredIdentity = '';
+  newCredSecret = '';
+  newCredDocUrl = '';
+  newCredDesc = '';
+
+  // n8n Workflow Automation State
+  readonly n8nWorkflows = signal<any[]>([]);
+  readonly n8nHistory = signal<any[]>([]);
+  readonly isExecutingN8n = signal<boolean>(false);
+  readonly activeRunningWorkflowId = signal<string | null>(null);
+
   // Computed settlements that occurred directly without a formal invoice
   readonly settlementsWithoutInvoice = computed(() => {
     const invoiceUtrs = new Set(
@@ -98,6 +120,14 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
     return this.recentSettlements().filter(
       (s) => !invoiceUtrs.has(s.utr_number) && !invoiceUtrs.has(s.transaction_id)
     );
+  });
+
+  // Filtered Vault Credentials by category
+  readonly filteredVaultCredentials = computed(() => {
+    const cat = this.selectedVaultCategory();
+    const creds = this.vaultCredentials();
+    if (cat === 'ALL') return creds;
+    return creds.filter((c) => c.category === cat);
   });
 
   // Computed metrics
@@ -155,6 +185,8 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
       this.refreshOfficeData(),
       this.refreshLiveMonitor(),
       this.refreshAffiliateData(),
+      this.refreshVaultData(),
+      this.refreshN8nData(),
     ]);
   }
 
@@ -235,8 +267,40 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  setActiveTab(tab: 'agents' | 'overview' | 'affiliate' | 'invoices' | 'receipts'): void {
+  async refreshVaultData(): Promise<void> {
+    this.businessService.fetchVaultCredentials(undefined, true).subscribe({
+      next: (creds) => {
+        if (Array.isArray(creds)) {
+          this.vaultCredentials.set(creds);
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  async refreshN8nData(): Promise<void> {
+    this.businessService.fetchN8nWorkflows().subscribe({
+      next: (wfs) => {
+        if (Array.isArray(wfs)) {
+          this.n8nWorkflows.set(wfs);
+        }
+      },
+      error: () => {}
+    });
+    this.businessService.fetchN8nHistory().subscribe({
+      next: (hist) => {
+        if (Array.isArray(hist)) {
+          this.n8nHistory.set(hist);
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  setActiveTab(tab: 'overview' | 'n8n' | 'vault' | 'agents' | 'affiliate' | 'invoices' | 'receipts'): void {
     this.activeTab.set(tab);
+    if (tab === 'vault') this.refreshVaultData();
+    if (tab === 'n8n') this.refreshN8nData();
   }
 
   selectWorker(worker: SpecialistWorker): void {
@@ -253,6 +317,86 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
 
   closeReceiptModal(): void {
     this.selectedReceipt.set(null);
+  }
+
+  // --- VAULT ACTIONS ---
+  toggleSecretReveal(credId: string): void {
+    this.showSecretMap.update((m) => ({
+      ...m,
+      [credId]: !m[credId]
+    }));
+  }
+
+  openAddCredentialModal(): void {
+    this.newCredServiceName = '';
+    this.newCredCategory = 'AUTOMATION';
+    this.newCredIdentity = '';
+    this.newCredSecret = '';
+    this.newCredDocUrl = '';
+    this.newCredDesc = '';
+    this.showAddCredentialModal.set(true);
+  }
+
+  async submitAddCredential(): Promise<void> {
+    if (!this.newCredServiceName.trim() || !this.newCredSecret.trim()) {
+      this.showToast('⚠️ Service Name and Secret / Password are required.');
+      return;
+    }
+    this.isSavingCredential.set(true);
+    this.businessService.saveVaultCredential({
+      service_name: this.newCredServiceName.trim(),
+      category: this.newCredCategory,
+      identity_username: this.newCredIdentity.trim(),
+      secret_value: this.newCredSecret.trim(),
+      documentation_url: this.newCredDocUrl.trim() || undefined,
+      description: this.newCredDesc.trim() || undefined,
+    }).subscribe({
+      next: () => {
+        this.showToast(`✓ Credential saved for ${this.newCredServiceName}!`);
+        this.showAddCredentialModal.set(false);
+        this.refreshVaultData();
+        this.isSavingCredential.set(false);
+      },
+      error: () => {
+        this.showToast('⚠️ Error saving credential to vault.');
+        this.isSavingCredential.set(false);
+      }
+    });
+  }
+
+  deleteVaultCredential(credId: string): void {
+    if (!confirm('Are you sure you want to remove this credential from the secure vault?')) return;
+    this.businessService.deleteVaultCredential(credId).subscribe({
+      next: () => {
+        this.showToast('✓ Credential removed from Vault.');
+        this.refreshVaultData();
+      },
+      error: () => this.showToast('⚠️ Could not delete credential.')
+    });
+  }
+
+  // --- N8N WORKFLOW AUTOMATION ACTIONS ---
+  triggerN8nWorkflow(workflowId: string): void {
+    this.isExecutingN8n.set(true);
+    this.activeRunningWorkflowId.set(workflowId);
+    this.showToast(`🚀 Dispatched n8n workflow '${workflowId}'...`);
+    this.speechVoice.speak(`Executing n8n workflow ${workflowId.replace(/_/g, ' ')}, Mamu.`);
+
+    this.businessService.executeN8nWorkflow(workflowId).subscribe({
+      next: (res) => {
+        this.showToast(`✓ ${res.output_summary || 'Workflow executed successfully!'}`);
+        this.speechVoice.speak('Workflow execution completed and settled to SBI, Mamu.');
+        this.refreshN8nData();
+        this.refreshTreasuryData();
+        this.isExecutingN8n.set(false);
+        this.activeRunningWorkflowId.set(null);
+      },
+      error: (err) => {
+        this.showToast(`⚠️ Execution failed: ${err.message || 'Workflow error'}`);
+        this.isExecutingN8n.set(false);
+        this.activeRunningWorkflowId.set(null);
+      }
+    });
   }
 
   // --- ACTIONS: AUTONOMOUS REVENUE CYCLE & WORKER STATUS ---
@@ -276,14 +420,19 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
 
   async triggerAutonomousRevenueCycle(): Promise<void> {
     this.isAutopilotRunning.set(true);
-    this.speechVoice.speak('Engaging master autonomous commercial cycle across all agents and revenue pipelines, Mamu.');
-    this.showToast('🚀 Running Master Autonomous Revenue Cycle across all 4 tiers...');
+    this.speechVoice.speak('Engaging master autonomous commercial cycle across all agents, n8n workflows, and revenue pipelines, Mamu.');
+    this.showToast('🚀 Running Master Autonomous Revenue Cycle across all 4 tiers & n8n...');
 
     try {
-      const res = await this.agentApi.runAutopilotCycle();
+      const res = await this.businessService.runMasterRevenueCycle().toPromise();
       if (res) {
-        await Promise.all([this.refreshOfficeData(), this.refreshTreasuryData(), this.refreshLiveMonitor()]);
-        this.showToast('✓ Master revenue cycle executed. All agents synchronized!');
+        await Promise.all([
+          this.refreshOfficeData(),
+          this.refreshTreasuryData(),
+          this.refreshLiveMonitor(),
+          this.refreshN8nData(),
+        ]);
+        this.showToast('✓ Master revenue cycle executed. All agents & n8n pipelines synchronized!');
         this.speechVoice.speak('Autonomous revenue cycle completed and physical state verified, Mamu.');
       }
     } catch {

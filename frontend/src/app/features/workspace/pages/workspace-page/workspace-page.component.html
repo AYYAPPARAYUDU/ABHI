@@ -389,33 +389,33 @@
           <!-- Quick 4-Stat Metric Row (Bootstrap Flex / Grid) -->
           <div class="row g-2 mb-3">
             <div class="col-6 col-md-3">
-              <div class="p-2 rounded-3 bg-dark-subtle border border-secondary-subtle">
-                <div class="text-secondary small fw-bold font-monospace">STATUS</div>
-                <div class="text-success fw-bold font-monospace small d-flex align-items-center gap-1 mt-1">
+              <div class="p-2 rounded-3 agent-tile-box">
+                <div class="small fw-bold font-monospace" style="color: var(--abhi-text-muted);">STATUS</div>
+                <div class="fw-bold font-monospace small d-flex align-items-center gap-1 mt-1" style="color: var(--abhi-success);">
                   <span class="status-dot-mini bg-success"></span> Operational
                 </div>
               </div>
             </div>
             <div class="col-6 col-md-3">
-              <div class="p-2 rounded-3 bg-dark-subtle border border-secondary-subtle">
-                <div class="text-secondary small fw-bold font-monospace">SYNAPTIC SYNC</div>
-                <div class="text-primary fw-bold font-monospace small mt-1">
+              <div class="p-2 rounded-3 agent-tile-box">
+                <div class="small fw-bold font-monospace" style="color: var(--abhi-text-muted);">SYNAPTIC SYNC</div>
+                <div class="fw-bold font-monospace small mt-1" style="color: var(--abhi-cyan);">
                   {{ agentWork()?.synaptic_bond || 99.1 }}% Bound
                 </div>
               </div>
             </div>
             <div class="col-6 col-md-3">
-              <div class="p-2 rounded-3 bg-dark-subtle border border-secondary-subtle">
-                <div class="text-secondary small fw-bold font-monospace">MODEL ENGINE</div>
-                <div class="text-info fw-bold font-monospace small mt-1 text-truncate">
+              <div class="p-2 rounded-3 agent-tile-box">
+                <div class="small fw-bold font-monospace" style="color: var(--abhi-text-muted);">MODEL ENGINE</div>
+                <div class="fw-bold font-monospace small mt-1 text-truncate" style="color: var(--abhi-blue);">
                   {{ (agentWork()?.model_name || 'Qwen 8B').split(' ')[0] }}
                 </div>
               </div>
             </div>
             <div class="col-6 col-md-3">
-              <div class="p-2 rounded-3 bg-dark-subtle border border-secondary-subtle">
-                <div class="text-secondary small fw-bold font-monospace">DISPATCH</div>
-                <div class="text-warning fw-bold font-monospace small mt-1">
+              <div class="p-2 rounded-3 agent-tile-box">
+                <div class="small fw-bold font-monospace" style="color: var(--abhi-text-muted);">DISPATCH</div>
+                <div class="fw-bold font-monospace small mt-1" style="color: var(--abhi-warning);">
                   0ms Native Win32
                 </div>
               </div>
@@ -427,23 +427,23 @@
             <!-- Left Column: Objective & Pipeline -->
             <div class="col-12 col-lg-6 d-flex flex-column gap-3">
               <!-- Card: Current Mission & Objective -->
-              <div class="card bg-dark-subtle border-0 rounded-3 p-3 shadow-sm" [style.borderLeft]="'4px solid ' + current.color">
-                <div class="d-flex align-items-center gap-1 text-secondary small fw-bold font-monospace mb-1">
+              <div class="agent-card-panel p-3" [style.borderLeft]="'4px solid ' + current.color">
+                <div class="d-flex align-items-center gap-1 small fw-bold font-monospace mb-1" style="color: var(--abhi-text-muted);">
                   <span>◈</span> CURRENT MISSION & OBJECTIVE
                 </div>
-                <h5 class="fw-bold text-light mb-1">{{ agentWork()?.current_mission || current.role }}</h5>
-                <p class="text-secondary small mb-0 font-monospace">
+                <h5 class="fw-bold mb-1" style="color: var(--abhi-text-primary);">{{ agentWork()?.current_mission || current.role }}</h5>
+                <p class="small mb-0 font-monospace" style="color: var(--abhi-text-secondary);">
                   {{ agentWork()?.current_activity || 'Operating at peak neural performance.' }}
                 </p>
               </div>
 
               <!-- Card: Autonomous Execution Roadmap -->
-              <div class="card bg-dark-subtle border-0 rounded-3 p-3 shadow-sm">
+              <div class="agent-card-panel p-3">
                 <div class="d-flex align-items-center justify-content-between mb-2">
-                  <div class="d-flex align-items-center gap-1 text-secondary small fw-bold font-monospace">
+                  <div class="d-flex align-items-center gap-1 small fw-bold font-monospace" style="color: var(--abhi-text-muted);">
                     <span>⚡</span> EXECUTION ROADMAP
                   </div>
-                  <span class="badge bg-secondary-subtle text-secondary font-monospace small">4 Steps</span>
+                  <span class="badge font-monospace small" style="background: var(--abhi-surface-raised); color: var(--abhi-text-secondary); border: 1px solid var(--abhi-border);">4 Steps</span>
                 </div>
 
                 <div class="d-flex flex-column gap-2">
@@ -481,13 +481,13 @@
             <!-- Right Column: Tools & Deliverables -->
             <div class="col-12 col-lg-6 d-flex flex-column gap-3">
               <!-- Card: Integrated Resources & Tools -->
-              <div class="card bg-dark-subtle border-0 rounded-3 p-3 shadow-sm">
-                <div class="d-flex align-items-center gap-1 text-secondary small fw-bold font-monospace mb-2">
+              <div class="agent-card-panel p-3">
+                <div class="d-flex align-items-center gap-1 small fw-bold font-monospace mb-2" style="color: var(--abhi-text-muted);">
                   <span>🛠️</span> INTEGRATED CAPABILITIES & TOOLS
                 </div>
                 <div class="d-flex flex-wrap gap-2">
                   @for (tool of agentWork()?.tools; track tool) {
-                    <span class="badge bg-dark text-info-emphasis border border-secondary-subtle p-2 font-monospace">
+                    <span class="badge p-2 font-monospace" style="background: var(--abhi-surface-raised); color: var(--abhi-cyan); border: 1px solid var(--abhi-border);">
                       ◈ {{ tool }}
                     </span>
                   }
@@ -495,15 +495,15 @@
               </div>
 
               <!-- Card: Today's Deliverables & Accomplishments -->
-              <div class="card bg-dark-subtle border-0 rounded-3 p-3 shadow-sm">
-                <div class="d-flex align-items-center gap-1 text-secondary small fw-bold font-monospace mb-2">
+              <div class="agent-card-panel p-3">
+                <div class="d-flex align-items-center gap-1 small fw-bold font-monospace mb-2" style="color: var(--abhi-text-muted);">
                   <span>📋</span> TODAY'S ACCOMPLISHMENTS
                 </div>
                 <div class="d-flex flex-column gap-2">
                   @for (item of agentWork()?.today_work; track item) {
-                    <div class="p-2 rounded-2 bg-dark border border-secondary-subtle d-flex align-items-start gap-2">
-                      <span class="text-success fw-bold">✓</span>
-                      <span class="text-light small font-monospace lh-sm">{{ item }}</span>
+                    <div class="p-2 rounded-2 d-flex align-items-start gap-2" style="background: var(--abhi-surface-raised); border: 1px solid var(--abhi-border);">
+                      <span class="fw-bold" style="color: var(--abhi-success);">✓</span>
+                      <span class="small font-monospace lh-sm" style="color: var(--abhi-text-primary);">{{ item }}</span>
                     </div>
                   }
                 </div>
@@ -512,8 +512,8 @@
           </div>
 
           <!-- Bottom: Direct Directive Input to this Specialist -->
-          <div class="mt-3 p-3 rounded-3 bg-dark-subtle border border-secondary-subtle">
-            <div class="d-flex align-items-center gap-1 text-secondary small fw-bold font-monospace mb-2">
+          <div class="mt-3 p-3 rounded-3 agent-card-panel">
+            <div class="d-flex align-items-center gap-1 small fw-bold font-monospace mb-2" style="color: var(--abhi-text-muted);">
               <span>🎯</span> ASSIGN DIRECT DIRECTIVE TO {{ current.name | uppercase }}
             </div>
             <div class="input-group">
@@ -522,7 +522,7 @@
                 [(ngModel)]="directAgentTaskInput"
                 (keyup.enter)="submitDirectAgentTask(current.id)"
                 [placeholder]="'Give instruction to ' + current.name + ' (e.g. audit memory, synthesize code, check task)...'"
-                class="form-control bg-dark text-light border-secondary font-monospace small"
+                class="form-control font-monospace small agent-directive-input"
               />
               <button
                 type="button"

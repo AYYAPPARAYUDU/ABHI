@@ -23,88 +23,134 @@ export interface AbhiThemeColors {
 export interface AbhiTheme {
   id: string;
   label: string;
+  category?: 'MODERN' | 'DARK' | 'WARM' | 'CYBER' | 'PRO';
   isCustom?: boolean;
   colors: AbhiThemeColors;
 }
 
-export const QUANTUM_WHITE_THEME: AbhiTheme = {
-  id: 'quantum-white',
-  label: 'Quantum White (Default)',
+/**
+ * 1. MODERN LIGHT MODE (Clean SaaS Dashboard from User Specification)
+ */
+export const MODERN_LIGHT_THEME: AbhiTheme = {
+  id: 'modern-light',
+  label: 'Modern Light Mode',
+  category: 'MODERN',
   isCustom: false,
   colors: {
-    background: '#f5f7fb',
+    background: '#f8fafc',
     backgroundSecondary: '#ffffff',
     surfaceRaised: '#ffffff',
-    surfaceInset: '#eaf0f8',
-    textPrimary: '#0b1329',
-    textSecondary: '#475569',
+    surfaceInset: '#f1f5f9',
+    textPrimary: '#0f172a',
+    textSecondary: '#334155',
     textMuted: '#64748b',
-    accentPrimary: '#0099cc',
-    accentSecondary: '#2563eb',
-    coreGlow: '#0099cc',
-    networkLine: '#0099cc',
-    active: '#0099cc',
-    border: 'rgba(11, 19, 41, 0.09)',
-    borderActive: 'rgba(0, 153, 204, 0.5)',
-    success: '#059669',
-    warning: '#d97706',
-    error: '#e11d48'
-  }
-};
-
-export const OBSIDIAN_CYAN_THEME: AbhiTheme = {
-  id: 'obsidian-cyan',
-  label: 'Obsidian Cyan',
-  isCustom: false,
-  colors: {
-    background: '#030712',
-    backgroundSecondary: '#070d1e',
-    surfaceRaised: '#0d182e',
-    surfaceInset: '#050a16',
-    textPrimary: '#f8fafc',
-    textSecondary: '#94a3b8',
-    textMuted: '#64748b',
-    accentPrimary: '#00f0ff',
+    accentPrimary: '#2563eb',
     accentSecondary: '#3b82f6',
-    coreGlow: '#00f0ff',
-    networkLine: '#00f0ff',
-    active: '#00f0ff',
-    border: 'rgba(0, 240, 255, 0.18)',
-    borderActive: 'rgba(0, 240, 255, 0.45)',
+    coreGlow: '#2563eb',
+    networkLine: '#3b82f6',
+    active: '#2563eb',
+    border: 'rgba(15, 23, 42, 0.08)',
+    borderActive: 'rgba(37, 99, 235, 0.45)',
     success: '#10b981',
     warning: '#f59e0b',
     error: '#ef4444'
   }
 };
 
-export const MIDNIGHT_AMETHYST_THEME: AbhiTheme = {
-  id: 'midnight-amethyst',
-  label: 'Midnight Amethyst',
+/**
+ * 2. OBSIDIAN DARK MODE (Pro Developer / Cyber HUD from User Specification)
+ */
+export const OBSIDIAN_DARK_THEME: AbhiTheme = {
+  id: 'obsidian-dark',
+  label: 'Obsidian Dark Mode',
+  category: 'DARK',
   isCustom: false,
   colors: {
-    background: '#05030e',
-    backgroundSecondary: '#0d071f',
-    surfaceRaised: '#170c38',
-    surfaceInset: '#090416',
-    textPrimary: '#f8f5ff',
-    textSecondary: '#c4b5fd',
-    textMuted: '#8b7ca8',
-    accentPrimary: '#c084fc',
-    accentSecondary: '#818cf8',
-    coreGlow: '#a855f7',
-    networkLine: '#c084fc',
-    active: '#e879f9',
-    border: 'rgba(192, 132, 252, 0.22)',
-    borderActive: 'rgba(232, 121, 249, 0.55)',
-    success: '#34d399',
-    warning: '#fbbf24',
-    error: '#f43f5e'
+    background: '#0b0f19',
+    backgroundSecondary: '#0f172a',
+    surfaceRaised: '#131d31',
+    surfaceInset: '#070b14',
+    textPrimary: '#f8fafc',
+    textSecondary: '#94a3b8',
+    textMuted: '#64748b',
+    accentPrimary: '#3882f6',
+    accentSecondary: '#06b6d4',
+    coreGlow: '#3882f6',
+    networkLine: '#06b6d4',
+    active: '#3882f6',
+    border: 'rgba(255, 255, 255, 0.09)',
+    borderActive: 'rgba(56, 130, 246, 0.5)',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ef4444'
   }
 };
 
+/**
+ * 3. WARM NEUTRAL / FINTECH (Warm Cream, Espresso & Forest Emerald from User Specification)
+ */
+export const WARM_NEUTRAL_FINTECH_THEME: AbhiTheme = {
+  id: 'warm-neutral',
+  label: 'Warm Neutral / Fintech',
+  category: 'WARM',
+  isCustom: false,
+  colors: {
+    background: '#fbf9f5',
+    backgroundSecondary: '#ffffff',
+    surfaceRaised: '#ffffff',
+    surfaceInset: '#f3efea',
+    textPrimary: '#1c1917',
+    textSecondary: '#57534e',
+    textMuted: '#78716c',
+    accentPrimary: '#0d7a57',
+    accentSecondary: '#d97706',
+    coreGlow: '#0d7a57',
+    networkLine: '#10b981',
+    active: '#0d7a57',
+    border: 'rgba(68, 64, 60, 0.12)',
+    borderActive: 'rgba(13, 122, 87, 0.5)',
+    success: '#059669',
+    warning: '#d97706',
+    error: '#dc2626'
+  }
+};
+
+/**
+ * 4. CYBER / AI NEON DARK (Cosmic Violet, Neon Cyan & Vivid Magenta from User Specification)
+ */
+export const CYBER_NEON_DARK_THEME: AbhiTheme = {
+  id: 'cyber-neon',
+  label: 'Cyber / AI Neon Dark',
+  category: 'CYBER',
+  isCustom: false,
+  colors: {
+    background: '#080711',
+    backgroundSecondary: '#0f0c1e',
+    surfaceRaised: '#16132d',
+    surfaceInset: '#0b0917',
+    textPrimary: '#ffffff',
+    textSecondary: '#c4b5fd',
+    textMuted: '#8b7ca8',
+    accentPrimary: '#7c3aed',
+    accentSecondary: '#00f0ff',
+    coreGlow: '#a855f7',
+    networkLine: '#00f0ff',
+    active: '#ec4899',
+    border: 'rgba(168, 85, 247, 0.28)',
+    borderActive: 'rgba(124, 58, 237, 0.65)',
+    success: '#10b981',
+    warning: '#f59e0b',
+    error: '#ec4899'
+  }
+};
+
+/**
+ * 5. EMERALD MATRIX TERMINAL (Hacker Matrix Green)
+ */
 export const EMERALD_MATRIX_THEME: AbhiTheme = {
   id: 'emerald-matrix',
-  label: 'Emerald Matrix',
+  label: 'Emerald Matrix Terminal',
+  category: 'PRO',
   isCustom: false,
   colors: {
     background: '#020b06',
@@ -127,9 +173,13 @@ export const EMERALD_MATRIX_THEME: AbhiTheme = {
   }
 };
 
+/**
+ * 6. ARDENA SUNSET CRIMSON (Deep Warm Solar Red)
+ */
 export const ARDENA_CRIMSON_THEME: AbhiTheme = {
   id: 'ardena-crimson',
   label: 'Ardena Sunset Crimson',
+  category: 'PRO',
   isCustom: false,
   colors: {
     background: '#0e1013',
@@ -152,9 +202,13 @@ export const ARDENA_CRIMSON_THEME: AbhiTheme = {
   }
 };
 
+/**
+ * 7. OMBRIA TITANIUM SLATE (Industrial Gold & Slate)
+ */
 export const OMBRIA_SLATE_THEME: AbhiTheme = {
   id: 'ombria-slate',
   label: 'Ombria Titanium Slate',
+  category: 'PRO',
   isCustom: false,
   colors: {
     background: '#131518',
@@ -177,76 +231,79 @@ export const OMBRIA_SLATE_THEME: AbhiTheme = {
   }
 };
 
-export const SAPPHIRE_SAAS_THEME: AbhiTheme = {
-  id: 'sapphire-saas',
-  label: 'Sapphire Midnight SaaS',
-  isCustom: false,
-  colors: {
-    background: '#050914',
-    backgroundSecondary: '#0a1226',
-    surfaceRaised: '#101e3d',
-    surfaceInset: '#040710',
-    textPrimary: '#f0f6fc',
-    textSecondary: '#93c5fd',
-    textMuted: '#60a5fa',
-    accentPrimary: '#38bdf8',
-    accentSecondary: '#3b82f6',
-    coreGlow: '#0ea5e9',
-    networkLine: '#38bdf8',
-    active: '#0284c7',
-    border: 'rgba(56, 189, 248, 0.22)',
-    borderActive: 'rgba(56, 189, 248, 0.55)',
-    success: '#10b981',
-    warning: '#f59e0b',
-    error: '#ef4444'
-  }
-};
-
 @Injectable({
   providedIn: 'root'
 })
 export class ThemeService {
   private readonly STORAGE_KEY = 'abhi_theme_preference';
+  private readonly GLOW_STORAGE_KEY = 'abhi_theme_glow_mode';
+  private readonly CONTRAST_STORAGE_KEY = 'abhi_theme_contrast_mode';
+  private readonly DENSITY_STORAGE_KEY = 'abhi_theme_density_mode';
   private static readonly STYLE_TAG_ID = 'abhi-theme-root-vars';
 
   readonly availablePresets: readonly AbhiTheme[] = [
-    OBSIDIAN_CYAN_THEME,
-    QUANTUM_WHITE_THEME,
+    OBSIDIAN_DARK_THEME,
+    MODERN_LIGHT_THEME,
+    WARM_NEUTRAL_FINTECH_THEME,
+    CYBER_NEON_DARK_THEME,
+    EMERALD_MATRIX_THEME,
     ARDENA_CRIMSON_THEME,
-    OMBRIA_SLATE_THEME,
-    SAPPHIRE_SAAS_THEME,
-    MIDNIGHT_AMETHYST_THEME,
-    EMERALD_MATRIX_THEME
+    OMBRIA_SLATE_THEME
   ];
 
-  // DSA O(1) Hash Map for constant-time preset retrieval
-  private readonly presetMap = new Map<string, AbhiTheme>(
-    this.availablePresets.map((p) => [p.id, p])
-  );
+  // DSA O(1) Hash Map with legacy ID aliasing
+  private readonly presetMap = new Map<string, AbhiTheme>([
+    [OBSIDIAN_DARK_THEME.id, OBSIDIAN_DARK_THEME],
+    ['obsidian-cyan', OBSIDIAN_DARK_THEME],
+    [MODERN_LIGHT_THEME.id, MODERN_LIGHT_THEME],
+    ['quantum-white', MODERN_LIGHT_THEME],
+    [WARM_NEUTRAL_FINTECH_THEME.id, WARM_NEUTRAL_FINTECH_THEME],
+    [CYBER_NEON_DARK_THEME.id, CYBER_NEON_DARK_THEME],
+    ['midnight-amethyst', CYBER_NEON_DARK_THEME],
+    ['sapphire-saas', OBSIDIAN_DARK_THEME],
+    [EMERALD_MATRIX_THEME.id, EMERALD_MATRIX_THEME],
+    [ARDENA_CRIMSON_THEME.id, ARDENA_CRIMSON_THEME],
+    [OMBRIA_SLATE_THEME.id, OMBRIA_SLATE_THEME]
+  ]);
 
-  readonly currentTheme = signal<AbhiTheme>(OBSIDIAN_CYAN_THEME);
+  readonly currentTheme = signal<AbhiTheme>(OBSIDIAN_DARK_THEME);
   readonly previewTheme = signal<AbhiTheme | null>(null);
+
+  // Advanced Visual Studio Controls
+  readonly glowMode = signal<'SOFT' | 'VIVID' | 'MINIMAL'>('SOFT');
+  readonly contrastMode = signal<'NORMAL' | 'HIGH'>('NORMAL');
+  readonly densityMode = signal<'COMPACT' | 'BALANCED' | 'RELAXED'>('BALANCED');
 
   readonly activeTheme = computed(() => {
     return this.previewTheme() || this.currentTheme();
   });
 
+  readonly isLightMode = computed(() => {
+    const c = this.activeTheme().colors;
+    return (
+      this.activeTheme().id === 'modern-light' ||
+      this.activeTheme().id === 'warm-neutral' ||
+      c.background.toLowerCase().startsWith('#f') ||
+      c.background.toLowerCase() === '#ffffff'
+    );
+  });
+
   private rafId: number | null = null;
 
   constructor() {
-    this.loadSavedTheme();
+    this.loadSavedPreferences();
 
-    // Effect to apply CSS variables atomically whenever active theme changes
+    // Effect to apply CSS variables atomically whenever theme, glow, contrast, or density changes
     effect(() => {
       const theme = this.activeTheme();
-      this.applyThemeToDOM(theme);
+      const glow = this.glowMode();
+      const contrast = this.contrastMode();
+      const density = this.densityMode();
+      this.applyThemeToDOM(theme, glow, contrast, density);
     });
   }
 
-  /**
-   * DSA O(1) Lookup for saved theme with safe JSON fallback
-   */
-  private loadSavedTheme(): void {
+  private loadSavedPreferences(): void {
     if (typeof localStorage === 'undefined') return;
 
     try {
@@ -259,14 +316,26 @@ export class ThemeService {
           this.currentTheme.set(parsed);
         }
       }
+
+      const savedGlow = localStorage.getItem(this.GLOW_STORAGE_KEY) as any;
+      if (savedGlow && ['SOFT', 'VIVID', 'MINIMAL'].includes(savedGlow)) {
+        this.glowMode.set(savedGlow);
+      }
+
+      const savedContrast = localStorage.getItem(this.CONTRAST_STORAGE_KEY) as any;
+      if (savedContrast && ['NORMAL', 'HIGH'].includes(savedContrast)) {
+        this.contrastMode.set(savedContrast);
+      }
+
+      const savedDensity = localStorage.getItem(this.DENSITY_STORAGE_KEY) as any;
+      if (savedDensity && ['COMPACT', 'BALANCED', 'RELAXED'].includes(savedDensity)) {
+        this.densityMode.set(savedDensity);
+      }
     } catch {
-      this.currentTheme.set(QUANTUM_WHITE_THEME);
+      this.currentTheme.set(OBSIDIAN_DARK_THEME);
     }
   }
 
-  /**
-   * O(1) Constant-time preset selection
-   */
   setPreset(presetId: string): void {
     const found = this.presetMap.get(presetId);
     if (found) {
@@ -276,15 +345,75 @@ export class ThemeService {
     }
   }
 
-  setLivePreviewColor(key: keyof AbhiThemeColors, value: string): void {
+  setMode(mode: 'light' | 'dark' | 'warm' | 'cyber'): void {
+    switch (mode) {
+      case 'light':
+        this.setPreset('modern-light');
+        break;
+      case 'dark':
+        this.setPreset('obsidian-dark');
+        break;
+      case 'warm':
+        this.setPreset('warm-neutral');
+        break;
+      case 'cyber':
+        this.setPreset('cyber-neon');
+        break;
+    }
+  }
+
+  setGlowMode(mode: 'SOFT' | 'VIVID' | 'MINIMAL'): void {
+    this.glowMode.set(mode);
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(this.GLOW_STORAGE_KEY, mode);
+      } catch {}
+    }
+  }
+
+  setContrastMode(mode: 'NORMAL' | 'HIGH'): void {
+    this.contrastMode.set(mode);
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(this.CONTRAST_STORAGE_KEY, mode);
+      } catch {}
+    }
+  }
+
+  setDensityMode(mode: 'COMPACT' | 'BALANCED' | 'RELAXED'): void {
+    this.densityMode.set(mode);
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem(this.DENSITY_STORAGE_KEY, mode);
+      } catch {}
+    }
+  }
+
+  setLivePreviewColor(key: string, value: string): void {
     const base = this.activeTheme();
     const updated: AbhiTheme = {
       id: 'custom',
-      label: 'Custom Palette',
+      label: 'Custom Studio Palette',
       isCustom: true,
       colors: {
         ...base.colors,
         [key]: value
+      }
+    };
+    this.previewTheme.set(updated);
+  }
+
+  setLiveAccentColor(color: string): void {
+    const base = this.activeTheme();
+    const updated: AbhiTheme = {
+      id: 'custom-' + base.id,
+      label: `${base.label} (Custom Tint)`,
+      isCustom: true,
+      colors: {
+        ...base.colors,
+        accentPrimary: color,
+        coreGlow: color,
+        active: color
       }
     };
     this.previewTheme.set(updated);
@@ -304,31 +433,32 @@ export class ThemeService {
   }
 
   resetToDefault(): void {
-    this.currentTheme.set(QUANTUM_WHITE_THEME);
+    this.currentTheme.set(OBSIDIAN_DARK_THEME);
+    this.glowMode.set('SOFT');
+    this.contrastMode.set('NORMAL');
+    this.densityMode.set('BALANCED');
     this.previewTheme.set(null);
     this.persistCurrentTheme();
   }
 
-  /**
-   * Non-blocking persistent write scheduled outside the critical rendering path
-   */
   private persistCurrentTheme(): void {
     if (typeof localStorage === 'undefined') return;
     setTimeout(() => {
       try {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.currentTheme()));
-      } catch {
-        // Safe storage quota fallback
-      }
+      } catch {}
     }, 0);
   }
 
   /**
-   * Atomic Batched CSS Variable Injection via a single <style> element.
-   * Eliminates 35+ synchronous layout recalculations and style dirtiness checks,
-   * guaranteeing 60fps single-frame repaint (<16ms) via requestAnimationFrame.
+   * Atomic Batched CSS Variable Injection with High-Contrast & Density Support
    */
-  private applyThemeToDOM(theme: AbhiTheme): void {
+  private applyThemeToDOM(
+    theme: AbhiTheme,
+    glow: 'SOFT' | 'VIVID' | 'MINIMAL',
+    contrast: 'NORMAL' | 'HIGH',
+    density: 'COMPACT' | 'BALANCED' | 'RELAXED'
+  ): void {
     if (typeof document === 'undefined') return;
 
     if (this.rafId !== null) {
@@ -340,12 +470,18 @@ export class ThemeService {
       const root = document.documentElement;
       const c = theme.colors;
       const isLight =
-        theme.id === 'quantum-white' ||
+        theme.id === 'modern-light' ||
+        theme.id === 'warm-neutral' ||
         c.background.toLowerCase().startsWith('#f') ||
         c.background.toLowerCase() === '#ffffff';
 
       root.setAttribute('data-theme', theme.id);
       root.setAttribute('data-mode', isLight ? 'light' : 'dark');
+      root.setAttribute('data-contrast', contrast.toLowerCase());
+      root.setAttribute('data-density', density.toLowerCase());
+
+      const glowMultiplier = glow === 'VIVID' ? '1.8' : glow === 'MINIMAL' ? '0' : '1';
+      const densityPadding = density === 'COMPACT' ? '6px' : density === 'RELAXED' ? '14px' : '10px';
 
       const cssVars = `
         :root {
@@ -363,40 +499,48 @@ export class ThemeService {
           --abhi-blue: ${c.accentSecondary};
           --abhi-accent-cyan: ${c.accentPrimary};
           --abhi-accent-blue: ${c.accentSecondary};
-          --abhi-border: ${c.border};
+          --abhi-border: ${contrast === 'HIGH' ? (isLight ? 'rgba(15, 23, 42, 0.22)' : 'rgba(255, 255, 255, 0.25)') : c.border};
           --abhi-border-active: ${c.borderActive};
           --abhi-success: ${c.success};
           --abhi-warning: ${c.warning};
           --abhi-danger: ${c.error};
-          --abhi-surface-glass: ${isLight ? 'rgba(255, 255, 255, 0.88)' : 'rgba(13, 24, 46, 0.78)'};
-          --abhi-surface-card: ${isLight ? '#ffffff' : c.surfaceRaised};
-          --abhi-bg-surface-glass: ${isLight ? 'rgba(255, 255, 255, 0.88)' : 'rgba(13, 24, 46, 0.78)'};
-          --abhi-bg-surface-card: ${isLight ? '#ffffff' : c.surfaceRaised};
-          --abhi-text-heading: ${isLight ? '#0b1329' : '#ffffff'};
-          --abhi-border-subtle: ${isLight ? 'rgba(11, 19, 41, 0.08)' : c.border};
-          --abhi-border-medium: ${isLight ? 'rgba(11, 19, 41, 0.16)' : c.borderActive};
-          --abhi-card-bg: ${isLight ? '#ffffff' : c.surfaceRaised};
-          --abhi-card-border: ${isLight ? 'rgba(11, 19, 41, 0.09)' : c.border};
-          --abhi-card-text: ${isLight ? '#0b1329' : c.textPrimary};
+          --abhi-density-padding: ${densityPadding};
+          --abhi-surface-glass: ${isLight ? 'rgba(255, 255, 255, 0.94)' : 'rgba(17, 24, 39, 0.88)'};
+          --abhi-surface-card: ${c.surfaceRaised};
+          --abhi-bg-surface-glass: ${isLight ? 'rgba(255, 255, 255, 0.94)' : 'rgba(17, 24, 39, 0.88)'};
+          --abhi-bg-surface-card: ${c.surfaceRaised};
+          --abhi-text-heading: ${c.textPrimary};
+          --abhi-card-bg: ${c.surfaceRaised};
+          --abhi-card-border: ${contrast === 'HIGH' ? (isLight ? 'rgba(15, 23, 42, 0.2)' : 'rgba(255, 255, 255, 0.22)') : c.border};
+          --abhi-card-text: ${c.textPrimary};
+
+          /* Global Bootstrap Variable Synchronization */
+          --bs-body-bg: ${c.background};
+          --bs-body-color: ${c.textPrimary};
+          --bs-dark-bg-subtle: ${c.surfaceInset};
+          --bs-secondary-bg-subtle: ${c.surfaceRaised};
+          --bs-secondary-color: ${c.textSecondary};
+          --bs-tertiary-color: ${c.textMuted};
+          --bs-border-color: ${c.border};
+          --bs-primary: ${c.accentPrimary};
+          --bs-link-color: ${c.accentPrimary};
+
           --abhi-raised-shadow: ${
             isLight
-              ? '0 8px 24px -4px rgba(11, 19, 41, 0.07), 0 2px 8px -2px rgba(11, 19, 41, 0.04), 0 0 0 1px rgba(11, 19, 41, 0.06)'
-              : '12px 12px 28px rgba(0, 0, 0, 0.55), -6px -6px 20px rgba(0, 240, 255, 0.04)'
+              ? '0 8px 24px -4px rgba(15, 23, 42, 0.08), 0 2px 8px -2px rgba(15, 23, 42, 0.04)'
+              : '0 12px 32px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4)'
           };
           --abhi-inset-shadow: ${
             isLight
-              ? 'inset 2px 2px 6px rgba(11, 19, 41, 0.05), inset -2px -2px 6px rgba(255, 255, 255, 0.9)'
-              : 'inset 4px 4px 12px rgba(0, 0, 0, 0.50), inset -3px -3px 8px rgba(0, 240, 255, 0.06)'
+              ? 'inset 1px 1px 4px rgba(15, 23, 42, 0.06)'
+              : 'inset 2px 2px 8px rgba(0, 0, 0, 0.55)'
           };
           --abhi-glow-bg: ${
-            isLight
-              ? 'radial-gradient(circle at 50% 50%, rgba(0, 153, 204, 0.08) 0%, rgba(245, 247, 251, 0.7) 65%, #f5f7fb 100%)'
-              : 'radial-gradient(ellipse at 50% 48%, rgba(0, 240, 255, 0.09) 0%, rgba(168, 85, 247, 0.04) 30%, rgba(6, 11, 24, 0.9) 65%, #030712 100%)'
-          };
-          --abhi-rim-vignette: ${
-            isLight
-              ? 'radial-gradient(circle at 50% 50%, transparent 60%, rgba(220, 228, 240, 0.45) 85%, rgba(210, 220, 235, 0.7) 100%)'
-              : 'radial-gradient(circle at 50% 50%, transparent 45%, rgba(3, 7, 18, 0.55) 75%, rgba(2, 4, 10, 0.96) 100%)'
+            glow === 'MINIMAL'
+              ? 'none'
+              : isLight
+              ? `radial-gradient(circle at 50% 0%, ${c.accentPrimary}14 0%, transparent 60%)`
+              : `radial-gradient(ellipse at 50% 0%, ${c.accentPrimary}22 0%, ${c.accentSecondary}0d 40%, transparent 70%)`
           };
         }
       `;

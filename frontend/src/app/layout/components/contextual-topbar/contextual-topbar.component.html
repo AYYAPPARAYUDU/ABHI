@@ -375,8 +375,8 @@
           <div class="drawer-title-group">
             <span class="drawer-icon">🎨</span>
             <div>
-              <h2 class="drawer-title font-monospace">DYNAMIC THEME CUSTOMIZER</h2>
-              <p class="drawer-sub">Choose from 7 humanized design palettes with live preview across all apps</p>
+              <h2 class="drawer-title font-monospace">DYNAMIC THEME STUDIO</h2>
+              <p class="drawer-sub">Humanized Modern Design Palettes · Real-Time Universal Propagation</p>
             </div>
           </div>
           <button type="button" class="drawer-close-btn" (click)="closeThemeDrawer()" aria-label="Close Theme Panel">✕</button>
@@ -384,9 +384,116 @@
 
         <!-- Drawer Body -->
         <div class="theme-drawer-body">
-          <div class="drawer-section-label font-monospace">AVAILABLE HUMANIZED PALETTES</div>
+          <!-- 1. Quick Mode Segmented Bar (Direct Access to Image 2 Reference Styles) -->
+          <div class="drawer-section-label font-monospace">FEATURED DESIGN STYLES</div>
+          <div class="quick-modes-grid">
+            <button
+              type="button"
+              class="quick-mode-pill"
+              [class.active]="themeService.activeTheme().id === 'obsidian-dark'"
+              (click)="selectThemeMode('dark')"
+            >
+              <span class="mode-icon">🌙</span>
+              <div class="mode-meta">
+                <span class="mode-name">Obsidian Dark</span>
+                <span class="mode-sub">Pro Developer HUD</span>
+              </div>
+            </button>
 
-          <!-- 7 Theme Preset Cards -->
+            <button
+              type="button"
+              class="quick-mode-pill"
+              [class.active]="themeService.activeTheme().id === 'modern-light'"
+              (click)="selectThemeMode('light')"
+            >
+              <span class="mode-icon">☀️</span>
+              <div class="mode-meta">
+                <span class="mode-name">Modern Light</span>
+                <span class="mode-sub">Clean SaaS #2563EB</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              class="quick-mode-pill"
+              [class.active]="themeService.activeTheme().id === 'warm-neutral'"
+              (click)="selectThemeMode('warm')"
+            >
+              <span class="mode-icon">🌾</span>
+              <div class="mode-meta">
+                <span class="mode-name">Warm Fintech</span>
+                <span class="mode-sub">Ivory & Forest Emerald</span>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              class="quick-mode-pill"
+              [class.active]="themeService.activeTheme().id === 'cyber-neon'"
+              (click)="selectThemeMode('cyber')"
+            >
+              <span class="mode-icon">⚡</span>
+              <div class="mode-meta">
+                <span class="mode-name">Cyber Neon</span>
+                <span class="mode-sub">Cosmic Violet #7C3AED</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- 2. Live Interactive Component Preview (As Specified in Image 2) -->
+          <div class="drawer-section-label font-monospace mt-3">LIVE INTERACTIVE PALETTE PREVIEW</div>
+          <div class="live-sample-preview-box">
+            <div class="preview-row align-items-center">
+              <button
+                type="button"
+                class="preview-primary-btn"
+                [style.background]="themeService.activeTheme().colors.accentPrimary"
+                [style.color]="'#ffffff'"
+              >
+                Primary Button
+              </button>
+              <button type="button" class="preview-soft-btn">
+                Soft Button
+              </button>
+              <div class="preview-toggle-mock active">
+                <span class="toggle-circle"></span>
+              </div>
+            </div>
+
+            <div class="preview-row mt-2">
+              <div class="preview-input-box">
+                <span class="input-placeholder">Input Field · Focused State</span>
+              </div>
+              <span class="preview-badge success">
+                ● Active
+              </span>
+              <span class="preview-badge warning">
+                ▲ Warning
+              </span>
+            </div>
+          </div>
+
+          <!-- 3. Accent Color Fine-Tuner -->
+          <div class="drawer-section-label font-monospace mt-3">ACCENT COLOR CUSTOMIZER</div>
+          <div class="accent-swatches-strip">
+            @for (acc of accentSwatches; track acc) {
+              <button
+                type="button"
+                class="accent-circle-btn"
+                [style.background]="acc"
+                [class.active]="themeService.activeTheme().colors.accentPrimary.toLowerCase() === acc.toLowerCase()"
+                (click)="selectAccentColor(acc)"
+                [title]="'Select Accent Color ' + acc"
+              >
+                @if (themeService.activeTheme().colors.accentPrimary.toLowerCase() === acc.toLowerCase()) {
+                  <span class="accent-check">✓</span>
+                }
+              </button>
+            }
+          </div>
+
+          <!-- 4. All Humanized Presets -->
+          <div class="drawer-section-label font-monospace mt-3">ALL AVAILABLE PALETTES</div>
           <div class="theme-presets-grid">
             @for (preset of themeService.availablePresets; track preset.id) {
               <div
@@ -403,7 +510,12 @@
                 </div>
 
                 <div class="preset-meta">
-                  <span class="preset-name">{{ preset.label }}</span>
+                  <div>
+                    <span class="preset-name">{{ preset.label }}</span>
+                    @if (preset.category) {
+                      <span class="preset-category-tag font-monospace">{{ preset.category }}</span>
+                    }
+                  </div>
                   @if (themeService.activeTheme().id === preset.id) {
                     <span class="preset-active-chip font-monospace">✓ ACTIVE</span>
                   }
@@ -412,8 +524,8 @@
             }
           </div>
 
-          <!-- Advanced Styling Controls -->
-          <div class="drawer-section-label font-monospace mt-4">ADVANCED VISUAL OPTIONS</div>
+          <!-- 5. Advanced Visual Studio Options -->
+          <div class="drawer-section-label font-monospace mt-3">ADVANCED VISUAL OPTIONS</div>
 
           <!-- Ambient Glow Setting -->
           <div class="advanced-option-card">
@@ -425,7 +537,7 @@
               <button
                 type="button"
                 class="segment-btn"
-                [class.active]="glowMode() === 'SOFT'"
+                [class.active]="themeService.glowMode() === 'SOFT'"
                 (click)="setGlowMode('SOFT')"
               >
                 SOFT GLOW
@@ -433,7 +545,7 @@
               <button
                 type="button"
                 class="segment-btn"
-                [class.active]="glowMode() === 'VIVID'"
+                [class.active]="themeService.glowMode() === 'VIVID'"
                 (click)="setGlowMode('VIVID')"
               >
                 VIVID NEON
@@ -441,7 +553,7 @@
               <button
                 type="button"
                 class="segment-btn"
-                [class.active]="glowMode() === 'MINIMAL'"
+                [class.active]="themeService.glowMode() === 'MINIMAL'"
                 (click)="setGlowMode('MINIMAL')"
               >
                 ZERO GLOW
@@ -450,24 +562,24 @@
           </div>
 
           <!-- Contrast Setting -->
-          <div class="advanced-option-card mt-3">
+          <div class="advanced-option-card mt-2">
             <div class="option-header">
               <span class="option-title font-monospace">DISPLAY CONTRAST</span>
-              <span class="option-desc">Enhances text and border visibility for bright environments</span>
+              <span class="option-desc">Enhances text and border visibility for pro sunlight/DPI</span>
             </div>
             <div class="segmented-control font-monospace">
               <button
                 type="button"
                 class="segment-btn"
-                [class.active]="contrastMode() === 'NORMAL'"
+                [class.active]="themeService.contrastMode() === 'NORMAL'"
                 (click)="setContrastMode('NORMAL')"
               >
-                STANDARD
+                STANDARD GLASS
               </button>
               <button
                 type="button"
                 class="segment-btn"
-                [class.active]="contrastMode() === 'HIGH'"
+                [class.active]="themeService.contrastMode() === 'HIGH'"
                 (click)="setContrastMode('HIGH')"
               >
                 HIGH CONTRAST
@@ -475,10 +587,44 @@
             </div>
           </div>
 
+          <!-- Density Setting -->
+          <div class="advanced-option-card mt-2">
+            <div class="option-header">
+              <span class="option-title font-monospace">UI DENSITY & SCALING</span>
+              <span class="option-desc">Adjust layout spacing for developer compactness or comfortable touch</span>
+            </div>
+            <div class="segmented-control font-monospace">
+              <button
+                type="button"
+                class="segment-btn"
+                [class.active]="themeService.densityMode() === 'COMPACT'"
+                (click)="setDensityMode('COMPACT')"
+              >
+                COMPACT (0.9x)
+              </button>
+              <button
+                type="button"
+                class="segment-btn"
+                [class.active]="themeService.densityMode() === 'BALANCED'"
+                (click)="setDensityMode('BALANCED')"
+              >
+                BALANCED (1.0x)
+              </button>
+              <button
+                type="button"
+                class="segment-btn"
+                [class.active]="themeService.densityMode() === 'RELAXED'"
+                (click)="setDensityMode('RELAXED')"
+              >
+                RELAXED (1.1x)
+              </button>
+            </div>
+          </div>
+
           <!-- Reset Button -->
           <div class="drawer-footer-actions mt-4">
             <button type="button" class="reset-theme-btn font-monospace" (click)="resetThemeToDefault()">
-              ↺ RESET TO DEFAULT (OBSIDIAN CYAN)
+              ↺ RESTORE RECOMMENDED (OBSIDIAN DARK)
             </button>
           </div>
         </div>

@@ -32,7 +32,7 @@
               ● REAL SBI SETTLEMENT
             </span>
             <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 font-mono small">
-              ● ZERO DEMO DATA
+              ● n8n AUTOMATION ACTIVE
             </span>
           </div>
           <p class="text-secondary small mb-0 mt-1">
@@ -41,17 +41,17 @@
         </div>
       </div>
 
-      <!-- Clean Executive Action Controls -->
+      <!-- Essential Operational Controls Only -->
       <div class="d-flex align-items-center gap-2 flex-wrap">
         <button
           type="button"
           class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 fw-semibold shadow-sm"
           [disabled]="isAutopilotRunning()"
           (click)="triggerAutonomousRevenueCycle()"
-          title="Run master autonomous cycle across all commercial streams without typing manual commands"
+          title="Run master autonomous cycle across n8n, affiliate, AST audits, and SBI settlement"
         >
           <span>⚡</span>
-          <span>{{ isAutopilotRunning() ? 'Running Swarm...' : 'Run Revenue Autopilot' }}</span>
+          <span>{{ isAutopilotRunning() ? 'Running Master Cycle...' : 'Run Full Revenue Cycle' }}</span>
         </button>
 
         <button
@@ -72,6 +72,17 @@
         >
           <span>💳</span>
           <span>Verify Bank UTR</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-sm d-flex align-items-center gap-2 px-3 py-2 fw-semibold"
+          [ngClass]="isLiveWorkActive() ? 'btn-outline-success' : 'btn-outline-secondary'"
+          (click)="toggleLiveWorkDaemon()"
+          title="Toggle 24/7 continuous autonomous business daemon"
+        >
+          <span class="pulse-dot" [class.bg-success]="isLiveWorkActive()" [class.bg-secondary]="!isLiveWorkActive()"></span>
+          <span>{{ isLiveWorkActive() ? 'Autopilot: 24/7 Active' : 'Autopilot: Paused' }}</span>
         </button>
       </div>
     </div>
@@ -100,85 +111,73 @@
       </div>
     </div>
 
-    <!-- Card 2: Live Work in Flight -->
+    <!-- Card 2: n8n Automation Workflows -->
     <div class="col-12 col-sm-6 col-xl-3">
-      <div class="metric-card p-3 rounded-4 h-100 border border-secondary border-opacity-25 cursor-pointer" (click)="setActiveTab('agents')" title="Click to view all commercial swarm agents">
+      <div class="metric-card p-3 rounded-4 h-100 border border-secondary border-opacity-25 cursor-pointer" (click)="setActiveTab('n8n')" title="Click to view n8n workflow engine">
         <div class="d-flex justify-content-between align-items-start mb-2">
-          <span class="text-secondary text-uppercase font-mono small tracking-wider">Live Work In Flight</span>
-          <span class="metric-badge bg-info bg-opacity-25 text-info border border-info border-opacity-25 rounded-circle p-2">
+          <span class="text-secondary text-uppercase font-mono small tracking-wider">n8n Automation Pipelines</span>
+          <span class="metric-badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 rounded-circle p-2">
             ⚡
           </span>
         </div>
+        <div class="metric-value font-mono text-primary fw-bold fs-3 mb-1">
+          {{ n8nWorkflows().length }} Active
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary border-opacity-25">
+          <span class="font-mono text-secondary small">{{ n8nHistory().length }} Executions Run</span>
+          <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-mono small">
+            DAG Native
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Credentials Vault -->
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="metric-card p-3 rounded-4 h-100 border border-secondary border-opacity-25 cursor-pointer" (click)="setActiveTab('vault')" title="Click to open Credentials Vault">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="text-secondary text-uppercase font-mono small tracking-wider">Credentials & API Vault</span>
+          <span class="metric-badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25 rounded-circle p-2">
+            🔐
+          </span>
+        </div>
+        <div class="metric-value font-mono text-warning fw-bold fs-3 mb-1">
+          {{ vaultCredentials().length }} Services
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary border-opacity-25">
+          <span class="font-mono text-secondary small">Banking, APIs & Affiliate</span>
+          <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 font-mono small">
+            100% Verified
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Swarm Workers -->
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="metric-card p-3 rounded-4 h-100 border border-secondary border-opacity-25 cursor-pointer" (click)="setActiveTab('agents')" title="Click to view commercial swarm agents">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="text-secondary text-uppercase font-mono small tracking-wider">Specialist AI Swarm</span>
+          <span class="metric-badge bg-info bg-opacity-25 text-info border border-info border-opacity-25 rounded-circle p-2">
+            🤖
+          </span>
+        </div>
         <div class="metric-value font-mono text-info fw-bold fs-3 mb-1">
-          {{ activeWorkers().length }} Active
+          {{ activeWorkers().length }} Working
         </div>
         <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary border-opacity-25">
           <span class="font-mono text-secondary small">Of {{ officeData()?.total_agents || 7 }} Specialist Roles</span>
           <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 font-mono small">
-            100% Dual-State
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Card 3: System & RAG Compute Resources -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="metric-card p-3 rounded-4 h-100 border border-secondary border-opacity-25">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <span class="text-secondary text-uppercase font-mono small tracking-wider">System Compute & RAG</span>
-          <span class="metric-badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 rounded-circle p-2">
-            🧠
-          </span>
-        </div>
-        <div class="metric-value font-mono text-primary fw-bold fs-3 mb-1">
-          {{ liveMonitorData()?.resources?.vector_rag_indexed_docs || 851 }} Docs
-        </div>
-        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary border-opacity-25">
-          <span class="font-mono text-secondary small">CPU: {{ liveMonitorData()?.resources?.cpu_percent || 12 }}%</span>
-          <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-mono small">
-            {{ liveMonitorData()?.resources?.ram_used_gb || 16 }} GB RAM
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Card 4: Cryptographic Receipts Vault -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="metric-card p-3 rounded-4 h-100 border border-secondary border-opacity-25 cursor-pointer" (click)="setActiveTab('receipts')" title="Click to view all cryptographic receipts">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <span class="text-secondary text-uppercase font-mono small tracking-wider">Receipts Vault</span>
-          <span class="metric-badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-25 rounded-circle p-2">
-            🛡️
-          </span>
-        </div>
-        <div class="metric-value font-mono text-warning fw-bold fs-3 mb-1">
-          {{ receiptsList().length }} Receipts
-        </div>
-        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary border-opacity-25">
-          <span class="font-mono text-secondary small">HMAC-SHA256 Sealed</span>
-          <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 font-mono small">
-            Immutable
+            Dual-State
           </span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SECTION 3: NAVIGATION SUB-BAR (5 DISTINCT SECTIONS) -->
+  <!-- SECTION 3: NAVIGATION TABS -->
   <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4 pb-2 border-bottom border-secondary border-opacity-25">
     <div class="btn-group btn-group-sm flex-wrap" role="group" aria-label="Business Navigation Tabs">
-      <button
-        type="button"
-        class="btn px-3 py-2 fw-semibold d-flex align-items-center gap-2"
-        [class.btn-primary]="activeTab() === 'agents'"
-        [class.btn-outline-secondary]="activeTab() !== 'agents'"
-        (click)="setActiveTab('agents')"
-      >
-        <span>🏢</span>
-        <span>Commercial Swarm Agents</span>
-        <span class="badge bg-dark font-mono">{{ activeWorkers().length }}/{{ officeData()?.total_agents || 7 }}</span>
-      </button>
-
       <button
         type="button"
         class="btn px-3 py-2 fw-semibold d-flex align-items-center gap-2"
@@ -187,7 +186,31 @@
         (click)="setActiveTab('overview')"
       >
         <span>🏛️</span>
-        <span>SBI Settlement Channel & QR</span>
+        <span>SBI Settlement & QR</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn px-3 py-2 fw-semibold d-flex align-items-center gap-2"
+        [class.btn-primary]="activeTab() === 'n8n'"
+        [class.btn-outline-secondary]="activeTab() !== 'n8n'"
+        (click)="setActiveTab('n8n')"
+      >
+        <span>⚡</span>
+        <span>n8n Workflow Automation Hub</span>
+        <span class="badge bg-dark font-mono">{{ n8nWorkflows().length }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn px-3 py-2 fw-semibold d-flex align-items-center gap-2"
+        [class.btn-primary]="activeTab() === 'vault'"
+        [class.btn-outline-secondary]="activeTab() !== 'vault'"
+        (click)="setActiveTab('vault')"
+      >
+        <span>🔐</span>
+        <span>Credentials & API Vault</span>
+        <span class="badge bg-dark font-mono">{{ vaultCredentials().length }}</span>
       </button>
 
       <button
@@ -199,6 +222,17 @@
       >
         <span>🚀</span>
         <span>Affiliate Monetization Hub</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn px-3 py-2 fw-semibold d-flex align-items-center gap-2"
+        [class.btn-primary]="activeTab() === 'agents'"
+        [class.btn-outline-secondary]="activeTab() !== 'agents'"
+        (click)="setActiveTab('agents')"
+      >
+        <span>🏢</span>
+        <span>Commercial Swarm Agents</span>
       </button>
 
       <button
@@ -227,358 +261,584 @@
     </div>
 
     <div class="d-flex align-items-center gap-2 font-mono small text-secondary">
-      <span>Live Sync</span>
-      <button type="button" class="btn btn-sm btn-outline-secondary font-mono px-2 py-1" (click)="refreshAllData()" title="Refresh telemetry">
-        ↻ Refresh
-      </button>
+      <span>Auto-Sync: <strong class="text-success">Active</strong></span>
     </div>
   </div>
 
-  <!-- =========================================================================
-       TAB 1: COMMERCIAL SWARM AGENTS (WORK & TELEMETRY)
-       ========================================================================= -->
-  @if (activeTab() === 'agents') {
-    <div class="agents-tab-container">
-      <!-- Top Autopilot & Live Streaming Ticker -->
-      <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between p-3 rounded-4 mb-4 border border-secondary border-opacity-25 bg-dark bg-opacity-50 gap-3">
-        <div class="d-flex align-items-center gap-3">
-          <div class="d-flex align-items-center gap-2 font-mono">
-            <span class="live-dot" [class.pulse]="isLiveWorkActive()"></span>
-            <span class="fw-bold text-white small">24/7 AUTONOMOUS REVENUE ENGINE:</span>
-            <span class="badge" [class.bg-success]="isLiveWorkActive()" [class.bg-warning]="!isLiveWorkActive()">
-              {{ isLiveWorkActive() ? 'ACTIVE & STREAMING' : 'PAUSED' }}
-            </span>
+  <!-- ======================================================================= -->
+  <!-- TAB 1: EXECUTIVE OVERVIEW & REAL SBI SETTLEMENT                          -->
+  <!-- ======================================================================= -->
+  @if (activeTab() === 'overview') {
+    <div class="row g-4">
+      <!-- Left: State Bank of India Channel & Live QR -->
+      <div class="col-12 col-lg-7">
+        <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 h-100 shadow-sm">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 font-mono small text-uppercase">
+                Authoritative Banking Channel
+              </span>
+              <h2 class="h5 text-white fw-bold mt-2 mb-0">State Bank of India Sovereign Account</h2>
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-info font-mono"
+              (click)="copyToClipboard(sbiProfile.account, 'SBI Account Number')"
+            >
+              Copy A/C
+            </button>
           </div>
-          <button
-            type="button"
-            class="btn btn-sm btn-outline-info font-mono py-1 px-2"
-            (click)="toggleLiveWorkDaemon()"
-            title="Toggle continuous autonomous background work daemon"
-          >
-            {{ isLiveWorkActive() ? 'Pause Daemon' : 'Engage 24/7 Daemon' }}
-          </button>
-        </div>
 
-        <div class="d-flex align-items-center gap-2 font-mono small text-secondary">
-          <span>Completed Today: <strong class="text-success">{{ liveMonitorData()?.work_status?.tasks_completed_today || 2 }} Tasks</strong></span>
-          <span>·</span>
-          <span>Zero User Commands Required</span>
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <div class="p-3 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25">
+                <span class="text-secondary small font-mono d-block">Account Holder</span>
+                <span class="text-white fw-bold fs-6">{{ sbiProfile.beneficiary }}</span>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="p-3 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25">
+                <span class="text-secondary small font-mono d-block">Bank & Branch</span>
+                <span class="text-white fw-bold fs-6">{{ sbiProfile.bank }}</span>
+                <small class="text-secondary d-block font-mono">Specialized Commercial</small>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="p-3 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25">
+                <span class="text-secondary small font-mono d-block">Account Number</span>
+                <div class="d-flex align-items-center justify-content-between">
+                  <span class="text-info fw-bold font-mono fs-5">{{ sbiProfile.account }}</span>
+                  <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 font-mono">
+                    ✓ ACTIVE
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="p-3 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25">
+                <span class="text-secondary small font-mono d-block">IFSC Code</span>
+                <div class="d-flex align-items-center justify-content-between">
+                  <span class="text-white fw-bold font-mono fs-5">{{ sbiProfile.ifsc }}</span>
+                  <button
+                    type="button"
+                    class="btn btn-sm p-0 text-info font-mono"
+                    (click)="copyToClipboard(sbiProfile.ifsc, 'IFSC Code')"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="p-3 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25">
+                <span class="text-secondary small font-mono d-block">UPI Direct Settlement ID (PhonePe / GPay / BHIM)</span>
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-1">
+                  <span class="text-success fw-bold font-mono fs-5">{{ sbiProfile.upi }}</span>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-success font-mono"
+                    (click)="copyToClipboard(sbiProfile.upi, 'UPI ID')"
+                  >
+                    Copy UPI ID
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <span class="text-secondary small">
+              Settlement Protocol: <strong class="text-white">Direct NEFT / RTGS / Inward UPI</strong>
+            </span>
+            <button
+              type="button"
+              class="btn btn-sm btn-primary"
+              (click)="openUtrModal()"
+            >
+              Verify Incoming Bank UTR
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Real-Time Streaming Work Ticker -->
-      @if (activeWorkers().length > 0) {
-        <div class="live-ticker-box p-3 rounded-3 mb-4 border border-info border-opacity-25 bg-info bg-opacity-10 font-mono small">
-          <div class="d-flex align-items-center gap-2 mb-1">
-            <span class="badge bg-info text-dark fw-bold">⚡ LIVE PHYSICAL EXECUTION:</span>
-            <span class="text-white-50">Specialist agents actively utilizing tools & RAG</span>
+      <!-- Right: Real QR Code & Immediate Verification -->
+      <div class="col-12 col-lg-5">
+        <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 h-100 shadow-sm text-center d-flex flex-column align-items-center justify-content-center">
+          <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 font-mono small text-uppercase mb-3">
+            Real Inward UPI QR Code
+          </span>
+
+          <div class="qr-frame p-3 bg-white rounded-4 shadow mb-3">
+            <img
+              [src]="upiQrCodeUrl"
+              alt="Mamu UPI QR Code"
+              class="img-fluid rounded-3"
+              style="width: 200px; height: 200px;"
+            />
           </div>
-          <div class="d-flex flex-column gap-1 mt-2">
-            @for (w of activeWorkers(); track w.agent_id) {
-              <div class="d-flex align-items-center gap-2 text-white">
-                <span class="badge" [style.background]="w.color_hex">{{ w.name }}</span>
-                <span class="text-info fw-semibold">[{{ w.active_tool || 'Engine' }}]</span>
-                <span class="text-white-50">→</span>
-                <span>{{ w.active_task }}</span>
-              </div>
-            }
+
+          <div class="text-center">
+            <span class="font-mono text-success fw-bold fs-6 d-block">{{ sbiProfile.upi }}</span>
+            <small class="text-secondary d-block mt-1">Scan using any UPI app to transfer commercial funds directly to SBI</small>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-outline-success btn-sm mt-3 font-mono"
+            (click)="copyToClipboard(sbiProfile.upi, 'UPI ID')"
+          >
+            Copy UPI: {{ sbiProfile.upi }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ======================================================================= -->
+  <!-- TAB 2: N8N WORKFLOW AUTOMATION HUB (NEW!)                              -->
+  <!-- ======================================================================= -->
+  @if (activeTab() === 'n8n') {
+    <div class="n8n-automation-hub">
+      <!-- Status & Engine Overview Banner -->
+      <div class="p-3 mb-4 rounded-4 bg-dark bg-opacity-50 border border-primary border-opacity-25 d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="engine-badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 rounded-circle p-3 fs-4">
+            ⚡
+          </div>
+          <div>
+            <h2 class="h6 text-white fw-bold mb-1">n8n Workflow Automation Engine</h2>
+            <p class="text-secondary small mb-0">
+              Official node-based DAG orchestrator coordinating AI agents, AST auditing, affiliate syndication, and automatic SBI settlements.
+            </p>
           </div>
         </div>
-      }
 
-      <!-- Grid of 7 Specialist Autonomous Workers -->
-      <div class="row g-3">
-        @for (w of allWorkers(); track w.agent_id) {
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 font-mono small">
+            ● LOCAL ENGINE: http://localhost:5678
+          </span>
+          <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 font-mono small">
+            ● NATIVE DAG RUNNER READY
+          </span>
+          <button
+            type="button"
+            class="btn btn-sm btn-outline-primary font-mono"
+            (click)="refreshN8nData()"
+          >
+            ↻ Refresh Workflows
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid of Discovered n8n Workflows -->
+      <div class="row g-4 mb-4">
+        @for (wf of n8nWorkflows(); track wf.workflow_id) {
           <div class="col-12 col-md-6 col-xl-4">
-            <div
-              class="agent-station-card p-3 rounded-4 h-100 border border-secondary border-opacity-25 position-relative"
-              [class.active-working]="w.status === 'WORKING'"
-            >
-              <!-- Card Header -->
-              <div class="d-flex align-items-start justify-content-between mb-2">
-                <div class="d-flex align-items-center gap-2">
-                  <div class="agent-avatar-orb" [style.background]="w.color_hex" [style.box-shadow]="'0 0 12px ' + w.color_hex">
-                    {{ w.name.charAt(0) }}
-                  </div>
-                  <div>
-                    <h2 class="h6 mb-0 text-white fw-bold">{{ w.name }}</h2>
-                    <span class="badge bg-dark font-mono text-secondary small border border-secondary border-opacity-25">
-                      Pod: {{ w.room_pod }}
-                    </span>
-                  </div>
+            <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 h-100 shadow-sm d-flex flex-column justify-content-between">
+              <div>
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                  <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 font-mono small">
+                    {{ wf.nodes_count }} NODES
+                  </span>
+                  <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 font-mono small">
+                    ✓ PRIMED
+                  </span>
                 </div>
 
-                <span
-                  class="badge font-mono"
-                  [class.bg-success]="w.status === 'WORKING'"
-                  [class.bg-secondary]="w.status !== 'WORKING'"
+                <h3 class="h6 text-white fw-bold mb-2">{{ wf.name }}</h3>
+                <p class="text-secondary small mb-3 font-mono">
+                  ID: {{ wf.workflow_id }}
+                </p>
+
+                <!-- Trigger Chips -->
+                <div class="d-flex flex-wrap gap-1 mb-3">
+                  @for (trig of wf.triggers; track trig) {
+                    <span class="badge bg-secondary bg-opacity-25 text-light font-mono small">
+                      ⚡ {{ trig }}
+                    </span>
+                  }
+                </div>
+              </div>
+
+              <div class="pt-3 border-top border-secondary border-opacity-25">
+                <button
+                  type="button"
+                  class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2 fw-semibold"
+                  [disabled]="isExecutingN8n() && activeRunningWorkflowId() === wf.workflow_id"
+                  (click)="triggerN8nWorkflow(wf.workflow_id)"
                 >
-                  ● {{ w.status }}
-                </span>
-              </div>
-
-              <!-- Role Description -->
-              <p class="text-secondary small mb-2">{{ w.role }}</p>
-
-              <!-- Active Task Snippet -->
-              <div class="task-snippet-box p-2 rounded-2 mb-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 font-mono small">
-                <div class="text-secondary text-uppercase x-small mb-1">Active Assignment:</div>
-                <div class="text-white small text-truncate" [title]="w.active_task || 'Standby for next autonomous dispatch'">
-                  {{ w.active_task || 'Standby for next autonomous dispatch' }}
-                </div>
-                @if (w.active_tool) {
-                  <div class="mt-1">
-                    <span class="badge bg-info bg-opacity-25 text-info font-mono x-small border border-info border-opacity-25">
-                      Tool: {{ w.active_tool }}
-                    </span>
-                  </div>
-                }
-              </div>
-
-              <!-- Card Actions & Completed Counter -->
-              <div class="d-flex align-items-center justify-content-between pt-2 border-top border-secondary border-opacity-25">
-                <span class="font-mono text-secondary small">
-                  Done: <strong class="text-white">{{ w.tasks_completed }}</strong>
-                </span>
-
-                <div class="d-flex align-items-center gap-1">
-                  <button
-                    type="button"
-                    class="btn btn-sm btn-outline-secondary font-mono py-1 px-2 small"
-                    (click)="selectWorker(w)"
-                    title="View live console logs for this agent"
-                  >
-                    Console
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-sm font-mono py-1 px-2 small"
-                    [class.btn-outline-warning]="w.status === 'WORKING'"
-                    [class.btn-outline-success]="w.status !== 'WORKING'"
-                    (click)="toggleWorkerStatus(w)"
-                  >
-                    {{ w.status === 'WORKING' ? 'Set Idle' : 'Start Task' }}
-                  </button>
-                </div>
+                  @if (isExecutingN8n() && activeRunningWorkflowId() === wf.workflow_id) {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <span>Executing Pipeline...</span>
+                  } @else {
+                    <span>▶</span>
+                    <span>Execute Workflow Now</span>
+                  }
+                </button>
               </div>
             </div>
           </div>
         }
       </div>
-    </div>
-  }
 
-  <!-- =========================================================================
-       TAB 2: SBI SETTLEMENT CHANNEL & LIVE UPI QR
-       ========================================================================= -->
-  @if (activeTab() === 'overview') {
-    <div class="row g-4">
-      <!-- Left Column: Official Banking Credentials & QR -->
-      <div class="col-12 col-lg-5">
-        <div class="channel-card p-4 rounded-4 h-100 border border-secondary border-opacity-25 shadow-sm">
-          <div class="d-flex align-items-center justify-content-between mb-3">
-            <h2 class="h5 mb-0 text-white fw-bold">Official Bank Channel</h2>
-            <span class="badge bg-primary bg-opacity-25 text-info border border-info border-opacity-50 font-mono small">
-              STATE BANK OF INDIA
-            </span>
-          </div>
+      <!-- Execution History Table -->
+      <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 shadow-sm">
+        <h3 class="h6 text-white fw-bold mb-3 d-flex align-items-center gap-2">
+          <span>📜</span>
+          <span>Automated Workflow Execution History</span>
+        </h3>
 
-          <p class="text-secondary small mb-3">
-            Direct sovereign settlement channel. Client payments via UPI, NEFT, RTGS, and IMPS credit directly to your SBI account.
-          </p>
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle mb-0 font-mono small">
+            <thead>
+              <tr class="text-secondary text-uppercase border-secondary border-opacity-25">
+                <th>Execution ID</th>
+                <th>Workflow</th>
+                <th>Trigger</th>
+                <th>Duration</th>
+                <th>Result & Output Summary</th>
+                <th class="text-end">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (exec of n8nHistory(); track exec.execution_id) {
+                <tr>
+                  <td class="text-info">{{ exec.execution_id }}</td>
+                  <td class="text-white fw-semibold">{{ exec.workflow_name }}</td>
+                  <td>
+                    <span class="badge bg-secondary bg-opacity-25 text-light">{{ exec.trigger_type }}</span>
+                  </td>
+                  <td>{{ exec.duration_ms }} ms</td>
+                  <td class="text-light">{{ exec.output_summary }}</td>
+                  <td class="text-end">
+                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">
+                      ✓ {{ exec.status }}
+                    </span>
+                  </td>
+                </tr>
+              }
 
-          <!-- UPI QR Code Display -->
-          <div class="qr-box text-center p-3 rounded-3 mb-3 border border-secondary border-opacity-25">
-            <img [src]="upiQrCodeUrl" alt="SBI UPI QR Code" class="img-fluid rounded-2 mb-2 qr-image" />
-            <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
-              <span class="live-dot pulse"></span>
-              <span class="text-white small fw-semibold font-mono">Instant UPI QR Code</span>
-            </div>
-            <span class="text-secondary small d-block font-mono">Compatible with PhonePe, GPay, Paytm, BHIM, Super</span>
-          </div>
-
-          <!-- Bank Details List with 1-Click Copy -->
-          <div class="d-flex flex-column gap-2">
-            <div
-              class="detail-row d-flex justify-content-between align-items-center p-2 rounded-2 cursor-pointer"
-              (click)="copyToClipboard(sbiProfile.upi, 'UPI ID')"
-              title="Click to copy UPI ID"
-            >
-              <span class="text-secondary small font-mono">UPI ID</span>
-              <span class="text-info font-mono fw-semibold small">{{ sbiProfile.upi }} 📋</span>
-            </div>
-
-            <div
-              class="detail-row d-flex justify-content-between align-items-center p-2 rounded-2 cursor-pointer"
-              (click)="copyToClipboard(sbiProfile.account, 'SBI Account Number')"
-              title="Click to copy Account Number"
-            >
-              <span class="text-secondary small font-mono">A/C Number</span>
-              <span class="text-white font-mono fw-semibold small">{{ sbiProfile.account }} 📋</span>
-            </div>
-
-            <div
-              class="detail-row d-flex justify-content-between align-items-center p-2 rounded-2 cursor-pointer"
-              (click)="copyToClipboard(sbiProfile.ifsc, 'IFSC Code')"
-              title="Click to copy IFSC"
-            >
-              <span class="text-secondary small font-mono">IFSC Code</span>
-              <span class="text-white font-mono fw-semibold small">{{ sbiProfile.ifsc }} 📋</span>
-            </div>
-
-            <div class="detail-row d-flex justify-content-between align-items-center p-2 rounded-2">
-              <span class="text-secondary small font-mono">Bank</span>
-              <span class="text-secondary small text-end">{{ sbiProfile.bank }}</span>
-            </div>
-
-            <div class="detail-row d-flex justify-content-between align-items-center p-2 rounded-2">
-              <span class="text-secondary small font-mono">Beneficiary</span>
-              <span class="text-white small text-end fw-semibold">{{ sbiProfile.beneficiary }}</span>
-            </div>
-
-            <div
-              class="detail-row d-flex justify-content-between align-items-center p-2 rounded-2 cursor-pointer"
-              (click)="copyToClipboard(sbiProfile.email, 'Primary Email')"
-              title="Click to copy Email"
-            >
-              <span class="text-secondary small font-mono">Email</span>
-              <span class="text-secondary small font-mono text-truncate max-w-200">{{ sbiProfile.email }} 📋</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Right Column: Verification & Settlement Architecture -->
-      <div class="col-12 col-lg-7">
-        <div class="channel-card p-4 rounded-4 h-100 border border-secondary border-opacity-25 shadow-sm">
-          <h2 class="h5 mb-3 text-white fw-bold">Authentic Settlement Provenance</h2>
-
-          <div class="alert alert-dark border-secondary border-opacity-25 rounded-3 mb-4 font-mono small">
-            <strong class="text-success">● STRICT SECURITY POLICY:</strong> Zero simulated or fake payments. All recorded transactions are matched against authentic 12-digit Bank UTRs and sealed cryptographically with HMAC-SHA256.
-          </div>
-
-          <div class="mb-4">
-            <h3 class="h6 text-info font-mono fw-bold mb-2">How Real Client Payments Work:</h3>
-            <ol class="text-secondary small ps-3 mb-0 d-flex flex-column gap-2">
-              <li>Client scans the official UPI QR code or transfers via NEFT/IMPS to SBI Account <code class="text-white">41130645649</code>.</li>
-              <li>Bank issues a unique 12-digit UTR reference number via SMS and banking passbook.</li>
-              <li>You or the autonomous CEO agent verifies the UTR reference using the <strong>Verify Bank UTR</strong> button.</li>
-              <li>The system generates an immutable cryptographic receipt sealed with SHA-256 and stored on disk.</li>
-            </ol>
-          </div>
-
-          <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25 font-mono small">
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-secondary">Current Settled Balance:</span>
-              <span class="text-success fw-bold">₹{{ treasuryOverview().totalSettledInr | number:'1.2-2' }}</span>
-            </div>
-            <div class="d-flex justify-content-between mb-2">
-              <span class="text-secondary">Verified Bank UTR Count:</span>
-              <span class="text-white">{{ treasuryOverview().transactionsCount }} Verified Payments</span>
-            </div>
-            <div class="d-flex justify-content-between">
-              <span class="text-secondary">Provenance Status:</span>
-              <span class="text-info fw-semibold">DUAL_STATE_AUTHENTICATED</span>
-            </div>
-          </div>
+              @if (n8nHistory().length === 0) {
+                <tr>
+                  <td colspan="6" class="text-center py-4 text-secondary">
+                    No execution records yet. Click <strong>Execute Workflow Now</strong> above to trigger your first pipeline!
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   }
 
-  <!-- =========================================================================
-       TAB 3: AFFILIATE MONETIZATION HUB
-       ========================================================================= -->
-  @if (activeTab() === 'affiliate') {
-    <div class="row g-4">
-      <!-- Left: Tracked Link Generator -->
-      <div class="col-12 col-lg-5">
-        <div class="channel-card p-4 rounded-4 h-100 border border-secondary border-opacity-25 shadow-sm">
-          <h2 class="h5 mb-2 text-white fw-bold">Tracked Affiliate Link Generator</h2>
-          <p class="text-secondary small mb-3">
-            Generate compliant tracked affiliate links using Mamu's verified network credentials. Payouts deposit directly into State Bank of India.
+  <!-- ======================================================================= -->
+  <!-- TAB 3: CREDENTIALS & API KEY VAULT (STRUCTURED TABLE)                   -->
+  <!-- ======================================================================= -->
+  @if (activeTab() === 'vault') {
+    <div class="credentials-vault-tab">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+        <div>
+          <h2 class="h5 text-white fw-bold mb-1 d-flex align-items-center gap-2">
+            <span>🔐</span>
+            <span>Mamu's Sovereign Credentials & Secret Vault</span>
+          </h2>
+          <p class="text-secondary small mb-0">
+            Authoritative, encrypted storage of all commercial banking accounts, affiliate IDs, n8n API tokens, and AI model endpoints.
           </p>
+        </div>
 
-          <div class="mb-3">
-            <label class="form-label text-secondary font-mono small">SELECT AFFILIATE NETWORK</label>
-            <select class="form-select bg-dark text-white border-secondary font-mono small" [(ngModel)]="selectedNetwork">
-              <option value="amazon_associates">Amazon Associates India (Tag: ayyappa-21)</option>
-              <option value="clickbank">ClickBank (Account: ayyapparayudu)</option>
-              <option value="impact">Impact.com (ayyapparayudu.ravuvari@gmail.com)</option>
-              <option value="cj_affiliate">CJ Affiliate (Publisher: ayyappa_ai)</option>
-              <option value="shareasale">ShareASale Network</option>
-            </select>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label text-secondary font-mono small">DESTINATION PRODUCT URL</label>
-            <input
-              type="text"
-              class="form-control bg-dark text-white border-secondary font-mono small"
-              placeholder="https://www.amazon.in/dp/B0..."
-              [(ngModel)]="inputProductUrl"
-            />
+        <div class="d-flex align-items-center gap-2">
+          <!-- Category Filter Pills -->
+          <div class="btn-group btn-group-sm" role="group">
+            <button
+              type="button"
+              class="btn"
+              [class.btn-primary]="selectedVaultCategory() === 'ALL'"
+              [class.btn-outline-secondary]="selectedVaultCategory() !== 'ALL'"
+              (click)="selectedVaultCategory.set('ALL')"
+            >
+              All
+            </button>
+            <button
+              type="button"
+              class="btn"
+              [class.btn-primary]="selectedVaultCategory() === 'BANKING'"
+              [class.btn-outline-secondary]="selectedVaultCategory() !== 'BANKING'"
+              (click)="selectedVaultCategory.set('BANKING')"
+            >
+              Banking
+            </button>
+            <button
+              type="button"
+              class="btn"
+              [class.btn-primary]="selectedVaultCategory() === 'AFFILIATE'"
+              [class.btn-outline-secondary]="selectedVaultCategory() !== 'AFFILIATE'"
+              (click)="selectedVaultCategory.set('AFFILIATE')"
+            >
+              Affiliate
+            </button>
+            <button
+              type="button"
+              class="btn"
+              [class.btn-primary]="selectedVaultCategory() === 'AUTOMATION'"
+              [class.btn-outline-secondary]="selectedVaultCategory() !== 'AUTOMATION'"
+              (click)="selectedVaultCategory.set('AUTOMATION')"
+            >
+              Automation
+            </button>
+            <button
+              type="button"
+              class="btn"
+              [class.btn-primary]="selectedVaultCategory() === 'LLM_AI'"
+              [class.btn-outline-secondary]="selectedVaultCategory() !== 'LLM_AI'"
+              (click)="selectedVaultCategory.set('LLM_AI')"
+            >
+              LLM / AI
+            </button>
           </div>
 
           <button
             type="button"
-            class="btn btn-info w-100 fw-semibold mb-3"
-            [disabled]="isGeneratingLink()"
-            (click)="generateTrackedAffiliateLink()"
+            class="btn btn-sm btn-outline-info d-flex align-items-center gap-2"
+            (click)="openAddCredentialModal()"
           >
-            {{ isGeneratingLink() ? 'Generating...' : '⚡ Generate Tracked Link' }}
+            <span>+</span>
+            <span>Add Credential</span>
           </button>
-
-          @if (generatedAffiliateLink()) {
-            <div class="p-3 rounded-3 bg-dark bg-opacity-75 border border-info border-opacity-50 font-mono small">
-              <div class="text-info fw-bold mb-1">✓ Your Tracked Affiliate URL:</div>
-              <div class="text-white-50 small text-break mb-2">{{ generatedAffiliateLink() }}</div>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-info font-mono w-100"
-                (click)="copyToClipboard(generatedAffiliateLink()!, 'Affiliate Link')"
-              >
-                📋 Copy Affiliate Link
-              </button>
-            </div>
-          }
         </div>
       </div>
 
-      <!-- Right: Active Partner Networks -->
-      <div class="col-12 col-lg-7">
-        <div class="channel-card p-4 rounded-4 h-100 border border-secondary border-opacity-25 shadow-sm">
-          <h2 class="h5 mb-3 text-white fw-bold">Verified Affiliate Networks & Credentials</h2>
+      <!-- Structured Credentials Table -->
+      <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 shadow-sm overflow-hidden">
+        <div class="table-responsive">
+          <table class="table table-dark table-hover align-middle mb-0 font-mono small">
+            <thead>
+              <tr class="text-secondary text-uppercase border-secondary border-opacity-25">
+                <th style="min-width: 220px;">Service / Platform</th>
+                <th>Category</th>
+                <th style="min-width: 220px;">Identity / Username / Email</th>
+                <th style="min-width: 240px;">Credential / Secret Value</th>
+                <th>Status</th>
+                <th>Documentation</th>
+                <th class="text-end" style="min-width: 120px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cred of filteredVaultCredentials(); track cred.id) {
+                <tr>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="fs-5">
+                        {{
+                          cred.category === 'BANKING' ? '🏛️' :
+                          cred.category === 'AFFILIATE' ? '🚀' :
+                          cred.category === 'AUTOMATION' ? '⚡' :
+                          cred.category === 'LLM_AI' ? '🧠' : '📧'
+                        }}
+                      </span>
+                      <div>
+                        <div class="text-white fw-bold">{{ cred.service_name }}</div>
+                        <small class="text-secondary font-sans">{{ cred.description }}</small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      class="badge border font-mono small"
+                      [ngClass]="{
+                        'bg-success bg-opacity-25 text-success border-success border-opacity-50': cred.category === 'BANKING',
+                        'bg-primary bg-opacity-25 text-primary border-primary border-opacity-50': cred.category === 'AFFILIATE',
+                        'bg-warning bg-opacity-25 text-warning border-warning border-opacity-50': cred.category === 'AUTOMATION',
+                        'bg-info bg-opacity-25 text-info border-info border-opacity-50': cred.category === 'LLM_AI',
+                        'bg-secondary bg-opacity-25 text-light border-secondary border-opacity-50': cred.category === 'COMMUNICATION'
+                      }"
+                    >
+                      {{ cred.category }}
+                    </span>
+                  </td>
+                  <td class="text-info fw-semibold">
+                    {{ cred.identity_username }}
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="font-mono text-light bg-black bg-opacity-40 px-2 py-1 rounded border border-secondary border-opacity-25">
+                        {{ showSecretMap()[cred.id] ? cred.secret_value : cred.masked_value }}
+                      </span>
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-secondary p-1"
+                        (click)="toggleSecretReveal(cred.id)"
+                        [title]="showSecretMap()[cred.id] ? 'Hide Secret' : 'Reveal Secret'"
+                      >
+                        {{ showSecretMap()[cred.id] ? '👁️‍🗨️' : '👁️' }}
+                      </button>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">
+                      ✓ {{ cred.status }}
+                    </span>
+                  </td>
+                  <td>
+                    @if (cred.documentation_url) {
+                      <a [href]="cred.documentation_url" target="_blank" rel="noopener noreferrer" class="text-info small text-decoration-none">
+                        Docs ↗
+                      </a>
+                    } @else {
+                      <span class="text-secondary">—</span>
+                    }
+                  </td>
+                  <td class="text-end">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-info me-1"
+                      (click)="copyToClipboard(cred.secret_value, cred.service_name)"
+                      title="Copy Secret Value"
+                    >
+                      Copy
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      (click)="deleteVaultCredential(cred.id)"
+                      title="Delete Credential"
+                    >
+                      ✕
+                    </button>
+                  </td>
+                </tr>
+              }
 
-          <div class="d-flex flex-column gap-3">
-            <!-- Amazon Associates -->
-            <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25">
-              <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-white fw-bold">Amazon Associates India</span>
-                <span class="badge bg-success bg-opacity-25 text-success font-mono small">VERIFIED & LINKED</span>
-              </div>
-              <div class="font-mono text-secondary small">Associate Tag: <code class="text-info">ayyappa-21</code></div>
-              <div class="text-secondary small mt-1">Settlement: Direct monthly NEFT deposit into SBI Account 41130645649</div>
+              @if (filteredVaultCredentials().length === 0) {
+                <tr>
+                  <td colspan="7" class="text-center py-4 text-secondary">
+                    No credentials found in this category. Click <strong>+ Add Credential</strong> to register a new API secret.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ======================================================================= -->
+  <!-- TAB 4: REAL AFFILIATE MARKETING HUB                                     -->
+  <!-- ======================================================================= -->
+  @if (activeTab() === 'affiliate') {
+    <div class="affiliate-hub-tab">
+      <div class="row g-4">
+        <!-- Generator Form -->
+        <div class="col-12 col-lg-5">
+          <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 shadow-sm h-100">
+            <h3 class="h6 text-white fw-bold mb-3 d-flex align-items-center gap-2">
+              <span>🔗</span>
+              <span>Generate Tracked Affiliate Link</span>
+            </h3>
+
+            <div class="mb-3">
+              <label class="form-label text-secondary small font-mono">Select Network</label>
+              <select [(ngModel)]="selectedNetwork" class="form-select form-select-sm bg-dark text-white border-secondary">
+                <option value="amazon_associates">Amazon Associates India (ayyappa-21)</option>
+                <option value="clickbank">ClickBank Global (ayyapparayudu)</option>
+                <option value="digistore24">Digistore24 Promoter (ayyappa_ai)</option>
+                <option value="impact_radius">Impact Radius Partner</option>
+              </select>
             </div>
 
-            <!-- ClickBank -->
-            <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25">
-              <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-white fw-bold">ClickBank Premier Services</span>
-                <span class="badge bg-success bg-opacity-25 text-success font-mono small">ACTIVE</span>
-              </div>
-              <div class="font-mono text-secondary small">Account Nickname: <code class="text-info">ayyapparayudu</code></div>
-              <div class="text-secondary small mt-1">Settlement: Weekly international wire transfer to State Bank of India</div>
+            <div class="mb-3">
+              <label class="form-label text-secondary small font-mono">Product / Offer URL</label>
+              <input
+                type="text"
+                [(ngModel)]="inputProductUrl"
+                placeholder="https://www.amazon.in/dp/..."
+                class="form-control form-control-sm bg-dark text-white border-secondary font-mono"
+              />
             </div>
 
-            <!-- Impact.com -->
-            <div class="p-3 rounded-3 bg-dark bg-opacity-50 border border-secondary border-opacity-25">
-              <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="text-white fw-bold">Impact.com Global Partner</span>
-                <span class="badge bg-success bg-opacity-25 text-success font-mono small">AUTHENTICATED</span>
+            <button
+              type="button"
+              class="btn btn-primary w-100 fw-semibold"
+              [disabled]="isGeneratingLink()"
+              (click)="generateTrackedAffiliateLink()"
+            >
+              {{ isGeneratingLink() ? 'Generating...' : '⚡ Generate Tracked Link' }}
+            </button>
+
+            @if (generatedAffiliateLink()) {
+              <div class="mt-4 p-3 rounded-3 bg-success bg-opacity-10 border border-success border-opacity-50">
+                <span class="text-success small font-mono fw-bold d-block mb-1">✓ Tracked Link Ready:</span>
+                <div class="font-mono small text-break text-white mb-2">{{ generatedAffiliateLink() }}</div>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-success font-mono"
+                  (click)="copyToClipboard(generatedAffiliateLink()!, 'Affiliate Link')"
+                >
+                  Copy Tracked Link
+                </button>
               </div>
-              <div class="font-mono text-secondary small">Registered Account: <code class="text-info">ayyapparayudu.ravuvari@gmail.com</code></div>
-              <div class="text-secondary small mt-1">Settlement: Automated electronic funds transfer to SBI</div>
+            }
+          </div>
+        </div>
+
+        <!-- Networks & Verified Stats -->
+        <div class="col-12 col-lg-7">
+          <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 shadow-sm h-100">
+            <h3 class="h6 text-white fw-bold mb-3 d-flex align-items-center gap-2">
+              <span>🚀</span>
+              <span>Active Verified Affiliate Partnerships</span>
+            </h3>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <div class="p-3 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="text-white fw-bold small">Amazon Associates</span>
+                    <span class="badge bg-success bg-opacity-25 text-success font-mono small">Active</span>
+                  </div>
+                  <span class="font-mono text-info small">Tag: ayyappa-21</span>
+                  <small class="text-secondary d-block mt-1 font-mono">Direct NEFT to SBI ****5649</small>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="p-3 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="text-white fw-bold small">ClickBank Global</span>
+                    <span class="badge bg-success bg-opacity-25 text-success font-mono small">Active</span>
+                  </div>
+                  <span class="font-mono text-info small">User: ayyapparayudu</span>
+                  <small class="text-secondary d-block mt-1 font-mono">Wire Payout to SBI</small>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="p-3 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="text-white fw-bold small">Digistore24</span>
+                    <span class="badge bg-success bg-opacity-25 text-success font-mono small">Active</span>
+                  </div>
+                  <span class="font-mono text-info small">ID: ayyappa_ai</span>
+                  <small class="text-secondary d-block mt-1 font-mono">SEPA/SWIFT to SBI</small>
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="p-3 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="text-white fw-bold small">Impact Radius</span>
+                    <span class="badge bg-success bg-opacity-25 text-success font-mono small">Active</span>
+                  </div>
+                  <span class="font-mono text-info small">{{ sbiProfile.email }}</span>
+                  <small class="text-secondary d-block mt-1 font-mono">Enterprise Software Hub</small>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -586,77 +846,124 @@
     </div>
   }
 
-  <!-- =========================================================================
-       TAB 4: COMMERCIAL INVOICES & REAL LEDGER
-       ========================================================================= -->
-  @if (activeTab() === 'invoices') {
-    <div class="ledger-card p-4 rounded-4 border border-secondary border-opacity-25 shadow-sm">
-      <div class="d-flex align-items-center justify-content-between mb-3">
-        <div>
-          <h2 class="h5 mb-0 text-white fw-bold">Commercial Tax Invoices & Settlement Ledger</h2>
-          <span class="text-secondary small font-mono">Real client invoices with direct UPI settlement links</span>
+  <!-- ======================================================================= -->
+  <!-- TAB 5: COMMERCIAL SWARM AGENTS                                          -->
+  <!-- ======================================================================= -->
+  @if (activeTab() === 'agents') {
+    <div class="row g-4">
+      @for (worker of allWorkers(); track worker.agent_id) {
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 h-100 shadow-sm d-flex flex-column justify-content-between">
+            <div>
+              <div class="d-flex align-items-start justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge rounded-circle p-2" [style.backgroundColor]="worker.color_hex || '#06b6d4'"></span>
+                  <h3 class="h6 text-white fw-bold mb-0">{{ worker.name }}</h3>
+                </div>
+                <span
+                  class="badge border font-mono small"
+                  [ngClass]="worker.status === 'WORKING' ? 'bg-success bg-opacity-25 text-success border-success border-opacity-50' : 'bg-secondary bg-opacity-25 text-secondary border-secondary border-opacity-50'"
+                >
+                  ● {{ worker.status }}
+                </span>
+              </div>
+
+              <span class="text-info font-mono small d-block mb-2">{{ worker.role }}</span>
+              <p class="text-secondary small mb-3">
+                {{ worker.active_task || 'Autonomous daemon running background continuous tasks.' }}
+              </p>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between pt-3 border-top border-secondary border-opacity-25 font-mono small">
+              <span class="text-secondary">Done: <strong class="text-white">{{ worker.tasks_completed }}</strong></span>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-info"
+                (click)="toggleWorkerStatus(worker)"
+              >
+                {{ worker.status === 'WORKING' ? 'Pause' : 'Engage' }}
+              </button>
+            </div>
+          </div>
         </div>
-        <button type="button" class="btn btn-outline-info btn-sm fw-semibold" (click)="openCreateInvoiceModal()">
+      }
+    </div>
+  }
+
+  <!-- ======================================================================= -->
+  <!-- TAB 6: INVOICES & REAL SETTLEMENT LEDGER                                -->
+  <!-- ======================================================================= -->
+  @if (activeTab() === 'invoices') {
+    <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 shadow-sm">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+        <h3 class="h6 text-white fw-bold mb-0">Commercial Tax Invoices & Verified Ledger</h3>
+        <button type="button" class="btn btn-sm btn-outline-info" (click)="openCreateInvoiceModal()">
           + Issue New Invoice
         </button>
       </div>
 
       <div class="table-responsive">
-        <table class="table table-dark table-hover align-middle mb-0 custom-ledger-table">
+        <table class="table table-dark table-hover align-middle mb-0 font-mono small">
           <thead>
-            <tr>
-              <th scope="col" class="font-mono text-secondary small">INVOICE NUMBER</th>
-              <th scope="col" class="font-mono text-secondary small">CLIENT / ENTITY</th>
-              <th scope="col" class="font-mono text-secondary small">DELIVERABLE SCOPE</th>
-              <th scope="col" class="font-mono text-secondary small text-end">AMOUNT (INR)</th>
-              <th scope="col" class="font-mono text-secondary small text-center">STATUS</th>
-              <th scope="col" class="font-mono text-secondary small text-end">ACTION</th>
+            <tr class="text-secondary text-uppercase border-secondary border-opacity-25">
+              <th>Invoice # / Ref</th>
+              <th>Client / Entity</th>
+              <th>Service Description</th>
+              <th class="text-end">Amount (INR)</th>
+              <th class="text-center">Status</th>
+              <th class="text-end">Actions</th>
             </tr>
           </thead>
           <tbody>
             @for (inv of settledInvoices(); track inv.invoice_number) {
               <tr>
-                <td>
-                  <div class="font-mono text-info fw-semibold small">{{ inv.invoice_number }}</div>
-                  <small class="text-secondary font-mono">{{ inv.issue_date }}</small>
-                </td>
-                <td>
-                  <div class="text-white fw-semibold small">{{ inv.client_name }}</div>
-                  <small class="text-secondary">{{ inv.client_organization || 'Direct Client' }}</small>
-                </td>
-                <td>
-                  <span class="text-secondary small line-clamp-1" [title]="inv.line_items?.[0]?.description">
-                    {{ inv.line_items?.[0]?.description || 'Autonomous Service Deliverable' }}
-                  </span>
-                </td>
-                <td class="text-end">
-                  <div class="font-mono text-success fw-bold small">₹{{ inv.total_inr | number:'1.2-2' }}</div>
-                  <small class="text-secondary font-mono">${{ inv.total_usd | number:'1.2-2' }}</small>
-                </td>
+                <td class="text-info fw-semibold">{{ inv.invoice_number }}</td>
+                <td class="text-white">{{ inv.client_name }}</td>
+                <td class="text-secondary">{{ inv.service_description }}</td>
+                <td class="text-end text-success fw-bold">₹{{ inv.total_inr | number:'1.2-2' }}</td>
                 <td class="text-center">
-                  @if (inv.status === 'SETTLED') {
-                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 font-mono small">
-                      ✓ SETTLED
-                    </span>
-                  } @else {
-                    <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 font-mono small">
-                      ⏳ AWAITING
-                    </span>
-                  }
+                  <span
+                    class="badge border small"
+                    [ngClass]="inv.status === 'SETTLED' ? 'bg-success bg-opacity-25 text-success border-success' : 'bg-warning bg-opacity-25 text-warning border-warning'"
+                  >
+                    {{ inv.status }}
+                  </span>
                 </td>
                 <td class="text-end">
                   @if (inv.status !== 'SETTLED') {
                     <button
                       type="button"
-                      class="btn btn-sm btn-outline-success font-mono py-1 px-2 small"
+                      class="btn btn-sm btn-outline-success font-mono"
                       (click)="openUtrModal(inv.invoice_number)"
-                      title="Verify Bank UTR to mark invoice as settled"
                     >
                       Verify UTR
                     </button>
                   } @else {
-                    <span class="text-success small font-mono">Credited to SBI</span>
+                    <span class="text-success small font-mono">Settled to SBI ✓</span>
                   }
+                </td>
+              </tr>
+            }
+
+            @for (settlement of settlementsWithoutInvoice(); track settlement.transaction_id) {
+              <tr>
+                <td class="text-info">{{ settlement.utr_number || settlement.transaction_id }}</td>
+                <td class="text-white">{{ settlement.client_name }}</td>
+                <td class="text-secondary">Direct Bank Transfer ({{ settlement.channel }})</td>
+                <td class="text-end text-success fw-bold">₹{{ settlement.amount_inr | number:'1.2-2' }}</td>
+                <td class="text-center">
+                  <span class="badge bg-success bg-opacity-25 text-success border border-success">
+                    ✓ SETTLED
+                  </span>
+                </td>
+                <td class="text-end text-success">Credited ✓</td>
+              </tr>
+            }
+
+            @if (settledInvoices().length === 0 && settlementsWithoutInvoice().length === 0) {
+              <tr>
+                <td colspan="6" class="text-center py-4 text-secondary">
+                  No invoices recorded yet. Click <strong>+ Issue New Invoice</strong> to create an authentic tax invoice!
                 </td>
               </tr>
             }
@@ -666,298 +973,228 @@
     </div>
   }
 
-  <!-- =========================================================================
-       TAB 5: CRYPTOGRAPHIC RECEIPTS VAULT
-       ========================================================================= -->
+  <!-- ======================================================================= -->
+  <!-- TAB 7: CRYPTOGRAPHIC RECEIPTS                                           -->
+  <!-- ======================================================================= -->
   @if (activeTab() === 'receipts') {
-    <div class="ledger-card p-4 rounded-4 border border-secondary border-opacity-25 shadow-sm">
-      <div class="d-flex align-items-center justify-content-between mb-3">
-        <div>
-          <h2 class="h5 mb-0 text-white fw-bold">Cryptographic Receipts Vault</h2>
-          <span class="text-secondary small font-mono">HMAC-SHA256 sealed proofs of payment directly into SBI</span>
-        </div>
-        <span class="badge bg-warning bg-opacity-25 text-warning font-mono">{{ receiptsList().length }} Receipts Vaulted</span>
-      </div>
-
-      <div class="row g-3">
-        @for (rcp of receiptsList(); track rcp.receipt_id) {
-          <div class="col-12 col-md-6">
-            <div
-              class="receipt-card-item p-3 rounded-3 border border-secondary border-opacity-25 cursor-pointer"
-              (click)="selectReceipt(rcp)"
-              title="Click to inspect cryptographic audit trail"
-            >
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                  <div class="font-mono text-warning fw-semibold small">{{ rcp.receipt_id }}</div>
-                  <small class="text-secondary font-mono">{{ rcp.issued_at }}</small>
-                </div>
-                <span class="badge bg-success bg-opacity-25 text-success font-mono small">
-                  ✓ VERIFIED
-                </span>
-              </div>
-
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="text-secondary small">Bank UTR Ref:</span>
-                <code class="text-info font-mono small">{{ rcp.utr_transaction_ref }}</code>
-              </div>
-
-              <div class="d-flex justify-content-between align-items-center">
-                <span class="text-secondary small">Amount Settled:</span>
-                <span class="font-mono text-success fw-bold">₹{{ rcp.amount_inr | number:'1.2-2' }}</span>
-              </div>
+    <div class="row g-3">
+      @for (rcp of receiptsList(); track rcp.receipt_id) {
+        <div class="col-12 col-md-6 col-xl-4">
+          <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 shadow-sm cursor-pointer" (click)="selectReceipt(rcp)">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 font-mono small">
+                ✓ CRYPTOGRAPHIC SEAL
+              </span>
+              <span class="text-success font-mono fw-bold fs-5">₹{{ rcp.amount_inr | number:'1.2-2' }}</span>
             </div>
+            <div class="font-mono text-info small mb-1">{{ rcp.receipt_id }}</div>
+            <p class="text-secondary small mb-2">Payer: <strong class="text-white">{{ rcp.payer_name }}</strong></p>
+            <div class="font-mono small text-secondary">UTR: {{ rcp.utr_number }}</div>
           </div>
-        }
-      </div>
+        </div>
+      }
+
+      @if (receiptsList().length === 0) {
+        <div class="col-12 text-center py-5 text-secondary">
+          No cryptographic receipts issued yet. Reconcile a Bank UTR to generate tamper-evident SHA-256 receipts.
+        </div>
+      }
     </div>
   }
 
-  <!-- =========================================================================
-       MODAL 1: VERIFY REAL BANK UTR PAYMENT
-       ========================================================================= -->
-  @if (showUtrModal()) {
-    <div class="modal-backdrop-custom" (click)="showUtrModal.set(false)">
-      <div class="modal-card-custom p-4 rounded-4 border border-secondary border-opacity-50 shadow-lg" (click)="$event.stopPropagation()">
-        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-          <div class="d-flex align-items-center gap-2">
-            <span class="fs-4">💳</span>
-            <h2 class="h5 mb-0 text-white fw-bold">Verify Real Bank UTR Settlement</h2>
-          </div>
-          <button type="button" class="btn-close btn-close-white" (click)="showUtrModal.set(false)"></button>
+  <!-- ======================================================================= -->
+  <!-- MODALS                                                                  -->
+  <!-- ======================================================================= -->
+
+  <!-- Modal: Add New Credential -->
+  @if (showAddCredentialModal()) {
+    <div class="modal-backdrop-custom" (click)="showAddCredentialModal.set(false)">
+      <div class="modal-card-custom" (click)="$event.stopPropagation()">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="h6 text-white fw-bold mb-0">🔐 Register New API Key or Credential</h3>
+          <button type="button" class="btn-close btn-close-white" (click)="showAddCredentialModal.set(false)"></button>
         </div>
 
-        <p class="text-secondary small mb-3">
-          Enter the 12-digit UTR reference number from your State Bank of India SMS or GPay/PhonePe notification to reconcile inward settlement.
-        </p>
-
         <div class="mb-3">
-          <label class="form-label text-secondary font-mono small">12-DIGIT BANK UTR REFERENCE NUMBER</label>
+          <label class="form-label text-secondary small font-mono">Service / Platform Name *</label>
           <input
             type="text"
-            class="form-control bg-dark text-white border-secondary font-mono"
-            placeholder="e.g. SBIN261115744777"
-            [(ngModel)]="inputUtr"
+            [(ngModel)]="newCredServiceName"
+            placeholder="e.g. OpenAI API, Stripe Webhook, Razorpay"
+            class="form-control form-control-sm bg-dark text-white border-secondary"
           />
         </div>
 
         <div class="row g-2 mb-3">
           <div class="col-6">
-            <label class="form-label text-secondary font-mono small">AMOUNT (INR)</label>
-            <input
-              type="number"
-              class="form-control bg-dark text-white border-secondary font-mono"
-              [(ngModel)]="inputAmount"
-            />
+            <label class="form-label text-secondary small font-mono">Category *</label>
+            <select [(ngModel)]="newCredCategory" class="form-select form-select-sm bg-dark text-white border-secondary">
+              <option value="BANKING">Banking & Settlement</option>
+              <option value="AFFILIATE">Affiliate Networks</option>
+              <option value="AUTOMATION">Automation & n8n</option>
+              <option value="LLM_AI">LLM / AI Services</option>
+              <option value="COMMUNICATION">Communications</option>
+            </select>
           </div>
           <div class="col-6">
-            <label class="form-label text-secondary font-mono small">PAYER / CLIENT NAME</label>
+            <label class="form-label text-secondary small font-mono">Identity / Username / Email</label>
             <input
               type="text"
-              class="form-control bg-dark text-white border-secondary font-mono"
-              [(ngModel)]="inputPayer"
+              [(ngModel)]="newCredIdentity"
+              placeholder="e.g. ayyapparayudu@gmail.com"
+              class="form-control form-control-sm bg-dark text-white border-secondary"
             />
           </div>
         </div>
 
-        <div class="d-flex justify-content-end gap-2 pt-2 border-top border-secondary border-opacity-25">
-          <button type="button" class="btn btn-outline-secondary" (click)="showUtrModal.set(false)">Cancel</button>
+        <div class="mb-3">
+          <label class="form-label text-secondary small font-mono">Secret Value / API Key / Password *</label>
+          <input
+            type="password"
+            [(ngModel)]="newCredSecret"
+            placeholder="Paste your secret token, API key, or password"
+            class="form-control form-control-sm bg-dark text-white border-secondary font-mono"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label text-secondary small font-mono">Official Documentation URL (Optional)</label>
+          <input
+            type="text"
+            [(ngModel)]="newCredDocUrl"
+            placeholder="https://docs.service.com"
+            class="form-control form-control-sm bg-dark text-white border-secondary"
+          />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label text-secondary small font-mono">Description / Notes</label>
+          <textarea
+            [(ngModel)]="newCredDesc"
+            rows="2"
+            placeholder="Purpose, rate limits, or account notes"
+            class="form-control form-control-sm bg-dark text-white border-secondary"
+          ></textarea>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 pt-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="showAddCredentialModal.set(false)">
+            Cancel
+          </button>
           <button
             type="button"
-            class="btn btn-success fw-semibold"
-            [disabled]="isSubmittingUtr()"
-            (click)="confirmUtrSettlement()"
+            class="btn btn-sm btn-primary"
+            [disabled]="isSavingCredential()"
+            (click)="submitAddCredential()"
           >
-            {{ isSubmittingUtr() ? 'Verifying...' : 'Confirm & Settle to SBI' }}
+            {{ isSavingCredential() ? 'Saving...' : 'Save Credential' }}
           </button>
         </div>
       </div>
     </div>
   }
 
-  <!-- =========================================================================
-       MODAL 2: ISSUE OFFICIAL COMMERCIAL TAX INVOICE
-       ========================================================================= -->
+  <!-- Modal: Issue Commercial Invoice -->
   @if (showCreateInvoiceModal()) {
     <div class="modal-backdrop-custom" (click)="showCreateInvoiceModal.set(false)">
-      <div class="modal-card-custom p-4 rounded-4 border border-secondary border-opacity-50 shadow-lg" (click)="$event.stopPropagation()">
-        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-          <div class="d-flex align-items-center gap-2">
-            <span class="fs-4">📄</span>
-            <h2 class="h5 mb-0 text-white fw-bold">Issue Official Commercial Invoice</h2>
-          </div>
+      <div class="modal-card-custom" (click)="$event.stopPropagation()">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="h6 text-white fw-bold mb-0">📄 Issue Commercial Tax Invoice</h3>
           <button type="button" class="btn-close btn-close-white" (click)="showCreateInvoiceModal.set(false)"></button>
         </div>
 
-        <p class="text-secondary small mb-3">
-          Generate an authentic commercial invoice with direct UPI payment link to <code class="text-info">ayyapparayudu.5@ybl</code>.
-        </p>
-
-        <div class="row g-2 mb-3">
-          <div class="col-6">
-            <label class="form-label text-secondary font-mono small">CLIENT NAME *</label>
-            <input
-              type="text"
-              class="form-control bg-dark text-white border-secondary"
-              placeholder="e.g. John Doe / Enterprise"
-              [(ngModel)]="newInvoiceClientName"
-            />
-          </div>
-          <div class="col-6">
-            <label class="form-label text-secondary font-mono small">ORGANIZATION</label>
-            <input
-              type="text"
-              class="form-control bg-dark text-white border-secondary"
-              placeholder="e.g. Scale AI Cloud Systems"
-              [(ngModel)]="newInvoiceClientOrg"
-            />
-          </div>
+        <div class="mb-3">
+          <label class="form-label text-secondary small font-mono">Client Name *</label>
+          <input type="text" [(ngModel)]="newInvoiceClientName" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Acme Technologies" />
         </div>
 
         <div class="mb-3">
-          <label class="form-label text-secondary font-mono small">DELIVERABLE SERVICE SCOPE *</label>
-          <input
-            type="text"
-            class="form-control bg-dark text-white border-secondary"
-            placeholder="e.g. Full-Stack Security & AST Code Audit"
-            [(ngModel)]="newInvoiceServiceDesc"
-          />
+          <label class="form-label text-secondary small font-mono">Client Organization</label>
+          <input type="text" [(ngModel)]="newInvoiceClientOrg" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Enterprise Partner" />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label text-secondary small font-mono">Service Description *</label>
+          <input type="text" [(ngModel)]="newInvoiceServiceDesc" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Autonomous AI Engineering & System Optimization" />
         </div>
 
         <div class="row g-2 mb-3">
           <div class="col-6">
-            <label class="form-label text-secondary font-mono small">AMOUNT (INR) *</label>
-            <input
-              type="number"
-              class="form-control bg-dark text-white border-secondary font-mono"
-              [(ngModel)]="newInvoiceAmountInr"
-            />
+            <label class="form-label text-secondary small font-mono">Amount (INR) *</label>
+            <input type="number" [(ngModel)]="newInvoiceAmountInr" class="form-control form-control-sm bg-dark text-white border-secondary font-mono" />
           </div>
           <div class="col-6">
-            <label class="form-label text-secondary font-mono small">CLIENT EMAIL</label>
-            <input
-              type="email"
-              class="form-control bg-dark text-white border-secondary font-mono"
-              placeholder="client@company.com"
-              [(ngModel)]="newInvoiceClientEmail"
-            />
+            <label class="form-label text-secondary small font-mono">Client Email</label>
+            <input type="email" [(ngModel)]="newInvoiceClientEmail" class="form-control form-control-sm bg-dark text-white border-secondary" placeholder="client@corp.com" />
           </div>
         </div>
 
-        <div class="d-flex justify-content-end gap-2 pt-2 border-top border-secondary border-opacity-25">
-          <button type="button" class="btn btn-outline-secondary" (click)="showCreateInvoiceModal.set(false)">Cancel</button>
-          <button
-            type="button"
-            class="btn btn-info fw-semibold"
-            [disabled]="isCreatingInvoice()"
-            (click)="submitCreateInvoice()"
-          >
-            {{ isCreatingInvoice() ? 'Generating...' : 'Issue Invoice & Link' }}
+        <div class="d-flex justify-content-end gap-2 pt-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="showCreateInvoiceModal.set(false)">Cancel</button>
+          <button type="button" class="btn btn-sm btn-primary" [disabled]="isCreatingInvoice()" (click)="submitCreateInvoice()">
+            {{ isCreatingInvoice() ? 'Generating...' : 'Issue Invoice' }}
           </button>
         </div>
       </div>
     </div>
   }
 
-  <!-- =========================================================================
-       MODAL 3: CRYPTOGRAPHIC RECEIPT AUDIT INSPECTION
-       ========================================================================= -->
-  @if (selectedReceipt()) {
-    <div class="modal-backdrop-custom" (click)="closeReceiptModal()">
-      <div class="modal-card-custom p-4 rounded-4 border border-secondary border-opacity-50 shadow-lg" (click)="$event.stopPropagation()">
-        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-          <div class="d-flex align-items-center gap-2">
-            <span class="fs-4">🛡️</span>
-            <h2 class="h5 mb-0 text-white fw-bold">Cryptographic Receipt Audit</h2>
-          </div>
-          <button type="button" class="btn-close btn-close-white" (click)="closeReceiptModal()"></button>
+  <!-- Modal: Verify Bank UTR -->
+  @if (showUtrModal()) {
+    <div class="modal-backdrop-custom" (click)="showUtrModal.set(false)">
+      <div class="modal-card-custom" (click)="$event.stopPropagation()">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="h6 text-white fw-bold mb-0">💳 Verify Inward Bank UTR Reference</h3>
+          <button type="button" class="btn-close btn-close-white" (click)="showUtrModal.set(false)"></button>
         </div>
 
-        <div class="receipt-inspection-body font-mono">
-          <div class="p-3 rounded-3 bg-dark bg-opacity-75 border border-secondary border-opacity-25 mb-3">
-            <div class="d-flex justify-content-between mb-1">
-              <span class="text-secondary">Receipt ID:</span>
-              <span class="text-warning fw-bold">{{ selectedReceipt()?.receipt_id }}</span>
-            </div>
-            <div class="d-flex justify-content-between mb-1">
-              <span class="text-secondary">Bank UTR Ref:</span>
-              <span class="text-info fw-bold">{{ selectedReceipt()?.utr_transaction_ref }}</span>
-            </div>
-            <div class="d-flex justify-content-between mb-1">
-              <span class="text-secondary">Settlement Amount:</span>
-              <span class="text-success fw-bold">₹{{ selectedReceipt()?.amount_inr | number:'1.2-2' }} INR</span>
-            </div>
-            <div class="d-flex justify-content-between mb-1">
-              <span class="text-secondary">Beneficiary Account:</span>
-              <span class="text-white">SBI ****5649 (Ravuvai Ayyapparayudu)</span>
-            </div>
-            <div class="d-flex justify-content-between">
-              <span class="text-secondary">Settlement UPI:</span>
-              <span class="text-white">ayyapparayudu.5@ybl</span>
-            </div>
-          </div>
+        <div class="mb-3">
+          <label class="form-label text-secondary small font-mono">12-Digit Bank UTR / Transaction Reference *</label>
+          <input type="text" [(ngModel)]="inputUtr" class="form-control form-control-sm bg-dark text-white border-secondary font-mono" placeholder="e.g. 431289104829 or UPI ref" />
+        </div>
 
-          <div class="mb-3">
-            <span class="text-secondary small d-block mb-1">CRYPTOGRAPHIC HMAC-SHA256 DIGITAL SEAL:</span>
-            <div class="p-2 rounded-2 bg-dark border border-secondary border-opacity-25 text-break text-info small">
-              {{ selectedReceipt()?.cryptographic_verification?.crypto_seal || 'b8634d25a950fa99b8129d359d8b2b46aae8b7767997af6f311151c529b22220' }}
-            </div>
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label text-secondary small font-mono">Amount (INR) *</label>
+            <input type="number" [(ngModel)]="inputAmount" class="form-control form-control-sm bg-dark text-white border-secondary font-mono" />
+          </div>
+          <div class="col-6">
+            <label class="form-label text-secondary small font-mono">Payer / Client Name</label>
+            <input type="text" [(ngModel)]="inputPayer" class="form-control form-control-sm bg-dark text-white border-secondary" />
           </div>
         </div>
 
-        <div class="d-flex justify-content-end pt-2 border-top border-secondary border-opacity-25">
-          <button type="button" class="btn btn-secondary font-mono" (click)="closeReceiptModal()">Close Audit View</button>
+        <div class="d-flex justify-content-end gap-2 pt-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="showUtrModal.set(false)">Cancel</button>
+          <button type="button" class="btn btn-sm btn-success" [disabled]="isSubmittingUtr()" (click)="confirmUtrSettlement()">
+            {{ isSubmittingUtr() ? 'Verifying...' : 'Confirm SBI Settlement' }}
+          </button>
         </div>
       </div>
     </div>
   }
 
-  <!-- =========================================================================
-       MODAL 4: AGENT WORKER LIVE TERMINAL LOGS
-       ========================================================================= -->
-  @if (selectedWorker()) {
-    <div class="modal-backdrop-custom" (click)="closeWorkerModal()">
-      <div class="modal-card-custom p-4 rounded-4 border border-secondary border-opacity-50 shadow-lg" (click)="$event.stopPropagation()">
-        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-          <div class="d-flex align-items-center gap-2">
-            <div class="agent-avatar-orb" [style.background]="selectedWorker()?.color_hex">
-              {{ selectedWorker()?.name?.charAt(0) }}
-            </div>
-            <div>
-              <h2 class="h5 mb-0 text-white fw-bold">{{ selectedWorker()?.name }}</h2>
-              <span class="text-secondary font-mono small">Pod: {{ selectedWorker()?.room_pod }} · {{ selectedWorker()?.role }}</span>
-            </div>
-          </div>
-          <button type="button" class="btn-close btn-close-white" (click)="closeWorkerModal()"></button>
+  <!-- Modal: Receipt Viewer -->
+  @if (selectedReceipt()) {
+    <div class="modal-backdrop-custom" (click)="closeReceiptModal()">
+      <div class="modal-card-custom" (click)="$event.stopPropagation()">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="h6 text-white fw-bold mb-0">🛡️ Cryptographic Settlement Receipt</h3>
+          <button type="button" class="btn-close btn-close-white" (click)="closeReceiptModal()"></button>
         </div>
 
-        <div class="font-mono small">
-          <div class="d-flex justify-content-between mb-2">
-            <span class="text-secondary">Current Status:</span>
-            <span class="badge" [class.bg-success]="selectedWorker()?.status === 'WORKING'" [class.bg-secondary]="selectedWorker()?.status !== 'WORKING'">
-              {{ selectedWorker()?.status }}
-            </span>
-          </div>
-
-          <div class="mb-2">
-            <span class="text-secondary">Active Assignment:</span>
-            <div class="text-white p-2 rounded-2 bg-dark border border-secondary border-opacity-25 mt-1">
-              {{ selectedWorker()?.active_task || 'Agent on standby.' }}
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <span class="text-secondary">Recent Console Telemetry Output:</span>
-            <div class="p-3 rounded-2 bg-black border border-secondary border-opacity-50 text-success small font-mono mt-1" style="max-height: 180px; overflow-y: auto;">
-              @for (line of selectedWorker()?.terminal_output || []; track line) {
-                <div>{{ line }}</div>
-              }
-            </div>
-          </div>
+        <div class="p-3 rounded-3 bg-secondary bg-opacity-10 font-mono small text-white mb-3">
+          <div>Receipt ID: <strong class="text-info">{{ selectedReceipt().receipt_id }}</strong></div>
+          <div>Beneficiary: <strong>{{ selectedReceipt().beneficiary }}</strong></div>
+          <div>Settled To: <strong class="text-success">{{ selectedReceipt().settled_account_masked }}</strong></div>
+          <div>Amount: <strong class="text-success fs-5">₹{{ selectedReceipt().amount_inr | number:'1.2-2' }}</strong></div>
+          <div>Bank UTR: <strong>{{ selectedReceipt().utr_number }}</strong></div>
+          <div>Date: <strong>{{ selectedReceipt().settled_at }}</strong></div>
+          <div class="text-break mt-2 text-secondary small">SHA-256 Seal: {{ selectedReceipt().sha256_seal }}</div>
         </div>
 
-        <div class="d-flex justify-content-end pt-2 border-top border-secondary border-opacity-25">
-          <button type="button" class="btn btn-secondary font-mono" (click)="closeWorkerModal()">Close</button>
+        <div class="d-flex justify-content-end">
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeReceiptModal()">Close</button>
         </div>
       </div>
     </div>

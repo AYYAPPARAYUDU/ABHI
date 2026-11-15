@@ -1,0 +1,52 @@
+{
+  "name": "ABHI - Real-Time Bank UTR Verification & Cryptographic Settlement",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "settlement-reconciliation",
+        "options": {}
+      },
+      "id": "node-payment-webhook",
+      "name": "Inward Bank Payment / UTR Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 360]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/business/treasury/verify-settlement",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"utr_number\": \"{{ $json.utr_number }}\",\n  \"amount_inr\": {{ $json.amount_inr }},\n  \"payer_name\": \"{{ $json.payer_name }}\",\n  \"invoice_number\": \"{{ $json.invoice_number }}\"\n}"
+      },
+      "id": "node-verify-sbi-utr",
+      "name": "Verify 12-Digit Bank UTR with SBI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [500, 360]
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nreturn [{\n  json: {\n    status: 'SETTLED_TO_SBI',\n    utr: result.settlement?.utr_number,\n    settled_inr: result.settlement?.amount_inr,\n    beneficiary: 'Ravuvai Ayyapparayudu',\n    account_masked: 'SBI ****5649',\n    receipt_sha256: result.receipt?.receipt_id,\n    reconciled_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "node-issue-crypto-receipt",
+      "name": "Confirm Cryptographic Receipt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [780, 360]
+    }
+  ],
+  "connections": {
+    "Inward Bank Payment / UTR Webhook": {
+      "main": [[{ "node": "Verify 12-Digit Bank UTR with SBI", "type": "main", "index": 0 }]]
+    },
+    "Verify 12-Digit Bank UTR with SBI": {
+      "main": [[{ "node": "Confirm Cryptographic Receipt", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

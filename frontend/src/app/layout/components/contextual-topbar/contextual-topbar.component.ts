@@ -193,6 +193,18 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
     this.isThemeDrawerOpen.set(false);
   }
 
+  readonly accentSwatches: readonly string[] = [
+    '#2563eb', // Royal Blue (Modern Light)
+    '#3882f6', // Radiant Blue (Obsidian Dark)
+    '#00f0ff', // Cyber Cyan
+    '#7c3aed', // Electric Violet (Cyber Neon)
+    '#0d7a57', // Forest Emerald (Fintech)
+    '#10b981', // Mint Matrix
+    '#d97706', // Terracotta Gold
+    '#ff4d4d', // Sunset Crimson
+    '#ec4899'  // Electric Magenta
+  ];
+
   selectThemePreset(presetId: string, event?: MouseEvent): void {
     if (event?.currentTarget) {
       this.animService.tactileClick(event.currentTarget as HTMLElement);
@@ -200,31 +212,28 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
     this.themeService.setPreset(presetId);
   }
 
+  selectThemeMode(mode: 'light' | 'dark' | 'warm' | 'cyber'): void {
+    this.themeService.setMode(mode);
+  }
+
+  selectAccentColor(color: string): void {
+    this.themeService.setLiveAccentColor(color);
+  }
+
   setGlowMode(mode: 'SOFT' | 'VIVID' | 'MINIMAL'): void {
-    this.glowMode.set(mode);
-    if (typeof document !== 'undefined') {
-      const root = document.documentElement;
-      if (mode === 'VIVID') {
-        root.style.setProperty('--abhi-glow-intensity', '1.5');
-      } else if (mode === 'MINIMAL') {
-        root.style.setProperty('--abhi-glow-intensity', '0.1');
-      } else {
-        root.style.setProperty('--abhi-glow-intensity', '1.0');
-      }
-    }
+    this.themeService.setGlowMode(mode);
   }
 
   setContrastMode(mode: 'NORMAL' | 'HIGH'): void {
-    this.contrastMode.set(mode);
-    if (typeof document !== 'undefined') {
-      document.documentElement.setAttribute('data-contrast', mode.toLowerCase());
-    }
+    this.themeService.setContrastMode(mode);
+  }
+
+  setDensityMode(mode: 'COMPACT' | 'BALANCED' | 'RELAXED'): void {
+    this.themeService.setDensityMode(mode);
   }
 
   resetThemeToDefault(): void {
     this.themeService.resetToDefault();
-    this.glowMode.set('SOFT');
-    this.contrastMode.set('NORMAL');
   }
 
   // Mobile Navigation Sheet Controls

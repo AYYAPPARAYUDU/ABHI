@@ -118,6 +118,66 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
+/* Universal Bootstrap Overrides to match Active Dynamic Theme */
+.bg-dark-subtle {
+  background-color: var(--abhi-surface-inset) !important;
+  color: var(--abhi-text-primary) !important;
+}
+
+.bg-secondary-subtle {
+  background-color: var(--abhi-surface-inset) !important;
+  color: var(--abhi-text-secondary) !important;
+}
+
+.bg-dark {
+  background-color: var(--abhi-surface-raised) !important;
+  color: var(--abhi-text-primary) !important;
+}
+
+.text-light {
+  color: var(--abhi-text-primary) !important;
+}
+
+.text-secondary {
+  color: var(--abhi-text-secondary) !important;
+}
+
+.text-muted {
+  color: var(--abhi-text-muted) !important;
+}
+
+.border-secondary-subtle {
+  border-color: var(--abhi-border) !important;
+}
+
+/* Reusable Agent & Workspace Custom Surface Tokens */
+.agent-tile-box {
+  background: var(--abhi-surface-inset) !important;
+  border: 1px solid var(--abhi-border) !important;
+  border-radius: 10px;
+  color: var(--abhi-text-primary) !important;
+  transition: all 0.2s ease;
+}
+
+.agent-card-panel {
+  background: var(--abhi-surface-inset) !important;
+  border: 1px solid var(--abhi-border) !important;
+  border-radius: 12px;
+  color: var(--abhi-text-primary) !important;
+  box-shadow: var(--abhi-raised-shadow);
+}
+
+.agent-directive-input {
+  background: var(--abhi-surface-inset) !important;
+  border: 1px solid var(--abhi-border) !important;
+  color: var(--abhi-text-primary) !important;
+}
+
+.agent-directive-input:focus {
+  border-color: var(--abhi-cyan) !important;
+  box-shadow: 0 0 10px var(--abhi-border-active) !important;
+}
+
 /* ==========================================================================
    THEME MODES & DYNAMIC SURFACE SYSTEM (LIGHT / QUANTUM WHITE & DARK)
    ========================================================================== */

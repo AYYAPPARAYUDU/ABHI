@@ -19,6 +19,8 @@ from backend.app.business.service import business_service
 from backend.app.business.treasury import sovereign_treasury
 from backend.app.business.autonomous_ceo import autonomous_business_ceo
 from backend.app.business.affiliate_engine import affiliate_engine
+from backend.app.business.credential_vault import credential_vault
+from backend.app.business.n8n_bridge import n8n_bridge
 from datetime import datetime, timezone
 import psutil
 import threading
@@ -444,4 +446,87 @@ async def record_affiliate_commission(payload: Dict[str, Any]) -> Dict[str, Any]
         payout_note=payout_note
     )
     return {"status": "SUCCESS", "commission": rec}
+
+
+# =========================================================================
+# CREDENTIALS & API KEY VAULT (STRUCTURED TABLE MANAGEMENT)
+# =========================================================================
+
+@router.get("/vault/credentials")
+async def list_vault_credentials(category: Optional[str] = Query(None), show_secrets: bool = Query(False)) -> List[Dict[str, Any]]:
+    """Retrieve all commercial credentials and API secrets in a clean table structure."""
+    return credential_vault.list_credentials(category=category, show_secrets=show_secrets)
+
+
+@router.get("/vault/credentials/{cred_id}")
+async def get_vault_credential(cred_id: str, reveal: bool = Query(False)) -> Dict[str, Any]:
+    """Retrieve single credential with optional reveal toggle."""
+    cred = credential_vault.get_credential(cred_id, reveal=reveal)
+    if not cred:
+        raise HTTPException(status_code=404, detail=f"Credential '{cred_id}' not found.")
+    return cred
+
+
+@router.post("/vault/credentials")
+async def add_or_update_vault_credential(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Securely save or update an API key, banking identifier, or automation secret."""
+    service_name = payload.get("service_name", "").strip()
+    category = payload.get("category", "AUTOMATION").strip()
+    identity_username = payload.get("identity_username", "").strip()
+    secret_value = payload.get("secret_value", "").strip()
+
+    if not service_name or not secret_value:
+        raise HTTPException(status_code=400, detail="service_name and secret_value are required.")
+
+    return credential_vault.add_or_update_credential(
+        service_name=service_name,
+        category=category,
+        identity_username=identity_username,
+        secret_value=secret_value,
+        documentation_url=payload.get("documentation_url", ""),
+        description=payload.get("description", ""),
+        cred_id=payload.get("id")
+    )
+
+
+@router.delete("/vault/credentials/{cred_id}")
+async def delete_vault_credential(cred_id: str) -> Dict[str, Any]:
+    """Remove a credential from the vault."""
+    success = credential_vault.delete_credential(cred_id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Credential '{cred_id}' not found.")
+    return {"status": "SUCCESS", "message": f"Credential '{cred_id}' deleted."}
+
+
+# =========================================================================
+# N8N WORKFLOW AUTOMATION ENGINE & WEBHOOK HUB
+# =========================================================================
+
+@router.get("/n8n/workflows")
+async def list_n8n_workflows() -> List[Dict[str, Any]]:
+    """List all official n8n workflow definitions with active node statistics."""
+    return n8n_bridge.list_workflows()
+
+
+@router.get("/n8n/history")
+async def list_n8n_history(limit: int = Query(20, ge=1, le=100)) -> List[Dict[str, Any]]:
+    """List recent automated workflow executions and outcomes."""
+    return n8n_bridge.get_execution_history(limit=limit)
+
+
+@router.post("/n8n/execute")
+async def execute_n8n_workflow(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Execute an n8n workflow either via live webhook or native fail-safe runner."""
+    workflow_id = payload.get("workflow_id", "").strip()
+    if not workflow_id:
+        raise HTTPException(status_code=400, detail="workflow_id is required.")
+
+    return await n8n_bridge.execute_workflow(workflow_id, payload.get("payload"))
+
+
+@router.post("/n8n/webhook/{workflow_id}")
+async def receive_n8n_inbound_webhook(workflow_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Receive inbound webhook triggers from external or cloud n8n orchestrators."""
+    return await n8n_bridge.execute_workflow(workflow_id, payload)
+
 

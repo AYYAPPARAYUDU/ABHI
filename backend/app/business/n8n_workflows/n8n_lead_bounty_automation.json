@@ -1,0 +1,69 @@
+{
+  "name": "ABHI - Automated Code Security Audit & Commercial Tax Invoicing",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "audit-order-inbound",
+        "options": {}
+      },
+      "id": "node-audit-inbound-webhook",
+      "name": "Inbound Audit Order Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 360]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/business/ceo/audit-bounty",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"target_code\": \"{{ $json.repository_code || $json.code_snippet }}\",\n  \"client_name\": \"{{ $json.client_name || 'Enterprise Client' }}\",\n  \"client_email\": \"{{ $json.client_email || 'client@enterprise.com' }}\"\n}"
+      },
+      "id": "node-execute-ast-audit",
+      "name": "Trigger ABHI AST Engine",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 360]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/business/treasury/invoices",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"client_name\": \"{{ $json.client_name }}\",\n  \"service_description\": \"Enterprise AST Code Security & Architecture Vulnerability Audit\",\n  \"amount_inr\": 28500.0,\n  \"client_email\": \"{{ $json.client_email }}\",\n  \"client_organization\": \"{{ $json.client_org || 'Commercial Partner' }}\",\n  \"mark_as_settled\": false\n}"
+      },
+      "id": "node-issue-sbi-tax-invoice",
+      "name": "Generate Official SBI Tax Invoice",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [740, 360]
+    },
+    {
+      "parameters": {
+        "jsCode": "const invoice = $input.first().json;\nreturn [{\n  json: {\n    status: 'FULFILLED',\n    invoice_number: invoice.invoice_number,\n    amount_inr: invoice.total_inr,\n    payment_upi_qr: `upi://pay?pa=ayyapparayudu.5@ybl&pn=Ravuvai%20Ayyapparayudu&am=${invoice.total_inr}&cu=INR`,\n    sbi_account: '41130645649',\n    ifsc: 'SBIN0020507',\n    delivered_at: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "node-dispatch-deliverable",
+      "name": "Assemble Deliverable & Banking QR",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 360]
+    }
+  ],
+  "connections": {
+    "Inbound Audit Order Webhook": {
+      "main": [[{ "node": "Trigger ABHI AST Engine", "type": "main", "index": 0 }]]
+    },
+    "Trigger ABHI AST Engine": {
+      "main": [[{ "node": "Generate Official SBI Tax Invoice", "type": "main", "index": 0 }]]
+    },
+    "Generate Official SBI Tax Invoice": {
+      "main": [[{ "node": "Assemble Deliverable & Banking QR", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

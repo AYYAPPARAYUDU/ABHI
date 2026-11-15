@@ -199,4 +199,61 @@ export class BusinessService {
       catchError(() => of(null))
     );
   }
+
+  // =========================================================================
+  // CREDENTIALS & API VAULT (TABLE STRUCTURE)
+  // =========================================================================
+
+  fetchVaultCredentials(category?: string, showSecrets = false): Observable<any[]> {
+    let url = `${this.baseUrl}/vault/credentials?show_secrets=${showSecrets}`;
+    if (category) {
+      url += `&category=${category}`;
+    }
+    return this.http.get<any[]>(url).pipe(
+      catchError(() => of([]))
+    );
+  }
+
+  saveVaultCredential(payload: {
+    service_name: string;
+    category: string;
+    identity_username: string;
+    secret_value: string;
+    documentation_url?: string;
+    description?: string;
+    id?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/vault/credentials`, payload);
+  }
+
+  deleteVaultCredential(credId: string): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/vault/credentials/${credId}`);
+  }
+
+  // =========================================================================
+  // N8N WORKFLOW AUTOMATION ENGINE
+  // =========================================================================
+
+  fetchN8nWorkflows(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/n8n/workflows`).pipe(
+      catchError(() => of([]))
+    );
+  }
+
+  fetchN8nHistory(limit = 20): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/n8n/history?limit=${limit}`).pipe(
+      catchError(() => of([]))
+    );
+  }
+
+  executeN8nWorkflow(workflowId: string, payload?: any): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/n8n/execute`, {
+      workflow_id: workflowId,
+      payload: payload || {}
+    });
+  }
+
+  runMasterRevenueCycle(): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/ceo/revenue-cycle`, {});
+  }
 }

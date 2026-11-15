@@ -1,0 +1,106 @@
+{
+  "name": "ABHI - Automated Affiliate Syndication & Monetization Autopilot",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "node-schedule-trigger",
+      "name": "Schedule Trigger (Every 6h)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "affiliate-syndication",
+        "options": {}
+      },
+      "id": "node-webhook-trigger",
+      "name": "On-Demand Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [250, 500]
+    },
+    {
+      "parameters": {
+        "url": "https://api.github.com/search/repositories?q=language:python+stars:>500+topic:ai&sort=updated&order=desc",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "node-fetch-trending-ai",
+      "name": "Discover Trending Tech & AI Tools",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 400]
+    },
+    {
+      "parameters": {
+        "model": "abhi:latest",
+        "prompt": "=Analyze the following trending AI product and generate a high-converting, professional technical review and product brief for software engineers and technology leaders. Emphasize performance, enterprise readiness, and direct ROI.\n\nProduct: {{ $json.items[0].name }}\nDescription: {{ $json.items[0].description }}\nRepository: {{ $json.items[0].html_url }}"
+      },
+      "id": "node-ollama-llm-copy",
+      "name": "ABHI Core LLM (Copywriter Agent)",
+      "type": "n8n-nodes-base.llmAgent",
+      "typeVersion": 1.0,
+      "position": [720, 400]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Attach Mamu's authentic affiliate tracking links\nconst product = $input.first().json;\nconst operatorEmail = 'ayyapparayudu.ravuvari@gmail.com';\nconst amazonTag = 'ayyappa-21';\nconst clickbankUser = 'ayyapparayudu';\nconst digistoreId = 'ayyappa_ai';\nconst sbiAccount = '41130645649';\n\nconst trackingLink = `https://www.amazon.in/dp/B0CX23V2ZH?tag=${amazonTag}`;\nconst promoCampaign = {\n  product_name: product.name || 'Enterprise AI Infrastructure Suite',\n  category: 'DEV_TOOLS_AI',\n  affiliate_link: trackingLink,\n  beneficiary: 'Ravuvai Ayyapparayudu',\n  payout_sbi: sbiAccount,\n  commission_rate: '8.5%',\n  generated_at: new Date().toISOString()\n};\n\nreturn [{ json: promoCampaign }];"
+      },
+      "id": "node-attach-affiliate-tag",
+      "name": "Inject Mamu Verified Affiliate Tags",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:8000/api/v1/business/affiliate/campaigns",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"network_id\": \"amazon_associates\",\n  \"product_name\": \"{{ $json.product_name }}\",\n  \"category\": \"TECH\",\n  \"destination_url\": \"{{ $json.affiliate_link }}\",\n  \"commission_rate_pct\": 8.5,\n  \"estimated_earnings_per_click_inr\": 650.0\n}"
+      },
+      "id": "node-sync-to-abhi-treasury",
+      "name": "Sync to ABHI Sovereign Treasury",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [1200, 400]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger (Every 6h)": {
+      "main": [[{ "node": "Discover Trending Tech & AI Tools", "type": "main", "index": 0 }]]
+    },
+    "On-Demand Webhook Trigger": {
+      "main": [[{ "node": "Discover Trending Tech & AI Tools", "type": "main", "index": 0 }]]
+    },
+    "Discover Trending Tech & AI Tools": {
+      "main": [[{ "node": "ABHI Core LLM (Copywriter Agent)", "type": "main", "index": 0 }]]
+    },
+    "ABHI Core LLM (Copywriter Agent)": {
+      "main": [[{ "node": "Inject Mamu Verified Affiliate Tags", "type": "main", "index": 0 }]]
+    },
+    "Inject Mamu Verified Affiliate Tags": {
+      "main": [[{ "node": "Sync to ABHI Sovereign Treasury", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
