@@ -7,9 +7,8 @@ import { SpeechVoiceService } from '../../../../core/services/speech-voice.servi
 import { AgentCommandService } from '../../../../core/services/agent-command.service';
 import { getApiUrl } from '../../../../core/config/api-config';
 import { BusinessService } from '../../../business/services/business.service';
-import { SamplePageComponent } from '../../../sample/pages/sample-page/sample-page.component';
 
-export type WorkspaceViewMode = 'colony' | 'live-agents' | 'agent-works' | 'live-business';
+export type WorkspaceViewMode = 'colony' | 'live-business';
 
 interface SmallLLMBrain {
   id: string;
@@ -50,7 +49,7 @@ interface ChannelMessage {
 @Component({
   selector: 'app-workspace-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, SamplePageComponent],
+  imports: [CommonModule, FormsModule],
   templateUrl: './workspace-page.component.html',
   styleUrl: './workspace-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -127,7 +126,18 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
   readonly isSendingBrainChat = signal(false);
 
   // Station Action Status & Popup Tabs
-  readonly activePopupTab = signal<'MISSION_WORK' | 'LIVE_TELEMETRY' | 'ML_PREDICTIONS' | 'CHAT'>('MISSION_WORK');
+  readonly activePopupTab = signal<'DIGITAL_SCREEN' | 'MISSION_WORK' | 'LIVE_TELEMETRY' | 'ML_PREDICTIONS' | 'CHAT'>('DIGITAL_SCREEN');
+  readonly monitorFeed = signal<any>(null);
+  readonly availableMonitors = signal<any>({ physical_monitors: [], application_windows: [], virtual_displays: [], current_assignments: {} });
+  readonly isLoadingScreen = signal<boolean>(false);
+  readonly isAssigningMonitor = signal<boolean>(false);
+  readonly autoStreamEnabled = signal<boolean>(true);
+  readonly isExecutingRealAction = signal<boolean>(false);
+  readonly realActionStatus = signal<string | null>(null);
+  readonly isWideScreen = signal<boolean>(true);
+  realPowerShellCmd: string = 'Get-Process | Select-Object -First 6 ProcessName, CPU, WorkingSet64';
+  realAppToLaunch: string = 'chrome';
+  realTextToType: string = '';
   readonly stationActionStatus = signal<string | null>(null);
   readonly currentAgentDetails = signal<any>(null);
   readonly isLoadingDetails = signal<boolean>(false);
@@ -139,6 +149,26 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
   delegationGoal = '';
   readonly isDelegating = signal(false);
 
+  // Real Physical Telemetry & Active OS Window Monitoring
+  readonly activeWindow = signal<string>('Detecting Active Window...');
+  readonly systemTelemetry = signal<{
+    cpu: number;
+    mem_used: number;
+    mem_total: number;
+    mem_pct: number;
+    battery_pct: number | null;
+    open_windows_count: number;
+    resolution: string;
+  } | null>(null);
+  readonly currentExecutingTask = signal<string>('Dynamic Action Resolver monitoring Windows OS // 0ms Latency');
+  readonly topWindows = signal<any[]>([]);
+
+  // Direct AI Command Execution from Command Center
+  naturalCommandInput = '';
+  readonly isExecutingCommand = signal<boolean>(false);
+  readonly commandResult = signal<string | null>(null);
+  readonly showOperationsStream = signal<boolean>(false);
+
   private syncTimer: any = null;
   private telemetryRefreshTimer: any = null;
   private agentFocusSub: Subscription | null = null;
@@ -146,8 +176,10 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
   constructor() {}
 
   ngOnInit(): void {
+    this.fetchActiveContext();
     this.fetchFamilyStatus();
     this.fetchChannelMessages();
+    this.fetchAvailableMonitors();
 
     // Directly bind to 3D station click & focus events from ThreeScene
     this.agentFocusSub = this.threeScene.agentFocused$.subscribe((agent) => {
@@ -157,6 +189,7 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
 
     // Poll at 3s cadence with memoized comparisons to prevent redundant change detection
     this.syncTimer = setInterval(() => {
+      this.fetchActiveContext();
       this.fetchFamilyStatus();
       this.fetchChannelMessages();
       if (this.activeWorkspaceMode() === 'live-business') {
@@ -227,7 +260,10 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
           }
         }
       } catch {}
-    }, 3000);
+      if (this.autoStreamEnabled()) {
+        await this.fetchAgentLiveScreen(agentId);
+      }
+    }, 2500);
   }
 
   private stopTelemetryTimer(): void {
@@ -235,6 +271,108 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
       clearInterval(this.telemetryRefreshTimer);
       this.telemetryRefreshTimer = null;
     }
+  }
+
+  async fetchAvailableMonitors(): Promise<void> {
+    try {
+      const res = await fetch(getApiUrl('/api/v1/monitors/list'));
+      if (res.ok) {
+        const data = await res.json();
+        this.availableMonitors.set(data);
+        this.cdr.markForCheck();
+      }
+    } catch (e) {
+      console.warn('Failed to fetch available monitors:', e);
+    }
+  }
+
+  async fetchAgentLiveScreen(agentId: string): Promise<void> {
+    if (!agentId) return;
+    this.isLoadingScreen.set(true);
+    try {
+      const res = await fetch(getApiUrl(`/api/v1/monitors/live-screen/${agentId}`));
+      if (res.ok) {
+        const data = await res.json();
+        this.monitorFeed.set(data);
+        this.cdr.markForCheck();
+      }
+    } catch (e) {
+      console.warn('Failed to fetch agent live screen:', e);
+    } finally {
+      this.isLoadingScreen.set(false);
+      this.cdr.markForCheck();
+    }
+  }
+
+  async assignMonitorToAgent(agentId: string, monitor: any): Promise<void> {
+    this.isAssigningMonitor.set(true);
+    this.realActionStatus.set(`Routing ${monitor.name} to ${agentId}...`);
+    try {
+      const res = await fetch(getApiUrl('/api/v1/monitors/assign'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agent_id: agentId,
+          monitor_id: monitor.id,
+          monitor_name: monitor.name,
+          monitor_type: monitor.type || 'window',
+          target_hwnd: monitor.hwnd || 0,
+          resolution: monitor.resolution || '1280x800'
+        })
+      });
+      if (res.ok) {
+        this.realActionStatus.set(`Assigned ${monitor.name} successfully!`);
+        await this.fetchAgentLiveScreen(agentId);
+        await this.fetchAvailableMonitors();
+      }
+    } catch (e) {
+      this.realActionStatus.set(`Failed to assign monitor: ${e}`);
+    } finally {
+      this.isAssigningMonitor.set(false);
+      setTimeout(() => this.realActionStatus.set(null), 3500);
+      this.cdr.markForCheck();
+    }
+  }
+
+  async executeRealAction(agentId: string, actionType: string, params: any = {}): Promise<void> {
+    this.isExecutingRealAction.set(true);
+    this.realActionStatus.set(`Executing real-world ${actionType}...`);
+    try {
+      const res = await fetch(getApiUrl('/api/v1/monitors/action'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agent_id: agentId,
+          action_type: actionType,
+          ...params
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.output) {
+          this.realActionStatus.set(`Output: ${data.output.slice(0, 80)}`);
+        } else {
+          this.realActionStatus.set(data.message || `Action ${actionType} completed!`);
+        }
+        await this.fetchAgentLiveScreen(agentId);
+      }
+    } catch (e) {
+      this.realActionStatus.set(`Error executing action: ${e}`);
+    } finally {
+      this.isExecutingRealAction.set(false);
+      setTimeout(() => this.realActionStatus.set(null), 4000);
+      this.cdr.markForCheck();
+    }
+  }
+
+  onScreenCanvasClick(event: MouseEvent, agentId: string): void {
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const relX = (event.clientX - rect.left) / rect.width;
+    const relY = (event.clientY - rect.top) / rect.height;
+    const normX = Math.round(relX * 1280);
+    const normY = Math.round(relY * 800);
+    this.executeRealAction(agentId, 'click', { x: normX, y: normY });
   }
 
   async fetchFamilyStatus(): Promise<void> {
@@ -277,6 +415,68 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
       }
     } catch {
       // Offline fallback
+    }
+  }
+
+  async fetchActiveContext(): Promise<void> {
+    try {
+      const res = await fetch(getApiUrl('/api/v1/desktop/active-context'));
+      if (res.ok) {
+        const d = await res.json();
+        if (d.active_window && d.active_window.title) {
+          this.activeWindow.set(d.active_window.title);
+        }
+        if (d.system_telemetry) {
+          const st = d.system_telemetry;
+          this.systemTelemetry.set({
+            cpu: st.cpu_percent || 0,
+            mem_used: st.memory?.available_gb ? Math.round((st.memory.total_gb - st.memory.available_gb) * 10) / 10 : 0,
+            mem_total: st.memory?.total_gb || 16,
+            mem_pct: Math.round(st.memory?.percent_used || 0),
+            battery_pct: st.battery?.percent ?? null,
+            open_windows_count: d.open_windows_count || (Array.isArray(d.top_windows) ? d.top_windows.length : 0),
+            resolution: st.display?.resolution || '1920x1080'
+          });
+        }
+        if (Array.isArray(d.top_windows)) {
+          this.topWindows.set(d.top_windows);
+        }
+        this.cdr.markForCheck();
+      }
+    } catch {
+      // Retain active context
+    }
+  }
+
+  async submitNaturalCommand(): Promise<void> {
+    const text = this.naturalCommandInput.trim();
+    if (!text || this.isExecutingCommand()) return;
+    this.isExecutingCommand.set(true);
+    this.commandResult.set('Executing command for Mamu...');
+    try {
+      const res = await fetch(getApiUrl('/api/v1/desktop/ask-bot'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: text,
+          screen_context: `Active Window: ${this.activeWindow()}`
+        })
+      });
+      if (res.ok) {
+        const d = await res.json();
+        const rep = d.reply || 'Action completed, Mamu.';
+        this.commandResult.set(rep);
+        this.currentExecutingTask.set(rep);
+        await this.fetchActiveContext();
+        await this.fetchChannelMessages();
+      }
+    } catch (e) {
+      this.commandResult.set(`Execution error: ${e}`);
+    } finally {
+      this.isExecutingCommand.set(false);
+      this.naturalCommandInput = '';
+      setTimeout(() => this.commandResult.set(null), 5000);
+      this.cdr.markForCheck();
     }
   }
 
@@ -340,6 +540,8 @@ export class WorkspacePageComponent implements OnInit, OnDestroy, AfterViewInit 
     }
     this.stationActionStatus.set(null);
     this.loadMlSuite();
+    this.fetchAvailableMonitors();
+    this.fetchAgentLiveScreen(agent.id);
     this.cdr.markForCheck();
 
     // O(1) LRU Cache check for instantaneous zero-stutter popup display

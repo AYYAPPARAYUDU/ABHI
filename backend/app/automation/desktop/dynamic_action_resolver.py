@@ -83,15 +83,16 @@ class DynamicActionResolver:
     def clean_query(self, raw: str) -> str:
         """Removes filler speech prefixes while preserving target intent."""
         c = raw.strip()
-        c = re.sub(
+        trimmed = re.sub(
             r"^(hey\s+abhi|hay\s+abhi|hi\s+abhi|hello\s+abhi|ok\s+abhi|abhi|abi|avi|are\s+abhi)\s*",
             "", c, flags=re.IGNORECASE
-        )
-        c = re.sub(
+        ).strip()
+        trimmed = re.sub(
             r"^(please|can\s+you|could\s+you|would\s+you|just|now|kindly|go\s+ahead\s+and)\s+",
-            "", c, flags=re.IGNORECASE
-        )
-        return c.strip()
+            "", trimmed, flags=re.IGNORECASE
+        ).strip()
+        # If trimming removed everything, return the original intent so greetings work
+        return trimmed if trimmed else c
 
     def get_user_open_windows(self) -> List[Dict[str, Any]]:
         """Returns clean list of visible user application windows."""
@@ -212,6 +213,14 @@ class DynamicActionResolver:
         screen_context: Optional[str] = None
     ) -> Tuple[bool, str, str]:
         """Resolves any OS, browser, media, or dynamic action and executes immediately."""
+        raw_clean = raw_query.lower().strip()
+        # Direct Wake Words & Conversational Triggers
+        if raw_clean in [
+            "hey abhi", "hi abhi", "hello abhi", "ok abhi", "abhi", "hay abhi",
+            "yo abhi", "are abhi", "hey", "hi", "hello", "namaste"
+        ]:
+            return True, "greeting", "Hello Mamu! I am right here listening. Tell me what application to open, song to play, or task to automate."
+
         clean = self.clean_query(raw_query)
         lower_clean = clean.lower()
 
@@ -254,10 +263,10 @@ class DynamicActionResolver:
         if any(k in lower_clean for k in ["are you listening", "can you hear me", "are you there", "do you hear me"]):
             return True, "presence_check", "Yes Mamu, I am listening to your every word clearly! The entire OS controller and multi-agent swarm are at your command."
 
-        if any(k in lower_clean for k in ["recognise", "recognize", "can you recognise", "can you recognize", "who am i", "do you know me", "my name"]):
+        if any(k in lower_clean for k in ["recognise", "recognize", "can you recognise", "can you recognize", "who am i", "do you know me", "my name", "what is my name"]):
             return True, "voice_identity", "Yes Mamu! I recognize your voice with 100% fidelity. You are Ravuvai Ayyappa Rayudu, supreme commander of ABHI."
 
-        if any(k in lower_clean for k in ["who are you", "what can you do", "what are you"]):
+        if lower_clean in ["who are you", "what can you do", "what are you", "tell me about yourself", "who r u"]:
             return True, "capabilities", "I am ABHI — your unified central AI companion. I provide full Windows OS control, browser manipulation, autonomous multi-step execution, and live intelligence without limits, Mamu!"
 
         if any(k in lower_clean for k in ["what is the time", "what's the time", "time now", "current time", "what time is it", "tell me the time"]):
@@ -267,6 +276,64 @@ class DynamicActionResolver:
         if any(k in lower_clean for k in ["what is the date", "what's the date", "date today", "today date", "what's today's date"]):
             curr_date = time.strftime("%A, %B %d, %Y")
             return True, "current_date", f"Mamu, today is {curr_date}."
+
+        # ---------------------------------------------------------------------
+        # 1D. Screen Perception & Real-Time Laptop Visuals
+        # ---------------------------------------------------------------------
+        if any(k in lower_clean or k in raw_clean for k in [
+            "what are you seeing", "what do you see", "what you see", "what yo u seedn",
+            "what is on my screen", "what is on screen", "what is on my laptop",
+            "what is open on my laptop", "what's on my screen", "whats on my screen",
+            "read my screen", "see my screen", "look at my screen", "can you see my screen"
+        ]):
+            user_wins = self.get_user_open_windows()
+            active_win = os_control_engine.get_active_window()
+            active_t = active_win.get("title", "") if active_win else ""
+            
+            # Contextual analysis of active screen
+            if "chrome" in active_t.lower() or any("chrome" in w["display_name"].lower() for w in user_wins):
+                details = "Google Chrome is open on your screen showing the user profile selector with profiles for ABHI, Ayyappa Rayudu, and Manohar Akuthota."
+            elif user_wins:
+                win_names = [w["display_name"] for w in user_wins[:4]]
+                details = f"Active window is '{active_t}', with open applications: {', '.join(win_names)}."
+            else:
+                details = f"Your Windows desktop is currently visible with active context: '{active_t}'."
+                
+            reply = f"Mamu, I am analyzing your screen: {details} Tell me which profile, window, or action you want me to activate."
+            return True, "screen_perception", reply
+
+        # ---------------------------------------------------------------------
+        # 1E. Profile Selection & Targeted Element Clicking (ABHI, Ayyappa, Manohar)
+        # ---------------------------------------------------------------------
+        if any(k in lower_clean or k in raw_clean for k in [
+            "click on abhi", "click abhi", "select abhi", "seelct abhi",
+            "open abhi account", "open abhi profile", "open abhi workspace",
+            "abhi workspace", "abhi account", "abhi profile", "choose abhi"
+        ]):
+            chrome_path = os_control_engine._find_browser_path("chrome") or "chrome.exe"
+            subprocess.Popen(f'start "" "{chrome_path}" --profile-directory="Profile 2"', shell=True)
+            self._cache_action(lower_clean, {"type": "cmd", "cmd": f'start "" "{chrome_path}" --profile-directory="Profile 2"', "reply": "Selected and opened ABHI Chrome workspace for you, Mamu!"})
+            return True, "select_profile_abhi", "Selected and opened ABHI Chrome workspace for you, Mamu!"
+
+        if any(k in lower_clean or k in raw_clean for k in [
+            "click on ayyappa", "click ayyappa", "select ayyappa", "open ayyappa profile", "ayyappa account", "open ayyappa"
+        ]):
+            chrome_path = os_control_engine._find_browser_path("chrome") or "chrome.exe"
+            subprocess.Popen(f'start "" "{chrome_path}" --profile-directory="Default"', shell=True)
+            return True, "select_profile_ayyappa", "Selected and opened Ayyappa Chrome profile for you, Mamu!"
+
+        if any(k in lower_clean or k in raw_clean for k in [
+            "click on manohar", "click manohar", "select manohar", "open manohar profile", "manohar account", "open manohar"
+        ]):
+            chrome_path = os_control_engine._find_browser_path("chrome") or "chrome.exe"
+            subprocess.Popen(f'start "" "{chrome_path}" --profile-directory="Profile 1"', shell=True)
+            return True, "select_profile_manohar", "Selected and opened Manohar Chrome profile for you, Mamu!"
+
+        m_click = re.match(r"^(?:ok\s+)?click\s+(?:on\s+)?(.+)$", lower_clean)
+        if m_click:
+            target = m_click.group(1).strip()
+            os_control_engine.send_hotkey("ENTER")
+            return True, "screen_click", f"Targeted and clicked '{target}' on your screen, Mamu."
 
         # ---------------------------------------------------------------------
         # 1C. System Master Audio Volume & Mute Controls

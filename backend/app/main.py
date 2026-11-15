@@ -24,6 +24,7 @@ from backend.app.api.v1.decisions import router as decisions_router
 from backend.app.api.v1.devices import router as devices_router
 from backend.app.api.v1.quantum import router as quantum_router
 from backend.app.api.v1.desktop import router as desktop_router
+from backend.app.api.v1.monitors import router as monitors_router
 from backend.app.api.v1.analytics import router as analytics_router
 from backend.app.api.websockets.telemetry import router as ws_router
 from backend.app.core.config import settings
@@ -196,6 +197,7 @@ for r in agent_router.routes:
 app.include_router(agent_compat_router)
 app.include_router(business_router, prefix="/api/v1")
 app.include_router(desktop_router, prefix="/api/v1")
+app.include_router(monitors_router, prefix="/api/v1")
 app.include_router(decisions_router, prefix="/api/v1")
 app.include_router(analytics_router, prefix="/api/v1")
 app.include_router(devices_router, prefix="/api/v1")

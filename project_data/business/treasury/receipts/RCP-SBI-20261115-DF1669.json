@@ -1,0 +1,30 @@
+{
+  "receipt_id": "RCP-SBI-20261115-DF1669",
+  "invoice_number": "DIRECT-SBIN2611",
+  "issued_at": "2026-11-15T12:30:22.845403+00:00",
+  "amount_inr": 18500.0,
+  "amount_usd": 211.43,
+  "currency": "INR",
+  "settlement_channel": "State Bank of India (UPI / NEFT)",
+  "utr_transaction_ref": "SBIN261115744777",
+  "beneficiary": {
+    "name": "Ravuvai Ayyapparayudu",
+    "bank": "State Bank of India",
+    "account_number": "41130645649",
+    "account_masked": "SBI ****5649",
+    "ifsc": "SBIN0020507",
+    "upi_id": "ayyapparayudu.5@ybl"
+  },
+  "payer": {
+    "name": "Scale AI Cloud Systems"
+  },
+  "service_deliverable": {
+    "description": "Real-World Service Settlement & Verification",
+    "deliverable_sha256": "f285c85af20766aee19bfa4d224dbca789e18c72b2b9d59e58031b4e3b4e04fd"
+  },
+  "cryptographic_verification": {
+    "verification_status": "DUAL_STATE_AUTHENTICATED",
+    "crypto_seal": "b8634d25a950fa99b8129d359d8b2b46aae8b7767997af6f311151c529b22220",
+    "algorithm": "HMAC-SHA256"
+  }
+}

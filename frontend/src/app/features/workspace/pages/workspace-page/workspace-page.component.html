@@ -5,7 +5,7 @@
       <div class="nav-left">
         <div class="brand-badge">
           <span class="brand-icon">⬢</span>
-          <span class="brand-title">Agent HQ</span>
+          <span class="brand-title">ABHI Command Center</span>
         </div>
         <div class="profile-chip" title="Sovereign Architect & Operator">
           <span class="profile-avatar">👨‍💻</span>
@@ -20,34 +20,10 @@
           class="tab-pill-btn"
           [class.active]="activeWorkspaceMode() === 'colony'"
           (click)="setWorkspaceMode('colony')"
-          title="Original 10-Agent Cybernetic Colony"
+          title="3D Living Architectural Command Center & Multi-Agent Swarm"
         >
           <span class="pill-icon">🛰️</span>
-          <span class="pill-label">3D Colony (Default)</span>
-        </button>
-
-        <button
-          type="button"
-          class="tab-pill-btn"
-          [class.active]="activeWorkspaceMode() === 'live-agents'"
-          (click)="setWorkspaceMode('live-agents')"
-          title="Live Agents 8-Pod Hub & Spoke"
-        >
-          <span class="pill-icon">🧠</span>
-          <span class="pill-label">Live Agents HQ</span>
-          <span class="pill-badge-hub">8-POD HUB</span>
-        </button>
-
-        <button
-          type="button"
-          class="tab-pill-btn"
-          [class.active]="activeWorkspaceMode() === 'agent-works'"
-          (click)="setWorkspaceMode('agent-works')"
-          title="Corporate Architectural Office Floorplan"
-        >
-          <span class="pill-icon">🏢</span>
-          <span class="pill-label">Agent Works & Floorplan</span>
-          <span class="pill-badge-office">LIVE OFFICE</span>
+          <span class="pill-label">3D Architectural Colony</span>
         </button>
 
         <button
@@ -55,29 +31,19 @@
           class="tab-pill-btn"
           [class.active]="activeWorkspaceMode() === 'live-business'"
           (click)="setWorkspaceMode('live-business')"
-          title="Real-World SBI Settlement & Autonomous Business Treasury"
+          title="Real-World SBI Settlement & Sovereign Business Treasury"
         >
           <span class="pill-icon">🏛️</span>
-          <span class="pill-label">Live Business & Settlement</span>
-          <span class="pill-badge-sbi">₹30.98L REAL SBI</span>
-        </button>
-
-        <button
-          type="button"
-          class="tab-pill-btn icon-only-pill"
-          (click)="setWorkspaceMode('agent-works')"
-          title="Office Floorplan"
-        >
-          <span class="pill-icon">🖨️</span>
-          <span class="pill-label">Office Floorplan</span>
+          <span class="pill-label">Live Business & SBI Settlement</span>
+          <span class="pill-badge-sbi">REAL SBI</span>
         </button>
       </nav>
 
       <div class="nav-right">
-        <div class="agents-live-counter">
+        <div class="agents-live-counter" title="Live Operating System Telemetry">
           <span class="live-dot pulse"></span>
-          <span class="counter-text">
-            <strong>31 agents</strong> · 12 running
+          <span class="counter-text font-monospace">
+            <strong>CPU: {{ systemTelemetry()?.cpu || 0 }}%</strong> · RAM: {{ systemTelemetry()?.mem_pct || 0 }}% · {{ systemTelemetry()?.open_windows_count || 0 }} Wins
           </span>
         </div>
       </div>
@@ -95,8 +61,11 @@
     <div class="hud-brand-group">
       <span class="hud-brand-symbol">◈</span>
       <div>
-        <h1 class="hud-title">3D LIVING BOT WORKSPACE</h1>
-        <p class="hud-subtitle">10 Specialized Agent Brains Active on Spatial Base // Zero-Cloud Local Inference</p>
+        <h1 class="hud-title">3D LIVING ARCHITECTURAL COMMAND CENTER</h1>
+        <p class="hud-subtitle">
+          <span class="active-task-pill">⚡ {{ currentExecutingTask() }}</span>
+          <span class="active-win-pill">🖥️ {{ activeWindow() }}</span>
+        </p>
       </div>
     </div>
 
@@ -107,36 +76,64 @@
         class="council-toggle-btn"
         [class.active]="voiceStreamEnabled()"
         (click)="toggleVoiceStream()"
-        title="Toggle Real-Time Voice Audio Stream"
+        title="Toggle Real-Time Continuous Voice VAD Stream"
       >
         <span>{{ voiceStreamEnabled() ? '🔊 VOICE LIVE' : '🔇 VOICE MUTED' }}</span>
       </button>
 
-      <div class="consensus-badge">
+      <div class="consensus-badge" title="Multi-Agent Consensus Ratification">
         <span class="pulse-dot"></span>
         <span class="consensus-label">CONSENSUS:</span>
-        <span class="consensus-val">{{ consensusScore() }}% RATIFIED</span>
+        <span class="consensus-val">{{ consensusScore() }}%</span>
       </div>
 
       <button
         type="button"
-        class="council-btn"
-        (click)="triggerFamilyDeliberation()"
-        [disabled]="isDeliberating()"
+        class="council-toggle-btn"
+        [class.active]="showFamilyCouncil()"
+        (click)="showFamilyCouncil.set(!showFamilyCouncil())"
+        title="Toggle Unified Multi-Agent Operations & Dialogue Stream"
       >
-        <span>{{ isDeliberating() ? 'DELIBERATING...' : '⚡ SQUAD COUNCIL DEBATE' }}</span>
+        <span>💬 LIVE OPERATIONS STREAM</span>
       </button>
 
       <button
         type="button"
         class="council-toggle-btn"
-        (click)="showFamilyCouncil.set(!showFamilyCouncil())"
-        title="Toggle Squad Channels & Logs"
+        (click)="threeScene.resetCameraFocus()"
+        title="Reset 3D Architectural Camera"
       >
-        <span>💬 LIVE CHAT CHANNELS</span>
+        <span>🎯 RESET 3D</span>
       </button>
     </div>
   </header>
+
+  <!-- Live Natural Language OS Automation & Command Bar -->
+  <div class="workspace-command-input-bar">
+    <span class="input-prompt-symbol">❯</span>
+    <input
+      type="text"
+      class="command-quick-input"
+      [(ngModel)]="naturalCommandInput"
+      (keydown.enter)="submitNaturalCommand()"
+      placeholder="Command ABHI across Windows OS, applications, or intelligence (e.g. 'open terminal', 'volume down', 'who is cricketer', 'Lucknow PIN code')..."
+      [disabled]="isExecutingCommand()"
+    />
+    <button
+      type="button"
+      class="command-send-btn"
+      (click)="submitNaturalCommand()"
+      [disabled]="!naturalCommandInput.trim() || isExecutingCommand()"
+    >
+      {{ isExecutingCommand() ? 'EXECUTING...' : '⚡ EXECUTE' }}
+    </button>
+  </div>
+  @if (commandResult()) {
+    <div class="workspace-command-receipt-pill">
+      <span class="receipt-icon">✓</span>
+      <span class="receipt-text">{{ commandResult() }}</span>
+    </div>
+  }
 
   <!-- Interactive 9-Bot Stations Dock -->
   <footer class="stations-dock-container" [class.expanded]="dockExpanded()">
@@ -212,7 +209,7 @@
 
   <!-- Floating Dynamic Right-Side Agent Intelligence Popup -->
   @if ((activeStation() || selectedAgent()); as current) {
-    <aside class="station-side-popup" [style.borderColor]="current.color" role="dialog" aria-label="Specialist Agent Intelligence">
+    <aside class="station-side-popup" [class.wide-screen]="isWideScreen()" [style.borderColor]="current.color" role="dialog" aria-label="Specialist Agent Intelligence">
       <!-- Popup Header with Live Indicator -->
       <div class="popup-header">
         <div class="popup-agent-info">
@@ -230,11 +227,30 @@
             <div class="popup-agent-sub font-monospace">{{ current.codename }} // {{ current.subsystem }}</div>
           </div>
         </div>
-        <button type="button" class="popup-close-btn" (click)="closeStationDrawer()" aria-label="Close Popup">✕</button>
+        <div class="popup-header-actions">
+          <button
+            type="button"
+            class="header-screen-toggle-btn"
+            [class.active]="isWideScreen()"
+            (click)="isWideScreen.set(!isWideScreen())"
+            title="Toggle Wide Digital Monitor View"
+          >
+            {{ isWideScreen() ? '🗗 COMPACT' : '🗖 WIDE' }}
+          </button>
+          <button type="button" class="popup-close-btn" (click)="closeStationDrawer()" aria-label="Close Popup">✕</button>
+        </div>
       </div>
 
       <!-- Tab Navigation Ribbon -->
       <div class="popup-tabs-bar">
+        <button
+          type="button"
+          class="popup-tab-btn premier-screen-tab"
+          [class.active]="activePopupTab() === 'DIGITAL_SCREEN'"
+          (click)="activePopupTab.set('DIGITAL_SCREEN')"
+        >
+          🖥️ Live Screen & Monitors
+        </button>
         <button
           type="button"
           class="popup-tab-btn"
@@ -270,6 +286,11 @@
       </div>
 
       <!-- Action Feedback Toast -->
+      @if (realActionStatus()) {
+        <div class="station-action-status-banner real-action-toast">
+          ⚡ {{ realActionStatus() }}
+        </div>
+      }
       @if (stationActionStatus()) {
         <div class="station-action-status-banner">
           {{ stationActionStatus() }}
@@ -277,6 +298,212 @@
       }
 
       <div class="popup-body">
+        <!-- ============================================================== -->
+        <!-- TAB 0: LIVE DIGITAL SCREEN & MONITORS -->
+        <!-- ============================================================== -->
+        @if (activePopupTab() === 'DIGITAL_SCREEN') {
+          <div class="popup-tab-pane digital-screen-pane">
+            <!-- Screen Control Ribbon -->
+            <div class="screen-control-bar">
+              <div class="monitor-meta-info">
+                <span class="live-dot-pulse"></span>
+                <span class="monitor-badge-label font-monospace">
+                  {{ monitorFeed()?.assigned_monitor?.monitor_name || 'PHYSICAL DISPLAY 1 (PRIMARY DESKTOP)' }}
+                </span>
+                <span class="resolution-chip font-monospace">
+                  {{ monitorFeed()?.assigned_monitor?.resolution || '1280x800' }} @ 60 FPS
+                </span>
+              </div>
+
+              <div class="screen-actions-cluster">
+                <button
+                  type="button"
+                  class="screen-action-btn"
+                  [class.active]="autoStreamEnabled()"
+                  (click)="autoStreamEnabled.set(!autoStreamEnabled())"
+                  title="Toggle Real-Time Screen Auto-Stream"
+                >
+                  {{ autoStreamEnabled() ? '🔴 STREAM LIVE' : '⏸ STREAM PAUSED' }}
+                </button>
+                <button
+                  type="button"
+                  class="screen-action-btn"
+                  [disabled]="isLoadingScreen()"
+                  (click)="fetchAgentLiveScreen(current.id)"
+                  title="Capture Fresh Real-World Screen Frame"
+                >
+                  {{ isLoadingScreen() ? 'CAPTURING...' : '📸 SNAP FRAME' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Digital CRT/OLED Glass Monitor Display -->
+            <div class="digital-bezel-frame" [style.borderColor]="current.color">
+              <div class="screen-scanlines-layer"></div>
+
+              @if (monitorFeed()?.screen_base64) {
+                <div class="interactive-screen-canvas" (click)="onScreenCanvasClick($event, current.id)">
+                  <img
+                    [src]="monitorFeed()?.screen_base64"
+                    [alt]="'Live Monitor Screen of ' + current.name"
+                    class="monitor-live-image"
+                  />
+                  <div class="live-cursor-hud font-monospace">
+                    <span>🖱️ CLICK ON SCREEN TO DISPATCH NATIVE WIN32 MOUSE EVENT</span>
+                  </div>
+                </div>
+              } @else {
+                <div class="screen-loading-box">
+                  <div class="radar-spinner" [style.borderColor]="current.color"></div>
+                  <span class="loading-label font-monospace">ACQUIRING REAL-WORLD LIVE SCREEN STREAM FOR {{ current.name }}...</span>
+                </div>
+              }
+            </div>
+
+            <!-- Monitor Assignment Ribbon ("ASSIGN MONITORS") -->
+            <div class="screen-section-block">
+              <div class="section-tag-header">
+                <span class="tag-icon">🖥️</span>
+                <span class="tag-title">ASSIGN MONITOR / WINDOW (SELECT DISPLAY TO ROUTE TO THIS AGENT)</span>
+              </div>
+
+              <div class="monitor-assignment-grid">
+                <!-- Physical Monitors -->
+                @for (mon of availableMonitors()?.physical_monitors; track mon.id) {
+                  <button
+                    type="button"
+                    class="assign-chip-btn"
+                    [class.assigned]="monitorFeed()?.assigned_monitor?.monitor_id === mon.id"
+                    (click)="assignMonitorToAgent(current.id, mon)"
+                    title="Assign primary physical desktop screen"
+                  >
+                    <span>🖥️ {{ mon.name }}</span>
+                    <span class="chip-res font-monospace">({{ mon.resolution }})</span>
+                  </button>
+                }
+
+                <!-- Active Windows on Host -->
+                @for (win of availableMonitors()?.application_windows; track win.id) {
+                  <button
+                    type="button"
+                    class="assign-chip-btn"
+                    [class.assigned]="monitorFeed()?.assigned_monitor?.target_hwnd === win.hwnd"
+                    (click)="assignMonitorToAgent(current.id, win)"
+                    [title]="'Route window HWND ' + win.hwnd + ' (' + win.name + ')'"
+                  >
+                    <span>🪟 {{ win.name }}</span>
+                  </button>
+                }
+
+                <!-- Virtual Displays -->
+                @for (vir of availableMonitors()?.virtual_displays; track vir.id) {
+                  <button
+                    type="button"
+                    class="assign-chip-btn"
+                    [class.assigned]="monitorFeed()?.assigned_monitor?.monitor_id === vir.id"
+                    (click)="assignMonitorToAgent(current.id, vir)"
+                  >
+                    <span>⚡ {{ vir.name }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+
+            <!-- Real-World Action Controller ("DO ALL THINGS IN REAL WORLD") -->
+            <div class="screen-section-block">
+              <div class="section-tag-header">
+                <span class="tag-icon">⚡</span>
+                <span class="tag-title">DO ALL THINGS IN REAL WORLD // HOST OS CONTROLLER</span>
+              </div>
+
+              <!-- Quick Real Actions -->
+              <div class="real-actions-row">
+                <button
+                  type="button"
+                  class="real-act-btn"
+                  (click)="executeRealAction(current.id, 'focus')"
+                  title="Bring this assigned window to front"
+                >
+                  🪟 Bring Window To Front
+                </button>
+                <button
+                  type="button"
+                  class="real-act-btn"
+                  (click)="executeRealAction(current.id, 'hotkey', { key_combo: 'alt+tab' })"
+                  title="Send Alt+Tab to cycle active applications"
+                >
+                  🔄 Alt + Tab
+                </button>
+                <button
+                  type="button"
+                  class="real-act-btn"
+                  (click)="executeRealAction(current.id, 'hotkey', { key_combo: 'win+d' })"
+                  title="Show / Minimize to Windows Desktop"
+                >
+                  💻 Show Desktop
+                </button>
+                <button
+                  type="button"
+                  class="real-act-btn"
+                  (click)="executeRealAction(current.id, 'hotkey', { key_combo: 'ctrl+shift+esc' })"
+                  title="Open Windows Task Manager"
+                >
+                  📊 Task Manager
+                </button>
+              </div>
+
+              <!-- Direct Real-World PowerShell Execution Runner -->
+              <div class="real-command-box">
+                <div class="cmd-label font-monospace">DIRECT POWERSHELL RUNNER IN REAL WORLD:</div>
+                <div class="cmd-input-row">
+                  <input
+                    type="text"
+                    class="cmd-input font-monospace"
+                    [(ngModel)]="realPowerShellCmd"
+                    placeholder="Enter PowerShell command to execute in real world..."
+                    (keyup.enter)="executeRealAction(current.id, 'run_command', { text: realPowerShellCmd })"
+                  />
+                  <button
+                    type="button"
+                    class="cmd-send-btn font-monospace"
+                    [disabled]="isExecutingRealAction()"
+                    (click)="executeRealAction(current.id, 'run_command', { text: realPowerShellCmd })"
+                  >
+                    {{ isExecutingRealAction() ? 'RUNNING...' : '▶ EXECUTE' }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Launch Real Application -->
+              <div class="real-app-launch-row">
+                <span class="launch-label font-monospace">LAUNCH APP:</span>
+                <button type="button" class="app-quick-pill" (click)="executeRealAction(current.id, 'launch', { app_name: 'chrome' })">🌐 Chrome</button>
+                <button type="button" class="app-quick-pill" (click)="executeRealAction(current.id, 'launch', { app_name: 'notepad' })">📝 Notepad</button>
+                <button type="button" class="app-quick-pill" (click)="executeRealAction(current.id, 'launch', { app_name: 'calculator' })">🧮 Calculator</button>
+                <button type="button" class="app-quick-pill" (click)="executeRealAction(current.id, 'launch', { app_name: 'terminal' })">💻 Terminal</button>
+                <button type="button" class="app-quick-pill" (click)="executeRealAction(current.id, 'launch', { app_name: 'explorer' })">📁 Explorer</button>
+              </div>
+            </div>
+
+            <!-- Live What They Are Working On Real-World Log -->
+            <div class="screen-section-block">
+              <div class="section-tag-header">
+                <span class="tag-icon">📋</span>
+                <span class="tag-title">WHAT THIS AGENT IS WORKING ON (REAL-WORLD AUDIT LOG)</span>
+              </div>
+
+              <div class="activity-feed-list font-monospace">
+                @for (act of monitorFeed()?.recent_activities; track $index) {
+                  <div class="activity-log-item">
+                    <span class="act-time">[{{ act.time }}]</span>
+                    <span class="act-type" [style.color]="current.color">[{{ act.action }}]</span>
+                    <span class="act-detail">{{ act.detail }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        }
         <!-- ============================================================== -->
         <!-- TAB 1: MISSION & HOW IT WORKS ("whr it do" & "hwo it work") -->
         <!-- ============================================================== -->
@@ -825,21 +1052,7 @@
   }
   </div> <!-- colony-view-wrapper end -->
 
-  <!-- View 2: Live Agents 3D HQ (8-Pod Hub) -->
-  @if (activeWorkspaceMode() === 'live-agents') {
-    <div class="embedded-view-container" role="region" aria-label="Live Agents 3D HQ">
-      <app-sample-page [initialMode]="'hub-and-spoke'" (modeChange)="setWorkspaceMode($event)"></app-sample-page>
-    </div>
-  }
-
-  <!-- View 3: Agent Works & Floorplan (Corporate Architectural Floorplan) -->
-  @if (activeWorkspaceMode() === 'agent-works') {
-    <div class="embedded-view-container" role="region" aria-label="Agent Works Floorplan Office">
-      <app-sample-page [initialMode]="'corporate-floorplan'" (modeChange)="setWorkspaceMode($event)"></app-sample-page>
-    </div>
-  }
-
-  <!-- View 4: Live Business & Real Automated Settlement Engine -->
+  <!-- View 2: Live Business & Real Automated Settlement Engine -->
   @if (activeWorkspaceMode() === 'live-business') {
     <div class="business-view-container" role="region" aria-label="Real Sovereign Business & Treasury Command Center">
       <!-- Executive Banking & Sovereign Treasury Banner -->

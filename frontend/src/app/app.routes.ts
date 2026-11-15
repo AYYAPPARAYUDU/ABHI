@@ -28,22 +28,23 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'live-status',
+    redirectTo: 'workspace',
+    pathMatch: 'full'
+  },
+  {
     path: 'live-console',
-    loadComponent: () =>
-      import('./features/live-console/pages/live-console-page/live-console-page.component').then(
-        (m) => m.LiveConsolePageComponent
-      )
+    redirectTo: 'workspace',
+    pathMatch: 'full'
   },
   {
     path: 'meeting',
-    loadComponent: () =>
-      import('./features/meeting/pages/meeting-page/meeting-page.component').then(
-        (m) => m.MeetingPageComponent
-      )
+    redirectTo: 'workspace',
+    pathMatch: 'full'
   },
   {
     path: 'council',
-    redirectTo: 'meeting',
+    redirectTo: 'workspace',
     pathMatch: 'full'
   },
   {
@@ -187,10 +188,8 @@ export const routes: Routes = [
   },
   {
     path: 'sample',
-    loadComponent: () =>
-      import('./features/sample/pages/sample-page/sample-page.component').then(
-        (m) => m.SamplePageComponent
-      )
+    redirectTo: 'workspace',
+    pathMatch: 'full'
   },
   {
     path: 'dev-ui',
