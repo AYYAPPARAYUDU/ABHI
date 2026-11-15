@@ -182,6 +182,9 @@
                 <span class="loc-address font-bold text-white">{{ locationData().city }}, {{ locationData().region }}, {{ locationData().country }}</span>
                 <span class="loc-isp-badge">{{ locationData().isp }}</span>
               </div>
+              <div class="loc-sub-address font-monospace" style="font-size: 8.5px; opacity: 0.88; color: var(--abhi-text-secondary, #94a3b8); line-height: 1.2;">
+                {{ locationData().address }}
+              </div>
               <span class="loc-coords text-cyan">{{ locationData().lat }}°N, {{ locationData().lng }}°E // Timezone: {{ locationData().timezone }}</span>
             </div>
             <div class="loc-links-group">

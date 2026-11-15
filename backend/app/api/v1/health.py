@@ -80,16 +80,16 @@ _WEATHER_CACHE_TIME: float = 0.0
 
 @router.get("/system-location", response_model=Dict[str, Any])
 async def get_system_location() -> Dict[str, Any]:
-    """Resolve physical Windows host live geolocation using multi-provider fallback with in-memory caching."""
+    """Resolve physical Windows host live geolocation using multi-provider fallback with reverse geocoding."""
     global _LOCATION_CACHE, _LOCATION_CACHE_TIME
     now = time.time()
-    if _LOCATION_CACHE and (now - _LOCATION_CACHE_TIME) < 900:  # 15 min cache
+    if _LOCATION_CACHE and (now - _LOCATION_CACHE_TIME) < 120:  # 2 min dynamic cache
         return _LOCATION_CACHE
 
-    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+    headers = {"User-Agent": "ABHI-AI-Workstation/1.0 (Mozilla/5.0 Windows NT 10.0)"}
     import httpx
 
-    # Provider 1: ipwho.is (fast, no key required, detailed ISP/coordinates)
+    # Provider 1: ipwho.is (fast, highly accurate ISP/coordinates)
     try:
         async with httpx.AsyncClient(timeout=4.0, headers=headers) as client:
             resp = await client.get("https://ipwho.is/")
@@ -98,12 +98,32 @@ async def get_system_location() -> Dict[str, Any]:
                 if data.get("success") is not False and data.get("latitude"):
                     lat = round(float(data.get("latitude")), 4)
                     lng = round(float(data.get("longitude")), 4)
-                    city = data.get("city") or "Vijayawada"
+                    city = data.get("city") or "Guntur"
                     region = data.get("region") or "Andhra Pradesh"
                     country = data.get("country") or "India"
                     isp = data.get("connection", {}).get("isp") or "Reliance Jio Infocomm Limited"
-                    postal = data.get("postal") or "520013"
+                    postal = data.get("postal") or "522001"
                     tz = data.get("timezone", {}).get("id") or "Asia/Kolkata"
+
+                    # Optional high-resolution reverse geocode for street/neighborhood
+                    detailed_addr = f"{city}, {region}, {country}"
+                    try:
+                        rev_resp = await client.get(
+                            f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lng}",
+                            timeout=3.0,
+                        )
+                        if rev_resp.status_code == 200:
+                            rev_data = rev_resp.json()
+                            addr_obj = rev_data.get("address", {})
+                            suburb = addr_obj.get("suburb") or addr_obj.get("residential") or addr_obj.get("road")
+                            if suburb:
+                                detailed_addr = f"{suburb}, {city}, {region}"
+                            elif rev_data.get("display_name"):
+                                parts = [p.strip() for p in rev_data["display_name"].split(",")]
+                                detailed_addr = ", ".join(parts[:3])
+                    except Exception:
+                        pass
+
                     result = {
                         "status": "LIVE_PHYSICAL_RESOLVED",
                         "provider": "ipwho.is",
@@ -116,8 +136,8 @@ async def get_system_location() -> Dict[str, Any]:
                         "isp": isp,
                         "network": "Jio 5G / Fiber",
                         "timezone": tz,
-                        "address": f"{city}, {region}, {country}",
-                        "formatted": f"{city}, {region}, {country} ({isp})",
+                        "address": detailed_addr,
+                        "formatted": f"{detailed_addr} ({isp})",
                         "osm_url": f"https://www.openstreetmap.org/?mlat={lat}&mlon={lng}",
                         "google_maps_url": f"https://maps.google.com/?q={lat},{lng}",
                         "cached_at": now,
@@ -137,11 +157,11 @@ async def get_system_location() -> Dict[str, Any]:
                 if data.get("latitude") and data.get("longitude"):
                     lat = round(float(data.get("latitude")), 4)
                     lng = round(float(data.get("longitude")), 4)
-                    city = data.get("city") or "Vijayawada"
+                    city = data.get("city") or "Guntur"
                     region = data.get("region") or "Andhra Pradesh"
                     country = data.get("country_name") or "India"
                     isp = data.get("org") or "Reliance Jio Infocomm Limited"
-                    postal = data.get("postal") or "520013"
+                    postal = data.get("postal") or "522001"
                     tz = data.get("timezone") or "Asia/Kolkata"
                     result = {
                         "status": "LIVE_PHYSICAL_RESOLVED",
@@ -171,19 +191,19 @@ async def get_system_location() -> Dict[str, Any]:
     fallback = {
         "status": "SOVEREIGN_OPERATOR_FIXED",
         "provider": "local_default",
-        "lat": 16.5167,
-        "lng": 80.6167,
-        "city": "Vijayawada",
+        "lat": 16.2997,
+        "lng": 80.4573,
+        "city": "Guntur",
         "region": "Andhra Pradesh",
         "country": "India",
-        "postal": "520013",
+        "postal": "522001",
         "isp": "Reliance Jio Infocomm Limited",
         "network": "Jio 5G / Fiber",
         "timezone": "Asia/Kolkata",
-        "address": "Vijayawada, Andhra Pradesh, India",
-        "formatted": "Vijayawada, Andhra Pradesh, India (Jio 5G)",
-        "osm_url": "https://www.openstreetmap.org/?mlat=16.5167&mlon=80.6167",
-        "google_maps_url": "https://maps.google.com/?q=16.5167,80.6167",
+        "address": "Lalapet, Guntur, Andhra Pradesh, India",
+        "formatted": "Lalapet, Guntur, Andhra Pradesh, India (Jio 5G)",
+        "osm_url": "https://www.openstreetmap.org/?mlat=16.2997&mlon=80.4573",
+        "google_maps_url": "https://maps.google.com/?q=16.2997,80.4573",
         "cached_at": now,
     }
     _LOCATION_CACHE = fallback
@@ -192,7 +212,7 @@ async def get_system_location() -> Dict[str, Any]:
 
 
 @router.get("/live-weather", response_model=Dict[str, Any])
-async def get_live_weather(lat: float = 16.5075, lng: float = 80.6466) -> Dict[str, Any]:
+async def get_live_weather(lat: float = 16.2997, lng: float = 80.4573) -> Dict[str, Any]:
     """Fetch live meteorological observations from Open-Meteo for physical coordinates."""
     global _WEATHER_CACHE, _WEATHER_CACHE_TIME
     now = time.time()

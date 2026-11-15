@@ -121,16 +121,16 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // 2. Real Geolocation & Interactive Map (100% Authentic Physical Workstation Location)
   readonly locationData = signal({
-    lat: 16.5075,
-    lng: 80.6466,
-    city: 'Vijayawada',
+    lat: 16.2997,
+    lng: 80.4573,
+    city: 'Guntur',
     region: 'Andhra Pradesh',
     country: 'India',
-    postal: '520001',
+    postal: '522001',
     isp: 'Reliance Jio Infocomm Limited',
     network: 'Jio 5G / Fiber',
     timezone: 'Asia/Kolkata (+05:30)',
-    address: 'Vijayawada, Andhra Pradesh, India'
+    address: 'Lalapet, Guntur, Andhra Pradesh, India'
   });
 
   readonly safeMapUrl = computed<SafeResourceUrl>(() => {
@@ -922,81 +922,169 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async refreshLocation(): Promise<void> {
+    // 1. Try High-Precision Browser Geolocation first (GPS / WiFi high accuracy)
+    if (typeof navigator !== 'undefined' && navigator.geolocation) {
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 6000,
+            maximumAge: 0
+          });
+        });
+
+        if (pos?.coords) {
+          const lat = Number(pos.coords.latitude.toFixed(4));
+          const lng = Number(pos.coords.longitude.toFixed(4));
+          await this.applyCoordinatesWithReverseGeocode(lat, lng, 'GPS / WiFi High Accuracy');
+          return;
+        }
+      } catch {
+        // Geolocation denied or timed out, proceed to backend / IP providers
+      }
+    }
+
+    // 2. Try Backend API endpoint (/api/v1/health/system-location)
     try {
       const locUrl = getApiUrl('/api/v1/health/system-location');
       const res = await fetch(locUrl);
       if (res.ok) {
         const d = await res.json();
         if (d.lat && d.lng) {
-          this.locationData.set({
-            lat: Number(d.lat),
-            lng: Number(d.lng),
-            city: d.city || 'Vijayawada',
-            region: d.region || 'Andhra Pradesh',
-            country: d.country || 'India',
-            postal: d.postal || '520001',
-            isp: d.isp || 'Reliance Jio Infocomm Limited',
-            network: d.network || 'Jio 5G / Fiber',
-            timezone: d.timezone || 'Asia/Kolkata (+05:30)',
-            address: d.address || `${d.city}, ${d.region}, ${d.country}`
-          });
-          this.fetchLiveWeather(d.lat, d.lng);
+          await this.applyCoordinatesWithReverseGeocode(
+            Number(d.lat),
+            Number(d.lng),
+            d.isp || 'Reliance Jio Infocomm Limited',
+            d
+          );
           return;
         }
       }
     } catch {
-      // Fallback below
+      // Backend unavailable; proceed to direct multi-provider IP resolution
     }
 
-    try {
-      if (typeof navigator !== 'undefined' && navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            this.locationData.update((loc) => ({
-              ...loc,
-              lat: Number(pos.coords.latitude.toFixed(4)),
-              lng: Number(pos.coords.longitude.toFixed(4)),
-            }));
-            this.fetchLiveWeather(pos.coords.latitude, pos.coords.longitude);
-          },
-          async () => {
-            await this.fallbackIpLocation();
-          },
-          { timeout: 4000 }
-        );
-      } else {
-        await this.fallbackIpLocation();
+    // 3. Fallback to direct client-side IP Geolocation
+    await this.fallbackIpLocation();
+  }
+
+  private async applyCoordinatesWithReverseGeocode(
+    lat: number,
+    lng: number,
+    isp: string = 'Reliance Jio Infocomm Limited',
+    prefilled?: any
+  ): Promise<void> {
+    let city = prefilled?.city || '';
+    let region = prefilled?.region || '';
+    let country = prefilled?.country || 'India';
+    let postal = prefilled?.postal || '';
+    let address = prefilled?.address || '';
+
+    // If address is generic or city is missing, reverse geocode via BigDataCloud client API
+    if (!address || !city) {
+      try {
+        const revUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`;
+        const res = await fetch(revUrl);
+        if (res.ok) {
+          const r = await res.json();
+          city = r.city || r.locality || city || 'Guntur';
+          region = r.principalSubdivision || region || 'Andhra Pradesh';
+          country = r.countryName || country || 'India';
+          postal = r.postcode || postal || '522001';
+          const sub = r.localityInfo?.informative?.[5]?.name || r.localityInfo?.administrative?.[4]?.name || '';
+          address = sub ? `${sub}, ${city}, ${region}` : `${city}, ${region}, ${country}`;
+        }
+      } catch {
+        // Continue to Nominatim fallback
       }
-    } catch {
-      await this.fallbackIpLocation();
     }
+
+    // Secondary reverse geocoding via OpenStreetMap Nominatim for street/neighborhood detail
+    if (!address || address === `${city}, ${region}, ${country}`) {
+      try {
+        const nomUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`;
+        const res = await fetch(nomUrl, { headers: { Accept: 'application/json' } });
+        if (res.ok) {
+          const n = await res.json();
+          if (n.address) {
+            city = n.address.city || n.address.town || n.address.village || city;
+            region = n.address.state || region;
+            country = n.address.country || country;
+            postal = n.address.postcode || postal;
+            const roadOrArea = n.address.suburb || n.address.residential || n.address.road || '';
+            address = roadOrArea ? `${roadOrArea}, ${city}, ${region}` : n.display_name?.split(',').slice(0, 3).join(',') || address;
+          }
+        }
+      } catch {}
+    }
+
+    this.locationData.set({
+      lat,
+      lng,
+      city: city || 'Guntur',
+      region: region || 'Andhra Pradesh',
+      country: country || 'India',
+      postal: postal || '522001',
+      isp: isp || 'Reliance Jio Infocomm Limited',
+      network: 'Jio 5G / Fiber',
+      timezone: 'Asia/Kolkata (+05:30)',
+      address: address || `${city || 'Guntur'}, ${region || 'Andhra Pradesh'}, ${country || 'India'}`
+    });
+
+    this.fetchLiveWeather(lat, lng);
   }
 
   private async fallbackIpLocation(): Promise<void> {
+    // Provider A: ipwho.is
     try {
       const res = await fetch('https://ipwho.is/');
       if (res.ok) {
         const d = await res.json();
-        if (d.latitude && d.longitude) {
-          this.locationData.set({
-            lat: Number(Number(d.latitude).toFixed(4)),
-            lng: Number(Number(d.longitude).toFixed(4)),
-            city: d.city || 'Vijayawada',
-            region: d.region || 'Andhra Pradesh',
-            country: d.country || 'India',
-            postal: d.postal || '520001',
-            isp: d.connection?.isp || 'Reliance Jio Infocomm Limited',
-            network: 'Jio 5G / Fiber',
-            timezone: 'Asia/Kolkata (+05:30)',
-            address: `${d.city || 'Vijayawada'}, ${d.region || 'Andhra Pradesh'}, ${d.country || 'India'}`
+        if (d.success !== false && d.latitude && d.longitude) {
+          const lat = Number(Number(d.latitude).toFixed(4));
+          const lng = Number(Number(d.longitude).toFixed(4));
+          const isp = d.connection?.isp || 'Reliance Jio Infocomm Limited';
+          await this.applyCoordinatesWithReverseGeocode(lat, lng, isp, {
+            city: d.city,
+            region: d.region,
+            country: d.country,
+            postal: d.postal,
+            address: `${d.city}, ${d.region}, ${d.country}`
           });
-          this.fetchLiveWeather(d.latitude, d.longitude);
           return;
         }
       }
-    } catch {
-      this.fetchLiveWeather(16.5075, 80.6466);
-    }
+    } catch {}
+
+    // Provider B: ipapi.co
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      if (res.ok) {
+        const d = await res.json();
+        if (d.latitude && d.longitude) {
+          const lat = Number(Number(d.latitude).toFixed(4));
+          const lng = Number(Number(d.longitude).toFixed(4));
+          const isp = d.org || 'Reliance Jio Infocomm Limited';
+          await this.applyCoordinatesWithReverseGeocode(lat, lng, isp, {
+            city: d.city,
+            region: d.region,
+            country: d.country_name,
+            postal: d.postal,
+            address: `${d.city}, ${d.region}, ${d.country_name}`
+          });
+          return;
+        }
+      }
+    } catch {}
+
+    // Provider C: Workstation physical fix (Guntur, AP)
+    await this.applyCoordinatesWithReverseGeocode(16.2997, 80.4573, 'Reliance Jio Infocomm Limited', {
+      city: 'Guntur',
+      region: 'Andhra Pradesh',
+      country: 'India',
+      postal: '522001',
+      address: 'Lalapet, Guntur, Andhra Pradesh, India'
+    });
   }
 
   updateClockAndWeather(): void {
