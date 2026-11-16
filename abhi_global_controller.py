@@ -40,6 +40,11 @@ try:
 except Exception:
     dynamic_action_resolver = None
 
+try:
+    from backend.app.automation.desktop.screen_perception_engine import screen_perception
+except Exception:
+    screen_perception = None
+
 # DPI Awareness for crisp 4K / High-DPI Windows displays
 try:
     ctypes.windll.shcore.SetProcessDpiAwareness(1)
@@ -521,37 +526,61 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
 
     def _dispatch_ai_query(self, query: str):
         self.bot_state = "THINKING"
-        payload = json.dumps({
-            "query": query,
-            "screen_context": f"Active OS Window: {self.active_window_title}"
-        }).encode()
+        reply = None
 
-        try:
-            req = urllib.request.Request(
-                f"{API_BASE}/api/v1/desktop/ask-bot",
-                data=payload,
-                headers={"Content-Type": "application/json"}
-            )
-            with urllib.request.urlopen(req, timeout=12) as resp:
-                data = json.loads(resp.read().decode())
-                reply = data.get("reply", "Task completed, Mamu.")
-                self.after(0, lambda: self.append_chat("ABHI", reply))
-                self._speak_verbally(reply)
-        except Exception:
-            # 0ms In-Process Local Execution Fallback
-            reply = None
-            if dynamic_action_resolver:
-                try:
-                    ok, action_name, res_reply = dynamic_action_resolver.resolve_and_execute(query)
-                    if ok:
-                        reply = res_reply
-                except Exception:
-                    pass
-            if not reply:
-                reply = self._execute_native_fallback(query)
-            self.after(0, lambda: self.append_chat("ABHI", reply))
-            self._speak_verbally(reply)
+        # 1. 0ms Ultra-Fast In-Process Resolution (Zero Latency)
+        if dynamic_action_resolver:
+            try:
+                ok, action_name, res_reply = dynamic_action_resolver.resolve_and_execute(
+                    query, f"Active OS Window: {self.active_window_title}"
+                )
+                if ok and res_reply:
+                    reply = res_reply
+            except Exception:
+                pass
 
+        # 2. Check native screen perception & grid intent directly
+        if not reply and screen_perception:
+            try:
+                q_l = query.lower()
+                if any(k in q_l for k in ["row", "first one", "second one", "third one", "video"]):
+                    ok_g, g_reply = screen_perception.parse_and_execute_grid_intent(query)
+                    if ok_g and g_reply:
+                        reply = g_reply
+                elif any(k in q_l for k in ["screen", "what you seeing", "what you saw", "what do you see", "read my screen"]):
+                    reply = screen_perception.describe_current_screen()
+                elif any(k in q_l for k in ["what you said", "what did you say", "repeat"]):
+                    reply = f"Mamu, I said: '{screen_perception.get_last_spoken()}'"
+            except Exception:
+                pass
+
+        # 3. Fast Backend Gateway Call (3.5s timeout, never hangs)
+        if not reply:
+            try:
+                payload = json.dumps({
+                    "query": query,
+                    "screen_context": f"Active OS Window: {self.active_window_title}"
+                }).encode()
+                req = urllib.request.Request(
+                    f"{API_BASE}/api/v1/desktop/ask-bot",
+                    data=payload,
+                    headers={"Content-Type": "application/json"}
+                )
+                with urllib.request.urlopen(req, timeout=3.5) as resp:
+                    data = json.loads(resp.read().decode())
+                    reply = data.get("reply")
+            except Exception:
+                pass
+
+        # 4. Instant Native OS Control Fallback
+        if not reply:
+            reply = self._execute_native_fallback(query)
+
+        if screen_perception and reply:
+            screen_perception.record_spoken(reply)
+
+        self.after(0, lambda: self.append_chat("ABHI", reply))
+        self._speak_verbally(reply)
         self.bot_state = "LISTENING"
 
     def _speak_verbally(self, text: str):
@@ -665,7 +694,20 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
         self._speak_verbally(msg)
 
     def _execute_native_fallback(self, query: str) -> str:
-        q = query.lower()
+        q = query.lower().strip()
+
+        # 1. Screen Perception & Grid Directives
+        if screen_perception:
+            ok_grid, grid_reply = screen_perception.parse_and_execute_grid_intent(q)
+            if ok_grid and grid_reply:
+                return grid_reply
+
+            if any(k in q for k in ["screen", "what you seeing", "what you saw", "what do you see", "read my screen", "see my screen", "look at my screen"]):
+                return screen_perception.describe_current_screen()
+
+            if any(k in q for k in ["what you said", "what did you say", "repeat that", "say again"]):
+                return f"Mamu, I said: '{screen_perception.get_last_spoken()}'"
+
         if "close the window" in q or "close window" in q:
             ctypes.windll.user32.PostMessageA(ctypes.windll.user32.GetForegroundWindow(), 0x0010, 0, 0)
             return "Closed active window, Mamu."
@@ -676,7 +718,7 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
             ctypes.windll.user32.keybd_event(0x57, 0, 2, 0)
             ctypes.windll.user32.keybd_event(0x11, 0, 2, 0)
             return "Closed tab, Mamu."
-        elif "pause" in q or "play" in q:
+        elif q in ["pause", "pause video", "stop video", "stop music", "resume", "play", "play video", "toggle play"]:
             ctypes.windll.user32.keybd_event(0x20, 0, 0, 0) # SPACE
             ctypes.windll.user32.keybd_event(0x20, 0, 2, 0)
             return "Toggled playback, Mamu."
@@ -709,27 +751,27 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
     # -------------------------------------------------------------------------
 
     def _start_continuous_voice_listener(self):
-        """Continuous voice listener with Voice Activity Detection (VAD) buffering."""
+        """Continuous voice listener with optimized Low-Latency Voice Activity Detection (VAD)."""
         def voice_worker():
             recognizer = sr.Recognizer()
-            recognizer.energy_threshold = 200
+            recognizer.energy_threshold = 180
             recognizer.dynamic_energy_threshold = True
-            recognizer.dynamic_energy_adjustment_damping = 0.15
+            recognizer.dynamic_energy_adjustment_damping = 0.10
 
             fs = 16000
-            frame_seconds = 0.25
+            frame_seconds = 0.20
             frame_samples = int(fs * frame_seconds)
 
             is_speaking = False
             phrase_frames = []
             silence_frames_count = 0
-            max_silence_frames = 5  # ~1250ms silence terminates speech chunk to prevent mid-sentence cutting
-            max_phrase_frames = 36  # 9 seconds max continuous utterance
-            pre_roll_buffer = collections.deque(maxlen=3)
+            max_silence_frames = 3  # ~600ms silence terminates speech chunk (low latency, fast response)
+            max_phrase_frames = 40  # 8 seconds max continuous utterance
+            pre_roll_buffer = collections.deque(maxlen=4)
 
             while True:
                 if not self.is_mic_listening or self.bot_state == "SPEAKING":
-                    time.sleep(0.15)
+                    time.sleep(0.12)
                     is_speaking = False
                     phrase_frames.clear()
                     silence_frames_count = 0
@@ -756,7 +798,7 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
                     self.live_voice_ratio = voice_ratio
 
                     # Acoustic gate: human vocal spectrum + sound pressure level
-                    has_speech = (rms >= 0.0035 and voice_ratio >= 0.04)
+                    has_speech = (rms >= 0.0022 and voice_ratio >= 0.028)
 
                     if has_speech:
                         if not is_speaking:
@@ -843,7 +885,9 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
                 "open", "close", "play", "pause", "mute", "unmute", "search", "skip",
                 "type", "run", "keypad", "keyboard", "screen", "what", "how", "who",
                 "youtube", "chrome", "notepad", "terminal", "calc", "tab", "window",
-                "fb", "movie", "scroll", "next", "rewind", "desktop", "task manager"
+                "fb", "movie", "scroll", "next", "rewind", "desktop", "task manager",
+                "click", "select", "row", "first", "second", "third", "one", "video",
+                "see", "saw", "say", "said", "read", "show", "tell"
             ]
             has_action = any(t in p for t in action_triggers)
             if (self.is_expanded or has_action) and len(p) >= 2:
@@ -881,8 +925,16 @@ class AbhiCyberneticVoiceCore(ctk.CTk):
                     buf = ctypes.create_unicode_buffer(length + 1)
                     ctypes.windll.user32.GetWindowTextW(hwnd, buf, length + 1)
                     val = buf.value.strip()
-                    if val and "ABHI" not in val:
+                    if val and not any(ign in val for ign in ["ABHI Cybernetic", "ABHI VOICE", "Program Manager"]):
                         return val
+            # Fallback to topmost active user window
+            if screen_perception:
+                ctx = screen_perception.get_real_screen_context()
+                user_apps = ctx.get("user_apps", [])
+                for app in user_apps:
+                    t = app.get("title", "")
+                    if t and not any(ign in t for ign in ["ABHI Cybernetic", "ABHI VOICE", "Settings", "Program Manager"]):
+                        return t
         except Exception:
             pass
         return "Windows Desktop"

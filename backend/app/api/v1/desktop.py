@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 
 from backend.app.automation.desktop.os_control_engine import os_control_engine
 from backend.app.automation.desktop.dynamic_action_resolver import dynamic_action_resolver
+from backend.app.automation.desktop.screen_perception_engine import screen_perception
 from backend.app.automation.flow_engine import flow_engine
 from backend.app.core.logging import logger
 from backend.app.services.llm.standalone_engine import abhi_standalone_engine
@@ -375,13 +376,24 @@ async def ask_living_bot(request: BotAskRequest):
     active_win = os_control_engine.get_active_window()
     window_title = active_win.get("title", "Active Screen") if active_win else "Desktop"
 
+    # Pre-check screen and repeat questions
+    q_lower = raw_query.lower()
+    if any(k in q_lower for k in ["screen", "what you seeing", "what you saw", "what do you see", "read my screen", "see my screen"]):
+        desc = screen_perception.describe_current_screen()
+        return {"status": "success", "reply": desc, "action_executed": "screen_perception"}
+
+    if any(k in q_lower for k in ["what you said", "what did you say", "repeat that"]):
+        last_m = screen_perception.get_last_spoken()
+        return {"status": "success", "reply": f"Mamu, I said: '{last_m}'", "action_executed": "repeat_spoken"}
+
     try:
         from backend.app.services.llm.abhi_llm import AbhiNativeLLM
         llm = AbhiNativeLLM()
         prompt = (
-            f"You are ABHI, the supreme AI assistant for Ravuvai Ayyappa Rayudu (Mamu). "
-            f"Active window: '{window_title}'. User directive: '{raw_query}'. "
-            f"Provide a direct, helpful, grounded response addressing Mamu."
+            f"You are ABHI, the supreme real-time cybernetic companion for Ravuvai Ayyappa Rayudu (Mamu).\n"
+            f"Active Window: '{window_title}'\n"
+            f"User directive: '{raw_query}'\n"
+            f"Provide a direct, grounded, helpful response (1-2 sentences) warmly addressing Mamu."
         )
         gen_res = await llm.generate(prompt=prompt)
         if gen_res and gen_res.response and len(gen_res.response.strip()) > 5:

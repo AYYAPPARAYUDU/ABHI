@@ -18,6 +18,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from backend.app.core.logging import logger
 from backend.app.automation.desktop.os_control_engine import os_control_engine
+from backend.app.automation.desktop.screen_perception_engine import screen_perception
 from backend.app.services.search.online_knowledge import OnlineKnowledgeSearcher
 
 
@@ -278,29 +279,28 @@ class DynamicActionResolver:
             return True, "current_date", f"Mamu, today is {curr_date}."
 
         # ---------------------------------------------------------------------
-        # 1D. Screen Perception & Real-Time Laptop Visuals
+        # 1D. Real-Time Screen Perception & Computer Vision Analysis
         # ---------------------------------------------------------------------
         if any(k in lower_clean or k in raw_clean for k in [
-            "what are you seeing", "what do you see", "what you see", "what yo u seedn",
+            "what are you seeing", "what do you see", "what you see", "what you seeing",
+            "what you saw", "what did you see", "what you seen",
             "what is on my screen", "what is on screen", "what is on my laptop",
             "what is open on my laptop", "what's on my screen", "whats on my screen",
-            "read my screen", "see my screen", "look at my screen", "can you see my screen"
+            "read my screen", "see my screen", "look at my screen", "can you see my screen",
+            "tell me what is on my screen", "what is visible", "describe my screen",
+            "what are you looking at", "what's visible on my screen"
         ]):
-            user_wins = self.get_user_open_windows()
-            active_win = os_control_engine.get_active_window()
-            active_t = active_win.get("title", "") if active_win else ""
-            
-            # Contextual analysis of active screen
-            if "chrome" in active_t.lower() or any("chrome" in w["display_name"].lower() for w in user_wins):
-                details = "Google Chrome is open on your screen showing the user profile selector with profiles for ABHI, Ayyappa Rayudu, and Manohar Akuthota."
-            elif user_wins:
-                win_names = [w["display_name"] for w in user_wins[:4]]
-                details = f"Active window is '{active_t}', with open applications: {', '.join(win_names)}."
-            else:
-                details = f"Your Windows desktop is currently visible with active context: '{active_t}'."
-                
-            reply = f"Mamu, I am analyzing your screen: {details} Tell me which profile, window, or action you want me to activate."
+            reply = screen_perception.describe_current_screen()
             return True, "screen_perception", reply
+
+        # Conversational memory: "what you said" / "repeat that"
+        if any(k in lower_clean for k in [
+            "what you said", "what did you say", "what have you said",
+            "repeat that", "say again", "repeat what you said", "repeat"
+        ]):
+            last_msg = screen_perception.get_last_spoken()
+            reply = f"Mamu, I said: '{last_msg}'"
+            return True, "repeat_spoken", reply
 
         # ---------------------------------------------------------------------
         # 1E. Profile Selection & Targeted Element Clicking (ABHI, Ayyappa, Manohar)
@@ -359,6 +359,13 @@ class DynamicActionResolver:
         if any(lower_clean == p for p in ["mute", "mute system", "mute audio", "mute master", "silence", "unmute system", "unmute"]):
             os_control_engine.adjust_volume("mute", steps=1)
             return True, "toggle_mute", "Toggled system audio mute, Mamu."
+
+        # ---------------------------------------------------------------------
+        # 2A. Dynamic YouTube / Web Video Grid Selection ("play third row first one")
+        # ---------------------------------------------------------------------
+        ok_grid, grid_reply = screen_perception.parse_and_execute_grid_intent(lower_clean)
+        if ok_grid and grid_reply:
+            return True, "youtube_grid_selection", grid_reply
 
         # ---------------------------------------------------------------------
         # 2. Stop / Pause Media (Prioritized BEFORE Song Search!)
