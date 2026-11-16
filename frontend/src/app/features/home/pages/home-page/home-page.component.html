@@ -146,46 +146,138 @@
           <div class="header-tag">
             <span class="tag-dot emerald pulse-glow"></span>
             <span class="tag-title font-monospace">PHYSICAL WORKSTATION LOCATION</span>
+            <span class="loc-accuracy-pill font-monospace">{{ locationAccuracy() }}</span>
           </div>
+
           <div class="header-controls-group">
-            <button type="button" class="btn-loc-ctrl" (click)="refreshLocation()" title="Refresh live GPS / ISP geolocation">↻ REFRESH FIX</button>
-            <button type="button" class="btn-loc-ctrl" (click)="refreshLocation()" title="Recenter target coords">🎯 RECENTER</button>
+            <!-- Map Layer Switcher -->
+            <div class="map-layer-pills" role="radiogroup" aria-label="Map Tile Layer">
+              <button
+                type="button"
+                class="btn-layer-pill"
+                [class.active]="selectedLayer() === 'dark'"
+                (click)="applyTileLayer('dark')"
+                title="CartoDB Cyber Dark"
+              >
+                🕶️ DARK
+              </button>
+              <button
+                type="button"
+                class="btn-layer-pill"
+                [class.active]="selectedLayer() === 'satellite'"
+                (click)="applyTileLayer('satellite')"
+                title="Esri Satellite Imagery"
+              >
+                🛰️ SATELLITE
+              </button>
+              <button
+                type="button"
+                class="btn-layer-pill"
+                [class.active]="selectedLayer() === 'street'"
+                (click)="applyTileLayer('street')"
+                title="Street & Road Map"
+              >
+                🗺️ STREET
+              </button>
+            </div>
+
+            <!-- Action Controls -->
+            <button
+              type="button"
+              class="btn-loc-ctrl"
+              [class.active]="followMeActive()"
+              (click)="toggleFollowMe()"
+              [title]="followMeActive() ? 'Pause continuous tracking' : 'Continuous live GPS tracking'"
+            >
+              📡 {{ followMeActive() ? 'TRACKING' : 'FOLLOW' }}
+            </button>
+            <button
+              type="button"
+              class="btn-loc-ctrl"
+              [class.active]="showRangeRings()"
+              (click)="toggleRangeRings()"
+              title="Toggle 1km / 5km / 10km radar range rings"
+            >
+              🎯 RADAR
+            </button>
+            <button
+              type="button"
+              class="btn-loc-ctrl"
+              (click)="recenterMap()"
+              title="Recenter map on your workstation pin"
+            >
+              🎯 RECENTER
+            </button>
+            <button
+              type="button"
+              class="btn-loc-ctrl"
+              (click)="refreshLocation()"
+              title="Refresh live GPS / ISP geolocation fix"
+            >
+              ↻ REFRESH
+            </button>
           </div>
         </div>
 
-        <div class="map-viewport-wrapper">
-          <iframe
-            [src]="safeMapUrl()"
-            class="osm-map-frame"
-            title="Real-Time OpenStreetMap Location"
-            loading="lazy"
-            scrolling="no"
-          ></iframe>
+        <!-- Location Search Bar -->
+        <div class="map-search-row">
+          <div class="search-input-wrap">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              class="map-search-input font-monospace"
+              placeholder="Search city, area, or coordinates (e.g. 16.25, 80.06)..."
+              [(ngModel)]="locationSearchQuery"
+              (keyup.enter)="searchLocation()"
+            />
+            @if (locationSearchQuery()) {
+              <button type="button" class="btn-clear-search" (click)="locationSearchQuery.set('')">✕</button>
+            }
+          </div>
+          <button
+            type="button"
+            class="btn-map-search-go font-monospace"
+            (click)="searchLocation()"
+            [disabled]="isSearchingLocation() || !locationSearchQuery()"
+          >
+            {{ isSearchingLocation() ? '...' : 'FLY TO' }}
+          </button>
+          @if (searchResultHint()) {
+            <span class="search-hint-badge font-monospace">{{ searchResultHint() }}</span>
+          }
+        </div>
 
-          <!-- High-Tech Animated Radar Scope Layer -->
+        <div class="map-viewport-wrapper">
+          <!-- Leaflet Interactive Map Canvas Host -->
+          <div #leafletMapContainer class="leaflet-map-host" id="liveWorkstationMap"></div>
+
+          <!-- Radar Scope Crosshair Overlay (Non-blocking) -->
           <div class="radar-scope-overlay pointer-none">
             <div class="radar-crosshair-h"></div>
             <div class="radar-crosshair-v"></div>
-            <div class="radar-sweep-beam"></div>
-            <div class="radar-ping-beacon">
-              <span class="beacon-ring ring-1"></span>
-              <span class="beacon-ring ring-2"></span>
-              <span class="beacon-core"></span>
-            </div>
+            @if (showRangeRings()) {
+              <div class="radar-sweep-beam"></div>
+            }
           </div>
 
           <!-- Location HUD Overlay Info Overlay on Map -->
           <div class="map-overlay-badge font-monospace">
-            <div class="loc-pin-icon">📍</div>
+            <div class="loc-pin-icon" (click)="recenterMap()" title="Click to recenter">📍</div>
             <div class="loc-text-group">
               <div class="loc-headline-row">
                 <span class="loc-address font-bold text-white">{{ locationData().city }}, {{ locationData().region }}, {{ locationData().country }}</span>
                 <span class="loc-isp-badge">{{ locationData().isp }}</span>
               </div>
-              <div class="loc-sub-address font-monospace" style="font-size: 8.5px; opacity: 0.88; color: var(--abhi-text-secondary, #94a3b8); line-height: 1.2;">
+              <div class="loc-sub-address font-monospace">
                 {{ locationData().address }}
               </div>
-              <span class="loc-coords text-cyan">{{ locationData().lat }}°N, {{ locationData().lng }}°E // Timezone: {{ locationData().timezone }}</span>
+              <div class="loc-telemetry-meta">
+                <span class="loc-coords text-cyan" (click)="copyCoordinates()" title="Click to copy coordinates">
+                  {{ locationData().lat }}°N, {{ locationData().lng }}°E
+                  <span class="copy-tag" [class.success]="copyCoordsSuccess()">{{ copyCoordsSuccess() ? '✓ COPIED' : '📋 COPY' }}</span>
+                </span>
+                <span class="loc-tz-tag">// TZ: {{ locationData().timezone }}</span>
+              </div>
             </div>
             <div class="loc-links-group">
               <a
@@ -198,13 +290,13 @@
                 GOOGLE MAPS ↗
               </a>
               <a
-                [href]="'https://www.openstreetmap.org/?mlat=' + locationData().lat + '&mlon=' + locationData().lng"
+                [href]="'https://earth.google.com/web/search/' + locationData().lat + ',' + locationData().lng"
                 target="_blank"
                 rel="noopener"
                 class="btn-view-map-pill font-monospace secondary"
-                title="View on OpenStreetMap"
+                title="Explore 3D satellite globe on Google Earth"
               >
-                OSM ↗
+                EARTH 3D ↗
               </a>
             </div>
           </div>

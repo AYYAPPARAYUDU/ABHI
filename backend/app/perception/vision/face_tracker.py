@@ -52,7 +52,8 @@ class OperatorPresenceResult(BaseModel):
     intruder_snapshot_path: Optional[str] = None
     status: str = "OPERATOR_AWAY"
     message: str = "No operator detected in camera view."
-    detected_mood: str = "neutral"
+https://www.youtube.com/watch?v=9dV6Hl2u3vM&autoplay=1
+      detected_mood: str = "neutral"
     timestamp: float = Field(default_factory=time.time)
 
 

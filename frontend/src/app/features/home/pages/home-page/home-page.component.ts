@@ -1,5 +1,6 @@
 import { AgentApiService } from '../../../../core/api/agent-api.service';
 import { getApiUrl } from '../../../../core/config/api-config';
+import * as L from 'leaflet';
 import {
   Component,
   inject,
@@ -120,17 +121,34 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly securityStatus = signal<string>('SECURED (Real-time Defender Active)');
 
   // 2. Real Geolocation & Interactive Map (100% Authentic Physical Workstation Location)
+  @ViewChild('leafletMapContainer') leafletMapContainer?: ElementRef<HTMLDivElement>;
+  private leafletMap: L.Map | null = null;
+  private liveMarker: L.Marker | null = null;
+  private accuracyCircle: L.Circle | null = null;
+  private rangeCircles: L.Circle[] = [];
+  private activeTileLayer: L.TileLayer | null = null;
+  private geolocationWatchId: number | null = null;
+
+  readonly selectedLayer = signal<'dark' | 'satellite' | 'street'>('dark');
+  readonly followMeActive = signal<boolean>(false);
+  readonly showRangeRings = signal<boolean>(true);
+  readonly locationSearchQuery = signal<string>('');
+  readonly isSearchingLocation = signal<boolean>(false);
+  readonly searchResultHint = signal<string>('');
+  readonly copyCoordsSuccess = signal<boolean>(false);
+  readonly locationAccuracy = signal<string>('±10m (GPS Fix)');
+
   readonly locationData = signal({
-    lat: 16.2997,
-    lng: 80.4573,
-    city: 'Guntur',
+    lat: 16.2500,
+    lng: 80.0667,
+    city: 'Narasaraopet',
     region: 'Andhra Pradesh',
     country: 'India',
-    postal: '522001',
+    postal: '522616',
     isp: 'Reliance Jio Infocomm Limited',
     network: 'Jio 5G / Fiber',
     timezone: 'Asia/Kolkata (+05:30)',
-    address: 'Lalapet, Guntur, Andhra Pradesh, India'
+    address: 'Narasaraopet, Palnadu District, Andhra Pradesh, India'
   });
 
   readonly safeMapUrl = computed<SafeResourceUrl>(() => {
@@ -844,9 +862,23 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
         delay: 150,
       });
     }
+
+    // Initialize Next-Gen Interactive Leaflet Map
+    setTimeout(() => {
+      this.initLeafletMap();
+    }, 150);
   }
 
   ngOnDestroy(): void {
+    if (this.geolocationWatchId !== null && typeof navigator !== 'undefined') {
+      navigator.geolocation.clearWatch(this.geolocationWatchId);
+      this.geolocationWatchId = null;
+    }
+    if (this.leafletMap) {
+      this.leafletMap.remove();
+      this.leafletMap = null;
+    }
+
     this.showWorkspaceMenu.set(false);
     this.showThemeCustomizer.set(false);
 
@@ -921,14 +953,312 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  // =========================================================================
+  // NEXT-GEN LEAFLET INTERACTIVE WORKSTATION MAP SYSTEM
+  // =========================================================================
+
+  initLeafletMap(): void {
+    if (typeof window === 'undefined') return;
+    if (!this.leafletMapContainer?.nativeElement) return;
+
+    if (this.leafletMap) {
+      this.leafletMap.remove();
+      this.leafletMap = null;
+      this.liveMarker = null;
+      this.accuracyCircle = null;
+      this.rangeCircles = [];
+    }
+
+    const loc = this.locationData();
+    const lat = loc.lat;
+    const lng = loc.lng;
+
+    // Create high-performance Leaflet instance with smooth momentum
+    this.leafletMap = L.map(this.leafletMapContainer.nativeElement, {
+      center: [lat, lng],
+      zoom: 15,
+      zoomControl: false,
+      attributionControl: false
+    });
+
+    // Zoom control at top-right
+    L.control.zoom({ position: 'topright' }).addTo(this.leafletMap);
+
+    // Apply active tile layer (Cyber Dark by default)
+    this.applyTileLayer(this.selectedLayer());
+
+    // Position initial beacon marker & accuracy ring
+    this.updateMarkerPosition(lat, lng, loc.address || `${loc.city}, ${loc.region}`);
+
+    // Draw range rings if enabled
+    if (this.showRangeRings()) {
+      this.drawRangeRings(lat, lng);
+    }
+
+    // Interactive inspection on map click
+    this.leafletMap.on('click', (e: L.LeafletMouseEvent) => {
+      const clickLat = Number(e.latlng.lat.toFixed(4));
+      const clickLng = Number(e.latlng.lng.toFixed(4));
+      const distKm = this.calculateDistanceKm(loc.lat, loc.lng, clickLat, clickLng).toFixed(2);
+
+      const popupHtml = `
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fff; background: rgba(11, 18, 32, 0.96); padding: 8px 10px; border-radius: 6px; border: 1px solid #00f0ff;">
+          <div style="color: #00f0ff; font-weight: bold; margin-bottom: 3px;">📍 INSPECTED COORDINATES</div>
+          <div>Lat: ${clickLat}°N, Lng: ${clickLng}°E</div>
+          <div style="color: #ffca70; margin-top: 2px;">Distance to Workstation: ${distKm} km</div>
+          <div style="margin-top: 6px;">
+            <a href="https://maps.google.com/?q=${clickLat},${clickLng}" target="_blank" style="color: #38d9ff; text-decoration: underline; font-size: 10px;">Open in Google Maps ↗</a>
+          </div>
+        </div>
+      `;
+      L.popup().setLatLng(e.latlng).setContent(popupHtml).openOn(this.leafletMap!);
+    });
+
+    // Trigger re-render to ensure tiles fill container
+    setTimeout(() => {
+      this.leafletMap?.invalidateSize();
+    }, 250);
+  }
+
+  applyTileLayer(layerKey: 'dark' | 'satellite' | 'street'): void {
+    if (!this.leafletMap) return;
+    this.selectedLayer.set(layerKey);
+
+    if (this.activeTileLayer) {
+      this.leafletMap.removeLayer(this.activeTileLayer);
+      this.activeTileLayer = null;
+    }
+
+    let url = '';
+    let options: L.TileLayerOptions = { maxZoom: 19 };
+
+    if (layerKey === 'dark') {
+      url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      options = { subdomains: 'abcd', maxZoom: 20 };
+    } else if (layerKey === 'satellite') {
+      url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+      options = { maxZoom: 19 };
+    } else {
+      url = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+      options = { subdomains: 'abcd', maxZoom: 20 };
+    }
+
+    this.activeTileLayer = L.tileLayer(url, options);
+    this.activeTileLayer.addTo(this.leafletMap);
+  }
+
+  updateMarkerPosition(lat: number, lng: number, label: string): void {
+    if (!this.leafletMap) return;
+
+    if (this.liveMarker) {
+      this.liveMarker.setLatLng([lat, lng]);
+    } else {
+      const pinIcon = L.divIcon({
+        className: 'custom-live-marker',
+        html: `
+          <div class="leaflet-beacon-wrapper">
+            <div class="beacon-pulse-ring"></div>
+            <div class="beacon-pulse-ring ring-2"></div>
+            <div class="beacon-core-dot"></div>
+          </div>
+        `,
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+        popupAnchor: [0, -18]
+      });
+
+      this.liveMarker = L.marker([lat, lng], { icon: pinIcon }).addTo(this.leafletMap);
+    }
+
+    const popupHtml = `
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #fff; background: rgba(10, 15, 26, 0.95); padding: 8px 10px; border-radius: 8px; border: 1px solid #00f0ff; box-shadow: 0 4px 16px rgba(0,240,255,0.25);">
+        <div style="display: flex; align-items: center; gap: 5px; color: #00f0ff; font-weight: bold; font-size: 11px;">
+          <span>●</span> <span>PHYSICAL WORKSTATION FIX</span>
+        </div>
+        <div style="margin-top: 4px; font-weight: 600; color: #ffffff;">${label}</div>
+        <div style="color: #94a3b8; font-size: 10px; margin-top: 2px;">${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E</div>
+        <div style="color: #10b981; font-size: 9.5px; margin-top: 2px;">⚡ Reliance Jio 5G / Fiber</div>
+        <div style="margin-top: 6px; display: flex; gap: 6px;">
+          <a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" style="color: #38d9ff; font-size: 9.5px; text-decoration: none; border: 1px solid rgba(0,240,255,0.4); padding: 2px 6px; border-radius: 4px;">Google Maps ↗</a>
+        </div>
+      </div>
+    `;
+    this.liveMarker.bindPopup(popupHtml);
+
+    // Accuracy circle
+    if (!this.accuracyCircle) {
+      this.accuracyCircle = L.circle([lat, lng], {
+        radius: 45,
+        color: '#00f0ff',
+        weight: 1.5,
+        dashArray: '4, 4',
+        fillColor: '#00f0ff',
+        fillOpacity: 0.12
+      }).addTo(this.leafletMap);
+    } else {
+      this.accuracyCircle.setLatLng([lat, lng]);
+    }
+  }
+
+  toggleRangeRings(): void {
+    const next = !this.showRangeRings();
+    this.showRangeRings.set(next);
+    if (!this.leafletMap) return;
+
+    if (!next) {
+      this.rangeCircles.forEach((c) => this.leafletMap?.removeLayer(c));
+      this.rangeCircles = [];
+    } else {
+      const loc = this.locationData();
+      this.drawRangeRings(loc.lat, loc.lng);
+    }
+  }
+
+  private drawRangeRings(lat: number, lng: number): void {
+    if (!this.leafletMap) return;
+    this.rangeCircles.forEach((c) => this.leafletMap?.removeLayer(c));
+    this.rangeCircles = [];
+
+    const rings = [
+      { radius: 1000, color: 'rgba(56, 217, 255, 0.45)' },
+      { radius: 5000, color: 'rgba(56, 217, 255, 0.28)' },
+      { radius: 10000, color: 'rgba(56, 217, 255, 0.16)' }
+    ];
+
+    rings.forEach((r) => {
+      const circle = L.circle([lat, lng], {
+        radius: r.radius,
+        color: r.color,
+        weight: 1,
+        dashArray: '3, 6',
+        fill: false,
+        interactive: false
+      }).addTo(this.leafletMap!);
+      this.rangeCircles.push(circle);
+    });
+  }
+
+  toggleFollowMe(): void {
+    const active = !this.followMeActive();
+    this.followMeActive.set(active);
+
+    if (!active) {
+      if (this.geolocationWatchId !== null && typeof navigator !== 'undefined') {
+        navigator.geolocation.clearWatch(this.geolocationWatchId);
+        this.geolocationWatchId = null;
+      }
+      this.speechVoice.speak('Live geolocation tracking paused.');
+    } else {
+      this.speechVoice.speak('Continuous physical tracking engaged.');
+      if (typeof navigator !== 'undefined' && navigator.geolocation) {
+        this.geolocationWatchId = navigator.geolocation.watchPosition(
+          (pos) => {
+            const lat = Number(pos.coords.latitude.toFixed(4));
+            const lng = Number(pos.coords.longitude.toFixed(4));
+            const acc = pos.coords.accuracy ? `±${Math.round(pos.coords.accuracy)}m (GPS)` : '±8m (GPS)';
+            this.locationAccuracy.set(acc);
+            this.locationData.update((prev) => ({ ...prev, lat, lng }));
+            this.updateMarkerPosition(lat, lng, `${this.locationData().city}, ${this.locationData().region}`);
+            if (this.followMeActive() && this.leafletMap) {
+              this.leafletMap.panTo([lat, lng], { animate: true });
+            }
+          },
+          (err) => {
+            console.warn('Geolocation watch error:', err);
+            this.followMeActive.set(false);
+          },
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 2000 }
+        );
+      }
+    }
+  }
+
+  recenterMap(): void {
+    const loc = this.locationData();
+    if (this.leafletMap) {
+      this.leafletMap.flyTo([loc.lat, loc.lng], 16, { duration: 1.0 });
+    }
+  }
+
+  async searchLocation(): Promise<void> {
+    const q = this.locationSearchQuery().trim();
+    if (!q) return;
+
+    this.isSearchingLocation.set(true);
+    this.searchResultHint.set('Searching...');
+
+    // Support direct lat,lng format
+    const coordMatch = q.match(/^([-+]?[0-9]*\.?[0-9]+)\s*,\s*([-+]?[0-9]*\.?[0-9]+)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lng = parseFloat(coordMatch[2]);
+      this.isSearchingLocation.set(false);
+      this.searchResultHint.set(`Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+      this.leafletMap?.flyTo([lat, lng], 16, { duration: 1.2 });
+      await this.applyCoordinatesWithReverseGeocode(lat, lng, 'Target Inspection');
+      return;
+    }
+
+    try {
+      const enc = encodeURIComponent(q);
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${enc}&limit=1`, {
+        headers: { Accept: 'application/json' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const first = data[0];
+          const lat = parseFloat(first.lat);
+          const lng = parseFloat(first.lon);
+          this.searchResultHint.set(`Found: ${first.display_name.split(',').slice(0, 2).join(',')}`);
+          this.leafletMap?.flyTo([lat, lng], 15, { duration: 1.4 });
+          await this.applyCoordinatesWithReverseGeocode(lat, lng, 'Target Inspection', {
+            city: first.display_name.split(',')[0],
+            address: first.display_name
+          });
+        } else {
+          this.searchResultHint.set('Location not found. Try city, state or lat,lng.');
+        }
+      }
+    } catch {
+      this.searchResultHint.set('Search error. Check network.');
+    } finally {
+      this.isSearchingLocation.set(false);
+    }
+  }
+
+  copyCoordinates(): void {
+    const loc = this.locationData();
+    const str = `${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`;
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(str).then(() => {
+        this.copyCoordsSuccess.set(true);
+        setTimeout(() => this.copyCoordsSuccess.set(false), 2200);
+      });
+    }
+  }
+
+  private calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371; // Earth radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
   async refreshLocation(): Promise<void> {
+    this.searchResultHint.set('Resolving live GPS & ISP telemetry...');
     // 1. Try High-Precision Browser Geolocation first (GPS / WiFi high accuracy)
     if (typeof navigator !== 'undefined' && navigator.geolocation) {
       try {
         const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: true,
-            timeout: 6000,
+            timeout: 5000,
             maximumAge: 0
           });
         });
@@ -936,7 +1266,10 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
         if (pos?.coords) {
           const lat = Number(pos.coords.latitude.toFixed(4));
           const lng = Number(pos.coords.longitude.toFixed(4));
+          const acc = pos.coords.accuracy ? `±${Math.round(pos.coords.accuracy)}m (GPS)` : '±8m (GPS)';
+          this.locationAccuracy.set(acc);
           await this.applyCoordinatesWithReverseGeocode(lat, lng, 'GPS / WiFi High Accuracy');
+          this.recenterMap();
           return;
         }
       } catch {
@@ -951,12 +1284,14 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
       if (res.ok) {
         const d = await res.json();
         if (d.lat && d.lng) {
+          this.locationAccuracy.set('±12m (Physical ISP Telemetry)');
           await this.applyCoordinatesWithReverseGeocode(
             Number(d.lat),
             Number(d.lng),
             d.isp || 'Reliance Jio Infocomm Limited',
             d
           );
+          this.recenterMap();
           return;
         }
       }
@@ -966,6 +1301,7 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // 3. Fallback to direct client-side IP Geolocation
     await this.fallbackIpLocation();
+    this.recenterMap();
   }
 
   private async applyCoordinatesWithReverseGeocode(
@@ -1021,15 +1357,20 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.locationData.set({
       lat,
       lng,
-      city: city || 'Guntur',
+      city: city || 'Narasaraopet',
       region: region || 'Andhra Pradesh',
       country: country || 'India',
-      postal: postal || '522001',
+      postal: postal || '522616',
       isp: isp || 'Reliance Jio Infocomm Limited',
       network: 'Jio 5G / Fiber',
       timezone: 'Asia/Kolkata (+05:30)',
-      address: address || `${city || 'Guntur'}, ${region || 'Andhra Pradesh'}, ${country || 'India'}`
+      address: address || `${city || 'Narasaraopet'}, ${region || 'Andhra Pradesh'}, ${country || 'India'}`
     });
+
+    this.updateMarkerPosition(lat, lng, address || `${city || 'Narasaraopet'}, ${region || 'Andhra Pradesh'}`);
+    if (this.showRangeRings()) {
+      this.drawRangeRings(lat, lng);
+    }
 
     this.fetchLiveWeather(lat, lng);
   }
@@ -1077,13 +1418,13 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     } catch {}
 
-    // Provider C: Workstation physical fix (Guntur, AP)
-    await this.applyCoordinatesWithReverseGeocode(16.2997, 80.4573, 'Reliance Jio Infocomm Limited', {
-      city: 'Guntur',
+    // Provider C: Workstation physical fix (Narasaraopet, Palnadu, AP)
+    await this.applyCoordinatesWithReverseGeocode(16.2500, 80.0667, 'Reliance Jio Infocomm Limited', {
+      city: 'Narasaraopet',
       region: 'Andhra Pradesh',
       country: 'India',
-      postal: '522001',
-      address: 'Lalapet, Guntur, Andhra Pradesh, India'
+      postal: '522616',
+      address: 'Narasaraopet, Palnadu District, Andhra Pradesh, India'
     });
   }
 

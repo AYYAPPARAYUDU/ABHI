@@ -1,46 +1,53 @@
 <div class="brain-page-container">
-  <!-- Toast Banner -->
+  <!-- Toast Notification Alert -->
   @if (assistant.notificationAlert()) {
     <div class="page-toast-banner font-mono animate-fade-in">
       <span>🔔 {{ assistant.notificationAlert() }}</span>
     </div>
   }
 
-  <!-- EXECUTIVE OPERATOR HEADER -->
+  <!-- ========================================================================= -->
+  <!-- 1. EXECUTIVE OPERATOR HEADER (THEME-ALIGNED & INTUITIVE)                  -->
+  <!-- ========================================================================= -->
   <header class="executive-header-card">
     <div class="header-main-row">
       <div class="title-meta-group">
         <div class="title-badge-row">
           <span class="brain-glyph">🧠</span>
-          <h1 class="page-title font-mono">ABHI COGNITIVE BRAIN & EXECUTIVE COMMAND</h1>
-          <span class="version-tag font-mono">{{ assistant.brainStatus()?.version || 'v2.5-Sovereign' }}</span>
+          <div>
+            <div class="title-flex">
+              <h1 class="page-title font-mono">ABHI COGNITIVE BRAIN</h1>
+              <span class="version-tag font-mono">{{ assistant.brainStatus()?.version || 'v2.5 Sovereign' }}</span>
+              <span class="status-indicator-live font-mono">● LIVE KNOWLEDGE</span>
+            </div>
+            <p class="subtitle-text">
+              Personal Sovereign AI Assistant • Connected POCO 22101320I • Real-Time Communications & Memory Engine
+            </p>
+          </div>
         </div>
-        <p class="subtitle-text">
-          Personal Cognitive Intelligence Core • Local DeepSeek-R1 / Qwen 8B • Connected Device Telemetry & Autonomous Communications
-        </p>
       </div>
 
       <div class="header-actions-group">
-        <!-- Mobile Connection Status Badge -->
+        <!-- Mobile Connectivity Pill -->
         @if (summary()?.device?.connected || summary()?.mobile_connected) {
-          <div class="status-pill status-connected font-mono" title="Wireless ADB Active">
+          <div class="status-pill status-connected font-mono" title="Connected to POCO Redwood via ADB">
             <span class="pulse-dot green"></span>
-            <span>POCO 22101320I • ⚡ {{ summary()?.battery?.level || 14 }}% (Connected)</span>
+            <span>POCO 22101320I • ⚡ {{ summary()?.battery?.level || 14 }}% Connected</span>
           </div>
         } @else {
-          <div class="status-pill status-offline font-mono" title="Mobile offline - local store & WhatsApp bridge active">
+          <div class="status-pill status-offline font-mono" title="Mobile storage & local bridge active">
             <span class="pulse-dot amber"></span>
-            <span>Mobile Offline • Local Sync & WhatsApp Active</span>
+            <span>Mobile Offline • Local Storage Synced</span>
           </div>
         }
 
-        <!-- Alignment Score Badge -->
+        <!-- AI Alignment Pill -->
         <div class="status-pill status-aligned font-mono">
           <span class="lightning-glyph">⚡</span>
           <span>{{ ((assistant.brainStatus()?.alignment_score || 0.986) * 100).toFixed(1) }}% ALIGNED</span>
         </div>
 
-        <!-- Sync Button -->
+        <!-- Sync Feeds Button -->
         <button
           type="button"
           class="btn-action btn-sync font-mono"
@@ -51,13 +58,18 @@
           <span [class.spin]="assistant.isSyncing()">🔄</span>
           <span>{{ assistant.isSyncing() ? 'SYNCING...' : 'SYNC ALL' }}</span>
         </button>
+
+        <!-- Edit Profile Button -->
+        <button type="button" class="btn-action btn-edit-profile font-mono" (click)="toggleEditProfile()">
+          {{ isEditingProfile() ? '✕ CLOSE' : '✎ PROFILE' }}
+        </button>
       </div>
     </div>
 
-    <!-- SOVEREIGN OPERATOR IDENTITY STRIP -->
+    <!-- SOVEREIGN OPERATOR IDENTITY BAR -->
     <div class="operator-identity-strip">
       <div class="identity-info font-mono">
-        <span class="sovereign-tag">👑 SOVEREIGN OPERATOR:</span>
+        <span class="sovereign-tag">👑 OPERATOR:</span>
         <strong class="operator-name">Ravuvai Ayyapparayudu (Mamu)</strong>
         <span class="id-sep">•</span>
         <span class="id-sub">{{ assistant.profile()?.email || 'ayyapparayudu.ravuvari@gmail.com' }}</span>
@@ -66,15 +78,12 @@
         <span class="treasury-badge">🏦 SBI: ****5649 (ayyapparayudu.5@ybl)</span>
       </div>
 
-      <div class="identity-actions font-mono">
-        <button type="button" class="btn-text-link" (click)="toggleEditProfile()">
-          {{ isEditingProfile() ? '✕ CANCEL' : '✎ EDIT PROFILE' }}
+      <div class="identity-quick-links font-mono">
+        <button type="button" class="btn-mini-link" (click)="assistant.launchWhatsAppWeb()" title="Open WhatsApp Web">
+          💬 WhatsApp Web
         </button>
-        <button type="button" class="btn-text-link" (click)="assistant.launchWhatsAppWeb()" title="Open WhatsApp in browser">
-          💬 WHATSAPP WEB
-        </button>
-        <button type="button" class="btn-text-link" (click)="assistant.launchWhatsAppDesktop()" title="Open WhatsApp Desktop">
-          💻 WHATSAPP APP
+        <button type="button" class="btn-mini-link" (click)="openEmail('ayyapparayudu.ravuvari@gmail.com')" title="Open Gmail">
+          📧 Open Gmail
         </button>
       </div>
     </div>
@@ -82,7 +91,7 @@
     <!-- Collapsible Edit Profile Drawer -->
     @if (isEditingProfile()) {
       <div class="profile-drawer-card animate-slide-down">
-        <div class="drawer-title font-mono">Configure Communications Profile</div>
+        <div class="drawer-title font-mono">⚙️ Configure Sovereign Communications Profile</div>
         <div class="drawer-grid">
           <div class="input-group">
             <label class="font-mono">Email Address</label>
@@ -93,8 +102,8 @@
             <input type="tel" class="ctrl-input font-mono" [(ngModel)]="inputPhone" placeholder="+91..." />
           </div>
           <div class="input-group">
-            <label class="font-mono">Monitored Contacts/Threads</label>
-            <input type="text" class="ctrl-input font-mono" [(ngModel)]="inputThreads" placeholder="e.g. Dheenu, SBI, Bank Alert" />
+            <label class="font-mono">Monitored Contacts / Key Threads</label>
+            <input type="text" class="ctrl-input font-mono" [(ngModel)]="inputThreads" placeholder="e.g. Dheenu, SBI, ICICI Bank" />
           </div>
           <div class="drawer-action-col">
             <button
@@ -103,7 +112,7 @@
               (click)="saveProfile()"
               [disabled]="assistant.isLoading()"
             >
-              {{ assistant.isLoading() ? 'SAVING...' : 'SAVE CONFIGURATION' }}
+              {{ assistant.isLoading() ? 'SAVING...' : 'SAVE CHANGES' }}
             </button>
           </div>
         </div>
@@ -111,502 +120,539 @@
     }
   </header>
 
-  <!-- DAILY EXECUTIVE BRIEFING & INTELLIGENCE COMMAND CENTER (HERO SECTION) -->
-  <section class="executive-briefing-hero">
-    <div class="briefing-header-bar">
-      <div class="briefing-title-cluster">
-        <span class="hero-icon">⚡</span>
-        <div>
-          <h2 class="hero-title font-mono">DAILY EXECUTIVE BRIEFING & INTELLIGENCE RADAR</h2>
-          <span class="hero-sub font-mono">Tier 1: Basic Vitals • Tier 2: Priority Alerts • Tier 3: Dynamic Drilldown</span>
-        </div>
-      </div>
+  <!-- ========================================================================= -->
+  <!-- 2. EXECUTIVE 3-TAB SEGMENTED CONTROLLER (SIMPLIFIED NAVIGATION)          -->
+  <!-- ========================================================================= -->
+  <nav class="brain-segmented-nav font-mono" aria-label="Brain Navigation Tabs">
+    <button
+      type="button"
+      class="segment-btn"
+      [class.active-segment]="activeTab() === 'STREAM'"
+      (click)="activeTab.set('STREAM')"
+    >
+      <span class="tab-ic">📱</span>
+      <span>Live Communications & Messages</span>
+      <span class="tab-badge">{{ summary()?.total || filteredMessages().length }}</span>
+    </button>
 
-      <div class="briefing-cta-cluster">
-        <button
-          type="button"
-          class="btn-hero-briefing font-mono"
-          (click)="triggerDailyBriefing()"
-          [disabled]="assistant.isBriefingLoading() || assistant.isAskingAI()"
-        >
-          <span>🎙️</span>
-          <span>{{ assistant.isBriefingLoading() || assistant.isAskingAI() ? 'READING DATA...' : 'READ & UPDATE ME' }}</span>
-        </button>
-        <button
-          type="button"
-          class="btn-hero-tune font-mono"
-          (click)="assistant.evaluateAndUpgradeBrain()"
-          [disabled]="assistant.isUpgradingBrain()"
-        >
-          <span>🧠</span>
-          <span>{{ assistant.isUpgradingBrain() ? 'UPGRADING...' : 'RE-TUNE BRAIN' }}</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- TIER 1: BASIC DATA SUMMARY TILES -->
-    <div class="tier1-vitals-grid">
-      <!-- Total Messages Tile -->
-      <div class="vital-card" [class.active-vital]="assistant.activeFilter() === 'all'" (click)="setFilter('all')">
-        <div class="vital-top">
-          <span class="vital-icon">📊</span>
-          <span class="vital-label font-mono">TOTAL COMMS</span>
-        </div>
-        <div class="vital-value font-mono">{{ summary()?.total || filteredMessages().length }}</div>
-        <div class="vital-hint font-mono">Combined Streams</div>
-      </div>
-
-      <!-- WhatsApp Messages Tile -->
-      <div class="vital-card vital-whatsapp" [class.active-vital]="assistant.activeFilter() === 'whatsapp'" (click)="setFilter('whatsapp')">
-        <div class="vital-top">
-          <span class="vital-icon">💬</span>
-          <span class="vital-label font-mono">WHATSAPP</span>
-        </div>
-        <div class="vital-value font-mono">{{ summary()?.whatsapp || 0 }}</div>
-        <div class="vital-hint font-mono">Mobile & Desktop Sync</div>
-      </div>
-
-      <!-- Emails & Gmail Tile -->
-      <div class="vital-card vital-email" [class.active-vital]="assistant.activeFilter() === 'mail'" (click)="setFilter('mail')">
-        <div class="vital-top">
-          <span class="vital-icon">📧</span>
-          <span class="vital-label font-mono">EMAILS / GMAIL</span>
-        </div>
-        <div class="vital-value font-mono">{{ summary()?.emails || 0 }}</div>
-        <div class="vital-hint font-mono">IMAP & Android Dumps</div>
-      </div>
-
-      <!-- Voice Calls Tile -->
-      <div class="vital-card vital-calls" [class.active-vital]="assistant.activeFilter() === 'calls'" (click)="setFilter('calls')">
-        <div class="vital-top">
-          <span class="vital-icon">📞</span>
-          <span class="vital-label font-mono">CALLS</span>
-        </div>
-        <div class="vital-value font-mono">
-          {{ summary()?.calls || 0 }}
-          @if (summary()?.missed_calls) {
-            <span class="missed-tag">({{ summary()?.missed_calls }} MISSED)</span>
-          }
-        </div>
-        <div class="vital-hint font-mono">Phone Call Logs</div>
-      </div>
-
-      <!-- Banking & UPI Tile -->
-      <div class="vital-card vital-banking" [class.active-vital]="assistant.activeFilter() === 'banking'" (click)="setFilter('banking')">
-        <div class="vital-top">
-          <span class="vital-icon">🏦</span>
-          <span class="vital-label font-mono">BANKING / UPI</span>
-        </div>
-        <div class="vital-value font-mono">{{ summary()?.banking || 0 }}</div>
-        <div class="vital-hint font-mono">SBI & ICICI Financials</div>
-      </div>
-
-      <!-- Security OTPs Tile -->
-      <div class="vital-card vital-otp" [class.active-vital]="assistant.activeFilter() === 'otp'" (click)="setFilter('otp')">
-        <div class="vital-top">
-          <span class="vital-icon">🔐</span>
-          <span class="vital-label font-mono">SECURITY OTPS</span>
-        </div>
-        <div class="vital-value font-mono">{{ summary()?.otps || 0 }}</div>
-        <div class="vital-hint font-mono">Instant Copy Codes</div>
-      </div>
-    </div>
-
-    <!-- TIER 2: PRIORITY & IMPORTANT ITEMS RADAR STRIP -->
-    @if (assistant.dailyBriefing()?.tier_2_priority_items?.length) {
-      <div class="tier2-priority-container">
-        <div class="tier2-header font-mono">
-          <span class="badge-critical">TIER 2 • PRIORITY ALERTS REQUIRING ATTENTION</span>
-          <span class="count-sub">{{ assistant.dailyBriefing()?.tier_2_priority_items?.length }} critical items found</span>
-        </div>
-
-        <div class="priority-cards-track">
-          @for (item of assistant.dailyBriefing()?.tier_2_priority_items; track item.title) {
-            <div class="priority-card" [ngClass]="item.type.toLowerCase()">
-              <div class="p-card-top font-mono">
-                <span class="p-type-badge">{{ item.type.replace('_', ' ') }}</span>
-                <span class="p-urgency" [class.p-urgency-high]="item.urgency === 'HIGH' || item.urgency === 'CRITICAL'">
-                  {{ item.urgency }}
-                </span>
-              </div>
-              <div class="p-card-title">{{ item.title }}</div>
-              <div class="p-card-sender font-mono">From: {{ item.sender }}</div>
-              <div class="p-card-body">{{ item.body | slice:0:110 }}...</div>
-
-              <div class="p-card-actions">
-                @if (item.otp_code) {
-                  <button type="button" class="btn-p-action font-mono" (click)="assistant.copyToClipboard(item.otp_code, 'OTP')">
-                    📋 COPY OTP: {{ item.otp_code }}
-                  </button>
-                } @else if (item.utr) {
-                  <button type="button" class="btn-p-action font-mono" (click)="assistant.copyToClipboard(item.utr, 'UTR')">
-                    📋 COPY UTR: {{ item.utr }}
-                  </button>
-                } @else if (item.type === 'MISSED_CALL') {
-                  <button type="button" class="btn-p-action font-mono" (click)="dialPhone(item.sender)">
-                    📞 CALL BACK
-                  </button>
-                } @else if (item.type === 'WHATSAPP_MESSAGE') {
-                  <button type="button" class="btn-p-action font-mono" (click)="assistant.launchWhatsAppWeb()">
-                    💬 OPEN CHAT
-                  </button>
-                } @else {
-                  <button type="button" class="btn-p-action font-mono" (click)="setFilter('all')">
-                    🔍 INSPECT
-                  </button>
-                }
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    }
-
-    <!-- TIER 3: ASK BRAIN / DYNAMIC QUERY BAR -->
-    <div class="tier3-query-container">
-      <div class="query-input-wrapper">
-        <span class="query-brain-glyph">🧠</span>
-        <input
-          type="text"
-          class="query-text-input font-mono"
-          [(ngModel)]="userQuery"
-          (keydown.enter)="askAI()"
-          placeholder="Ask Brain anything (e.g. 'Update me on today', 'What is my latest ICICI debit?', 'Show my Jio OTP', 'Did anyone message on WhatsApp?')..."
-        />
-        <button
-          type="button"
-          class="btn-run-query font-mono"
-          (click)="askAI()"
-          [disabled]="assistant.isAskingAI() || !userQuery().trim()"
-        >
-          {{ assistant.isAskingAI() ? 'PROCESSING...' : '⚡ ASK BRAIN' }}
-        </button>
-      </div>
-
-      <!-- Quick Prompt Chips -->
-      <div class="prompt-chips-row font-mono">
-        <span class="chips-label">QUICK DRILLDOWNS:</span>
-        <button type="button" class="prompt-chip" (click)="triggerDailyBriefing()">
-          ⚡ Full Daily Briefing
-        </button>
-        <button type="button" class="prompt-chip" (click)="sendQuickQuery('Show my recent ICICI and SBI debits, credits and UTR numbers')">
-          🏦 Banking Debits & Credits
-        </button>
-        <button type="button" class="prompt-chip" (click)="sendQuickQuery('What are my latest security OTP codes?')">
-          🔐 Recent OTP Codes
-        </button>
-        <button type="button" class="prompt-chip" (click)="sendQuickQuery('Show all recent WhatsApp messages and senders')">
-          💬 WhatsApp Chats
-        </button>
-        <button type="button" class="prompt-chip" (click)="sendQuickQuery('Who called me today and are there any missed calls?')">
-          📞 Missed Calls
-        </button>
-      </div>
-
-      <!-- RENDERED AI INTELLIGENCE ANSWER BLOCK -->
-      @if (assistant.intelligenceAnswer()) {
-        <div class="ai-answer-card animate-fade-in font-mono">
-          <div class="ai-answer-top">
-            <span class="ai-tag">✨ SOVEREIGN COGNITIVE SYNTHESIS</span>
-            <button type="button" class="btn-close-ai" (click)="clearAIAnswer()" title="Dismiss Answer">✕</button>
-          </div>
-
-          @if (assistant.intelligenceAnswer()?.thinking) {
-            <details class="thought-trace-box">
-              <summary class="thought-summary">Cognitive Reasoning Trace (DeepSeek-R1)</summary>
-              <div class="thought-content">{{ assistant.intelligenceAnswer()?.thinking }}</div>
-            </details>
-          }
-
-          <div class="ai-answer-body">{{ assistant.intelligenceAnswer()?.answer }}</div>
-
-          @if (assistant.intelligenceAnswer()?.sources?.length) {
-            <div class="sources-strip">
-              <span class="source-hdr">VERIFIED SOURCES ({{ assistant.intelligenceAnswer()?.sources?.length }}):</span>
-              @for (src of assistant.intelligenceAnswer()?.sources; track src.text) {
-                <span class="source-pill" [title]="src.text">
-                  {{ src.source }} ({{ (src.score * 100).toFixed(0) }}%)
-                </span>
-              }
-            </div>
-          }
-        </div>
+    <button
+      type="button"
+      class="segment-btn"
+      [class.active-segment]="activeTab() === 'BRIEFING'"
+      (click)="activeTab.set('BRIEFING')"
+    >
+      <span class="tab-ic">⚡</span>
+      <span>Daily Briefing & Ask AI</span>
+      @if (assistant.dailyBriefing()?.tier_2_priority_items?.length) {
+        <span class="tab-badge badge-alert">{{ assistant.dailyBriefing()?.tier_2_priority_items?.length }}</span>
       }
-    </div>
-  </section>
+    </button>
 
-  <!-- COMMUNICATIONS STREAM & RESPONSE COCKPIT -->
-  <section class="cockpit-stream-section">
-    <!-- Stream Controls Toolbar -->
-    <div class="stream-toolbar">
-      <div class="filter-tabs-cluster font-mono">
+    <button
+      type="button"
+      class="segment-btn"
+      [class.active-segment]="activeTab() === 'PROFILE'"
+      (click)="activeTab.set('PROFILE')"
+    >
+      <span class="tab-ic">🧠</span>
+      <span>Cognitive Profile & Memory Vault</span>
+    </button>
+  </nav>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 1: LIVE COMMUNICATIONS STREAM & AI RESPONSE COCKPIT                   -->
+  <!-- ========================================================================= -->
+  @if (activeTab() === 'STREAM') {
+    <section class="cockpit-stream-section animate-fade-in">
+      <!-- Stream Category Filter Chips -->
+      <div class="filter-chips-row font-mono">
         <button
           type="button"
-          class="tab-btn"
-          [class.active]="assistant.activeFilter() === 'all'"
+          class="filter-pill"
+          [class.active-pill]="assistant.activeFilter() === 'all'"
           (click)="setFilter('all')"
         >
-          All Stream ({{ summary()?.total || filteredMessages().length }})
+          <span>📊 All</span>
+          <span class="pill-count">{{ summary()?.total || filteredMessages().length }}</span>
         </button>
+
         <button
           type="button"
-          class="tab-btn"
-          [class.active]="assistant.activeFilter() === 'banking'"
-          (click)="setFilter('banking')"
-        >
-          🏦 Banking & UPI ({{ summary()?.banking || 0 }})
-        </button>
-        <button
-          type="button"
-          class="tab-btn"
-          [class.active]="assistant.activeFilter() === 'otp'"
-          (click)="setFilter('otp')"
-        >
-          🔐 OTPs & Security ({{ summary()?.otps || 0 }})
-        </button>
-        <button
-          type="button"
-          class="tab-btn"
-          [class.active]="assistant.activeFilter() === 'mail'"
-          (click)="setFilter('mail')"
-        >
-          📧 Emails & Gmail ({{ summary()?.emails || 0 }})
-        </button>
-        <button
-          type="button"
-          class="tab-btn"
-          [class.active]="assistant.activeFilter() === 'whatsapp'"
+          class="filter-pill pill-wa"
+          [class.active-pill]="assistant.activeFilter() === 'whatsapp'"
           (click)="setFilter('whatsapp')"
         >
-          💬 WhatsApp ({{ summary()?.whatsapp || 0 }})
+          <span>💬 WhatsApp</span>
+          <span class="pill-count">{{ summary()?.whatsapp || 0 }}</span>
         </button>
+
         <button
           type="button"
-          class="tab-btn"
-          [class.active]="assistant.activeFilter() === 'calls'"
+          class="filter-pill pill-email"
+          [class.active-pill]="assistant.activeFilter() === 'mail'"
+          (click)="setFilter('mail')"
+        >
+          <span>📧 Gmail</span>
+          <span class="pill-count">{{ summary()?.emails || 0 }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="filter-pill pill-bank"
+          [class.active-pill]="assistant.activeFilter() === 'banking'"
+          (click)="setFilter('banking')"
+        >
+          <span>🏦 Banking & UPI</span>
+          <span class="pill-count">{{ summary()?.banking || 0 }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="filter-pill pill-otp"
+          [class.active-pill]="assistant.activeFilter() === 'otp'"
+          (click)="setFilter('otp')"
+        >
+          <span>🔐 OTPs</span>
+          <span class="pill-count">{{ summary()?.otps || 0 }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="filter-pill pill-call"
+          [class.active-pill]="assistant.activeFilter() === 'calls'"
           (click)="setFilter('calls')"
         >
-          📞 Calls & Alerts ({{ summary()?.calls || 0 }})
+          <span>📞 Calls</span>
+          <span class="pill-count">{{ summary()?.calls || 0 }}</span>
         </button>
       </div>
 
-      <div class="stream-status font-mono">
-        <span>Showing {{ filteredMessages().length }} communications</span>
-      </div>
-    </div>
-
-    <!-- Two-Column Cockpit Layout: Left Feed & Right Inspector -->
-    <div class="cockpit-split-grid">
-      <!-- LEFT COLUMN: Communications Feed -->
-      <div class="stream-feed-pane custom-scrollbar">
-        @if (filteredMessages().length === 0) {
-          <div class="empty-feed-card font-mono">
-            <span class="empty-icon">📭</span>
-            <div class="empty-title">No communications found for this filter</div>
-            <p class="empty-sub">Click 'SYNC ALL' above to harvest live data from your POCO phone, WhatsApp & Gmail.</p>
-          </div>
-        }
-
-        @for (msg of filteredMessages(); track msg.message_id) {
-          <div
-            class="feed-card"
-            [class.selected-feed-card]="assistant.activeMessage()?.message_id === msg.message_id"
-            (click)="onSelectMessage(msg)"
-          >
-            <div class="card-top-row">
-              <div class="sender-group">
-                <span
-                  class="channel-badge font-mono"
-                  [ngClass]="'badge-' + (msg.category || msg.channel).toLowerCase()"
-                >
-                  {{ (msg.category || msg.channel).toUpperCase() }}
-                </span>
-                <strong class="sender-name">{{ msg.sender }}</strong>
-              </div>
-              <span class="card-time font-mono">{{ msg.timestamp | date:'shortTime' }}</span>
+      <!-- Split View: Feed on Left, Detail on Right -->
+      <div class="cockpit-split-grid">
+        <!-- Feed Column -->
+        <div class="stream-feed-pane custom-scrollbar">
+          @if (filteredMessages().length === 0) {
+            <div class="empty-feed-card font-mono">
+              <span class="empty-icon">📭</span>
+              <div class="empty-title">No communications in this filter</div>
+              <p class="empty-sub">Click 'SYNC ALL' above to synchronize messages from your phone and accounts.</p>
             </div>
+          }
 
-            @if (msg.subject) {
-              <div class="card-subject font-mono">{{ msg.subject }}</div>
-            }
-
-            <div class="card-body-snippet">{{ msg.body | slice:0:130 }}...</div>
-
-            <!-- Contextual Highlights (Amount, UTR, OTP) -->
-            <div class="card-meta-row font-mono">
-              @if (msg.amount_inr != null) {
-                <span class="tag-financial">
-                  {{ msg.body.toLowerCase().includes('credited') ? '+' : '-' }} ₹{{ msg.amount_inr }}
-                </span>
-              }
-              @if (msg.utr) {
-                <span class="tag-utr" (click)="$event.stopPropagation(); assistant.copyToClipboard(msg.utr, 'UTR')">
-                  UTR: {{ msg.utr }}
-                </span>
-              }
-              @if (msg.otp_code) {
-                <span class="tag-otp" (click)="$event.stopPropagation(); assistant.copyToClipboard(msg.otp_code, 'OTP')">
-                  OTP: {{ msg.otp_code }}
-                </span>
-              }
-              <span class="status-indicator" [class.replied]="msg.reply_status === 'replied'">
-                {{ msg.reply_status ? msg.reply_status.toUpperCase() : 'PENDING' }}
-              </span>
-            </div>
-          </div>
-        }
-      </div>
-
-      <!-- RIGHT COLUMN: Message Detail Inspector & AI Reply Bridge -->
-      <div class="stream-detail-pane">
-        @if (assistant.activeMessage(); as activeMsg) {
-          <div class="detail-card">
-            <!-- Inspector Header -->
-            <div class="detail-header">
-              <div>
-                <div class="detail-channel-row">
+          @for (msg of filteredMessages(); track msg.message_id) {
+            <div
+              class="feed-card"
+              [class.selected-feed-card]="assistant.activeMessage()?.message_id === msg.message_id"
+              (click)="onSelectMessage(msg)"
+            >
+              <div class="card-top-row">
+                <div class="sender-group">
                   <span
                     class="channel-badge font-mono"
-                    [ngClass]="'badge-' + (activeMsg.category || activeMsg.channel).toLowerCase()"
+                    [ngClass]="'badge-' + (msg.category || msg.channel).toLowerCase()"
                   >
-                    {{ (activeMsg.category || activeMsg.channel).toUpperCase() }}
+                    {{ (msg.category || msg.channel).toUpperCase() }}
                   </span>
-                  <span class="detail-time font-mono">{{ activeMsg.timestamp | date:'medium' }}</span>
+                  <strong class="sender-name">{{ msg.sender }}</strong>
                 </div>
-                <h3 class="detail-sender">{{ activeMsg.sender }}</h3>
-                @if (activeMsg.subject) {
-                  <div class="detail-subj font-mono">{{ activeMsg.subject }}</div>
-                }
+                <span class="card-time font-mono">{{ msg.timestamp | date:'shortTime' }}</span>
               </div>
 
-              <!-- Quick Action Buttons -->
-              <div class="detail-quick-actions font-mono">
-                @if (activeMsg.otp_code) {
-                  <button
-                    type="button"
-                    class="btn-detail-action"
-                    (click)="assistant.copyToClipboard(activeMsg.otp_code, 'OTP Code')"
-                  >
-                    📋 COPY OTP ({{ activeMsg.otp_code }})
-                  </button>
+              @if (msg.subject) {
+                <div class="card-subject font-mono">{{ msg.subject }}</div>
+              }
+
+              <div class="card-body-snippet">{{ msg.body | slice:0:130 }}...</div>
+
+              <div class="card-meta-row font-mono">
+                @if (msg.amount_inr != null) {
+                  <span class="tag-financial">
+                    {{ msg.body.toLowerCase().includes('credited') ? '+' : '-' }} ₹{{ msg.amount_inr }}
+                  </span>
                 }
-                @if (activeMsg.utr) {
-                  <button
-                    type="button"
-                    class="btn-detail-action"
-                    (click)="assistant.copyToClipboard(activeMsg.utr, 'UTR')"
-                  >
-                    📋 COPY UTR
-                  </button>
+                @if (msg.otp_code) {
+                  <span class="tag-otp" (click)="$event.stopPropagation(); assistant.copyToClipboard(msg.otp_code, 'OTP')">
+                    📋 COPY OTP: {{ msg.otp_code }}
+                  </span>
                 }
-                @if (activeMsg.channel === 'whatsapp' || activeMsg.category === 'whatsapp') {
-                  <button
-                    type="button"
-                    class="btn-detail-action btn-wa-action"
-                    (click)="launchWhatsAppForMessage(activeMsg)"
-                  >
-                    💬 OPEN WHATSAPP
-                  </button>
+                @if (msg.utr) {
+                  <span class="tag-utr" (click)="$event.stopPropagation(); assistant.copyToClipboard(msg.utr, 'UTR')">
+                    UTR: {{ msg.utr }}
+                  </span>
                 }
-                @if (activeMsg.channel === 'call' || activeMsg.category === 'calls') {
-                  <button
-                    type="button"
-                    class="btn-detail-action"
-                    (click)="dialPhone(activeMsg.sender)"
-                  >
-                    📞 DIAL NUMBER
-                  </button>
-                }
-                @if (activeMsg.channel === 'gmail' || activeMsg.category === 'mail') {
-                  <button
-                    type="button"
-                    class="btn-detail-action"
-                    (click)="openEmail(activeMsg.sender, activeMsg.subject)"
-                  >
-                    📧 COMPOSE IN GMAIL
-                  </button>
-                }
+                <span class="status-indicator" [class.replied]="msg.reply_status === 'replied'">
+                  {{ msg.reply_status ? msg.reply_status.toUpperCase() : 'PENDING' }}
+                </span>
               </div>
             </div>
+          }
+        </div>
 
-            <!-- Full Message Text -->
-            <div class="detail-body-box font-mono">
-              {{ activeMsg.body }}
-            </div>
-
-            <!-- AI Suggested Replies -->
-            <div class="suggested-replies-box">
-              <div class="suggested-hdr font-mono">
-                <span>🤖 AI CONTEXTUAL REPLIES (QWEN 8B / DEEPSEEK-R1)</span>
-                <button
-                  type="button"
-                  class="btn-regenerate font-mono"
-                  (click)="assistant.generateSuggestions(activeMsg)"
-                  [disabled]="assistant.isGeneratingReplies()"
-                >
-                  {{ assistant.isGeneratingReplies() ? 'GENERATING...' : '🔄 RE-GENERATE' }}
-                </button>
-              </div>
-
-              @if (assistant.suggestedReplies().length > 0) {
-                <div class="suggestions-grid">
-                  @for (s of assistant.suggestedReplies(); track s.category) {
-                    <div
-                      class="suggestion-pill"
-                      [class.active-pill]="customReplyText() === s.text"
-                      (click)="selectReplyOption(s.text)"
+        <!-- Detail Inspector Column -->
+        <div class="stream-detail-pane">
+          @if (assistant.activeMessage(); as activeMsg) {
+            <div class="detail-card">
+              <div class="detail-header">
+                <div>
+                  <div class="detail-channel-row font-mono">
+                    <span
+                      class="channel-badge"
+                      [ngClass]="'badge-' + (activeMsg.category || activeMsg.channel).toLowerCase()"
                     >
-                      <div class="pill-top font-mono">
-                        <span class="pill-tone">{{ s.tone }}</span>
-                        <span class="pill-cat">{{ s.category }}</span>
-                      </div>
-                      <div class="pill-text">{{ s.text }}</div>
-                      <button
-                        type="button"
-                        class="btn-pill-send font-mono"
-                        (click)="$event.stopPropagation(); sendQuickReply(s.text)"
-                        [disabled]="assistant.isSendingReply()"
-                      >
-                        ⚡ DISPATCH
-                      </button>
-                    </div>
+                      {{ (activeMsg.category || activeMsg.channel).toUpperCase() }}
+                    </span>
+                    <span class="detail-time">{{ activeMsg.timestamp | date:'medium' }}</span>
+                  </div>
+                  <h3 class="detail-sender">{{ activeMsg.sender }}</h3>
+                  @if (activeMsg.subject) {
+                    <div class="detail-subj font-mono">{{ activeMsg.subject }}</div>
                   }
+                </div>
+
+                <div class="detail-quick-actions font-mono">
+                  @if (activeMsg.otp_code) {
+                    <button
+                      type="button"
+                      class="btn-detail-action btn-otp-action"
+                      (click)="assistant.copyToClipboard(activeMsg.otp_code, 'OTP Code')"
+                    >
+                      📋 COPY OTP: {{ activeMsg.otp_code }}
+                    </button>
+                  }
+                  @if (activeMsg.utr) {
+                    <button
+                      type="button"
+                      class="btn-detail-action"
+                      (click)="assistant.copyToClipboard(activeMsg.utr, 'UTR')"
+                    >
+                      📋 COPY UTR
+                    </button>
+                  }
+                  @if (activeMsg.channel === 'whatsapp' || activeMsg.category === 'whatsapp') {
+                    <button
+                      type="button"
+                      class="btn-detail-action btn-wa-action"
+                      (click)="launchWhatsAppForMessage(activeMsg)"
+                    >
+                      💬 OPEN WHATSAPP
+                    </button>
+                  }
+                  @if (activeMsg.channel === 'call' || activeMsg.category === 'calls') {
+                    <button
+                      type="button"
+                      class="btn-detail-action"
+                      (click)="dialPhone(activeMsg.sender)"
+                    >
+                      📞 CALL BACK
+                    </button>
+                  }
+                  @if (activeMsg.channel === 'gmail' || activeMsg.category === 'mail') {
+                    <button
+                      type="button"
+                      class="btn-detail-action"
+                      (click)="openEmail(activeMsg.sender, activeMsg.subject)"
+                    >
+                      📧 REPLY IN GMAIL
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Message Text -->
+              <div class="detail-body-box font-mono">
+                {{ activeMsg.body }}
+              </div>
+
+              <!-- AI Contextual Suggestions -->
+              <div class="suggested-replies-box">
+                <div class="suggested-hdr font-mono">
+                  <span>🤖 AI CONTEXTUAL REPLIES (QWEN 8B / ABHI)</span>
+                  <button
+                    type="button"
+                    class="btn-regenerate font-mono"
+                    (click)="assistant.generateSuggestions(activeMsg)"
+                    [disabled]="assistant.isGeneratingReplies()"
+                  >
+                    {{ assistant.isGeneratingReplies() ? 'GENERATING...' : '🔄 RE-GENERATE' }}
+                  </button>
+                </div>
+
+                @if (assistant.suggestedReplies().length > 0) {
+                  <div class="suggestions-grid">
+                    @for (s of assistant.suggestedReplies(); track s.category) {
+                      <div
+                        class="suggestion-pill"
+                        [class.active-pill]="customReplyText() === s.text"
+                        (click)="selectReplyOption(s.text)"
+                      >
+                        <div class="pill-top font-mono">
+                          <span class="pill-tone">{{ s.tone }}</span>
+                          <span class="pill-cat">{{ s.category }}</span>
+                        </div>
+                        <div class="pill-text">{{ s.text }}</div>
+                        <button
+                          type="button"
+                          class="btn-pill-send font-mono"
+                          (click)="$event.stopPropagation(); sendQuickReply(s.text)"
+                          [disabled]="assistant.isSendingReply()"
+                        >
+                          ⚡ SEND
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Reply Composer -->
+              <div class="reply-composer-box">
+                <div class="composer-title font-mono">
+                  <span>COMPOSE REPLY TO {{ activeMsg.sender }}</span>
+                  <span class="target-channel">VIA {{ activeMsg.channel.toUpperCase() }}</span>
+                </div>
+                <textarea
+                  class="composer-textarea font-mono"
+                  rows="3"
+                  [(ngModel)]="customReplyText"
+                  placeholder="Type custom reply or select an AI suggestion above..."
+                ></textarea>
+
+                <div class="composer-actions-row">
+                  <button
+                    type="button"
+                    class="btn-send-dispatch font-mono"
+                    (click)="sendSelectedReply()"
+                    [disabled]="assistant.isSendingReply() || !customReplyText().trim()"
+                  >
+                    <span>🚀</span>
+                    <span>{{ assistant.isSendingReply() ? 'SENDING...' : 'DISPATCH REPLY' }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="no-selection-card font-mono">
+              <span class="no-sel-icon">👈</span>
+              <span>Select any communication from the list on the left to inspect and reply.</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- TAB 2: DAILY BRIEFING & ASK AI ASSISTANT                                  -->
+  <!-- ========================================================================= -->
+  @if (activeTab() === 'BRIEFING') {
+    <section class="executive-briefing-section animate-fade-in">
+      <!-- Daily Briefing Hero Card -->
+      <div class="briefing-card">
+        <div class="briefing-card-header">
+          <div class="briefing-title-cluster">
+            <span class="hero-icon">⚡</span>
+            <div>
+              <h2 class="hero-title font-mono">DAILY EXECUTIVE BRIEFING & RADAR</h2>
+              <span class="hero-sub font-mono">Autonomous Summary of Communications, Banking & Priority Alerts</span>
+            </div>
+          </div>
+
+          <div class="briefing-cta-cluster">
+            <button
+              type="button"
+              class="btn-hero-briefing font-mono"
+              (click)="triggerDailyBriefing()"
+              [disabled]="assistant.isBriefingLoading() || assistant.isAskingAI()"
+            >
+              <span>🎙️</span>
+              <span>{{ assistant.isBriefingLoading() || assistant.isAskingAI() ? 'READING FEEDS...' : 'GENERATE BRIEFING' }}</span>
+            </button>
+            <button
+              type="button"
+              class="btn-hero-tune font-mono"
+              (click)="assistant.evaluateAndUpgradeBrain()"
+              [disabled]="assistant.isUpgradingBrain()"
+            >
+              <span>🧠</span>
+              <span>{{ assistant.isUpgradingBrain() ? 'UPGRADING...' : 'RE-TUNE BRAIN' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Priority Alerts (If any) -->
+        @if (assistant.dailyBriefing()?.tier_2_priority_items?.length) {
+          <div class="priority-radar-box">
+            <div class="priority-radar-header font-mono">
+              <span class="badge-critical">CRITICAL ALERTS REQUIRING ATTENTION</span>
+              <span>{{ assistant.dailyBriefing()?.tier_2_priority_items?.length }} Items</span>
+            </div>
+
+            <div class="priority-cards-grid">
+              @for (item of assistant.dailyBriefing()?.tier_2_priority_items; track item.title) {
+                <div class="priority-item-card">
+                  <div class="p-top font-mono">
+                    <span class="p-type">{{ item.type.replace('_', ' ') }}</span>
+                    <span class="p-urgency" [class.urgent]="item.urgency === 'HIGH' || item.urgency === 'CRITICAL'">
+                      {{ item.urgency }}
+                    </span>
+                  </div>
+                  <strong class="p-title">{{ item.title }}</strong>
+                  <div class="p-body">{{ item.body | slice:0:110 }}...</div>
+
+                  <div class="p-actions font-mono">
+                    @if (item.otp_code) {
+                      <button type="button" class="btn-p-pill" (click)="assistant.copyToClipboard(item.otp_code, 'OTP')">
+                        📋 COPY OTP: {{ item.otp_code }}
+                      </button>
+                    } @else if (item.utr) {
+                      <button type="button" class="btn-p-pill" (click)="assistant.copyToClipboard(item.utr, 'UTR')">
+                        📋 COPY UTR: {{ item.utr }}
+                      </button>
+                    } @else if (item.type === 'MISSED_CALL') {
+                      <button type="button" class="btn-p-pill" (click)="dialPhone(item.sender)">
+                        📞 CALL BACK
+                      </button>
+                    } @else {
+                      <button type="button" class="btn-p-pill" (click)="activeTab.set('STREAM')">
+                        🔍 INSPECT
+                      </button>
+                    }
+                  </div>
                 </div>
               }
             </div>
-
-            <!-- Custom Reply Composer -->
-            <div class="reply-composer-box">
-              <div class="composer-title font-mono">
-                <span>COMPOSE REPLY TO {{ activeMsg.sender }}</span>
-                <span class="target-channel font-mono">VIA {{ activeMsg.channel.toUpperCase() }}</span>
-              </div>
-              <textarea
-                class="composer-textarea font-mono"
-                rows="3"
-                [(ngModel)]="customReplyText"
-                placeholder="Type customized reply or select an AI suggestion above..."
-              ></textarea>
-
-              <div class="composer-actions-row">
-                <button
-                  type="button"
-                  class="btn-send-dispatch font-mono"
-                  (click)="sendSelectedReply()"
-                  [disabled]="assistant.isSendingReply() || !customReplyText().trim()"
-                >
-                  <span>🚀</span>
-                  <span>{{ assistant.isSendingReply() ? 'DISPATCHING...' : 'DISPATCH REPLY' }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        } @else {
-          <div class="no-selection-card font-mono">
-            <span>👈 Select a communication from the feed to inspect details and dispatch replies.</span>
           </div>
         }
       </div>
-    </div>
-  </section>
+
+      <!-- Ask Brain Dynamic Query Bar -->
+      <div class="ask-brain-card">
+        <div class="query-input-bar">
+          <span class="query-icon">🧠</span>
+          <input
+            type="text"
+            class="query-input font-mono"
+            [(ngModel)]="userQuery"
+            (keydown.enter)="askAI()"
+            placeholder="Ask Brain anything (e.g. 'Show my recent debits', 'What is my latest OTP?', 'Did anyone call me?')..."
+          />
+          <button
+            type="button"
+            class="btn-query-submit font-mono"
+            (click)="askAI()"
+            [disabled]="assistant.isAskingAI() || !userQuery().trim()"
+          >
+            {{ assistant.isAskingAI() ? 'PROCESSING...' : '⚡ ASK BRAIN' }}
+          </button>
+        </div>
+
+        <div class="quick-chips-strip font-mono">
+          <span class="chip-hdr">QUICK DRILLDOWNS:</span>
+          <button type="button" class="quick-chip" (click)="triggerDailyBriefing()">
+            ⚡ Daily Briefing
+          </button>
+          <button type="button" class="quick-chip" (click)="sendQuickQuery('Show my recent ICICI and SBI debits, credits and UTR numbers')">
+            🏦 Banking Debits & Credits
+          </button>
+          <button type="button" class="quick-chip" (click)="sendQuickQuery('What are my latest security OTP codes?')">
+            🔐 Recent OTP Codes
+          </button>
+          <button type="button" class="quick-chip" (click)="sendQuickQuery('Show all recent WhatsApp messages and senders')">
+            💬 WhatsApp Chats
+          </button>
+          <button type="button" class="quick-chip" (click)="sendQuickQuery('Who called me today and are there any missed calls?')">
+            📞 Missed Calls
+          </button>
+        </div>
+
+        <!-- Rendered AI Answer Card -->
+        @if (assistant.intelligenceAnswer()) {
+          <div class="ai-answer-block animate-fade-in font-mono">
+            <div class="ai-answer-top">
+              <span class="ai-tag">✨ SOVEREIGN COGNITIVE SYNTHESIS</span>
+              <button type="button" class="btn-close-answer" (click)="clearAIAnswer()" title="Dismiss Answer">✕</button>
+            </div>
+            <div class="ai-answer-body">{{ assistant.intelligenceAnswer()?.answer }}</div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- TAB 3: COGNITIVE PROFILE & MEMORY VAULT                                   -->
+  <!-- ========================================================================= -->
+  @if (activeTab() === 'PROFILE') {
+    <section class="profile-vault-section animate-fade-in">
+      <div class="profile-cards-grid">
+        <!-- Sovereign Profile Details -->
+        <div class="vault-card">
+          <div class="vault-card-header font-mono">
+            <span class="v-icon">👑</span>
+            <span class="v-title">SOVEREIGN OPERATOR IDENTITY</span>
+          </div>
+          <div class="vault-specs-grid font-mono">
+            <div class="spec-tile">
+              <span class="spec-label">LEGAL OPERATOR</span>
+              <span class="spec-val text-primary font-bold">Ravuvai Ayyapparayudu (Mamu)</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">VERIFIED PHONE</span>
+              <span class="spec-val">{{ assistant.profile()?.phone_number || '+91 9390598938' }}</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">OFFICIAL EMAIL</span>
+              <span class="spec-val">{{ assistant.profile()?.email || 'ayyapparayudu.ravuvari@gmail.com' }}</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">SETTLEMENT ACCOUNT</span>
+              <span class="spec-val text-emerald font-bold">State Bank of India (41130645649)</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">SETTLEMENT IFSC</span>
+              <span class="spec-val font-bold">SBIN0020507</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">UPI ID</span>
+              <span class="spec-val text-emerald font-bold">ayyapparayudu.5@ybl</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Local Brain & Cognitive Model Specs -->
+        <div class="vault-card">
+          <div class="vault-card-header font-mono">
+            <span class="v-icon">🤖</span>
+            <span class="v-title">LOCAL AI MODELS & MEMORY STATUS</span>
+          </div>
+          <div class="vault-specs-grid font-mono">
+            <div class="spec-tile">
+              <span class="spec-label">PRIMARY LLM</span>
+              <span class="spec-val text-cyan font-bold">abhi:latest (Local Sovereign 8B)</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">FALLBACK MODEL</span>
+              <span class="spec-val">qwen3:8b (Offline Quantized)</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">COGNITIVE ALIGNMENT</span>
+              <span class="spec-val text-emerald font-bold">{{ ((assistant.brainStatus()?.alignment_score || 0.986) * 100).toFixed(1) }}% High Alignment</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">LOCAL VECTOR STORE</span>
+              <span class="spec-val">123,000+ Project Records Indexed</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">PRIVACY GUARANTEE</span>
+              <span class="spec-val text-emerald font-bold">100% Offline • Zero External Telemetry</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">MOBILE TELEMETRY BRIDGE</span>
+              <span class="spec-val">POCO 22101320I (Wireless ADB 10.65.249.121:5555)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  }
 </div>

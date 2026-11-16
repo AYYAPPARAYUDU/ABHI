@@ -13,6 +13,7 @@ import { CommunicationsAssistantService, InboxMessage } from '../../../../core/s
 export class BrainPageComponent implements OnInit, OnDestroy {
   readonly assistant = inject(CommunicationsAssistantService);
 
+  readonly activeTab = signal<'STREAM' | 'BRIEFING' | 'PROFILE'>('STREAM');
   isEditingProfile = signal<boolean>(false);
   inputEmail = '';
   inputPhone = '';
