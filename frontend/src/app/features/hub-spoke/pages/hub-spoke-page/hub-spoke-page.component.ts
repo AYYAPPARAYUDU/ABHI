@@ -75,8 +75,8 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly selectedPod = signal<PodDefinition | null>(null);
 
   // Real Business & System Data
-  readonly sbiSettledTotalInr = signal<number>(1842500);
-  readonly sbiTransactionsCount = signal<number>(14);
+  readonly sbiSettledTotalInr = signal<number>(0);
+  readonly sbiTransactionsCount = signal<number>(0);
   readonly vectorIndexedDocsCount = signal<number>(574);
   readonly systemCpuPct = signal<number>(12);
   readonly systemRamPct = signal<number>(44);
@@ -178,7 +178,7 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
       color: '#14b8a6',
       hexColor: 0x14b8a6,
       agentsCount: 3,
-      statusText: 'SBI ****5649 · ₹18.42L',
+      statusText: 'SBI ****5649 · Active',
       angleDeg: 180,
       x: 0,
       z: 16,
@@ -186,7 +186,7 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
       departmentKey: 'COMMERCIAL_TREASURY',
       leadAgent: 'Shuri (Treasury Comptroller)',
       realMetrics: [
-        { label: 'SETTLED REVENUE', value: '₹18,42,500' },
+        { label: 'SETTLED REVENUE', value: '₹0.00' },
         { label: 'ACCOUNT NUMBER', value: 'SBI 41130645649' },
         { label: 'UPI IDENTIFIER', value: 'ayyapparayudu.5@ybl' }
       ],
@@ -265,7 +265,7 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
       podBadge: 'TBX Shop / Treasury',
       sender: 'Shuri',
       color: '#14b8a6',
-      text: 'Verified SBI Account 41130645649 ledger: ₹18,42,500 settled across 14 transactions.',
+      text: 'Verified SBI Account 41130645649 settlement rail online. Immutable ledger active.',
       time: '18:50:12',
       type: 'settlement'
     },
@@ -350,20 +350,20 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
     const url = getApiUrl('/api/v1/business/live-monitor');
     this.http.get<any>(url).subscribe({
       next: (res) => {
-        if (res?.overview) {
-          const rev = res.overview.settled_revenue_inr || 1842500;
-          const count = res.overview.settled_transactions_count || 14;
+        if (res?.financial) {
+          const rev = res.financial.total_settled_inr || 0;
+          const count = res.financial.settled_transactions_count || 0;
           this.sbiSettledTotalInr.set(rev);
           this.sbiTransactionsCount.set(count);
           // Update pod metric in array
           this.pods[4].realMetrics[0].value = `₹${rev.toLocaleString('en-IN')}`;
-          this.pods[4].statusText = `SBI ****5649 · ₹${(rev / 100000).toFixed(2)}L`;
+          this.pods[4].statusText = rev > 0 ? `SBI ****5649 · ₹${(rev / 100000).toFixed(2)}L` : 'SBI ****5649 · Ready';
           this.cdr.markForCheck();
         }
       },
       error: () => {
         // Fallback to real authoritative baseline
-        this.sbiSettledTotalInr.set(1842500);
+        this.sbiSettledTotalInr.set(0);
       }
     });
 

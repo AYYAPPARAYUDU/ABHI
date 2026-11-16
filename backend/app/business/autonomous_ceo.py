@@ -122,7 +122,7 @@ class AutonomousBusinessCEO:
                 "description": f"Syntax error: {se.msg}"
             })
 
-        # Synthesize deliverable audit document
+        # Synthesize deliverable audit document only when an authentic invoice or client order is requested
         deliverable_filename = f"SECURITY_AUDIT_REPORT_{uuid.uuid4().hex[:8].upper()}.md"
         deliverable_path = self.output_dir / deliverable_filename
         report_content = (
@@ -153,13 +153,13 @@ class AutonomousBusinessCEO:
             f"- **UPI ID:** ayyapparayudu.5@ybl\n"
         )
 
-        with open(deliverable_path, "w", encoding="utf-8") as f:
-            f.write(report_content)
-
         deliv_hash = hashlib.sha256(report_content.encode("utf-8")).hexdigest()
 
         invoice_data = {}
         if create_invoice:
+            with open(deliverable_path, "w", encoding="utf-8") as f:
+                f.write(report_content)
+
             invoice = sovereign_treasury.generate_invoice(
                 client_name=client_name,
                 service_description=f"Automated Code Quality & Security Vulnerability Audit ({file_path_str[:30]})",

@@ -158,18 +158,22 @@ class N8nAutomationBridge:
                 }
 
             elif workflow_id == "n8n_micro_saas_billing":
-                utr = payload.get("utr_number", f"SBI{int(time.time())}")
-                amount = float(payload.get("amount_inr", 25000.0))
-                payer = payload.get("payer_name", "Verified Client Direct Transfer")
+                utr = payload.get("utr_number")
+                amount = float(payload.get("amount_inr", 0.0))
+                payer = payload.get("payer_name", "")
                 
-                res = sovereign_treasury.record_verified_sbi_settlement(
-                    utr_number=utr,
-                    amount_inr=amount,
-                    payer_name=payer,
-                    invoice_number=payload.get("invoice_number")
-                )
-                output_summary = f"Payment ₹{amount:,.2f} verified via Bank UTR {utr}. Credited into SBI Account 41130645649."
-                result_data = res
+                if utr and amount > 0:
+                    res = sovereign_treasury.record_verified_sbi_settlement(
+                        utr_number=utr,
+                        amount_inr=amount,
+                        payer_name=payer or "Verified Client",
+                        invoice_number=payload.get("invoice_number")
+                    )
+                    output_summary = f"Payment ₹{amount:,.2f} verified via Bank UTR {utr}. Credited into SBI Account 41130645649."
+                    result_data = res
+                else:
+                    output_summary = "Micro-SaaS billing pipeline standby. Awaiting authentic incoming Bank UTR and amount."
+                    result_data = {"status": "AWAITING_REAL_PAYMENT_UTR"}
 
             else:
                 output_summary = f"Workflow '{workflow_id}' executed successfully."

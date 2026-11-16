@@ -58,10 +58,10 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
 
   // Real Commercial Settlement Metrics from authoritative backend
   readonly treasuryOverview = signal({
-    totalSettledInr: 18500.0,
-    totalSettledUsd: 211.43,
+    totalSettledInr: 0.0,
+    totalSettledUsd: 0.0,
     pendingInr: 0.0,
-    transactionsCount: 1,
+    transactionsCount: 0,
     currency: 'INR',
     lastUpdated: 'Live',
   });
@@ -148,7 +148,7 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
   readonly showUtrModal = signal<boolean>(false);
   readonly isSubmittingUtr = signal<boolean>(false);
   inputUtr = '';
-  inputAmount = 25000.0;
+  inputAmount = 0.0;
   inputPayer = 'Direct Client Transfer';
   inputInvoiceNum = '';
 
@@ -158,7 +158,7 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
   newInvoiceClientName = '';
   newInvoiceClientOrg = '';
   newInvoiceServiceDesc = '';
-  newInvoiceAmountInr = 25000.0;
+  newInvoiceAmountInr = 0.0;
   newInvoiceClientEmail = '';
 
   ngOnInit(): void {
@@ -200,10 +200,10 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
 
       if (overview) {
         this.treasuryOverview.set({
-          totalSettledInr: overview.total_settled_revenue_inr ?? overview.settled_revenue_inr ?? 18500.0,
-          totalSettledUsd: overview.total_settled_revenue_usd ?? overview.settled_revenue_usd ?? 211.43,
+          totalSettledInr: overview.total_settled_revenue_inr ?? overview.settled_revenue_inr ?? 0.0,
+          totalSettledUsd: overview.total_settled_revenue_usd ?? overview.settled_revenue_usd ?? 0.0,
           pendingInr: overview.pending_invoices_inr ?? 0.0,
-          transactionsCount: overview.settled_transactions_count ?? 1,
+          transactionsCount: overview.settled_transactions_count ?? 0,
           currency: overview.settlement_currency || 'INR',
           lastUpdated: new Date().toLocaleTimeString(),
         });
@@ -494,7 +494,7 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
     this.newInvoiceClientName = '';
     this.newInvoiceClientOrg = '';
     this.newInvoiceServiceDesc = '';
-    this.newInvoiceAmountInr = 25000.0;
+    this.newInvoiceAmountInr = 0.0;
     this.newInvoiceClientEmail = '';
     this.showCreateInvoiceModal.set(true);
   }
@@ -541,7 +541,7 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
     if (invoiceNumber) {
       const inv = this.settledInvoices().find((i) => i.invoice_number === invoiceNumber);
       if (inv) {
-        this.inputAmount = inv.total_inr || inv.subtotal_inr || 25000.0;
+        this.inputAmount = inv.total_inr || inv.subtotal_inr || 0.0;
         this.inputPayer = inv.client_name || 'Direct Client Transfer';
       }
     }

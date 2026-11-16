@@ -58,5 +58,20 @@
     "total_earned_inr": 0.0,
     "status": "ACTIVE",
     "created_at": "2026-11-13T12:05:11.203522+00:00"
+  },
+  {
+    "campaign_id": "CAMP-AMAZ-57B7A9",
+    "network_id": "amazon_associates",
+    "product_name": "Enterprise Sovereign AI Hardware Hub",
+    "category": "TECH",
+    "destination_url": "https://www.amazon.in/dp/B0CX23V2ZH?tag=ayyappa-21",
+    "affiliate_link": "https://www.amazon.in/dp/B0CX23V2ZH?tag=ayyappa-21&ascsubtag=abhi_3f6fcc",
+    "commission_rate_pct": 8.5,
+    "estimated_earnings_per_click_inr": 650.0,
+    "clicks": 0,
+    "conversions": 0,
+    "total_earned_inr": 0.0,
+    "status": "ACTIVE",
+    "created_at": "2026-11-16T03:31:15.754154+00:00"
   }
 ]

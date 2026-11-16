@@ -463,8 +463,8 @@ export class ArchitecturePageComponent implements OnInit, OnDestroy {
         },
         speedMetric: {
           icon: '💰',
-          title: '₹18,42,500 Settled',
-          desc: '14 verified commercial settlements from enterprise AI clients.'
+          title: 'Production Rails',
+          desc: 'Zero fake or demo data. Every rupee requires an authentic Bank UTR.'
         },
         reliability: {
           icon: '🧾',
@@ -499,13 +499,13 @@ export class ArchitecturePageComponent implements OnInit, OnDestroy {
           { label: 'Bank Name', value: 'State Bank of India' },
           { label: 'Account Number', value: 'SBI ****5649 (41130645649)' },
           { label: 'Account Holder', value: 'Ravuvai Ayyapparayudu (Mamu)' },
-          { label: 'Total Settled Revenue', value: '₹18,42,500 INR ($21,057.14 USD)' }
+          { label: 'Settlement Status', value: 'Authentic Production Ledger' }
         ],
         entities: [
           { name: 'Account Holder', details: 'Ravuvai Ayyapparayudu (ayyapparayudu.5@ybl).', status: 'VERIFIED' },
           { name: 'Bank Account Entity', details: 'State Bank of India (IFSC: SBIN0020507, Spl Commercial).', status: 'ACTIVE' },
-          { name: 'Settlement Ledger', details: '14 confirmed settlements with verified UTR hashes.', status: 'SETTLED' },
-          { name: 'Enterprise Invoices', details: 'Contracts with Global AI Solutions and Scale AI Cloud.', status: 'CURRENT' }
+          { name: 'Settlement Ledger', details: 'Zero demo records. Production UTR journal active.', status: 'READY' },
+          { name: 'Commercial Invoicing', details: 'On-demand commercial tax invoicing with UPI gateway.', status: 'ACTIVE' }
         ]
       },
       diagramType: 'ER'

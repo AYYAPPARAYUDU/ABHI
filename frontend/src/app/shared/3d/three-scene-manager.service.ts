@@ -1428,7 +1428,7 @@ export class ThreeSceneManagerService {
         pos: new THREE.Vector3(-5.2, 1.8, 2.5),
         size: 0.95,
         role: 'AST Code Analysis & Security Bounty Hunter',
-        upi: '₹28,500 Deliverables'
+        upi: 'Code Security Audit'
       },
       {
         id: 'llm_media_monetize',
@@ -1437,7 +1437,7 @@ export class ThreeSceneManagerService {
         pos: new THREE.Vector3(5.2, 1.8, 2.5),
         size: 0.95,
         role: 'Programmatic Scripts & Sponsorship Monetization',
-        upi: '₹42,000 Deliverables'
+        upi: 'Media Monetization'
       },
       {
         id: 'llm_b2b_outreach',
@@ -1446,7 +1446,7 @@ export class ThreeSceneManagerService {
         pos: new THREE.Vector3(-3.8, -1.8, 3.8),
         size: 0.9,
         role: 'Enterprise Lead Gen & Contract Negotiation',
-        upi: '₹75,000 Deliverables'
+        upi: 'B2B Client Outreach'
       },
       {
         id: 'llm_treasury_settle',

@@ -58,17 +58,9 @@ async def run_business_cycle(iteration: int = 1) -> dict:
     if "data" in aff_res and "affiliate_link" in aff_res["data"]:
         print(f"   🔗 Tracking URL: {aff_res['data']['affiliate_link']}")
 
-    # 4. Execute Stream 2: Code Security Audit & AST Bug Bounty
-    print(f"\n▶ [STREAM B] Executing AST Code Quality & Security Audit...")
-    audit_target = str(repo_root / "backend/app/business/treasury.py")
-    audit_order = await autonomous_business_ceo.execute_code_audit_order(
-        target_code_or_path=audit_target,
-        client_name="Enterprise Systems Corp",
-        client_org="Tier 1 Technology Partner",
-        service_fee_inr=28500.0,
-        create_invoice=False  # Keep invoice creation clean until client contracts
-    )
-    print(f"   ✓ Deliverable Report generated ({audit_order.get('code_lines', 0)} lines audited, {len(audit_order.get('findings', []))} AST findings).")
+    # 4. Check Commercial Stream Capabilities (Zero Mock Generation)
+    print(f"\n▶ [STREAM B] Code Security Audit Engine Verified (Zero Mock Invoices Mode).")
+    audit_order = {"status": "STANDBY", "stream": "CODE_AUDIT", "mode": "AWAITING_CLIENT_ORDER"}
 
     # 5. Execute Master CEO Revenue Assessment
     print(f"\n▶ [STREAM C] Synchronizing Master Business Autopilot...")

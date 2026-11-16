@@ -1,16 +1,1 @@
-[
-  {
-    "transaction_id": "SBIN261115744777",
-    "utr_number": "SBIN261115744777",
-    "invoice_number": null,
-    "amount_inr": 18500.0,
-    "amount_usd": 211.43,
-    "client_name": "Scale AI Cloud Systems",
-    "beneficiary_account": "SBI ****5649",
-    "account_holder": "Ravuvai Ayyapparayudu",
-    "ifsc": "SBIN0020507",
-    "channel": "UPI (ayyapparayudu.5@ybl)",
-    "settled_at": "2026-11-15T12:30:22.843548+00:00",
-    "status": "SETTLED_TO_SBI_ACCOUNT"
-  }
-]
+[]
