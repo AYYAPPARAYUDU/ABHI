@@ -38,8 +38,8 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
 
   readonly toastMessage = signal<string | null>(null);
 
-  // Active view tab: Executive Overview | n8n Workflows | Credentials Vault | Swarm Agents | Affiliate Hub | Invoices | Receipts
-  readonly activeTab = signal<'overview' | 'n8n' | 'vault' | 'agents' | 'affiliate' | 'invoices' | 'receipts'>('overview');
+  // Active view tab: Executive Dashboard | Mobile PhonePe Hub | SBI Channel | n8n Workflows | Credentials Vault | Swarm Agents | Affiliate Hub | Invoices | Receipts
+  readonly activeTab = signal<'dashboard' | 'mobile' | 'sbi' | 'overview' | 'n8n' | 'vault' | 'agents' | 'affiliate' | 'invoices' | 'receipts'>('dashboard');
 
   // Authoritative State Bank of India Settlement Channel (Mamu)
   readonly sbiProfile = {
@@ -64,6 +64,137 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
     transactionsCount: 0,
     currency: 'INR',
     lastUpdated: 'Live',
+  });
+
+  // Mobile PhonePe & Bank SMS Integration State (POCO X5 Pro 5G)
+  readonly mobileStatus = signal<{
+    connected: boolean;
+    device_model: string | null;
+    serial: string | null;
+    message: string;
+  }>({
+    connected: false,
+    device_model: null,
+    serial: null,
+    message: 'Initializing mobile wireless bridge...',
+  });
+
+  readonly mobileTransactions = signal<any[]>([]);
+  readonly mobileOtps = signal<any[]>([]);
+  readonly isLoadingMobile = signal<boolean>(false);
+  readonly isLaunchingPhonePe = signal<boolean>(false);
+  readonly filterTxnType = signal<'ALL' | 'CREDIT' | 'DEBIT'>('ALL');
+
+  rawSmsInput = '';
+  readonly isParsingSms = signal<boolean>(false);
+  readonly parsedSmsResult = signal<any | null>(null);
+
+  // Filtered transactions
+  readonly filteredMobileTransactions = computed(() => {
+    const filter = this.filterTxnType();
+    const list = this.mobileTransactions();
+    if (filter === 'ALL') return list;
+    return list.filter((t) => t.transaction_type === filter);
+  });
+
+  // Totals computed from real SMS transactions
+  readonly mobileCreditTotal = computed(() => {
+    return this.mobileTransactions()
+      .filter((t) => t.transaction_type === 'CREDIT')
+      .reduce((acc, t) => acc + (t.amount_inr || 0), 0);
+  });
+
+  readonly mobileDebitTotal = computed(() => {
+    return this.mobileTransactions()
+      .filter((t) => t.transaction_type === 'DEBIT')
+      .reduce((acc, t) => acc + (t.amount_inr || 0), 0);
+  });
+
+  readonly mobileNetVelocity = computed(() => {
+    return this.mobileCreditTotal() - this.mobileDebitTotal();
+  });
+
+  // Dynamic SVG Cashflow Velocity Path Generator
+  readonly cashflowChartSvg = computed(() => {
+    const txns = this.mobileTransactions();
+    if (!txns || txns.length === 0) {
+      return {
+        areaPath: 'M 20 150 Q 180 130, 360 145 T 700 140 L 700 200 L 20 200 Z',
+        linePath: 'M 20 150 Q 180 130, 360 145 T 700 140',
+        points: [] as { x: number; y: number; label: string; amount: number; isCredit: boolean }[],
+        maxVal: 10000,
+      };
+    }
+
+    const slice = [...txns].reverse().slice(-14);
+    const maxAmount = Math.max(...slice.map((t) => t.amount_inr || 100), 10000);
+    const width = 720;
+    const height = 180;
+    const padding = 24;
+    const stepX = slice.length > 1 ? (width - padding * 2) / (slice.length - 1) : width / 2;
+
+    const points = slice.map((t, idx) => {
+      const x = Math.round(padding + idx * stepX);
+      const ratio = Math.min((t.amount_inr || 0) / maxAmount, 0.9);
+      const y = Math.round(height - padding - ratio * (height - padding * 2));
+      return {
+        x,
+        y,
+        label: t.channel || t.sender,
+        amount: t.amount_inr || 0,
+        isCredit: t.transaction_type === 'CREDIT',
+      };
+    });
+
+    let linePath = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      const midX = (prev.x + curr.x) / 2;
+      linePath += ` C ${midX} ${prev.y}, ${midX} ${curr.y}, ${curr.x} ${curr.y}`;
+    }
+
+    const firstPt = points[0];
+    const lastPt = points[points.length - 1];
+    const areaPath = `${linePath} L ${lastPt.x} ${height} L ${firstPt.x} ${height} Z`;
+
+    return { areaPath, linePath, points, maxVal: maxAmount };
+  });
+
+  // Channel Distribution Percentages
+  readonly channelDistribution = computed(() => {
+    const txns = this.mobileTransactions();
+    let upiCount = 0;
+    let sbiCount = 0;
+    let iciciCount = 0;
+    let otherCount = 0;
+
+    for (const t of txns) {
+      const ch = (t.channel || t.sender || '').toUpperCase();
+      if (ch.includes('UPI') || ch.includes('PHONEPE') || ch.includes('GPAY') || ch.includes('PAYTM')) {
+        upiCount++;
+      } else if (ch.includes('SBI')) {
+        sbiCount++;
+      } else if (ch.includes('ICICI')) {
+        iciciCount++;
+      } else {
+        otherCount++;
+      }
+    }
+
+    const total = txns.length || 1;
+    const upiPct = Math.round((upiCount / total) * 100);
+    const sbiPct = Math.round((sbiCount / total) * 100);
+    const iciciPct = Math.round((iciciCount / total) * 100);
+    const otherPct = Math.max(0, 100 - upiPct - sbiPct - iciciPct);
+
+    return {
+      upiPct,
+      sbiPct,
+      iciciPct,
+      otherPct,
+      totalTxns: txns.length,
+    };
   });
 
   // Agent Swarm & Live Telemetry
@@ -182,6 +313,7 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
   async refreshAllData(): Promise<void> {
     await Promise.all([
       this.refreshTreasuryData(),
+      this.refreshMobileData(),
       this.refreshOfficeData(),
       this.refreshLiveMonitor(),
       this.refreshAffiliateData(),
@@ -297,10 +429,117 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  setActiveTab(tab: 'overview' | 'n8n' | 'vault' | 'agents' | 'affiliate' | 'invoices' | 'receipts'): void {
-    this.activeTab.set(tab);
-    if (tab === 'vault') this.refreshVaultData();
-    if (tab === 'n8n') this.refreshN8nData();
+  setActiveTab(tab: 'dashboard' | 'mobile' | 'n8n' | 'vault' | 'agents' | 'affiliate' | 'sbi' | 'invoices' | any): void {
+    const target = tab === 'overview' ? 'dashboard' : tab;
+    this.activeTab.set(target);
+    if (target === 'mobile') this.refreshMobileData();
+    if (target === 'vault') this.refreshVaultData();
+    if (target === 'n8n') this.refreshN8nData();
+    if (target === 'affiliate') this.refreshAffiliateData();
+  }
+
+  // --- MOBILE ADB & PHONEPE ACTIONS ---
+  async refreshMobileData(): Promise<void> {
+    this.isLoadingMobile.set(true);
+    try {
+      this.businessService.fetchMobileTransactions(undefined, 50).subscribe({
+        next: (res) => {
+          this.mobileStatus.set({
+            connected: !!res.connected,
+            device_model: res.device_model || (res.connected ? '22101320I (POCO X5 Pro 5G)' : null),
+            serial: res.serial || (res.connected ? '10.65.249.121:5555' : null),
+            message: res.message || (res.connected ? 'Wireless ADB link active' : 'Offline'),
+          });
+          if (Array.isArray(res.transactions)) {
+            this.mobileTransactions.set(res.transactions);
+          }
+          if (Array.isArray(res.otps)) {
+            this.mobileOtps.set(res.otps);
+          }
+          this.isLoadingMobile.set(false);
+        },
+        error: () => {
+          this.isLoadingMobile.set(false);
+        }
+      });
+    } catch {
+      this.isLoadingMobile.set(false);
+    }
+  }
+
+  launchPhonePeApp(): void {
+    this.isLaunchingPhonePe.set(true);
+    this.speechVoice.speak('Launching PhonePe on connected mobile device, Mamu.');
+    this.showToast('📲 Launching PhonePe application on POCO X5 Pro 5G...');
+    this.businessService.launchPhonePe().subscribe({
+      next: (res) => {
+        this.isLaunchingPhonePe.set(false);
+        if (res.success) {
+          this.showToast('✓ PhonePe app launched successfully on device!');
+        } else {
+          this.showToast(`⚠️ ${res.message || 'Could not launch PhonePe'}`);
+        }
+      },
+      error: () => {
+        this.isLaunchingPhonePe.set(false);
+        this.showToast('⚠️ Error launching PhonePe');
+      }
+    });
+  }
+
+  parseRawSms(): void {
+    if (!this.rawSmsInput.trim()) {
+      this.showToast('⚠️ Please paste bank SMS or PhonePe notification text.');
+      return;
+    }
+    this.isParsingSms.set(true);
+    this.businessService.parseSmsText(this.rawSmsInput.trim(), 'SMS_PASTE', false).subscribe({
+      next: (res) => {
+        this.isParsingSms.set(false);
+        this.parsedSmsResult.set(res);
+        if (res.transaction) {
+          this.showToast(`✓ Parsed ${res.transaction.transaction_type}: ₹${res.transaction.amount_inr}`);
+          this.speechVoice.speak(`Parsed ${res.transaction.transaction_type} of rupees ${res.transaction.amount_inr}, Mamu.`);
+        } else {
+          this.showToast('⚠️ No transaction detected in provided text.');
+        }
+      },
+      error: () => {
+        this.isParsingSms.set(false);
+        this.showToast('⚠️ Error parsing SMS text');
+      }
+    });
+  }
+
+  verifyMobileTransactionToLedger(txn: any): void {
+    if (!txn || !txn.amount_inr) return;
+    const utr = txn.utr_number || ('SMS-' + Date.now().toString().slice(-8));
+    this.speechVoice.speak(`Verifying payment of rupees ${txn.amount_inr} into sovereign SBI ledger, Mamu.`);
+    this.showToast(`⚡ Verifying ₹${txn.amount_inr} (${txn.channel || txn.sender}) into ledger...`);
+
+    this.businessService.verifySbiSettlement({
+      utr_number: utr,
+      amount_inr: txn.amount_inr,
+      payer_name: txn.channel || txn.sender || 'Mobile PhonePe Transfer',
+      invoice_number: `VERIFIED-${utr}`
+    }).subscribe({
+      next: () => {
+        this.showToast(`✓ Verified! ₹${txn.amount_inr} added to authentic ledger with UTR ${utr}.`);
+        this.refreshTreasuryData();
+      },
+      error: () => {
+        this.showToast('⚠️ Error verifying transaction to ledger.');
+      }
+    });
+  }
+
+  copyOtpCode(code: string): void {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(code).then(() => {
+        this.showToast(`✓ Copied OTP: ${code}`);
+        this.speechVoice.speak(`OTP copied, Mamu.`);
+      });
+    }
   }
 
   selectWorker(worker: SpecialistWorker): void {

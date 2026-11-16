@@ -85,12 +85,16 @@ export class CommunicationsAssistantService {
     banking: 0,
     otps: 0,
     calls: 0,
+    emails: 0,
     notifications: 0,
     device: { model: 'POCO 22101320I', connected: true },
     battery: { level: 14, status: 'Discharging' },
     endpoint: '10.65.249.121:5555'
   });
-  readonly activeFilter = signal<'all' | 'banking' | 'otp' | 'calls' | 'notifications'>('all');
+  readonly activeFilter = signal<'all' | 'banking' | 'otp' | 'calls' | 'mail' | 'notifications'>('all');
+
+  readonly intelligenceAnswer = signal<any | null>(null);
+  readonly isAskingAI = signal<boolean>(false);
 
   readonly isLoading = signal<boolean>(false);
   readonly isSyncing = signal<boolean>(false);
@@ -188,7 +192,7 @@ export class CommunicationsAssistantService {
     }
   }
 
-  setFilter(filter: 'all' | 'banking' | 'otp' | 'calls' | 'notifications'): void {
+  setFilter(filter: 'all' | 'banking' | 'otp' | 'calls' | 'mail' | 'notifications'): void {
     this.activeFilter.set(filter);
     const msgs = this.getFilteredInbox();
     if (msgs.length > 0 && (!this.activeMessage() || !msgs.some(m => m.message_id === this.activeMessage()?.message_id))) {
@@ -202,9 +206,34 @@ export class CommunicationsAssistantService {
     if (filter === 'all') return all;
     if (filter === 'banking') return all.filter(m => m.category === 'banking' || m.amount_inr != null || !!m.utr);
     if (filter === 'otp') return all.filter(m => m.category === 'otp' || !!m.otp_code);
-    if (filter === 'calls') return all.filter(m => m.category === 'calls' || m.category === 'sms');
+    if (filter === 'calls') return all.filter(m => m.category === 'calls' || m.channel === 'call');
+    if (filter === 'mail') return all.filter(m => m.category === 'mail' || m.channel === 'gmail' || m.channel === 'email');
     if (filter === 'notifications') return all.filter(m => m.category === 'notifications');
     return all;
+  }
+
+  async askIntelligence(query: string): Promise<any> {
+    if (!query.trim()) return null;
+    this.isAskingAI.set(true);
+    try {
+      const url = getApiUrl('/api/v1/assistant/query-intelligence');
+      const res: any = await firstValueFrom(this.http.post(url, { query }));
+      if (res && res.success) {
+        this.intelligenceAnswer.set(res);
+        return res;
+      }
+      return null;
+    } catch (e) {
+      console.error('Failed to query communications intelligence', e);
+      this.setAlert('Intelligence retrieval error.');
+      return null;
+    } finally {
+      this.isAskingAI.set(false);
+    }
+  }
+
+  clearIntelligenceAnswer(): void {
+    this.intelligenceAnswer.set(null);
   }
 
   async copyToClipboard(text: string, label: string = 'Copied'): Promise<void> {

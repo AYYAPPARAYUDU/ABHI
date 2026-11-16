@@ -351,15 +351,15 @@
   "llms": {
     "abhi:latest": {
       "model_name": "abhi:latest",
-      "total_requests": 49,
-      "successful_requests": 49,
+      "total_requests": 51,
+      "successful_requests": 51,
       "fallback_requests": 0,
-      "total_prompt_tokens": 18658,
-      "total_completion_tokens": 10000,
+      "total_prompt_tokens": 20066,
+      "total_completion_tokens": 10150,
       "total_thinking_time_ms": 12500.0,
-      "total_generation_time_ms": 95450.3129000077,
-      "average_tokens_per_second": 22.2,
-      "average_latency_ms": 1948.0,
+      "total_generation_time_ms": 149893.5116000357,
+      "average_tokens_per_second": 12.2,
+      "average_latency_ms": 2939.1,
       "reasoning_depth_score": 96.2,
       "reliability_pct": 100.0
     },
@@ -406,5 +406,5 @@
       "reliability_pct": 100.0
     }
   },
-  "updated_at": "2026-11-16T04:36:58.275857+00:00"
+  "updated_at": "2026-11-16T06:13:45.339874+00:00"
 }

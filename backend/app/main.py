@@ -119,10 +119,21 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to start live work daemon: {e}")
 
+    # 7. Start Universal Communications & Mobile Harvester (Auto-syncs POCO SMS, Calls, OTPs, Emails into Brain RAG)
+    harvester_task = None
+    try:
+        from backend.app.assistant.universal_harvester import universal_harvester
+        harvester_task = asyncio.create_task(universal_harvester.start_background_sync(interval_seconds=45))
+        logger.info("Autonomous Universal Communications & Mobile Harvester background loop started.")
+    except Exception as e:
+        logger.error(f"Failed to start communications harvester: {e}")
+
     logger.info("Backend Gateway & Cognitive Core startup complete.")
     yield
     if evolution_task and not evolution_task.done():
         evolution_task.cancel()
+    if harvester_task and not harvester_task.done():
+        harvester_task.cancel()
     try:
         from backend.app.intelligence.autonomous_autopilot import autonomous_autopilot
         autonomous_autopilot.stop_live_work()

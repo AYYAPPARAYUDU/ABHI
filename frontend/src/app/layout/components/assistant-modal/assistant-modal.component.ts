@@ -22,6 +22,7 @@ export class AssistantModalComponent {
   inputThreads = '';
 
   customReplyText = signal<string>('');
+  userQuery = signal<string>('');
 
   readonly filteredMessages = computed(() => {
     return this.assistant.getFilteredInbox();
@@ -80,8 +81,25 @@ export class AssistantModalComponent {
     await this.assistant.sendReply(msg, replyText);
   }
 
-  setFilter(filter: 'all' | 'banking' | 'otp' | 'calls' | 'notifications'): void {
+  setFilter(filter: 'all' | 'banking' | 'otp' | 'calls' | 'mail' | 'notifications'): void {
     this.assistant.setFilter(filter);
+  }
+
+  async askAI(): Promise<void> {
+    const q = this.userQuery().trim();
+    if (!q) return;
+    await this.assistant.askIntelligence(q);
+  }
+
+  clearAIAnswer(): void {
+    this.assistant.clearIntelligenceAnswer();
+    this.userQuery.set('');
+  }
+
+  openEmail(to: string, subject: string = 'Re: Information'): void {
+    const encTo = encodeURIComponent(to);
+    const encSub = encodeURIComponent(subject);
+    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encTo}&su=${encSub}`, '_blank');
   }
 
   copyText(text: string, label: string = 'Copied'): void {

@@ -136,6 +136,25 @@ class AdbController:
             )
             stdout_str = stdout_bytes.decode("utf-8", errors="replace").strip()
             stderr_str = stderr_bytes.decode("utf-8", errors="replace").strip()
+
+            # Auto-heal: If no devices found and not a global command, reconnect to POCO phone and retry once
+            if proc.returncode != 0 and ("no devices" in stderr_str.lower() or "offline" in stderr_str.lower() or "device not found" in stderr_str.lower()) and not is_global:
+                logger.info("Mobile device link interrupted. Auto-reconnecting to 10.65.249.121:5555...")
+                await self.connect_wireless("10.65.249.121", 5555)
+                try:
+                    proc_retry = await asyncio.create_subprocess_exec(
+                        *full_args,
+                        stdout=asyncio.subprocess.PIPE,
+                        stderr=asyncio.subprocess.PIPE
+                    )
+                    stdout_bytes_r, stderr_bytes_r = await asyncio.wait_for(
+                        proc_retry.communicate(),
+                        timeout=timeout
+                    )
+                    return proc_retry.returncode, stdout_bytes_r.decode("utf-8", errors="replace").strip(), stderr_bytes_r.decode("utf-8", errors="replace").strip()
+                except Exception:
+                    pass
+
             return proc.returncode, stdout_str, stderr_str
         except asyncio.TimeoutError:
             logger.warning(f"ADB command timed out: {' '.join(full_args)}")

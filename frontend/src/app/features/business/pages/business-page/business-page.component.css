@@ -90,6 +90,34 @@
   letter-spacing: 0.06em;
 }
 
+.letter-spacing-1 {
+  letter-spacing: 2.5px;
+}
+
+.text-cyan {
+  color: var(--abhi-cyan, #06b6d4) !important;
+}
+
+.bg-cyan {
+  background-color: var(--abhi-cyan, #06b6d4) !important;
+}
+
+.border-cyan {
+  border-color: var(--abhi-cyan, #06b6d4) !important;
+}
+
+.card {
+  background: var(--abhi-surface-raised, rgba(15, 23, 42, 0.85)) !important;
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.1)) !important;
+  color: var(--abhi-text-primary, #ffffff);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.chart-container svg {
+  filter: drop-shadow(0 4px 12px rgba(6, 182, 212, 0.15));
+}
+
 /* Left Column: Settlement Channel */
 .channel-card {
   background: var(--abhi-surface-raised, rgba(15, 23, 42, 0.88));

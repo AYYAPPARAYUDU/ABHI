@@ -148,11 +148,11 @@ export class BusinessService {
   fetchTreasuryOverview(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/treasury/overview`).pipe(
       catchError(() => of({
-        settled_revenue_inr: 1842500,
-        settled_revenue_usd: 21057.14,
-        total_invoiced_inr: 1842500,
+        settled_revenue_inr: 0,
+        settled_revenue_usd: 0,
+        total_invoiced_inr: 0,
         pending_invoices_count: 0,
-        settled_transactions_count: 12,
+        settled_transactions_count: 0,
         bank_name: "State Bank of India",
         account_number_masked: "SBI ****5649",
         account_holder: "Ravuvai Ayyapparayudu",
@@ -255,5 +255,75 @@ export class BusinessService {
 
   runMasterRevenueCycle(): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/ceo/revenue-cycle`, {});
+  }
+
+  // =========================================================================
+  // MOBILE ADB & PHONEPE MINI STATEMENT INTEGRATION
+  // =========================================================================
+
+  fetchMobileStatus(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/mobile/status`).pipe(
+      catchError(() => of({ connected: false, message: 'Mobile bridge offline' }))
+    );
+  }
+
+  fetchMobileTransactions(serial?: string, limit = 50): Observable<any> {
+    let url = `${this.baseUrl}/mobile/bank-transactions?limit=${limit}`;
+    if (serial) url += `&serial=${serial}`;
+    return this.http.get<any>(url).pipe(
+      catchError(() => of({ connected: false, transactions: [], otps: [] }))
+    );
+  }
+
+  fetchMobileOtps(serial?: string, limit = 20): Observable<any> {
+    let url = `${this.baseUrl}/mobile/otps?limit=${limit}`;
+    if (serial) url += `&serial=${serial}`;
+    return this.http.get<any>(url).pipe(
+      catchError(() => of({ connected: false, otps: [] }))
+    );
+  }
+
+  launchPhonePe(serial?: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/mobile/launch-phonepe`, { serial });
+  }
+
+  connectWirelessMobile(ip = '10.65.249.121', port = 5555): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/mobile/connect-wireless`, { ip, port });
+  }
+
+  parseSmsText(text: string, sender = 'SMS_PASTE', recordToTreasury = false): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/mobile/parse-sms-text`, {
+      text,
+      sender,
+      record_to_treasury: recordToTreasury
+    });
+  }
+
+  // =========================================================================
+  // AFFILIATE & REVENUE ENGINE
+  // =========================================================================
+
+  fetchAffiliateOverview(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/affiliate/overview`).pipe(
+      catchError(() => of({
+        total_clicks: 0,
+        total_commissions_inr: 0,
+        active_campaigns_count: 3,
+        partner_tag: 'ayyappa-21',
+        campaigns: []
+      }))
+    );
+  }
+
+  generateAffiliateLink(productUrl: string, category = 'TECH', campaign = 'DIRECT'): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/affiliate/generate-link`, {
+      product_url: productUrl,
+      category,
+      campaign
+    });
+  }
+
+  runAuditBounty(repoUrl?: string): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/ceo/audit-bounty`, { repo_url: repoUrl });
   }
 }

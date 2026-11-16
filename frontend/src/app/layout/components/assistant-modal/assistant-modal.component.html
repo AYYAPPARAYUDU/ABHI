@@ -103,7 +103,7 @@
               </div>
               <div class="vital-item">
                 <span class="v-label font-mono">MEMORY RAG:</span>
-                <span class="v-val text-emerald font-mono">591 Local Knowledge Embeddings</span>
+                <span class="v-val text-emerald font-mono">1,498 Knowledge Embeddings Indexed</span>
               </div>
               <div class="vital-item">
                 <span class="v-label font-mono">EXECUTION:</span>
@@ -154,7 +154,7 @@
               (click)="syncDevice()"
               [disabled]="assistant.isSyncing()"
             >
-              <span>{{ assistant.isSyncing() ? '↻ SYNCING MOBILE...' : '↻ SYNC PHONE SMS & ALERTS' }}</span>
+              <span>{{ assistant.isSyncing() ? '↻ SYNCING MOBILE & EMAILS...' : '↻ SYNC PHONE SMS & EMAILS' }}</span>
             </button>
             <button
               type="button"
@@ -169,6 +169,51 @@
 
         <!-- RIGHT COLUMN (62%): Mobile Intelligence & Communications Stream -->
         <div class="right-cockpit-pane">
+          <!-- Natural Language Cognitive Brain Query Box (Ask AI Anything about Communications) -->
+          <div class="brain-query-cockpit-box">
+            <div class="query-input-wrap">
+              <span class="query-brain-icon">🧠</span>
+              <input
+                type="text"
+                class="brain-query-input font-mono"
+                placeholder="Ask Brain anything (e.g. 'What is my latest ICICI debit?', 'Show my Jio OTP', 'What emails arrived?')..."
+                [(ngModel)]="userQuery"
+                (keydown.enter)="askAI()"
+              />
+              <button
+                type="button"
+                class="ask-brain-btn font-mono"
+                (click)="askAI()"
+                [disabled]="assistant.isAskingAI() || !userQuery().trim()"
+              >
+                {{ assistant.isAskingAI() ? '⚡ REASONING...' : '⚡ ASK BRAIN' }}
+              </button>
+              @if (assistant.intelligenceAnswer()) {
+                <button
+                  type="button"
+                  class="clear-ai-btn font-mono"
+                  (click)="clearAIAnswer()"
+                  title="Clear Answer"
+                >
+                  ✕
+                </button>
+              }
+            </div>
+
+            <!-- AI Synthesis Answer Banner -->
+            @if (assistant.intelligenceAnswer(); as aiRes) {
+              <div class="ai-synthesis-banner">
+                <div class="ai-banner-header">
+                  <span class="ai-badge font-mono">⚡ LOCAL NEURAL COGNITION (DeepSeek-R1 / Qwen 8B • LanceDB RAG)</span>
+                  <span class="sources-badge font-mono">Verified across {{ aiRes.retrieved_count || 0 }} authentic communication sources</span>
+                </div>
+                <div class="ai-banner-body font-mono">
+                  {{ aiRes.answer }}
+                </div>
+              </div>
+            }
+          </div>
+
           <!-- Filter Navigation Tabs -->
           <div class="stream-filter-bar">
             <button
@@ -198,10 +243,18 @@
             <button
               type="button"
               class="filter-tab-btn font-mono"
+              [class.active]="assistant.activeFilter() === 'mail'"
+              (click)="setFilter('mail')"
+            >
+              📧 Emails & Gmail <span class="tab-count font-mono">{{ assistant.deviceSummary()?.emails || 0 }}</span>
+            </button>
+            <button
+              type="button"
+              class="filter-tab-btn font-mono"
               [class.active]="assistant.activeFilter() === 'calls'"
               (click)="setFilter('calls')"
             >
-              📱 Calls & SMS <span class="tab-count font-mono">{{ assistant.deviceSummary()?.calls || 0 }}</span>
+              📱 Calls & Alerts <span class="tab-count font-mono">{{ assistant.deviceSummary()?.calls || 0 }}</span>
             </button>
             <button
               type="button"
@@ -218,7 +271,7 @@
             <div class="stream-scroll-box">
               @if (filteredMessages().length === 0) {
                 <div class="empty-stream-state font-mono">
-                  <span>📱 No communications found in this category. Click 'Sync Phone SMS' to refresh.</span>
+                  <span>📱 No communications found in this category. Click 'Sync Phone SMS & Emails' to refresh.</span>
                 </div>
               } @else {
                 @for (msg of filteredMessages(); track msg.message_id) {
@@ -227,6 +280,7 @@
                     [class.selected]="assistant.activeMessage()?.message_id === msg.message_id"
                     [class.card-banking]="msg.category === 'banking' || msg.amount_inr != null"
                     [class.card-otp]="msg.category === 'otp' || !!msg.otp_code"
+                    [class.card-email]="msg.category === 'mail' || msg.channel === 'gmail'"
                     (click)="onSelectMessage(msg)"
                   >
                     <!-- Card Top Row -->
@@ -236,6 +290,8 @@
                           <span class="type-icon">🏦</span>
                         } @else if (msg.category === 'otp' || !!msg.otp_code) {
                           <span class="type-icon">🔐</span>
+                        } @else if (msg.category === 'mail' || msg.channel === 'gmail') {
+                          <span class="type-icon">📧</span>
                         } @else if (msg.category === 'calls') {
                           <span class="type-icon">📞</span>
                         } @else {
@@ -244,6 +300,9 @@
                         <strong class="sender-name font-mono">{{ msg.sender }}</strong>
                         @if (msg.account) {
                           <span class="account-tag font-mono">{{ msg.account }}</span>
+                        }
+                        @if (msg.category === 'mail' || msg.channel === 'gmail') {
+                          <span class="channel-pill font-mono">GMAIL</span>
                         }
                       </div>
 
@@ -261,6 +320,11 @@
                         <span class="time-label font-mono">{{ msg.timestamp | date:'shortTime' }}</span>
                       </div>
                     </div>
+
+                    <!-- Subject if available -->
+                    @if (msg.subject && msg.category !== 'sms') {
+                      <div class="msg-subject-bar font-mono">{{ msg.subject }}</div>
+                    }
 
                     <!-- Card Body -->
                     <div class="msg-card-body">
@@ -285,6 +349,22 @@
                           (click)="$event.stopPropagation(); copyText(msg.otp_code!, 'OTP')"
                         >
                           📋 Copy Code: {{ msg.otp_code }}
+                        </button>
+                      }
+                      @if (msg.category === 'mail' || msg.channel === 'gmail') {
+                        <button
+                          type="button"
+                          class="action-pill-btn font-mono"
+                          (click)="$event.stopPropagation(); openEmail(msg.sender, msg.subject || 'Re: Information')"
+                        >
+                          📧 Open in Gmail
+                        </button>
+                        <button
+                          type="button"
+                          class="action-pill-btn font-mono"
+                          (click)="$event.stopPropagation(); copyText(msg.sender, 'Email Sender')"
+                        >
+                          📋 Copy Email
                         </button>
                       }
                       @if (msg.sender.startsWith('+') || msg.sender.startsWith('91') || msg.category === 'calls') {
@@ -323,6 +403,10 @@
                   <span class="ins-date font-mono">{{ curMsg.timestamp | date:'medium' }}</span>
                 </div>
 
+                @if (curMsg.subject) {
+                  <div class="ins-subject font-mono">Subject: <strong>{{ curMsg.subject }}</strong></div>
+                }
+
                 <div class="ins-body-box">
                   <p class="ins-text font-mono">"{{ curMsg.body }}"</p>
                 </div>
@@ -345,6 +429,22 @@
                       (click)="copyText(curMsg.otp_code!, 'OTP Code')"
                     >
                       📋 COPY OTP CODE ({{ curMsg.otp_code }})
+                    </button>
+                  }
+                  @if (curMsg.category === 'mail' || curMsg.channel === 'gmail') {
+                    <button
+                      type="button"
+                      class="op-action-btn font-mono"
+                      (click)="openEmail(curMsg.sender, curMsg.subject || 'Re: Information')"
+                    >
+                      📧 OPEN IN GMAIL WEB COMPOSE
+                    </button>
+                    <button
+                      type="button"
+                      class="op-action-btn-secondary font-mono"
+                      (click)="copyText(curMsg.sender, 'Email Sender')"
+                    >
+                      📋 COPY SENDER EMAIL
                     </button>
                   }
                   @if (curMsg.sender.startsWith('+') || curMsg.sender.startsWith('91') || curMsg.category === 'calls') {

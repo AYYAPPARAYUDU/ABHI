@@ -181,9 +181,34 @@
       <button
         type="button"
         class="btn px-3 py-2 fw-semibold d-flex align-items-center gap-2"
-        [class.btn-primary]="activeTab() === 'overview'"
-        [class.btn-outline-secondary]="activeTab() !== 'overview'"
-        (click)="setActiveTab('overview')"
+        [class.btn-primary]="activeTab() === 'dashboard'"
+        [class.btn-outline-secondary]="activeTab() !== 'dashboard'"
+        (click)="setActiveTab('dashboard')"
+      >
+        <span>📊</span>
+        <span>Executive Analytics & Velocity</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn px-3 py-2 fw-semibold d-flex align-items-center gap-2"
+        [class.btn-primary]="activeTab() === 'mobile'"
+        [class.btn-outline-secondary]="activeTab() !== 'mobile'"
+        (click)="setActiveTab('mobile')"
+      >
+        <span>📱</span>
+        <span>Mobile & PhonePe Statement Hub</span>
+        @if (mobileTransactions().length > 0) {
+          <span class="badge bg-success bg-opacity-25 text-success font-mono small">{{ mobileTransactions().length }}</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="btn px-3 py-2 fw-semibold d-flex align-items-center gap-2"
+        [class.btn-primary]="activeTab() === 'sbi' || activeTab() === 'overview'"
+        [class.btn-outline-secondary]="activeTab() !== 'sbi' && activeTab() !== 'overview'"
+        (click)="setActiveTab('sbi')"
       >
         <span>🏛️</span>
         <span>SBI Settlement & QR</span>
@@ -198,7 +223,7 @@
       >
         <span>⚡</span>
         <span>n8n Workflow Automation Hub</span>
-        <span class="badge bg-dark font-mono">{{ n8nWorkflows().length }}</span>
+        <span class="badge bg-primary bg-opacity-25 text-primary font-mono small">{{ n8nWorkflows().length }}</span>
       </button>
 
       <button
@@ -210,7 +235,7 @@
       >
         <span>🔐</span>
         <span>Credentials & API Vault</span>
-        <span class="badge bg-dark font-mono">{{ vaultCredentials().length }}</span>
+        <span class="badge bg-warning bg-opacity-25 text-warning font-mono small">{{ vaultCredentials().length }}</span>
       </button>
 
       <button
@@ -220,7 +245,7 @@
         [class.btn-outline-secondary]="activeTab() !== 'affiliate'"
         (click)="setActiveTab('affiliate')"
       >
-        <span>🚀</span>
+        <span>🏷️</span>
         <span>Affiliate Monetization Hub</span>
       </button>
 
@@ -231,7 +256,7 @@
         [class.btn-outline-secondary]="activeTab() !== 'agents'"
         (click)="setActiveTab('agents')"
       >
-        <span>🏢</span>
+        <span>🤖</span>
         <span>Commercial Swarm Agents</span>
       </button>
 
@@ -242,9 +267,9 @@
         [class.btn-outline-secondary]="activeTab() !== 'invoices'"
         (click)="setActiveTab('invoices')"
       >
-        <span>📄</span>
+        <span>📜</span>
         <span>Invoices & Real Ledger</span>
-        <span class="badge bg-dark font-mono">{{ settledInvoices().length }}</span>
+        <span class="badge bg-info bg-opacity-25 text-info font-mono small">{{ settledInvoices().length }}</span>
       </button>
 
       <button
@@ -256,7 +281,7 @@
       >
         <span>🛡️</span>
         <span>Cryptographic Receipts</span>
-        <span class="badge bg-dark font-mono">{{ receiptsList().length }}</span>
+        <span class="badge bg-secondary font-mono small">{{ receiptsList().length }}</span>
       </button>
     </div>
 
@@ -266,9 +291,519 @@
   </div>
 
   <!-- ======================================================================= -->
+  <!-- TAB 0: EXECUTIVE ANALYTICS & CASHFLOW VELOCITY DASHBOARD               -->
+  <!-- ======================================================================= -->
+  @if (activeTab() === 'dashboard') {
+    <div class="row g-4 mb-4">
+      <!-- High-Resolution Cashflow Velocity Chart (Area SVG) -->
+      <div class="col-12 col-xl-8">
+        <div class="channel-card p-4 rounded-4 h-100 shadow-sm border">
+          <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+            <div>
+              <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 font-mono small text-uppercase">
+                Real-Time Cashflow Velocity
+              </span>
+              <h3 class="h5 fw-bold mb-0 mt-2" style="color: var(--abhi-text-primary);">
+                Inward & Outward Velocity Spline (₹ Volume / Time)
+              </h3>
+            </div>
+            <div class="d-flex align-items-center gap-2 font-mono small">
+              <span class="d-flex align-items-center gap-1">
+                <span class="d-inline-block rounded-circle" style="width: 10px; height: 10px; background: var(--abhi-cyan, #06b6d4);"></span>
+                <span style="color: var(--abhi-text-secondary);">Inward Volume</span>
+              </span>
+              <span class="badge bg-secondary bg-opacity-10 text-secondary border">
+                Peak: ₹{{ cashflowChartSvg().maxVal | number:'1.0-0' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Responsive SVG Spline Chart -->
+          <div class="chart-container position-relative" style="height: 190px; width: 100%;">
+            <svg viewBox="0 0 720 180" preserveAspectRatio="none" class="w-100 h-100" style="overflow: visible;">
+              <defs>
+                <linearGradient id="cashflowGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--abhi-cyan, #06b6d4)" stop-opacity="0.4" />
+                  <stop offset="100%" stop-color="var(--abhi-cyan, #06b6d4)" stop-opacity="0.0" />
+                </linearGradient>
+                <linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#06b6d4" />
+                  <stop offset="50%" stop-color="#10b981" />
+                  <stop offset="100%" stop-color="#38bdf8" />
+                </linearGradient>
+                <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <!-- Reference Gridlines -->
+              <line x1="20" y1="30" x2="700" y2="30" stroke="var(--abhi-border, rgba(255,255,255,0.08))" stroke-dasharray="3,3" />
+              <line x1="20" y1="80" x2="700" y2="80" stroke="var(--abhi-border, rgba(255,255,255,0.08))" stroke-dasharray="3,3" />
+              <line x1="20" y1="130" x2="700" y2="130" stroke="var(--abhi-border, rgba(255,255,255,0.08))" stroke-dasharray="3,3" />
+
+              <!-- Spline Area Fill -->
+              <path [attr.d]="cashflowChartSvg().areaPath" fill="url(#cashflowGrad)" />
+
+              <!-- Spline Stroke -->
+              <path [attr.d]="cashflowChartSvg().linePath" fill="none" stroke="url(#strokeGrad)" stroke-width="2.5" filter="url(#glowEffect)" />
+
+              <!-- Data Point Beads -->
+              @for (pt of cashflowChartSvg().points; track $index) {
+                <circle
+                  [attr.cx]="pt.x"
+                  [attr.cy]="pt.y"
+                  r="4.5"
+                  [attr.fill]="pt.isCredit ? '#10b981' : '#f43f5e'"
+                  stroke="#030712"
+                  stroke-width="1.5"
+                >
+                  <title>{{ pt.label }}: ₹{{ pt.amount | number:'1.2-2' }} ({{ pt.isCredit ? 'CREDIT' : 'DEBIT' }})</title>
+                </circle>
+              }
+            </svg>
+          </div>
+
+          <!-- Inward/Outward Velocity Summary -->
+          <div class="row g-2 mt-3 pt-3 border-top border-secondary border-opacity-25">
+            <div class="col-4">
+              <span class="text-secondary small font-mono d-block">Inward Volume (SMS)</span>
+              <span class="text-success fw-bold font-mono fs-6">₹{{ mobileCreditTotal() | number:'1.2-2' }}</span>
+            </div>
+            <div class="col-4">
+              <span class="text-secondary small font-mono d-block">Outward Volume (SMS)</span>
+              <span class="text-danger fw-bold font-mono fs-6">₹{{ mobileDebitTotal() | number:'1.2-2' }}</span>
+            </div>
+            <div class="col-4">
+              <span class="text-secondary small font-mono d-block">Net Cashflow Velocity</span>
+              <span class="fw-bold font-mono fs-6" [ngClass]="mobileNetVelocity() >= 0 ? 'text-info' : 'text-warning'">
+                ₹{{ mobileNetVelocity() | number:'1.2-2' }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Channel Radial Allocation Donut -->
+      <div class="col-12 col-xl-4">
+        <div class="channel-card p-4 rounded-4 h-100 shadow-sm border d-flex flex-column justify-content-between">
+          <div>
+            <span class="badge bg-purple bg-opacity-25 text-purple border border-purple border-opacity-50 font-mono small text-uppercase">
+              Channel Distribution
+            </span>
+            <h3 class="h5 fw-bold mb-3 mt-2" style="color: var(--abhi-text-primary);">
+              Payment Rails Breakdown
+            </h3>
+
+            <!-- Radial Gauge -->
+            <div class="d-flex align-items-center justify-content-center py-2">
+              <div class="position-relative" style="width: 140px; height: 140px;">
+                <svg viewBox="0 0 100 100" class="w-100 h-100" style="transform: rotate(-90deg);">
+                  <circle cx="50" cy="50" r="40" fill="transparent" stroke="var(--abhi-border, rgba(255,255,255,0.08))" stroke-width="12" />
+                  <circle
+                    cx="50" cy="50" r="40" fill="transparent"
+                    stroke="var(--abhi-cyan, #06b6d4)" stroke-width="12"
+                    [attr.stroke-dasharray]="(channelDistribution().upiPct * 2.51) + ' 251'"
+                    stroke-dashoffset="0"
+                  />
+                  <circle
+                    cx="50" cy="50" r="40" fill="transparent"
+                    stroke="var(--abhi-success, #10b981)" stroke-width="12"
+                    [attr.stroke-dasharray]="(channelDistribution().sbiPct * 2.51) + ' 251'"
+                    [attr.stroke-dashoffset]="-(channelDistribution().upiPct * 2.51)"
+                  />
+                </svg>
+                <div class="position-absolute top-50 start-50 translate-middle text-center">
+                  <span class="fw-bold fs-5 font-mono" style="color: var(--abhi-text-primary);">
+                    {{ channelDistribution().totalTxns }}
+                  </span>
+                  <small class="d-block text-secondary font-mono" style="font-size: 10px;">TXNS</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Legend Items -->
+            <div class="d-flex flex-column gap-2 mt-2">
+              <div class="d-flex justify-content-between align-items-center font-mono small">
+                <span class="d-flex align-items-center gap-2">
+                  <span class="rounded-circle d-inline-block" style="width: 8px; height: 8px; background: var(--abhi-cyan, #06b6d4);"></span>
+                  <span>UPI (PhonePe / GPay)</span>
+                </span>
+                <span class="fw-bold">{{ channelDistribution().upiPct }}%</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center font-mono small">
+                <span class="d-flex align-items-center gap-2">
+                  <span class="rounded-circle d-inline-block" style="width: 8px; height: 8px; background: var(--abhi-success, #10b981);"></span>
+                  <span>Direct Bank (SBI / ICICI)</span>
+                </span>
+                <span class="fw-bold">{{ channelDistribution().sbiPct + channelDistribution().iciciPct }}%</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center font-mono small">
+                <span class="d-flex align-items-center gap-2">
+                  <span class="rounded-circle d-inline-block" style="width: 8px; height: 8px; background: #94a3b8;"></span>
+                  <span>Merchant Settlements</span>
+                </span>
+                <span class="fw-bold">{{ channelDistribution().otherPct }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-3 pt-3 border-top border-secondary border-opacity-25">
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-info w-100 d-flex align-items-center justify-content-center gap-2 font-mono"
+              (click)="setActiveTab('mobile')"
+            >
+              <span>📱</span>
+              <span>Open PhonePe & SMS Statement ({{ mobileTransactions().length }})</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Commercial Multi-Agent Swarm Matrix -->
+    <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 shadow-sm mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+          <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 font-mono small text-uppercase">
+            Autonomous Commercial Swarm
+          </span>
+          <h3 class="h5 fw-bold mb-0 mt-2" style="color: var(--abhi-text-primary);">
+            Active Revenue Generation Specialists
+          </h3>
+        </div>
+        <button
+          type="button"
+          class="btn btn-sm btn-primary d-flex align-items-center gap-2 font-mono"
+          (click)="triggerAutonomousRevenueCycle()"
+          [disabled]="isAutopilotRunning()"
+        >
+          <span>⚡</span>
+          <span>Execute Revenue Cycle Across Swarm</span>
+        </button>
+      </div>
+
+      <div class="row g-3">
+        @for (worker of allWorkers().slice(0, 6); track worker.agent_id) {
+          <div class="col-12 col-md-6 col-xl-4">
+            <div class="p-3 rounded-3 border border-secondary border-opacity-25 h-100 d-flex flex-column justify-content-between" style="background: var(--abhi-surface-inset, rgba(15,23,42,0.6));">
+              <div>
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="rounded-circle d-inline-block" [style.background]="worker.color_hex" style="width: 10px; height: 10px;"></span>
+                    <strong class="font-mono fs-6" style="color: var(--abhi-text-primary);">{{ worker.name }}</strong>
+                  </div>
+                  <span
+                    class="badge font-mono small text-uppercase"
+                    [ngClass]="worker.status === 'WORKING' ? 'bg-success bg-opacity-25 text-success border border-success border-opacity-25' : 'bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25'"
+                  >
+                    {{ worker.status }}
+                  </span>
+                </div>
+                <div class="text-secondary small font-mono mb-2">{{ worker.role }}</div>
+                <div class="p-2 rounded-2 small font-mono text-truncate" style="background: rgba(0,0,0,0.25); color: var(--abhi-text-secondary);">
+                  {{ worker.active_task || 'Standby for commercial tasks' }}
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary border-opacity-25 font-mono small">
+                <span class="text-secondary">{{ worker.tasks_completed }} Tasks Done</span>
+                <button
+                  type="button"
+                  class="btn btn-sm p-0 text-info"
+                  (click)="toggleWorkerStatus(worker)"
+                >
+                  {{ worker.status === 'WORKING' ? 'Pause' : 'Activate' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ======================================================================= -->
+  <!-- TAB 0.5: MOBILE & PHONEPE STATEMENT HUB                                -->
+  <!-- ======================================================================= -->
+  @if (activeTab() === 'mobile') {
+    <div class="row g-4">
+      <!-- Left Column: Real Bank SMS & PhonePe Mini Statement Table -->
+      <div class="col-12 col-xl-8">
+        <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 shadow-sm mb-4">
+          <!-- Connection Status & Top Actions -->
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+            <div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 font-mono small text-uppercase">
+                  ● Real Mobile Hardware Bridge
+                </span>
+                <span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 font-mono small">
+                  POCO X5 Pro 5G · 10.65.249.121:5555
+                </span>
+              </div>
+              <h2 class="h5 fw-bold mt-2 mb-0" style="color: var(--abhi-text-primary);">
+                Authentic Bank SMS Alerts & PhonePe Mini Statement
+              </h2>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                class="btn btn-sm btn-primary d-flex align-items-center gap-2 font-mono"
+                [disabled]="isLaunchingPhonePe()"
+                (click)="launchPhonePeApp()"
+                title="Launch official PhonePe app directly on phone screen"
+              >
+                <span>📲</span>
+                <span>Launch PhonePe</span>
+              </button>
+
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-info d-flex align-items-center gap-2 font-mono"
+                [disabled]="isLoadingMobile()"
+                (click)="refreshMobileData()"
+                title="Query latest bank SMS inbox and update statement"
+              >
+                <span>🔄</span>
+                <span>{{ isLoadingMobile() ? 'Syncing...' : 'Refresh SMS' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Transaction Type Filters -->
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <div class="btn-group btn-group-sm" role="group">
+              <button
+                type="button"
+                class="btn"
+                [class.btn-primary]="filterTxnType() === 'ALL'"
+                [class.btn-outline-secondary]="filterTxnType() !== 'ALL'"
+                (click)="filterTxnType.set('ALL')"
+              >
+                All ({{ mobileTransactions().length }})
+              </button>
+              <button
+                type="button"
+                class="btn"
+                [class.btn-success]="filterTxnType() === 'CREDIT'"
+                [class.btn-outline-secondary]="filterTxnType() !== 'CREDIT'"
+                (click)="filterTxnType.set('CREDIT')"
+              >
+                Credits Only (₹{{ mobileCreditTotal() | number:'1.2-2' }})
+              </button>
+              <button
+                type="button"
+                class="btn"
+                [class.btn-danger]="filterTxnType() === 'DEBIT'"
+                [class.btn-outline-secondary]="filterTxnType() !== 'DEBIT'"
+                (click)="filterTxnType.set('DEBIT')"
+              >
+                Debits (₹{{ mobileDebitTotal() | number:'1.2-2' }})
+              </button>
+            </div>
+
+            <span class="text-secondary small font-mono">
+              Net Velocity: <strong class="text-success">₹{{ mobileNetVelocity() | number:'1.2-2' }}</strong>
+            </span>
+          </div>
+
+          <!-- Real Mobile Bank Statement Table -->
+          <div class="table-responsive">
+            <table class="table custom-ledger-table align-middle mb-0 font-mono small">
+              <thead>
+                <tr>
+                  <th scope="col">Date / Time</th>
+                  <th scope="col">Flow</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">Sender / Channel</th>
+                  <th scope="col">Account</th>
+                  <th scope="col">UTR Reference</th>
+                  <th scope="col" class="text-end">Ledger Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (filteredMobileTransactions().length === 0) {
+                  <tr>
+                    <td colspan="7" class="text-center py-4 text-secondary">
+                      {{ isLoadingMobile() ? 'Streaming transactions from device...' : 'No transactions match selected filter.' }}
+                    </td>
+                  </tr>
+                }
+                @for (txn of filteredMobileTransactions(); track $index) {
+                  <tr>
+                    <td class="text-secondary text-nowrap">
+                      {{ txn.timestamp ? (txn.timestamp | date:'dd MMM yyyy, HH:mm') : 'Recent' }}
+                    </td>
+                    <td>
+                      <span
+                        class="badge font-mono text-uppercase"
+                        [ngClass]="txn.transaction_type === 'CREDIT' ? 'bg-success bg-opacity-25 text-success border border-success border-opacity-50' : 'bg-danger bg-opacity-25 text-danger border border-danger border-opacity-50'"
+                      >
+                        {{ txn.transaction_type === 'CREDIT' ? '↑ CREDIT' : '↓ DEBIT' }}
+                      </span>
+                    </td>
+                    <td>
+                      <strong class="fs-6 font-mono" [ngClass]="txn.transaction_type === 'CREDIT' ? 'text-success' : 'text-danger'">
+                        ₹{{ txn.amount_inr | number:'1.2-2' }}
+                      </strong>
+                    </td>
+                    <td>
+                      <span class="d-block fw-semibold" style="color: var(--abhi-text-primary);">{{ txn.sender }}</span>
+                      <small class="text-secondary">{{ txn.channel }}</small>
+                    </td>
+                    <td class="text-secondary">
+                      {{ txn.account_masked || 'Primary' }}
+                    </td>
+                    <td>
+                      <span class="badge bg-secondary bg-opacity-10 text-info border border-secondary border-opacity-25 font-mono">
+                        {{ txn.utr_number || 'N/A' }}
+                      </span>
+                    </td>
+                    <td class="text-end">
+                      @if (txn.transaction_type === 'CREDIT') {
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-success font-mono text-nowrap"
+                          (click)="verifyMobileTransactionToLedger(txn)"
+                          title="Verify and record this credit into the persistent sovereign ledger"
+                        >
+                          + Verify to Ledger
+                        </button>
+                      } @else {
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25">
+                          Verified
+                        </span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Raw SMS Paste & Instant Parser Panel -->
+        <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 shadow-sm">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 font-mono small text-uppercase">
+              Instant Parser
+            </span>
+            <h3 class="h6 fw-bold mb-0" style="color: var(--abhi-text-primary);">
+              Paste Raw Bank SMS / PhonePe Transaction Alert
+            </h3>
+          </div>
+          <p class="text-secondary small mb-3">
+            Paste any unparsed SMS or payment notification text to extract amount, sender, UTR, and optionally record to ledger.
+          </p>
+
+          <div class="d-flex flex-column gap-2">
+            <textarea
+              class="form-control font-mono small"
+              rows="3"
+              [(ngModel)]="rawSmsInput"
+              placeholder="e.g. ICICI Bank Acct XX711 debited for Rs 9220.00 on 15-Nov-26; Sagamreddy Naga credited. UPI:139559837887..."
+              style="background: var(--abhi-surface-inset, rgba(15,23,42,0.8)); border-color: var(--abhi-border, rgba(255,255,255,0.1)); color: var(--abhi-text-primary);"
+            ></textarea>
+
+            <div class="d-flex align-items-center justify-content-between mt-2">
+              <button
+                type="button"
+                class="btn btn-sm btn-primary d-flex align-items-center gap-2 font-mono"
+                [disabled]="isParsingSms() || !rawSmsInput.trim()"
+                (click)="parseRawSms()"
+              >
+                <span>⚡</span>
+                <span>{{ isParsingSms() ? 'Parsing...' : 'Parse Bank SMS' }}</span>
+              </button>
+
+              @if (parsedSmsResult()?.transaction) {
+                <span class="text-success font-mono small">
+                  ✓ Detected {{ parsedSmsResult().transaction.transaction_type }}: ₹{{ parsedSmsResult().transaction.amount_inr }} (UTR: {{ parsedSmsResult().transaction.utr_number }})
+                </span>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Live Mobile OTP Sniffer -->
+      <div class="col-12 col-xl-4">
+        <div class="card bg-dark bg-opacity-50 border border-secondary border-opacity-25 rounded-4 p-4 shadow-sm h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <span class="badge bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50 font-mono small text-uppercase">
+                🔐 Live OTP Sniffer
+              </span>
+              <h3 class="h5 fw-bold mb-0 mt-2" style="color: var(--abhi-text-primary);">
+                Incoming One-Time Passwords
+              </h3>
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-outline-warning font-mono"
+              (click)="refreshMobileData()"
+              title="Poll phone SMS for recent OTPs"
+            >
+              Sync
+            </button>
+          </div>
+
+          <p class="text-secondary small mb-3">
+            Streamed in real-time from connected mobile SMS inbox. 1-click copy for authentication.
+          </p>
+
+          <div class="d-flex flex-column gap-3">
+            @if (mobileOtps().length === 0) {
+              <div class="p-4 text-center text-secondary border border-secondary border-opacity-25 rounded-3">
+                No recent OTPs found in device SMS inbox.
+              </div>
+            }
+            @for (otp of mobileOtps(); track $index) {
+              <div class="p-3 rounded-3 border border-secondary border-opacity-25" style="background: var(--abhi-surface-inset, rgba(15,23,42,0.6));">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <span class="badge bg-secondary bg-opacity-25 text-secondary font-mono small">
+                    {{ otp.sender }}
+                  </span>
+                  <small class="text-secondary font-mono" style="font-size: 11px;">
+                    {{ otp.timestamp ? (otp.timestamp | date:'HH:mm:ss') : 'Recent' }}
+                  </small>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                  <span class="font-mono fs-4 fw-bold text-warning letter-spacing-1">
+                    {{ otp.otp_code }}
+                  </span>
+                  <button
+                    type="button"
+                    class="btn btn-sm btn-outline-warning font-mono d-flex align-items-center gap-1"
+                    (click)="copyOtpCode(otp.otp_code)"
+                  >
+                    <span>📋</span>
+                    <span>Copy</span>
+                  </button>
+                </div>
+
+                <div class="text-secondary small font-mono mt-2 text-truncate" style="font-size: 11px;">
+                  {{ otp.raw_text }}
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ======================================================================= -->
   <!-- TAB 1: EXECUTIVE OVERVIEW & REAL SBI SETTLEMENT                          -->
   <!-- ======================================================================= -->
-  @if (activeTab() === 'overview') {
+  @if (activeTab() === 'sbi' || activeTab() === 'overview') {
     <div class="row g-4">
       <!-- Left: State Bank of India Channel & Live QR -->
       <div class="col-12 col-lg-7">

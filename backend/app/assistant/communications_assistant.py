@@ -23,6 +23,7 @@ from sqlalchemy import text
 
 from backend.app.automation.desktop.os_control_engine import os_control_engine
 from backend.app.automation.mobile.adb_controller import adb_controller
+from backend.app.assistant.universal_harvester import universal_harvester
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
 from backend.app.services.llm.ollama_client import ollama_client
@@ -69,6 +70,23 @@ class MessageActionRequest(BaseModel):
     action: str = Field(..., description="'dial', 'whatsapp', 'sync', 'copy_utr', or 'copy_otp'")
     phone: Optional[str] = Field(None, description="Phone number to dial or message")
     message: Optional[str] = Field(None, description="Optional text for WhatsApp")
+
+
+class IntelligenceQueryRequest(BaseModel):
+    query: str = Field(..., description="Query across communications, banking, emails, and mobile data")
+
+
+class IngestMessageRequest(BaseModel):
+    sender: str
+    channel: str = "gmail"
+    recipient: Optional[str] = "Mamu"
+    subject: Optional[str] = None
+    body: str
+    category: Optional[str] = "mail"
+    amount_inr: Optional[float] = None
+    utr: Optional[str] = None
+    otp_code: Optional[str] = None
+    account: Optional[str] = None
 
 
 # ============================================================================
@@ -139,18 +157,6 @@ async def ensure_assistant_tables() -> None:
         async with engine.begin() as conn:
             for q in queries:
                 await conn.execute(text(q))
-            # Safely ensure metadata columns exist on communications_inbox
-            for col_def in [
-                "category TEXT DEFAULT 'all'",
-                "amount_inr REAL",
-                "utr TEXT",
-                "otp_code TEXT",
-                "account TEXT"
-            ]:
-                try:
-                    await conn.execute(text(f"ALTER TABLE communications_inbox ADD COLUMN {col_def};"))
-                except Exception:
-                    pass
     except Exception as e:
         logger.error(f"Error ensuring assistant SQLite tables: {e}")
 
@@ -353,102 +359,16 @@ async def parse_live_adb_notifications() -> List[Dict[str, Any]]:
 
 @router.get("/messages/inbox")
 async def get_messages_inbox(limit: int = Query(60, ge=1, le=200)):
-    """Fetch authentic incoming communications harvested from connected Android POCO device (SMS, Banking alerts, OTPs, notifications)."""
+    """Fetch recent authentic communications harvested from POCO phone (SMS, Banking alerts, OTPs, Calls) and Gmail emails."""
     await ensure_assistant_tables()
 
-    # 1. Probe authentic SMS messages, bank transactions, and OTPs via ADB
+    # 1. Trigger universal harvester sync cycle (mobile SMS + Call logs + OTPs + Gmail)
     try:
-        if await adb_controller.is_available():
-            sms_data = await adb_controller.get_bank_sms_and_transactions(limit=120)
-            raw_msgs = sms_data.get("raw_messages", [])
-            if raw_msgs:
-                async with engine.begin() as conn:
-                    for m in raw_msgs:
-                        sender = m.get("sender", "UNKNOWN")
-                        body = m.get("body", "")
-                        ts = m.get("timestamp") or datetime.now(timezone.utc).isoformat()
-                        is_fin = bool(m.get("is_financial"))
-                        is_otp = bool(m.get("is_otp"))
-
-                        if is_fin:
-                            cat = "banking"
-                        elif is_otp:
-                            cat = "otp"
-                        elif sender.startswith("+") or sender.isdigit() or "call" in body.lower():
-                            cat = "calls"
-                        else:
-                            cat = "sms"
-
-                        msg_id = f"sms_{abs(hash(sender + body + str(ts))) % 100000000}"
-                        subj = f"Bank Alert: {sender}" if is_fin else (f"OTP Security: {sender}" if is_otp else f"SMS: {sender}")
-
-                        await conn.execute(
-                            text(
-                                """
-                                INSERT INTO communications_inbox (
-                                    message_id, channel, sender, recipient, subject, body, timestamp, reply_status,
-                                    suggested_replies, category, amount_inr, utr, otp_code, account
-                                ) VALUES (
-                                    :id, 'sms', :sender, 'Mamu', :subject, :body, :ts, 'verified',
-                                    '[]', :cat, :amt, :utr, :otp, :acc
-                                )
-                                ON CONFLICT(message_id) DO UPDATE SET
-                                    category = excluded.category,
-                                    amount_inr = excluded.amount_inr,
-                                    utr = excluded.utr,
-                                    otp_code = excluded.otp_code,
-                                    account = excluded.account;
-                                """
-                            ),
-                            {
-                                "id": msg_id,
-                                "sender": sender,
-                                "subject": subj,
-                                "body": body,
-                                "ts": ts,
-                                "cat": cat,
-                                "amt": m.get("amount_inr"),
-                                "utr": m.get("utr"),
-                                "otp": m.get("otp_code"),
-                                "acc": m.get("account")
-                            }
-                        )
+        await universal_harvester.sync_all()
     except Exception as e:
-        logger.warning(f"Error harvesting mobile SMS: {e}")
+        logger.warning(f"Universal harvester auto-sync note: {e}")
 
-    # 2. Probe real-time active ADB notifications (WhatsApp, Gmail, etc.)
-    try:
-        live_msgs = await parse_live_adb_notifications()
-        if live_msgs:
-            async with engine.begin() as conn:
-                for m in live_msgs:
-                    await conn.execute(
-                        text(
-                            """
-                            INSERT OR IGNORE INTO communications_inbox (
-                                message_id, channel, sender, recipient, subject, body, timestamp, reply_status,
-                                suggested_replies, category
-                            ) VALUES (
-                                :id, :channel, :sender, :recipient, :subject, :body, :ts, :status,
-                                '[]', 'notifications'
-                            );
-                            """
-                        ),
-                        {
-                            "id": m["message_id"],
-                            "channel": m["channel"],
-                            "sender": m["sender"],
-                            "recipient": m["recipient"],
-                            "subject": m["subject"],
-                            "body": m["body"],
-                            "ts": m["timestamp"],
-                            "status": m["reply_status"]
-                        }
-                    )
-    except Exception as e:
-        logger.warning(f"Error persisting live notifications: {e}")
-
-    # 3. Fetch from persistent SQLite WAL table
+    # 2. Fetch all stored messages from persistent SQLite WAL table
     stored_msgs = []
     try:
         async with engine.connect() as conn:
@@ -492,7 +412,7 @@ async def get_messages_inbox(limit: int = Query(60, ge=1, le=200)):
     except Exception as e:
         logger.error(f"Error querying communications inbox: {e}")
 
-    # 4. Device and battery status
+    # 3. Device and battery status
     device_status = {}
     battery_info = {}
     try:
@@ -503,7 +423,8 @@ async def get_messages_inbox(limit: int = Query(60, ge=1, le=200)):
 
     banking_count = sum(1 for m in stored_msgs if m.get("category") == "banking")
     otp_count = sum(1 for m in stored_msgs if m.get("category") == "otp")
-    calls_count = sum(1 for m in stored_msgs if m.get("category") in ["calls", "sms"])
+    calls_count = sum(1 for m in stored_msgs if m.get("category") == "calls")
+    email_count = sum(1 for m in stored_msgs if m.get("category") == "mail" or m.get("channel") in ["gmail", "email"])
     notif_count = sum(1 for m in stored_msgs if m.get("category") == "notifications")
 
     return {
@@ -514,13 +435,63 @@ async def get_messages_inbox(limit: int = Query(60, ge=1, le=200)):
             "banking": banking_count,
             "otps": otp_count,
             "calls": calls_count,
+            "emails": email_count,
             "notifications": notif_count,
             "device": device_status.get("device_info", {}) or {"model": "POCO 22101320I", "connected": True},
-            "battery": battery_info or device_status.get("battery", {}) or {"level": 19, "status": "Discharging"},
+            "battery": battery_info or device_status.get("battery", {}) or {"level": 14, "status": "Discharging"},
             "endpoint": "10.65.249.121:5555"
         },
         "messages": stored_msgs
     }
+
+
+@router.post("/query-intelligence")
+async def query_communications_intelligence(request: IntelligenceQueryRequest):
+    """Query sovereign communications knowledge base using LanceDB hybrid vector search and local Ollama neural model."""
+    try:
+        result = await universal_harvester.query_intelligence(request.query)
+        return {
+            "success": True,
+            "query": request.query,
+            "answer": result.get("answer"),
+            "thinking": result.get("thinking"),
+            "retrieved_count": result.get("retrieved_context_count"),
+            "sources": result.get("sources", [])
+        }
+    except Exception as e:
+        logger.error(f"Intelligence query failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/messages/ingest")
+async def ingest_communication_message(request: IngestMessageRequest):
+    """Ingest external email, webhook, or automation message directly into the Brain RAG store."""
+    try:
+        msg_id = f"ingest_{uuid.uuid4().hex[:12]}"
+        msg = {
+            "message_id": msg_id,
+            "channel": request.channel.lower().strip(),
+            "sender": request.sender.strip(),
+            "recipient": request.recipient or "Mamu",
+            "subject": request.subject or f"Incoming {request.channel.title()}",
+            "body": request.body.strip(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "reply_status": "pending",
+            "category": request.category or "mail",
+            "amount_inr": request.amount_inr,
+            "utr": request.utr,
+            "otp_code": request.otp_code,
+            "account": request.account
+        }
+        await universal_harvester.persist_and_vectorize([msg])
+        return {
+            "success": True,
+            "message_id": msg_id,
+            "message": "Communication ingested and vectorized into Brain RAG store."
+        }
+    except Exception as e:
+        logger.error(f"Message ingestion failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/messages/action")
@@ -540,11 +511,13 @@ async def execute_message_action(request: MessageActionRequest):
         result["success"] = code == 0
         result["message"] = f"WhatsApp conversation opened for {clean}"
     elif action == "sync":
+        sync_res = await universal_harvester.sync_all()
         inbox_res = await get_messages_inbox(limit=60)
         result["success"] = True
+        result["sync_stats"] = sync_res
         result["summary"] = inbox_res.get("summary")
         result["count"] = inbox_res.get("count")
-        result["message"] = f"Successfully synchronized {inbox_res.get('count')} records from POCO mobile device"
+        result["message"] = f"Successfully synchronized {inbox_res.get('count')} records from POCO mobile device & Gmail"
     else:
         result["message"] = f"Unknown or unsupported action: {action}"
 
