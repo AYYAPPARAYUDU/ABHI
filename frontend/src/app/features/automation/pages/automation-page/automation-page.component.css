@@ -1405,3 +1405,77 @@
   font-size: 11px;
 }
 
+/* =========================================================================
+   DYNAMIC THEME HARMONIZATION FOR AUTOMATION (LIGHT & WARM MODES)
+   ========================================================================= */
+:host-context([data-mode="light"]),
+:host-context([data-theme="modern-light"]),
+:host-context([data-theme="warm-neutral"]) {
+  color: var(--abhi-text-primary, #0b1329);
+}
+
+:host-context([data-mode="light"]) .automation-header,
+:host-context([data-theme="modern-light"]) .automation-header,
+:host-context([data-theme="warm-neutral"]) .automation-header {
+  background: var(--abhi-surface-raised, #ffffff) !important;
+  border: 1px solid var(--abhi-border, rgba(15, 23, 42, 0.12)) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06) !important;
+}
+
+:host-context([data-mode="light"]) .header-title,
+:host-context([data-theme="modern-light"]) .header-title,
+:host-context([data-theme="warm-neutral"]) .header-title {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .tab-btn,
+:host-context([data-theme="modern-light"]) .tab-btn,
+:host-context([data-theme="warm-neutral"]) .tab-btn {
+  background: var(--abhi-surface-inset, #f1f5f9) !important;
+  border-color: var(--abhi-border, rgba(15, 23, 42, 0.1)) !important;
+  color: #475569 !important;
+}
+
+:host-context([data-mode="light"]) .tab-btn:hover,
+:host-context([data-theme="modern-light"]) .tab-btn:hover,
+:host-context([data-theme="warm-neutral"]) .tab-btn:hover {
+  background: #e2e8f0 !important;
+  color: #0b1329 !important;
+}
+
+:host-context([data-mode="light"]) .tab-btn.active,
+:host-context([data-theme="modern-light"]) .tab-btn.active,
+:host-context([data-theme="warm-neutral"]) .tab-btn.active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+}
+
+:host-context([data-mode="light"]) .workflow-card,
+:host-context([data-theme="modern-light"]) .workflow-card,
+:host-context([data-theme="warm-neutral"]) .workflow-card,
+:host-context([data-mode="light"]) .flow-card,
+:host-context([data-theme="modern-light"]) .flow-card,
+:host-context([data-theme="warm-neutral"]) .flow-card,
+:host-context([data-mode="light"]) .n8n-node-item,
+:host-context([data-theme="modern-light"]) .n8n-node-item,
+:host-context([data-theme="warm-neutral"]) .n8n-node-item {
+  background: var(--abhi-surface-raised, #ffffff) !important;
+  border: 1px solid var(--abhi-border, rgba(15, 23, 42, 0.12)) !important;
+  color: var(--abhi-text-primary, #0b1329) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+}
+
+:host-context([data-mode="light"]) .flow-title,
+:host-context([data-theme="modern-light"]) .flow-title,
+:host-context([data-theme="warm-neutral"]) .flow-title {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .dispatch-textarea,
+:host-context([data-theme="modern-light"]) .dispatch-textarea,
+:host-context([data-theme="warm-neutral"]) .dispatch-textarea {
+  background: #f8fafc !important;
+  border: 1px solid rgba(15, 23, 42, 0.15) !important;
+  color: #0b1329 !important;
+}
+

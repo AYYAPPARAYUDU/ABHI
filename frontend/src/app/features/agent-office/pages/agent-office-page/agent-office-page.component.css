@@ -798,3 +798,141 @@
 .font-monospace {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
+
+/* =========================================================================
+   DYNAMIC THEME HARMONIZATION (LIGHT & WARM MODES)
+   ========================================================================= */
+:host-context([data-mode="light"]),
+:host-context([data-theme="modern-light"]),
+:host-context([data-theme="warm-neutral"]) {
+  color: var(--abhi-text-primary, #0b1329);
+}
+
+:host-context([data-mode="light"]) .office-viewport-container,
+:host-context([data-theme="modern-light"]) .office-viewport-container,
+:host-context([data-theme="warm-neutral"]) .office-viewport-container {
+  background-color: var(--abhi-bg, #f5f7fb) !important;
+}
+
+:host-context([data-mode="light"]) .office-left-panel,
+:host-context([data-theme="modern-light"]) .office-left-panel,
+:host-context([data-theme="warm-neutral"]) .office-left-panel,
+:host-context([data-mode="light"]) .comm-feed-container,
+:host-context([data-theme="modern-light"]) .comm-feed-container,
+:host-context([data-theme="warm-neutral"]) .comm-feed-container,
+:host-context([data-mode="light"]) .agent-detail-dock,
+:host-context([data-theme="modern-light"]) .agent-detail-dock,
+:host-context([data-theme="warm-neutral"]) .agent-detail-dock {
+  background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.94)) !important;
+  border: 1px solid var(--abhi-border, rgba(15, 23, 42, 0.12)) !important;
+  color: var(--abhi-text-primary, #0b1329) !important;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08) !important;
+}
+
+:host-context([data-mode="light"]) .kpi-card,
+:host-context([data-theme="modern-light"]) .kpi-card,
+:host-context([data-theme="warm-neutral"]) .kpi-card {
+  background: var(--abhi-surface-inset, #f1f5f9) !important;
+  border: 1px solid var(--abhi-border, rgba(15, 23, 42, 0.1)) !important;
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .kpi-value,
+:host-context([data-theme="modern-light"]) .kpi-value,
+:host-context([data-theme="warm-neutral"]) .kpi-value {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .kpi-label,
+:host-context([data-theme="modern-light"]) .kpi-label,
+:host-context([data-theme="warm-neutral"]) .kpi-label {
+  color: #64748b !important;
+}
+
+:host-context([data-mode="light"]) .panel-section-title,
+:host-context([data-theme="modern-light"]) .panel-section-title,
+:host-context([data-theme="warm-neutral"]) .panel-section-title {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .agent-activity-item,
+:host-context([data-theme="modern-light"]) .agent-activity-item,
+:host-context([data-theme="warm-neutral"]) .agent-activity-item {
+  background: var(--abhi-surface-inset, #f8fafc) !important;
+  border: 1px solid var(--abhi-border, rgba(15, 23, 42, 0.1)) !important;
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .agent-name,
+:host-context([data-theme="modern-light"]) .agent-name,
+:host-context([data-theme="warm-neutral"]) .agent-name {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .agent-role,
+:host-context([data-theme="modern-light"]) .agent-role,
+:host-context([data-theme="warm-neutral"]) .agent-role {
+  color: #475569 !important;
+}
+
+:host-context([data-mode="light"]) .comm-header,
+:host-context([data-theme="modern-light"]) .comm-header,
+:host-context([data-theme="warm-neutral"]) .comm-header {
+  border-bottom: 1px solid var(--abhi-border, rgba(15, 23, 42, 0.1)) !important;
+}
+
+:host-context([data-mode="light"]) .comm-title,
+:host-context([data-theme="modern-light"]) .comm-title,
+:host-context([data-theme="warm-neutral"]) .comm-title {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .comm-item,
+:host-context([data-theme="modern-light"]) .comm-item,
+:host-context([data-theme="warm-neutral"]) .comm-item {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+}
+
+:host-context([data-mode="light"]) .comm-agent-name,
+:host-context([data-theme="modern-light"]) .comm-agent-name,
+:host-context([data-theme="warm-neutral"]) .comm-agent-name {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .comm-message,
+:host-context([data-theme="modern-light"]) .comm-message,
+:host-context([data-theme="warm-neutral"]) .comm-message {
+  color: #334155 !important;
+}
+
+:host-context([data-mode="light"]) .dock-name,
+:host-context([data-theme="modern-light"]) .dock-name,
+:host-context([data-theme="warm-neutral"]) .dock-name {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .dock-role,
+:host-context([data-theme="modern-light"]) .dock-role,
+:host-context([data-theme="warm-neutral"]) .dock-role {
+  color: #475569 !important;
+}
+
+:host-context([data-mode="light"]) .summary-text,
+:host-context([data-theme="modern-light"]) .summary-text,
+:host-context([data-theme="warm-neutral"]) .summary-text {
+  color: #334155 !important;
+}
+
+:host-context([data-mode="light"]) .dock-val,
+:host-context([data-theme="modern-light"]) .dock-val,
+:host-context([data-theme="warm-neutral"]) .dock-val {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .task-input-box,
+:host-context([data-theme="modern-light"]) .task-input-box,
+:host-context([data-theme="warm-neutral"]) .task-input-box {
+  background: var(--abhi-surface-inset, #f1f5f9) !important;
+  border-color: var(--abhi-border, rgba(15, 23, 42, 0.15)) !important;
+  color: var(--abhi-text-primary, #0b1329) !important;
+}

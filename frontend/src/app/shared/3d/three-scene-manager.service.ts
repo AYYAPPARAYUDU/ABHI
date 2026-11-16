@@ -3732,11 +3732,12 @@ export class ThreeSceneManagerService {
   updateThemeColors(colors: AbhiThemeColors): void {
     if (!this.scene) return;
     try {
-      // 1. Dynamic Background Fog & Clear Color (Harmonized deep space void across all themes)
+      // 1. Dynamic Background Fog & Clear Color (Harmonized with Active Theme)
       const isLightBg = colors.background.toLowerCase().startsWith('#f') || colors.background.toLowerCase() === '#ffffff';
-      const effective3dBg = isLightBg ? '#040916' : colors.background;
+      const effective3dBg = colors.background;
       if (this.scene.fog && this.scene.fog instanceof THREE.FogExp2) {
         this.scene.fog.color.set(effective3dBg);
+        this.scene.fog.density = isLightBg ? 0.012 : 0.022;
       }
       if (this.renderer) {
         this.renderer.setClearColor(new THREE.Color(effective3dBg), 1);
@@ -3746,7 +3747,10 @@ export class ThreeSceneManagerService {
       if (this.pointLight1) this.pointLight1.color.set(colors.accentPrimary);
       if (this.pointLight2) this.pointLight2.color.set(colors.accentSecondary);
       if (this.pointLightCore) this.pointLightCore.color.set(colors.accentPrimary);
-      if (this.ambientLight) this.ambientLight.color.set(colors.backgroundSecondary);
+      if (this.ambientLight) {
+        this.ambientLight.color.set(isLightBg ? 0xffffff : colors.backgroundSecondary);
+        this.ambientLight.intensity = isLightBg ? 2.4 : 1.8;
+      }
 
       this.themeColorLights.forEach(({ light, isSecondary }) => {
         light.color.set(isSecondary ? colors.accentSecondary : colors.accentPrimary);

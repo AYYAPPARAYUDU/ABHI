@@ -314,20 +314,52 @@
         "tool_accuracy": 99.0,
         "verification": 100.0
       }
+    },
+    "browser_agent": {
+      "agent_id": "browser_agent",
+      "name": "Grounded Browser Automation Agent",
+      "role": "Controls local browser sites via Playwright semantic locators and visual grounding with dual-state verification.",
+      "total_tasks": 1,
+      "successful_tasks": 1,
+      "failed_tasks": 0,
+      "total_latency_ms": 94.0,
+      "average_latency_ms": 94.0,
+      "tool_calls_count": 1,
+      "dual_state_verifications_passed": 1,
+      "accuracy_score": 100.0,
+      "power_rating": 119.6,
+      "last_active_iso": "2026-11-16T03:38:58.769630+00:00",
+      "domain_strengths": {}
+    },
+    "os_desktop_agent": {
+      "agent_id": "os_desktop_agent",
+      "name": "OS & Desktop Automation Agent",
+      "role": "Controls Windows OS applications, windows, files, mouse, keyboard, and accessibility interfaces.",
+      "total_tasks": 2,
+      "successful_tasks": 2,
+      "failed_tasks": 0,
+      "total_latency_ms": 11736.0,
+      "average_latency_ms": 5868.0,
+      "tool_calls_count": 2,
+      "dual_state_verifications_passed": 2,
+      "accuracy_score": 100.0,
+      "power_rating": 103.0,
+      "last_active_iso": "2026-11-16T04:36:58.275319+00:00",
+      "domain_strengths": {}
     }
   },
   "llms": {
     "abhi:latest": {
       "model_name": "abhi:latest",
-      "total_requests": 45,
-      "successful_requests": 45,
+      "total_requests": 49,
+      "successful_requests": 49,
       "fallback_requests": 0,
-      "total_prompt_tokens": 18400,
-      "total_completion_tokens": 9200,
+      "total_prompt_tokens": 18658,
+      "total_completion_tokens": 10000,
       "total_thinking_time_ms": 12500.0,
-      "total_generation_time_ms": 38000.0,
-      "average_tokens_per_second": 38.4,
-      "average_latency_ms": 844.0,
+      "total_generation_time_ms": 95450.3129000077,
+      "average_tokens_per_second": 22.2,
+      "average_latency_ms": 1948.0,
       "reasoning_depth_score": 96.2,
       "reliability_pct": 100.0
     },
@@ -374,5 +406,5 @@
       "reliability_pct": 100.0
     }
   },
-  "updated_at": "2026-11-15T13:33:24.582670+00:00"
+  "updated_at": "2026-11-16T04:36:58.275857+00:00"
 }

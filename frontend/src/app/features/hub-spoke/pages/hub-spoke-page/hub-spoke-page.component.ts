@@ -8,7 +8,8 @@ import {
   ViewChild,
   signal,
   inject,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  effect
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +19,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { getApiUrl } from '../../../../core/config/api-config';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { BusinessService } from '../../../business/services/business.service';
+import { ThemeService } from '../../../../core/services/theme.service';
 
 export interface PodDefinition {
   id: string;
@@ -318,6 +320,24 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
   private cameraTargetPos?: THREE.Vector3;
   private cameraTargetLookAt?: THREE.Vector3;
 
+  // Injects & Reactive Theme Synchronization
+  private themeService = inject(ThemeService);
+
+  constructor() {
+    effect(() => {
+      const isLight = this.themeService.isLightMode();
+      const currentTheme = this.themeService.activeTheme();
+      if (this.scene) {
+        const bgHex = isLight ? (currentTheme?.colors?.background || '#eef2f7') : '#080c14';
+        this.scene.background = new THREE.Color(bgHex);
+        if (this.scene.fog && this.scene.fog instanceof THREE.FogExp2) {
+          this.scene.fog.color.set(bgHex);
+          this.scene.fog.density = isLight ? 0.005 : 0.0075;
+        }
+      }
+    });
+  }
+
   ngOnInit(): void {
     // Select Treasury Pod by default to showcase real commercial settlement
     this.selectedPod.set(this.pods[4]);
@@ -510,10 +530,14 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
     const width = container.clientWidth || 1200;
     const height = container.clientHeight || 750;
 
-    // 1. Scene
+    // 1. Scene with Dynamic Theme Harmonization
+    const isLight = this.themeService.isLightMode();
+    const currentTheme = this.themeService.activeTheme();
+    const bgHex = isLight ? (currentTheme?.colors?.background || '#eef2f7') : '#080c14';
+
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x080c14); // Deep space dark-slate
-    this.scene.fog = new THREE.FogExp2(0x080c14, 0.0075);
+    this.scene.background = new THREE.Color(bgHex);
+    this.scene.fog = new THREE.FogExp2(bgHex, isLight ? 0.005 : 0.0075);
 
     // 2. Camera (Wide isometric angle so all 8 pods are clearly visible on all screens)
     this.camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 1000);

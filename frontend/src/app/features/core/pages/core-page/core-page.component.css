@@ -596,3 +596,102 @@
   50% { transform: scale(1.3); opacity: 1; }
 }
 
+/* =========================================================================
+   DYNAMIC THEME HARMONIZATION FOR CORE (LIGHT & WARM MODES)
+   ========================================================================= */
+:host-context([data-mode="light"]),
+:host-context([data-theme="modern-light"]),
+:host-context([data-theme="warm-neutral"]) {
+  color: var(--abhi-text-primary, #0b1329);
+}
+
+:host-context([data-mode="light"]) .core-floating-controls-bar,
+:host-context([data-theme="modern-light"]) .core-floating-controls-bar,
+:host-context([data-theme="warm-neutral"]) .core-floating-controls-bar {
+  background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.94)) !important;
+  border: 1px solid var(--abhi-border, rgba(15, 23, 42, 0.12)) !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08) !important;
+}
+
+:host-context([data-mode="light"]) .brand-text,
+:host-context([data-theme="modern-light"]) .brand-text,
+:host-context([data-theme="warm-neutral"]) .brand-text {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .energy-pills-group .pill-btn,
+:host-context([data-theme="modern-light"]) .energy-pills-group .pill-btn,
+:host-context([data-theme="warm-neutral"]) .energy-pills-group .pill-btn {
+  background: var(--abhi-surface-inset, #f1f5f9) !important;
+  border: 1px solid var(--abhi-border, rgba(15, 23, 42, 0.1)) !important;
+  color: #475569 !important;
+}
+
+:host-context([data-mode="light"]) .energy-pills-group .pill-btn.active,
+:host-context([data-theme="modern-light"]) .energy-pills-group .pill-btn.active,
+:host-context([data-theme="warm-neutral"]) .energy-pills-group .pill-btn.active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+}
+
+:host-context([data-mode="light"]) .floating-hud-card,
+:host-context([data-theme="modern-light"]) .floating-hud-card,
+:host-context([data-theme="warm-neutral"]) .floating-hud-card {
+  background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.94)) !important;
+  border: 1px solid var(--abhi-border, rgba(15, 23, 42, 0.12)) !important;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08) !important;
+}
+
+:host-context([data-mode="light"]) .hud-card-title,
+:host-context([data-theme="modern-light"]) .hud-card-title,
+:host-context([data-theme="warm-neutral"]) .hud-card-title {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .hud-metric-row,
+:host-context([data-theme="modern-light"]) .hud-metric-row,
+:host-context([data-theme="warm-neutral"]) .hud-metric-row {
+  color: #475569 !important;
+}
+
+:host-context([data-mode="light"]) .hud-val,
+:host-context([data-theme="modern-light"]) .hud-val,
+:host-context([data-theme="warm-neutral"]) .hud-val {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .core-subconscious-bar,
+:host-context([data-theme="modern-light"]) .core-subconscious-bar,
+:host-context([data-theme="warm-neutral"]) .core-subconscious-bar {
+  background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.92)) !important;
+  border: 1px solid var(--abhi-border, rgba(15, 23, 42, 0.12)) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06) !important;
+}
+
+:host-context([data-mode="light"]) .subconscious-text,
+:host-context([data-theme="modern-light"]) .subconscious-text,
+:host-context([data-theme="warm-neutral"]) .subconscious-text {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .core-bottom-command-bar,
+:host-context([data-theme="modern-light"]) .core-bottom-command-bar,
+:host-context([data-theme="warm-neutral"]) .core-bottom-command-bar {
+  background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.96)) !important;
+  border: 1px solid var(--abhi-border, rgba(15, 23, 42, 0.15)) !important;
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.1) !important;
+}
+
+:host-context([data-mode="light"]) .ai-core-input,
+:host-context([data-theme="modern-light"]) .ai-core-input,
+:host-context([data-theme="warm-neutral"]) .ai-core-input {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .ai-core-input::placeholder,
+:host-context([data-theme="modern-light"]) .ai-core-input::placeholder,
+:host-context([data-theme="warm-neutral"]) .ai-core-input::placeholder {
+  color: #94a3b8 !important;
+}
+

@@ -2,9 +2,14 @@
    ABHI EXECUTIVE BUSINESS & SOVEREIGN TREASURY (BOOTSTRAP 5 ENHANCED)
    ========================================================================= */
 
+:host {
+  display: block;
+  width: 100%;
+}
+
 .business-page {
   animation: fadeIn 0.3s ease-out;
-  color: #f1f5f9;
+  color: var(--abhi-text-primary, #f1f5f9);
   min-height: calc(100vh - 70px);
 }
 
@@ -22,7 +27,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(6, 182, 212, 0.95);
+  background: var(--abhi-cyan, #06b6d4);
   color: #030712;
   font-weight: 700;
   font-size: 13px;
@@ -39,9 +44,13 @@
 
 /* Operator Identity & Header */
 .executive-header {
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92) 0%, rgba(10, 15, 29, 0.96) 100%);
+  background: var(--abhi-surface-raised, rgba(15, 23, 42, 0.92));
+  border: 1px solid var(--abhi-border, rgba(56, 189, 248, 0.2)) !important;
+  color: var(--abhi-text-primary, #ffffff);
   backdrop-filter: blur(20px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.25s ease;
 }
 
 .operator-avatar {
@@ -58,15 +67,18 @@
 
 /* Metric Cards */
 .metric-card {
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(10, 15, 29, 0.9) 100%);
+  background: var(--abhi-surface-raised, rgba(15, 23, 42, 0.85));
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.1)) !important;
+  color: var(--abhi-text-primary, #ffffff);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .metric-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(6, 182, 212, 0.35) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border-color: var(--abhi-cyan, #06b6d4) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 .metric-badge {
@@ -80,12 +92,15 @@
 
 /* Left Column: Settlement Channel */
 .channel-card {
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.88) 0%, rgba(8, 12, 22, 0.94) 100%);
+  background: var(--abhi-surface-raised, rgba(15, 23, 42, 0.88));
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.1)) !important;
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .qr-box {
-  background: rgba(3, 7, 18, 0.6);
+  background: var(--abhi-surface-inset, rgba(3, 7, 18, 0.6));
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.08));
 }
 
 .qr-image {
@@ -93,7 +108,7 @@
   background: #ffffff;
   padding: 6px;
   border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .live-dot {
@@ -114,76 +129,144 @@
 }
 
 .detail-row {
-  background: rgba(15, 23, 42, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--abhi-surface-inset, rgba(15, 23, 42, 0.5));
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.05));
+  color: var(--abhi-text-primary, #f8fafc);
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .detail-row:hover {
-  background: rgba(30, 41, 59, 0.7);
-  border-color: rgba(6, 182, 212, 0.3);
+  background: var(--abhi-surface-raised, rgba(30, 41, 59, 0.7));
+  border-color: var(--abhi-cyan, rgba(6, 182, 212, 0.3));
 }
 
 /* Right Column: Ledger & Receipts */
 .ledger-card {
-  background: linear-gradient(145deg, rgba(15, 23, 42, 0.88) 0%, rgba(8, 12, 22, 0.94) 100%);
+  background: var(--abhi-surface-raised, rgba(15, 23, 42, 0.88));
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.1)) !important;
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .custom-ledger-table {
   --bs-table-bg: transparent;
-  --bs-table-hover-bg: rgba(30, 41, 59, 0.5);
-  border-color: rgba(255, 255, 255, 0.08);
+  --bs-table-hover-bg: rgba(30, 41, 59, 0.25);
+  border-color: var(--abhi-border, rgba(255, 255, 255, 0.08));
+  color: var(--abhi-text-primary, #f8fafc);
 }
 
 .custom-ledger-table th {
-  background: rgba(10, 15, 29, 0.8);
+  background: var(--abhi-surface-inset, rgba(10, 15, 29, 0.8));
+  color: var(--abhi-text-secondary, #94a3b8);
   font-weight: 600;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.12));
   padding: 12px 14px;
 }
 
 .custom-ledger-table td {
   padding: 12px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.05));
+  color: var(--abhi-text-primary, #f8fafc);
 }
 
 .receipt-card-item {
-  background: rgba(15, 23, 42, 0.6);
+  background: var(--abhi-surface-inset, rgba(15, 23, 42, 0.6));
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.08)) !important;
+  color: var(--abhi-text-primary, #f8fafc);
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .receipt-card-item:hover {
   transform: translateY(-2px);
-  border-color: rgba(16, 185, 129, 0.4) !important;
-  background: rgba(15, 23, 42, 0.9);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  border-color: var(--abhi-success, #10b981) !important;
+  background: var(--abhi-surface-raised, rgba(15, 23, 42, 0.9));
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* Modals */
-.modal-backdrop-custom {
-  position: fixed;
-  inset: 0;
-  z-index: 1060;
-  background: rgba(3, 7, 18, 0.8);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  animation: fadeIn 0.2s ease-out;
+/* Light Mode Overrides for Business Page */
+:host-context([data-mode="light"]) .business-page,
+:host-context([data-theme="modern-light"]) .business-page,
+:host-context([data-theme="warm-neutral"]) .business-page {
+  color: #0b1329;
 }
 
-.modal-card-custom {
-  background: #0f172a;
-  max-width: 580px;
-  width: 100%;
-  animation: zoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+:host-context([data-mode="light"]) .text-white,
+:host-context([data-theme="modern-light"]) .text-white,
+:host-context([data-theme="warm-neutral"]) .text-white {
+  color: #0b1329 !important;
 }
 
-@keyframes zoomIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+:host-context([data-mode="light"]) .text-secondary,
+:host-context([data-theme="modern-light"]) .text-secondary,
+:host-context([data-theme="warm-neutral"]) .text-secondary {
+  color: #334155 !important;
+}
+
+:host-context([data-mode="light"]) .executive-header {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(203, 213, 225, 0.8) !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+}
+
+:host-context([data-mode="light"]) .metric-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(203, 213, 225, 0.8) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+:host-context([data-mode="light"]) .card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(203, 213, 225, 0.8) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06) !important;
+}
+
+:host-context([data-mode="light"]) .channel-card,
+:host-context([data-mode="light"]) .ledger-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(203, 213, 225, 0.8) !important;
+}
+
+:host-context([data-mode="light"]) .bg-secondary.bg-opacity-10 {
+  background: #f1f5f9 !important;
+  border-color: rgba(203, 213, 225, 0.8) !important;
+}
+
+:host-context([data-mode="light"]) .custom-ledger-table th {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: rgba(203, 213, 225, 0.8) !important;
+}
+
+:host-context([data-mode="light"]) .custom-ledger-table td {
+  color: #0f172a !important;
+  border-color: rgba(203, 213, 225, 0.6) !important;
+}
+
+:host-context([data-mode="light"]) .receipt-card-item {
+  background: #f8fafc !important;
+  border-color: rgba(203, 213, 225, 0.8) !important;
+}
+
+:host-context([data-mode="light"]) .qr-box {
+  background: #f1f5f9 !important;
+}
+
+:host-context([data-mode="light"]) .detail-row {
+  background: #f8fafc !important;
+  border-color: rgba(203, 213, 225, 0.8) !important;
+  color: #0f172a !important;
+}
+
+:host-context([data-mode="light"]) .agent-station-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(203, 213, 225, 0.8) !important;
+  color: #0f172a !important;
+}
+
+:host-context([data-mode="light"]) .modal-card-custom {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: rgba(203, 213, 225, 0.9) !important;
 }
 
 .receipt-inspection-body {

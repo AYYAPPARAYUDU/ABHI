@@ -8,7 +8,8 @@ import {
   ViewChild,
   signal,
   inject,
-  ChangeDetectorRef
+  ChangeDetectorRef,
+  effect
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +18,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { getApiUrl } from '../../../../core/config/api-config';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
+import { ThemeService } from '../../../../core/services/theme.service';
 
 export interface OfficeAgent {
   id: string;
@@ -240,6 +242,24 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
   // Camera lerp target
   private cameraTargetPos?: THREE.Vector3;
   private cameraTargetLookAt?: THREE.Vector3;
+
+  // Injects & Reactive Theme Synchronization
+  private themeService = inject(ThemeService);
+
+  constructor() {
+    effect(() => {
+      const isLight = this.themeService.isLightMode();
+      const currentTheme = this.themeService.activeTheme();
+      if (this.scene) {
+        const bgHex = isLight ? (currentTheme?.colors?.background || '#eef2f7') : '#060911';
+        this.scene.background = new THREE.Color(bgHex);
+        if (this.scene.fog && this.scene.fog instanceof THREE.FogExp2) {
+          this.scene.fog.color.set(bgHex);
+          this.scene.fog.density = isLight ? 0.005 : 0.007;
+        }
+      }
+    });
+  }
 
   ngOnInit(): void {
     // Select first agent as default preview
@@ -527,10 +547,14 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
     const width = container.clientWidth || 1200;
     const height = container.clientHeight || 750;
 
-    // 1. Scene
+    // 1. Scene with Dynamic Theme Harmonization
+    const isLight = this.themeService.isLightMode();
+    const currentTheme = this.themeService.activeTheme();
+    const bgHex = isLight ? (currentTheme?.colors?.background || '#eef2f7') : '#060911';
+
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x060911);
-    this.scene.fog = new THREE.FogExp2(0x060911, 0.007);
+    this.scene.background = new THREE.Color(bgHex);
+    this.scene.fog = new THREE.FogExp2(bgHex, isLight ? 0.005 : 0.007);
 
     // 2. Camera (Wide Isometric angle so the full office, perimeter pines, and sidewalks fit on any screen)
     this.camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 1000);

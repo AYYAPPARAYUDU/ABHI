@@ -2131,6 +2131,66 @@
   border-radius: 9999px;
 }
 
+/* Light / Warm Theme Overrides for Workspace Top Navbar */
+:host-context([data-mode="light"]) .workspace-top-nav-bar,
+:host-context([data-theme="modern-light"]) .workspace-top-nav-bar,
+:host-context([data-theme="warm-neutral"]) .workspace-top-nav-bar {
+  background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.94)) !important;
+  border-bottom: 1px solid var(--abhi-border, rgba(15, 23, 42, 0.12)) !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06) !important;
+}
+
+:host-context([data-mode="light"]) .workspace-top-nav-bar .brand-title,
+:host-context([data-theme="modern-light"]) .workspace-top-nav-bar .brand-title,
+:host-context([data-theme="warm-neutral"]) .workspace-top-nav-bar .brand-title {
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .workspace-top-nav-bar .profile-chip,
+:host-context([data-theme="modern-light"]) .workspace-top-nav-bar .profile-chip,
+:host-context([data-theme="warm-neutral"]) .workspace-top-nav-bar .profile-chip {
+  background: var(--abhi-surface-inset, #f1f5f9) !important;
+  border-color: var(--abhi-border, rgba(15, 23, 42, 0.12)) !important;
+  color: var(--abhi-text-primary, #0b1329) !important;
+}
+
+:host-context([data-mode="light"]) .workspace-top-nav-bar .nav-center-tabs,
+:host-context([data-theme="modern-light"]) .workspace-top-nav-bar .nav-center-tabs,
+:host-context([data-theme="warm-neutral"]) .workspace-top-nav-bar .nav-center-tabs {
+  background: var(--abhi-surface-inset, #eef2f7) !important;
+  border-color: var(--abhi-border, rgba(15, 23, 42, 0.1)) !important;
+}
+
+:host-context([data-mode="light"]) .workspace-top-nav-bar .tab-pill-btn,
+:host-context([data-theme="modern-light"]) .workspace-top-nav-bar .tab-pill-btn,
+:host-context([data-theme="warm-neutral"]) .workspace-top-nav-bar .tab-pill-btn {
+  color: #475569 !important;
+}
+
+:host-context([data-mode="light"]) .workspace-top-nav-bar .tab-pill-btn:hover,
+:host-context([data-theme="modern-light"]) .workspace-top-nav-bar .tab-pill-btn:hover,
+:host-context([data-theme="warm-neutral"]) .workspace-top-nav-bar .tab-pill-btn:hover {
+  color: #0b1329 !important;
+  background: #e2e8f0 !important;
+}
+
+:host-context([data-mode="light"]) .workspace-top-nav-bar .tab-pill-btn.active,
+:host-context([data-theme="modern-light"]) .workspace-top-nav-bar .tab-pill-btn.active,
+:host-context([data-theme="warm-neutral"]) .workspace-top-nav-bar .tab-pill-btn.active {
+  background: #ffffff !important;
+  color: #0284c7 !important;
+  border-color: rgba(2, 132, 199, 0.35) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+:host-context([data-mode="light"]) .workspace-top-nav-bar .agents-live-counter,
+:host-context([data-theme="modern-light"]) .workspace-top-nav-bar .agents-live-counter,
+:host-context([data-theme="warm-neutral"]) .workspace-top-nav-bar .agents-live-counter {
+  color: #334155 !important;
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
 .mode-switch-btn.active .mode-badge {
   background: rgba(56, 189, 248, 0.3);
   color: #38bdf8;

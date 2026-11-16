@@ -303,3 +303,29 @@
         flex-shrink: 0;
       }
     }
+
+/* Light / Warm Theme Overrides */
+:host-context([data-mode="light"]) .switch-tab-btn,
+:host-context([data-theme="modern-light"]) .switch-tab-btn,
+:host-context([data-theme="warm-neutral"]) .switch-tab-btn {
+  background: var(--abhi-surface-raised, #ffffff) !important;
+  border-color: var(--abhi-border, rgba(15, 23, 42, 0.12)) !important;
+  color: #475569 !important;
+}
+
+:host-context([data-mode="light"]) .switch-tab-btn:hover,
+:host-context([data-theme="modern-light"]) .switch-tab-btn:hover,
+:host-context([data-theme="warm-neutral"]) .switch-tab-btn:hover {
+  color: #0b1329 !important;
+  border-color: #0284c7 !important;
+  background: #f1f5f9 !important;
+}
+
+:host-context([data-mode="light"]) .switch-tab-btn.active,
+:host-context([data-theme="modern-light"]) .switch-tab-btn.active,
+:host-context([data-theme="warm-neutral"]) .switch-tab-btn.active {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 2px 10px rgba(2, 132, 199, 0.3) !important;
+}

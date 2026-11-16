@@ -1,3 +1,4 @@
+from backend.app.automation.mobile.adb_controller import adb_controller
 from backend.app.business.revenue_pipeline import sovereign_revenue_pipeline
 """FastAPI Router for Business Sectors, Autonomous Operations & Revenue Integrity (Phase 9 Stage 3)."""
 
@@ -528,5 +529,117 @@ async def execute_n8n_workflow(payload: Dict[str, Any]) -> Dict[str, Any]:
 async def receive_n8n_inbound_webhook(workflow_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     """Receive inbound webhook triggers from external or cloud n8n orchestrators."""
     return await n8n_bridge.execute_workflow(workflow_id, payload)
+
+
+# =========================================================================
+# MOBILE PHONEPE & BANKING STATEMENT REAL-TIME HUB
+# =========================================================================
+
+@router.get("/mobile/status")
+async def get_business_mobile_status(serial: Optional[str] = Query(None)) -> Dict[str, Any]:
+    """Get connected mobile device diagnostics (USB & Wireless ADB) for banking integration."""
+    try:
+        status_data = await adb_controller.get_device_status(serial=serial)
+        identifiers = await adb_controller.get_phone_identifiers(serial=serial)
+        status_data["identifiers"] = identifiers
+        devices = await adb_controller.list_devices()
+        return {
+            "status": "SUCCESS",
+            "connected": status_data.get("connected", False),
+            "device_count": len(devices),
+            "devices": devices,
+            "primary_device": status_data
+        }
+    except Exception as e:
+        return {
+            "status": "ERROR",
+            "connected": False,
+            "message": str(e)
+        }
+
+
+@router.get("/mobile/bank-transactions")
+async def get_mobile_bank_transactions(
+    serial: Optional[str] = Query(None),
+    limit: int = Query(30, ge=1, le=100)
+) -> Dict[str, Any]:
+    """Stream live bank SMS transactions & PhonePe UPI mini statement from connected Android device."""
+    return await adb_controller.get_bank_sms_and_transactions(serial=serial, limit=limit)
+
+
+@router.get("/mobile/otps")
+async def get_mobile_otps(
+    serial: Optional[str] = Query(None),
+    limit: int = Query(15, ge=1, le=50)
+) -> Dict[str, Any]:
+    """Extract live incoming banking and UPI one-time passwords (OTPs) from connected mobile."""
+    res = await adb_controller.get_bank_sms_and_transactions(serial=serial, limit=50)
+    return {
+        "status": "SUCCESS",
+        "connected": res.get("connected", False),
+        "otps_count": res.get("otps_count", 0),
+        "otps": res.get("otps", [])[:limit]
+    }
+
+
+@router.post("/mobile/launch-phonepe")
+async def launch_phonepe_on_mobile(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Launch the official PhonePe app directly on connected Android mobile device."""
+    serial = payload.get("serial") if payload else None
+    res = await adb_controller.launch_phonepe(serial=serial)
+    return res
+
+
+@router.post("/mobile/parse-sms-text")
+async def parse_sms_text_to_transaction(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Parse pasted raw bank SMS text or PhonePe transaction message into authentic transaction records.
+    Optionally records verified credit into the sovereign treasury ledger.
+    """
+    raw_text = payload.get("text", "").strip()
+    sender = payload.get("sender", "SMS_INBOX").strip()
+    record_to_treasury = payload.get("record_to_treasury", False)
+
+    if not raw_text:
+        raise HTTPException(status_code=400, detail="SMS text is required.")
+
+    parsed = adb_controller.parse_raw_sms_transaction(raw_text, sender=sender)
+    if not parsed:
+        return {
+            "status": "NO_TRANSACTION_DETECTED",
+            "message": "Could not identify banking or UPI transaction patterns in the provided text."
+        }
+
+    ledger_record = None
+    if record_to_treasury and parsed["transaction_type"] == "CREDIT" and parsed.get("utr_number"):
+        try:
+            ledger_record = sovereign_treasury.record_verified_sbi_settlement(
+                utr_number=parsed["utr_number"],
+                amount_inr=parsed["amount_inr"],
+                payer_name=f"{parsed['channel']} Transfer",
+                invoice_number=payload.get("invoice_number")
+            )
+        except Exception as e:
+            ledger_record = {"error": str(e)}
+
+    return {
+        "status": "PARSED_SUCCESSFULLY",
+        "transaction": parsed,
+        "recorded_to_treasury": ledger_record is not None,
+        "treasury_entry": ledger_record
+    }
+
+
+@router.post("/mobile/connect-wireless")
+async def connect_mobile_wireless(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Connect to Android phone wirelessly via ADB over Wi-Fi."""
+    ip = payload.get("ip", "").strip()
+    port = int(payload.get("port", 5555))
+    if not ip:
+        raise HTTPException(status_code=400, detail="Mobile IP address is required.")
+
+    res = await adb_controller.connect_wireless(ip=ip, port=port)
+    return res
+
 
 
