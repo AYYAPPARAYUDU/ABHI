@@ -56,7 +56,7 @@ export class AutomationPageComponent implements OnInit {
   customAutomationReply = signal<string>('');
   commsInputEmail = '';
   commsInputPhone = '';
-  commsInputMode: 'HUMAN_CONFIRMATION' | 'FULLY_AUTONOMOUS' = 'HUMAN_CONFIRMATION';
+  commsInputMode: 'HUMAN_CONFIRMATION' | 'FULLY_AUTONOMOUS' | 'SOVEREIGN_OPERATOR' = 'HUMAN_CONFIRMATION';
   isEditingCommsProfile = signal<boolean>(false);
 
   // Universal Natural Language Prompt
@@ -508,7 +508,7 @@ export class AutomationPageComponent implements OnInit {
     if (prof) {
       this.commsInputEmail = prof.email || '';
       this.commsInputPhone = prof.phone_number || '';
-      this.commsInputMode = prof.auto_reply_mode;
+      this.commsInputMode = (prof.auto_reply_mode as any) || 'HUMAN_CONFIRMATION';
     }
     this.isEditingCommsProfile.set(!this.isEditingCommsProfile());
   }

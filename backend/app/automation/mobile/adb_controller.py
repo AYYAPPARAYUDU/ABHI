@@ -11,6 +11,7 @@ Native asynchronous ADB controller enabling zero-touch personal device managemen
 """
 
 import asyncio
+from datetime import datetime, timezone
 import os
 import re
 import shutil
@@ -74,6 +75,17 @@ class AdbController:
 
     def _discover_adb(self) -> str:
         """Locate adb.exe binary across known paths or system PATH."""
+        explicit_candidates = [
+            r"C:\Users\AYYAPPA RAYUDU\platform-tools\platform-tools\adb.exe",
+            r"C:\Users\AYYAPPA RAYUDU\platform-tools\adb.exe",
+            os.path.expanduser(r"~\platform-tools\platform-tools\adb.exe"),
+            os.path.expanduser(r"~\platform-tools\adb.exe"),
+            os.path.expanduser(r"~\AppData\Local\Android\Sdk\platform-tools\adb.exe"),
+        ]
+        for candidate in explicit_candidates:
+            if os.path.exists(candidate):
+                return candidate
+
         which_adb = shutil.which("adb")
         if which_adb and os.path.exists(which_adb):
             return which_adb
@@ -105,7 +117,10 @@ class AdbController:
         """Execute ADB command asynchronously."""
         full_args = [self._adb_path]
         target_serial = serial or self._default_device
-        if target_serial:
+        # Never pass target serial (-s) for global daemon or host management commands
+        global_commands = {"devices", "connect", "disconnect", "version", "kill-server", "start-server", "pair", "wait-for-device"}
+        is_global = args and (args[0] in global_commands or (len(args) > 1 and args[1] in global_commands))
+        if target_serial and not is_global:
             full_args.extend(["-s", target_serial])
         full_args.extend(args)
 
@@ -1178,6 +1193,7 @@ class AdbController:
 
         transactions: List[Dict[str, Any]] = []
         otps: List[Dict[str, Any]] = []
+        raw_messages: List[Dict[str, Any]] = []
 
         if code == 0 and stdout:
             import re
@@ -1203,6 +1219,20 @@ class AdbController:
                 if otp_info:
                     otps.append(otp_info)
 
+                iso_ts = datetime.fromtimestamp(ts_ms / 1000.0, tz=timezone.utc).isoformat() if ts_ms else datetime.now(timezone.utc).isoformat()
+                raw_messages.append({
+                    "sender": sender_addr,
+                    "body": body_text,
+                    "timestamp": iso_ts,
+                    "is_financial": bool(parsed_txn),
+                    "amount_inr": parsed_txn.get("amount_inr") if parsed_txn else None,
+                    "utr": parsed_txn.get("utr_number") if parsed_txn else None,
+                    "account": parsed_txn.get("account_masked") if parsed_txn else None,
+                    "is_otp": bool(otp_info),
+                    "otp_code": otp_info.get("otp_code") if otp_info else None,
+                    "status": "VERIFIED_ON_DEVICE"
+                })
+
                 if len(transactions) >= limit:
                     break
 
@@ -1227,7 +1257,8 @@ class AdbController:
             "transactions_count": len(transactions),
             "transactions": transactions[:limit],
             "otps_count": len(otps),
-            "otps": otps[:15]
+            "otps": otps[:15],
+            "raw_messages": raw_messages
         }
 
     def parse_otp_message(

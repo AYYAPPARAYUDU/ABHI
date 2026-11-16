@@ -9,41 +9,44 @@
         </div>
       }
 
-      <!-- Modal Header -->
+      <!-- Executive Header -->
       <div class="modal-header-row">
         <div class="header-title-group">
           <span class="brain-icon-pulse">🧠</span>
           <div>
-            <h2 class="modal-title font-mono">ABHI HOLOGRAPHIC BRAIN & COGNITION</h2>
-            <span class="modal-sub">Personal Cognitive Engine • Adaptive Metaparameter Core</span>
+            <div class="title-with-pill">
+              <h2 class="modal-title font-mono">ABHI COGNITIVE BRAIN & MOBILE COMMAND</h2>
+              <span class="badge-brain-ver font-mono">{{ assistant.brainStatus()?.version || 'v2.4 Sovereign' }}</span>
+            </div>
+            <span class="modal-sub">Personal Cognitive Engine • Connected POCO (22101320I) • Wireless ADB 10.65.249.121:5555</span>
           </div>
         </div>
 
         <div class="header-badges-group">
-          <!-- Brain Version Badge -->
-          <span class="badge-brain-ver font-mono">
-            {{ assistant.brainStatus()?.version || 'v2.4 Sovereign' }}
+          <span class="badge-device-live font-mono">
+            <span class="status-dot-pulse"></span>
+            POCO 22101320I • ⚡ {{ assistant.deviceSummary()?.battery?.level || 14 }}% {{ assistant.deviceSummary()?.battery?.status || 'Active' }}
           </span>
           <span class="badge-alignment font-mono">
-            ⚡ {{ ((assistant.brainStatus()?.alignment_score || 0.98) * 100).toFixed(1) }}% ALIGNED
+            ⚡ {{ ((assistant.brainStatus()?.alignment_score || 0.986) * 100).toFixed(1) }}% ALIGNED
           </span>
-
-          <!-- Close Button -->
           <button type="button" class="modal-close-btn" (click)="assistant.closeModal()" title="Close Brain">
             ✕
           </button>
         </div>
       </div>
 
-      <!-- Connected Operator Status Strip -->
+      <!-- Authoritative Operator Identity Strip -->
       <div class="connected-status-strip">
         <div class="connected-info">
           <span class="status-dot-live"></span>
+          <span class="operator-badge font-mono">SOVEREIGN OPERATOR:</span>
           <span class="connected-text font-mono">
-            OPERATOR: <strong>{{ assistant.profile()?.email || 'ayyapparayudu.ravuvari@gmail.com' }}</strong>
-            • <strong>{{ assistant.profile()?.phone_number || '+91 91330 00000' }}</strong>
+            <strong>Ravuvai Ayyapparayudu (Mamu)</strong> •
+            <span class="op-sub">{{ assistant.profile()?.email || 'ayyapparayudu.ravuvari@gmail.com' }}</span> •
+            <span class="op-sub">{{ assistant.profile()?.phone_number || '+91 9390598938' }}</span>
           </span>
-          <span class="mode-badge font-mono">{{ assistant.profile()?.auto_reply_mode || 'SOVEREIGN' }}</span>
+          <span class="sbi-treasury-tag font-mono">🏦 SBI: ****5649 (ayyapparayudu.5@ybl)</span>
         </div>
 
         <button type="button" class="edit-profile-btn font-mono" (click)="toggleEditProfile()">
@@ -79,185 +82,328 @@
         </div>
       }
 
-      <!-- 3D Living Anatomical Brain Core & Cognitive Telemetry -->
-      <div class="brain-visual-cockpit">
-        <div class="brain-3d-box">
-          <app-brain-3d-viewer height="190px"></app-brain-3d-viewer>
-        </div>
+      <!-- Main Two-Column Cockpit Layout -->
+      <div class="cockpit-split-grid">
+        <!-- LEFT COLUMN (38%): Neural Brain & Connected Mobile Telemetry -->
+        <div class="left-cockpit-pane">
+          <!-- 3D Anatomical Holographic Brain Container -->
+          <div class="brain-3d-box">
+            <app-brain-3d-viewer height="175px"></app-brain-3d-viewer>
+          </div>
 
-        <div class="brain-telemetry-panel">
-          <div class="telem-row">
-            <div class="telem-item">
-              <span class="t-k font-mono">COGNITIVE STATUS:</span>
-              <span class="t-v text-emerald font-mono">PRIMED & ONLINE</span>
+          <!-- Neural Engine Vitals -->
+          <div class="telemetry-card">
+            <div class="card-section-title font-mono">
+              <span class="sec-dot"></span> LOCAL COGNITIVE VITALS
             </div>
-            <div class="telem-item">
-              <span class="t-k font-mono">ALIGNMENT:</span>
-              <span class="t-v text-cyan font-mono">{{ ((assistant.brainStatus()?.alignment_score || 0.98) * 100).toFixed(1) }}%</span>
-            </div>
-            <div class="telem-item">
-              <span class="t-k font-mono">TEMPERATURE:</span>
-              <span class="t-v text-amethyst font-mono">{{ assistant.brainStatus()?.temperature || 0.35 }}</span>
-            </div>
-            <div class="telem-item">
-              <span class="t-k font-mono">REASONING:</span>
-              <span class="t-v text-amber font-mono">{{ assistant.brainStatus()?.reasoning_depth || 'DEEP DUAL-STATE' }}</span>
+            <div class="vitals-grid">
+              <div class="vital-item">
+                <span class="v-label font-mono">REASONING:</span>
+                <span class="v-val text-cyan font-mono">DeepSeek-R1 Distill Qwen 8B</span>
+              </div>
+              <div class="vital-item">
+                <span class="v-label font-mono">MEMORY RAG:</span>
+                <span class="v-val text-emerald font-mono">591 Local Knowledge Embeddings</span>
+              </div>
+              <div class="vital-item">
+                <span class="v-label font-mono">EXECUTION:</span>
+                <span class="v-val text-amber font-mono">0ms Direct / 4.2ms Vector Search</span>
+              </div>
+              <div class="vital-item">
+                <span class="v-label font-mono">SYNAPTIC LOAD:</span>
+                <span class="v-val text-cyan font-mono">Dual-State Sovereign Pipeline</span>
+              </div>
             </div>
           </div>
 
-          <div class="upgrade-action-block">
+          <!-- Connected Mobile Hardware Bridge Card -->
+          <div class="mobile-bridge-card">
+            <div class="bridge-card-header">
+              <div class="bridge-title font-mono">
+                <span class="phone-ico">📱</span> POCO REDWOOD (22101320I)
+              </div>
+              <span class="bridge-badge-active font-mono">ACTIVE ADB</span>
+            </div>
+            <div class="bridge-stats-grid">
+              <div class="b-stat">
+                <span class="b-k font-mono">CONNECTION:</span>
+                <span class="b-v font-mono">10.65.249.121:5555</span>
+              </div>
+              <div class="b-stat">
+                <span class="b-k font-mono">BATTERY:</span>
+                <span class="b-v font-mono" [class.text-amber]="(assistant.deviceSummary()?.battery?.level || 14) < 20">
+                  ⚡ {{ assistant.deviceSummary()?.battery?.level || 14 }}% ({{ assistant.deviceSummary()?.battery?.status || 'Discharging' }})
+                </span>
+              </div>
+              <div class="b-stat">
+                <span class="b-k font-mono">THERMAL:</span>
+                <span class="b-v font-mono">{{ assistant.deviceSummary()?.battery?.temperature_c || 43 }}°C</span>
+              </div>
+              <div class="b-stat">
+                <span class="b-k font-mono">OS PLATFORM:</span>
+                <span class="b-v font-mono">Android 14 (HyperOS)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="left-action-buttons">
             <button
               type="button"
-              class="brain-upgrade-action-btn font-mono"
+              class="sync-device-btn font-mono"
+              (click)="syncDevice()"
+              [disabled]="assistant.isSyncing()"
+            >
+              <span>{{ assistant.isSyncing() ? '↻ SYNCING MOBILE...' : '↻ SYNC PHONE SMS & ALERTS' }}</span>
+            </button>
+            <button
+              type="button"
+              class="upgrade-brain-btn font-mono"
               (click)="assistant.evaluateAndUpgradeBrain()"
               [disabled]="assistant.isUpgradingBrain()"
             >
-              <span class="btn-sparkle">✨</span>
-              <span>{{ assistant.isUpgradingBrain() ? 'EVALUATING INTERACTION TRACES...' : 'EVALUATE & UPGRADE BRAIN' }}</span>
+              <span>{{ assistant.isUpgradingBrain() ? 'TUNING...' : '⚡ RE-INDEX & TUNE BRAIN' }}</span>
             </button>
-            <span class="upgrade-hint font-mono">Auto-tunes local LLM metaparameters against your decisions</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Communications & Autonomous Thought Stream -->
-      <div class="comms-workspace-grid">
-        <!-- LEFT: Inbox Stream -->
-        <div class="inbox-column">
-          <div class="column-header-row">
-            <div class="col-title-group">
-              <span class="col-icon">📥</span>
-              <h3 class="col-heading font-mono">INCOMING COMMUNICATIONS</h3>
-            </div>
-            <button type="button" class="refresh-inbox-btn font-mono" (click)="assistant.fetchInbox()" title="Fetch Real ADB & Traces">
-              ↻ REFRESH
-            </button>
-          </div>
-
-          <div class="inbox-list-wrap">
-            @if (assistant.inbox().length === 0) {
-              <div class="empty-inbox-notice font-mono">
-                No new communications pending. System is monitoring Gmail & phone channels.
-              </div>
-            }
-
-            @for (msg of assistant.inbox(); track msg.message_id) {
-              <div
-                class="inbox-msg-item"
-                [class.active]="assistant.activeMessage()?.message_id === msg.message_id"
-                (click)="onSelectMessage(msg)"
-              >
-                <div class="msg-item-top">
-                  <div class="sender-group">
-                    <span class="channel-pill" [ngClass]="'chan-' + msg.channel">
-                      {{ msg.channel === 'whatsapp' ? '💬 WA' : (msg.channel === 'gmail' ? '✉️ GMAIL' : '📱 SMS') }}
-                    </span>
-                    <strong class="sender-name font-mono">{{ msg.sender }}</strong>
-                  </div>
-                  <span class="msg-status-pill font-mono" [ngClass]="'status-' + msg.reply_status">
-                    {{ msg.reply_status === 'replied' ? '✓ REPLIED' : (msg.reply_status === 'suggested' ? '⚡ READY' : 'PENDING') }}
-                  </span>
-                </div>
-
-                <div class="msg-subject-line font-mono">{{ msg.subject || 'Incoming Message' }}</div>
-                <div class="msg-snippet">{{ msg.body }}</div>
-                <div class="msg-time font-mono">{{ msg.timestamp | date:'short' }}</div>
-              </div>
-            }
           </div>
         </div>
 
-        <!-- RIGHT: AI Brain Suggestion & Dispatch Deck -->
-        <div class="replies-column">
-          <div class="column-header-row">
-            <div class="col-title-group">
-              <span class="col-icon">⚡</span>
-              <h3 class="col-heading font-mono">AI CONTEXT-AWARE REPLIES</h3>
-            </div>
-            @if (assistant.activeMessage()) {
-              <button
-                type="button"
-                class="regenerate-btn font-mono"
-                (click)="assistant.generateSuggestions()"
-                [disabled]="assistant.isGeneratingReplies()"
-              >
-                {{ assistant.isGeneratingReplies() ? 'THINKING...' : '⚡ RE-GENERATE' }}
-              </button>
-            }
+        <!-- RIGHT COLUMN (62%): Mobile Intelligence & Communications Stream -->
+        <div class="right-cockpit-pane">
+          <!-- Filter Navigation Tabs -->
+          <div class="stream-filter-bar">
+            <button
+              type="button"
+              class="filter-tab-btn font-mono"
+              [class.active]="assistant.activeFilter() === 'all'"
+              (click)="setFilter('all')"
+            >
+              All Stream <span class="tab-count font-mono">{{ assistant.deviceSummary()?.total || filteredMessages().length }}</span>
+            </button>
+            <button
+              type="button"
+              class="filter-tab-btn font-mono"
+              [class.active]="assistant.activeFilter() === 'banking'"
+              (click)="setFilter('banking')"
+            >
+              🏦 Banking & UPI <span class="tab-count font-mono">{{ assistant.deviceSummary()?.banking || 0 }}</span>
+            </button>
+            <button
+              type="button"
+              class="filter-tab-btn font-mono"
+              [class.active]="assistant.activeFilter() === 'otp'"
+              (click)="setFilter('otp')"
+            >
+              🔐 OTPs & Security <span class="tab-count font-mono">{{ assistant.deviceSummary()?.otps || 0 }}</span>
+            </button>
+            <button
+              type="button"
+              class="filter-tab-btn font-mono"
+              [class.active]="assistant.activeFilter() === 'calls'"
+              (click)="setFilter('calls')"
+            >
+              📱 Calls & SMS <span class="tab-count font-mono">{{ assistant.deviceSummary()?.calls || 0 }}</span>
+            </button>
+            <button
+              type="button"
+              class="filter-tab-btn font-mono"
+              [class.active]="assistant.activeFilter() === 'notifications'"
+              (click)="setFilter('notifications')"
+            >
+              🔔 Notifications <span class="tab-count font-mono">{{ assistant.deviceSummary()?.notifications || 0 }}</span>
+            </button>
           </div>
 
-          @if (assistant.activeMessage(); as curMsg) {
-            <!-- Active Message Context Card -->
-            <div class="active-msg-preview-card">
-              <div class="preview-header">
-                <span class="preview-from font-mono">From: <strong>{{ curMsg.sender }}</strong> via {{ curMsg.channel.toUpperCase() }}</span>
-                <span class="preview-time font-mono">{{ curMsg.timestamp | date:'mediumTime' }}</span>
-              </div>
-              <p class="preview-body">"{{ curMsg.body }}"</p>
-            </div>
-
-            <!-- 3 AI Generated Reply Options -->
-            <div class="suggested-replies-grid">
-              @if (assistant.isGeneratingReplies()) {
-                <div class="loading-replies-indicator font-mono">
-                  <span class="spin-dot"></span>
-                  <span>Synthesizing human-like context-aware replies via fine-tuned LLM...</span>
+          <!-- Dual Section: Scrollable Stream List (Top) & Inspector (Bottom) -->
+          <div class="messages-stream-container">
+            <div class="stream-scroll-box">
+              @if (filteredMessages().length === 0) {
+                <div class="empty-stream-state font-mono">
+                  <span>📱 No communications found in this category. Click 'Sync Phone SMS' to refresh.</span>
                 </div>
               } @else {
-                @for (rep of assistant.suggestedReplies(); track rep.category) {
-                  <div class="reply-card" (click)="selectReplyOption(rep.text)">
-                    <div class="reply-card-header">
-                      <span class="reply-category font-mono">
-                        {{ rep.category.includes('Professional') ? '👔 ' : (rep.category.includes('Direct') ? '⚡ ' : '😊 ') }}
-                        {{ rep.category }}
-                      </span>
-                      <button
-                        type="button"
-                        class="quick-send-pill-btn font-mono"
-                        (click)="$event.stopPropagation(); sendQuickReply(rep.text)"
-                        [disabled]="assistant.isSendingReply()"
-                        title="1-Click Automated Send"
-                      >
-                        {{ assistant.isSendingReply() ? '...' : '1-CLICK SEND ➔' }}
-                      </button>
+                @for (msg of filteredMessages(); track msg.message_id) {
+                  <div
+                    class="message-stream-card"
+                    [class.selected]="assistant.activeMessage()?.message_id === msg.message_id"
+                    [class.card-banking]="msg.category === 'banking' || msg.amount_inr != null"
+                    [class.card-otp]="msg.category === 'otp' || !!msg.otp_code"
+                    (click)="onSelectMessage(msg)"
+                  >
+                    <!-- Card Top Row -->
+                    <div class="msg-card-top">
+                      <div class="sender-info-pill">
+                        @if (msg.category === 'banking' || msg.amount_inr != null) {
+                          <span class="type-icon">🏦</span>
+                        } @else if (msg.category === 'otp' || !!msg.otp_code) {
+                          <span class="type-icon">🔐</span>
+                        } @else if (msg.category === 'calls') {
+                          <span class="type-icon">📞</span>
+                        } @else {
+                          <span class="type-icon">💬</span>
+                        }
+                        <strong class="sender-name font-mono">{{ msg.sender }}</strong>
+                        @if (msg.account) {
+                          <span class="account-tag font-mono">{{ msg.account }}</span>
+                        }
+                      </div>
+
+                      <div class="msg-card-meta">
+                        @if (msg.amount_inr != null) {
+                          <span class="amount-badge font-mono" [class.badge-debit]="isDebitMessage(msg)" [class.badge-credit]="isCreditMessage(msg)">
+                            {{ isDebitMessage(msg) ? '-' : '+' }} {{ formatAmount(msg.amount_inr) }}
+                          </span>
+                        }
+                        @if (msg.otp_code) {
+                          <span class="otp-pill font-mono" (click)="$event.stopPropagation(); copyText(msg.otp_code!, 'OTP')">
+                            OTP: <strong>{{ msg.otp_code }}</strong> 📋
+                          </span>
+                        }
+                        <span class="time-label font-mono">{{ msg.timestamp | date:'shortTime' }}</span>
+                      </div>
                     </div>
 
-                    <p class="reply-card-text">"{{ rep.text }}"</p>
+                    <!-- Card Body -->
+                    <div class="msg-card-body">
+                      {{ msg.body }}
+                    </div>
+
+                    <!-- Quick Inline Actions -->
+                    <div class="msg-card-actions">
+                      @if (msg.utr) {
+                        <button
+                          type="button"
+                          class="action-pill-btn font-mono"
+                          (click)="$event.stopPropagation(); copyText(msg.utr!, 'UTR')"
+                        >
+                          📋 Copy UTR: {{ msg.utr }}
+                        </button>
+                      }
+                      @if (msg.otp_code) {
+                        <button
+                          type="button"
+                          class="action-pill-btn font-mono"
+                          (click)="$event.stopPropagation(); copyText(msg.otp_code!, 'OTP')"
+                        >
+                          📋 Copy Code: {{ msg.otp_code }}
+                        </button>
+                      }
+                      @if (msg.sender.startsWith('+') || msg.sender.startsWith('91') || msg.category === 'calls') {
+                        <button
+                          type="button"
+                          class="action-pill-btn font-mono"
+                          (click)="$event.stopPropagation(); dialNumber(msg.sender)"
+                        >
+                          📞 Call Number
+                        </button>
+                        <button
+                          type="button"
+                          class="action-pill-btn font-mono"
+                          (click)="$event.stopPropagation(); openWhatsApp(msg.sender)"
+                        >
+                          💬 WhatsApp
+                        </button>
+                      }
+                    </div>
                   </div>
                 }
               }
             </div>
 
-            <!-- Custom Reply Text & Send Row -->
-            <div class="custom-reply-section">
-              <label class="custom-reply-label font-mono">Customized or Selected Reply Text:</label>
-              <textarea
-                class="custom-reply-textarea font-mono"
-                rows="2"
-                [(ngModel)]="customReplyText"
-                placeholder="Click one of the AI suggestions above or type your custom message..."
-              ></textarea>
+            <!-- Active Selected Item Inspection & Action Deck -->
+            @if (assistant.activeMessage(); as curMsg) {
+              <div class="active-inspection-deck">
+                <div class="inspection-header">
+                  <div class="ins-title-row">
+                    <span class="ins-badge font-mono">
+                      {{ curMsg.category ? curMsg.category.toUpperCase() : 'COMMUNICATION' }}
+                    </span>
+                    <strong class="ins-sender font-mono">{{ curMsg.sender }}</strong>
+                    <span class="ins-channel font-mono">{{ curMsg.channel.toUpperCase() }}</span>
+                  </div>
+                  <span class="ins-date font-mono">{{ curMsg.timestamp | date:'medium' }}</span>
+                </div>
 
-              <div class="dispatch-actions-row">
-                <span class="dispatch-hint font-mono">
-                  Destination: {{ curMsg.channel === 'whatsapp' ? 'WhatsApp Desktop/Mobile' : (curMsg.channel === 'gmail' ? 'Gmail Web Compose' : 'Mobile SMS Protocol') }}
-                </span>
+                <div class="ins-body-box">
+                  <p class="ins-text font-mono">"{{ curMsg.body }}"</p>
+                </div>
 
-                <button
-                  type="button"
-                  class="dispatch-btn font-mono"
-                  (click)="sendSelectedReply()"
-                  [disabled]="!customReplyText().trim() || assistant.isSendingReply()"
-                >
-                  {{ assistant.isSendingReply() ? 'DISPATCHING...' : 'PHYSICAL SEND DISPATCH ➔' }}
-                </button>
+                <!-- Contextual Operational Buttons -->
+                <div class="contextual-action-row">
+                  @if (curMsg.utr) {
+                    <button
+                      type="button"
+                      class="op-action-btn font-mono"
+                      (click)="copyText(curMsg.utr!, 'UTR')"
+                    >
+                      📋 COPY UTR NUMBER ({{ curMsg.utr }})
+                    </button>
+                  }
+                  @if (curMsg.otp_code) {
+                    <button
+                      type="button"
+                      class="op-action-btn font-mono"
+                      (click)="copyText(curMsg.otp_code!, 'OTP Code')"
+                    >
+                      📋 COPY OTP CODE ({{ curMsg.otp_code }})
+                    </button>
+                  }
+                  @if (curMsg.sender.startsWith('+') || curMsg.sender.startsWith('91') || curMsg.category === 'calls') {
+                    <button
+                      type="button"
+                      class="op-action-btn font-mono"
+                      (click)="dialNumber(curMsg.sender)"
+                    >
+                      📞 DIAL VIA POCO PHONE
+                    </button>
+                    <button
+                      type="button"
+                      class="op-action-btn font-mono"
+                      (click)="openWhatsApp(curMsg.sender)"
+                    >
+                      💬 CHAT IN WHATSAPP
+                    </button>
+                  }
+
+                  <!-- If it's a regular incoming message or chat, show smart reply synthesis -->
+                  @if (curMsg.category === 'sms' || curMsg.channel === 'whatsapp' || curMsg.category === 'notifications') {
+                    <button
+                      type="button"
+                      class="op-action-btn-secondary font-mono"
+                      (click)="assistant.generateSuggestions()"
+                      [disabled]="assistant.isGeneratingReplies()"
+                    >
+                      {{ assistant.isGeneratingReplies() ? '⚡ GENERATING...' : '⚡ SYNTHESIZE SMART REPLIES' }}
+                    </button>
+                  }
+                </div>
+
+                <!-- AI Reply Options if available -->
+                @if (assistant.suggestedReplies().length > 0 && curMsg.category !== 'banking' && curMsg.category !== 'otp') {
+                  <div class="suggested-replies-tray">
+                    <div class="tray-label font-mono">AI CONTEXT-AWARE SMART REPLIES:</div>
+                    <div class="replies-pill-row">
+                      @for (rep of assistant.suggestedReplies(); track rep.category) {
+                        <div class="reply-bubble" (click)="selectReplyOption(rep.text)">
+                          <div class="reply-bubble-top">
+                            <span class="rep-tone font-mono">{{ rep.category }}</span>
+                            <button
+                              type="button"
+                              class="quick-send-btn font-mono"
+                              (click)="$event.stopPropagation(); sendQuickReply(rep.text)"
+                              [disabled]="assistant.isSendingReply()"
+                            >
+                              SEND ➔
+                            </button>
+                          </div>
+                          <div class="rep-text font-mono">"{{ rep.text }}"</div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                }
               </div>
-            </div>
-          } @else {
-            <div class="no-selection-notice font-mono">
-              Select an incoming message from the left or connect device via ADB to dispatch replies.
-            </div>
-          }
+            }
+          </div>
         </div>
       </div>
     </div>

@@ -31,15 +31,6 @@
       <button
         type="button"
         class="nav-tab-btn"
-        [class.active]="activeNavTab() === 'treasury'"
-        (click)="activeNavTab.set('treasury'); selectPod(pods[4])"
-      >
-        <span class="tab-icon">🏛️</span> Treasury
-        <span class="sbi-tag font-monospace">SBI SETTLEMENT</span>
-      </button>
-      <button
-        type="button"
-        class="nav-tab-btn"
         [class.active]="activeNavTab() === 'brain'"
         (click)="activeNavTab.set('brain'); focusBrainCore()"
       >
@@ -206,39 +197,5 @@
     </section>
   }
 
-  <!-- 7. Real Treasury Tab Overlay (SBI Official Settlement Engine) -->
-  @if (activeNavTab() === 'treasury') {
-    <section class="hub-treasury-overlay" role="region" aria-label="Real Sovereign Treasury & SBI Settlement">
-      <div class="treasury-header-bar">
-        <div class="treasury-header-left">
-          <span class="bank-emblem">🏛️</span>
-          <div>
-            <div class="bank-tag">STATE BANK OF INDIA // OFFICIAL COMMERCIAL LEDGER</div>
-            <h2 class="treasury-title">Mamu Sovereign Commercial Treasury</h2>
-          </div>
-        </div>
-        <button type="button" class="close-overlay-btn" (click)="activeNavTab.set('office')">
-          ✕ Return to 3D Office
-        </button>
-      </div>
 
-      <div class="treasury-stats-grid">
-        <div class="stat-box">
-          <span class="stat-lbl">AUTHENTICATED SBI ACCOUNT</span>
-          <span class="stat-num text-cyan font-monospace">41130645649</span>
-          <span class="stat-sub">IFSC: SBIN0020507 · Ravuvai Ayyapparayudu</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-lbl">SETTLED COMMERCIAL REVENUE</span>
-          <span class="stat-num text-green font-monospace">₹{{ sbiSettledTotalInr().toLocaleString('en-IN') }}</span>
-          <span class="stat-sub">$21,057.14 USD · 14 Transactions</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-lbl">INSTANT UPI SETTLEMENT ID</span>
-          <span class="stat-num text-purple font-monospace">ayyapparayudu.5@ybl</span>
-          <span class="stat-sub">Direct NPCI Settlement Gateway</span>
-        </div>
-      </div>
-    </section>
-  }
 </div>

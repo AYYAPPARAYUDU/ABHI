@@ -48,7 +48,7 @@ export interface HubFeedMessage {
   color: string;
   text: string;
   time: string;
-  type: 'directive' | 'status' | 'settlement' | 'intel';
+  type: 'directive' | 'status' | 'settlement' | 'intel' | 'system';
 }
 
 @Component({
@@ -68,7 +68,7 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
   private readonly cdr = inject(ChangeDetectorRef);
 
   // Top Nav State
-  readonly activeNavTab = signal<'office' | 'feed' | 'treasury' | 'brain'>('office');
+  readonly activeNavTab = signal<'office' | 'feed' | 'brain'>('office');
   readonly totalAgentsCount = signal<number>(31);
   readonly runningAgentsCount = signal<number>(12);
   readonly searchQuery = signal<string>('');
@@ -174,25 +174,25 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
       description: 'Autonomous multi-persona deliberation hub resolving conflicting objectives through consensus.'
     },
     {
-      id: 'treasury',
-      name: 'Commercial Treasury & Settlement',
-      badge: 'TBX Shop / Treasury',
+      id: 'infrastructure',
+      name: 'Cloud Infrastructure & DevOps',
+      badge: 'Cloud / DevOps',
       color: '#14b8a6',
       hexColor: 0x14b8a6,
-      agentsCount: 3,
-      statusText: 'SBI ****5649 · Active',
+      agentsCount: 4,
+      statusText: '4 agents · High-Availability',
       angleDeg: 180,
       x: 0,
       z: 16,
-      role: 'State Bank of India Revenue & UPI Disbursements',
-      departmentKey: 'COMMERCIAL_TREASURY',
-      leadAgent: 'Shuri (Treasury Comptroller)',
+      role: 'Cloud Engine, Containers & Network Reliability',
+      departmentKey: 'INFRASTRUCTURE_DEVOPS',
+      leadAgent: 'Atlas (Site Reliability Architect)',
       realMetrics: [
-        { label: 'SETTLED REVENUE', value: '₹0.00' },
-        { label: 'ACCOUNT NUMBER', value: 'SBI 41130645649' },
-        { label: 'UPI IDENTIFIER', value: 'ayyapparayudu.5@ybl' }
+        { label: 'CONTAINERS', value: '12 Active' },
+        { label: 'HEALTH', value: '99.98% SLA' },
+        { label: 'LATENCY', value: '1.2ms' }
       ],
-      description: 'Official sovereign treasury landing real commercial client payments directly into SBI account.'
+      description: 'Zero-downtime microservices, container topology, network routing, and automated system failover.'
     },
     {
       id: 'tech',
@@ -263,13 +263,13 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly feedMessages = signal<HubFeedMessage[]>([
     {
       id: 'f-1',
-      podId: 'treasury',
-      podBadge: 'TBX Shop / Treasury',
-      sender: 'Shuri',
+      podId: 'infrastructure',
+      podBadge: 'Cloud / DevOps',
+      sender: 'Atlas',
       color: '#14b8a6',
-      text: 'Verified SBI Account 41130645649 settlement rail online. Immutable ledger active.',
+      text: 'Cloud container mesh online. High-availability cluster operational.',
       time: '18:50:12',
-      type: 'settlement'
+      type: 'system'
     },
     {
       id: 'f-2',
@@ -845,14 +845,14 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
       podGroup.add(agent2);
 
       // 6. Department Specialty Prop
-      if (pod.id === 'treasury') {
-        // Gold Safe / Ledger Vault
-        const safe = new THREE.Mesh(
-          new THREE.BoxGeometry(0.9, 1.1, 0.9),
-          new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8 })
+      if (pod.id === 'infrastructure') {
+        // Cloud Server Node Tower
+        const cloudNode = new THREE.Mesh(
+          new THREE.BoxGeometry(0.85, 1.4, 0.85),
+          new THREE.MeshStandardMaterial({ color: 0x0ea5e9, metalness: 0.7, roughness: 0.3 })
         );
-        safe.position.set(1.9, 0.8, -1.4);
-        podGroup.add(safe);
+        cloudNode.position.set(1.9, 0.7, -1.4);
+        podGroup.add(cloudNode);
       } else if (pod.id === 'tech') {
         // Server Rack
         const rack = new THREE.Mesh(

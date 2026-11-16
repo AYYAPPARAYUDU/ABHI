@@ -4,12 +4,17 @@ import { firstValueFrom } from 'rxjs';
 import { getApiUrl } from '../config/api-config';
 
 export interface CommunicationsProfile {
+  operator_name?: string;
   email: string | null;
   phone_number: string | null;
   whatsapp_enabled: boolean;
-  auto_reply_mode: 'HUMAN_CONFIRMATION' | 'FULLY_AUTONOMOUS';
+  auto_reply_mode: 'HUMAN_CONFIRMATION' | 'FULLY_AUTONOMOUS' | 'SOVEREIGN_OPERATOR' | string;
   monitored_threads: string[];
   updated_at?: string | null;
+  sbi_account?: string;
+  sbi_upi?: string;
+  connected_device?: any;
+  battery?: any;
 }
 
 export interface InboxMessage {
@@ -20,10 +25,15 @@ export interface InboxMessage {
   subject?: string;
   body: string;
   timestamp: string;
-  reply_status: 'pending' | 'suggested' | 'replied' | string;
+  reply_status: 'pending' | 'suggested' | 'replied' | 'verified' | string;
   suggested_replies?: SuggestedReply[];
   selected_reply?: string;
   sent_at?: string;
+  category?: 'all' | 'banking' | 'otp' | 'calls' | 'sms' | 'notifications' | string;
+  amount_inr?: number | null;
+  utr?: string | null;
+  otp_code?: string | null;
+  account?: string | null;
 }
 
 export interface SuggestedReply {
@@ -70,7 +80,20 @@ export class CommunicationsAssistantService {
   readonly upgradeHistory = signal<BrainUpgradeRecord[]>([]);
   readonly lastUpgradeDiff = signal<any>(null);
 
+  readonly deviceSummary = signal<any>({
+    total: 0,
+    banking: 0,
+    otps: 0,
+    calls: 0,
+    notifications: 0,
+    device: { model: 'POCO 22101320I', connected: true },
+    battery: { level: 14, status: 'Discharging' },
+    endpoint: '10.65.249.121:5555'
+  });
+  readonly activeFilter = signal<'all' | 'banking' | 'otp' | 'calls' | 'notifications'>('all');
+
   readonly isLoading = signal<boolean>(false);
+  readonly isSyncing = signal<boolean>(false);
   readonly isGeneratingReplies = signal<boolean>(false);
   readonly isSendingReply = signal<boolean>(false);
   readonly isUpgradingBrain = signal<boolean>(false);
@@ -117,7 +140,7 @@ export class CommunicationsAssistantService {
     email: string,
     phone: string,
     whatsappEnabled: boolean = true,
-    autoReplyMode: 'HUMAN_CONFIRMATION' | 'FULLY_AUTONOMOUS' = 'HUMAN_CONFIRMATION',
+    autoReplyMode: 'HUMAN_CONFIRMATION' | 'FULLY_AUTONOMOUS' | 'SOVEREIGN_OPERATOR' = 'SOVEREIGN_OPERATOR',
     monitoredThreads: string[] = []
   ): Promise<boolean> {
     this.isLoading.set(true);
@@ -149,16 +172,82 @@ export class CommunicationsAssistantService {
 
   async fetchInbox(): Promise<void> {
     try {
-      const url = getApiUrl('/api/v1/assistant/messages/inbox');
+      const url = getApiUrl('/api/v1/assistant/messages/inbox?limit=80');
       const res: any = await firstValueFrom(this.http.get(url));
       if (res && res.success && Array.isArray(res.messages)) {
         this.inbox.set(res.messages);
+        if (res.summary) {
+          this.deviceSummary.set(res.summary);
+        }
         if (res.messages.length > 0 && !this.activeMessage()) {
           this.selectMessage(res.messages[0]);
         }
       }
     } catch (e) {
       console.error('Failed to fetch communications inbox', e);
+    }
+  }
+
+  setFilter(filter: 'all' | 'banking' | 'otp' | 'calls' | 'notifications'): void {
+    this.activeFilter.set(filter);
+    const msgs = this.getFilteredInbox();
+    if (msgs.length > 0 && (!this.activeMessage() || !msgs.some(m => m.message_id === this.activeMessage()?.message_id))) {
+      this.selectMessage(msgs[0]);
+    }
+  }
+
+  getFilteredInbox(): InboxMessage[] {
+    const filter = this.activeFilter();
+    const all = this.inbox();
+    if (filter === 'all') return all;
+    if (filter === 'banking') return all.filter(m => m.category === 'banking' || m.amount_inr != null || !!m.utr);
+    if (filter === 'otp') return all.filter(m => m.category === 'otp' || !!m.otp_code);
+    if (filter === 'calls') return all.filter(m => m.category === 'calls' || m.category === 'sms');
+    if (filter === 'notifications') return all.filter(m => m.category === 'notifications');
+    return all;
+  }
+
+  async copyToClipboard(text: string, label: string = 'Copied'): Promise<void> {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+      }
+      this.setAlert(`${label}: ${text}`);
+    } catch {
+      this.setAlert(`${label}: ${text}`);
+    }
+  }
+
+  async syncDeviceData(): Promise<void> {
+    this.isSyncing.set(true);
+    try {
+      const url = getApiUrl('/api/v1/assistant/messages/action');
+      const res: any = await firstValueFrom(this.http.post(url, { action: 'sync' }));
+      if (res && res.success) {
+        this.setAlert(res.message || 'Mobile device communications synchronized.');
+        await this.fetchInbox();
+        await this.loadProfile();
+      }
+    } catch (e) {
+      console.error('Sync failed', e);
+      this.setAlert('Device synchronization encountered an error.');
+    } finally {
+      this.isSyncing.set(false);
+    }
+  }
+
+  async executePhoneAction(action: 'dial' | 'whatsapp', phone: string, message?: string): Promise<boolean> {
+    try {
+      const url = getApiUrl('/api/v1/assistant/messages/action');
+      const res: any = await firstValueFrom(this.http.post(url, { action, phone, message }));
+      if (res && res.success) {
+        this.setAlert(res.message || `Action dispatched on POCO mobile.`);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error('Phone action failed', e);
+      return false;
     }
   }
 

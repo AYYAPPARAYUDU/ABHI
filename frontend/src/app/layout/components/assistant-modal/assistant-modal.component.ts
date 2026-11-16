@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CommunicationsAssistantService, InboxMessage } from '../../../core/services/communications-assistant.service';
@@ -18,18 +18,22 @@ export class AssistantModalComponent {
   inputEmail = '';
   inputPhone = '';
   inputWhatsapp = true;
-  inputMode: 'HUMAN_CONFIRMATION' | 'FULLY_AUTONOMOUS' = 'HUMAN_CONFIRMATION';
+  inputMode: 'HUMAN_CONFIRMATION' | 'FULLY_AUTONOMOUS' | 'SOVEREIGN_OPERATOR' = 'SOVEREIGN_OPERATOR';
   inputThreads = '';
 
   customReplyText = signal<string>('');
 
+  readonly filteredMessages = computed(() => {
+    return this.assistant.getFilteredInbox();
+  });
+
   toggleEditProfile(): void {
     const prof = this.assistant.profile();
     if (prof) {
-      this.inputEmail = prof.email || '';
-      this.inputPhone = prof.phone_number || '';
-      this.inputWhatsapp = prof.whatsapp_enabled;
-      this.inputMode = prof.auto_reply_mode;
+      this.inputEmail = prof.email || 'ayyapparayudu.ravuvari@gmail.com';
+      this.inputPhone = prof.phone_number || '+91 9390598938';
+      this.inputWhatsapp = prof.whatsapp_enabled ?? true;
+      this.inputMode = (prof.auto_reply_mode as any) || 'SOVEREIGN_OPERATOR';
       this.inputThreads = (prof.monitored_threads || []).join(', ');
     }
     this.isEditingProfile.set(!this.isEditingProfile());
@@ -45,7 +49,7 @@ export class AssistantModalComponent {
       this.inputEmail,
       this.inputPhone,
       this.inputWhatsapp,
-      this.inputMode,
+      this.inputMode as any,
       threads
     );
     if (ok) {
@@ -74,5 +78,40 @@ export class AssistantModalComponent {
     const msg = this.assistant.activeMessage();
     if (!msg || !replyText) return;
     await this.assistant.sendReply(msg, replyText);
+  }
+
+  setFilter(filter: 'all' | 'banking' | 'otp' | 'calls' | 'notifications'): void {
+    this.assistant.setFilter(filter);
+  }
+
+  copyText(text: string, label: string = 'Copied'): void {
+    this.assistant.copyToClipboard(text, label);
+  }
+
+  syncDevice(): void {
+    this.assistant.syncDeviceData();
+  }
+
+  dialNumber(phone: string): void {
+    this.assistant.executePhoneAction('dial', phone);
+  }
+
+  openWhatsApp(phone: string): void {
+    this.assistant.executePhoneAction('whatsapp', phone);
+  }
+
+  formatAmount(val?: number | null): string {
+    if (val == null) return '';
+    return '₹' + Number(val).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  isDebitMessage(msg: InboxMessage): boolean {
+    const b = (msg.body || '').toLowerCase();
+    return b.includes('debited') || b.includes('debit') || b.includes('sent') || b.includes('paid');
+  }
+
+  isCreditMessage(msg: InboxMessage): boolean {
+    const b = (msg.body || '').toLowerCase();
+    return b.includes('credited') || b.includes('credit') || b.includes('received') || b.includes('deposited');
   }
 }
