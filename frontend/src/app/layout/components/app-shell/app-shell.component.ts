@@ -6,7 +6,6 @@ import { filter, map } from 'rxjs/operators';
 import { ContextualTopbarComponent } from '../contextual-topbar/contextual-topbar.component';
 import { ConsentModalComponent } from '../../../features/operator-console/components/consent-modal/consent-modal.component';
 import { CommandPaletteComponent } from '../../../shared/ui/command-palette/command-palette.component';
-import { AssistantModalComponent } from '../assistant-modal/assistant-modal.component';
 import { WorkspaceLockScreenComponent } from '../../../features/perception/components/workspace-lock-screen/workspace-lock-screen.component';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
 import { SpatialEnvironmentMode } from '../../../core/models/agent-experience.model';
@@ -20,7 +19,6 @@ import { SpatialEnvironmentMode } from '../../../core/models/agent-experience.mo
     ContextualTopbarComponent,
     ConsentModalComponent,
     CommandPaletteComponent,
-    AssistantModalComponent,
     WorkspaceLockScreenComponent
   ],
   templateUrl: './app-shell.component.html',

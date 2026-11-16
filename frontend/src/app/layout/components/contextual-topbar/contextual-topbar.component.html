@@ -107,19 +107,20 @@
             @if (isActive('/architecture')) { <span class="active-glow-pip"></span> }
           </a>
 
-          <!-- 6. Brain -->
-          <button
-            type="button"
-            class="rail-nav-link rail-button-link"
-            (click)="assistantService.openModal()"
-            title="3D Holographic Brain & Communications Assistant"
+          <!-- 6. Brain (Dedicated Sovereign Communications & Intelligence Page) -->
+          <a
+            routerLink="/brain"
+            class="rail-nav-link"
+            [class.active]="isActive('/brain')"
+            title="ABHI Cognitive Brain & Communications Command Center"
           >
             <span class="nav-icon">🧠</span>
             <span class="nav-label">Brain</span>
             @if (!assistantService.isConfigured()) {
               <span class="brain-alert-badge" title="Configuration Alert">!</span>
             }
-          </button>
+            @if (isActive('/brain')) { <span class="active-glow-pip"></span> }
+          </a>
 
           <!-- 7. Gallery -->
           <a

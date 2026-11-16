@@ -1,1 +1,60 @@
-[]
+[
+  {
+    "execution_id": "exec_c2de008aa01f",
+    "workflow_id": "n8n_affiliate_autopilot",
+    "workflow_name": "N8N Affiliate Autopilot",
+    "trigger_type": "MANUAL_AUTOMATION",
+    "status": "SUCCESS",
+    "started_at": "2026-11-16T06:14:22.228689+00:00",
+    "completed_at": "2026-11-16T06:14:23.869718+00:00",
+    "duration_ms": 1641.03,
+    "output_summary": "Affiliate campaign generated for Amazon Associates (tag: ayyappa-21). Payout linked to SBI ****5649.",
+    "details": {
+      "campaign": {
+        "campaign_id": "CAMP-AMAZ-526EB6",
+        "network_id": "amazon_associates",
+        "product_name": "Enterprise Sovereign AI Hardware Hub",
+        "category": "TECH",
+        "destination_url": "https://www.amazon.in/dp/B0CX23V2ZH?tag=ayyappa-21",
+        "affiliate_link": "https://www.amazon.in/dp/B0CX23V2ZH?tag=ayyappa-21&ascsubtag=abhi_83b48a",
+        "commission_rate_pct": 8.5,
+        "estimated_earnings_per_click_inr": 650.0,
+        "clicks": 0,
+        "conversions": 0,
+        "total_earned_inr": 0.0,
+        "status": "ACTIVE",
+        "created_at": "2026-11-16T06:14:23.867639+00:00"
+      },
+      "affiliate_link": "https://www.amazon.in/dp/B0CX23V2ZH?tag=ayyappa-21&ascsubtag=abhi_83b48a",
+      "sbi_payout_target": "State Bank of India (41130645649)"
+    }
+  },
+  {
+    "execution_id": "exec_a60cb026dad1",
+    "workflow_id": "n8n_lead_bounty_automation",
+    "workflow_name": "N8N Lead Bounty Automation",
+    "trigger_type": "MANUAL_AUTOMATION",
+    "status": "FAILED",
+    "started_at": "2026-11-16T06:14:50.460610+00:00",
+    "completed_at": "2026-11-16T06:14:52.076769+00:00",
+    "duration_ms": 1615.93,
+    "output_summary": "'CommercialTaxInvoice' object has no attribute 'upi_qr_url'",
+    "details": {
+      "error": "'CommercialTaxInvoice' object has no attribute 'upi_qr_url'"
+    }
+  },
+  {
+    "execution_id": "exec_29e5516a800f",
+    "workflow_id": "n8n_micro_saas_billing",
+    "workflow_name": "N8N Micro Saas Billing",
+    "trigger_type": "MANUAL_AUTOMATION",
+    "status": "SUCCESS",
+    "started_at": "2026-11-16T06:14:55.231609+00:00",
+    "completed_at": "2026-11-16T06:14:56.846146+00:00",
+    "duration_ms": 1614.54,
+    "output_summary": "Micro-SaaS billing pipeline standby. Awaiting authentic incoming Bank UTR and amount.",
+    "details": {
+      "status": "AWAITING_REAL_PAYMENT_UTR"
+    }
+  }
+]

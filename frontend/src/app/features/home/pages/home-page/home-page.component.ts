@@ -1245,6 +1245,47 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.executeQuickAction('Close active tab');
   }
 
+  // =========================================================================
+  // REAL-TIME SCREEN PERCEPTION & MEDIA QUICK ACTIONS (OPEN-JARVIS STYLE)
+  // =========================================================================
+  readonly screenVisionStatus = signal<string>('ONLINE · WinRT GDI 0.6s');
+
+  readMyScreen(): void {
+    this.executeQuickAction('Read my screen');
+  }
+
+  searchTeluguTrailers(): void {
+    this.executeQuickAction('in youtube search for new telugu trailers');
+  }
+
+  searchTeluguSongs(): void {
+    this.executeQuickAction('open youtube search for any telegu songs');
+  }
+
+  skipSong2Min(): void {
+    this.executeQuickAction('skip song 2 min');
+  }
+
+  changeSong(): void {
+    this.executeQuickAction('change the song');
+  }
+
+  togglePlayPause(): void {
+    this.executeQuickAction('pause the video');
+  }
+
+  scrollLittleUp(): void {
+    this.executeQuickAction('now scroll little up');
+  }
+
+  scrollLittleDown(): void {
+    this.executeQuickAction('scroll down');
+  }
+
+  againSearch(): void {
+    this.executeQuickAction('again serch');
+  }
+
   sendTranscription(): void {
     const text = this.transcriptionInput.trim();
     if (!text) return;

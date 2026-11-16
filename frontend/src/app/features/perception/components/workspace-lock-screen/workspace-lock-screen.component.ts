@@ -218,11 +218,22 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
         this.rotateHologram(pass1.head_pose.yaw, pass1.head_pose.pitch, pass1.head_pose.roll);
       }
 
+      // Fast-Path: If Pass 1 verified biometric cosine immediately, unlock without waiting for Pass 2 jitter
+      if (pass1.is_verified) {
+        const rawMatch = pass1.match_score ?? 0;
+        const matchPct = Math.round(rawMatch <= 1.0 ? rawMatch * 100 : rawMatch);
+        const verifiedName = pass1.operator_name || this.operatorName();
+        this.pass2MatchScore.set(matchPct);
+        this.operatorName.set(verifiedName);
+        this.unlockSuccessfully(verifiedName, pass1.confidence, rawMatch);
+        return;
+      }
+
       // Stage 2: SFace 128-D Biometric Match
       this.stage.set('SCANNING_PASS_2');
       this.statusMessage.set('Stage 2/2: Computing SFace 128-D Cosine Metric against SQLite WAL Database...');
 
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 400));
 
       const frame2 = (await this.getReadyFrameBase64()) || frame1;
       let pass2: any = null;
@@ -247,33 +258,7 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
       }
 
       if (isVerified) {
-        if (this.presenceIntervalId) {
-          clearInterval(this.presenceIntervalId);
-          this.presenceIntervalId = null;
-        }
-        if (this.noPasswordTimer) {
-          clearTimeout(this.noPasswordTimer);
-          this.noPasswordTimer = null;
-        }
-        this.failedPasswordAttempts = 0;
-        this.stage.set('AUTHENTICATED');
-        this.statusMessage.set(`IDENTITY VERIFIED: Welcome back, ${verifiedName}. Unlocking workspace.`);
-
-        this.operatorState.biometricStatus.set({
-          verified: true,
-          scanning: false,
-          confidence: pass1.confidence,
-          matchScore: rawMatch,
-          operatorName: verifiedName,
-          message: `Operator ${verifiedName} authenticated at workstation.`,
-          timestamp: Date.now()
-        });
-
-        this.speechVoice.speak(`Biometric identity verified. Welcome back, Sir.`);
-
-        setTimeout(() => {
-          this.operatorState.unlockWorkspace('BIOMETRIC');
-        }, 800);
+        this.unlockSuccessfully(verifiedName, pass1.confidence, rawMatch);
       } else {
         // Face does not match: Directly ask for Master Password (143)
         // Do NOT capture photos on regular failed matches!
@@ -301,6 +286,60 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
       console.error('Lock screen scan error:', err);
       this.stage.set('FAILED');
       this.statusMessage.set(`Sensor error: ${err?.message || 'Check camera connection'}`);
+    }
+  }
+
+  private unlockSuccessfully(verifiedName: string, confidence: number, matchScore: number): void {
+    if (this.presenceIntervalId) {
+      clearInterval(this.presenceIntervalId);
+      this.presenceIntervalId = null;
+    }
+    if (this.noPasswordTimer) {
+      clearTimeout(this.noPasswordTimer);
+      this.noPasswordTimer = null;
+    }
+    this.failedPasswordAttempts = 0;
+    this.stage.set('AUTHENTICATED');
+    this.statusMessage.set(`IDENTITY VERIFIED: Welcome back, ${verifiedName}. Unlocking workspace.`);
+
+    this.operatorState.biometricStatus.set({
+      verified: true,
+      scanning: false,
+      confidence: confidence,
+      matchScore: matchScore,
+      operatorName: verifiedName,
+      message: `Operator ${verifiedName} authenticated at workstation.`,
+      timestamp: Date.now()
+    });
+
+    this.speechVoice.speak(`Biometric identity verified. Welcome back, Sir.`);
+
+    setTimeout(() => {
+      this.operatorState.unlockWorkspace('BIOMETRIC');
+    }, 700);
+  }
+
+  async reEnrollFace(): Promise<void> {
+    const pwd = this.passcodeValue.trim() || '143';
+    this.stage.set('SCANNING_PASS_1');
+    this.statusMessage.set('Position face in camera view to update biometric signature...');
+    try {
+      const frame = await this.getReadyFrameBase64(10);
+      if (!frame) {
+        this.stage.set('STANDBY');
+        this.statusMessage.set('Could not acquire camera frame. Please look into the camera.');
+        return;
+      }
+      const res = await this.agentApi.enrollBiometricFrame(frame, this.operatorName() || 'Ayyappa Rayudu Ravuvari', pwd);
+      this.statusMessage.set('✓ Biometrics successfully updated! Unlocking workspace...');
+      this.speechVoice.speak('Face lock updated and verified. Welcome, Sir.');
+      this.stage.set('AUTHENTICATED');
+      setTimeout(() => {
+        this.operatorState.unlockWorkspace('BIOMETRIC');
+      }, 700);
+    } catch (err: any) {
+      this.stage.set('STANDBY');
+      this.statusMessage.set(`Enrollment error: ${err?.message || 'Verification error'}`);
     }
   }
 

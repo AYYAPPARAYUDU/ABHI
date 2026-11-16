@@ -266,6 +266,97 @@ class UniversalCommunicationsHarvester:
 
         return emails
 
+    async def harvest_whatsapp_data(self) -> List[Dict[str, Any]]:
+        """Harvest WhatsApp communications:
+        1. From connected Android POCO phone via ADB dumpsys notification (com.whatsapp).
+        2. Fallback to local persistent communications_inbox if mobile is offline.
+        """
+        wa_messages: List[Dict[str, Any]] = []
+
+        # 1. Harvest WhatsApp notifications from Android POCO phone via ADB
+        try:
+            code, out, _ = await adb_controller.run_adb(
+                ["shell", "dumpsys", "notification"],
+                serial=self.POCO_SERIAL,
+                timeout=5.0
+            )
+            if code == 0 and out:
+                wa_blocks = [b for b in out.split("NotificationRecord(") if "com.whatsapp" in b]
+                for b in wa_blocks:
+                    t_match = re.search(r"android\.title=String\s*\((.*?)\)", b)
+                    txt_match = re.search(r"android\.text=String\s*\((.*?)\)", b) or re.search(r"android\.bigText=String\s*\((.*?)\)", b)
+                    sub_match = re.search(r"android\.subText=String\s*\((.*?)\)", b)
+                    time_match = re.search(r"postTime=(\d+)", b)
+
+                    sender = t_match.group(1).strip() if t_match else "WhatsApp Contact"
+                    body = txt_match.group(1).strip() if txt_match else "New WhatsApp message"
+                    chat_context = sub_match.group(1).strip() if sub_match else "WhatsApp"
+
+                    # Skip empty system or generic notifications
+                    if sender in ["WhatsApp", "Checking for new messages", "Backup in progress", "WhatsApp Web is currently active"]:
+                        continue
+
+                    ts = datetime.now(timezone.utc).isoformat()
+                    if time_match:
+                        try:
+                            ts = datetime.fromtimestamp(int(time_match.group(1)) / 1000.0, tz=timezone.utc).isoformat()
+                        except Exception:
+                            pass
+
+                    wid = f"wa_{abs(hash(sender + body + str(ts))) % 100000000}"
+                    wa_messages.append({
+                        "message_id": wid,
+                        "channel": "whatsapp",
+                        "sender": sender,
+                        "recipient": "Mamu",
+                        "subject": f"WhatsApp from {sender} ({chat_context})",
+                        "body": body,
+                        "timestamp": ts,
+                        "reply_status": "pending",
+                        "category": "whatsapp",
+                        "amount_inr": None,
+                        "utr": None,
+                        "otp_code": None,
+                        "account": None
+                    })
+        except Exception as e:
+            logger.debug(f"ADB WhatsApp notification harvest note: {e}")
+
+        # 2. If mobile is offline or 0 new messages found, retrieve cached WhatsApp history from SQLite
+        if not wa_messages:
+            try:
+                async with engine.connect() as conn:
+                    res = await conn.execute(
+                        text("""
+                            SELECT message_id, channel, sender, recipient, subject, body, timestamp, reply_status
+                            FROM communications_inbox
+                            WHERE channel = 'whatsapp' OR category = 'whatsapp'
+                            ORDER BY timestamp DESC
+                            LIMIT 20;
+                        """)
+                    )
+                    rows = res.fetchall()
+                    for r in rows:
+                        wa_messages.append({
+                            "message_id": r[0],
+                            "channel": r[1],
+                            "sender": r[2],
+                            "recipient": r[3],
+                            "subject": r[4],
+                            "body": r[5],
+                            "timestamp": r[6],
+                            "reply_status": r[7],
+                            "category": "whatsapp",
+                            "amount_inr": None,
+                            "utr": None,
+                            "otp_code": None,
+                            "account": None
+                        })
+            except Exception as e:
+                logger.debug(f"WhatsApp local fallback note: {e}")
+
+        return wa_messages
+
     async def persist_and_vectorize(self, messages: List[Dict[str, Any]]) -> int:
         """Persist messages in SQLite communications_inbox and embed into Global RAG Vector Knowledge Store."""
         if not messages:
@@ -372,7 +463,7 @@ class UniversalCommunicationsHarvester:
         return len(messages)
 
     async def sync_all(self) -> Dict[str, Any]:
-        """Perform full unified sync across mobile SMS, call logs, phone notifications, and emails."""
+        """Perform full unified sync across mobile SMS, call logs, phone notifications, WhatsApp, and emails."""
         if self._is_syncing:
             return {"status": "IN_PROGRESS", "message": "Synchronization cycle already running."}
 
@@ -384,7 +475,10 @@ class UniversalCommunicationsHarvester:
             # 2. Harvest emails
             email_msgs = await self.harvest_emails(max_emails=20)
 
-            all_msgs = mobile_msgs + email_msgs
+            # 3. Harvest WhatsApp (from phone ADB or desktop/local cache)
+            wa_msgs = await self.harvest_whatsapp_data()
+
+            all_msgs = mobile_msgs + email_msgs + wa_msgs
             persisted = await self.persist_and_vectorize(all_msgs)
 
             self._last_sync_ts = time.time()
@@ -393,15 +487,220 @@ class UniversalCommunicationsHarvester:
                 "total_harvested": len(all_msgs),
                 "mobile_count": len(mobile_msgs),
                 "email_count": len(email_msgs),
+                "whatsapp_count": len(wa_msgs),
                 "persisted_count": persisted,
                 "synced_at": datetime.now(timezone.utc).isoformat()
             }
         finally:
             self._is_syncing = False
 
+    async def generate_daily_executive_briefing(self) -> Dict[str, Any]:
+        """Generate structured 3-Tier Sovereign Executive Briefing:
+        Tier 1: Basic Data Summary (Counts: Messages, Emails, Calls, Missed Calls, WhatsApp, Banking)
+        Tier 2: Important & Priority Items (High-value debits/credits, active OTPs, VIP emails, missed calls)
+        Tier 3: Dynamic Drilldown & Specific Inquiries (Direct figures, one-click actions, interactive intelligence)
+        """
+        await self.ensure_db_schema()
+
+        # Query recent communications from SQLite WAL
+        records: List[Dict[str, Any]] = []
+        try:
+            async with engine.connect() as conn:
+                res = await conn.execute(
+                    text("""
+                        SELECT message_id, channel, sender, recipient, subject, body, timestamp, reply_status,
+                               category, amount_inr, utr, otp_code, account
+                        FROM communications_inbox
+                        WHERE message_id NOT IN ('test_msg_001')
+                        ORDER BY timestamp DESC
+                        LIMIT 120;
+                    """)
+                )
+                for r in res.fetchall():
+                    records.append({
+                        "message_id": r[0],
+                        "channel": r[1],
+                        "sender": r[2],
+                        "recipient": r[3],
+                        "subject": r[4] or "",
+                        "body": r[5] or "",
+                        "timestamp": r[6],
+                        "reply_status": r[7],
+                        "category": r[8] or "all",
+                        "amount_inr": r[9],
+                        "utr": r[10],
+                        "otp_code": r[11],
+                        "account": r[12]
+                    })
+        except Exception as e:
+            logger.error(f"Error reading communications for daily briefing: {e}")
+
+        # TIER 1: Basic Data Summary Counts
+        total_messages = len(records)
+        whatsapp_records = [r for r in records if r["channel"] == "whatsapp" or r["category"] == "whatsapp"]
+        email_records = [r for r in records if r["channel"] in ["gmail", "email"] or r["category"] == "mail"]
+        call_records = [r for r in records if r["channel"] == "call" or r["category"] == "calls"]
+        missed_call_records = [
+            r for r in call_records
+            if "missed" in r["subject"].lower() or "missed" in r["body"].lower()
+        ]
+        banking_records = [
+            r for r in records
+            if r["category"] == "banking" or r["amount_inr"] is not None or bool(r["utr"])
+        ]
+        otp_records = [
+            r for r in records
+            if r["category"] == "otp" or bool(r["otp_code"])
+        ]
+
+        tier_1_summary = {
+            "total_communications": total_messages,
+            "whatsapp_count": len(whatsapp_records),
+            "email_count": len(email_records),
+            "calls_count": len(call_records),
+            "missed_calls_count": len(missed_call_records),
+            "banking_count": len(banking_records),
+            "otp_count": len(otp_records),
+            "headline": f"Daily Briefing: {total_messages} communications ({len(whatsapp_records)} WhatsApp, {len(email_records)} Emails, {len(call_records)} Calls with {len(missed_call_records)} Missed, {len(banking_records)} Banking alerts)"
+        }
+
+        # TIER 2: Important & Priority Items
+        priority_items: List[Dict[str, Any]] = []
+
+        # 1. Financial debits/credits (Highest urgency)
+        for b in banking_records[:6]:
+            amt_str = f"₹{b['amount_inr']:,.2f}" if b['amount_inr'] is not None else "Amount recorded"
+            priority_items.append({
+                "type": "FINANCIAL_ALERT",
+                "urgency": "HIGH",
+                "title": f"Banking Transaction ({amt_str})",
+                "sender": b["sender"],
+                "amount": b["amount_inr"],
+                "utr": b["utr"],
+                "account": b["account"],
+                "body": b["body"],
+                "timestamp": b["timestamp"],
+                "action_label": "Copy UTR" if b["utr"] else "View Details"
+            })
+
+        # 2. Security OTPs
+        for o in otp_records[:4]:
+            priority_items.append({
+                "type": "SECURITY_OTP",
+                "urgency": "CRITICAL",
+                "title": f"Security OTP ({o.get('otp_code') or 'Code Required'})",
+                "sender": o["sender"],
+                "otp_code": o.get("otp_code"),
+                "body": o["body"],
+                "timestamp": o["timestamp"],
+                "action_label": "Copy OTP"
+            })
+
+        # 3. Missed Calls
+        for mc in missed_call_records[:4]:
+            priority_items.append({
+                "type": "MISSED_CALL",
+                "urgency": "HIGH",
+                "title": f"Missed Call from {mc['sender']}",
+                "sender": mc["sender"],
+                "body": mc["body"],
+                "timestamp": mc["timestamp"],
+                "action_label": "Call Back"
+            })
+
+        # 4. WhatsApp Messages
+        for w in whatsapp_records[:4]:
+            priority_items.append({
+                "type": "WHATSAPP_MESSAGE",
+                "urgency": "MEDIUM",
+                "title": f"WhatsApp from {w['sender']}",
+                "sender": w["sender"],
+                "body": w["body"],
+                "timestamp": w["timestamp"],
+                "action_label": "Open WhatsApp"
+            })
+
+        # 5. Important Emails
+        for em in email_records[:4]:
+            priority_items.append({
+                "type": "EMAIL_INBOX",
+                "urgency": "MEDIUM",
+                "title": em["subject"] or f"Email from {em['sender']}",
+                "sender": em["sender"],
+                "body": em["body"],
+                "timestamp": em["timestamp"],
+                "action_label": "Open in Gmail"
+            })
+
+        # TIER 3: Executive Briefing Text Synthesis
+        briefing_text = (
+            f"**[TIER 1 • EXECUTIVE SUMMARY]**\n"
+            f"Good day, Sovereign Operator Mamu. Here is your synthesized communication briefing:\n"
+            f"• **Total Communications Logged**: {total_messages}\n"
+            f"• **WhatsApp Messages**: {len(whatsapp_records)} active conversations\n"
+            f"• **Emails & Gmail**: {len(email_records)} messages received\n"
+            f"• **Voice Calls**: {len(call_records)} total ({len(missed_call_records)} missed calls)\n"
+            f"• **Banking & UPI Alerts**: {len(banking_records)} financial alerts\n"
+            f"• **Active Security OTPs**: {len(otp_records)} verification codes\n\n"
+            f"**[TIER 2 • HIGH-PRIORITY ITEMS REQUIRING ATTENTION]**\n"
+        )
+
+        if banking_records:
+            first_b = banking_records[0]
+            amt_label = f"₹{first_b['amount_inr']:,.2f}" if first_b.get("amount_inr") is not None else "transaction"
+            briefing_text += f"1. 🏦 **Banking Alert**: {first_b['sender']} - {amt_label}. UTR: `{first_b.get('utr') or 'N/A'}`.\n"
+
+        if otp_records:
+            first_o = otp_records[0]
+            briefing_text += f"2. 🔐 **Latest Security OTP**: `{first_o.get('otp_code') or 'Code'}` from {first_o['sender']}.\n"
+
+        if missed_call_records:
+            first_mc = missed_call_records[0]
+            briefing_text += f"3. 📞 **Urgent Missed Call**: From {first_mc['sender']} on your POCO mobile.\n"
+
+        if whatsapp_records:
+            first_wa = whatsapp_records[0]
+            briefing_text += f"4. 💬 **Recent WhatsApp**: From {first_wa['sender']}: \"{first_wa['body'][:80]}...\".\n"
+
+        briefing_text += (
+            f"\n**[TIER 3 • DYNAMIC DRILL-DOWN & DIRECT COMMANDS]**\n"
+            f"You can ask me for any specific detail (e.g. *'Show my SBI transactions'*, *'What is the OTP for Jio?'*, *'Did Dheenu reply on WhatsApp?'*) "
+            f"or use the one-click action buttons below to reply or dial."
+        )
+
+        return {
+            "success": True,
+            "briefing_text": briefing_text,
+            "tier_1_summary": tier_1_summary,
+            "tier_2_priority_items": priority_items,
+            "tier_3_suggested_queries": [
+                "What is my latest ICICI or SBI transaction?",
+                "Show my latest security OTP",
+                "Who called me today?",
+                "Show all unread WhatsApp chats",
+                "Give me a detailed email summary"
+            ],
+            "generated_at": datetime.now(timezone.utc).isoformat()
+        }
+
     async def query_intelligence(self, user_query: str) -> Dict[str, Any]:
-        """Query communication memory using LanceDB Hybrid Vector Search and Local Ollama / Standalone LLM."""
-        # 1. Search vector store
+        """Query communication memory using LanceDB Hybrid Vector Search and Local Ollama / Standalone LLM.
+        Directly detects daily briefing/update requests and provides structured 3-tier intelligence.
+        """
+        # Check if user is asking for general daily update, briefing, or summary of messages/calls/mails
+        is_briefing_request = bool(
+            re.search(
+                r'\b(update|briefing|summary|what happened|read my message|read my messages|daily update|status of messages|how many messages|check messages|calls and mails|mails and calls)\b',
+                user_query,
+                re.IGNORECASE
+            )
+        )
+
+        daily_briefing = None
+        if is_briefing_request:
+            daily_briefing = await self.generate_daily_executive_briefing()
+
+        # 1. Search vector store for relevant context
         search_results = await self.vector_store.hybrid_search(
             query=user_query,
             top_k=6
@@ -413,11 +712,26 @@ class UniversalCommunicationsHarvester:
 
         joined_context = "\n".join(context_blocks) if context_blocks else "No matching communication records found."
 
-        # 2. Synthesize with Local LLM (DeepSeek-R1 / Qwen 8B)
+        # If user asked for daily update/briefing, provide the authoritative 3-tier briefing directly
+        if is_briefing_request and daily_briefing:
+            return {
+                "query": user_query,
+                "answer": daily_briefing["briefing_text"],
+                "thinking": "Structured 3-Tier Executive Briefing generated from SQLite WAL records & live device telemetry.",
+                "is_daily_briefing": True,
+                "briefing_data": daily_briefing,
+                "retrieved_context_count": len(search_results),
+                "sources": [
+                    {"source": r.source, "text": r.text, "score": r.score}
+                    for r in search_results
+                ]
+            }
+
+        # 2. Synthesize specific query with Local LLM (DeepSeek-R1 / Qwen 8B)
         sys_prompt = (
             "You are the ABHI Sovereign Intelligence & Communications Cognitive Core. "
             "You have direct access to the Operator Mamu's authentic mobile communications, "
-            "State Bank of India and ICICI Bank transactions, security OTPs, emails, and call logs. "
+            "WhatsApp chats, State Bank of India and ICICI Bank transactions, security OTPs, emails, and call logs. "
             "Answer the user's inquiry with exact details, financial amounts, UTR numbers, dates, and clear guidance. "
             "Never invent demo data. If information is not in the context, state it clearly."
         )
@@ -438,6 +752,7 @@ class UniversalCommunicationsHarvester:
             "query": user_query,
             "answer": synthesis.response if hasattr(synthesis, "response") else str(synthesis),
             "thinking": getattr(synthesis, "thinking", None) or getattr(synthesis, "thought", None) or "",
+            "is_daily_briefing": False,
             "retrieved_context_count": len(search_results),
             "sources": [
                 {"source": r.source, "text": r.text, "score": r.score}

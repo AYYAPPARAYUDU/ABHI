@@ -38,8 +38,8 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
 
   readonly toastMessage = signal<string | null>(null);
 
-  // Active view tab: Executive Dashboard | Mobile PhonePe Hub | SBI Channel | n8n Workflows | Credentials Vault | Swarm Agents | Affiliate Hub | Invoices | Receipts
-  readonly activeTab = signal<'dashboard' | 'mobile' | 'sbi' | 'overview' | 'n8n' | 'vault' | 'agents' | 'affiliate' | 'invoices' | 'receipts'>('dashboard');
+  // Active view tab: Executive Cashflow & PhonePe | SBI Settlement | Autonomous Engine & Vault
+  readonly activeTab = signal<'dashboard' | 'sbi' | 'automation'>('dashboard');
 
   // Authoritative State Bank of India Settlement Channel (Mamu)
   readonly sbiProfile = {
@@ -429,13 +429,24 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  setActiveTab(tab: 'dashboard' | 'mobile' | 'n8n' | 'vault' | 'agents' | 'affiliate' | 'sbi' | 'invoices' | any): void {
-    const target = tab === 'overview' ? 'dashboard' : tab;
+  setActiveTab(tab: 'dashboard' | 'sbi' | 'automation' | string): void {
+    let target: 'dashboard' | 'sbi' | 'automation' = 'dashboard';
+    if (tab === 'sbi' || tab === 'invoices' || tab === 'receipts' || tab === 'overview') {
+      target = 'sbi';
+    } else if (tab === 'automation' || tab === 'n8n' || tab === 'vault' || tab === 'agents' || tab === 'affiliate') {
+      target = 'automation';
+    } else {
+      target = 'dashboard';
+    }
     this.activeTab.set(target);
-    if (target === 'mobile') this.refreshMobileData();
-    if (target === 'vault') this.refreshVaultData();
-    if (target === 'n8n') this.refreshN8nData();
-    if (target === 'affiliate') this.refreshAffiliateData();
+    if (target === 'dashboard') this.refreshMobileData();
+    if (target === 'sbi') this.refreshTreasuryData();
+    if (target === 'automation') {
+      this.refreshN8nData();
+      this.refreshVaultData();
+      this.refreshAffiliateData();
+      this.refreshOfficeData();
+    }
   }
 
   // --- MOBILE ADB & PHONEPE ACTIONS ---

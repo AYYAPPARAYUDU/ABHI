@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "invoice_number": "INV-ABHI-20261116-64B943",
+    "client_name": "Enterprise Client",
+    "client_email": "client@enterprise.com",
+    "client_organization": "Commercial Partner",
+    "issue_date": "2026-11-16",
+    "due_date": "2026-11-16",
+    "currency": "INR",
+    "line_items": [
+      {
+        "item_id": "item_12a014",
+        "description": "Enterprise AST Code Security & Architecture Vulnerability Audit",
+        "quantity": 1,
+        "unit_price_inr": 28500.0,
+        "unit_price_usd": 325.71,
+        "total_inr": 28500.0,
+        "total_usd": 325.71
+      }
+    ],
+    "subtotal_inr": 28500.0,
+    "tax_rate_pct": 18.0,
+    "tax_amount_inr": 5130.0,
+    "total_inr": 33630.0,
+    "total_usd": 384.34,
+    "status": "ISSUED",
+    "beneficiary": {
+      "bank_name": "State Bank of India",
+      "account_holder_name": "Ravuvai Ayyapparayudu",
+      "account_number": "41130645649",
+      "ifsc_code": "SBIN0020507",
+      "branch_name": "SBI Specialized Branch",
+      "account_type": "Current / Savings Account",
+      "currency": "INR",
+      "upi_id": "ayyapparayudu.5@ybl"
+    },
+    "upi_payment_link": "upi://pay?pa=ayyapparayudu.5@ybl&pn=Ravuvai%20Ayyapparayudu&am=33630.0&cu=INR&tn=INV-ABHI-20261116-64B943",
+    "settlement_reference": null,
+    "service_fulfillment_ref": null,
+    "deliverable_hash": "sha256_e560c582a3414ab7"
+  }
+]

@@ -19,6 +19,7 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from backend.app.automation.desktop.os_control_engine import os_control_engine
+from backend.app.automation.desktop.live_screen_vision import live_screen_vision
 
 
 class ScreenPerceptionEngine:
@@ -36,9 +37,10 @@ class ScreenPerceptionEngine:
         """Cache the last spoken message for 'what you said' queries."""
         if text and len(text.strip()) > 3:
             self.last_spoken_message = text.strip()
+            live_screen_vision.record_spoken(text)
 
     def get_last_spoken(self) -> str:
-        return self.last_spoken_message
+        return live_screen_vision.get_last_spoken() or self.last_spoken_message
 
     def _ensure_desktop(self) -> None:
         """Attach thread to active user desktop."""
@@ -157,47 +159,10 @@ class ScreenPerceptionEngine:
         }
 
     def describe_current_screen(self) -> str:
-        """Generate a 100% grounded, truthful verbal and text description of Mamu's screen."""
-        # 1. Take a fresh screenshot
-        self.capture_screenshot()
-
-        # 2. Extract real live OS window metadata
-        ctx = self.get_real_screen_context()
-        active_title = ctx["active_title"]
-        user_apps = ctx["user_apps"]
-        has_youtube = ctx["has_youtube"]
-        has_ide = ctx["has_ide"]
-
-        desc_parts = []
-
-        # Analyze foreground application
-        if has_youtube or "youtube" in active_title.lower():
-            yt_title = ctx.get("youtube_details", {}).get("title", active_title)
-            clean_yt = yt_title.replace(" - Google Chrome", "").strip()
-            if "youtube" in clean_yt.lower() and len(clean_yt) < 25:
-                desc_parts.append(f"Google Chrome is active on your screen displaying the YouTube home feed (`{clean_yt}`). Visible are recommended video tiles, trending playlists, and a YouTube Shorts carousel.")
-            else:
-                desc_parts.append(f"Google Chrome is active playing or displaying `{clean_yt}` on YouTube.")
-        elif "chrome" in active_title.lower():
-            clean_title = active_title.replace(" - Google Chrome", "").strip()
-            desc_parts.append(f"Google Chrome is active on your screen displaying `{clean_title}`.")
-        elif "antigravity" in active_title.lower() or "code" in active_title.lower():
-            desc_parts.append(f"Antigravity IDE is open in the foreground with active workspace (`{active_title}`).")
-        else:
-            desc_parts.append(f"Your active foreground window is '{active_title}'.")
-
-        # Mention companion widget
-        desc_parts.append("The ABHI Cybernetic Voice HUD is floating on the right.")
-
-        # Mention background visible windows
-        other_apps = [a["title"] for a in user_apps if a["title"] != active_title and "ABHI Cybernetic" not in a["title"]]
-        if other_apps:
-            top_others = other_apps[:3]
-            desc_parts.append(f"Other open applications in the background include: {', '.join(top_others)}.")
-
-        full_description = f"Mamu, I am analyzing your screen right now: {' '.join(desc_parts)} Tell me what video to play, row to click, or action to automate!"
-        self.record_spoken(full_description)
-        return full_description
+        """Generate a 100% grounded, truthful verbal and text description of Mamu's screen using live WinRT OCR and window tracking."""
+        desc = live_screen_vision.describe_current_screen()
+        self.record_spoken(desc)
+        return desc
 
     def execute_youtube_grid_selection(self, row: int, col: int) -> Tuple[bool, str]:
         """

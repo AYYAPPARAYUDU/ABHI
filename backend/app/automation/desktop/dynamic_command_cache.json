@@ -181,5 +181,49 @@
     "type": "cmd",
     "cmd": "start \"\" \"\"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe\"\" --profile-directory=\"Profile 2\"",
     "reply": "Selected and opened ABHI Chrome workspace for you, Mamu!"
+  },
+  "in youtube search for new telugu trailers": {
+    "type": "youtube_play",
+    "query": "new telugu trailers",
+    "reply": "Opened YouTube and searching for 'new telugu trailers', Mamu!"
+  },
+  "open youtube search for any telegu songs": {
+    "type": "youtube_play",
+    "query": "any telegu songs",
+    "reply": "Opened YouTube and searching for 'any telegu songs', Mamu!"
+  },
+  "stop the video": {
+    "type": "hotkey",
+    "key": "SPACE",
+    "reply": "Stopped playback for you, Mamu."
+  },
+  "scroll little up": {
+    "type": "scroll",
+    "clicks": 3,
+    "direction": "up",
+    "reply": "Scrolled a little up for you, Mamu."
+  },
+  "skip song 2 min": {
+    "type": "multi_hotkey",
+    "keys": [
+      "L",
+      "L",
+      "L",
+      "L",
+      "L",
+      "L",
+      "L",
+      "L",
+      "L",
+      "L",
+      "L",
+      "L"
+    ],
+    "reply": "Skipped forward 2 minutes for you, Mamu."
+  },
+  "change the song": {
+    "type": "hotkey",
+    "key": "SHIFT+N",
+    "reply": "Changed the song and playing the next track for you, Mamu."
   }
 }

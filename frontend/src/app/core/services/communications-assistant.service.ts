@@ -85,13 +85,20 @@ export class CommunicationsAssistantService {
     banking: 0,
     otps: 0,
     calls: 0,
+    missed_calls: 0,
     emails: 0,
+    whatsapp: 0,
     notifications: 0,
+    mobile_connected: true,
+    fallback_active: false,
     device: { model: 'POCO 22101320I', connected: true },
     battery: { level: 14, status: 'Discharging' },
     endpoint: '10.65.249.121:5555'
   });
-  readonly activeFilter = signal<'all' | 'banking' | 'otp' | 'calls' | 'mail' | 'notifications'>('all');
+  readonly activeFilter = signal<'all' | 'banking' | 'otp' | 'calls' | 'mail' | 'whatsapp' | 'notifications'>('all');
+
+  readonly dailyBriefing = signal<any | null>(null);
+  readonly isBriefingLoading = signal<boolean>(false);
 
   readonly intelligenceAnswer = signal<any | null>(null);
   readonly isAskingAI = signal<boolean>(false);
@@ -192,7 +199,7 @@ export class CommunicationsAssistantService {
     }
   }
 
-  setFilter(filter: 'all' | 'banking' | 'otp' | 'calls' | 'mail' | 'notifications'): void {
+  setFilter(filter: 'all' | 'banking' | 'otp' | 'calls' | 'mail' | 'whatsapp' | 'notifications'): void {
     this.activeFilter.set(filter);
     const msgs = this.getFilteredInbox();
     if (msgs.length > 0 && (!this.activeMessage() || !msgs.some(m => m.message_id === this.activeMessage()?.message_id))) {
@@ -208,8 +215,47 @@ export class CommunicationsAssistantService {
     if (filter === 'otp') return all.filter(m => m.category === 'otp' || !!m.otp_code);
     if (filter === 'calls') return all.filter(m => m.category === 'calls' || m.channel === 'call');
     if (filter === 'mail') return all.filter(m => m.category === 'mail' || m.channel === 'gmail' || m.channel === 'email');
+    if (filter === 'whatsapp') return all.filter(m => m.category === 'whatsapp' || m.channel === 'whatsapp');
     if (filter === 'notifications') return all.filter(m => m.category === 'notifications');
     return all;
+  }
+
+  async loadDailyBriefing(): Promise<any> {
+    this.isBriefingLoading.set(true);
+    try {
+      const url = getApiUrl('/api/v1/assistant/daily-briefing');
+      const res: any = await firstValueFrom(this.http.get(url));
+      if (res && res.success) {
+        this.dailyBriefing.set(res);
+        return res;
+      }
+      return null;
+    } catch (e) {
+      console.error('Failed to load daily executive briefing', e);
+      return null;
+    } finally {
+      this.isBriefingLoading.set(false);
+    }
+  }
+
+  async launchWhatsAppWeb(): Promise<void> {
+    try {
+      const url = getApiUrl('/api/v1/assistant/messages/action');
+      await firstValueFrom(this.http.post(url, { action: 'whatsapp_web' }));
+      this.setAlert('WhatsApp Web initiated in browser.');
+    } catch {
+      window.open('https://web.whatsapp.com', '_blank');
+    }
+  }
+
+  async launchWhatsAppDesktop(): Promise<void> {
+    try {
+      const url = getApiUrl('/api/v1/assistant/messages/action');
+      await firstValueFrom(this.http.post(url, { action: 'whatsapp_desktop' }));
+      this.setAlert('WhatsApp Desktop summoned.');
+    } catch {
+      window.open('https://web.whatsapp.com', '_blank');
+    }
   }
 
   async askIntelligence(query: string): Promise<any> {
@@ -220,6 +266,9 @@ export class CommunicationsAssistantService {
       const res: any = await firstValueFrom(this.http.post(url, { query }));
       if (res && res.success) {
         this.intelligenceAnswer.set(res);
+        if (res.is_daily_briefing && res.briefing_data) {
+          this.dailyBriefing.set(res.briefing_data);
+        }
         return res;
       }
       return null;

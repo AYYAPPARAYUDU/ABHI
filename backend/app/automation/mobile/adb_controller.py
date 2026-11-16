@@ -204,8 +204,8 @@ class AdbController:
         if not devices:
             # Auto-reconnect to operator's paired wireless mobile device
             try:
-                await self.run_adb(["connect", "10.65.249.121:5555"], timeout=3.0)
-                code_r, stdout_r, _ = await self.run_adb(["devices", "-l"], timeout=3.0)
+                await self.run_adb(["connect", "10.65.249.121:5555"], timeout=8.0)
+                code_r, stdout_r, _ = await self.run_adb(["devices", "-l"], timeout=5.0)
                 if code_r == 0:
                     for line in stdout_r.splitlines():
                         line = line.strip()
@@ -260,6 +260,9 @@ class AdbController:
     async def get_device_status(self, serial: Optional[str] = None) -> Dict[str, Any]:
         """Fetch comprehensive status (battery, screen, network, OS) of device."""
         devices = await self.list_devices()
+        if not devices:
+            await self.connect_wireless("10.65.249.121", 5555)
+            devices = await self.list_devices()
         if not devices:
             pnp_dev = self._detect_physical_usb_device()
             if pnp_dev:
@@ -1193,6 +1196,9 @@ class AdbController:
         Queries content://sms/inbox for banking SMS alerts (SBI, PhonePe, Paytm, GPay, UPI).
         """
         devices = await self.list_devices()
+        if not devices:
+            await self.connect_wireless("10.65.249.121", 5555)
+            devices = await self.list_devices()
         if not devices:
             return {
                 "connected": False,

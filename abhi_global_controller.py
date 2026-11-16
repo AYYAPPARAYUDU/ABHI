@@ -252,6 +252,7 @@ class AbhiCyberneticCompanion(ctk.CTk):
         self._enforce_topmost()
         self._start_os_context_monitor()
         self._start_continuous_voice_listener()
+        self._start_face_mood_observer()
         self._schedule_blinking()
 
     # ==========================================================================
@@ -412,22 +413,69 @@ class AbhiCyberneticCompanion(ctk.CTk):
                 fill=t["accent"], width=2
             )
 
-        # Draw left and right eyes
+        # Draw left and right eyes (or continuous cyberpunk shades if in cyber mood)
         left_eye_center = (face_cx - eye_spacing, face_cy)
         right_eye_center = (face_cx + eye_spacing, face_cy)
 
-        for ex, ey in [left_eye_center, right_eye_center]:
+        if self.mood == "cyber":
+            # Futuristic neon matrix cyberpunk sunglasses across both eyes
+            sy1, sy2 = face_cy - 9, face_cy + 9
+            sx1 = face_cx - eye_spacing - eye_base_w - 3
+            sx2 = face_cx + eye_spacing + eye_base_w + 3
+            shades_pts = [
+                sx1, sy1 + 5,
+                sx1 + 7, sy1,
+                sx2 - 7, sy1,
+                sx2, sy1 + 5,
+                sx2 - 5, sy2,
+                sx1 + 5, sy2
+            ]
+            self.cube_canvas.create_polygon(shades_pts, fill="#020617", outline=t["border_glow"], width=2)
+            # Glowing laser scanline across cyber shades
+            scan_y = sy1 + 3 + (self.animation_tick % 13)
+            self.cube_canvas.create_line(sx1 + 4, scan_y, sx2 - 4, scan_y, fill=t["accent"], width=1.5)
+            # Center bridge
+            self.cube_canvas.create_line(face_cx - 3, sy1 + 2, face_cx + 3, sy1 + 2, fill=t["border"], width=2)
+        else:
             self._draw_cute_eye(
-                canvas=self.cube_canvas,
-                cx=ex,
-                cy=ey,
-                base_w=eye_base_w,
-                base_h=eye_base_h,
-                theme=t
+                canvas=self.cube_canvas, cx=left_eye_center[0], cy=left_eye_center[1],
+                base_w=eye_base_w, base_h=eye_base_h, theme=t, is_right_eye=False,
+                face_cx=face_cx, face_cy=face_cy
+            )
+            self._draw_cute_eye(
+                canvas=self.cube_canvas, cx=right_eye_center[0], cy=right_eye_center[1],
+                base_w=eye_base_w, base_h=eye_base_h, theme=t, is_right_eye=True,
+                face_cx=face_cx, face_cy=face_cy
             )
 
-        # 7. Cute Mouth / Expression Indicator at Bottom of Visor
+        # Cute Rosy Blush on Cheeks (Happy, Excited, Love, Wink)
         mouth_y = face_cy + 13
+        if self.mood in ["happy", "excited", "love", "wink"]:
+            blush_col = "#f472b6" if self.mood == "love" else "#fb923c"
+            self.cube_canvas.create_oval(
+                face_cx - eye_spacing - 6, mouth_y - 3,
+                face_cx - eye_spacing + 4, mouth_y + 3,
+                fill=blush_col, outline=""
+            )
+            self.cube_canvas.create_oval(
+                face_cx + eye_spacing - 4, mouth_y - 3,
+                face_cx + eye_spacing + 6, mouth_y + 3,
+                fill=blush_col, outline=""
+            )
+
+        # Floating peaceful Z particles in sleep mode
+        if self.mood == "sleep":
+            z_offset = (self.animation_tick * 1.2) % 24
+            self.cube_canvas.create_text(
+                face_cx + 22, vy1 + 20 - z_offset,
+                text="z", font=("Segoe UI", 7, "bold"), fill=t["text_muted"]
+            )
+            self.cube_canvas.create_text(
+                face_cx + 27, vy1 + 13 - z_offset,
+                text="Z", font=("Segoe UI", 9, "bold"), fill=t["border_glow"]
+            )
+
+        # 7. Rich Expressive Mouth Indicator at Bottom of Visor
         if self.bot_state == "SPEAKING":
             # Speaking audio wave mouth
             mouth_w = 6 + int(min(8, self.live_audio_rms * 50))
@@ -436,11 +484,78 @@ class AbhiCyberneticCompanion(ctk.CTk):
                 fill=t["eye_primary"], width=2
             )
         elif self.mood == "happy":
-            # Cute small smiling arc
+            # Cute small smiling arc ◡
             self.cube_canvas.create_arc(
                 face_cx - 5, mouth_y - 3, face_cx + 5, mouth_y + 4,
                 start=190, extent=160, style="arc",
-                outline=t["border_secondary"], width=1.5
+                outline=t["border_secondary"], width=2
+            )
+        elif self.mood == "excited":
+            # Joyous open smile D
+            self.cube_canvas.create_arc(
+                face_cx - 6, mouth_y - 4, face_cx + 6, mouth_y + 6,
+                start=180, extent=180, fill=t["border_secondary"], outline=t["border_secondary"], width=1
+            )
+        elif self.mood == "love":
+            # Cute cat-like double curved mouth ω
+            self.cube_canvas.create_arc(
+                face_cx - 6, mouth_y - 2, face_cx, mouth_y + 4,
+                start=190, extent=150, style="arc", outline="#f472b6", width=1.5
+            )
+            self.cube_canvas.create_arc(
+                face_cx, mouth_y - 2, face_cx + 6, mouth_y + 4,
+                start=190, extent=150, style="arc", outline="#f472b6", width=1.5
+            )
+        elif self.mood == "thinking":
+            # Curious wavy line ~
+            self.cube_canvas.create_line(
+                face_cx - 5, mouth_y + 1, face_cx - 1, mouth_y - 2,
+                face_cx + 2, mouth_y + 2, face_cx + 6, mouth_y,
+                smooth=True, fill=t["eye_primary"], width=1.8
+            )
+        elif self.mood == "surprised":
+            # Small round open mouth o
+            self.cube_canvas.create_oval(
+                face_cx - 3, mouth_y - 2, face_cx + 3, mouth_y + 4,
+                outline=t["eye_primary"], fill=t["bg"], width=1.8
+            )
+        elif self.mood == "wink":
+            # Playful tilted smirk
+            self.cube_canvas.create_line(
+                face_cx - 4, mouth_y + 2, face_cx + 1, mouth_y + 2,
+                face_cx + 6, mouth_y - 2,
+                smooth=True, fill=t["eye_primary"], width=2
+            )
+        elif self.mood == "concerned":
+            # Empathetic downturned arc ︵
+            self.cube_canvas.create_arc(
+                face_cx - 5, mouth_y, face_cx + 5, mouth_y + 6,
+                start=10, extent=160, style="arc",
+                outline=t["border_secondary"], width=2
+            )
+        elif self.mood == "focus":
+            # Crisp straight focused line —
+            self.cube_canvas.create_line(
+                face_cx - 6, mouth_y, face_cx + 6, mouth_y,
+                fill=t["accent"], width=2
+            )
+        elif self.mood == "shield":
+            # Security lock bar
+            self.cube_canvas.create_line(
+                face_cx - 5, mouth_y, face_cx + 5, mouth_y,
+                fill="#ef4444", width=2
+            )
+        elif self.mood == "sleep":
+            # Peaceful micro-line
+            self.cube_canvas.create_line(
+                face_cx - 3, mouth_y, face_cx + 3, mouth_y,
+                fill=t["text_muted"], width=1.5
+            )
+        else:
+            # Neutral gentle micro-smile
+            self.cube_canvas.create_line(
+                face_cx - 4, mouth_y, face_cx + 4, mouth_y,
+                fill=t["text_muted"], width=1.5
             )
 
         # 8. Bottom Mood / State Label
@@ -457,9 +572,9 @@ class AbhiCyberneticCompanion(ctk.CTk):
         # Refresh canvas frame (smooth 30 FPS animation)
         self.after(33, self._render_cube_pet)
 
-    def _draw_cute_eye(self, canvas, cx, cy, base_w, base_h, theme):
+    def _draw_cute_eye(self, canvas, cx, cy, base_w, base_h, theme, is_right_eye: bool = False, face_cx: float = 0, face_cy: float = 0):
         """Draws one cute expressive eye taking mood, gaze, and blink state into account."""
-        # Sleep Mode: Simple peaceful curved horizontal slits
+        # 1. Sleep Mode: Peaceful curved horizontal slits (- -)
         if self.mood == "sleep":
             canvas.create_line(
                 cx - base_w, cy + 2, cx + base_w, cy + 2,
@@ -467,7 +582,7 @@ class AbhiCyberneticCompanion(ctk.CTk):
             )
             return
 
-        # Happy Mode: Cute anime arched crescents (^ ^)
+        # 2. Happy Mode: Cute anime arched crescents (^ ^)
         if self.mood == "happy" and not self.is_blinking:
             canvas.create_arc(
                 cx - base_w, cy - base_h / 2, cx + base_w, cy + base_h / 2,
@@ -476,15 +591,95 @@ class AbhiCyberneticCompanion(ctk.CTk):
             )
             return
 
-        # Success Mode: Glowing Stars (★)
-        if self.bot_state == "SUCCESS":
-            canvas.create_text(
-                cx, cy, text="★", font=("Segoe UI", 14, "bold"),
-                fill=theme["eye_primary"]
+        # 3. Excited / Success Mode: Pulsating Glowing Stars (★ ★)
+        if self.mood == "excited" or self.bot_state == "SUCCESS":
+            r = base_w + 1 + math.sin(self.animation_tick * 0.3) * 1.5
+            star_pts = [
+                cx, cy - r,
+                cx + r * 0.28, cy - r * 0.28,
+                cx + r, cy,
+                cx + r * 0.28, cy + r * 0.28,
+                cx, cy + r,
+                cx - r * 0.28, cy + r * 0.28,
+                cx - r, cy,
+                cx - r * 0.28, cy - r * 0.28
+            ]
+            canvas.create_polygon(star_pts, fill=theme["eye_primary"], outline=theme["border_glow"], width=1)
+            return
+
+        # 4. Love Mode: Glowing Pulsating Hearts (♥ ♥)
+        if self.mood == "love" and not self.is_blinking:
+            scale = 1.0 + math.sin(self.animation_tick * 0.25) * 0.14
+            hr = 6.2 * scale
+            heart_pts = [
+                cx, cy + hr * 0.9,
+                cx - hr, cy + hr * 0.1,
+                cx - hr * 1.05, cy - hr * 0.5,
+                cx - hr * 0.6, cy - hr * 0.95,
+                cx, cy - hr * 0.4,
+                cx + hr * 0.6, cy - hr * 0.95,
+                cx + hr * 1.05, cy - hr * 0.5,
+                cx + hr, cy + hr * 0.1
+            ]
+            canvas.create_polygon(heart_pts, smooth=True, fill="#f43f5e", outline="#fda4af", width=1.5)
+            return
+
+        # 5. Wink Mode: Left eye winks (^), Right eye wide open sparkle (O)
+        if self.mood == "wink" and not is_right_eye and not self.is_blinking:
+            canvas.create_arc(
+                cx - base_w, cy - base_h / 2 + 1, cx + base_w, cy + base_h / 2 + 1,
+                start=25, extent=130, style="arc",
+                outline=theme["eye_primary"], width=3
             )
             return
 
-        # Calculate animated height based on blinking
+        # 6. Concerned / Sad Mode: Droopy downturned sorrowful crescents (︶ ︶)
+        if self.mood == "concerned" and not self.is_blinking:
+            canvas.create_arc(
+                cx - base_w, cy + 1, cx + base_w, cy + base_h - 2,
+                start=200, extent=140, style="arc",
+                outline=theme["eye_primary"], width=2.5
+            )
+            if is_right_eye:
+                canvas.create_oval(cx + 4, cy + 7, cx + 8, cy + 12, fill="#38bdf8", outline="")
+            return
+
+        # 7. Surprised Mode: Large wide circular anime eyes (O O)
+        if self.mood == "surprised" and not self.is_blinking:
+            canvas.create_oval(
+                cx - 8.5, cy - 9.5, cx + 8.5, cy + 7.5,
+                fill=theme["bg"], outline=theme["eye_primary"], width=2.5
+            )
+            canvas.create_oval(cx - 2.5, cy - 2, cx + 2.5, cy + 3, fill=theme["eye_primary"], outline="")
+            canvas.create_line(cx - 7, cy - 13, cx + 7, cy - 13, fill=theme["eye_primary"], width=2)
+            return
+
+        # 8. Shield / Security Lock Mode: Crosshair HUD Reticle (✛ ✛)
+        if self.mood == "shield":
+            canvas.create_oval(cx - 7.5, cy - 7.5, cx + 7.5, cy + 7.5, outline=theme["border_glow"], width=1.5)
+            canvas.create_line(cx - 9, cy, cx + 9, cy, fill=theme["border_glow"], width=1.5)
+            canvas.create_line(cx, cy - 9, cx, cy + 9, fill=theme["border_glow"], width=1.5)
+            canvas.create_oval(cx - 2, cy - 2, cx + 2, cy + 2, fill="#ef4444", outline="")
+            return
+
+        # 9. Focus Mode: Angled cyberpunk visor slits
+        if self.mood == "focus" and not self.is_blinking:
+            if not is_right_eye:
+                pts = [cx - base_w, cy - 2, cx + base_w, cy - 5, cx + base_w, cy + 2, cx - base_w, cy + 4]
+            else:
+                pts = [cx - base_w, cy - 5, cx + base_w, cy - 2, cx + base_w, cy + 4, cx - base_w, cy + 2]
+            canvas.create_polygon(pts, fill=theme["eye_primary"], outline=theme["border"], width=1.5)
+            return
+
+        # 10. Thinking Mode: Right eyebrow quizzically raised
+        if self.mood == "thinking" and is_right_eye:
+            canvas.create_arc(
+                cx - base_w, cy - base_h - 2, cx + base_w, cy - base_h + 8,
+                start=30, extent=120, style="arc",
+                outline=theme["eye_primary"], width=2
+            )
+
+        # Standard Blink and Gaze Tracking Capsule (Neutral, Thinking, or Wink Right Eye)
         current_h = base_h * (1.0 - self.blink_state)
         if current_h < 2.0:
             # Fully shut eye line during blink
@@ -494,11 +689,13 @@ class AbhiCyberneticCompanion(ctk.CTk):
             )
             return
 
-        # Gaze offset (moves pupil/eye gently)
+        # Gaze offset (moves pupil/eye gently with mouse hover or head tracker)
         gx = self.gaze_x * 3.5
         gy = self.gaze_y * 2.5
+        if self.mood == "thinking":
+            gx += 2.0
+            gy -= 2.0
 
-        # Audio reactive pupil enlargement when listening
         audio_pulse = min(3.0, self.live_audio_rms * 25.0) if self.bot_state == "LISTENING" else 0.0
         w_eff = (base_w + audio_pulse)
         h_eff = (current_h + audio_pulse)
@@ -508,7 +705,6 @@ class AbhiCyberneticCompanion(ctk.CTk):
         x2 = cx + w_eff + gx
         y2 = cy + h_eff / 2 + gy
 
-        # Outer Eye Capsule
         eye_color = theme["eye_primary"]
         self._create_rounded_rect(
             canvas, x1, y1, x2, y2,
@@ -518,7 +714,7 @@ class AbhiCyberneticCompanion(ctk.CTk):
             width=1.5
         )
 
-        # Cute Anime Specular Highlight (White shiny reflection dot at top-right)
+        # Specular highlights
         if current_h > 8.0:
             hl_x = cx + gx + 2.5
             hl_y = cy + gy - 3.5
@@ -526,7 +722,6 @@ class AbhiCyberneticCompanion(ctk.CTk):
                 hl_x - 2, hl_y - 2, hl_x + 2, hl_y + 2,
                 fill="#ffffff", outline=""
             )
-            # Secondary tiny reflection dot at bottom-left
             hl2_x = cx + gx - 2.5
             hl2_y = cy + gy + 3.0
             canvas.create_oval(
@@ -609,33 +804,47 @@ class AbhiCyberneticCompanion(ctk.CTk):
             w.bind("<B1-Motion>", self._on_drag_motion)
             w.bind("<ButtonRelease-1>", self._on_drag_end_header)
 
-        # 2. Interactive Mood Switcher Chips (5 Cute Micro-Chips)
-        self.mood_bar = ctk.CTkFrame(self.expanded_frame, fg_color="transparent")
-        self.mood_bar.pack(fill="x", padx=10, pady=2)
+        # 2. Interactive Mood Switcher Chips (12 Expressive Micro-Chips in 2 Rows)
+        self.mood_bar_1 = ctk.CTkFrame(self.expanded_frame, fg_color="transparent")
+        self.mood_bar_1.pack(fill="x", padx=8, pady=(2, 1))
 
-        moods = [
+        self.mood_bar_2 = ctk.CTkFrame(self.expanded_frame, fg_color="transparent")
+        self.mood_bar_2.pack(fill="x", padx=8, pady=(1, 2))
+
+        moods_row1 = [
             ("😊 Happy", "happy"),
+            ("✨ Excited", "excited"),
             ("🎯 Focus", "focus"),
-            ("⚡ Cyber", "cyber"),
-            ("🎧 Tuned", "tuned"),
-            ("🌙 Sleep", "sleep")
+            ("🤔 Think", "thinking"),
+            ("😲 Wow", "surprised"),
+            ("😉 Wink", "wink")
         ]
+        moods_row2 = [
+            ("💖 Love", "love"),
+            ("⚡ Cyber", "cyber"),
+            ("🥺 Sad", "concerned"),
+            ("🌙 Sleep", "sleep"),
+            ("🛡️ Guard", "shield"),
+            ("😐 Calm", "neutral")
+        ]
+
         self.mood_buttons = {}
-        for label, mood_key in moods:
-            btn = ctk.CTkButton(
-                self.mood_bar,
-                text=label,
-                font=("Segoe UI", 8, "bold"),
-                width=66,
-                height=26,
-                corner_radius=13,
-                fg_color=t["border"] if mood_key == self.mood else t["surface"],
-                hover_color=t["border_secondary"],
-                text_color=t["text_primary"],
-                command=lambda m=mood_key: self.set_mood(m)
-            )
-            btn.pack(side="left", padx=2, expand=True)
-            self.mood_buttons[mood_key] = btn
+        for row_frame, mood_list in [(self.mood_bar_1, moods_row1), (self.mood_bar_2, moods_row2)]:
+            for label, mood_key in mood_list:
+                btn = ctk.CTkButton(
+                    row_frame,
+                    text=label,
+                    font=("Segoe UI", 7, "bold"),
+                    width=54,
+                    height=24,
+                    corner_radius=12,
+                    fg_color=t["border"] if mood_key == self.mood else t["surface"],
+                    hover_color=t["border_secondary"],
+                    text_color=t["text_primary"],
+                    command=lambda m=mood_key: self.set_mood(m, voice_announcement=True)
+                )
+                btn.pack(side="left", padx=1.5, expand=True)
+                self.mood_buttons[mood_key] = btn
 
         # 3. Dynamic Themes Dropdown
         theme_row = ctk.CTkFrame(self.expanded_frame, fg_color="transparent")
@@ -801,9 +1010,11 @@ class AbhiCyberneticCompanion(ctk.CTk):
         elif action == "toggle_mic":
             self.toggle_mic()
 
-    def set_mood(self, new_mood: str):
+    def set_mood(self, new_mood: str, voice_announcement: bool = True):
         """Sets the mood of ABHI, altering eye expressions, colors, and personality."""
         self.mood = new_mood
+        if voice_announcement:
+            self._last_manual_mood_time = time.time()
         t = self.theme
         # Update mood button highlights
         for m_key, btn in self.mood_buttons.items():
@@ -814,14 +1025,22 @@ class AbhiCyberneticCompanion(ctk.CTk):
 
         greetings = {
             "happy": "Feeling vibrant and ready, Mamu!",
+            "excited": "Super excited! Let's build something extraordinary, Mamu!",
             "focus": "Focus mode engaged. Maximum productivity, Mamu.",
+            "thinking": "Pondering the neural possibilities, Mamu...",
+            "surprised": "Whoa! That caught my attention, Mamu!",
+            "wink": "Understood with a wink, Mamu!",
+            "love": "Sending you all the positive vibes, Mamu!",
             "cyber": "Cyber matrix synchronized. All systems hyper-charged, Mamu.",
-            "tuned": "Acoustic voice filter locked onto your frequency, Mamu.",
-            "sleep": "Power-saving standby mode active, Mamu. Call me anytime."
+            "concerned": "I'm right here with you, Mamu. Let me help you out.",
+            "sleep": "Power-saving standby mode active, Mamu. Call me anytime.",
+            "shield": "Security lockdown active. All perimeters guarded, Mamu.",
+            "neutral": "Calm and steady, Mamu. Ready for instructions."
         }
         msg = greetings.get(new_mood, f"Mood set to {new_mood}, Mamu.")
         self.append_chat("ABHI", msg)
-        self._speak_verbally(msg)
+        if voice_announcement:
+            self._speak_verbally(msg)
 
     def _on_theme_select(self, theme_display_name: str):
         key_map = {
@@ -946,7 +1165,7 @@ class AbhiCyberneticCompanion(ctk.CTk):
         if screen_perception:
             try:
                 q_l = query.lower()
-                if any(k in q_l for k in ["row", "first one", "second one", "third one", "video", "play"]):
+                if any(k in q_l for k in ["row", "first one", "second one", "third one", "fourth one", "first video", "second video", "third video"]):
                     ok_g, g_reply = screen_perception.parse_and_execute_grid_intent(query)
                     if ok_g and g_reply:
                         reply = g_reply
@@ -1036,19 +1255,43 @@ class AbhiCyberneticCompanion(ctk.CTk):
     def _execute_native_fallback(self, query: str) -> str:
         q = query.lower().strip()
 
-        # Mood directives
-        if "happy mood" in q or "feel happy" in q:
+        # Mood & Expression directives
+        if any(w in q for w in ["happy", "smile", "be happy", "feel happy"]):
             self.after(0, lambda: self.set_mood("happy"))
             return "Switched to happy mood, Mamu!"
-        elif "focus mood" in q or "focus mode" in q:
+        elif any(w in q for w in ["excited", "star eyes", "super happy", "celebrate"]):
+            self.after(0, lambda: self.set_mood("excited"))
+            return "Super excited! Let's do this, Mamu!"
+        elif any(w in q for w in ["focus mood", "focus mode", "concentrate"]):
             self.after(0, lambda: self.set_mood("focus"))
             return "Focus mode active, Mamu."
-        elif "cyber mood" in q or "cyber mode" in q:
+        elif any(w in q for w in ["thinking", "think mood", "ponder"]):
+            self.after(0, lambda: self.set_mood("thinking"))
+            return "Pondering neural thoughts, Mamu..."
+        elif any(w in q for w in ["surprised", "whoa", "shocked", "wow"]):
+            self.after(0, lambda: self.set_mood("surprised"))
+            return "Whoa! That's impressive, Mamu!"
+        elif any(w in q for w in ["wink", "give me a wink"]):
+            self.after(0, lambda: self.set_mood("wink"))
+            return "Wink wink, Mamu!"
+        elif any(w in q for w in ["love mood", "heart eyes", "love me"]):
+            self.after(0, lambda: self.set_mood("love"))
+            return "Sending love and good energy, Mamu!"
+        elif any(w in q for w in ["cyber mood", "cyber mode", "matrix mode"]):
             self.after(0, lambda: self.set_mood("cyber"))
             return "Cyber overdrive engaged, Mamu."
-        elif "sleep mode" in q or "go to sleep" in q:
+        elif any(w in q for w in ["sad mood", "concerned", "be sad"]):
+            self.after(0, lambda: self.set_mood("concerned"))
+            return "I'm right here with you, Mamu."
+        elif any(w in q for w in ["sleep mode", "go to sleep", "sleepy", "nap"]):
             self.after(0, lambda: self.set_mood("sleep"))
             return "Going into sleep standby mode, Mamu."
+        elif any(w in q for w in ["shield mode", "lock mode", "guard mode", "protect"]):
+            self.after(0, lambda: self.set_mood("shield"))
+            return "Security perimeter guarded, Mamu."
+        elif any(w in q for w in ["neutral mood", "calm mood", "normal mood", "relax"]):
+            self.after(0, lambda: self.set_mood("neutral"))
+            return "Calm and steady, Mamu."
 
         # Window & OS controls
         if "close the window" in q or "close window" in q:
@@ -1278,6 +1521,48 @@ class AbhiCyberneticCompanion(ctk.CTk):
         except Exception:
             pass
         return "Windows Desktop"
+
+    # ==========================================================================
+    # DYNAMIC FACIAL MOOD & EMOTION MIRRORING OBSERVER
+    # ==========================================================================
+
+    def _start_face_mood_observer(self):
+        """Continuously observes user face presence & mood, mirroring expressions and tracking gaze."""
+        def face_observer_loop():
+            while True:
+                time.sleep(2.0)
+                # Respect manual user mood selection for 12 seconds
+                if time.time() - getattr(self, "_last_manual_mood_time", 0) < 12.0:
+                    continue
+
+                try:
+                    # Query backend biometrics presence and neural mood analyzer
+                    req = urllib.request.Request(
+                        f"{API_BASE}/api/v1/agent-gateway/biometrics/presence?camera_index=0",
+                        headers={"Content-Type": "application/json"}
+                    )
+                    with urllib.request.urlopen(req, timeout=1.5) as resp:
+                        if resp.status == 200:
+                            data = json.loads(resp.read().decode())
+                            if data.get("face_detected"):
+                                d_mood = data.get("detected_mood")
+                                if d_mood and d_mood in [
+                                    "happy", "excited", "focus", "thinking", "surprised", "sleep", "neutral"
+                                ]:
+                                    if self.mood != d_mood and self.bot_state not in ["THINKING", "SPEAKING"]:
+                                        self.after(0, lambda m=d_mood: self.set_mood(m, voice_announcement=False))
+
+                                # Gaze orientation tracking from 3D head pose Euler angles
+                                head_pose = data.get("head_pose")
+                                if head_pose:
+                                    yaw = float(head_pose.get("yaw", 0.0))
+                                    pitch = float(head_pose.get("pitch", 0.0))
+                                    self.gaze_x = max(-1.0, min(1.0, yaw / 22.0))
+                                    self.gaze_y = max(-1.0, min(1.0, -pitch / 16.0))
+                except Exception:
+                    pass
+
+        threading.Thread(target=face_observer_loop, daemon=True).start()
 
 
 if __name__ == "__main__":

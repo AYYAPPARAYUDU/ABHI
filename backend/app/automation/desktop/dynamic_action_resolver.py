@@ -361,6 +361,32 @@ class DynamicActionResolver:
             return True, "toggle_mute", "Toggled system audio mute, Mamu."
 
         # ---------------------------------------------------------------------
+        # 1F. Universal Scrolling & Page Navigation (High Priority)
+        # ---------------------------------------------------------------------
+        # Matches: "now scroll little up", "scroll up", "scroll a bit up", "scroll little down", "scroll to top", "scroll to bottom"
+        if ("scroll" in lower_clean or "page up" in lower_clean or "page down" in lower_clean) and not any(k in lower_clean for k in ["read", "see", "what"]):
+            if any(k in lower_clean for k in ["top", "all the way up", "to the top"]):
+                os_control_engine.send_hotkey("HOME")
+                self._cache_action(lower_clean, {"type": "hotkey", "key": "HOME", "reply": "Scrolled to the top of the page, Mamu."})
+                return True, "scroll_top", "Scrolled to the top of the page, Mamu."
+            elif any(k in lower_clean for k in ["bottom", "all the way down", "to the bottom"]):
+                os_control_engine.send_hotkey("END")
+                self._cache_action(lower_clean, {"type": "hotkey", "key": "END", "reply": "Scrolled to the bottom of the page, Mamu."})
+                return True, "scroll_bottom", "Scrolled to the bottom of the page, Mamu."
+            elif any(k in lower_clean for k in ["up", "higher"]):
+                clicks = 3 if any(w in lower_clean for w in ["little", "bit", "slightly", "slowly", "small"]) else (12 if "lot" in lower_clean else 6)
+                os_control_engine.mouse_scroll(clicks=clicks, direction="up")
+                desc = "a little " if clicks <= 3 else ("a lot " if clicks >= 12 else "")
+                self._cache_action(lower_clean, {"type": "scroll", "clicks": clicks, "direction": "up", "reply": f"Scrolled {desc}up for you, Mamu."})
+                return True, "scroll_up", f"Scrolled {desc}up for you, Mamu."
+            elif any(k in lower_clean for k in ["down", "lower"]):
+                clicks = 3 if any(w in lower_clean for w in ["little", "bit", "slightly", "slowly", "small"]) else (12 if "lot" in lower_clean else 6)
+                os_control_engine.mouse_scroll(clicks=clicks, direction="down")
+                desc = "a little " if clicks <= 3 else ("a lot " if clicks >= 12 else "")
+                self._cache_action(lower_clean, {"type": "scroll", "clicks": clicks, "direction": "down", "reply": f"Scrolled {desc}down for you, Mamu."})
+                return True, "scroll_down", f"Scrolled {desc}down for you, Mamu."
+
+        # ---------------------------------------------------------------------
         # 2A. Dynamic YouTube / Web Video Grid Selection ("play third row first one")
         # ---------------------------------------------------------------------
         ok_grid, grid_reply = screen_perception.parse_and_execute_grid_intent(lower_clean)
@@ -368,18 +394,80 @@ class DynamicActionResolver:
             return True, "youtube_grid_selection", grid_reply
 
         # ---------------------------------------------------------------------
-        # 2. Stop / Pause Media (Prioritized BEFORE Song Search!)
+        # 2B. Media Track Change & Next Song (Prioritized BEFORE Song Search!)
+        # ---------------------------------------------------------------------
+        if any(k in lower_clean for k in [
+            "change the song", "change song", "change the track", "change track",
+            "switch song", "switch track", "play another song", "another song",
+            "different song", "play different song", "next song", "next video",
+            "next track", "play next video", "play next song", "skip track", "skip to next song"
+        ]):
+            os_control_engine.send_hotkey("SHIFT+N")
+            os_control_engine.send_hotkey("VK_MEDIA_NEXT_TRACK")
+            self._cache_action(lower_clean, {"type": "hotkey", "key": "SHIFT+N", "reply": "Changed the song and playing the next track for you, Mamu."})
+            return True, "next_video", "Changed the song and playing the next track for you, Mamu."
+
+        if any(k in lower_clean for k in ["previous video", "previous song", "last video", "last song", "previous track"]):
+            os_control_engine.send_hotkey("SHIFT+P")
+            os_control_engine.send_hotkey("VK_MEDIA_PREV_TRACK")
+            return True, "previous_video", "Playing previous video, Mamu."
+
+        # ---------------------------------------------------------------------
+        # 2C. Media Duration Seeking & Scrubbing ('skip song 2 min', 'seek 30s', 'rewind 1 min')
+        # ---------------------------------------------------------------------
+        m_seek_fwd = re.search(r"(?:skip|seek|forward|jump|fast forward|advance)\s*(?:song|video|track)?\s*(?:by|ahead)?\s*(\d+)\s*(min|minute|minutes|m|sec|second|seconds|s)?", lower_clean)
+        if m_seek_fwd and not any(k in lower_clean for k in ["ad", "add"]):
+            val = int(m_seek_fwd.group(1))
+            unit = (m_seek_fwd.group(2) or "sec").lower()
+            total_seconds = val * 60 if unit.startswith("m") else val
+            presses = max(1, round(total_seconds / 10))
+            for _ in range(min(presses, 30)):
+                os_control_engine.send_hotkey("L")
+                time.sleep(0.03)
+            unit_str = f"{val} minute{'s' if val > 1 else ''}" if unit.startswith("m") else f"{val} second{'s' if val > 1 else ''}"
+            reply = f"Skipped forward {unit_str} for you, Mamu."
+            self._cache_action(lower_clean, {"type": "multi_hotkey", "keys": ["L"] * min(presses, 30), "reply": reply})
+            return True, "forward_seek", reply
+
+        m_seek_rev = re.search(r"(?:rewind|back|seek back|jump back|go back)\s*(?:song|video|track)?\s*(?:by)?\s*(\d+)\s*(min|minute|minutes|m|sec|second|seconds|s)?", lower_clean)
+        if m_seek_rev:
+            val = int(m_seek_rev.group(1))
+            unit = (m_seek_rev.group(2) or "sec").lower()
+            total_seconds = val * 60 if unit.startswith("m") else val
+            presses = max(1, round(total_seconds / 10))
+            for _ in range(min(presses, 30)):
+                os_control_engine.send_hotkey("J")
+                time.sleep(0.03)
+            unit_str = f"{val} minute{'s' if val > 1 else ''}" if unit.startswith("m") else f"{val} second{'s' if val > 1 else ''}"
+            reply = f"Rewound {unit_str} for you, Mamu."
+            self._cache_action(lower_clean, {"type": "multi_hotkey", "keys": ["J"] * min(presses, 30), "reply": reply})
+            return True, "rewind_seek", reply
+
+        # ---------------------------------------------------------------------
+        # 2D. Search Again / Re-Search ('again serch', 'search again', 'retry search')
+        # ---------------------------------------------------------------------
+        if any(k in lower_clean for k in ["again serch", "again search", "search again", "re-search", "search once more", "retry search", "search again on youtube"]):
+            last_query = getattr(self, "_last_search_query", None)
+            if last_query:
+                os_control_engine.play_youtube_song(last_query)
+                return True, "again_search", f"Searching again for '{last_query}' for you, Mamu!"
+            else:
+                os_control_engine.send_hotkey("/")
+                return True, "focus_search", "Re-focused search bar for you, Mamu. Speak what you wish to find."
+
+        # ---------------------------------------------------------------------
+        # 2E. Stop / Pause / Resume Media (Prioritized BEFORE Song Search!)
         # ---------------------------------------------------------------------
         if any(lower_clean == p or p in lower_clean for p in [
             "stop the song", "stop song", "stop music", "stop video", "stop playing",
-            "stop", "pause the song", "pause song", "pause music", "pause video",
-            "pause the video", "pause video", "pause", "shut up", "be quiet"
+            "stop the video", "stop", "pause the song", "pause song", "pause music", "pause video",
+            "pause the video", "pause", "shut up", "be quiet", "halt playback"
         ]):
             os_control_engine.send_hotkey("SPACE")
-            self._cache_action(lower_clean, {"type": "hotkey", "key": "SPACE", "reply": "Stopped playback for you, Mamu."})
-            return True, "stop_media", "Stopped playback for you, Mamu."
+            self._cache_action(lower_clean, {"type": "hotkey", "key": "SPACE", "reply": "Paused video playback for you, Mamu."})
+            return True, "stop_media", "Paused video playback for you, Mamu."
 
-        if any(lower_clean == p or lower_clean.startswith(f"{p} ") for p in ["resume", "resume video", "resume the video", "unpause"]):
+        if any(lower_clean == p or lower_clean.startswith(f"{p} ") for p in ["resume", "resume video", "resume the video", "unpause", "continue video", "play video"]):
             os_control_engine.send_hotkey("SPACE")
             self._cache_action(lower_clean, {"type": "hotkey", "key": "SPACE", "reply": "Resumed playback, Mamu."})
             return True, "resume_media", "Resumed playback for you, Mamu."
@@ -397,36 +485,12 @@ class DynamicActionResolver:
             self._cache_action(lower_clean, {"type": "hotkey", "key": "TAB+ENTER", "reply": "Skipped the advertisement, Mamu."})
             return True, "skip_ad", "Skipped the advertisement, Mamu."
 
-        if any(k in lower_clean for k in ["next video", "play next video", "next track", "next song"]):
-            os_control_engine.send_hotkey("SHIFT+N")
-            self._cache_action(lower_clean, {"type": "hotkey", "key": "SHIFT+N", "reply": "Playing next video on YouTube, Mamu."})
-            return True, "next_video", "Playing the next video, Mamu."
-
-        if any(k in lower_clean for k in ["previous video", "previous song", "last video"]):
-            os_control_engine.send_hotkey("SHIFT+P")
-            return True, "previous_video", "Playing previous video, Mamu."
-
-        if any(k in lower_clean for k in ["skip 30 seconds", "forward 30 seconds", "seek forward 30 seconds", "skip 30s"]):
-            for _ in range(3):
-                os_control_engine.send_hotkey("L")
-                time.sleep(0.04)
-            self._cache_action(lower_clean, {"type": "multi_hotkey", "keys": ["L", "L", "L"], "reply": "Skipped 30 seconds forward, Mamu."})
-            return True, "forward_30s", "Skipped 30 seconds forward, Mamu."
-
-        if any(k in lower_clean for k in ["skip 10 seconds", "forward 10 seconds", "seek forward", "forward 10s"]):
-            os_control_engine.send_hotkey("L")
-            return True, "forward_10s", "Skipped 10 seconds forward, Mamu."
-
-        if any(k in lower_clean for k in ["rewind 10 seconds", "back 10 seconds", "seek backward", "rewind"]):
-            os_control_engine.send_hotkey("J")
-            return True, "rewind_10s", "Rewound 10 seconds, Mamu."
-
         if any(k in lower_clean for k in ["fullscreen", "full screen", "exit fullscreen"]):
             os_control_engine.send_hotkey("F")
             return True, "fullscreen_toggle", "Toggled fullscreen view, Mamu."
 
         # Bare "video" or "open video"
-        if lower_clean in ["video", "open video", "play video"]:
+        if lower_clean in ["video", "open video"]:
             os_control_engine.send_hotkey("SPACE")
             return True, "toggle_video", "Toggled video playback, Mamu."
 
@@ -442,11 +506,12 @@ class DynamicActionResolver:
             self._cache_action(lower_clean, {"type": "url", "url": "https://www.youtube.com", "reply": "Opened YouTube home page for you, Mamu."})
             return True, "open_youtube", "Opened YouTube home page for you, Mamu."
 
-        # Case B: YouTube Search & Topic Playing (e.g. "YouTube and search agriculture", "Rajasthani picture film")
+        # Case B: YouTube Search & Topic Playing (e.g. "in youtube search for new telugu trailers", "open youtube search for any telegu songs")
         if "youtube" in lower_clean or any(k in lower_clean for k in ["song", "songs", "music", "track", "film", "picture film", "movie", "trailer"]):
             term = lower_clean
             for w in [
-                "open youtube and search", "youtube and search", "search in youtube for",
+                "open youtube and search for", "open youtube and search", "open youtube search for",
+                "in youtube search for", "in youtube search", "search in youtube for",
                 "search on youtube for", "search in youtube", "search on youtube",
                 "search for", "search", "open youtube and play", "play on youtube",
                 "play in youtube", "in youtube", "on youtube", "open youtube",
@@ -458,8 +523,9 @@ class DynamicActionResolver:
             term = re.sub(r"\s+(for|of|to|in|on|and|the)$", "", term).strip()
 
             if term and len(term) > 1 and term not in ["video", "videos", "song", "songs"]:
+                self._last_search_query = term
                 os_control_engine.play_youtube_song(term)
-                self._cache_action(lower_clean, {"type": "youtube_play", "query": term, "reply": f"Opened YouTube and searching for '{term}', Mamu!"})
+                self._cache_action(lower_clean, {"type": "youtube_play", "query": term, "reply": f"Opened YouTube and searching for '{term}' for you, Mamu!"})
                 return True, "play_youtube", f"Opened YouTube and searching for '{term}' for you, Mamu!"
             else:
                 os_control_engine.open_url("https://www.youtube.com")
@@ -641,11 +707,77 @@ class DynamicActionResolver:
             except Exception:
                 pass
 
-        # Final Sovereign Companion Guidance for any unhandled / casual phrase
-        active_title = os_control_engine.get_active_window().get("title", "Windows Desktop")
-        if not active_title:
-            active_title = "Windows Desktop"
-        return False, "unhandled", f"Understood, Mamu. I am monitoring '{active_title}'. Tell me what application to open, song to play, or task to automate."
+        # ---------------------------------------------------------------------
+        # 10. Dynamic Agentic Fallback with Live Screen Vision & Local LLM (Open-Jarvis Style)
+        # ---------------------------------------------------------------------
+        active_title = os_control_engine.get_active_window().get("title", "Windows Desktop") or "Windows Desktop"
+        ok_agentic, act_name, agentic_reply = self._agentic_dynamic_resolve(raw_query, active_title)
+        if ok_agentic and agentic_reply:
+            return True, act_name, agentic_reply
+
+        return True, "screen_aware_companion", f"Mamu, I see '{active_title}' active on your screen. Tell me what video to play, row to click, or action to automate!"
+
+    def _agentic_dynamic_resolve(self, query: str, active_window: str) -> Tuple[bool, str, str]:
+        """
+        Dynamically consults local Ollama LLM (abhi:latest / qwen3:8b) with live screen OCR perception
+        to generate an intelligent, autonomous action plan or conversational response for Mamu.
+        """
+        import requests
+        from backend.app.automation.desktop.live_screen_vision import live_screen_vision
+
+        ocr_snip = live_screen_vision.extract_screen_text()
+        ocr_clean = " ".join([l.strip() for l in ocr_snip.splitlines() if len(l.strip()) > 3][:10])
+
+        system_prompt = (
+            "You are ABHI, an ultra-advanced sovereign AI assistant and Windows 11 autonomous agent. "
+            "Address the user strictly as 'Mamu'. "
+            "Analyze the user's voice/text command, active foreground window, and on-screen text.\n"
+            f"Active Window: {active_window}\n"
+            f"Visible Screen Text: {ocr_clean[:300]}\n"
+            "Return a valid JSON object ONLY with:\n"
+            "- 'action': 'hotkey' | 'type' | 'scroll' | 'answer'\n"
+            "- 'param': string key (e.g. 'ENTER', 'SPACE') or null\n"
+            "- 'reply': natural spoken response addressing Mamu\n"
+            "Output JSON only."
+        )
+
+        try:
+            res = requests.post(
+                "http://localhost:11434/api/generate",
+                json={
+                    "model": "abhi:latest",
+                    "prompt": f"{system_prompt}\nMamu says: '{query}'\nJSON:",
+                    "stream": False,
+                    "format": "json",
+                    "options": {"temperature": 0.2, "num_predict": 100}
+                },
+                timeout=2.6
+            )
+            if res.status_code == 200:
+                data = res.json().get("response", "{}")
+                parsed = json.loads(data)
+                act = parsed.get("action", "answer")
+                param = parsed.get("param")
+                reply = parsed.get("reply", "").strip()
+
+                if act == "hotkey" and param:
+                    os_control_engine.send_hotkey(str(param).upper())
+                elif act == "scroll":
+                    direction = "down" if "down" in str(param).lower() else "up"
+                    os_control_engine.mouse_scroll(clicks=6, direction=direction)
+                elif act == "type" and param:
+                    os_control_engine.type_text(str(param))
+
+                if reply:
+                    self._cache_action(query.lower().strip(), {
+                        "type": act, "param": param, "reply": reply
+                    })
+                    return True, f"agentic_{act}", reply
+        except Exception as e:
+            logger.debug(f"Agentic LLM fallback note: {e}")
+
+        # Intelligent screen-aware fallback if LLM is offline or timed out
+        return True, "screen_aware_companion", f"Mamu, I am monitoring '{active_window}'. Tell me what video to play, row to click, or action to automate!"
 
     def _cache_action(self, pattern: str, plan: Dict[str, Any]):
         self._learned_cache[pattern] = plan

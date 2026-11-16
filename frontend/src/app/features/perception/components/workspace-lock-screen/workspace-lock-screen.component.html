@@ -164,11 +164,22 @@
 
       <button
         type="button"
+        class="gate-btn enroll-btn"
+        (click)="reEnrollFace()"
+        [disabled]="stage() === 'SCANNING_PASS_1' || stage() === 'SCANNING_PASS_2' || stage() === 'AUTHENTICATED'"
+        title="Re-enroll your face with current lighting"
+      >
+        <span class="btn-icon">📸</span>
+        <span>RE-ENROLL FACE</span>
+      </button>
+
+      <button
+        type="button"
         class="gate-btn override-toggle-btn"
         (click)="togglePasscodeInput()"
       >
         <span class="btn-icon">🔑</span>
-        <span>{{ showPasscodeInput() ? 'HIDE PASSCODE' : 'OPERATOR PASSCODE OVERRIDE' }}</span>
+        <span>{{ showPasscodeInput() ? 'HIDE PASSCODE' : 'PASSCODE (143)' }}</span>
       </button>
     </div>
 

@@ -443,27 +443,67 @@
   </main>
 
   <!-- ========================================================================= -->
+  <!-- LIVE VISION MATRIX & REAL-TIME OPEN-JARVIS ACTION BAR                     -->
+  <!-- ========================================================================= -->
+  <section class="era-vision-matrix-bar font-monospace" aria-label="Open-Jarvis Dynamic Perception HUD">
+    <div class="matrix-pill vision-pill" (click)="readMyScreen()" title="Click to execute live WinRT OCR screen perception">
+      <span class="pill-dot emerald pulse-glow"></span>
+      <span class="pill-label">LIVE VISION OCR:</span>
+      <span class="pill-val text-cyan">{{ screenVisionStatus() }}</span>
+      <span class="pill-shortcut">👁️ READ SCREEN</span>
+    </div>
+
+    <div class="matrix-pill media-pill">
+      <span class="pill-dot amber"></span>
+      <span class="pill-label">QUICK ACTIONS:</span>
+      <button type="button" class="btn-micro-chip" (click)="searchTeluguTrailers()">🎬 Telugu Trailers</button>
+      <button type="button" class="btn-micro-chip" (click)="searchTeluguSongs()">🎵 Telugu Songs</button>
+      <button type="button" class="btn-micro-chip" (click)="skipSong2Min()">⏭️ Skip 2m</button>
+      <button type="button" class="btn-micro-chip" (click)="changeSong()">🔀 Next Song</button>
+      <button type="button" class="btn-micro-chip" (click)="togglePlayPause()">⏸️ Pause/Play</button>
+      <button type="button" class="btn-micro-chip" (click)="scrollLittleUp()">⬆️ Scroll Up</button>
+      <button type="button" class="btn-micro-chip" (click)="scrollLittleDown()">⬇️ Scroll Down</button>
+      <button type="button" class="btn-micro-chip" (click)="againSearch()">🔄 Search Again</button>
+    </div>
+  </section>
+
+  <!-- ========================================================================= -->
   <!-- BOTTOM QUICK ACTION CHIPS (VIRAL REELS & OS TAB AUTOMATION & SBI REVENUE) -->
   <!-- ========================================================================= -->
   <section class="era-quick-chips-bar" aria-label="Viral Quick Action Shortcuts">
-    <button type="button" class="era-chip-btn chip-virus" (click)="executeVirusScan()">
-      <span class="chip-ic">🛡️</span>
-      <span class="chip-label">Scan PC for Viruses</span>
+    <button type="button" class="era-chip-btn chip-cyan" (click)="readMyScreen()">
+      <span class="chip-ic">👁️</span>
+      <span class="chip-label">Read Screen</span>
     </button>
 
-    <button type="button" class="era-chip-btn" (click)="executeTabSwitch('next')">
-      <span class="chip-ic">📑</span>
-      <span class="chip-label">Switch Tab</span>
+    <button type="button" class="era-chip-btn" (click)="searchTeluguTrailers()">
+      <span class="chip-ic">🎬</span>
+      <span class="chip-label">Telugu Trailers</span>
     </button>
 
-    <button type="button" class="era-chip-btn" (click)="executeNewTab()">
-      <span class="chip-ic">➕</span>
-      <span class="chip-label">New Tab</span>
+    <button type="button" class="era-chip-btn" (click)="searchTeluguSongs()">
+      <span class="chip-ic">🎵</span>
+      <span class="chip-label">Telugu Songs</span>
     </button>
 
-    <button type="button" class="era-chip-btn" (click)="executeCloseTab()">
-      <span class="chip-ic">✖️</span>
-      <span class="chip-label">Close Tab</span>
+    <button type="button" class="era-chip-btn" (click)="skipSong2Min()">
+      <span class="chip-ic">⏭️</span>
+      <span class="chip-label">Skip 2 Min</span>
+    </button>
+
+    <button type="button" class="era-chip-btn" (click)="changeSong()">
+      <span class="chip-ic">🔀</span>
+      <span class="chip-label">Change Song</span>
+    </button>
+
+    <button type="button" class="era-chip-btn" (click)="scrollLittleUp()">
+      <span class="chip-ic">⬆️</span>
+      <span class="chip-label">Scroll Up</span>
+    </button>
+
+    <button type="button" class="era-chip-btn" (click)="scrollLittleDown()">
+      <span class="chip-ic">⬇️</span>
+      <span class="chip-label">Scroll Down</span>
     </button>
 
     <button type="button" class="era-chip-btn chip-gold" (click)="runAutonomousRevenueCycle()">
@@ -471,9 +511,14 @@
       <span class="chip-label">Master Revenue Cycle (SBI)</span>
     </button>
 
-    <button type="button" class="era-chip-btn" (click)="runCodeAuditBounty()">
-      <span class="chip-ic">🔬</span>
-      <span class="chip-label">Code Audit Bounty</span>
+    <button type="button" class="era-chip-btn chip-virus" (click)="executeVirusScan()">
+      <span class="chip-ic">🛡️</span>
+      <span class="chip-label">Scan PC</span>
+    </button>
+
+    <button type="button" class="era-chip-btn" (click)="executeTabSwitch('next')">
+      <span class="chip-ic">📑</span>
+      <span class="chip-label">Switch Tab</span>
     </button>
 
     <button type="button" class="era-chip-btn chip-cyan" (click)="toggleAlexaMode()">

@@ -59,6 +59,18 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'brain',
+    loadComponent: () =>
+      import('./features/brain/pages/brain-page/brain-page.component').then(
+        (m) => m.BrainPageComponent
+      )
+  },
+  {
+    path: 'assistant',
+    redirectTo: 'brain',
+    pathMatch: 'full'
+  },
+  {
     path: 'workflows',
     redirectTo: 'architecture',
     pathMatch: 'full'

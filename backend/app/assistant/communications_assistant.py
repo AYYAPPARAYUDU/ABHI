@@ -423,9 +423,17 @@ async def get_messages_inbox(limit: int = Query(60, ge=1, le=200)):
 
     banking_count = sum(1 for m in stored_msgs if m.get("category") == "banking")
     otp_count = sum(1 for m in stored_msgs if m.get("category") == "otp")
-    calls_count = sum(1 for m in stored_msgs if m.get("category") == "calls")
+    calls_count = sum(1 for m in stored_msgs if m.get("category") == "calls" or m.get("channel") == "call")
+    missed_calls_count = sum(
+        1 for m in stored_msgs
+        if (m.get("category") == "calls" or m.get("channel") == "call")
+        and ("missed" in (m.get("subject") or "").lower() or "missed" in (m.get("body") or "").lower())
+    )
     email_count = sum(1 for m in stored_msgs if m.get("category") == "mail" or m.get("channel") in ["gmail", "email"])
+    whatsapp_count = sum(1 for m in stored_msgs if m.get("category") == "whatsapp" or m.get("channel") == "whatsapp")
     notif_count = sum(1 for m in stored_msgs if m.get("category") == "notifications")
+
+    is_mobile_connected = bool(device_status.get("connected", False))
 
     return {
         "success": True,
@@ -435,14 +443,28 @@ async def get_messages_inbox(limit: int = Query(60, ge=1, le=200)):
             "banking": banking_count,
             "otps": otp_count,
             "calls": calls_count,
+            "missed_calls": missed_calls_count,
             "emails": email_count,
+            "whatsapp": whatsapp_count,
             "notifications": notif_count,
-            "device": device_status.get("device_info", {}) or {"model": "POCO 22101320I", "connected": True},
+            "mobile_connected": is_mobile_connected,
+            "fallback_active": not is_mobile_connected,
+            "device": device_status.get("device_info", {}) or {
+                "model": "POCO 22101320I",
+                "connected": is_mobile_connected,
+                "status": "Live Wireless ADB" if is_mobile_connected else "Offline (Using Local Sync & WhatsApp Desktop)"
+            },
             "battery": battery_info or device_status.get("battery", {}) or {"level": 14, "status": "Discharging"},
             "endpoint": "10.65.249.121:5555"
         },
         "messages": stored_msgs
     }
+
+
+@router.get("/daily-briefing")
+async def get_daily_executive_briefing():
+    """Fetch authoritative 3-tier sovereign executive briefing."""
+    return await universal_harvester.generate_daily_executive_briefing()
 
 
 @router.post("/query-intelligence")
@@ -507,9 +529,33 @@ async def execute_message_action(request: MessageActionRequest):
         result["message"] = f"Dialer opened for {clean} on connected POCO device"
     elif action == "whatsapp" and request.phone:
         clean = re.sub(r"[^\d]", "", request.phone)
-        code, out, err = await adb_controller.run_adb(["shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", f"https://api.whatsapp.com/send?phone={clean}"])
-        result["success"] = code == 0
-        result["message"] = f"WhatsApp conversation opened for {clean}"
+        # 1. Try mobile ADB if connected
+        dispatched_on_mobile = False
+        if await adb_controller.is_available():
+            code, out, err = await adb_controller.run_adb(["shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", f"https://api.whatsapp.com/send?phone={clean}"])
+            dispatched_on_mobile = (code == 0)
+
+        # 2. If mobile is offline or requested, also open in Desktop / Browser
+        if not dispatched_on_mobile:
+            os_control_engine.open_url(f"https://web.whatsapp.com/send?phone={clean}")
+            result["success"] = True
+            result["message"] = f"WhatsApp Web chat opened for {clean} (Mobile offline fallback active)"
+        else:
+            result["success"] = True
+            result["message"] = f"WhatsApp conversation opened for {clean} on POCO device"
+
+    elif action in ["whatsapp_web", "open_whatsapp_web"]:
+        ok, data, err = os_control_engine.open_url("https://web.whatsapp.com")
+        result["success"] = ok
+        result["message"] = "WhatsApp Web initiated in default browser"
+
+    elif action in ["whatsapp_desktop", "open_whatsapp"]:
+        ok, data, err = os_control_engine.open_application("whatsapp")
+        if not ok:
+            os_control_engine.open_url("https://web.whatsapp.com")
+        result["success"] = True
+        result["message"] = "WhatsApp Desktop / Web launched successfully"
+
     elif action == "sync":
         sync_res = await universal_harvester.sync_all()
         inbox_res = await get_messages_inbox(limit=60)
@@ -517,7 +563,7 @@ async def execute_message_action(request: MessageActionRequest):
         result["sync_stats"] = sync_res
         result["summary"] = inbox_res.get("summary")
         result["count"] = inbox_res.get("count")
-        result["message"] = f"Successfully synchronized {inbox_res.get('count')} records from POCO mobile device & Gmail"
+        result["message"] = f"Successfully synchronized {inbox_res.get('count')} records from POCO mobile device, WhatsApp & Gmail"
     else:
         result["message"] = f"Unknown or unsupported action: {action}"
 

@@ -1197,6 +1197,83 @@
 /* =========================================================================
    3. BOTTOM QUICK ACTION CHIPS
    ========================================================================= */
+/* =========================================================================
+   3A. OPEN-JARVIS LIVE VISION MATRIX BAR
+   ========================================================================= */
+.era-vision-matrix-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 16px;
+  background: var(--abhi-surface-raised, rgba(15, 23, 42, 0.75));
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--abhi-border, rgba(0, 240, 255, 0.15));
+  border-bottom: 1px solid var(--abhi-border, rgba(0, 240, 255, 0.1));
+  z-index: 45;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.matrix-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.matrix-pill.vision-pill {
+  cursor: pointer;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  transition: all 0.2s ease;
+}
+
+.matrix-pill.vision-pill:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: var(--abhi-success, #10b981);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.3);
+}
+
+.pill-shortcut {
+  font-weight: 700;
+  color: var(--abhi-cyan, #00f0ff);
+  padding: 2px 6px;
+  background: rgba(0, 240, 255, 0.12);
+  border-radius: 6px;
+  margin-left: 4px;
+}
+
+.matrix-pill.media-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-micro-chip {
+  padding: 3px 8px;
+  font-size: 9.5px;
+  font-family: inherit;
+  font-weight: 600;
+  border-radius: 8px;
+  background: var(--abhi-surface-inset, rgba(30, 41, 59, 0.7));
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.1));
+  color: var(--abhi-text-secondary, #cbd5e1);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-micro-chip:hover {
+  background: var(--abhi-surface-raised, rgba(51, 65, 85, 0.95));
+  color: var(--abhi-text-primary, #ffffff);
+  border-color: var(--abhi-cyan, #00f0ff);
+  transform: translateY(-1px);
+}
+
 .era-quick-chips-bar {
   height: 36px;
   min-height: 36px;
