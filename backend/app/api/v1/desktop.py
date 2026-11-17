@@ -292,7 +292,16 @@ async def ask_living_bot(request: BotAskRequest):
     q_lower = raw_query.lower()
 
     # 0. Live Screen Perception Grounding
-    if any(k in q_lower for k in ["screen", "what do you see", "what you see", "look at my screen", "read my screen", "what's on my screen", "whats on my screen", "what you seeing"]):
+    is_action_command = any(q_lower.startswith(p) or f" {p} " in q_lower for p in [
+        "play", "click", "tap", "select", "press", "open", "launch",
+        "close", "mute", "unmute", "scroll", "seek", "skip", "pause", "resume",
+        "volume", "switch", "activate"
+    ])
+    if not is_action_command and (any(k in q_lower for k in [
+        "what do you see", "what you see", "look at my screen", "read my screen",
+        "what's on my screen", "whats on my screen", "what you seeing", "describe my screen",
+        "except you", "what else you see", "what else do you see", "hat else you see"
+    ]) or (q_lower.strip() in ["screen", "read screen"])):
         if any(k in q_lower for k in ["what error", "explain", "read text", "summarize", "tell me about"]):
             reply = screen_perception.query_screen(raw_query)
         else:

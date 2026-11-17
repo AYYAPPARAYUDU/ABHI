@@ -1223,7 +1223,7 @@ class AbhiCyberneticCompanion(ctk.CTk):
                     data=payload,
                     headers={"Content-Type": "application/json"}
                 )
-                with urllib.request.urlopen(req, timeout=3.5) as resp:
+                with urllib.request.urlopen(req, timeout=12.0) as resp:
                     data = json.loads(resp.read().decode())
                     reply = data.get("reply")
             except Exception:
@@ -1340,7 +1340,13 @@ class AbhiCyberneticCompanion(ctk.CTk):
             ctypes.windll.user32.LockWorkStation()
             return "Workstation locked securely, Mamu."
         else:
-            return "Understood, Mamu. I am monitoring your screen and listening. Tell me what program to launch, song to play, or action to automate."
+            if any(k in q for k in ["no need", "don't play", "dont play", "cancel"]):
+                return "Understood, Mamu. Holding off on all media playback. I am right here listening—tell me what you need."
+            elif any(k in q for k in ["hi", "hello", "hey", "namaste"]):
+                return "Hey Mamu! I am right here with you. How can I help you right now?"
+            elif any(k in q for k in ["hear me", "listen", "understand"]):
+                return "I hear you loud and clear now, Mamu. I apologize for the previous confusion. I am completely tuned to you."
+            return "I am right here with you, Mamu. Tell me what you're thinking or what you'd like to do."
 
     # ==========================================================================
     # 24/7 BACKGROUND AMBIENT VOICE LISTENER

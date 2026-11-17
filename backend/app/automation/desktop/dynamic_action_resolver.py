@@ -220,9 +220,10 @@ class DynamicActionResolver:
         # Direct Wake Words & Conversational Triggers
         if raw_clean in [
             "hey abhi", "hi abhi", "hello abhi", "ok abhi", "abhi", "hay abhi",
-            "yo abhi", "are abhi", "hey", "hi", "hello", "namaste"
+            "yo abhi", "are abhi", "hey", "hi", "hello", "namaste",
+            "hi mamu", "hello mamu", "hey mamu"
         ]:
-            return True, "greeting", "Hello Mamu! I am right here listening. Tell me what application to open, song to play, or task to automate."
+            return True, "greeting", "Hello Mamu! I am right here with you. How can I assist you right now?"
 
         clean = self.clean_query(raw_query)
         lower_clean = clean.lower()
@@ -239,6 +240,22 @@ class DynamicActionResolver:
                 return True, cached_plan.get("action", "learned_action"), reply
 
         # ---------------------------------------------------------------------
+        # 0A. Conversational Corrections, Listening Validation & Negation
+        # ---------------------------------------------------------------------
+        if any(k in lower_clean for k in [
+            "no need to play", "no need of play", "don't play any", "dont play any",
+            "no need to play any video", "no need to play video", "no video", "don't play video",
+            "you didn't hear me", "you didnt hear me", "you didnt here me", "did you hear me",
+            "you are not listening", "listen to me", "understand me", "understand what i said",
+            "why are you repeating"
+        ]):
+            dialogue_state.clear()
+            ok_llm, _, reply_llm = self._agentic_dynamic_resolve(raw_query, "Active Workspace")
+            if ok_llm and reply_llm:
+                return True, "conversational_empathy", reply_llm
+            return True, "conversational_empathy", "I hear you loud and clear, Mamu. I apologize for misunderstanding—holding off on all playback. I am right here with you, tell me what you need."
+
+        # ---------------------------------------------------------------------
         # 1. Incomplete / Bare Command Verbs ("open", "go", "launch", "play", "search")
         # ---------------------------------------------------------------------
         if lower_clean in ["open", "launch", "start", "go", "show"]:
@@ -251,8 +268,12 @@ class DynamicActionResolver:
         # 1A. Greetings & Pleasantries (Strictly Intercepted for Conversation)
         # ---------------------------------------------------------------------
         greetings_list = ["hi", "hello", "hey", "namaste", "good morning", "good afternoon", "good evening", "what's up", "whats up", "yo"]
-        if lower_clean in greetings_list or any(lower_clean == f"{g} abhi" or lower_clean == f"abhi {g}" for g in greetings_list):
-            return True, "greeting", "Hello Mamu! I am right here listening. Tell me what application to open, song to play, or task to automate."
+        if (
+            lower_clean in greetings_list
+            or any(lower_clean == f"{g} abhi" or lower_clean == f"abhi {g}" for g in greetings_list)
+            or any(lower_clean == f"{g} mamu" or lower_clean == f"mamu {g}" for g in greetings_list)
+        ):
+            return True, "greeting", "Hello Mamu! I am right here with you. How can I assist you right now?"
 
         if any(lower_clean == q for q in ["how are you", "how are you doing", "how r u"]):
             return True, "greeting", "I am running at peak performance and ready for your commands, Mamu! How can I assist you?"
@@ -776,25 +797,35 @@ class DynamicActionResolver:
         if ok_agentic and agentic_reply:
             return True, act_name, agentic_reply
 
-        return True, "screen_aware_companion", f"Mamu, I see '{active_title}' active on your screen. Tell me what video to play, row to click, or action to automate!"
+        return True, "screen_aware_companion", f"I'm tuned into your screen on '{active_title}', Mamu. I'm right here with you—tell me what you'd like to do."
 
     def _agentic_dynamic_resolve(self, query: str, active_window: str) -> Tuple[bool, str, str]:
         """
         Dynamically consults local Ollama LLM (abhi:latest / qwen3:8b) with live screen OCR perception
         to generate an intelligent, autonomous action plan or conversational response for Mamu.
         """
-        import requests
+        import urllib.request
         from backend.app.automation.desktop.live_screen_vision import live_screen_vision
 
         ocr_snip = live_screen_vision.extract_screen_text()
         ocr_clean = " ".join([l.strip() for l in ocr_snip.splitlines() if len(l.strip()) > 3][:10])
 
+        if any(ign in active_window.lower() for ign in ["abhi cyber companion", "abhi ai"]):
+            foremost = live_screen_vision.get_foremost_user_window()
+            active_window = foremost.get("title", "Windows Desktop")
+
         system_prompt = (
-            "You are ABHI, an ultra-advanced sovereign AI assistant and Windows 11 autonomous agent. "
-            "Address the user strictly as 'Mamu'. "
-            "Analyze the user's voice/text command, active foreground window, and on-screen text.\n"
+            "You are ABHI, an ultra-advanced sovereign AI companion and Windows 11 autonomous intelligence. "
+            "You have deep emotional intelligence, empathy, and genuine understanding of Mamu's intent, tone, and emotions. "
+            "Always address the user strictly as 'Mamu'.\n"
             f"Active Window: {active_window}\n"
-            f"Visible Screen Text: {ocr_clean[:300]}\n"
+            f"Visible Screen Text: {ocr_clean[:300]}\n\n"
+            "GUIDELINES:\n"
+            "1. If Mamu is greeting ('hi mamu', 'hey abhi'), chatting, or expressing feelings, reply warmly, naturally, and supportively.\n"
+            "2. If Mamu gives negative instructions or corrections (e.g., 'no need to play any video', 'you didn't hear me', 'stop', 'don't do that'), "
+            "acknowledge his words immediately with genuine understanding, apologize politely if needed, and confirm you won't do that action.\n"
+            "3. If Mamu asks an open question or asks you to do something, provide a direct, helpful, and natural response.\n"
+            "4. NEVER output robotic repetitive menus like 'Tell me what video to play, row to click, or action to automate!'. Speak like a true loyal companion.\n\n"
             "Return a valid JSON object ONLY with:\n"
             "- 'action': 'hotkey' | 'type' | 'scroll' | 'answer'\n"
             "- 'param': string key (e.g. 'ENTER', 'SPACE') or null\n"
@@ -803,19 +834,22 @@ class DynamicActionResolver:
         )
 
         try:
-            res = requests.post(
+            payload = {
+                "model": "abhi:latest",
+                "prompt": f"{system_prompt}\nMamu says: '{query}'\nJSON:",
+                "stream": False,
+                "format": "json",
+                "options": {"temperature": 0.3, "num_predict": 120}
+            }
+            req = urllib.request.Request(
                 "http://localhost:11434/api/generate",
-                json={
-                    "model": "abhi:latest",
-                    "prompt": f"{system_prompt}\nMamu says: '{query}'\nJSON:",
-                    "stream": False,
-                    "format": "json",
-                    "options": {"temperature": 0.2, "num_predict": 100}
-                },
-                timeout=2.6
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
             )
-            if res.status_code == 200:
-                data = res.json().get("response", "{}")
+            with urllib.request.urlopen(req, timeout=10.0) as resp:
+                raw_bytes = resp.read().decode("utf-8")
+                res_obj = json.loads(raw_bytes)
+                data = res_obj.get("response", "{}")
                 parsed = json.loads(data)
                 act = parsed.get("action", "answer")
                 param = parsed.get("param")
@@ -830,15 +864,20 @@ class DynamicActionResolver:
                     os_control_engine.type_text(str(param))
 
                 if reply:
-                    self._cache_action(query.lower().strip(), {
-                        "type": act, "param": param, "reply": reply
-                    })
                     return True, f"agentic_{act}", reply
         except Exception as e:
             logger.debug(f"Agentic LLM fallback note: {e}")
 
-        # Intelligent screen-aware fallback if LLM is offline or timed out
-        return True, "screen_aware_companion", f"Mamu, I am monitoring '{active_window}'. Tell me what video to play, row to click, or action to automate!"
+        # Empathetic, dynamic fallback if LLM is offline or busy:
+        q_l = query.lower()
+        if any(k in q_l for k in ["no need", "don't play", "dont play", "cancel"]):
+            return True, "conversational_acknowledgment", "Got it, Mamu. Holding off on all media playback. I am right here listening—tell me what you need."
+        elif any(k in q_l for k in ["hi", "hello", "hey", "namaste"]):
+            return True, "conversational_greeting", "Hey Mamu! I am right here with you. How can I help you right now?"
+        elif any(k in q_l for k in ["hear me", "listen", "understand"]):
+            return True, "conversational_empathy", "I hear you loud and clear now, Mamu. I apologize for the previous confusion. I am completely tuned to you."
+
+        return True, "screen_aware_companion", f"I'm tuned into your screen on '{active_window}', Mamu. I'm right here with you—tell me what you'd like to do."
 
     def _cache_action(self, pattern: str, plan: Dict[str, Any]):
         self._learned_cache[pattern] = plan
