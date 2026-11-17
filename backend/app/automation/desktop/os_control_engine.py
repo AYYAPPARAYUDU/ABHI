@@ -584,6 +584,57 @@ class OSControlEngine:
         except Exception as e:
             return False, str(e)
 
+    def click_text_on_screen(
+        self,
+        target: str,
+        double_click: bool = False,
+        mask_own_ui: bool = True
+    ) -> Tuple[bool, str, Optional[Tuple[int, int]]]:
+        """
+        Locates the target text physically on the screen using WinRT spatial OCR bounding boxes,
+        moves the mouse cursor to its exact centroid, and clicks it.
+        Also registers the entity with DialogueStateTracker for pronoun resolution ('click it').
+        """
+        if not target or not target.strip():
+            return False, "Target text was empty, Mamu.", None
+
+        clean_target = target.strip()
+
+        try:
+            from backend.app.automation.desktop.live_screen_vision import live_screen_vision
+            from backend.app.automation.desktop.dialogue_state_tracker import dialogue_state
+
+            # 1. Resolve demonstrative pronoun if query was 'it', 'that', etc.
+            resolved = dialogue_state.resolve_demonstrative_pronoun(clean_target)
+            if resolved:
+                clean_target = resolved
+
+            coords = live_screen_vision.find_text_coordinates(clean_target, mask_own_ui=mask_own_ui)
+            if not coords:
+                coords = live_screen_vision.find_text_coordinates(clean_target, mask_own_ui=False)
+
+            if not coords:
+                return False, f"Could not find '{clean_target}' visibly on your workspace screen, Mamu.", None
+
+            cx, cy, matched_text = coords
+
+            # Ensure desktop is interactive and bring target area to front if needed
+            self._ensure_interactive_desktop()
+            self.mouse_move(cx, cy)
+            time.sleep(0.04)
+            ok, err = self.mouse_click(cx, cy, button="left", double_click=double_click)
+            if not ok:
+                return False, f"Failed to click at ({cx}, {cy}): {err}", (cx, cy)
+
+            # Record in DialogueStateTracker
+            dialogue_state.record_action("click", matched_text, (cx, cy))
+            dialogue_state.push_entity(matched_text, "screen_element", {"x": cx, "y": cy})
+
+            return True, f"Targeted and clicked '{matched_text}' on your screen, Mamu.", (cx, cy)
+        except Exception as e:
+            logger.error(f"Error in click_text_on_screen: {e}", exc_info=True)
+            return False, f"Error clicking '{clean_target}': {str(e)}", None
+
     # =========================================================================
     # 3. KEYBOARD & UNICODE TEXT DISPATCH
     # =========================================================================

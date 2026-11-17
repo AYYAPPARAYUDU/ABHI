@@ -1132,6 +1132,11 @@ class AbhiCyberneticCompanion(ctk.CTk):
             self.compact_frame.pack(fill="both", expand=True)
 
     def toggle_mic(self):
+        try:
+            from backend.app.perception.audio.tts import text_to_speech
+            text_to_speech.stop_speech()
+        except Exception:
+            pass
         self.is_mic_listening = not self.is_mic_listening
         btn_text = "🎙️" if self.is_mic_listening else "🔇"
         self.mic_btn.configure(text=btn_text)
@@ -1152,6 +1157,11 @@ class AbhiCyberneticCompanion(ctk.CTk):
         text = self.input_entry.get().strip()
         if not text:
             return
+        try:
+            from backend.app.perception.audio.tts import text_to_speech
+            text_to_speech.stop_speech()
+        except Exception:
+            pass
         self.input_entry.delete(0, "end")
         self.append_chat("Mamu", text)
         threading.Thread(target=self._dispatch_ai_query, args=(text,), daemon=True).start()
@@ -1165,14 +1175,28 @@ class AbhiCyberneticCompanion(ctk.CTk):
         if screen_perception:
             try:
                 q_l = query.lower()
-                if any(k in q_l for k in ["row", "first one", "second one", "third one", "fourth one", "first video", "second video", "third video"]):
-                    ok_g, g_reply = screen_perception.parse_and_execute_grid_intent(query)
-                    if ok_g and g_reply:
-                        reply = g_reply
-                elif any(k in q_l for k in ["screen", "what you seeing", "what you saw", "what do you see", "read my screen", "look at my screen"]):
-                    reply = screen_perception.describe_current_screen()
-                elif any(k in q_l for k in ["what you said", "what did you say", "repeat", "say again"]):
-                    reply = f"Mamu, I said: '{screen_perception.get_last_spoken()}'"
+                is_action_command = any(q_l.startswith(p) or f" {p} " in q_l for p in [
+                    "play", "click", "tap", "select", "press", "open", "launch",
+                    "close", "mute", "unmute", "scroll", "seek", "skip", "pause", "resume",
+                    "volume", "switch", "activate"
+                ])
+                if not is_action_command:
+                    if any(k in q_l for k in ["row", "first one", "second one", "third one", "fourth one", "first video", "second video", "third video"]):
+                        ok_g, g_reply = screen_perception.parse_and_execute_grid_intent(query)
+                        if ok_g and g_reply:
+                            reply = g_reply
+                    elif any(k in q_l for k in [
+                        "read my screen", "see my screen", "look at my screen", "what do you see",
+                        "what you see", "what are you seeing", "what's on my screen", "whats on my screen",
+                        "what is on my screen", "describe my screen", "describe screen", "except you",
+                        "what else you see", "what else do you see", "hat else you see", "what else on screen"
+                    ]) or (q_l.strip() in ["screen", "again", "what is open"]):
+                        if any(k in q_l for k in ["what error", "explain", "read text", "summarize", "tell me about"]):
+                            reply = screen_perception.query_screen(query)
+                        else:
+                            reply = screen_perception.describe_current_screen()
+                    elif any(k in q_l for k in ["what you said", "what did you say", "repeat", "say again"]):
+                        reply = f"Mamu, I said: '{screen_perception.get_last_spoken()}'"
             except Exception:
                 pass
 
@@ -1218,37 +1242,27 @@ class AbhiCyberneticCompanion(ctk.CTk):
         self.after(1500, lambda: setattr(self, "bot_state", "IDLE"))
 
     def _speak_verbally(self, text: str):
-        """Talks back verbally to user every time using native Windows SAPI5."""
+        """Talks back verbally to user using authentic Human-Realism Neural Voice with instant Barge-In."""
+        clean = text.replace("*", "").replace("#", "").replace("`", "").strip()
+        if not clean:
+            return
+
         def run_tts():
             try:
-                import pythoncom
-                import win32com.client
-                pythoncom.CoInitialize()
-                spk = win32com.client.Dispatch("SAPI.SpVoice")
-                spk.Rate = 1
-                spk.Volume = 100
-                for v in spk.GetVoices():
-                    if "zira" in v.GetDescription().lower():
-                        spk.Voice = v
-                        break
-
-                clean = text.replace("*", "").replace("#", "").replace("`", "").strip()
-                sentences = clean.split(".")
-                spoken_text = ". ".join(sentences[:2]) if len(sentences) > 1 else clean
-                if len(spoken_text) > 180:
-                    spoken_text = spoken_text[:180]
-
                 self.bot_state = "SPEAKING"
-                spk.Speak(spoken_text, 0)
-            except Exception:
-                pass
-            finally:
-                self.bot_state = "IDLE"
+                from backend.app.perception.audio.tts import text_to_speech
+                text_to_speech.play_text_verbally(clean, voice="mamu", rate=1.0)
+            except Exception as e:
                 try:
-                    import pythoncom
+                    import pythoncom, win32com.client
+                    pythoncom.CoInitialize()
+                    spk = win32com.client.Dispatch("SAPI.SpVoice")
+                    spk.Speak(clean[:150], 0)
                     pythoncom.CoUninitialize()
                 except Exception:
                     pass
+            finally:
+                self.after(800, lambda: setattr(self, "bot_state", "IDLE"))
 
         threading.Thread(target=run_tts, daemon=True).start()
 

@@ -19,6 +19,8 @@ from typing import Any, Dict, List, Optional, Tuple
 from backend.app.core.logging import logger
 from backend.app.automation.desktop.os_control_engine import os_control_engine
 from backend.app.automation.desktop.screen_perception_engine import screen_perception
+from backend.app.automation.desktop.dialogue_state_tracker import dialogue_state
+from backend.app.automation.desktop.live_screen_vision import live_screen_vision
 from backend.app.services.search.online_knowledge import OnlineKnowledgeSearcher
 
 
@@ -288,12 +290,15 @@ class DynamicActionResolver:
             "what is open on my laptop", "what's on my screen", "whats on my screen",
             "read my screen", "see my screen", "look at my screen", "can you see my screen",
             "tell me what is on my screen", "what is visible", "describe my screen",
-            "what are you looking at", "what's visible on my screen"
+            "what are you looking at", "what's visible on my screen",
+            "except you what else you see on screen", "what else you see on screen",
+            "what else do you see", "hat else you see on screen", "hat else you see",
+            "what else on screen", "except you"
         ]):
             reply = screen_perception.describe_current_screen()
             return True, "screen_perception", reply
 
-        # Conversational memory: "what you said" / "repeat that"
+        # Conversational memory: "what you said" / "repeat that" / "again"
         if any(k in lower_clean for k in [
             "what you said", "what did you say", "what have you said",
             "repeat that", "say again", "repeat what you said", "repeat"
@@ -302,8 +307,18 @@ class DynamicActionResolver:
             reply = f"Mamu, I said: '{last_msg}'"
             return True, "repeat_spoken", reply
 
+        if lower_clean in ["again", "check again", "look again", "read again", "see again", "once more"]:
+            reply = screen_perception.describe_current_screen()
+            return True, "screen_perception_again", reply
+
         # ---------------------------------------------------------------------
-        # 1E. Profile Selection & Targeted Element Clicking (ABHI, Ayyappa, Manohar)
+        # 1E. Autonomous Automation Mode Engagement
+        # ---------------------------------------------------------------------
+        if any(k in lower_clean for k in ["activate automate", "activate automation", "start automation", "enable automation", "automation mode"]):
+            return True, "activate_automate", "Autonomous screen automation engaged, Mamu! I am primed to target, click, and execute commands across your screen."
+
+        # ---------------------------------------------------------------------
+        # 1F. Profile Selection & Targeted Element Clicking (ABHI, Ayyappa, Manohar)
         # ---------------------------------------------------------------------
         if any(k in lower_clean or k in raw_clean for k in [
             "click on abhi", "click abhi", "select abhi", "seelct abhi",
@@ -329,11 +344,35 @@ class DynamicActionResolver:
             subprocess.Popen(f'start "" "{chrome_path}" --profile-directory="Profile 1"', shell=True)
             return True, "select_profile_manohar", "Selected and opened Manohar Chrome profile for you, Mamu!"
 
-        m_click = re.match(r"^(?:ok\s+)?click\s+(?:on\s+)?(.+)$", lower_clean)
+        # ---------------------------------------------------------------------
+        # 1G. Demonstrative Pronoun Clicking ("click it", "click that", "click that one", "it")
+        # ---------------------------------------------------------------------
+        pronoun_resolved = dialogue_state.resolve_demonstrative_pronoun(lower_clean)
+        if pronoun_resolved:
+            ok_c, reply_c, coords = os_control_engine.click_text_on_screen(pronoun_resolved)
+            if ok_c:
+                return True, "screen_click_pronoun", reply_c
+            return True, "screen_click_pronoun", f"Targeted '{pronoun_resolved}', but it is no longer visible on your workspace screen, Mamu."
+
+        # ---------------------------------------------------------------------
+        # 1H. Universal Spatial OCR Text Clicking ("click donga naa koduku", "click on arjuna")
+        # ---------------------------------------------------------------------
+        m_click = re.match(r"^(?:ok\s+)?(?:please\s+)?(?:click|tap|press|select)\s+(?:on\s+)?(.+)$", lower_clean)
         if m_click:
             target = m_click.group(1).strip()
-            os_control_engine.send_hotkey("ENTER")
-            return True, "screen_click", f"Targeted and clicked '{target}' on your screen, Mamu."
+            # Clean trailing screen mentions
+            target = re.sub(r"\s+on\s+(?:my\s+)?screen$", "", target, flags=re.IGNORECASE).strip()
+            target = re.sub(r"\s+now$", "", target, flags=re.IGNORECASE).strip()
+
+            # Resolve pronouns if nested
+            res_p = dialogue_state.resolve_demonstrative_pronoun(target)
+            if res_p:
+                target = res_p
+
+            ok_c, reply_c, coords = os_control_engine.click_text_on_screen(target)
+            if ok_c:
+                return True, "screen_click", reply_c
+            return True, "screen_click", f"Mamu, I searched your active screen for '{target}', but could not find it. Try telling me to scroll or describe the row!"
 
         # ---------------------------------------------------------------------
         # 1C. System Master Audio Volume & Mute Controls
@@ -493,6 +532,27 @@ class DynamicActionResolver:
         if lower_clean in ["video", "open video"]:
             os_control_engine.send_hotkey("SPACE")
             return True, "toggle_video", "Toggled video playback, Mamu."
+
+        # ---------------------------------------------------------------------
+        # 2F. Targeted Screen Media Play ("play donga naa koduku movie on screen", "play arjuna")
+        # ---------------------------------------------------------------------
+        m_play = re.match(r"^(?:ok\s+)?(?:please\s+)?play\s+(.+)$", lower_clean)
+        if m_play and not any(k in lower_clean for k in ["youtube", "spotify"]):
+            raw_media = m_play.group(1).strip()
+            clean_media = re.sub(r"\s+on\s+(?:my\s+)?screen$", "", raw_media, flags=re.IGNORECASE).strip()
+            clean_media = re.sub(r"\s+(?:movie|film|video|song)$", "", clean_media, flags=re.IGNORECASE).strip()
+
+            p_res = dialogue_state.resolve_demonstrative_pronoun(clean_media)
+            if p_res:
+                clean_media = p_res
+
+            coords = live_screen_vision.find_text_coordinates(clean_media)
+            if coords or "on screen" in lower_clean:
+                ok_c, reply_c, pt = os_control_engine.click_text_on_screen(clean_media)
+                if ok_c:
+                    dialogue_state.record_action("play", clean_media, pt)
+                    dialogue_state.push_entity(clean_media, "media")
+                    return True, "screen_play", f"Targeted and playing '{clean_media}' on your screen, Mamu!"
 
         # ---------------------------------------------------------------------
         # 3. YouTube Navigation & Search
@@ -710,7 +770,8 @@ class DynamicActionResolver:
         # ---------------------------------------------------------------------
         # 10. Dynamic Agentic Fallback with Live Screen Vision & Local LLM (Open-Jarvis Style)
         # ---------------------------------------------------------------------
-        active_title = os_control_engine.get_active_window().get("title", "Windows Desktop") or "Windows Desktop"
+        foremost_w = live_screen_vision.get_foremost_user_window()
+        active_title = foremost_w.get("title", "Windows Desktop") or "Windows Desktop"
         ok_agentic, act_name, agentic_reply = self._agentic_dynamic_resolve(raw_query, active_title)
         if ok_agentic and agentic_reply:
             return True, act_name, agentic_reply

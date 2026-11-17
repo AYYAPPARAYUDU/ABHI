@@ -12,8 +12,13 @@ function Await($asyncOp, $type) {
 [Windows.Media.Ocr.OcrEngine, Windows.Foundation, ContentType = WindowsRuntime] | Out-Null
 [Windows.Graphics.Imaging.BitmapDecoder, Windows.Foundation, ContentType = WindowsRuntime] | Out-Null
 
-$imgPath = $args[0]
-if (-not $imgPath -or -not (Test-Path $imgPath)) {
+$rawPath = $args[0]
+if (-not $rawPath) {
+    Write-Output "ERR:NO_PATH_SPECIFIED"
+    exit
+}
+$imgPath = [System.IO.Path]::GetFullPath($rawPath)
+if (-not (Test-Path $imgPath)) {
     Write-Output "ERR:FILE_NOT_FOUND"
     exit
 }
@@ -39,8 +44,28 @@ try {
     $ocrOp = $engine.RecognizeAsync($softwareBitmap)
     $ocrResult = Await $ocrOp ([Windows.Media.Ocr.OcrResult])
 
-    Write-Output "OCR_SUCCESS"
-    Write-Output $ocrResult.Text
+    $wordsList = [System.Collections.Generic.List[PSObject]]::new()
+    foreach ($line in $ocrResult.Lines) {
+        foreach ($word in $line.Words) {
+            $wordsList.Add([PSCustomObject]@{
+                t = $word.Text
+                x = [int][Math]::Round($word.BoundingRect.X)
+                y = [int][Math]::Round($word.BoundingRect.Y)
+                w = [int][Math]::Round($word.BoundingRect.Width)
+                h = [int][Math]::Round($word.BoundingRect.Height)
+            })
+        }
+    }
+
+    $payload = [PSCustomObject]@{
+        full_text = $ocrResult.Text
+        words = $wordsList
+    }
+
+    $json = ConvertTo-Json -InputObject $payload -Depth 4 -Compress
+    Write-Output "OCR_JSON_START"
+    Write-Output $json
+    Write-Output "OCR_JSON_END"
 } catch {
     Write-Output "ERR:$($_.Exception.Message)"
 }

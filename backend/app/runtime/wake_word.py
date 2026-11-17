@@ -67,6 +67,32 @@ class WakeWordDetector:
             return round(self.cooldown_duration_sec - elapsed, 2)
         return 0.0
 
+    @staticmethod
+    def play_wake_earcon() -> None:
+        """Iconic Alexa-style positive rising two-tone wake chime."""
+        def _beep():
+            try:
+                import winsound
+                winsound.Beep(880, 50)
+                winsound.Beep(1318, 90)
+            except Exception:
+                pass
+        import threading
+        threading.Thread(target=_beep, daemon=True).start()
+
+    @staticmethod
+    def play_sleep_earcon() -> None:
+        """Iconic Alexa-style falling two-tone sleep/standby chime."""
+        def _beep():
+            try:
+                import winsound
+                winsound.Beep(1318, 50)
+                winsound.Beep(880, 80)
+            except Exception:
+                pass
+        import threading
+        threading.Thread(target=_beep, daemon=True).start()
+
     def detect_phrase_intent(self, text: str) -> Tuple[VoiceTriggerType, str, float]:
         """Detect whether input text contains a wake or sleep trigger phrase."""
         if not text:
@@ -80,6 +106,7 @@ class WakeWordDetector:
         for phrase in self.SLEEP_PHRASES:
             if phrase in clean:
                 logger.info(f"Sleep trigger detected: '{phrase}' in '{text}'")
+                self.play_sleep_earcon()
                 return VoiceTriggerType.SLEEP, phrase, 0.98
 
         # Check wake triggers (e.g. "hey mamu", "mamu", "abhi")
@@ -88,6 +115,7 @@ class WakeWordDetector:
             pattern = rf"(?:^|\s){re.escape(phrase)}(?:$|\s)"
             if re.search(pattern, clean):
                 logger.info(f"Wake trigger detected: '{phrase}' in '{text}'")
+                self.play_wake_earcon()
                 return VoiceTriggerType.WAKE, phrase, 0.98
 
         return VoiceTriggerType.NONE, "", 0.0

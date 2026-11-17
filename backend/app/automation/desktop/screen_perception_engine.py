@@ -164,6 +164,12 @@ class ScreenPerceptionEngine:
         self.record_spoken(desc)
         return desc
 
+    def query_screen(self, question: str) -> str:
+        """Answer specific user inquiries about what is currently on screen using AI vision grounding."""
+        ans = live_screen_vision.query_screen_with_ai(question)
+        self.record_spoken(ans)
+        return ans
+
     def execute_youtube_grid_selection(self, row: int, col: int) -> Tuple[bool, str]:
         """
         Dynamically target and click a specific (row, column) video on YouTube.

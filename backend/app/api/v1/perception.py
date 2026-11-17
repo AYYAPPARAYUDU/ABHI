@@ -2,6 +2,7 @@
 
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, status, Response
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.app.perception.audio.vad import VoiceActivityDetector, AudioVADState
@@ -79,22 +80,27 @@ async def synthesize_speech(request: SynthesizeRequest) -> SpeechSynthesisResult
 
 
 @router.get("/tts/stream")
-async def stream_speech(text: str, voice: str = "en-GB-RyanNeural", rate: float = 1.0) -> Response:
-    """Stream authentic, realistic human neural audio (MP3 or WAV), or 204 for client TTS delegation."""
-    audio_bytes = await text_to_speech.synthesize_stream(text=text, voice=voice, rate=rate)
-    if not audio_bytes:
+async def stream_speech(text: str, voice: str = "default_neutral", rate: float = 1.0):
+    """Stream authentic, realistic human neural audio (MP3), yielding chunks as they are generated with instant start."""
+    clean_text = text.strip()
+    if not clean_text:
         return Response(status_code=204)
-    is_wav = audio_bytes.startswith(b"RIFF")
-    media_type = "audio/wav" if is_wav else "audio/mpeg"
-    filename = "speech.wav" if is_wav else "speech.mp3"
-    return Response(
-        content=audio_bytes,
-        media_type=media_type,
+
+    return StreamingResponse(
+        text_to_speech.stream_chunks(clean_text, voice=voice, rate=rate),
+        media_type="audio/mpeg",
         headers={
             "Cache-Control": "public, max-age=86400",
-            "Content-Disposition": f"inline; filename={filename}"
+            "Content-Disposition": "inline; filename=speech.mp3"
         }
     )
+
+
+@router.post("/tts/stop")
+async def stop_speech_playback():
+    """Immediately silence any active system TTS audio (Instant Barge-In)."""
+    text_to_speech.stop_speech()
+    return {"status": "ok", "message": "Speech playback halted immediately."}
 
 
 @router.post("/canonicalize", response_model=CanonicalCommand)

@@ -289,6 +289,19 @@ async def ask_living_bot(request: BotAskRequest):
     screen_context = request.screen_context
 
     logger.info(f"ask_living_bot processing query for Mamu: '{raw_query}'")
+    q_lower = raw_query.lower()
+
+    # 0. Live Screen Perception Grounding
+    if any(k in q_lower for k in ["screen", "what do you see", "what you see", "look at my screen", "read my screen", "what's on my screen", "whats on my screen", "what you seeing"]):
+        if any(k in q_lower for k in ["what error", "explain", "read text", "summarize", "tell me about"]):
+            reply = screen_perception.query_screen(raw_query)
+        else:
+            reply = screen_perception.describe_current_screen()
+        return {
+            "status": "success",
+            "reply": reply,
+            "action_executed": "screen_perception"
+        }
 
     # 1. Primary Dynamic Action Resolution (Browser, Media, OS, Apps, Start Menu, Dynamic Web targets)
     try:
