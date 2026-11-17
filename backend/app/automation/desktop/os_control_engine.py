@@ -367,6 +367,7 @@ class OSControlEngine:
 
         try:
             self._user32.ShowWindow(hwnd, SW_MINIMIZE)
+            self._user32.PostMessageW(hwnd, 0x0112, 0xF020, 0)  # WM_SYSCOMMAND, SC_MINIMIZE
             return True, None
         except Exception as e:
             return False, f"Failed to minimize window: {str(e)}"
@@ -391,6 +392,7 @@ class OSControlEngine:
 
         try:
             self._user32.ShowWindow(hwnd, SW_MAXIMIZE)
+            self._user32.PostMessageW(hwnd, 0x0112, 0xF030, 0)  # WM_SYSCOMMAND, SC_MAXIMIZE
             return True, None
         except Exception as e:
             return False, f"Failed to maximize window: {str(e)}"
@@ -415,6 +417,7 @@ class OSControlEngine:
 
         try:
             self._user32.ShowWindow(hwnd, SW_RESTORE)
+            self._user32.PostMessageW(hwnd, 0x0112, 0xF120, 0)  # WM_SYSCOMMAND, SC_RESTORE
             return True, None
         except Exception as e:
             return False, f"Failed to restore window: {str(e)}"

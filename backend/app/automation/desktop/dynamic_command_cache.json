@@ -225,5 +225,10 @@
     "type": "hotkey",
     "key": "SHIFT+N",
     "reply": "Changed the song and playing the next track for you, Mamu."
+  },
+  "open youtube and play any telugu songs": {
+    "type": "youtube_play",
+    "query": "any telugu songs",
+    "reply": "Opened YouTube and searching for 'any telugu songs' for you, Mamu!"
   }
 }

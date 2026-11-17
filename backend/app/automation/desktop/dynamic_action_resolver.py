@@ -87,13 +87,14 @@ class DynamicActionResolver:
         """Removes filler speech prefixes while preserving target intent."""
         c = raw.strip()
         trimmed = re.sub(
-            r"^(hey\s+abhi|hay\s+abhi|hi\s+abhi|hello\s+abhi|ok\s+abhi|abhi|abi|avi|are\s+abhi)\s*",
+            r"^(hey\s+abhi|hay\s+abhi|hi\s+abhi|hello\s+abhi|ok\s+abhi|abhi|abi|avi|are\s+abhi|mamu|hey\s+mamu)\s*",
             "", c, flags=re.IGNORECASE
         ).strip()
         trimmed = re.sub(
-            r"^(please|can\s+you|could\s+you|would\s+you|just|now|kindly|go\s+ahead\s+and)\s+",
+            r"^(ok|okay|please|can\s+you|could\s+you|would\s+you|just|now|kindly|go\s+ahead\s+and|then|so)\s+",
             "", trimmed, flags=re.IGNORECASE
         ).strip()
+        trimmed = re.sub(r"\s+(now|please)$", "", trimmed, flags=re.IGNORECASE).strip()
         # If trimming removed everything, return the original intent so greetings work
         return trimmed if trimmed else c
 
@@ -242,6 +243,22 @@ class DynamicActionResolver:
         # ---------------------------------------------------------------------
         # 0A. Conversational Corrections, Listening Validation & Negation
         # ---------------------------------------------------------------------
+        if any(k in lower_clean for k in ["still open", "still opened", "it's still open", "its still open"]):
+            foremost = live_screen_vision.get_foremost_user_window()
+            hwnd = foremost.get("hwnd")
+            title = foremost.get("title", "active window")
+            clean_title = title.split(" - ")[0].strip()
+            if hwnd:
+                os_control_engine.minimize_window(hwnd)
+            os_control_engine.send_hotkey("WIN+DOWN")
+            return True, "force_minimize", f"Understood, Mamu. Forcefully minimized '{clean_title}' to clear your screen."
+
+        if any(k in lower_clean for k in [
+            "did not understand", "didn't understand", "didnt understand", "not understanding",
+            "you did not understand what i asked for", "you didnt understand what i asked for"
+        ]):
+            return True, "conversational_empathy", "I apologize for misunderstanding, Mamu. I am completely tuned to you now—tell me what you need and I will execute it."
+
         if any(k in lower_clean for k in [
             "no need to play", "no need of play", "don't play any", "dont play any",
             "no need to play any video", "no need to play video", "no video", "don't play video",
@@ -665,6 +682,51 @@ class DynamicActionResolver:
                 os_control_engine.kill_process(target)
                 self._cache_action(lower_clean, {"type": "close_app", "target": target, "reply": f"Closed {target.title()} for you, Mamu."})
                 return True, f"close_{target}", f"Closed {target.title()} for you, Mamu."
+
+        # ---------------------------------------------------------------------
+        # 5B. Window State Controls (Minimize, Maximize, Restore, Hide)
+        # ---------------------------------------------------------------------
+        if any(lower_clean == p or lower_clean.startswith(f"{p} ") or f" {p}" in lower_clean for p in [
+            "minimize it", "minimize the screen", "minimize screen", "minimize window",
+            "minimize this", "minimize the window", "minimise it", "minimise the screen",
+            "minimise window", "minimise", "minimize", "hide it", "hide window", "hide the screen",
+            "hide screen"
+        ]):
+            foremost = live_screen_vision.get_foremost_user_window()
+            hwnd = foremost.get("hwnd")
+            title = foremost.get("title", "window")
+            clean_title = title.split(" - ")[0].strip()
+            if hwnd:
+                os_control_engine.minimize_window(hwnd)
+            else:
+                os_control_engine.send_hotkey("WIN+DOWN")
+            return True, "minimize_window", f"Minimized '{clean_title}' for you, Mamu."
+
+        if any(lower_clean == p or lower_clean.startswith(f"{p} ") or f" {p}" in lower_clean for p in [
+            "maximize it", "maximize the screen", "maximize screen", "maximize window",
+            "maximize this", "maximize the window", "maximise it", "maximise the screen",
+            "maximise window", "maximise", "maximize", "full window", "make it full screen"
+        ]):
+            foremost = live_screen_vision.get_foremost_user_window()
+            hwnd = foremost.get("hwnd")
+            title = foremost.get("title", "window")
+            clean_title = title.split(" - ")[0].strip()
+            if hwnd:
+                os_control_engine.maximize_window(hwnd)
+            else:
+                os_control_engine.send_hotkey("WIN+UP")
+            return True, "maximize_window", f"Maximized '{clean_title}' for you, Mamu."
+
+        if any(lower_clean == p or lower_clean.startswith(f"{p} ") or f" {p}" in lower_clean for p in [
+            "restore it", "restore the screen", "restore window", "restore this", "un-maximize"
+        ]):
+            foremost = live_screen_vision.get_foremost_user_window()
+            hwnd = foremost.get("hwnd")
+            title = foremost.get("title", "window")
+            clean_title = title.split(" - ")[0].strip()
+            if hwnd:
+                os_control_engine.restore_window(hwnd)
+            return True, "restore_window", f"Restored '{clean_title}' to normal size, Mamu."
 
         # ---------------------------------------------------------------------
         # 6. Browser Navigation & Tabs
