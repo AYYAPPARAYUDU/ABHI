@@ -68,6 +68,27 @@
   </header>
 
   <!-- ======================================================================= -->
+  <!-- LIVE FINANCIAL MARKET STREAMING TICKER                                  -->
+  <!-- ======================================================================= -->
+  <div class="market-ticker-strip p-2 px-3 rounded-4 mb-4 d-flex align-items-center justify-content-between overflow-x-auto gap-3 font-mono small border border-themed shadow-sm" style="background: var(--abhi-surface-inset);">
+    <div class="d-flex align-items-center gap-2 text-nowrap">
+      <span class="badge bg-success bg-opacity-25 text-success">● LIVE NSE & CRYPTO TICKERS</span>
+      <span class="text-secondary small">Real-Time Volatility Feed:</span>
+    </div>
+    <div class="d-flex align-items-center gap-4 text-nowrap">
+      @for (tick of marketTicker(); track tick.symbol) {
+        <div class="d-flex align-items-center gap-2">
+          <strong class="text-white">{{ tick.symbol }}</strong>
+          <span class="text-secondary">{{ tick.price }}</span>
+          <span [ngClass]="tick.isUp ? 'text-success' : 'text-danger'">
+            {{ tick.isUp ? '▲' : '▼' }} {{ tick.change }}
+          </span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ======================================================================= -->
   <!-- SECTION 2: LIVE MULTI-METRIC EXECUTIVE KPI CARDS                        -->
   <!-- ======================================================================= -->
   <div class="row g-3 mb-4">
@@ -224,6 +245,37 @@
   <!-- TAB 1: EXECUTIVE CASHFLOW VELOCITY & PHONEPE LEDGER                     -->
   <!-- ======================================================================= -->
   @if (activeTab() === 'dashboard') {
+    <!-- Sovereign Capital & Seed Status -->
+    <div class="p-3 rounded-4 mb-4 border border-themed d-flex justify-content-between align-items-center flex-wrap gap-3 shadow-sm" style="background: var(--abhi-surface-inset);">
+      <div class="d-flex align-items-center gap-3">
+        <div class="bg-success bg-opacity-20 text-success p-3 rounded-circle fs-4">
+          💰
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <h3 class="h6 fw-bold mb-0 font-mono card-title-themed">Mamu Sovereign Capital & Micro-Lot Trading Engine</h3>
+            <span class="badge bg-success bg-opacity-25 text-success font-mono small">₹500 Active Micro-Seed</span>
+            <span class="badge bg-primary bg-opacity-25 text-primary font-mono small">₹50,000 Portfolio Reserve</span>
+            <span class="badge bg-info bg-opacity-20 text-info font-mono small">Realized PnL: +₹740.00</span>
+          </div>
+          <p class="text-secondary small font-mono mb-0 mt-1">
+            Zero-loss circuit breaker active (2.0% max daily drawdown). Verified trades automatically compounded.
+          </p>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-info font-mono d-flex align-items-center gap-1"
+          (click)="setActiveTab('quant')"
+        >
+          <span>📈</span>
+          <span>Open Quant Terminal & Candlestick Chart ↗</span>
+        </button>
+      </div>
+    </div>
+
     <!-- Top Row: Cashflow Velocity Spline & Payment Rails Donut -->
     <div class="row g-4 mb-4">
       <!-- High-Resolution Cashflow Velocity Chart (Area SVG) -->

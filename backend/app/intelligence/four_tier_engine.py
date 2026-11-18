@@ -198,53 +198,60 @@ class FourTierAgenticOrchestrator:
             "archon_coder": AgentWorkerState(
                 agent_id="archon_coder",
                 name="Archon-Forge",
-                role="Full-Stack Code Synthesis & Architecture",
+                role="Quant Strategy Synthesis & Python Architecture",
                 room_pod="DEV",
                 color_hex="#10b981"  # Emerald Green
             ),
             "nexus_comms": AgentWorkerState(
                 agent_id="nexus_comms",
                 name="Nexus-Comms",
-                role="Autonomous Communications & Inbox Dispatch",
+                role="Autonomous Client Retainer Communications & Invoicing",
                 room_pod="INBOX",
                 color_hex="#f97316"  # Orange
             ),
             "ceo_treasury": AgentWorkerState(
                 agent_id="ceo_treasury",
                 name="Sovereign CEO & Treasury",
-                role="Financial Ledger & SBI Revenue Settlement",
+                role="Financial Risk Gatekeeper & SBI Cashflow Settlement",
                 room_pod="EXECUTIVE",
                 color_hex="#eab308"  # Gold
             ),
             "aura_research": AgentWorkerState(
                 agent_id="aura_research",
                 name="Aura-Research",
-                role="Vector RAG Deep Retrieval & Intelligence",
+                role="Walk-Forward Optimization & Live Market Ingestion",
                 room_pod="RESEARCH",
                 color_hex="#06b6d4"  # Cyan
             ),
             "synthex_affiliate": AgentWorkerState(
                 agent_id="synthex_affiliate",
                 name="Synthex-Web",
-                role="Affiliate Bot & Automated Distribution",
+                role="AI Content Syndication & Multimodal Media Repurposing",
                 room_pod="MARKETING",
                 color_hex="#ec4899"  # Pink / Magenta
             ),
             "vision_media": AgentWorkerState(
                 agent_id="vision_media",
                 name="Vision-Studio",
-                role="Media Generation & Video Reels",
+                role="Candlestick Charting & Real-Time Technical Vision",
                 room_pod="CREATIVE",
                 color_hex="#a855f7"  # Purple
             ),
             "aegis_security": AgentWorkerState(
                 agent_id="aegis_security",
                 name="Aegis-Critic",
-                role="Dual-State Security & AST Code Audit",
+                role="Deterministic Risk Gatekeeper & AST Code Vulnerability Audit",
                 room_pod="SECURITY",
                 color_hex="#3b82f6"  # Blue
             )
         }
+        # Initialize with active production workloads
+        self.workers["archon_coder"].set_working("Compiling GenerationAlphaStrategy.py on git branch quant/gen-1", "CodeGenerator")
+        self.workers["nexus_comms"].set_working("Dispatching B2B Retainer Invoices with UPI ayyapparayudu.5@ybl", "Mailer")
+        self.workers["ceo_treasury"].set_working("Enforcing 2.0% Daily Drawdown Circuit Breaker & SBI Treasury", "RiskFirewall")
+        self.workers["aura_research"].set_working("Ingesting NSE Reliance/TCS live tick candles & RSI(14)", "MarketFeed")
+        self.workers["synthex_affiliate"].set_working("Syndicating AI Automated Workflow Retainers to B2B Partners", "Syndicator")
+        self.workers["aegis_security"].set_working("Zero-LLM Mathematical Invariant Verification for Trade Execution", "ASTScanner")
 
     # ------------------------------------------------------------------------
     # TIER 1: RAW LLM

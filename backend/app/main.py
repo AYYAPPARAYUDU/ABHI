@@ -98,11 +98,11 @@ async def lifespan(app: FastAPI):
 
         async def run_evolution_scheduler():
             await asyncio.sleep(5)
-            await daily_evolution_service.execute_daily_evolution_cycle()
+            await asyncio.to_thread(daily_evolution_service.execute_daily_evolution_cycle)
             while True:
                 await asyncio.sleep(86400)
                 try:
-                    await daily_evolution_service.execute_daily_evolution_cycle()
+                    await asyncio.to_thread(daily_evolution_service.execute_daily_evolution_cycle)
                 except Exception as ex:
                     logger.error(f"Error during daily evolution cycle: {ex}")
 

@@ -1,0 +1,14 @@
+{
+  "ema_fast": 9,
+  "ema_slow": 21,
+  "rsi_period": 14,
+  "rsi_oversold": 35.0,
+  "rsi_overbought": 65.0,
+  "atr_period": 14,
+  "stop_atr_multiplier": 1.5,
+  "profit_atr_multiplier": 3.5,
+  "generation": 1,
+  "sharpe_ratio": 0.0,
+  "win_rate_pct": 0.0,
+  "max_drawdown_pct": 0.0
+}
