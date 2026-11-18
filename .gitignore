@@ -45,6 +45,11 @@ project_data/external/
 
 # System Logs & Observability
 
+project_data/audio_cache/
+project_data/desktop/
+project_data/intelligence/vector_store.json
+project_data/analytics/agent_llm_metrics.json
+project_data/hardware/active_profile.json
 logs/
 *.log
 
