@@ -167,6 +167,101 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
     return { areaPath, linePath, points, maxVal: maxAmount };
   });
 
+  // Dynamic SVG Candlestick & Technical Indicator Generator
+  readonly quantCandlestickSvg = computed(() => {
+    const telemetry = this.quantTelemetry();
+    const data = telemetry?.chart_data;
+    if (!data || data.length === 0) {
+      return {
+        candles: [] as any[],
+        emaFastPath: '',
+        emaSlowPath: '',
+        rsiPath: '',
+        minPrice: 0,
+        maxPrice: 0,
+      };
+    }
+
+    const width = 760;
+    const height = 180;
+    const padding = 20;
+
+    const highs = data.map((d: any) => d.high);
+    const lows = data.map((d: any) => d.low);
+    const minPrice = Math.min(...lows) * 0.995;
+    const maxPrice = Math.max(...highs) * 1.005;
+    const range = maxPrice - minPrice || 1;
+
+    const stepX = (width - padding * 2) / (data.length - 1 || 1);
+    const candleWidth = Math.max(4, Math.min(14, stepX * 0.65));
+
+    const candles = data.map((d: any, idx: number) => {
+      const cx = padding + idx * stepX;
+      const wy1 = height - padding - ((d.high - minPrice) / range) * (height - padding * 2);
+      const wy2 = height - padding - ((d.low - minPrice) / range) * (height - padding * 2);
+      const openY = height - padding - ((d.open - minPrice) / range) * (height - padding * 2);
+      const closeY = height - padding - ((d.close - minPrice) / range) * (height - padding * 2);
+      const isBullish = d.close >= d.open;
+      const topY = Math.min(openY, closeY);
+      const bHeight = Math.max(2, Math.abs(closeY - openY));
+
+      return {
+        cx,
+        wy1,
+        wy2,
+        bx: cx - candleWidth / 2,
+        by: topY,
+        bw: candleWidth,
+        bh: bHeight,
+        isBullish,
+        open: d.open,
+        close: d.close,
+        high: d.high,
+        low: d.low,
+        date: d.date,
+        closeY,
+      };
+    });
+
+    // EMA Fast Line Path
+    let emaFastPath = '';
+    let emaSlowPath = '';
+    data.forEach((d: any, idx: number) => {
+      const cx = padding + idx * stepX;
+      const fastY = height - padding - ((d.ema_fast - minPrice) / range) * (height - padding * 2);
+      const slowY = height - padding - ((d.ema_slow - minPrice) / range) * (height - padding * 2);
+      if (idx === 0) {
+        emaFastPath = `M ${cx} ${fastY}`;
+        emaSlowPath = `M ${cx} ${slowY}`;
+      } else {
+        emaFastPath += ` L ${cx} ${fastY}`;
+        emaSlowPath += ` L ${cx} ${slowY}`;
+      }
+    });
+
+    // RSI Subchart Path (Height 50px)
+    const rsiH = 50;
+    let rsiPath = '';
+    data.forEach((d: any, idx: number) => {
+      const cx = padding + idx * stepX;
+      const rsiY = rsiH - (d.rsi / 100.0) * rsiH;
+      if (idx === 0) {
+        rsiPath = `M ${cx} ${rsiY}`;
+      } else {
+        rsiPath += ` L ${cx} ${rsiY}`;
+      }
+    });
+
+    return {
+      candles,
+      emaFastPath,
+      emaSlowPath,
+      rsiPath,
+      minPrice: Math.round(minPrice),
+      maxPrice: Math.round(maxPrice),
+    };
+  });
+
   // Channel Distribution Percentages
   readonly channelDistribution = computed(() => {
     const txns = this.mobileTransactions();
