@@ -680,6 +680,26 @@ async def reset_quant_circuit_breaker(payload: Optional[Dict[str, Any]] = None) 
     }
 
 
+@router.post("/quant/live-trade/start")
+async def start_quant_live_trade(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Start an authentic live micro-lot trade with Mamu's ₹500 seed capital."""
+    symbol = (payload or {}).get("symbol", "RELIANCE.NS")
+    return quant_strategy_engine.start_live_micro_trade(symbol=symbol)
+
+
+@router.get("/quant/live-trade/status")
+async def get_quant_live_trade_status(symbol: str = Query("RELIANCE.NS")) -> Dict[str, Any]:
+    """Get real-time P&L (earning / losing status) for the live position."""
+    return quant_strategy_engine.get_live_trade_status(symbol=symbol)
+
+
+@router.post("/quant/live-trade/close")
+async def close_quant_live_trade(payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Close active live micro-lot trade and settle realized P&L."""
+    symbol = (payload or {}).get("symbol", "RELIANCE.NS")
+    return quant_strategy_engine.close_live_trade(symbol=symbol)
+
+
 # =============================================================================
 # PRODUCTION PAYMENT GATEWAY WEBHOOK (STRIPE / RAZORPAY / PHONEPE)
 # =============================================================================

@@ -1,6 +1,6 @@
 /* =========================================================================
-   ABHI EXECUTIVE BUSINESS & SOVEREIGN TREASURY (NOTCH GLASSMORPHIC SYSTEM)
-   Strictly styled with elayadesign/ai-design-skills tokens & motion physics
+   ABHI EXECUTIVE BUSINESS & SOVEREIGN TREASURY (SINGLE UNIFIED COCKPIT)
+   Strictly styled with high-contrast, notch-glassmorphic tokens & live telemetry
    ========================================================================= */
 
 :host {
@@ -10,13 +10,52 @@
 
 .business-page {
   animation: fadeIn 0.25s ease-out;
-  color: var(--abhi-text-primary, #f1f5f9);
+  color: #f1f5f9;
   min-height: calc(100vh - 70px);
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* =========================================================================
+   HIGH-CONTRAST TEXT & TYPOGRAPHY OVERRIDES (CRITICAL FOR READABILITY)
+   ========================================================================= */
+.text-white {
+  color: #ffffff !important;
+}
+
+.text-light {
+  color: #cbd5e1 !important; /* Bright silver slate, never dark gray */
+}
+
+.text-cyan {
+  color: #00f0ff !important;
+}
+
+.text-success {
+  color: #10b981 !important;
+}
+
+.text-danger {
+  color: #ef4444 !important;
+}
+
+.text-warning {
+  color: #f59e0b !important;
+}
+
+.text-info {
+  color: #38bdf8 !important;
+}
+
+.font-mono {
+  font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+}
+
+.tracking-wider {
+  letter-spacing: 0.08em;
 }
 
 /* Toast Pill */
@@ -28,13 +67,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--abhi-cyan, #06b6d4);
+  background: #00f0ff;
   color: #030712;
   font-weight: 700;
   font-size: 13px;
   padding: 10px 20px;
   border-radius: 30px;
-  box-shadow: 0 10px 28px rgba(6, 182, 212, 0.4);
+  box-shadow: 0 10px 28px rgba(0, 240, 255, 0.4);
   animation: slideInToast 0.25s ease-out;
 }
 
@@ -44,15 +83,15 @@
 }
 
 /* =========================================================================
-   NOTCH EXECUTIVE HEADER & PILLS
+   1. NOTCH EXECUTIVE HEADER & PILLS
    ========================================================================= */
 .notch-executive-header {
-  background: rgba(7, 11, 20, 0.88);
+  background: rgba(7, 11, 20, 0.92);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 16px rgba(249, 115, 22, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 16px rgba(0, 240, 255, 0.06);
   transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -60,8 +99,18 @@
   width: 52px;
   height: 52px;
   object-fit: cover;
-  border: 2px solid var(--abhi-cyan, #06b6d4);
-  box-shadow: 0 0 14px rgba(6, 182, 212, 0.35);
+  border: 2px solid #00f0ff;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.4);
+}
+
+.status-indicator-dot {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #070b14;
+}
+
+.op-subtext {
+  color: #cbd5e1;
 }
 
 /* Smooth Notch Pill Buttons */
@@ -72,7 +121,7 @@
   padding: 6px 16px;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(15, 23, 42, 0.85);
   color: #f1f5f9;
   cursor: pointer;
   transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
@@ -84,7 +133,7 @@
 .notch-pill-btn:hover {
   transform: translateY(-1px) scale(1.02);
   border-color: rgba(0, 240, 255, 0.5);
-  box-shadow: 0 4px 16px rgba(0, 240, 255, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 240, 255, 0.25);
   color: #ffffff;
 }
 
@@ -93,38 +142,63 @@
 }
 
 .notch-pill-btn.primary {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.35), rgba(16, 185, 129, 0.35));
-  border-color: rgba(6, 182, 212, 0.6);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.45), rgba(16, 185, 129, 0.45));
+  border-color: rgba(6, 182, 212, 0.7);
   color: #ffffff;
 }
 
 .notch-pill-btn.primary:hover {
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.5), rgba(16, 185, 129, 0.5));
-  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35);
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.65), rgba(16, 185, 129, 0.65));
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
 }
 
 .notch-pill-btn.secondary {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #e2e8f0;
+}
+
+.notch-pill-btn.cyan {
+  background: rgba(6, 182, 212, 0.2);
+  border-color: rgba(6, 182, 212, 0.5);
+  color: #38bdf8;
+}
+
+.notch-pill-btn.cyan:hover {
+  background: rgba(6, 182, 212, 0.35);
+  border-color: #00f0ff;
+  color: #ffffff;
+}
+
+.notch-pill-btn.amber {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+}
+
+.notch-pill-btn.amber:hover {
+  background: rgba(245, 158, 11, 0.35);
+  border-color: #f59e0b;
+  color: #ffffff;
 }
 
 .notch-pill-btn.bank-capsule-btn {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.35);
-  color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #34d399;
 }
 
 .notch-pill-btn.bank-capsule-btn:hover {
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.3);
   border-color: #10b981;
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.35);
+  color: #ffffff;
 }
 
 .bank-pill-tag {
   font-size: 10px;
-  background: rgba(16, 185, 129, 0.2);
-  padding: 2px 6px;
+  background: rgba(16, 185, 129, 0.25);
+  padding: 2px 7px;
   border-radius: 6px;
   color: #4ade80;
   font-weight: 700;
@@ -143,33 +217,33 @@
 }
 
 .notch-pill-badge.cyan {
-  background: rgba(6, 182, 212, 0.12);
+  background: rgba(6, 182, 212, 0.16);
   color: #38bdf8;
-  border: 1px solid rgba(6, 182, 212, 0.35);
+  border: 1px solid rgba(6, 182, 212, 0.4);
 }
 
 .notch-pill-badge.emerald {
-  background: rgba(16, 185, 129, 0.12);
+  background: rgba(16, 185, 129, 0.16);
   color: #4ade80;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
 .notch-pill-badge.amber {
-  background: rgba(245, 158, 11, 0.12);
+  background: rgba(245, 158, 11, 0.16);
   color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  border: 1px solid rgba(245, 158, 11, 0.4);
 }
 
 .notch-pill-badge.purple {
-  background: rgba(168, 85, 247, 0.12);
+  background: rgba(168, 85, 247, 0.16);
   color: #c084fc;
-  border: 1px solid rgba(168, 85, 247, 0.35);
+  border: 1px solid rgba(168, 85, 247, 0.4);
 }
 
 .autonomous-pulse-badge {
-  background: rgba(3, 7, 18, 0.6);
-  border: 1px solid rgba(16, 185, 129, 0.4);
-  box-shadow: 0 0 14px rgba(16, 185, 129, 0.15);
+  background: rgba(3, 7, 18, 0.7);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
 }
 
 .pulse-emerald {
@@ -189,31 +263,32 @@
 }
 
 /* =========================================================================
-   NOTCH METRIC CARDS
+   2. TOP 4 FINANCIAL METRIC CARDS
    ========================================================================= */
 .notch-metric-card {
-  background: rgba(7, 11, 20, 0.88);
+  background: rgba(15, 23, 42, 0.88);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 18px;
   color: #ffffff;
   transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1),
               border-color 250ms ease,
               box-shadow 250ms ease;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
 }
 
 .notch-metric-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(6, 182, 212, 0.5);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45), 0 0 16px rgba(6, 182, 212, 0.15);
+  border-color: rgba(0, 240, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 16px rgba(0, 240, 255, 0.2);
 }
 
 .notch-metric-label {
   color: #94a3b8;
   font-size: 11px;
   letter-spacing: 0.05em;
+  font-weight: 600;
 }
 
 .notch-metric-icon {
@@ -228,100 +303,43 @@
 }
 
 .notch-metric-icon.emerald {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.2);
   color: #10b981;
 }
 
 .notch-metric-icon.cyan {
-  background: rgba(6, 182, 212, 0.15);
+  background: rgba(6, 182, 212, 0.2);
   color: #06b6d4;
 }
 
 .notch-metric-icon.amber {
-  background: rgba(245, 158, 11, 0.15);
+  background: rgba(245, 158, 11, 0.2);
   color: #f59e0b;
 }
 
 .notch-metric-icon.purple {
-  background: rgba(168, 85, 247, 0.15);
+  background: rgba(168, 85, 247, 0.2);
   color: #a855f7;
 }
 
+.metric-value {
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+}
+
+.border-themed {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
 /* =========================================================================
-   MONEY FLOW HERO PANEL (EXECUTIVE ARCHITECTURE VISUALIZER)
+   3. HERO: LIVE MICRO-LOT TRADING & REAL-TIME P&L MONITOR (SINGLE COCKPIT)
    ========================================================================= */
-.money-flow-hero-panel {
-  background: rgba(7, 11, 20, 0.92);
+.live-trading-cockpit-card {
+  background: rgba(7, 11, 20, 0.94);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(0, 240, 255, 0.22);
-  border-radius: 20px;
-  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.5), inset 0 0 24px rgba(0, 240, 255, 0.04);
-}
-
-.flow-hero-icon {
-  font-size: 22px;
-  color: #f97316;
-}
-
-.money-stage-card {
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.money-stage-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-}
-
-.money-stage-card.highlight-vault {
-  border-color: rgba(245, 158, 11, 0.35);
-  background: rgba(15, 23, 42, 0.85);
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.08);
-}
-
-.stage-step-tag {
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  font-size: 10.5px;
-}
-
-.stage-badge-pill {
-  font-size: 9.5px;
-  padding: 2px 7px;
-  border-radius: 6px;
-  font-weight: 700;
-}
-
-.stage-badge-pill.cyan { background: rgba(6, 182, 212, 0.2); color: #38bdf8; }
-.stage-badge-pill.amber { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
-.stage-badge-pill.emerald { background: rgba(16, 185, 129, 0.2); color: #4ade80; }
-
-.stage-features-list {
-  list-style: none;
-  padding-left: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  line-height: 1.45;
-}
-
-.stage-bottom-stat {
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-/* Notch Banner Card */
-.notch-banner-card {
-  background: rgba(7, 11, 20, 0.88);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: 22px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), inset 0 0 24px rgba(0, 240, 255, 0.04);
 }
 
 .notch-icon-circle {
@@ -334,17 +352,169 @@
 }
 
 .notch-icon-circle.emerald {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(16, 185, 129, 0.2);
   color: #10b981;
 }
 
+/* Notch Select Dropdown */
+.notch-select {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  border-radius: 9999px;
+  color: #ffffff;
+  padding: 6px 14px;
+  outline: none;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.notch-select:focus {
+  border-color: #00f0ff;
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.35);
+}
+
+.notch-select option {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+/* Live Position Box */
+.live-position-box {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: border-color 200ms ease;
+}
+
+.live-position-box:hover {
+  border-color: rgba(0, 240, 255, 0.4);
+}
+
+/* Pulsating Live Beacon */
+.live-dot-beacon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  animation: beaconPulse 1.8s infinite;
+}
+
+.live-dot-beacon.green {
+  background: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+}
+
+.live-dot-beacon.blue {
+  background: #00f0ff;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.8);
+}
+
+@keyframes beaconPulse {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.8; }
+}
+
+/* Real-Time P&L Status Indicator Banner (High Contrast Profit / Loss) */
+.pnl-status-banner {
+  transition: all 300ms ease;
+  backdrop-filter: blur(12px);
+}
+
+.pnl-status-banner.profit-bg {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.24), rgba(6, 182, 212, 0.18));
+  border: 1px solid rgba(16, 185, 129, 0.55);
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.2);
+}
+
+.pnl-status-banner.loss-bg {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.24), rgba(245, 158, 11, 0.18));
+  border: 1px solid rgba(239, 68, 68, 0.55);
+  box-shadow: 0 4px 18px rgba(239, 68, 68, 0.2);
+}
+
+/* Live Candlestick Mini-Chart Box */
+.live-chart-box {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.svg-chart-container svg {
+  filter: drop-shadow(0 4px 12px rgba(0, 240, 255, 0.15));
+}
+
 /* =========================================================================
-   MODAL: NOTCH GLASSMORPHIC POPUP
+   4. CARDS & CONTAINERS (REAL CASHFLOW, 2FA, AFFILIATE, N8N)
+   ========================================================================= */
+.card {
+  background: rgba(15, 23, 42, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.card:hover {
+  border-color: rgba(0, 240, 255, 0.4) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+}
+
+.detail-box {
+  background: rgba(10, 15, 29, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #f8fafc;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.detail-box:hover {
+  border-color: rgba(0, 240, 255, 0.4) !important;
+}
+
+/* 2FA OTP Card */
+.otp-card-item {
+  background: rgba(10, 15, 29, 0.85);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.otp-card-item:hover {
+  transform: translateY(-1px);
+  border-color: #f59e0b;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.2);
+}
+
+/* =========================================================================
+   5. TABLES & STATEMENTS
+   ========================================================================= */
+.custom-ledger-table {
+  --bs-table-bg: transparent;
+  --bs-table-hover-bg: rgba(0, 240, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+.custom-ledger-table th {
+  background: rgba(10, 15, 29, 0.9);
+  color: #94a3b8;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px 14px;
+}
+
+.custom-ledger-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+}
+
+/* =========================================================================
+   6. MODAL: NOTCH GLASSMORPHIC POPUP (SBI DETAILS & INVOICE)
    ========================================================================= */
 .modal-backdrop-custom {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   z-index: 1050;
@@ -356,218 +526,14 @@
 }
 
 .modal-card-custom.notch-style-modal {
-  background: rgba(7, 11, 20, 0.94);
+  background: rgba(7, 11, 20, 0.96);
   backdrop-filter: blur(28px) saturate(180%);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid rgba(0, 240, 255, 0.35);
+  border: 1px solid rgba(0, 240, 255, 0.4);
   border-radius: 24px;
   max-width: 680px;
   width: 100%;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 24px rgba(0, 240, 255, 0.15);
-}
-
-.btn-copy-pill {
-  padding: 4px 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #94a3b8;
-  cursor: pointer;
-  transition: all 180ms ease;
-}
-
-.btn-copy-pill:hover {
-  background: rgba(0, 240, 255, 0.18);
-  border-color: #00f0ff;
-  color: #ffffff;
-}
-
-.qr-scan-box {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(0, 240, 255, 0.2);
-}
-
-.btn-text-link {
-  background: none;
-  border: none;
-  text-decoration: underline;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 11px;
-}
-
-/* =========================================================================
-   SECTION 2: METRIC CARDS
-   ========================================================================= */
-.metric-card {
-  background: var(--abhi-surface-raised, rgba(15, 23, 42, 0.85));
-  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.1)) !important;
-  color: var(--abhi-text-primary, #ffffff);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.metric-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--abhi-cyan, #06b6d4) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-}
-
-.metric-badge-icon {
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.metric-value {
-  font-size: clamp(1.4rem, 2.2vw, 2rem);
-}
-
-.border-themed {
-  border-color: var(--abhi-border, rgba(255, 255, 255, 0.1)) !important;
-}
-
-.card-title-themed {
-  color: var(--abhi-text-primary, #f8fafc) !important;
-}
-
-/* =========================================================================
-   SECTION 3: STREAMLINED 3-PILL EXECUTIVE SEGMENTED NAVIGATION
-   ========================================================================= */
-.executive-nav-bar {
-  background: var(--abhi-surface-raised, rgba(15, 23, 42, 0.7));
-  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.1));
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-}
-
-.executive-tab-pill {
-  background: var(--abhi-surface-inset, rgba(3, 7, 18, 0.5));
-  color: var(--abhi-text-secondary, #94a3b8);
-  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.08));
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: pointer;
-  letter-spacing: 0.02em;
-}
-
-.executive-tab-pill:hover {
-  color: var(--abhi-text-primary, #ffffff);
-  border-color: var(--abhi-cyan, #06b6d4);
-  background: var(--abhi-surface-raised, rgba(30, 41, 59, 0.8));
-}
-
-.executive-tab-pill.active {
-  background: var(--abhi-cyan, #06b6d4) !important;
-  color: #030712 !important;
-  font-weight: 700 !important;
-  border-color: var(--abhi-cyan, #06b6d4) !important;
-  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.35);
-}
-
-.tab-badge-count {
-  background: rgba(0, 0, 0, 0.2);
-  color: inherit;
-  font-size: 11px;
-  padding: 2px 7px;
-  border-radius: 12px;
-  font-weight: 700;
-}
-
-.executive-tab-pill.active .tab-badge-count {
-  background: #030712;
-  color: var(--abhi-cyan, #06b6d4);
-}
-
-/* =========================================================================
-   CONTAINERS, CARDS & DETAIL BOXES
-   ========================================================================= */
-.card, .channel-card {
-  background: var(--abhi-surface-raised, rgba(15, 23, 42, 0.85)) !important;
-  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.1)) !important;
-  color: var(--abhi-text-primary, #ffffff);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-
-.detail-box {
-  background: var(--abhi-surface-inset, rgba(15, 23, 42, 0.6)) !important;
-  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.08)) !important;
-  color: var(--abhi-text-primary, #f8fafc);
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-
-.detail-box:hover {
-  border-color: var(--abhi-cyan, rgba(6, 182, 212, 0.3)) !important;
-}
-
-.detail-subbox {
-  background: var(--abhi-surface-raised, rgba(0, 0, 0, 0.35)) !important;
-  color: var(--abhi-text-secondary, #94a3b8);
-}
-
-/* =========================================================================
-   TABLES & STATEMENTS
-   ========================================================================= */
-.custom-ledger-table {
-  --bs-table-bg: transparent;
-  --bs-table-hover-bg: rgba(6, 182, 212, 0.04);
-  border-color: var(--abhi-border, rgba(255, 255, 255, 0.08));
-  color: var(--abhi-text-primary, #f8fafc);
-}
-
-.custom-ledger-table th {
-  background: var(--abhi-surface-inset, rgba(10, 15, 29, 0.8));
-  color: var(--abhi-text-secondary, #94a3b8);
-  font-weight: 600;
-  border-bottom: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.12));
-  padding: 12px 14px;
-}
-
-.custom-ledger-table td {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.05));
-  color: var(--abhi-text-primary, #f8fafc);
-}
-
-/* =========================================================================
-   OTP CARDS & INTERCEPTOR
-   ========================================================================= */
-.otp-card-item {
-  background: var(--abhi-surface-inset, rgba(15, 23, 42, 0.7));
-  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.08));
-  transition: transform 0.15s ease, border-color 0.15s ease;
-}
-
-.otp-card-item:hover {
-  transform: translateY(-1px);
-  border-color: #f59e0b;
-}
-
-/* QR Box */
-.qr-frame {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-}
-
-/* SVG Chart */
-.chart-container svg {
-  filter: drop-shadow(0 4px 12px rgba(6, 182, 212, 0.15));
-}
-
-/* =========================================================================
-   MODALS
-   ========================================================================= */
-.modal-backdrop-custom {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 1050;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  animation: modalFadeIn 0.2s ease-out;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75), 0 0 28px rgba(0, 240, 255, 0.2);
 }
 
 .modal-card-custom {
@@ -575,18 +541,13 @@
   max-width: 580px;
   max-height: 90vh;
   overflow-y: auto;
-  background: var(--abhi-surface-raised, #0f172a);
-  border: 1px solid var(--abhi-border, rgba(56, 189, 248, 0.25));
-  border-radius: 16px;
+  background: #0f172a;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
   animation: modalScaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  color: var(--abhi-text-primary, #fff);
-}
-
-@keyframes modalFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  color: #ffffff;
 }
 
 @keyframes modalScaleUp {
@@ -594,26 +555,23 @@
   to { opacity: 1; transform: scale(1); }
 }
 
-/* Utilities */
-.cursor-pointer {
+.btn-copy-pill {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #cbd5e1;
   cursor: pointer;
+  transition: all 180ms ease;
 }
 
-.tracking-wider {
-  letter-spacing: 0.08em;
+.btn-copy-pill:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: #00f0ff;
+  color: #ffffff;
 }
 
-.line-clamp-1 {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.font-mono {
-  font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-}
-
-.x-small {
-  font-size: 10px;
+.qr-scan-box {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(0, 240, 255, 0.25);
 }

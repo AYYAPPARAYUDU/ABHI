@@ -47,6 +47,11 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
   readonly isEvaluatingQuant = signal<boolean>(false);
   readonly selectedStockSymbol = signal<string>('RELIANCE.NS');
 
+  // Real-Time Live Micro-Lot Trading & Real-Time P&L State
+  readonly liveTradeStatus = signal<any>(null);
+  readonly isStartingLiveTrade = signal<boolean>(false);
+  readonly isClosingLiveTrade = signal<boolean>(false);
+
   // Authoritative State Bank of India Settlement Channel (Mamu)
   readonly sbiProfile = {
     beneficiary: 'Ravuvai Ayyapparayudu',
@@ -526,10 +531,11 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
     this.threeScene.setMode('BUSINESS');
     this.refreshAllData();
 
-    // High-fidelity background telemetry cadence (3000ms polling for live work state)
+    // High-fidelity background telemetry cadence (3000ms polling for live work state & live trade status)
     this.pollInterval = setInterval(() => {
       this.refreshOfficeData();
       this.refreshLiveMonitor();
+      this.refreshLiveTradeStatus();
     }, 3000);
   }
 
@@ -550,6 +556,7 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
       this.refreshVaultData(),
       this.refreshN8nData(),
       this.refreshQuantData(),
+      this.refreshLiveTradeStatus(),
     ]);
   }
 
@@ -606,6 +613,57 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
       next: () => {
         this.showToast('Deterministic Risk Circuit Breaker RESET by Mamu.');
         this.refreshQuantData();
+      }
+    });
+  }
+
+  async startLiveMicroTrade(): Promise<void> {
+    if (this.isStartingLiveTrade()) return;
+    this.isStartingLiveTrade.set(true);
+    const sym = this.selectedStockSymbol();
+    this.showToast(`Starting live trade on ${sym} with Mamu's ₹500 seed...`);
+    this.businessService.startLiveMicroTrade(sym).subscribe({
+      next: (res) => {
+        this.isStartingLiveTrade.set(false);
+        this.liveTradeStatus.set(res);
+        this.showToast(res.message || `Live micro-trade initiated on ${sym}!`);
+        this.refreshQuantData();
+      },
+      error: (err) => {
+        this.isStartingLiveTrade.set(false);
+        this.showToast('Live trade error: ' + (err.message || 'Check connection'));
+      }
+    });
+  }
+
+  async refreshLiveTradeStatus(): Promise<void> {
+    const sym = this.selectedStockSymbol();
+    this.businessService.fetchLiveTradeStatus(sym).subscribe({
+      next: (res) => {
+        if (res) {
+          this.liveTradeStatus.set(res);
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  async closeActiveLiveTrade(): Promise<void> {
+    if (this.isClosingLiveTrade()) return;
+    this.isClosingLiveTrade.set(true);
+    const sym = this.selectedStockSymbol();
+    this.showToast(`Closing position on ${sym} and settling P&L to SBI...`);
+    this.businessService.closeLiveTrade(sym).subscribe({
+      next: (res) => {
+        this.isClosingLiveTrade.set(false);
+        this.showToast(res.message || `Position closed. Realized P&L: ₹${res.realized_pnl}`);
+        this.refreshLiveTradeStatus();
+        this.refreshQuantData();
+        this.refreshTreasuryData();
+      },
+      error: (err) => {
+        this.isClosingLiveTrade.set(false);
+        this.showToast('Close error: ' + (err.message || 'Failed to close position'));
       }
     });
   }

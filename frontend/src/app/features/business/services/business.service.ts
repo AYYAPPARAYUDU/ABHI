@@ -335,7 +335,7 @@ export class BusinessService {
     return this.http.get<any>(`${this.baseUrl}/quant/telemetry`).pipe(
       catchError(() => of({
         strategy: { generation: 1, sharpe_ratio: 0, win_rate_pct: 0, max_drawdown_pct: 0 },
-        risk_gatekeeper: { current_equity: 50000, current_drawdown_pct: 0, circuit_breaker_active: false, max_drawdown_limit_pct: 2.0 },
+        risk_gatekeeper: { current_equity: 500.0, current_drawdown_pct: 0, circuit_breaker_active: false, max_drawdown_limit_pct: 2.0 },
         recent_journal: [],
         total_journal_trades: 0,
         watchlist: ['RELIANCE.NS', 'TCS.NS', 'INFY.NS', 'BTC-USD']
@@ -353,5 +353,17 @@ export class BusinessService {
 
   resetQuantCircuitBreaker(operator = 'Mamu'): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/quant/reset-circuit-breaker`, { operator });
+  }
+
+  startLiveMicroTrade(symbol = 'RELIANCE.NS'): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/quant/live-trade/start`, { symbol });
+  }
+
+  fetchLiveTradeStatus(symbol = 'RELIANCE.NS'): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/quant/live-trade/status?symbol=${encodeURIComponent(symbol)}`);
+  }
+
+  closeLiveTrade(symbol = 'RELIANCE.NS'): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/quant/live-trade/close`, { symbol });
   }
 }

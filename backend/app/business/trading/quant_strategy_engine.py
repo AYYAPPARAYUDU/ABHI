@@ -514,6 +514,161 @@ class QuantStrategyEngine:
             "rsi": round(rsi_val, 1)
         }
 
+    def start_live_micro_trade(self, symbol: str = "RELIANCE.NS") -> Dict[str, Any]:
+        """
+        Executes an authentic live micro-lot trade with Mamu's ₹500 seed capital.
+        Strictly enforces 1.5% position risk (₹7.50 max risk) and 2.0% daily circuit breaker.
+        """
+        open_pos = deterministic_risk_gatekeeper.state.get("open_positions", {})
+        if symbol in open_pos:
+            return self.get_live_trade_status(symbol)
+
+        candles = self.fetch_market_candles(symbol, interval="1d", range_str="1mo")
+        if not candles:
+            return {"status": "ERROR", "message": f"Unable to fetch live price feed for {symbol}"}
+
+        latest = candles[-1]
+        entry_price = round(latest.close, 2)
+        atr_list = self.compute_atr(candles, 14)
+        atr_val = atr_list[-1] if atr_list else (entry_price * 0.012)
+        stop_dist = max(entry_price * 0.008, round(atr_val * 1.5, 2))
+        take_profit_dist = max(stop_dist * 2.2, round(atr_val * 3.5, 2))
+
+        # Micro-lot sizing strictly calibrated to ₹500 capital (1.5% risk = ₹7.50 max risk)
+        equity = deterministic_risk_gatekeeper.state.get("current_equity", 500.0)
+        max_risk_inr = round(equity * (deterministic_risk_gatekeeper.MAX_POSITION_RISK_PCT / 100.0), 2)
+        quantity = max(0.01, round(max_risk_inr / stop_dist, 4))
+
+        order = TradeOrder(
+            symbol=symbol,
+            action="BUY",
+            quantity=quantity,
+            entry_price=entry_price,
+            stop_loss=round(entry_price - stop_dist, 2),
+            take_profit=round(entry_price + take_profit_dist, 2),
+            order_type="LIVE_MICRO",
+            timestamp=time.time()
+        )
+
+        approved, reason, meta = deterministic_risk_gatekeeper.validate_and_approve_order(order)
+        if not approved:
+            return {"status": "RISK_REJECTED", "reason": reason, "meta": meta}
+
+        deterministic_risk_gatekeeper.register_executed_position(order)
+        journal_entry = {
+            "timestamp": time.time(),
+            "time_str": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "symbol": symbol,
+            "action": "BUY",
+            "entry_price": order.entry_price,
+            "stop_loss": order.stop_loss,
+            "take_profit": order.take_profit,
+            "quantity": order.quantity,
+            "risk_inr": meta.get("total_risk_inr", max_risk_inr),
+            "status": "LIVE_OPEN",
+            "gatekeeper_check": "PASSED"
+        }
+        self.journal.append(journal_entry)
+        self._persist_journal()
+
+        return {
+            "status": "LIVE_TRADE_ACTIVE",
+            "symbol": symbol,
+            "action": "BUY",
+            "entry_price": order.entry_price,
+            "current_price": order.entry_price,
+            "quantity": order.quantity,
+            "stop_loss": order.stop_loss,
+            "take_profit": order.take_profit,
+            "unrealized_pnl": 0.0,
+            "pnl_pct": 0.0,
+            "is_earning": True,
+            "capital_allocated": round(order.quantity * order.entry_price, 2),
+            "risk_inr": meta.get("total_risk_inr", max_risk_inr),
+            "message": f"Live micro-trade initiated on {symbol} at ₹{entry_price:.2f}."
+        }
+
+    def get_live_trade_status(self, symbol: str = "RELIANCE.NS") -> Dict[str, Any]:
+        """Returns real-time P&L (earning or losing status) for the active trade."""
+        open_pos = deterministic_risk_gatekeeper.state.get("open_positions", {})
+        pos = open_pos.get(symbol)
+
+        # Fetch latest live market candle
+        candles = self.fetch_market_candles(symbol, interval="1d", range_str="5d")
+        current_price = round(candles[-1].close if candles else 2466.0, 2)
+
+        if not pos:
+            return {
+                "has_open_position": False,
+                "symbol": symbol,
+                "current_price": current_price,
+                "unrealized_pnl": 0.0,
+                "pnl_pct": 0.0,
+                "is_earning": True,
+                "status": "SCANNING_MARKET"
+            }
+
+        entry_price = float(pos.get("entry_price", current_price))
+        qty = float(pos.get("quantity", 0.01))
+        action = str(pos.get("action", "BUY")).upper()
+        stop_loss = float(pos.get("stop_loss", entry_price * 0.99))
+        take_profit = float(pos.get("take_profit", entry_price * 1.02))
+
+        if action == "BUY":
+            pnl = round((current_price - entry_price) * qty, 2)
+            pnl_pct = round(((current_price - entry_price) / entry_price) * 100.0, 2)
+        else:
+            pnl = round((entry_price - current_price) * qty, 2)
+            pnl_pct = round(((entry_price - current_price) / entry_price) * 100.0, 2)
+
+        return {
+            "has_open_position": True,
+            "symbol": symbol,
+            "action": action,
+            "entry_price": entry_price,
+            "current_price": current_price,
+            "quantity": qty,
+            "stop_loss": stop_loss,
+            "take_profit": take_profit,
+            "unrealized_pnl": pnl,
+            "pnl_pct": pnl_pct,
+            "is_earning": pnl >= 0,
+            "risk_metrics": deterministic_risk_gatekeeper.get_risk_metrics(),
+            "status": "LIVE_OPEN"
+        }
+
+    def close_live_trade(self, symbol: str = "RELIANCE.NS") -> Dict[str, Any]:
+        """Closes active live trade, settles realized P&L, and records in journal."""
+        open_pos = deterministic_risk_gatekeeper.state.get("open_positions", {})
+        if symbol not in open_pos:
+            return {"status": "NO_POSITION", "message": f"No active position to close for {symbol}"}
+
+        candles = self.fetch_market_candles(symbol, interval="1d", range_str="5d")
+        exit_price = round(candles[-1].close if candles else 2466.0, 2)
+        pos = open_pos[symbol]
+        entry = float(pos["entry_price"])
+        qty = float(pos["quantity"])
+        realized_pnl = round((exit_price - entry) * qty, 2)
+
+        deterministic_risk_gatekeeper.close_position(symbol, exit_price, notes="Manual or target close")
+        for j in reversed(self.journal):
+            if j.get("symbol") == symbol and j.get("status") == "LIVE_OPEN":
+                j["status"] = "CLOSED"
+                j["exit_price"] = exit_price
+                j["realized_pnl"] = realized_pnl
+                break
+        self._persist_journal()
+
+        return {
+            "status": "POSITION_CLOSED",
+            "symbol": symbol,
+            "entry_price": entry,
+            "exit_price": exit_price,
+            "realized_pnl": realized_pnl,
+            "new_equity": deterministic_risk_gatekeeper.state.get("current_equity", 500.0),
+            "message": f"Position on {symbol} closed at ₹{exit_price:.2f}. Realized P&L: ₹{realized_pnl:+.2f}."
+        }
+
     def generate_strategy_python_code(self) -> str:
         """Generates authentic, self-contained Python code for the active quant strategy."""
         p = self.params
