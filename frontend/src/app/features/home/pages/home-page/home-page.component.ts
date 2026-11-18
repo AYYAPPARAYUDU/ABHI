@@ -261,7 +261,12 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly isAutoCycleRunning = signal(false);
 
   readonly errorMessage = signal<string | null>(null);
+  readonly latestExchange = signal<{ prompt: string; response: string } | null>(null);
   readonly selectedNode = signal<SpatialNodeData | null>(null);
+
+  clearLatestExchange(): void {
+    this.latestExchange.set(null);
+  }
 
   toggleActionsMenu(): void {
     this.showActionsMenu.update((v) => !v);
@@ -1032,18 +1037,47 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     let url = '';
     let options: L.TileLayerOptions = { maxZoom: 19 };
 
-    if (layerKey === 'dark') {
-      url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-      options = { subdomains: 'abcd', maxZoom: 20 };
+    if (layerKey === 'street') {
+      // 100% Free OpenStreetMap Standard Tiles — Never requires any API key
+      url = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      options = {
+        subdomains: ['a', 'b', 'c'],
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors'
+      };
     } else if (layerKey === 'satellite') {
+      // Esri ArcGIS World Imagery
       url = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-      options = { maxZoom: 19 };
+      options = {
+        maxZoom: 19,
+        attribution: 'Tiles &copy; Esri &mdash; DigitalGlobe, GeoEye, Earthstar Geographics'
+      };
     } else {
-      url = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-      options = { subdomains: 'abcd', maxZoom: 20 };
+      // Cyber Dark with automatic OSM fallback
+      url = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      options = {
+        subdomains: 'abcd',
+        maxZoom: 20,
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+      };
     }
 
     this.activeTileLayer = L.tileLayer(url, options);
+
+    // Resilient fallback: If any tile provider fails or throws a key challenge, instantly fallback to OpenStreetMap
+    this.activeTileLayer.on('tileerror', () => {
+      const osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      if (this.activeTileLayer && url !== osmUrl) {
+        console.info('[ABHI MAP] Tile error intercepted — falling back to standard OpenStreetMap (No API Key Required).');
+        this.leafletMap?.removeLayer(this.activeTileLayer);
+        this.activeTileLayer = L.tileLayer(osmUrl, {
+          subdomains: ['a', 'b', 'c'],
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(this.leafletMap!);
+      }
+    });
+
     this.activeTileLayer.addTo(this.leafletMap);
   }
 
@@ -1921,6 +1955,9 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
       const res = await this.commandService.submitCommand(text, 'TEXT', 'auto');
 
       this.commandInput = '';
+
+      const outputText = res?.summary || res?.title || 'Command processed successfully.';
+      this.latestExchange.set({ prompt: text, response: outputText });
 
       if (res?.summary) {
         this.threeScene.latestJarvisMessage.set(res.summary);

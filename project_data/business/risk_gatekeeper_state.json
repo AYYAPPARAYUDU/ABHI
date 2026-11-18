@@ -1,29 +1,22 @@
 {
   "date": "2026-11-18",
-  "starting_equity": 50500.0,
-  "current_equity": 51240.0,
-  "realized_pnl": 740.0,
-  "unrealized_pnl": 120.0,
-  "peak_equity_today": 51240.0,
+  "starting_equity": 500.0,
+  "current_equity": 500.0,
+  "realized_pnl": 0.0,
+  "unrealized_pnl": 0.0,
+  "peak_equity_today": 500.0,
   "current_drawdown_pct": 0.0,
   "circuit_breaker_active": false,
   "breaker_reason": null,
-  "trades_count": 3,
+  "trades_count": 0,
   "open_positions": {},
   "audit_log": [
     {
       "timestamp": 1795000000.0,
-      "time_str": "2026-11-18 09:15:00",
-      "event": "CAPITAL_INITIALIZED",
+      "time_str": "2026-11-18 09:00:00",
+      "event": "MAMU_SEED_CAPITAL_INITIALIZED",
       "order": null,
-      "details": "Initialized ₹50,500 sovereign capital (₹50,000 quant allocation + ₹500 Mamu micro-lot seed). 2.0% daily circuit breaker armed."
-    },
-    {
-      "timestamp": 1795003600.0,
-      "time_str": "2026-11-18 10:15:00",
-      "event": "TRADE_PROFIT",
-      "order": null,
-      "details": "Closed RELIANCE.NS micro-lot at ₹1,362.40. PnL: +₹740.00. Passed all risk invariants."
+      "details": "Initialized authentic \u20b9500.00 sovereign seed capital from Mamu (UTR-MAMU-SEED-500). Deterministic zero-loss circuit breaker active."
     }
   ]
 }

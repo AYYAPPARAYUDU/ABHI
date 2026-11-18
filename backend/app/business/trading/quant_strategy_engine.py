@@ -16,7 +16,7 @@ import time
 import math
 import json
 import logging
-import requests
+import httpx
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, asdict
 
@@ -125,7 +125,7 @@ class QuantStrategyEngine:
 
         candles: List[Candle] = []
         try:
-            resp = requests.get(url, params=params, headers=headers, timeout=8)
+            resp = httpx.get(url, params=params, headers=headers, timeout=8.0)
             if resp.status_code == 200:
                 data = resp.json()
                 result = data.get("chart", {}).get("result", [None])[0]
@@ -607,11 +607,8 @@ class Generation{p.generation}AlphaStrategy:
             {"pillar": 8, "title": "Security & Guardrails", "desc": "Deterministic Risk Gatekeeper + Zero LLM overrides", "status": "LOCKED", "icon": "🛡️"}
         ]
 
-        b2b_retainers = [
-            {"client": "Apex Capital Tech", "service": "AST Code Vulnerability & Security Audit", "mrr_inr": 216000, "mrr_usd": 2500, "status": "ACTIVE", "rails": "Stripe / SBI"},
-            {"client": "HyperGrowth Media", "service": "AI Content Syndication & Multimodal Repurposing", "mrr_inr": 155000, "mrr_usd": 1800, "status": "ACTIVE", "rails": "Razorpay / UPI"},
-            {"client": "FinFlow Solutions", "service": "Autonomous Cashflow & Invoicing DAG Automation", "mrr_inr": 259000, "mrr_usd": 3000, "status": "ACTIVE", "rails": "PhonePe / SBI"}
-        ]
+        # Zero fake contracts: Real pipeline reflects authentic signed client retainers
+        b2b_retainers = []
 
         git_version_history = [
             {"branch": f"quant/gen-{self.params.generation}-walkforward", "commit": "785092a", "message": f"Walk-forward validated Sharpe {self.params.sharpe_ratio:.2f}", "status": "PRODUCTION"},

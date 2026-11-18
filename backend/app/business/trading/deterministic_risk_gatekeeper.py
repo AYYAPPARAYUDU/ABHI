@@ -58,7 +58,7 @@ class DeterministicRiskGatekeeper:
     MIN_RISK_REWARD_RATIO: float = 2.0          # Take-Profit must be at least 2.0x of Stop-Loss distance
     MAX_LEVERAGE: float = 1.0                   # Zero unhedged leverage allowed
 
-    def __init__(self, initial_capital: float = 50000.0):
+    def __init__(self, initial_capital: float = 500.0):
         self.initial_capital = initial_capital
         os.makedirs(os.path.dirname(RISK_STATE_FILE), exist_ok=True)
         self.state = self._load_or_init_state()

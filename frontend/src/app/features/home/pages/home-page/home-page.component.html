@@ -147,6 +147,7 @@
             <span class="tag-dot emerald pulse-glow"></span>
             <span class="tag-title font-monospace">PHYSICAL WORKSTATION LOCATION</span>
             <span class="loc-accuracy-pill font-monospace">{{ locationAccuracy() }}</span>
+            <span class="map-license-badge font-monospace" style="font-size: 9.5px; color: #10b981; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 7px; border-radius: 999px;">✓ OpenStreetMap Active (No API Key Required)</span>
           </div>
 
           <div class="header-controls-group">
@@ -535,95 +536,25 @@
   </main>
 
   <!-- ========================================================================= -->
-  <!-- LIVE VISION MATRIX & REAL-TIME OPEN-JARVIS ACTION BAR                     -->
-  <!-- ========================================================================= -->
-  <section class="era-vision-matrix-bar font-monospace" aria-label="Open-Jarvis Dynamic Perception HUD">
-    <div class="matrix-pill vision-pill" (click)="readMyScreen()" title="Click to execute live WinRT OCR screen perception">
-      <span class="pill-dot emerald pulse-glow"></span>
-      <span class="pill-label">LIVE VISION OCR:</span>
-      <span class="pill-val text-cyan">{{ screenVisionStatus() }}</span>
-      <span class="pill-shortcut">👁️ READ SCREEN</span>
-    </div>
-
-    <div class="matrix-pill media-pill">
-      <span class="pill-dot amber"></span>
-      <span class="pill-label">QUICK ACTIONS:</span>
-      <button type="button" class="btn-micro-chip" (click)="searchTeluguTrailers()">🎬 Telugu Trailers</button>
-      <button type="button" class="btn-micro-chip" (click)="searchTeluguSongs()">🎵 Telugu Songs</button>
-      <button type="button" class="btn-micro-chip" (click)="skipSong2Min()">⏭️ Skip 2m</button>
-      <button type="button" class="btn-micro-chip" (click)="changeSong()">🔀 Next Song</button>
-      <button type="button" class="btn-micro-chip" (click)="togglePlayPause()">⏸️ Pause/Play</button>
-      <button type="button" class="btn-micro-chip" (click)="scrollLittleUp()">⬆️ Scroll Up</button>
-      <button type="button" class="btn-micro-chip" (click)="scrollLittleDown()">⬇️ Scroll Down</button>
-      <button type="button" class="btn-micro-chip" (click)="againSearch()">🔄 Search Again</button>
-    </div>
-  </section>
-
-  <!-- ========================================================================= -->
-  <!-- BOTTOM QUICK ACTION CHIPS (VIRAL REELS & OS TAB AUTOMATION & SBI REVENUE) -->
-  <!-- ========================================================================= -->
-  <section class="era-quick-chips-bar" aria-label="Viral Quick Action Shortcuts">
-    <button type="button" class="era-chip-btn chip-cyan" (click)="readMyScreen()">
-      <span class="chip-ic">👁️</span>
-      <span class="chip-label">Read Screen</span>
-    </button>
-
-    <button type="button" class="era-chip-btn" (click)="searchTeluguTrailers()">
-      <span class="chip-ic">🎬</span>
-      <span class="chip-label">Telugu Trailers</span>
-    </button>
-
-    <button type="button" class="era-chip-btn" (click)="searchTeluguSongs()">
-      <span class="chip-ic">🎵</span>
-      <span class="chip-label">Telugu Songs</span>
-    </button>
-
-    <button type="button" class="era-chip-btn" (click)="skipSong2Min()">
-      <span class="chip-ic">⏭️</span>
-      <span class="chip-label">Skip 2 Min</span>
-    </button>
-
-    <button type="button" class="era-chip-btn" (click)="changeSong()">
-      <span class="chip-ic">🔀</span>
-      <span class="chip-label">Change Song</span>
-    </button>
-
-    <button type="button" class="era-chip-btn" (click)="scrollLittleUp()">
-      <span class="chip-ic">⬆️</span>
-      <span class="chip-label">Scroll Up</span>
-    </button>
-
-    <button type="button" class="era-chip-btn" (click)="scrollLittleDown()">
-      <span class="chip-ic">⬇️</span>
-      <span class="chip-label">Scroll Down</span>
-    </button>
-
-    <button type="button" class="era-chip-btn chip-gold" (click)="runAutonomousRevenueCycle()">
-      <span class="chip-ic">💰</span>
-      <span class="chip-label">Master Revenue Cycle (SBI)</span>
-    </button>
-
-    <button type="button" class="era-chip-btn chip-virus" (click)="executeVirusScan()">
-      <span class="chip-ic">🛡️</span>
-      <span class="chip-label">Scan PC</span>
-    </button>
-
-    <button type="button" class="era-chip-btn" (click)="executeTabSwitch('next')">
-      <span class="chip-ic">📑</span>
-      <span class="chip-label">Switch Tab</span>
-    </button>
-
-    <button type="button" class="era-chip-btn chip-cyan" (click)="toggleAlexaMode()">
-      <span class="chip-ic">🎙️</span>
-      <span class="chip-label">{{ speechVoice.isAlexaConversationMode() ? 'Exit Voice Mode' : 'Hands-Free Voice' }}</span>
-    </button>
-  </section>
-
-  <!-- ========================================================================= -->
-  <!-- BOTTOM CENTRED PLAIN NEUMORPHIC COMMAND DOCK                              -->
+  <!-- BOTTOM CENTRED MINIMAL SOVEREIGN CHAT & COMMAND DOCK                      -->
   <!-- ========================================================================= -->
   <footer class="era-dock-container" role="region" aria-label="Command Dock">
     <div class="era-dock-shell" [class.working]="isWorking()" [class.has-error]="errorMessage()">
+      <!-- Live Prompt & Output Preview Strip -->
+      @if (latestExchange(); as exc) {
+        <div class="era-dock-response-strip font-monospace" (click)="clearLatestExchange()" title="Click to dismiss">
+          <div class="response-strip-top">
+            <span class="resp-tag-badge">⚡ OUTPUT RESPONSE</span>
+            <span class="resp-dismiss">✕ Dismiss</span>
+          </div>
+          <div class="response-strip-body">
+            <span class="resp-prompt-echo">"{{ exc.prompt }}"</span>
+            <span class="resp-arrow">➔</span>
+            <span class="resp-output-text">{{ exc.response }}</span>
+          </div>
+        </div>
+      }
+
       <form #dockFormRef class="era-dock-form" (ngSubmit)="onSubmitCommand()">
         <div class="era-dock-inner">
           <div class="dock-ai-icon" [class.glow]="isWorking()">

@@ -157,10 +157,10 @@ class AdbController:
 
             return proc.returncode, stdout_str, stderr_str
         except asyncio.TimeoutError:
-            logger.warning(f"ADB command timed out: {' '.join(full_args)}")
+            logger.debug(f"ADB command timed out: {' '.join(full_args)}")
             return -1, "", "Command timed out"
         except Exception as e:
-            logger.error(f"ADB command failed: {e}")
+            logger.debug(f"ADB command not available: {repr(e)}")
             return -1, "", str(e)
 
     async def list_devices(self) -> List[Dict[str, Any]]:

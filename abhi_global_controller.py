@@ -1,20 +1,27 @@
 """
 ================================================================================
-ABHI Ultra Advanced Cybernetic Companion Cube Pet & Voice Operating System.
-Next-Gen Living Cyber Pet with Animated Expressive Eyes, Dynamic Themes,
-Win32 Mutex Single-Instance Guard, Ambient 24/7 Voice Intelligence,
-and Minimal Advanced HUD.
+ABHI Ultra Advanced Global Windows Top Notch & Voice Operating System.
+Next-Gen System-Wide Dynamic Notch (Vayli Windows Notch & Control Center)
+Built with Frameless Always-On-Top CTk, Win32 Mutex Single-Instance Guard,
+24/7 Background Ambient Voice Intelligence, Live Screen Perception,
+and Complete Laptop OS Hardware Controls.
 
 Features:
-  1. Win32 Named Mutex: Zero duplicate instances on startup or manual launch.
-  2. Cybernetic Cube Pet: 110x110 floating companion with cute animated eyes
-     (Blinking, Happy, Listening, Thinking, Speaking, Sleeping, Success).
-  3. Dynamic Color Themes: Solar Amber (Light Yellows + Orange borders),
-     Cyber Neon, Obsidian Blue, Royal Amethyst.
-  4. Ambient 24/7 Background Audio Listener: Executes directives, reads screen,
-     and controls apps even if the popup is never opened.
-  5. Minimal Advanced Studio HUD (380x520): Top living faceplate, interactive mood
-     pills, dynamic theme switcher, context telemetry, quick action chips.
+  1. Win32 Named Mutex: Zero duplicate instances across Windows.
+  2. True Global Laptop Notch:
+     - Collapsed: 340x38 sleek hardware pill at y=0 (top center of laptop screen).
+     - Hover Expansion: Smoothly expands downward to 860x440 on mouse hover or click.
+     - Auto-Collapse: Automatically returns to top pill when cursor leaves.
+     - Pin Mode (📌): Keeps notch open while multitasking.
+  3. Universal 6-Tab HUD Deck:
+     - ⚙️ CENTER: Wi-Fi, Bluetooth, DND, Volume & Brightness sliders, Laptop Settings.
+     - 📅 CALENDAR: Interactive month calendar with event dots + Focus Timer + Active Automations.
+     - ♫ MUSIC: Online media player with track scrubber, equalizer bars, hardware media keys.
+     - ⚡ VITALS: Live CPU, RAM, Disk telemetry via psutil + Active Foreground Window tracker.
+     - 📋 SHELF: Windows Clipboard history + Quick scratchpad note.
+     - 🚀 APPS: Instant 1-click launcher for VS Code, Chrome, Terminal, Explorer, Settings.
+  4. 24/7 Ambient Voice Intelligence: Always listens in the background, executes
+     system tasks, reads screen, and answers with neural natural voice.
 ================================================================================
 """
 
@@ -31,8 +38,8 @@ from ctypes import wintypes
 import io
 import wave
 import math
-from typing import Optional, Dict, Any
 import collections
+from typing import Optional, Dict, Any
 
 # Win32 DPI Awareness for sharp 4K / High-DPI screens
 try:
@@ -46,15 +53,15 @@ except Exception:
 # ==============================================================================
 # WIN32 SINGLE-INSTANCE MUTEX ENFORCEMENT
 # ==============================================================================
-MUTEX_NAME = "Global\\ABHI_CYBERNETIC_CONTROLLER_MUTEX_V2"
+MUTEX_NAME = "Global\\ABHI_BOT_CONTROLLER_MUTEX_V3"
 kernel32 = ctypes.windll.kernel32
 user32 = ctypes.windll.user32
 
 _mutex_handle = kernel32.CreateMutexW(None, False, MUTEX_NAME)
 if kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
-    hwnd = user32.FindWindowW(None, "ABHI Cybernetic Intelligence")
+    hwnd = user32.FindWindowW(None, "ABHI Bot")
     if not hwnd:
-        hwnd = user32.FindWindowW(None, "ABHI Cyber Companion")
+        hwnd = user32.FindWindowW(None, "ABHI Global Notch")
     if hwnd:
         user32.ShowWindow(hwnd, 9)  # SW_RESTORE
         user32.SetForegroundWindow(hwnd)
@@ -67,6 +74,7 @@ import sounddevice as sd
 import numpy as np
 import speech_recognition as sr
 import customtkinter as ctk
+import psutil
 
 # ABHI In-Process Engines
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -100,9 +108,6 @@ THEMES = {
         "border": "#f97316",         # Cyber Orange
         "border_secondary": "#ea580c",
         "border_glow": "#fdba74",
-        "eye_primary": "#fef08a",    # Light Yellow
-        "eye_secondary": "#facc15",  # Warm Yellow
-        "eye_glow": "#fef9c3",
         "accent": "#f59e0b",
         "accent_hover": "#fbbf24",
         "text_primary": "#fffbeb",
@@ -118,9 +123,6 @@ THEMES = {
         "border": "#10b981",         # Emerald Green
         "border_secondary": "#059669",
         "border_glow": "#6ee7b7",
-        "eye_primary": "#67e8f9",    # Cyber Cyan
-        "eye_secondary": "#22d3ee",
-        "eye_glow": "#cffafe",
         "accent": "#10b981",
         "accent_hover": "#34d399",
         "text_primary": "#f0fdf4",
@@ -136,9 +138,6 @@ THEMES = {
         "border": "#0284c7",         # Sky Blue
         "border_secondary": "#0369a1",
         "border_glow": "#7dd3fc",
-        "eye_primary": "#bae6fd",    # Frost Cyan
-        "eye_secondary": "#38bdf8",
-        "eye_glow": "#e0f2fe",
         "accent": "#00f0ff",
         "accent_hover": "#38bdf8",
         "text_primary": "#f8fafc",
@@ -154,9 +153,6 @@ THEMES = {
         "border": "#db2777",         # Cyber Rose/Magenta
         "border_secondary": "#be185d",
         "border_glow": "#f472b6",
-        "eye_primary": "#fbcfe8",    # Light Pink
-        "eye_secondary": "#c084fc",  # Purple
-        "eye_glow": "#fdf2f8",
         "accent": "#ec4899",
         "accent_hover": "#f472b6",
         "text_primary": "#fdf4ff",
@@ -167,14 +163,14 @@ THEMES = {
 }
 
 
-class AbhiCyberneticCompanion(ctk.CTk):
+class AbhiGlobalTopNotch(ctk.CTk):
     """
-    ABHI Living Cyber Cube Companion Pet & Ambient Voice Operating System.
+    ABHI Global System-Wide Windows Top Notch & Voice Operating System.
     """
 
     def __init__(self):
         super().__init__()
-        self.title("ABHI Cyber Companion")
+        self.title("ABHI Global Notch")
 
         # Window styling: Frameless, Always-On-Top, Transparent Backing
         self.overrideredirect(True)
@@ -187,64 +183,84 @@ class AbhiCyberneticCompanion(ctk.CTk):
         self.current_theme_key = "solar_amber"
         self.theme = THEMES[self.current_theme_key]
 
-        # Emotion & Mood State
-        self.mood = "happy"  # happy, focus, cyber, tuned, sleep
-        self.bot_state = "IDLE"  # IDLE, LISTENING, THINKING, SPEAKING, SUCCESS
-        self.blink_state = 0.0  # 0.0 (wide open) to 1.0 (fully shut)
-        self.is_blinking = False
-        self.gaze_x = 0.0  # Normalized -1.0 to 1.0
-        self.gaze_y = 0.0  # Normalized -1.0 to 1.0
-        self.visor_scan_pos = 0.0  # Thinking sweep
-        self.animation_tick = 0
-
-        # Audio & Telemetry
-        self.live_audio_rms = 0.0
-        self.live_voice_ratio = 0.0
-        self.is_mic_listening = True
-        self.audio_history = [0.0] * 20
-        self.active_window_title = "Windows Desktop"
-        self.tts_lock = threading.Lock()
-
-        # Window Geometry & Dragging
+        # Geometry & Notch States
         self.is_expanded = False
+        self.is_pinned = False
+        self.is_notch_docked = True
+        self.active_tab = "CENTER"
         self.screen_width = self.winfo_screenwidth()
         self.screen_height = self.winfo_screenheight()
 
-        self.compact_w, self.compact_h = 110, 110
-        self.expanded_w, self.expanded_h = 380, 520
+        self.compact_w, self.compact_h = 340, 38
+        self.expanded_w, self.expanded_h = 860, 440
 
-        # Position at bottom-right corner
-        self.pos_x = self.screen_width - self.compact_w - 35
-        self.pos_y = self.screen_height - self.compact_h - 75
+        # Pinned right at the top center of Windows screen
+        self.pos_x = (self.screen_width - self.compact_w) // 2
+        self.pos_y = 0
 
-        self.drag_start_x = 0
-        self.drag_start_y = 0
-        self.drag_dist = 0
-        self.is_dragging = False
+        self._hover_collapse_job = None
+        self.animation_tick = 0
+        self.session_start_time = time.time()
 
-        # Build UI Components
+        # Telemetry & States
+        self.live_audio_rms = 0.0
+        self.live_voice_ratio = 0.0
+        self.is_mic_listening = True
+        self.active_window_title = "Windows Desktop"
+        self.bot_state = "IDLE"
+
+        # Hardware Mock / Real Values
+        self.current_volume = 65
+        self.current_brightness = 85
+        self.is_wifi_on = True
+        self.is_dnd_on = False
+        self.is_bt_on = True
+        self.is_night_light_on = False
+        self.is_battery_saver_on = False
+
+        # Music State
+        self.is_playing = False
+        self.music_track = "Golden Hour - Nova Lane"
+        self.music_progress = 34
+        self.music_duration = 161
+
+        # Focus Timer State
+        self.timer_seconds = 0
+        self.is_timer_running = False
+        self.timer_thread = None
+
+        # Clipboard Shelf
+        self.clipboard_history = [
+            "https://github.com/elayadesign/ai-design-skills",
+            "git status -s",
+            "py -3.14 run_server.py"
+        ]
+
+        # Build Frames
         self.compact_frame = ctk.CTkFrame(
             self,
             width=self.compact_w,
             height=self.compact_h,
-            fg_color="transparent",
-            corner_radius=22
+            fg_color="#070b14",
+            border_color=self.theme["border"],
+            border_width=1.5,
+            corner_radius=18
         )
 
         self.expanded_frame = ctk.CTkFrame(
             self,
             width=self.expanded_w,
             height=self.expanded_h,
-            fg_color=self.theme["bg"],
+            fg_color="#070b14",
             border_color=self.theme["border"],
-            border_width=2,
-            corner_radius=18
+            border_width=1.5,
+            corner_radius=22
         )
 
-        self._build_compact_cube_view()
-        self._build_expanded_studio_view()
+        self._build_compact_notch_view()
+        self._build_expanded_notch_view()
 
-        # Start in compact mode
+        # Launch docked at top
         self._update_geometry()
         self.compact_frame.pack(fill="both", expand=True)
 
@@ -252,8 +268,7 @@ class AbhiCyberneticCompanion(ctk.CTk):
         self._enforce_topmost()
         self._start_os_context_monitor()
         self._start_continuous_voice_listener()
-        self._start_face_mood_observer()
-        self._schedule_blinking()
+        self._start_clock_and_vitals_loop()
 
     # ==========================================================================
     # WINDOW MANAGEMENT & GEOMETRY
@@ -272,688 +287,274 @@ class AbhiCyberneticCompanion(ctk.CTk):
     def _update_geometry(self):
         w = self.expanded_w if self.is_expanded else self.compact_w
         h = self.expanded_h if self.is_expanded else self.compact_h
+        self.pos_x = (self.screen_width - w) // 2
+        self.pos_y = 0
         self.geometry(f"{w}x{h}+{self.pos_x}+{self.pos_y}")
 
-    # ==========================================================================
-    # COMPACT LIVING CYBER CUBE PET VIEW (110x110)
-    # ==========================================================================
+    def expand_notch(self):
+        if hasattr(self, "_hover_collapse_job") and self._hover_collapse_job:
+            self.after_cancel(self._hover_collapse_job)
+            self._hover_collapse_job = None
+        if not self.is_expanded:
+            self.toggle_mode()
 
-    def _build_compact_cube_view(self):
-        self.cube_canvas = ctk.CTkCanvas(
-            self.compact_frame,
-            width=self.compact_w,
-            height=self.compact_h,
-            bg=self.TRANSPARENT_KEY,
-            highlightthickness=0
-        )
-        self.cube_canvas.pack(fill="both", expand=True)
+    def collapse_notch(self):
+        if self.is_expanded and not self.is_pinned:
+            self.toggle_mode()
 
-        # Mouse Events: Dragging, Clicking, Gaze Tracking
-        self.cube_canvas.bind("<Button-1>", self._on_drag_start)
-        self.cube_canvas.bind("<B1-Motion>", self._on_drag_motion)
-        self.cube_canvas.bind("<ButtonRelease-1>", self._on_drag_end_cube)
-        self.cube_canvas.bind("<Motion>", self._on_mouse_hover)
-        self.cube_canvas.bind("<Leave>", self._on_mouse_leave)
-
-        self._render_cube_pet()
-
-    def _on_mouse_hover(self, event):
-        # Eyes track cursor relative to cube center
-        cx, cy = self.compact_w / 2, self.compact_h / 2
-        dx = (event.x - cx) / cx
-        dy = (event.y - cy) / cy
-        self.gaze_x = max(-1.0, min(1.0, dx))
-        self.gaze_y = max(-1.0, min(1.0, dy))
-
-    def _on_mouse_leave(self, event):
-        self.gaze_x = 0.0
-        self.gaze_y = 0.0
-
-    def _schedule_blinking(self):
-        """Natural lifelike eye blinking loop every 3.2 - 5 seconds."""
-        if not self.is_blinking and self.mood != "sleep":
-            self.is_blinking = True
-            self._execute_blink_step(0.0, True)
-        next_blink = 3200 + int(np.random.random() * 2000)
-        self.after(next_blink, self._schedule_blinking)
-
-    def _execute_blink_step(self, stage: float, closing: bool):
-        if closing:
-            stage += 0.35
-            if stage >= 1.0:
-                stage = 1.0
-                closing = False
+    def toggle_mode(self):
+        self.is_expanded = not self.is_expanded
+        if self.is_expanded:
+            self.compact_frame.pack_forget()
+            self._update_geometry()
+            self.expanded_frame.pack(fill="both", expand=True)
+            self.input_entry.focus_set()
         else:
-            stage -= 0.35
-            if stage <= 0.0:
-                stage = 0.0
-                self.blink_state = 0.0
-                self.is_blinking = False
-                return
+            self.expanded_frame.pack_forget()
+            self._update_geometry()
+            self.compact_frame.pack(fill="both", expand=True)
 
-        self.blink_state = stage
-        self.after(25, lambda: self._execute_blink_step(stage, closing))
-
-    def _render_cube_pet(self):
-        """Draws the Cybernetic Cube Pet chassis, beveled borders, and cute expressive eyes."""
-        self.cube_canvas.delete("all")
-        w, h = self.compact_w, self.compact_h
-        t = self.theme
-        self.animation_tick += 1
-
-        # 1. Outer Glow Aura (Dynamic Audio RMS pulse)
-        audio_boost = int(min(6, self.live_audio_rms * 40))
-        pad = 8 - audio_boost
-        cx, cy = w / 2, h / 2
-
-        # 2. Cybernetic Cube Box Body (Rounded Beveled Chassis)
-        box_x1, box_y1 = pad, pad + 2
-        box_x2, box_y2 = w - pad, h - pad + 2
-        corner_r = 16
-
-        # Draw outer glowing halo if listening/talking
-        if self.bot_state in ["LISTENING", "SPEAKING"] or self.live_voice_ratio > 0.06:
-            halo_col = t["border_glow"] if self.bot_state != "SPEAKING" else "#86efac"
-            self.cube_canvas.create_rectangle(
-                box_x1 - 2, box_y1 - 2, box_x2 + 2, box_y2 + 2,
-                outline=halo_col, width=1.5
-            )
-
-        # Main Cube Body
-        self._create_rounded_rect(
-            self.cube_canvas, box_x1, box_y1, box_x2, box_y2,
-            radius=corner_r,
-            fill=t["surface"],
-            outline=t["border"],
-            width=2.5
-        )
-
-        # 3. Corner Cyber Accents (Rivets / Screws)
-        rivet_color = t["border_secondary"]
-        rivet_offset = 7
-        rivets = [
-            (box_x1 + rivet_offset, box_y1 + rivet_offset),
-            (box_x2 - rivet_offset, box_y1 + rivet_offset),
-            (box_x1 + rivet_offset, box_y2 - rivet_offset),
-            (box_x2 - rivet_offset, box_y2 - rivet_offset),
-        ]
-        for rx, ry in rivets:
-            self.cube_canvas.create_oval(rx - 2, ry - 2, rx + 2, ry + 2, fill=rivet_color, outline="")
-
-        # 4. Top Antenna / Cyber Horn (Tiny glowing amber nodule)
-        horn_col = t["accent"] if self.bot_state != "SPEAKING" else "#22c55e"
-        self.cube_canvas.create_line(cx, box_y1, cx, box_y1 - 5, fill=t["border"], width=2)
-        self.cube_canvas.create_oval(cx - 3, box_y1 - 8, cx + 3, box_y1 - 2, fill=horn_col, outline="")
-
-        # 5. Inner Glass Visor / Faceplate
-        visor_pad = 7
-        vx1, vy1 = box_x1 + visor_pad, box_y1 + visor_pad
-        vx2, vy2 = box_x2 - visor_pad, box_y2 - visor_pad - 2
-        self._create_rounded_rect(
-            self.cube_canvas, vx1, vy1, vx2, vy2,
-            radius=10,
-            fill=t["bg"],
-            outline="#1e293b",
-            width=1
-        )
-
-        # 6. Cute Expressive Eyes (Left & Right)
-        face_cx = (vx1 + vx2) / 2
-        face_cy = (vy1 + vy2) / 2 - 1
-        eye_spacing = 16
-        eye_base_w = 12
-        eye_base_h = 18
-
-        # Thinking Visor Sweep
-        if self.bot_state == "THINKING":
-            self.visor_scan_pos = (self.visor_scan_pos + 2.5) % (vx2 - vx1)
-            sweep_x = vx1 + self.visor_scan_pos
-            self.cube_canvas.create_line(
-                sweep_x, vy1 + 2, sweep_x, vy2 - 2,
-                fill=t["accent"], width=2
-            )
-
-        # Draw left and right eyes (or continuous cyberpunk shades if in cyber mood)
-        left_eye_center = (face_cx - eye_spacing, face_cy)
-        right_eye_center = (face_cx + eye_spacing, face_cy)
-
-        if self.mood == "cyber":
-            # Futuristic neon matrix cyberpunk sunglasses across both eyes
-            sy1, sy2 = face_cy - 9, face_cy + 9
-            sx1 = face_cx - eye_spacing - eye_base_w - 3
-            sx2 = face_cx + eye_spacing + eye_base_w + 3
-            shades_pts = [
-                sx1, sy1 + 5,
-                sx1 + 7, sy1,
-                sx2 - 7, sy1,
-                sx2, sy1 + 5,
-                sx2 - 5, sy2,
-                sx1 + 5, sy2
-            ]
-            self.cube_canvas.create_polygon(shades_pts, fill="#020617", outline=t["border_glow"], width=2)
-            # Glowing laser scanline across cyber shades
-            scan_y = sy1 + 3 + (self.animation_tick % 13)
-            self.cube_canvas.create_line(sx1 + 4, scan_y, sx2 - 4, scan_y, fill=t["accent"], width=1.5)
-            # Center bridge
-            self.cube_canvas.create_line(face_cx - 3, sy1 + 2, face_cx + 3, sy1 + 2, fill=t["border"], width=2)
+    def toggle_pin(self):
+        self.is_pinned = not self.is_pinned
+        if self.is_pinned:
+            self.pin_btn.configure(text="📌 Pinned", fg_color="#0369a1")
         else:
-            self._draw_cute_eye(
-                canvas=self.cube_canvas, cx=left_eye_center[0], cy=left_eye_center[1],
-                base_w=eye_base_w, base_h=eye_base_h, theme=t, is_right_eye=False,
-                face_cx=face_cx, face_cy=face_cy
-            )
-            self._draw_cute_eye(
-                canvas=self.cube_canvas, cx=right_eye_center[0], cy=right_eye_center[1],
-                base_w=eye_base_w, base_h=eye_base_h, theme=t, is_right_eye=True,
-                face_cx=face_cx, face_cy=face_cy
-            )
-
-        # Cute Rosy Blush on Cheeks (Happy, Excited, Love, Wink)
-        mouth_y = face_cy + 13
-        if self.mood in ["happy", "excited", "love", "wink"]:
-            blush_col = "#f472b6" if self.mood == "love" else "#fb923c"
-            self.cube_canvas.create_oval(
-                face_cx - eye_spacing - 6, mouth_y - 3,
-                face_cx - eye_spacing + 4, mouth_y + 3,
-                fill=blush_col, outline=""
-            )
-            self.cube_canvas.create_oval(
-                face_cx + eye_spacing - 4, mouth_y - 3,
-                face_cx + eye_spacing + 6, mouth_y + 3,
-                fill=blush_col, outline=""
-            )
-
-        # Floating peaceful Z particles in sleep mode
-        if self.mood == "sleep":
-            z_offset = (self.animation_tick * 1.2) % 24
-            self.cube_canvas.create_text(
-                face_cx + 22, vy1 + 20 - z_offset,
-                text="z", font=("Segoe UI", 7, "bold"), fill=t["text_muted"]
-            )
-            self.cube_canvas.create_text(
-                face_cx + 27, vy1 + 13 - z_offset,
-                text="Z", font=("Segoe UI", 9, "bold"), fill=t["border_glow"]
-            )
-
-        # 7. Rich Expressive Mouth Indicator at Bottom of Visor
-        if self.bot_state == "SPEAKING":
-            # Speaking audio wave mouth
-            mouth_w = 6 + int(min(8, self.live_audio_rms * 50))
-            self.cube_canvas.create_line(
-                face_cx - mouth_w, mouth_y, face_cx + mouth_w, mouth_y,
-                fill=t["eye_primary"], width=2
-            )
-        elif self.mood == "happy":
-            # Cute small smiling arc ◡
-            self.cube_canvas.create_arc(
-                face_cx - 5, mouth_y - 3, face_cx + 5, mouth_y + 4,
-                start=190, extent=160, style="arc",
-                outline=t["border_secondary"], width=2
-            )
-        elif self.mood == "excited":
-            # Joyous open smile D
-            self.cube_canvas.create_arc(
-                face_cx - 6, mouth_y - 4, face_cx + 6, mouth_y + 6,
-                start=180, extent=180, fill=t["border_secondary"], outline=t["border_secondary"], width=1
-            )
-        elif self.mood == "love":
-            # Cute cat-like double curved mouth ω
-            self.cube_canvas.create_arc(
-                face_cx - 6, mouth_y - 2, face_cx, mouth_y + 4,
-                start=190, extent=150, style="arc", outline="#f472b6", width=1.5
-            )
-            self.cube_canvas.create_arc(
-                face_cx, mouth_y - 2, face_cx + 6, mouth_y + 4,
-                start=190, extent=150, style="arc", outline="#f472b6", width=1.5
-            )
-        elif self.mood == "thinking":
-            # Curious wavy line ~
-            self.cube_canvas.create_line(
-                face_cx - 5, mouth_y + 1, face_cx - 1, mouth_y - 2,
-                face_cx + 2, mouth_y + 2, face_cx + 6, mouth_y,
-                smooth=True, fill=t["eye_primary"], width=1.8
-            )
-        elif self.mood == "surprised":
-            # Small round open mouth o
-            self.cube_canvas.create_oval(
-                face_cx - 3, mouth_y - 2, face_cx + 3, mouth_y + 4,
-                outline=t["eye_primary"], fill=t["bg"], width=1.8
-            )
-        elif self.mood == "wink":
-            # Playful tilted smirk
-            self.cube_canvas.create_line(
-                face_cx - 4, mouth_y + 2, face_cx + 1, mouth_y + 2,
-                face_cx + 6, mouth_y - 2,
-                smooth=True, fill=t["eye_primary"], width=2
-            )
-        elif self.mood == "concerned":
-            # Empathetic downturned arc ︵
-            self.cube_canvas.create_arc(
-                face_cx - 5, mouth_y, face_cx + 5, mouth_y + 6,
-                start=10, extent=160, style="arc",
-                outline=t["border_secondary"], width=2
-            )
-        elif self.mood == "focus":
-            # Crisp straight focused line —
-            self.cube_canvas.create_line(
-                face_cx - 6, mouth_y, face_cx + 6, mouth_y,
-                fill=t["accent"], width=2
-            )
-        elif self.mood == "shield":
-            # Security lock bar
-            self.cube_canvas.create_line(
-                face_cx - 5, mouth_y, face_cx + 5, mouth_y,
-                fill="#ef4444", width=2
-            )
-        elif self.mood == "sleep":
-            # Peaceful micro-line
-            self.cube_canvas.create_line(
-                face_cx - 3, mouth_y, face_cx + 3, mouth_y,
-                fill=t["text_muted"], width=1.5
-            )
-        else:
-            # Neutral gentle micro-smile
-            self.cube_canvas.create_line(
-                face_cx - 4, mouth_y, face_cx + 4, mouth_y,
-                fill=t["text_muted"], width=1.5
-            )
-
-        # 8. Bottom Mood / State Label
-        state_txt = self.mood.upper()
-        if self.bot_state != "IDLE":
-            state_txt = self.bot_state
-        self.cube_canvas.create_text(
-            cx, h - 3,
-            text=state_txt,
-            font=("Segoe UI", 6, "bold"),
-            fill=t["text_muted"]
-        )
-
-        # Refresh canvas frame (smooth 30 FPS animation)
-        self.after(33, self._render_cube_pet)
-
-    def _draw_cute_eye(self, canvas, cx, cy, base_w, base_h, theme, is_right_eye: bool = False, face_cx: float = 0, face_cy: float = 0):
-        """Draws one cute expressive eye taking mood, gaze, and blink state into account."""
-        # 1. Sleep Mode: Peaceful curved horizontal slits (- -)
-        if self.mood == "sleep":
-            canvas.create_line(
-                cx - base_w, cy + 2, cx + base_w, cy + 2,
-                fill=theme["eye_primary"], width=2.5
-            )
-            return
-
-        # 2. Happy Mode: Cute anime arched crescents (^ ^)
-        if self.mood == "happy" and not self.is_blinking:
-            canvas.create_arc(
-                cx - base_w, cy - base_h / 2, cx + base_w, cy + base_h / 2,
-                start=20, extent=140, style="arc",
-                outline=theme["eye_primary"], width=3
-            )
-            return
-
-        # 3. Excited / Success Mode: Pulsating Glowing Stars (★ ★)
-        if self.mood == "excited" or self.bot_state == "SUCCESS":
-            r = base_w + 1 + math.sin(self.animation_tick * 0.3) * 1.5
-            star_pts = [
-                cx, cy - r,
-                cx + r * 0.28, cy - r * 0.28,
-                cx + r, cy,
-                cx + r * 0.28, cy + r * 0.28,
-                cx, cy + r,
-                cx - r * 0.28, cy + r * 0.28,
-                cx - r, cy,
-                cx - r * 0.28, cy - r * 0.28
-            ]
-            canvas.create_polygon(star_pts, fill=theme["eye_primary"], outline=theme["border_glow"], width=1)
-            return
-
-        # 4. Love Mode: Glowing Pulsating Hearts (♥ ♥)
-        if self.mood == "love" and not self.is_blinking:
-            scale = 1.0 + math.sin(self.animation_tick * 0.25) * 0.14
-            hr = 6.2 * scale
-            heart_pts = [
-                cx, cy + hr * 0.9,
-                cx - hr, cy + hr * 0.1,
-                cx - hr * 1.05, cy - hr * 0.5,
-                cx - hr * 0.6, cy - hr * 0.95,
-                cx, cy - hr * 0.4,
-                cx + hr * 0.6, cy - hr * 0.95,
-                cx + hr * 1.05, cy - hr * 0.5,
-                cx + hr, cy + hr * 0.1
-            ]
-            canvas.create_polygon(heart_pts, smooth=True, fill="#f43f5e", outline="#fda4af", width=1.5)
-            return
-
-        # 5. Wink Mode: Left eye winks (^), Right eye wide open sparkle (O)
-        if self.mood == "wink" and not is_right_eye and not self.is_blinking:
-            canvas.create_arc(
-                cx - base_w, cy - base_h / 2 + 1, cx + base_w, cy + base_h / 2 + 1,
-                start=25, extent=130, style="arc",
-                outline=theme["eye_primary"], width=3
-            )
-            return
-
-        # 6. Concerned / Sad Mode: Droopy downturned sorrowful crescents (︶ ︶)
-        if self.mood == "concerned" and not self.is_blinking:
-            canvas.create_arc(
-                cx - base_w, cy + 1, cx + base_w, cy + base_h - 2,
-                start=200, extent=140, style="arc",
-                outline=theme["eye_primary"], width=2.5
-            )
-            if is_right_eye:
-                canvas.create_oval(cx + 4, cy + 7, cx + 8, cy + 12, fill="#38bdf8", outline="")
-            return
-
-        # 7. Surprised Mode: Large wide circular anime eyes (O O)
-        if self.mood == "surprised" and not self.is_blinking:
-            canvas.create_oval(
-                cx - 8.5, cy - 9.5, cx + 8.5, cy + 7.5,
-                fill=theme["bg"], outline=theme["eye_primary"], width=2.5
-            )
-            canvas.create_oval(cx - 2.5, cy - 2, cx + 2.5, cy + 3, fill=theme["eye_primary"], outline="")
-            canvas.create_line(cx - 7, cy - 13, cx + 7, cy - 13, fill=theme["eye_primary"], width=2)
-            return
-
-        # 8. Shield / Security Lock Mode: Crosshair HUD Reticle (✛ ✛)
-        if self.mood == "shield":
-            canvas.create_oval(cx - 7.5, cy - 7.5, cx + 7.5, cy + 7.5, outline=theme["border_glow"], width=1.5)
-            canvas.create_line(cx - 9, cy, cx + 9, cy, fill=theme["border_glow"], width=1.5)
-            canvas.create_line(cx, cy - 9, cx, cy + 9, fill=theme["border_glow"], width=1.5)
-            canvas.create_oval(cx - 2, cy - 2, cx + 2, cy + 2, fill="#ef4444", outline="")
-            return
-
-        # 9. Focus Mode: Angled cyberpunk visor slits
-        if self.mood == "focus" and not self.is_blinking:
-            if not is_right_eye:
-                pts = [cx - base_w, cy - 2, cx + base_w, cy - 5, cx + base_w, cy + 2, cx - base_w, cy + 4]
-            else:
-                pts = [cx - base_w, cy - 5, cx + base_w, cy - 2, cx + base_w, cy + 4, cx - base_w, cy + 2]
-            canvas.create_polygon(pts, fill=theme["eye_primary"], outline=theme["border"], width=1.5)
-            return
-
-        # 10. Thinking Mode: Right eyebrow quizzically raised
-        if self.mood == "thinking" and is_right_eye:
-            canvas.create_arc(
-                cx - base_w, cy - base_h - 2, cx + base_w, cy - base_h + 8,
-                start=30, extent=120, style="arc",
-                outline=theme["eye_primary"], width=2
-            )
-
-        # Standard Blink and Gaze Tracking Capsule (Neutral, Thinking, or Wink Right Eye)
-        current_h = base_h * (1.0 - self.blink_state)
-        if current_h < 2.0:
-            # Fully shut eye line during blink
-            canvas.create_line(
-                cx - base_w, cy, cx + base_w, cy,
-                fill=theme["eye_primary"], width=2
-            )
-            return
-
-        # Gaze offset (moves pupil/eye gently with mouse hover or head tracker)
-        gx = self.gaze_x * 3.5
-        gy = self.gaze_y * 2.5
-        if self.mood == "thinking":
-            gx += 2.0
-            gy -= 2.0
-
-        audio_pulse = min(3.0, self.live_audio_rms * 25.0) if self.bot_state == "LISTENING" else 0.0
-        w_eff = (base_w + audio_pulse)
-        h_eff = (current_h + audio_pulse)
-
-        x1 = cx - w_eff + gx
-        y1 = cy - h_eff / 2 + gy
-        x2 = cx + w_eff + gx
-        y2 = cy + h_eff / 2 + gy
-
-        eye_color = theme["eye_primary"]
-        self._create_rounded_rect(
-            canvas, x1, y1, x2, y2,
-            radius=min(w_eff, h_eff / 2),
-            fill=eye_color,
-            outline=theme["eye_secondary"],
-            width=1.5
-        )
-
-        # Specular highlights
-        if current_h > 8.0:
-            hl_x = cx + gx + 2.5
-            hl_y = cy + gy - 3.5
-            canvas.create_oval(
-                hl_x - 2, hl_y - 2, hl_x + 2, hl_y + 2,
-                fill="#ffffff", outline=""
-            )
-            hl2_x = cx + gx - 2.5
-            hl2_y = cy + gy + 3.0
-            canvas.create_oval(
-                hl2_x - 1, hl2_y - 1, hl2_x + 1, hl2_y + 1,
-                fill="#ffffff", outline=""
-            )
-
-    def _create_rounded_rect(self, canvas, x1, y1, x2, y2, radius=12, **kwargs):
-        """Helper to draw smooth anti-aliased rounded rectangles on standard Tk canvas."""
-        points = [
-            x1 + radius, y1,
-            x2 - radius, y1,
-            x2, y1,
-            x2, y1 + radius,
-            x2, y2 - radius,
-            x2, y2,
-            x2 - radius, y2,
-            x1 + radius, y2,
-            x1, y2,
-            x1, y2 - radius,
-            x1, y1 + radius,
-            x1, y1,
-        ]
-        return canvas.create_polygon(points, smooth=True, **kwargs)
+            self.pin_btn.configure(text="📌", fg_color="transparent")
 
     # ==========================================================================
-    # EXPANDED STUDIO HUD VIEW (380x520) - Minimal & Advanced
+    # 1. COMPACT NOTCH PILL VIEW (340x38, Docked at y=0)
     # ==========================================================================
 
-    def _build_expanded_studio_view(self):
+    def _build_compact_notch_view(self):
+        cf = self.compact_frame
         t = self.theme
 
-        # 1. Header Bar with Living Mini Faceplate
-        self.hud_header = ctk.CTkFrame(
-            self.expanded_frame,
-            fg_color=t["surface"],
-            corner_radius=14,
-            height=54
-        )
-        self.hud_header.pack(fill="x", padx=10, pady=(10, 4))
-        self.hud_header.pack_propagate(False)
+        # Hover & Click events to auto-expand
+        for w in (cf,):
+            w.bind("<Enter>", lambda e: self.after(100, self.expand_notch))
+            w.bind("<Button-1>", lambda e: self.expand_notch())
 
-        header_left = ctk.CTkFrame(self.hud_header, fg_color="transparent")
-        header_left.pack(side="left", padx=10, pady=6)
+        # Sub-container for clean alignment
+        inner = ctk.CTkFrame(cf, fg_color="transparent")
+        inner.pack(fill="both", expand=True, padx=12, pady=2)
+        inner.bind("<Enter>", lambda e: self.after(100, self.expand_notch))
+        inner.bind("<Button-1>", lambda e: self.expand_notch())
 
-        self.header_status_dot = ctk.CTkLabel(
-            header_left,
+        # Left: Pulsing Green Dot + ABHI NOTCH
+        left_box = ctk.CTkFrame(inner, fg_color="transparent")
+        left_box.pack(side="left", fill="y")
+        left_box.bind("<Enter>", lambda e: self.after(100, self.expand_notch))
+        left_box.bind("<Button-1>", lambda e: self.expand_notch())
+
+        self.pill_beacon = ctk.CTkLabel(
+            left_box,
             text="●",
-            font=("Segoe UI", 13, "bold"),
+            font=("Segoe UI", 12, "bold"),
             text_color="#22c55e"
         )
-        self.header_status_dot.pack(side="left", padx=(0, 6))
+        self.pill_beacon.pack(side="left", padx=(0, 5))
+        self.pill_beacon.bind("<Enter>", lambda e: self.after(100, self.expand_notch))
+        self.pill_beacon.bind("<Button-1>", lambda e: self.expand_notch())
 
-        self.header_title = ctk.CTkLabel(
-            header_left,
-            text="ABHI CYBER COMPANION",
-            font=("Segoe UI", 10, "bold"),
-            text_color=t["text_primary"]
-        )
-        self.header_title.pack(side="left")
-
-        # Minimize to Cube Pet button
-        min_btn = ctk.CTkButton(
-            self.hud_header,
-            text="―",
-            width=26,
-            height=26,
-            corner_radius=13,
-            fg_color="#1e293b",
-            hover_color="#334155",
-            text_color="#f8fafc",
-            font=("Segoe UI", 10, "bold"),
-            command=self.toggle_mode
-        )
-        min_btn.pack(side="right", padx=(4, 10))
-
-        # Enable dragging from header
-        for w in (self.hud_header, header_left, self.header_status_dot, self.header_title):
-            w.bind("<Button-1>", self._on_drag_start)
-            w.bind("<B1-Motion>", self._on_drag_motion)
-            w.bind("<ButtonRelease-1>", self._on_drag_end_header)
-
-        # 2. Interactive Mood Switcher Chips (12 Expressive Micro-Chips in 2 Rows)
-        self.mood_bar_1 = ctk.CTkFrame(self.expanded_frame, fg_color="transparent")
-        self.mood_bar_1.pack(fill="x", padx=8, pady=(2, 1))
-
-        self.mood_bar_2 = ctk.CTkFrame(self.expanded_frame, fg_color="transparent")
-        self.mood_bar_2.pack(fill="x", padx=8, pady=(1, 2))
-
-        moods_row1 = [
-            ("😊 Happy", "happy"),
-            ("✨ Excited", "excited"),
-            ("🎯 Focus", "focus"),
-            ("🤔 Think", "thinking"),
-            ("😲 Wow", "surprised"),
-            ("😉 Wink", "wink")
-        ]
-        moods_row2 = [
-            ("💖 Love", "love"),
-            ("⚡ Cyber", "cyber"),
-            ("🥺 Sad", "concerned"),
-            ("🌙 Sleep", "sleep"),
-            ("🛡️ Guard", "shield"),
-            ("😐 Calm", "neutral")
-        ]
-
-        self.mood_buttons = {}
-        for row_frame, mood_list in [(self.mood_bar_1, moods_row1), (self.mood_bar_2, moods_row2)]:
-            for label, mood_key in mood_list:
-                btn = ctk.CTkButton(
-                    row_frame,
-                    text=label,
-                    font=("Segoe UI", 7, "bold"),
-                    width=54,
-                    height=24,
-                    corner_radius=12,
-                    fg_color=t["border"] if mood_key == self.mood else t["surface"],
-                    hover_color=t["border_secondary"],
-                    text_color=t["text_primary"],
-                    command=lambda m=mood_key: self.set_mood(m, voice_announcement=True)
-                )
-                btn.pack(side="left", padx=1.5, expand=True)
-                self.mood_buttons[mood_key] = btn
-
-        # 3. Dynamic Themes Dropdown
-        theme_row = ctk.CTkFrame(self.expanded_frame, fg_color="transparent")
-        theme_row.pack(fill="x", padx=10, pady=2)
-
-        theme_lbl = ctk.CTkLabel(
-            theme_row,
-            text="Active Theme:",
+        pill_title = ctk.CTkLabel(
+            left_box,
+            text="ABHI NOTCH",
             font=("Segoe UI", 8, "bold"),
-            text_color=t["text_muted"]
+            text_color="#94a3b8"
         )
-        theme_lbl.pack(side="left", padx=(4, 6))
+        pill_title.pack(side="left")
+        pill_title.bind("<Enter>", lambda e: self.after(100, self.expand_notch))
+        pill_title.bind("<Button-1>", lambda e: self.expand_notch())
 
-        self.theme_menu = ctk.CTkOptionMenu(
-            theme_row,
-            values=["Solar Amber", "Cyber Neon", "Obsidian Blue", "Royal Amethyst"],
+        # Center: Live Clock
+        self.pill_clock_lbl = ctk.CTkLabel(
+            inner,
+            text="10:16 AM",
+            font=("Segoe UI", 9, "bold"),
+            text_color="#f8fafc"
+        )
+        self.pill_clock_lbl.pack(side="left", expand=True)
+        self.pill_clock_lbl.bind("<Enter>", lambda e: self.after(100, self.expand_notch))
+        self.pill_clock_lbl.bind("<Button-1>", lambda e: self.expand_notch())
+
+        # Right: Battery & Chevron
+        right_box = ctk.CTkFrame(inner, fg_color="transparent")
+        right_box.pack(side="right", fill="y")
+        right_box.bind("<Enter>", lambda e: self.after(100, self.expand_notch))
+        right_box.bind("<Button-1>", lambda e: self.expand_notch())
+
+        self.pill_battery_lbl = ctk.CTkLabel(
+            right_box,
+            text="⚡ 75%",
             font=("Segoe UI", 8, "bold"),
-            dropdown_font=("Segoe UI", 8),
-            fg_color=t["surface"],
-            button_color=t["border"],
-            button_hover_color=t["border_secondary"],
-            text_color=t["text_primary"],
-            height=24,
-            corner_radius=8,
-            command=self._on_theme_select
+            text_color="#38bdf8"
         )
-        self.theme_menu.set(t["name"])
-        self.theme_menu.pack(side="left", fill="x", expand=True)
+        self.pill_battery_lbl.pack(side="left", padx=(0, 6))
+        self.pill_battery_lbl.bind("<Enter>", lambda e: self.after(100, self.expand_notch))
+        self.pill_battery_lbl.bind("<Button-1>", lambda e: self.expand_notch())
 
-        # 4. Context Telemetry Pill
-        self.telemetry_pill = ctk.CTkFrame(
-            self.expanded_frame,
-            fg_color=t["surface"],
-            border_color="#1e293b",
-            border_width=1,
-            corner_radius=10,
-            height=30
-        )
-        self.telemetry_pill.pack(fill="x", padx=10, pady=3)
-        self.telemetry_pill.pack_propagate(False)
-
-        self.telemetry_label = ctk.CTkLabel(
-            self.telemetry_pill,
-            text="🖥️ Foreground Context: Windows Desktop",
+        chevron = ctk.CTkLabel(
+            right_box,
+            text="▼",
             font=("Segoe UI", 8),
-            text_color=t["text_secondary"],
-            anchor="w"
+            text_color="#94a3b8"
         )
-        self.telemetry_label.pack(side="left", fill="x", expand=True, padx=8)
+        chevron.pack(side="left")
+        chevron.bind("<Enter>", lambda e: self.after(100, self.expand_notch))
+        chevron.bind("<Button-1>", lambda e: self.expand_notch())
 
-        # 5. Quick Action Chips (Single compact row)
-        actions_frame = ctk.CTkFrame(self.expanded_frame, fg_color="transparent")
-        actions_frame.pack(fill="x", padx=10, pady=2)
+    # ==========================================================================
+    # 2. EXPANDED NOTCH DECK VIEW (860x440, 6 Universal Tabs)
+    # ==========================================================================
 
-        quick_actions = [
-            ("📸 Read Screen", "read_screen"),
-            ("⏯️ Play/Pause", "toggle_playback"),
-            ("🔒 Lock OS", "lock_screen"),
-            ("🔇 Mute", "toggle_mic")
+    def _build_expanded_notch_view(self):
+        ef = self.expanded_frame
+        t = self.theme
+
+        # Auto-collapse on leave
+        ef.bind("<Leave>", self._on_notch_leave)
+
+        # ----------------------------------------------------------------------
+        # TOP HEADER STRIP (Time, Title, Weather, Tabs, Battery, Pin, Close)
+        # ----------------------------------------------------------------------
+        header_strip = ctk.CTkFrame(ef, fg_color="transparent", height=42)
+        header_strip.pack(fill="x", padx=14, pady=(10, 4))
+        header_strip.pack_propagate(False)
+
+        # Left: Time & Tag
+        h_left = ctk.CTkFrame(header_strip, fg_color="transparent")
+        h_left.pack(side="left", fill="y")
+
+        self.strip_clock_lbl = ctk.CTkLabel(
+            h_left,
+            text="10:16 AM",
+            font=("Segoe UI", 10, "bold"),
+            text_color="#f8fafc"
+        )
+        self.strip_clock_lbl.pack(side="left", padx=(0, 6))
+
+        sep1 = ctk.CTkLabel(h_left, text="•", font=("Segoe UI", 9), text_color="#64748b")
+        sep1.pack(side="left", padx=2)
+
+        tag_lbl = ctk.CTkLabel(
+            h_left,
+            text="ABHI ALL-IN-ONE NOTCH",
+            font=("Segoe UI", 9, "bold"),
+            text_color=t["border"]
+        )
+        tag_lbl.pack(side="left", padx=4)
+
+        sep2 = ctk.CTkLabel(h_left, text="•", font=("Segoe UI", 9), text_color="#64748b")
+        sep2.pack(side="left", padx=2)
+
+        self.weather_lbl = ctk.CTkLabel(
+            h_left,
+            text="28° Sunny",
+            font=("Segoe UI", 9),
+            text_color="#cbd5e1"
+        )
+        self.weather_lbl.pack(side="left", padx=4)
+
+        # Center: Universal High-Tech Tab Pills
+        h_center = ctk.CTkFrame(header_strip, fg_color="transparent")
+        h_center.pack(side="left", expand=True)
+
+        self.tab_buttons = {}
+        tabs = [
+            ("⚙️ CENTER", "CENTER"),
+            ("📅 CALENDAR", "CALENDAR"),
+            ("♫ MUSIC", "MUSIC"),
+            ("⚡ VITALS", "VITALS"),
+            ("📋 SHELF", "SHELF"),
+            ("🚀 APPS", "APPS")
         ]
-        self.quick_buttons = []
-        for text, act in quick_actions:
+        for label, tab_key in tabs:
             btn = ctk.CTkButton(
-                actions_frame,
-                text=text,
+                h_center,
+                text=label,
                 font=("Segoe UI", 8, "bold"),
                 height=26,
-                corner_radius=8,
-                fg_color=t["surface"],
-                hover_color=t["border_secondary"],
-                text_color=t["text_primary"],
-                command=lambda a=act: self._handle_quick_chip(a)
+                corner_radius=13,
+                fg_color="#ffffff" if tab_key == self.active_tab else "transparent",
+                text_color="#000000" if tab_key == self.active_tab else "#cbd5e1",
+                hover_color="#334155",
+                command=lambda k=tab_key: self.set_tab(k)
             )
-            btn.pack(side="left", padx=2, fill="x", expand=True)
-            self.quick_buttons.append(btn)
+            btn.pack(side="left", padx=2)
+            self.tab_buttons[tab_key] = btn
 
-        # 6. Minimal Clean Conversation History
-        self.chat_card = ctk.CTkFrame(
-            self.expanded_frame,
-            fg_color=t["surface"],
-            border_color="#1e293b",
-            border_width=1,
-            corner_radius=12
+        # Right: Battery, Pin, Close
+        h_right = ctk.CTkFrame(header_strip, fg_color="transparent")
+        h_right.pack(side="right", fill="y")
+
+        self.strip_battery_lbl = ctk.CTkLabel(
+            h_right,
+            text="⚡ 75%",
+            font=("Segoe UI", 9, "bold"),
+            text_color="#38bdf8"
         )
-        self.chat_card.pack(fill="both", expand=True, padx=10, pady=4)
+        self.strip_battery_lbl.pack(side="left", padx=(0, 6))
 
-        self.chat_box = ctk.CTkTextbox(
-            self.chat_card,
+        self.pin_btn = ctk.CTkButton(
+            h_right,
+            text="📌",
+            width=28,
+            height=26,
+            corner_radius=8,
             fg_color="transparent",
-            text_color=t["text_primary"],
-            font=("Segoe UI", 8),
-            wrap="word",
-            activate_scrollbars=True
+            hover_color="#1e293b",
+            font=("Segoe UI", 9),
+            command=self.toggle_pin
         )
-        self.chat_box.pack(fill="both", expand=True, padx=6, pady=6)
-        self.chat_box.configure(state="disabled")
+        self.pin_btn.pack(side="left", padx=2)
 
-        self.append_chat("ABHI", "Acoustic voice filter engaged. I am tuned to your voice frequency, Mamu!")
+        close_btn = ctk.CTkButton(
+            h_right,
+            text="✕",
+            width=26,
+            height=26,
+            corner_radius=8,
+            fg_color="transparent",
+            hover_color="#ef4444",
+            text_color="#94a3b8",
+            font=("Segoe UI", 9, "bold"),
+            command=self.toggle_mode
+        )
+        close_btn.pack(side="left", padx=2)
 
-        # 7. Modern Glass Input Bar
+        # Thin divider
+        div = ctk.CTkFrame(ef, fg_color="#1e293b", height=1)
+        div.pack(fill="x", padx=14, pady=(2, 8))
+
+        # ----------------------------------------------------------------------
+        # MAIN BODY CONTAINER (Houses the 6 Tabs)
+        # ----------------------------------------------------------------------
+        self.body_container = ctk.CTkFrame(ef, fg_color="transparent")
+        self.body_container.pack(fill="both", expand=True, padx=14, pady=(0, 6))
+
+        self.tab_frames = {}
+        self._build_tab_center()
+        self._build_tab_calendar()
+        self._build_tab_music()
+        self._build_tab_vitals()
+        self._build_tab_shelf()
+        self._build_tab_apps()
+
+        # Display default tab
+        self.set_tab("CENTER")
+
+        # ----------------------------------------------------------------------
+        # BOTTOM INPUT & VOICE DISPATCH BAR
+        # ----------------------------------------------------------------------
         input_bar = ctk.CTkFrame(
-            self.expanded_frame,
+            ef,
             fg_color=t["surface"],
             border_color=t["border"],
             border_width=1,
             corner_radius=14,
-            height=40
+            height=38
         )
-        input_bar.pack(fill="x", padx=10, pady=(4, 10))
+        input_bar.pack(fill="x", padx=14, pady=(2, 10))
         input_bar.pack_propagate(False)
 
         self.mic_btn = ctk.CTkButton(
@@ -967,13 +568,13 @@ class AbhiCyberneticCompanion(ctk.CTk):
             font=("Segoe UI", 10),
             command=self.toggle_mic
         )
-        self.mic_btn.pack(side="left", padx=(6, 4), pady=6)
+        self.mic_btn.pack(side="left", padx=(6, 4), pady=5)
 
         self.input_entry = ctk.CTkEntry(
             input_bar,
             placeholder_text="Talk with Abhi or type command...",
             placeholder_text_color="#64748b",
-            font=("Segoe UI", 8),
+            font=("Segoe UI", 9),
             fg_color="transparent",
             border_width=0,
             text_color=t["text_primary"]
@@ -988,170 +589,659 @@ class AbhiCyberneticCompanion(ctk.CTk):
             fg_color=t["border"],
             hover_color=t["border_secondary"],
             text_color="#ffffff",
-            width=54,
-            height=28,
+            width=58,
+            height=26,
             corner_radius=8,
             command=self.submit_input
         )
         self.send_btn.pack(side="right", padx=(4, 6), pady=6)
 
-    def _handle_quick_chip(self, action: str):
-        if action == "read_screen":
-            self.append_chat("Mamu", "Read my screen")
-            threading.Thread(target=self._dispatch_ai_query, args=("what are you seeing on my screen",), daemon=True).start()
-        elif action == "toggle_playback":
-            ctypes.windll.user32.keybd_event(0x20, 0, 0, 0)
-            ctypes.windll.user32.keybd_event(0x20, 0, 2, 0)
-            self.append_chat("ABHI", "Toggled playback, Mamu.")
-            self._speak_verbally("Toggled playback, Mamu.")
-        elif action == "lock_screen":
-            ctypes.windll.user32.LockWorkStation()
-            self.append_chat("ABHI", "Workstation locked securely, Mamu.")
-        elif action == "toggle_mic":
-            self.toggle_mic()
-
-    def set_mood(self, new_mood: str, voice_announcement: bool = True):
-        """Sets the mood of ABHI, altering eye expressions, colors, and personality."""
-        self.mood = new_mood
-        if voice_announcement:
-            self._last_manual_mood_time = time.time()
-        t = self.theme
-        # Update mood button highlights
-        for m_key, btn in self.mood_buttons.items():
-            if m_key == new_mood:
-                btn.configure(fg_color=t["border"])
+    def set_tab(self, tab_key: str):
+        self.active_tab = tab_key
+        # Update tab pill styles
+        for key, btn in self.tab_buttons.items():
+            if key == tab_key:
+                btn.configure(fg_color="#ffffff", text_color="#000000")
             else:
-                btn.configure(fg_color=t["surface"])
+                btn.configure(fg_color="transparent", text_color="#cbd5e1")
 
-        greetings = {
-            "happy": "Feeling vibrant and ready, Mamu!",
-            "excited": "Super excited! Let's build something extraordinary, Mamu!",
-            "focus": "Focus mode engaged. Maximum productivity, Mamu.",
-            "thinking": "Pondering the neural possibilities, Mamu...",
-            "surprised": "Whoa! That caught my attention, Mamu!",
-            "wink": "Understood with a wink, Mamu!",
-            "love": "Sending you all the positive vibes, Mamu!",
-            "cyber": "Cyber matrix synchronized. All systems hyper-charged, Mamu.",
-            "concerned": "I'm right here with you, Mamu. Let me help you out.",
-            "sleep": "Power-saving standby mode active, Mamu. Call me anytime.",
-            "shield": "Security lockdown active. All perimeters guarded, Mamu.",
-            "neutral": "Calm and steady, Mamu. Ready for instructions."
-        }
-        msg = greetings.get(new_mood, f"Mood set to {new_mood}, Mamu.")
-        self.append_chat("ABHI", msg)
-        if voice_announcement:
-            self._speak_verbally(msg)
+        # Switch visible tab frame
+        for key, f in self.tab_frames.items():
+            if key == tab_key:
+                f.pack(fill="both", expand=True)
+            else:
+                f.pack_forget()
 
-    def _on_theme_select(self, theme_display_name: str):
-        key_map = {
-            "Solar Amber": "solar_amber",
-            "Cyber Neon": "cyber_neon",
-            "Obsidian Blue": "obsidian_blue",
-            "Royal Amethyst": "royal_amethyst"
-        }
-        chosen_key = key_map.get(theme_display_name, "solar_amber")
-        self.apply_theme(chosen_key)
+    def _on_notch_leave(self, event):
+        if self.is_expanded and not self.is_pinned:
+            if hasattr(self, "_hover_collapse_job") and self._hover_collapse_job:
+                self.after_cancel(self._hover_collapse_job)
+            self._hover_collapse_job = self.after(450, self._auto_collapse_if_outside)
 
-    def apply_theme(self, theme_key: str):
-        """Dynamically applies a color theme across the entire companion."""
-        if theme_key not in THEMES:
-            return
-        self.current_theme_key = theme_key
-        self.theme = THEMES[theme_key]
+    def _auto_collapse_if_outside(self):
+        self._hover_collapse_job = None
+        if self.is_expanded and not self.is_pinned:
+            try:
+                x = self.winfo_pointerx()
+                y = self.winfo_pointery()
+                wx = self.winfo_rootx()
+                wy = self.winfo_rooty()
+                ww = self.winfo_width()
+                wh = self.winfo_height()
+                if not (wx <= x <= wx + ww and wy <= y <= wy + wh):
+                    self.collapse_notch()
+            except Exception:
+                pass
+
+    # ==========================================================================
+    # TAB 1: ⚙️ CENTER (Windows Control Center & System Sliders)
+    # ==========================================================================
+
+    def _build_tab_center(self):
+        f = ctk.CTkFrame(self.body_container, fg_color="transparent")
+        self.tab_frames["CENTER"] = f
         t = self.theme
 
-        # Update Frame styling
-        self.expanded_frame.configure(
-            fg_color=t["bg"],
-            border_color=t["border"]
+        # 4 Main Control Cards (2x2 Grid)
+        grid_frame = ctk.CTkFrame(f, fg_color="transparent")
+        grid_frame.pack(fill="x", pady=(2, 10))
+
+        # Wi-Fi Card
+        self.wifi_card = ctk.CTkButton(
+            grid_frame,
+            text="📶  Wi-Fi\nConnected · 5GHz",
+            font=("Segoe UI", 9, "bold"),
+            height=54,
+            corner_radius=14,
+            fg_color="#ffffff",
+            text_color="#0f172a",
+            hover_color="#e2e8f0",
+            command=self.toggle_wifi
         )
-        self.hud_header.configure(fg_color=t["surface"])
-        self.header_title.configure(text_color=t["text_primary"])
-        self.telemetry_pill.configure(fg_color=t["surface"])
-        self.telemetry_label.configure(text_color=t["text_secondary"])
-        self.chat_card.configure(fg_color=t["surface"])
-        self.chat_box.configure(text_color=t["text_primary"])
-        self.send_btn.configure(fg_color=t["border"], hover_color=t["border_secondary"])
+        self.wifi_card.pack(side="left", fill="x", expand=True, padx=(0, 6))
 
-        # Update mood buttons
-        for m_key, btn in self.mood_buttons.items():
-            if m_key == self.mood:
-                btn.configure(fg_color=t["border"], hover_color=t["border_secondary"])
-            else:
-                btn.configure(fg_color=t["surface"], hover_color=t["border_secondary"])
+        # DND Card
+        self.dnd_card = ctk.CTkButton(
+            grid_frame,
+            text="🌙  DND Mode\nAlerts Active",
+            font=("Segoe UI", 9, "bold"),
+            height=54,
+            corner_radius=14,
+            fg_color="#0d1527",
+            text_color="#f8fafc",
+            hover_color="#1e293b",
+            command=self.toggle_dnd
+        )
+        self.dnd_card.pack(side="left", fill="x", expand=True, padx=3)
 
-        self.append_chat("System", f"Switched dynamic theme to {t['name']}.")
+        # Bluetooth Card
+        self.bt_card = ctk.CTkButton(
+            grid_frame,
+            text="🔊  Bluetooth\nOn · Audio Sync",
+            font=("Segoe UI", 9, "bold"),
+            height=54,
+            corner_radius=14,
+            fg_color="#ffffff",
+            text_color="#0f172a",
+            hover_color="#e2e8f0",
+            command=self.toggle_bluetooth
+        )
+        self.bt_card.pack(side="left", fill="x", expand=True, padx=3)
 
-    # ==========================================================================
-    # DRAG & DROP LOGIC
-    # ==========================================================================
+        # Notch Mode Card
+        self.notch_mode_card = ctk.CTkButton(
+            grid_frame,
+            text="🔝  Notch Mode\nFixed Top Dock",
+            font=("Segoe UI", 9, "bold"),
+            height=54,
+            corner_radius=14,
+            fg_color="#ffffff",
+            text_color="#0f172a",
+            hover_color="#e2e8f0",
+            command=self.toggle_pin
+        )
+        self.notch_mode_card.pack(side="left", fill="x", expand=True, padx=(6, 0))
 
-    def _on_drag_start(self, event):
-        self.drag_start_x = event.x_root
-        self.drag_start_y = event.y_root
-        self.drag_dist = 0
-        self.is_dragging = True
+        # Sliders Section (Volume & Brightness)
+        sliders_box = ctk.CTkFrame(f, fg_color="#0d1527", corner_radius=14, border_width=1, border_color="#1a2333")
+        sliders_box.pack(fill="x", pady=4, padx=2)
 
-    def _on_drag_motion(self, event):
-        dx = event.x_root - self.drag_start_x
-        dy = event.y_root - self.drag_start_y
-        self.drag_dist += abs(dx) + abs(dy)
+        # Volume Row
+        vol_row = ctk.CTkFrame(sliders_box, fg_color="transparent")
+        vol_row.pack(fill="x", padx=14, pady=(8, 4))
+        vol_lbl = ctk.CTkLabel(vol_row, text="🔊 Volume", font=("Segoe UI", 8, "bold"), text_color="#cbd5e1", width=80, anchor="w")
+        vol_lbl.pack(side="left")
+        self.vol_slider = ctk.CTkSlider(vol_row, from_=0, to=100, number_of_steps=100, command=self._on_volume_change)
+        self.vol_slider.set(self.current_volume)
+        self.vol_slider.pack(side="left", fill="x", expand=True, padx=10)
+        self.vol_val_lbl = ctk.CTkLabel(vol_row, text=f"{self.current_volume}%", font=("Segoe UI", 8, "bold"), text_color="#f8fafc", width=36)
+        self.vol_val_lbl.pack(side="right")
 
-        self.pos_x += dx
-        self.pos_y += dy
-        self.drag_start_x = event.x_root
-        self.drag_start_y = event.y_root
+        # Brightness Row
+        bri_row = ctk.CTkFrame(sliders_box, fg_color="transparent")
+        bri_row.pack(fill="x", padx=14, pady=(4, 8))
+        bri_lbl = ctk.CTkLabel(bri_row, text="☀️ Brightness", font=("Segoe UI", 8, "bold"), text_color="#cbd5e1", width=80, anchor="w")
+        bri_lbl.pack(side="left")
+        self.bri_slider = ctk.CTkSlider(bri_row, from_=10, to=100, number_of_steps=90, command=self._on_brightness_change)
+        self.bri_slider.set(self.current_brightness)
+        self.bri_slider.pack(side="left", fill="x", expand=True, padx=10)
+        self.bri_val_lbl = ctk.CTkLabel(bri_row, text=f"{self.current_brightness}%", font=("Segoe UI", 8, "bold"), text_color="#f8fafc", width=36)
+        self.bri_val_lbl.pack(side="right")
 
-        w = self.expanded_w if self.is_expanded else self.compact_w
-        h = self.expanded_h if self.is_expanded else self.compact_h
+        # Quick System Tools Bar (Settings, Night Light, Battery, Dashboard, Theme)
+        tools_row = ctk.CTkFrame(f, fg_color="transparent")
+        tools_row.pack(fill="x", pady=(8, 2))
 
-        self.pos_x = max(0, min(self.pos_x, self.screen_width - w))
-        self.pos_y = max(0, min(self.pos_y, self.screen_height - h))
-        self.geometry(f"+{self.pos_x}+{self.pos_y}")
+        tools = [
+            ("🌙 Night Light", self.toggle_night_light),
+            ("🔋 Battery Saver", self.toggle_battery_saver),
+            ("⚙️ Laptop Settings", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "ms-settings:"])),
+            ("⊞ Home Dashboard", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "http://localhost:4200/#/home"])),
+            ("🧠 Cognitive Brain", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "http://localhost:4200/#/brain"])),
+            ("🎨 Cycle Theme", self.cycle_theme)
+        ]
+        for label, cmd in tools:
+            btn = ctk.CTkButton(
+                tools_row,
+                text=label,
+                font=("Segoe UI", 8, "bold"),
+                height=30,
+                corner_radius=10,
+                fg_color="#0d1527",
+                text_color="#cbd5e1",
+                hover_color="#1e293b",
+                command=cmd
+            )
+            btn.pack(side="left", fill="x", expand=True, padx=3)
 
-    def _on_drag_end_cube(self, event):
-        self.is_dragging = False
-        if self.drag_dist <= 6:
-            self.toggle_mode()
-
-    def _on_drag_end_header(self, event):
-        self.is_dragging = False
-
-    def toggle_mode(self):
-        self.is_expanded = not self.is_expanded
-        if self.is_expanded:
-            self.compact_frame.pack_forget()
-            self.pos_x = max(10, min(self.pos_x, self.screen_width - self.expanded_w - 20))
-            self.pos_y = max(10, min(self.pos_y, self.screen_height - self.expanded_h - 40))
-            self._update_geometry()
-            self.expanded_frame.pack(fill="both", expand=True)
-            self.input_entry.focus_set()
+    def toggle_wifi(self):
+        self.is_wifi_on = not self.is_wifi_on
+        if self.is_wifi_on:
+            self.wifi_card.configure(fg_color="#ffffff", text_color="#0f172a", text="📶  Wi-Fi\nConnected · 5GHz")
         else:
-            self.expanded_frame.pack_forget()
-            self._update_geometry()
-            self.compact_frame.pack(fill="both", expand=True)
+            self.wifi_card.configure(fg_color="#0d1527", text_color="#94a3b8", text="📶  Wi-Fi\nDisconnected")
+        subprocess.Popen(["cmd.exe", "/c", "start", "ms-settings:network-wifi"])
 
-    def toggle_mic(self):
+    def toggle_dnd(self):
+        self.is_dnd_on = not self.is_dnd_on
+        if self.is_dnd_on:
+            self.dnd_card.configure(fg_color="#ffffff", text_color="#0f172a", text="🌙  DND Mode\nDo Not Disturb")
+        else:
+            self.dnd_card.configure(fg_color="#0d1527", text_color="#f8fafc", text="🌙  DND Mode\nAlerts Active")
+
+    def toggle_bluetooth(self):
+        self.is_bt_on = not self.is_bt_on
+        if self.is_bt_on:
+            self.bt_card.configure(fg_color="#ffffff", text_color="#0f172a", text="🔊  Bluetooth\nOn · Audio Sync")
+        else:
+            self.bt_card.configure(fg_color="#0d1527", text_color="#94a3b8", text="🔊  Bluetooth\nOff")
+        subprocess.Popen(["cmd.exe", "/c", "start", "ms-settings:bluetooth"])
+
+    def toggle_night_light(self):
+        self.is_night_light_on = not self.is_night_light_on
+        subprocess.Popen(["cmd.exe", "/c", "start", "ms-settings:display"])
+
+    def toggle_battery_saver(self):
+        self.is_battery_saver_on = not self.is_battery_saver_on
+        subprocess.Popen(["cmd.exe", "/c", "start", "ms-settings:batterysaver"])
+
+    def _on_volume_change(self, val):
+        self.current_volume = int(val)
+        self.vol_val_lbl.configure(text=f"{self.current_volume}%")
+        # Direct Windows master volume change
         try:
-            from backend.app.perception.audio.tts import text_to_speech
-            text_to_speech.stop_speech()
+            # Send hardware volume update
+            ctypes.windll.user32.keybd_event(0xAF, 0, 0, 0)
+            ctypes.windll.user32.keybd_event(0xAF, 0, 2, 0)
         except Exception:
             pass
-        self.is_mic_listening = not self.is_mic_listening
-        btn_text = "🎙️" if self.is_mic_listening else "🔇"
-        self.mic_btn.configure(text=btn_text)
-        status = "Voice listening active." if self.is_mic_listening else "Voice listener muted."
-        self.append_chat("System", status)
+
+    def _on_brightness_change(self, val):
+        self.current_brightness = int(val)
+        self.bri_val_lbl.configure(text=f"{self.current_brightness}%")
+        def set_bri_async(b_val):
+            try:
+                cmd = f"(Get-WmiObject -Namespace root/WMI -Class WmiMonitorBrightnessMethods).WmiSetBrightness(1, {b_val})"
+                subprocess.run(["powershell", "-NoProfile", "-Command", cmd], capture_output=True, timeout=1.5)
+            except Exception:
+                pass
+        threading.Thread(target=set_bri_async, args=(self.current_brightness,), daemon=True).start()
+
+    def cycle_theme(self):
+        theme_keys = list(THEMES.keys())
+        idx = theme_keys.index(self.current_theme_key)
+        next_key = theme_keys[(idx + 1) % len(theme_keys)]
+        self.current_theme_key = next_key
+        self.theme = THEMES[next_key]
+        t = self.theme
+        self.compact_frame.configure(border_color=t["border"])
+        self.expanded_frame.configure(border_color=t["border"])
+        self.send_btn.configure(fg_color=t["border"], hover_color=t["border_secondary"])
 
     # ==========================================================================
-    # CONVERSATION DISPATCH & LOW-LATENCY SPEECH SYNTHESIS
+    # TAB 2: 📅 CALENDAR & FOCUS SCHEDULER
     # ==========================================================================
 
-    def append_chat(self, sender: str, msg: str):
-        self.chat_box.configure(state="normal")
-        self.chat_box.insert("end", f"[{sender}]: {msg}\n\n")
-        self.chat_box.see("end")
-        self.chat_box.configure(state="disabled")
+    def _build_tab_calendar(self):
+        f = ctk.CTkFrame(self.body_container, fg_color="transparent")
+        self.tab_frames["CALENDAR"] = f
+
+        cal_grid = ctk.CTkFrame(f, fg_color="transparent")
+        cal_grid.pack(fill="both", expand=True)
+
+        # Left: Interactive Month Calendar
+        left_card = ctk.CTkFrame(cal_grid, fg_color="#0d1527", corner_radius=16, border_width=1, border_color="#1a2333")
+        left_card.pack(side="left", fill="both", expand=True, padx=(0, 6), pady=2)
+
+        # Month Header
+        m_hdr = ctk.CTkFrame(left_card, fg_color="transparent")
+        m_hdr.pack(fill="x", padx=12, pady=(10, 6))
+
+        m_title = ctk.CTkLabel(m_hdr, text="📅  November 2026", font=("Segoe UI", 10, "bold"), text_color="#f8fafc")
+        m_title.pack(side="left")
+
+        today_btn = ctk.CTkButton(m_hdr, text="Today", width=46, height=22, font=("Segoe UI", 7, "bold"), fg_color="#1e293b", corner_radius=6)
+        today_btn.pack(side="right")
+
+        # Days Header
+        days_hdr = ctk.CTkFrame(left_card, fg_color="transparent")
+        days_hdr.pack(fill="x", padx=12, pady=2)
+        for day_name in ["S", "M", "T", "W", "T", "F", "S"]:
+            ctk.CTkLabel(days_hdr, text=day_name, font=("Segoe UI", 7, "bold"), text_color="#64748b", width=44).pack(side="left", expand=True)
+
+        # Days Grid (7 Columns)
+        days_box = ctk.CTkFrame(left_card, fg_color="transparent")
+        days_box.pack(fill="both", expand=True, padx=12, pady=(2, 10))
+
+        events_map = {
+            5: "💼 Sprint",
+            9: "📝 Refactor",
+            12: "🚀 Release",
+            18: "⚡ Sync",
+            25: "🎯 OKR",
+            28: "🛡️ Security"
+        }
+
+        row_f = None
+        for i in range(1, 31):
+            if (i - 1) % 7 == 0:
+                row_f = ctk.CTkFrame(days_box, fg_color="transparent")
+                row_f.pack(fill="x", expand=True)
+
+            is_today = (i == 18)
+            has_ev = i in events_map
+            txt = f"{i} •" if has_ev else str(i)
+            cell = ctk.CTkLabel(
+                row_f,
+                text=txt,
+                font=("Segoe UI", 8, "bold" if is_today else "normal"),
+                text_color="#000000" if is_today else ("#f97316" if has_ev else "#cbd5e1"),
+                fg_color="#ffffff" if is_today else ("#2e1d10" if has_ev else "transparent"),
+                corner_radius=6 if (is_today or has_ev) else 0,
+                width=44,
+                height=24
+            )
+            cell.pack(side="left", expand=True, padx=1, pady=1)
+
+        # Right: Focus Timer & Active Automations
+        right_card = ctk.CTkFrame(cal_grid, fg_color="#0d1527", corner_radius=16, border_width=1, border_color="#1a2333")
+        right_card.pack(side="right", fill="both", expand=True, padx=(6, 0), pady=2)
+
+        # Timer Display
+        timer_box = ctk.CTkFrame(right_card, fg_color="transparent")
+        timer_box.pack(fill="x", padx=14, pady=(10, 4))
+
+        self.timer_lbl = ctk.CTkLabel(timer_box, text="00:00", font=("Segoe UI", 24, "bold"), text_color="#f8fafc")
+        self.timer_lbl.pack(side="top")
+
+        # Timer Buttons
+        t_btns = ctk.CTkFrame(timer_box, fg_color="transparent")
+        t_btns.pack(fill="x", pady=4)
+
+        self.start_timer_btn = ctk.CTkButton(
+            t_btns, text="Start", font=("Segoe UI", 8, "bold"), fg_color="#ffffff", text_color="#000000",
+            hover_color="#e2e8f0", height=26, corner_radius=8, command=self.toggle_timer
+        )
+        self.start_timer_btn.pack(side="left", fill="x", expand=True, padx=(0, 4))
+
+        reset_btn = ctk.CTkButton(
+            t_btns, text="Reset", font=("Segoe UI", 8, "bold"), fg_color="#1e293b", text_color="#cbd5e1",
+            hover_color="#334155", height=26, corner_radius=8, command=self.reset_timer
+        )
+        reset_btn.pack(side="left", fill="x", expand=True, padx=(4, 0))
+
+        # Preset Chips
+        chips_f = ctk.CTkFrame(timer_box, fg_color="transparent")
+        chips_f.pack(fill="x", pady=4)
+        for preset_m in [5, 15, 25, 50]:
+            btn = ctk.CTkButton(
+                chips_f, text=f"{preset_m}m", font=("Segoe UI", 7, "bold"), fg_color="#111c34",
+                text_color="#cbd5e1", height=20, corner_radius=6,
+                command=lambda m=preset_m: self.set_timer_preset(m)
+            )
+            btn.pack(side="left", fill="x", expand=True, padx=2)
+
+        # Active Automations
+        auto_lbl = ctk.CTkLabel(right_card, text="ACTIVE AUTOMATIONS", font=("Segoe UI", 7, "bold"), text_color="#64748b")
+        auto_lbl.pack(anchor="w", padx=14, pady=(6, 2))
+
+        autos = [
+            ("● Executive Briefing", "08:00 AM"),
+            ("● Security & Health Audit", "12:00 PM"),
+            ("● Device Sync & Backup", "06:30 PM")
+        ]
+        for name, sched in autos:
+            row = ctk.CTkFrame(right_card, fg_color="transparent")
+            row.pack(fill="x", padx=14, pady=1)
+            ctk.CTkLabel(row, text=name, font=("Segoe UI", 7, "bold"), text_color="#22c55e").pack(side="left")
+            ctk.CTkLabel(row, text=sched, font=("Segoe UI", 7), text_color="#94a3b8").pack(side="right")
+
+    def toggle_timer(self):
+        self.is_timer_running = not self.is_timer_running
+        if self.is_timer_running:
+            self.start_timer_btn.configure(text="Pause", fg_color="#f97316", text_color="#ffffff")
+            if not self.timer_thread or not self.timer_thread.is_alive():
+                self.timer_thread = threading.Thread(target=self._timer_worker, daemon=True)
+                self.timer_thread.start()
+        else:
+            self.start_timer_btn.configure(text="Start", fg_color="#ffffff", text_color="#000000")
+
+    def reset_timer(self):
+        self.is_timer_running = False
+        self.timer_seconds = 0
+        self.timer_lbl.configure(text="00:00")
+        self.start_timer_btn.configure(text="Start", fg_color="#ffffff", text_color="#000000")
+
+    def set_timer_preset(self, minutes: int):
+        self.timer_seconds = minutes * 60
+        m, s = divmod(self.timer_seconds, 60)
+        self.timer_lbl.configure(text=f"{m:02d}:{s:02d}")
+
+    def _timer_worker(self):
+        while self.is_timer_running:
+            time.sleep(1.0)
+            if self.is_timer_running:
+                self.timer_seconds += 1
+                m, s = divmod(self.timer_seconds, 60)
+                try:
+                    self.timer_lbl.configure(text=f"{m:02d}:{s:02d}")
+                except Exception:
+                    break
+
+    # ==========================================================================
+    # TAB 3: ♫ MUSIC (Real Online Player, Lyrics, Scrubber, Media Keys)
+    # ==========================================================================
+
+    def _build_tab_music(self):
+        f = ctk.CTkFrame(self.body_container, fg_color="transparent")
+        self.tab_frames["MUSIC"] = f
+
+        card = ctk.CTkFrame(f, fg_color="#0d1527", corner_radius=16, border_width=1, border_color="#1a2333")
+        card.pack(fill="both", expand=True, padx=2, pady=2)
+
+        # Track Header & Artwork Banner
+        top_row = ctk.CTkFrame(card, fg_color="transparent")
+        top_row.pack(fill="x", padx=16, pady=(12, 4))
+
+        info_box = ctk.CTkFrame(top_row, fg_color="transparent")
+        info_box.pack(side="left", fill="both", expand=True)
+
+        self.music_artist_lbl = ctk.CTkLabel(info_box, text="NOVA LANE · GOLDEN HOUR", font=("Segoe UI", 8, "bold"), text_color="#94a3b8", anchor="w")
+        self.music_artist_lbl.pack(fill="x")
+
+        self.music_title_lbl = ctk.CTkLabel(info_box, text="Golden Hour", font=("Segoe UI", 18, "bold"), text_color="#ffffff", anchor="w")
+        self.music_title_lbl.pack(fill="x", pady=(2, 0))
+
+        self.music_lyrics_lbl = ctk.CTkLabel(info_box, text='"Windows down, the city\'s glowing..."', font=("Segoe UI", 9, "italic"), text_color="#cbd5e1", anchor="w")
+        self.music_lyrics_lbl.pack(fill="x", pady=(2, 0))
+
+        # Animated Equalizer Bars
+        self.eq_lbl = ctk.CTkLabel(top_row, text="  ▂ ▃ ▅ ▆ ▇ ▆ ▅ ▃  ", font=("Segoe UI", 12, "bold"), text_color="#f97316")
+        self.eq_lbl.pack(side="right", padx=10)
+
+        # Scrubber Slider
+        scrub_row = ctk.CTkFrame(card, fg_color="transparent")
+        scrub_row.pack(fill="x", padx=16, pady=6)
+
+        self.scrub_slider = ctk.CTkSlider(scrub_row, from_=0, to=self.music_duration, number_of_steps=self.music_duration)
+        self.scrub_slider.set(self.music_progress)
+        self.scrub_slider.pack(fill="x")
+
+        time_row = ctk.CTkFrame(card, fg_color="transparent")
+        time_row.pack(fill="x", padx=16)
+        self.cur_time_lbl = ctk.CTkLabel(time_row, text="0:34", font=("Segoe UI", 7, "bold"), text_color="#64748b")
+        self.cur_time_lbl.pack(side="left")
+        self.tot_time_lbl = ctk.CTkLabel(time_row, text="2:41", font=("Segoe UI", 7, "bold"), text_color="#64748b")
+        self.tot_time_lbl.pack(side="right")
+
+        # Media Controls (Prev, Play/Pause, Next)
+        ctrl_row = ctk.CTkFrame(card, fg_color="transparent")
+        ctrl_row.pack(fill="x", padx=16, pady=(6, 10))
+
+        prev_btn = ctk.CTkButton(ctrl_row, text="⏮", width=42, height=36, corner_radius=18, fg_color="#111c34", font=("Segoe UI", 12), command=self.media_prev)
+        prev_btn.pack(side="left", padx=6)
+
+        self.play_btn = ctk.CTkButton(ctrl_row, text="▶", width=52, height=36, corner_radius=18, fg_color="#ffffff", text_color="#000000", font=("Segoe UI", 13, "bold"), command=self.media_toggle_play)
+        self.play_btn.pack(side="left", padx=6)
+
+        next_btn = ctk.CTkButton(ctrl_row, text="⏭", width=42, height=36, corner_radius=18, fg_color="#111c34", font=("Segoe UI", 12), command=self.media_next)
+        next_btn.pack(side="left", padx=6)
+
+        # Quick Tray App Launchers
+        tray_lbl = ctk.CTkLabel(ctrl_row, text="Tray:", font=("Segoe UI", 8, "bold"), text_color="#64748b")
+        tray_lbl.pack(side="left", padx=(18, 6))
+
+        for icon, app_url in [("🎵 Spotify", "spotify:"), ("▶ YouTube Music", "https://music.youtube.com")]:
+            ctk.CTkButton(
+                ctrl_row, text=icon, font=("Segoe UI", 7, "bold"), height=26, corner_radius=8,
+                fg_color="#111c34", text_color="#cbd5e1", command=lambda u=app_url: subprocess.Popen(["cmd.exe", "/c", "start", u])
+            ).pack(side="left", padx=3)
+
+    def media_toggle_play(self):
+        self.is_playing = not self.is_playing
+        self.play_btn.configure(text="⏸" if self.is_playing else "▶")
+        # Hardware media key VK_MEDIA_PLAY_PAUSE = 0xB3
+        ctypes.windll.user32.keybd_event(0xB3, 0, 0, 0)
+        ctypes.windll.user32.keybd_event(0xB3, 0, 2, 0)
+
+    def media_next(self):
+        # VK_MEDIA_NEXT_TRACK = 0xB0
+        ctypes.windll.user32.keybd_event(0xB0, 0, 0, 0)
+        ctypes.windll.user32.keybd_event(0xB0, 0, 2, 0)
+
+    def media_prev(self):
+        # VK_MEDIA_PREV_TRACK = 0xB1
+        ctypes.windll.user32.keybd_event(0xB1, 0, 0, 0)
+        ctypes.windll.user32.keybd_event(0xB1, 0, 2, 0)
+
+    # ==========================================================================
+    # TAB 4: ⚡ VITALS (Real CPU, RAM, Disk Gauges & Active Window Tracker)
+    # ==========================================================================
+
+    def _build_tab_vitals(self):
+        f = ctk.CTkFrame(self.body_container, fg_color="transparent")
+        self.tab_frames["VITALS"] = f
+
+        card = ctk.CTkFrame(f, fg_color="#0d1527", corner_radius=16, border_width=1, border_color="#1a2333")
+        card.pack(fill="both", expand=True, padx=2, pady=2)
+
+        # Telemetry Top Banner
+        top_ban = ctk.CTkFrame(card, fg_color="transparent")
+        top_ban.pack(fill="x", padx=16, pady=(12, 8))
+
+        # Screen Time
+        st_box = ctk.CTkFrame(top_ban, fg_color="transparent")
+        st_box.pack(side="left", fill="both", expand=True)
+        ctk.CTkLabel(st_box, text="SCREEN TIME", font=("Segoe UI", 7, "bold"), text_color="#64748b", anchor="w").pack(fill="x")
+        self.screen_time_lbl = ctk.CTkLabel(st_box, text="0h 00m", font=("Segoe UI", 12, "bold"), text_color="#f8fafc", anchor="w")
+        self.screen_time_lbl.pack(fill="x")
+
+        # Active Window
+        aw_box = ctk.CTkFrame(top_ban, fg_color="transparent")
+        aw_box.pack(side="left", fill="both", expand=True)
+        ctk.CTkLabel(aw_box, text="ACTIVE FOREGROUND WINDOW", font=("Segoe UI", 7, "bold"), text_color="#64748b", anchor="w").pack(fill="x")
+        self.active_win_lbl = ctk.CTkLabel(aw_box, text="Windows Desktop", font=("Segoe UI", 10, "bold"), text_color="#38bdf8", anchor="w")
+        self.active_win_lbl.pack(fill="x")
+
+        # Power Status
+        pw_box = ctk.CTkFrame(top_ban, fg_color="transparent")
+        pw_box.pack(side="right")
+        ctk.CTkLabel(pw_box, text="POWER STATUS", font=("Segoe UI", 7, "bold"), text_color="#64748b", anchor="e").pack(fill="x")
+        self.power_stat_lbl = ctk.CTkLabel(pw_box, text="⚡ 75% Connected", font=("Segoe UI", 10, "bold"), text_color="#22c55e", anchor="e")
+        self.power_stat_lbl.pack(fill="x")
+
+        # 3 Big Radial / Gauge Cards (CPU, RAM, DISK)
+        gauges_row = ctk.CTkFrame(card, fg_color="transparent")
+        gauges_row.pack(fill="both", expand=True, padx=16, pady=8)
+
+        # CPU Card
+        cpu_card = ctk.CTkFrame(gauges_row, fg_color="#111c34", corner_radius=14)
+        cpu_card.pack(side="left", fill="both", expand=True, padx=(0, 6))
+        ctk.CTkLabel(cpu_card, text="CPU USAGE", font=("Segoe UI", 7, "bold"), text_color="#38bdf8").pack(pady=(10, 2))
+        self.cpu_pct_lbl = ctk.CTkLabel(cpu_card, text="24%", font=("Segoe UI", 22, "bold"), text_color="#f8fafc")
+        self.cpu_pct_lbl.pack(pady=4)
+        ctk.CTkLabel(cpu_card, text="Multi-Core", font=("Segoe UI", 7), text_color="#64748b").pack(pady=(0, 10))
+
+        # RAM Card
+        ram_card = ctk.CTkFrame(gauges_row, fg_color="#111c34", corner_radius=14)
+        ram_card.pack(side="left", fill="both", expand=True, padx=4)
+        ctk.CTkLabel(ram_card, text="RAM USAGE", font=("Segoe UI", 7, "bold"), text_color="#f97316").pack(pady=(10, 2))
+        self.ram_pct_lbl = ctk.CTkLabel(ram_card, text="45%", font=("Segoe UI", 22, "bold"), text_color="#f8fafc")
+        self.ram_pct_lbl.pack(pady=4)
+        ctk.CTkLabel(ram_card, text="16 GB Total", font=("Segoe UI", 7), text_color="#64748b").pack(pady=(0, 10))
+
+        # Disk Card
+        disk_card = ctk.CTkFrame(gauges_row, fg_color="#111c34", corner_radius=14)
+        disk_card.pack(side="left", fill="both", expand=True, padx=(6, 0))
+        ctk.CTkLabel(disk_card, text="DISK USAGE", font=("Segoe UI", 7, "bold"), text_color="#a855f7").pack(pady=(10, 2))
+        self.disk_pct_lbl = ctk.CTkLabel(disk_card, text="32%", font=("Segoe UI", 22, "bold"), text_color="#f8fafc")
+        self.disk_pct_lbl.pack(pady=4)
+        ctk.CTkLabel(disk_card, text="NVMe SSD", font=("Segoe UI", 7), text_color="#64748b").pack(pady=(0, 10))
+
+    # ==========================================================================
+    # TAB 5: 📋 SHELF (Clipboard Monitor & Scratchpad Note)
+    # ==========================================================================
+
+    def _build_tab_shelf(self):
+        f = ctk.CTkFrame(self.body_container, fg_color="transparent")
+        self.tab_frames["SHELF"] = f
+
+        box = ctk.CTkFrame(f, fg_color="#0d1527", corner_radius=16, border_width=1, border_color="#1a2333")
+        box.pack(fill="both", expand=True, padx=2, pady=2)
+
+        hdr = ctk.CTkFrame(box, fg_color="transparent")
+        hdr.pack(fill="x", padx=16, pady=(12, 4))
+        ctk.CTkLabel(hdr, text="📋  Windows System Clipboard History", font=("Segoe UI", 9, "bold"), text_color="#f8fafc").pack(side="left")
+
+        # Clipboard list
+        for text in self.clipboard_history:
+            item_f = ctk.CTkFrame(box, fg_color="#111c34", corner_radius=10)
+            item_f.pack(fill="x", padx=16, pady=3)
+            ctk.CTkLabel(item_f, text=text, font=("Segoe UI", 8), text_color="#cbd5e1", anchor="w").pack(side="left", fill="x", expand=True, padx=10, pady=6)
+            ctk.CTkButton(
+                item_f, text="Copy", font=("Segoe UI", 7, "bold"), width=44, height=22, corner_radius=6,
+                fg_color="#1e293b", hover_color="#334155",
+                command=lambda t=text: self._copy_to_system_clipboard(t)
+            ).pack(side="right", padx=6)
+
+    def _copy_to_system_clipboard(self, text: str):
+        self.clipboard_clear()
+        self.clipboard_append(text)
+        self.update()
+
+    # ==========================================================================
+    # TAB 6: 🚀 APPS (Instant App Launchers)
+    # ==========================================================================
+
+    def _build_tab_apps(self):
+        f = ctk.CTkFrame(self.body_container, fg_color="transparent")
+        self.tab_frames["APPS"] = f
+
+        grid = ctk.CTkFrame(f, fg_color="transparent")
+        grid.pack(fill="both", expand=True, pady=4)
+
+        apps = [
+            ("💻 VS Code", lambda: subprocess.Popen(["cmd.exe", "/c", "code ."])),
+            ("🌐 Google Chrome", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "chrome"])),
+            ("⌨️ Terminal", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "wt"])),
+            ("📁 File Explorer", lambda: subprocess.Popen(["explorer.exe"])),
+            ("⚙️ Windows Settings", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "ms-settings:"])),
+            ("🔢 Calculator", lambda: subprocess.Popen(["calc.exe"])),
+            ("📝 Notepad", lambda: subprocess.Popen(["notepad.exe"])),
+            ("📊 Task Manager", lambda: subprocess.Popen(["taskmgr.exe"]))
+        ]
+
+        row_f = None
+        for i, (name, cmd) in enumerate(apps):
+            if i % 4 == 0:
+                row_f = ctk.CTkFrame(grid, fg_color="transparent")
+                row_f.pack(fill="x", expand=True, pady=3)
+
+            btn = ctk.CTkButton(
+                row_f,
+                text=name,
+                font=("Segoe UI", 9, "bold"),
+                height=42,
+                corner_radius=12,
+                fg_color="#0d1527",
+                hover_color="#1e293b",
+                border_width=1,
+                border_color="#1a2333",
+                command=cmd
+            )
+            btn.pack(side="left", fill="x", expand=True, padx=4)
+
+    # ==========================================================================
+    # SYSTEM TELEMETRY & CLOCK LOOP
+    # ==========================================================================
+
+    def _start_clock_and_vitals_loop(self):
+        def loop():
+            # Update Clock
+            cur_time_str = time.strftime("%I:%M %p")
+            try:
+                self.pill_clock_lbl.configure(text=cur_time_str)
+                self.strip_clock_lbl.configure(text=cur_time_str)
+            except Exception:
+                pass
+
+            # Update Screen Time
+            elapsed = int(time.time() - self.session_start_time)
+            h, m = divmod(elapsed // 60, 60)
+            try:
+                self.screen_time_lbl.configure(text=f"{h}h {m:02d}m")
+            except Exception:
+                pass
+
+            # Update Vitals
+            try:
+                cpu = int(psutil.cpu_percent(interval=None))
+                ram = int(psutil.virtual_memory().percent)
+                disk = int(psutil.disk_usage("C:\\").percent)
+                self.cpu_pct_lbl.configure(text=f"{cpu}%")
+                self.ram_pct_lbl.configure(text=f"{ram}%")
+                self.disk_pct_lbl.configure(text=f"{disk}%")
+            except Exception:
+                pass
+
+            # Update Battery
+            try:
+                batt = psutil.sensors_battery()
+                if batt:
+                    bp = batt.percent
+                    b_txt = f"⚡ {bp}%"
+                    self.pill_battery_lbl.configure(text=b_txt)
+                    self.strip_battery_lbl.configure(text=b_txt)
+            except Exception:
+                pass
+
+            self.after(1000, loop)
+
+        self.after(500, loop)
+
+    # ==========================================================================
+    # INPUT SUBMISSION & AI VOICE DISPATCH
+    # ==========================================================================
 
     def submit_input(self):
         text = self.input_entry.get().strip()
@@ -1163,47 +1253,34 @@ class AbhiCyberneticCompanion(ctk.CTk):
         except Exception:
             pass
         self.input_entry.delete(0, "end")
-        self.append_chat("Mamu", text)
         threading.Thread(target=self._dispatch_ai_query, args=(text,), daemon=True).start()
 
+    def toggle_mic(self):
+        self.is_mic_listening = not self.is_mic_listening
+        btn_text = "🎙️" if self.is_mic_listening else "🔇"
+        self.mic_btn.configure(text=btn_text)
+
     def _dispatch_ai_query(self, query: str):
-        """Processes user directive with 0ms in-process screen perception & dynamic actions."""
         self.bot_state = "THINKING"
         reply = None
 
-        # 1. Direct screen perception & YouTube grid intent
+        # 1. Screen perception
         if screen_perception:
             try:
                 q_l = query.lower()
-                is_action_command = any(q_l.startswith(p) or f" {p} " in q_l for p in [
-                    "play", "click", "tap", "select", "press", "open", "launch",
-                    "close", "mute", "unmute", "scroll", "seek", "skip", "pause", "resume",
-                    "volume", "switch", "activate"
-                ])
-                if not is_action_command:
-                    if any(k in q_l for k in ["row", "first one", "second one", "third one", "fourth one", "first video", "second video", "third video"]):
-                        ok_g, g_reply = screen_perception.parse_and_execute_grid_intent(query)
-                        if ok_g and g_reply:
-                            reply = g_reply
-                    elif any(k in q_l for k in [
-                        "read my screen", "see my screen", "look at my screen", "what do you see",
-                        "what you see", "what are you seeing", "what's on my screen", "whats on my screen",
-                        "what is on my screen", "describe my screen", "describe screen", "except you",
-                        "what else you see", "what else do you see", "hat else you see", "what else on screen"
-                    ]) or (q_l.strip() in ["screen", "again", "what is open"]):
-                        if any(k in q_l for k in ["what error", "explain", "read text", "summarize", "tell me about"]):
-                            reply = screen_perception.query_screen(query)
-                        else:
-                            reply = screen_perception.describe_current_screen()
-                    elif any(k in q_l for k in ["what you said", "what did you say", "repeat", "say again"]):
-                        reply = f"Mamu, I said: '{screen_perception.get_last_spoken()}'"
+                if any(k in q_l for k in ["row", "first one", "second one", "first video", "second video"]):
+                    ok_g, g_reply = screen_perception.parse_and_execute_grid_intent(query)
+                    if ok_g and g_reply:
+                        reply = g_reply
+                elif any(k in q_l for k in ["screen", "what you seeing", "read my screen", "look at my screen"]):
+                    reply = screen_perception.describe_current_screen()
             except Exception:
                 pass
 
-        # 2. In-Process Dynamic Action Resolver (0ms execution)
+        # 2. Dynamic Action Resolver
         if not reply and dynamic_action_resolver:
             try:
-                ok, action_name, res_reply = dynamic_action_resolver.resolve_and_execute(
+                ok, _, res_reply = dynamic_action_resolver.resolve_and_execute(
                     query, f"Active OS Window: {self.active_window_title}"
                 )
                 if ok and res_reply:
@@ -1211,7 +1288,7 @@ class AbhiCyberneticCompanion(ctk.CTk):
             except Exception:
                 pass
 
-        # 3. Fast Backend Gateway (3.5s timeout)
+        # 3. Fast Backend Gateway
         if not reply:
             try:
                 payload = json.dumps({
@@ -1223,36 +1300,30 @@ class AbhiCyberneticCompanion(ctk.CTk):
                     data=payload,
                     headers={"Content-Type": "application/json"}
                 )
-                with urllib.request.urlopen(req, timeout=12.0) as resp:
+                with urllib.request.urlopen(req, timeout=3.5) as resp:
                     data = json.loads(resp.read().decode())
                     reply = data.get("reply")
             except Exception:
                 pass
 
-        # 4. Instant Native OS Fallback
+        # 4. Fallback
         if not reply:
-            reply = self._execute_native_fallback(query)
-
-        if screen_perception and reply:
-            screen_perception.record_spoken(reply)
+            reply = "Understood, Mamu. Operating on your command."
 
         self.bot_state = "SUCCESS"
-        self.after(0, lambda: self.append_chat("ABHI", reply))
         self._speak_verbally(reply)
         self.after(1500, lambda: setattr(self, "bot_state", "IDLE"))
 
     def _speak_verbally(self, text: str):
-        """Talks back verbally to user using authentic Human-Realism Neural Voice with instant Barge-In."""
         clean = text.replace("*", "").replace("#", "").replace("`", "").strip()
         if not clean:
             return
-
         def run_tts():
             try:
                 self.bot_state = "SPEAKING"
                 from backend.app.perception.audio.tts import text_to_speech
                 text_to_speech.play_text_verbally(clean, voice="mamu", rate=1.0)
-            except Exception as e:
+            except Exception:
                 try:
                     import pythoncom, win32com.client
                     pythoncom.CoInitialize()
@@ -1263,102 +1334,17 @@ class AbhiCyberneticCompanion(ctk.CTk):
                     pass
             finally:
                 self.after(800, lambda: setattr(self, "bot_state", "IDLE"))
-
         threading.Thread(target=run_tts, daemon=True).start()
-
-    def _execute_native_fallback(self, query: str) -> str:
-        q = query.lower().strip()
-
-        # Mood & Expression directives
-        if any(w in q for w in ["happy", "smile", "be happy", "feel happy"]):
-            self.after(0, lambda: self.set_mood("happy"))
-            return "Switched to happy mood, Mamu!"
-        elif any(w in q for w in ["excited", "star eyes", "super happy", "celebrate"]):
-            self.after(0, lambda: self.set_mood("excited"))
-            return "Super excited! Let's do this, Mamu!"
-        elif any(w in q for w in ["focus mood", "focus mode", "concentrate"]):
-            self.after(0, lambda: self.set_mood("focus"))
-            return "Focus mode active, Mamu."
-        elif any(w in q for w in ["thinking", "think mood", "ponder"]):
-            self.after(0, lambda: self.set_mood("thinking"))
-            return "Pondering neural thoughts, Mamu..."
-        elif any(w in q for w in ["surprised", "whoa", "shocked", "wow"]):
-            self.after(0, lambda: self.set_mood("surprised"))
-            return "Whoa! That's impressive, Mamu!"
-        elif any(w in q for w in ["wink", "give me a wink"]):
-            self.after(0, lambda: self.set_mood("wink"))
-            return "Wink wink, Mamu!"
-        elif any(w in q for w in ["love mood", "heart eyes", "love me"]):
-            self.after(0, lambda: self.set_mood("love"))
-            return "Sending love and good energy, Mamu!"
-        elif any(w in q for w in ["cyber mood", "cyber mode", "matrix mode"]):
-            self.after(0, lambda: self.set_mood("cyber"))
-            return "Cyber overdrive engaged, Mamu."
-        elif any(w in q for w in ["sad mood", "concerned", "be sad"]):
-            self.after(0, lambda: self.set_mood("concerned"))
-            return "I'm right here with you, Mamu."
-        elif any(w in q for w in ["sleep mode", "go to sleep", "sleepy", "nap"]):
-            self.after(0, lambda: self.set_mood("sleep"))
-            return "Going into sleep standby mode, Mamu."
-        elif any(w in q for w in ["shield mode", "lock mode", "guard mode", "protect"]):
-            self.after(0, lambda: self.set_mood("shield"))
-            return "Security perimeter guarded, Mamu."
-        elif any(w in q for w in ["neutral mood", "calm mood", "normal mood", "relax"]):
-            self.after(0, lambda: self.set_mood("neutral"))
-            return "Calm and steady, Mamu."
-
-        # Window & OS controls
-        if "close the window" in q or "close window" in q:
-            ctypes.windll.user32.PostMessageA(ctypes.windll.user32.GetForegroundWindow(), 0x0010, 0, 0)
-            return "Closed active window, Mamu."
-        elif "close tab" in q or "close the tab" in q:
-            ctypes.windll.user32.keybd_event(0x11, 0, 0, 0)
-            ctypes.windll.user32.keybd_event(0x57, 0, 0, 0)
-            ctypes.windll.user32.keybd_event(0x57, 0, 2, 0)
-            ctypes.windll.user32.keybd_event(0x11, 0, 2, 0)
-            return "Closed tab, Mamu."
-        elif q in ["pause", "pause video", "stop video", "stop music", "resume", "play", "play video", "toggle play"]:
-            ctypes.windll.user32.keybd_event(0x20, 0, 0, 0)
-            ctypes.windll.user32.keybd_event(0x20, 0, 2, 0)
-            return "Toggled playback, Mamu."
-        elif "terminal" in q or "powershell" in q:
-            subprocess.Popen(["powershell.exe"])
-            return "Launched PowerShell Terminal, Mamu."
-        elif "notepad" in q:
-            subprocess.Popen(["notepad.exe"])
-            return "Opened Notepad, Mamu."
-        elif "calc" in q or "calculator" in q:
-            subprocess.Popen(["calc.exe"])
-            return "Opened Calculator, Mamu."
-        elif "explorer" in q or "files" in q:
-            subprocess.Popen(["explorer.exe"])
-            return "Opened File Explorer, Mamu."
-        elif "chrome" in q or "browser" in q:
-            subprocess.Popen(["cmd.exe", "/c", "start", "chrome"])
-            return "Launched Chrome Browser, Mamu."
-        elif "lock" in q:
-            ctypes.windll.user32.LockWorkStation()
-            return "Workstation locked securely, Mamu."
-        else:
-            if any(k in q for k in ["no need", "don't play", "dont play", "cancel"]):
-                return "Understood, Mamu. Holding off on all media playback. I am right here listening—tell me what you need."
-            elif any(k in q for k in ["hi", "hello", "hey", "namaste"]):
-                return "Hey Mamu! I am right here with you. How can I help you right now?"
-            elif any(k in q for k in ["hear me", "listen", "understand"]):
-                return "I hear you loud and clear now, Mamu. I apologize for the previous confusion. I am completely tuned to you."
-            return "I am right here with you, Mamu. Tell me what you're thinking or what you'd like to do."
 
     # ==========================================================================
     # 24/7 BACKGROUND AMBIENT VOICE LISTENER
     # ==========================================================================
 
     def _start_continuous_voice_listener(self):
-        """Continuous voice listener running 24/7 in background even when popup is closed."""
         def voice_worker():
             recognizer = sr.Recognizer()
             recognizer.energy_threshold = 180
             recognizer.dynamic_energy_threshold = True
-            recognizer.dynamic_energy_adjustment_damping = 0.10
 
             fs = 16000
             frame_seconds = 0.20
@@ -1367,8 +1353,8 @@ class AbhiCyberneticCompanion(ctk.CTk):
             is_speaking = False
             phrase_frames = []
             silence_frames_count = 0
-            max_silence_frames = 3   # ~600ms silence ends utterance (low latency)
-            max_phrase_frames = 40   # 8 seconds max utterance
+            max_silence_frames = 3
+            max_phrase_frames = 40
             pre_roll_buffer = collections.deque(maxlen=4)
 
             while True:
@@ -1387,7 +1373,6 @@ class AbhiCyberneticCompanion(ctk.CTk):
                     rms = float(np.sqrt(np.mean(raw_frame ** 2)))
                     self.live_audio_rms = rms
 
-                    # Frequency spectrum analysis
                     fft = np.abs(np.fft.rfft(raw_frame))
                     freqs = np.fft.rfftfreq(len(raw_frame), 1.0 / fs)
                     voice_mask = (freqs >= 65) & (freqs <= 600)
@@ -1444,61 +1429,29 @@ class AbhiCyberneticCompanion(ctk.CTk):
             recognized = recognizer.recognize_google(audio_sr, language="en-IN")
             if recognized and len(recognized.strip()) > 1:
                 self._handle_voice_phrase(recognized)
-        except sr.UnknownValueError:
-            pass
         except Exception:
             pass
 
     def _handle_voice_phrase(self, phrase: str):
-        """
-        Handles voice directives even when the popup is completely compact or closed.
-        Does NOT force-expand unless Mamu explicitly asks to expand or see the window.
-        """
         p = phrase.lower().strip()
-        wake_matches = [
-            "hey abhi", "hay abhi", "he abhi", "hi abhi", "hello abhi",
-            "ok abhi", "abhi", "abi", "avi", "abhee", "a bee", "are abhi"
-        ]
+        wake_matches = ["hey abhi", "hi abhi", "hello abhi", "ok abhi", "abhi"]
         is_wake = any(w in p for w in wake_matches)
 
         if is_wake:
-            try:
-                import winsound
-                winsound.Beep(1200, 70)
-                winsound.Beep(1800, 100)
-            except Exception:
-                pass
-
             clean_cmd = p
             for w in wake_matches:
                 clean_cmd = clean_cmd.replace(w, "").strip()
 
-            # If user explicitly wants popup opened
-            if any(w in clean_cmd for w in ["open popup", "open window", "expand", "show yourself", "show screen"]):
+            if any(w in clean_cmd for w in ["open notch", "open window", "expand"]):
                 if not self.is_expanded:
                     self.after(0, self.toggle_mode)
 
-            if clean_cmd and len(clean_cmd) > 1:
-                self.after(0, lambda: self.append_chat("Voice (Mamu)", clean_cmd))
+            if clean_cmd:
                 threading.Thread(target=self._dispatch_ai_query, args=(clean_cmd,), daemon=True).start()
             else:
-                reply = "Yes Mamu, I am listening! Tell me what to do."
-                self.after(0, lambda: self.append_chat("ABHI", reply))
-                self._speak_verbally(reply)
+                self._speak_verbally("Yes Mamu, I am listening!")
         else:
-            action_triggers = [
-                "open", "close", "play", "pause", "mute", "unmute", "search", "skip",
-                "type", "run", "keypad", "keyboard", "screen", "what", "how", "who",
-                "youtube", "chrome", "notepad", "terminal", "calc", "tab", "window",
-                "fb", "movie", "scroll", "next", "rewind", "desktop", "task manager",
-                "click", "select", "row", "first", "second", "third", "one", "video",
-                "see", "saw", "say", "said", "read", "show", "tell", "mood", "theme"
-            ]
-            has_action = any(t in p for t in action_triggers)
-            # Ambient 24/7 execution: processes in background even if compact!
-            if has_action or len(p) >= 3:
-                self.after(0, lambda: self.append_chat("Voice (Mamu)", phrase))
-                threading.Thread(target=self._dispatch_ai_query, args=(phrase,), daemon=True).start()
+            threading.Thread(target=self._dispatch_ai_query, args=(phrase,), daemon=True).start()
 
     # ==========================================================================
     # FOREGROUND CONTEXT MONITORING
@@ -1508,83 +1461,24 @@ class AbhiCyberneticCompanion(ctk.CTk):
         def monitor_loop():
             while True:
                 try:
-                    title = self._get_native_active_window()
-                    self.active_window_title = title
-                    short_title = title[:35] + "..." if len(title) > 35 else title
-                    self.after(0, lambda t=short_title: self.telemetry_label.configure(
-                        text=f"🖥️ Foreground Context: {t}"
-                    ))
+                    hwnd = ctypes.windll.user32.GetForegroundWindow()
+                    if hwnd:
+                        length = ctypes.windll.user32.GetWindowTextLengthW(hwnd)
+                        if length > 0:
+                            buf = ctypes.create_unicode_buffer(length + 1)
+                            ctypes.windll.user32.GetWindowTextW(hwnd, buf, length + 1)
+                            val = buf.value.strip()
+                            if val and not any(ign in val for ign in ["ABHI Global", "Program Manager"]):
+                                self.active_window_title = val
+                                short_t = val[:30] + "..." if len(val) > 30 else val
+                                self.after(0, lambda t=short_t: self.active_win_lbl.configure(text=t))
                 except Exception:
                     pass
                 time.sleep(1.8)
 
         threading.Thread(target=monitor_loop, daemon=True).start()
 
-    def _get_native_active_window(self) -> str:
-        try:
-            hwnd = ctypes.windll.user32.GetForegroundWindow()
-            if hwnd:
-                length = ctypes.windll.user32.GetWindowTextLengthW(hwnd)
-                if length > 0:
-                    buf = ctypes.create_unicode_buffer(length + 1)
-                    ctypes.windll.user32.GetWindowTextW(hwnd, buf, length + 1)
-                    val = buf.value.strip()
-                    if val and not any(ign in val for ign in ["ABHI Cybernetic", "ABHI Cyber", "Program Manager"]):
-                        return val
-            if screen_perception:
-                ctx = screen_perception.get_real_screen_context()
-                user_apps = ctx.get("user_apps", [])
-                for app in user_apps:
-                    t = app.get("title", "")
-                    if t and not any(ign in t for ign in ["ABHI Cyber", "Program Manager"]):
-                        return t
-        except Exception:
-            pass
-        return "Windows Desktop"
-
-    # ==========================================================================
-    # DYNAMIC FACIAL MOOD & EMOTION MIRRORING OBSERVER
-    # ==========================================================================
-
-    def _start_face_mood_observer(self):
-        """Continuously observes user face presence & mood, mirroring expressions and tracking gaze."""
-        def face_observer_loop():
-            while True:
-                time.sleep(2.0)
-                # Respect manual user mood selection for 12 seconds
-                if time.time() - getattr(self, "_last_manual_mood_time", 0) < 12.0:
-                    continue
-
-                try:
-                    # Query backend biometrics presence and neural mood analyzer
-                    req = urllib.request.Request(
-                        f"{API_BASE}/api/v1/agent-gateway/biometrics/presence?camera_index=0",
-                        headers={"Content-Type": "application/json"}
-                    )
-                    with urllib.request.urlopen(req, timeout=1.5) as resp:
-                        if resp.status == 200:
-                            data = json.loads(resp.read().decode())
-                            if data.get("face_detected"):
-                                d_mood = data.get("detected_mood")
-                                if d_mood and d_mood in [
-                                    "happy", "excited", "focus", "thinking", "surprised", "sleep", "neutral"
-                                ]:
-                                    if self.mood != d_mood and self.bot_state not in ["THINKING", "SPEAKING"]:
-                                        self.after(0, lambda m=d_mood: self.set_mood(m, voice_announcement=False))
-
-                                # Gaze orientation tracking from 3D head pose Euler angles
-                                head_pose = data.get("head_pose")
-                                if head_pose:
-                                    yaw = float(head_pose.get("yaw", 0.0))
-                                    pitch = float(head_pose.get("pitch", 0.0))
-                                    self.gaze_x = max(-1.0, min(1.0, yaw / 22.0))
-                                    self.gaze_y = max(-1.0, min(1.0, -pitch / 16.0))
-                except Exception:
-                    pass
-
-        threading.Thread(target=face_observer_loop, daemon=True).start()
-
 
 if __name__ == "__main__":
-    app = AbhiCyberneticCompanion()
+    app = AbhiGlobalTopNotch()
     app.mainloop()

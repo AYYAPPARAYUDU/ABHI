@@ -41,8 +41,8 @@ export class SpeechVoiceService {
   // Universal Language Selection Signal
   readonly selectedLanguage = signal<AppLanguage>('auto');
 
-  // J.A.R.V.I.S. & F.R.I.D.A.Y. Persona & Beloved Operator Callsign ("Mamu" as authentic close friend)
-  readonly personaMode = signal<'JARVIS' | 'FRIDAY'>('JARVIS');
+  // ABHI, J.A.R.V.I.S. & F.R.I.D.A.Y. Persona & Beloved Operator Callsign ("Mamu" as authentic close friend)
+  readonly personaMode = signal<'ABHI' | 'JARVIS' | 'FRIDAY'>('ABHI');
   readonly userCallsign = signal<'Mamu'>('Mamu');
 
   // Natural Human Voice & Instagram Reel Subtitle Signals
@@ -87,7 +87,7 @@ export class SpeechVoiceService {
         this.selectedLanguage.set(savedLang as AppLanguage);
       }
       const savedPersona = localStorage.getItem('abhi_persona_mode');
-      if (savedPersona === 'JARVIS' || savedPersona === 'FRIDAY') {
+      if (savedPersona === 'ABHI' || savedPersona === 'JARVIS' || savedPersona === 'FRIDAY') {
         this.personaMode.set(savedPersona);
       }
       localStorage.setItem('abhi_user_callsign', 'Mamu');
@@ -159,7 +159,7 @@ export class SpeechVoiceService {
     this.recognition.lang = mapping[lang] || 'en-US';
   }
 
-  setPersonaMode(mode: 'JARVIS' | 'FRIDAY'): void {
+  setPersonaMode(mode: 'ABHI' | 'JARVIS' | 'FRIDAY'): void {
     this.personaMode.set(mode);
     if (typeof localStorage !== 'undefined') {
       const savedLang = localStorage.getItem('abhi_selected_language');
@@ -169,7 +169,7 @@ export class SpeechVoiceService {
       localStorage.setItem('abhi_persona_mode', mode);
       localStorage.setItem('abhi_user_callsign', 'Mamu');
     }
-    const name = mode === 'JARVIS' ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.';
+    const name = mode === 'ABHI' ? 'ABHI' : (mode === 'JARVIS' ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.');
     this.speak(`${name} online. Right here with you, Mamu! Let's do this!`, true);
   }
 
@@ -634,12 +634,12 @@ export class SpeechVoiceService {
         this.fallbackSpeechSynthesis(spokenText, req, words);
       };
 
-      // 1800ms load safety watchdog: if backend audio stalls or is blocked, switch cleanly to speech synthesis
+      // Adaptive load safety watchdog: give neural audio 7500ms to stream smoothly before fallback
       loadWatchdog = setTimeout(() => {
         if (!fallbackTriggered && this.currentAudio === audio && audio.paused) {
           triggerFallback();
         }
-      }, 1800);
+      }, 7500);
 
       audio.onplay = () => {
         if (loadWatchdog) {

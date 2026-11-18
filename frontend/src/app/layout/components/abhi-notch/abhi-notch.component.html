@@ -1,24 +1,27 @@
 <!-- ========================================================================= -->
-<!-- ABHI DYNAMIC NOTCH (Vayli Windows Notch & TwoCode Floating Island)       -->
-<!-- Strictly adhering to elayadesign/ai-design-skills visual & motion tokens -->
+<!-- ABHI ALL-IN-ONE DYNAMIC NOTCH (Vayli Windows Notch & Control Center)    -->
+<!-- Strictly adhering to elayadesign/ai-design-skills tokens & motion physics-->
 <!-- ========================================================================= -->
 
 <aside
   class="abhi-notch-root"
   [class.expanded]="isExpanded()"
+  (mouseenter)="onNotchMouseEnter()"
+  (mouseleave)="onNotchMouseLeave()"
   role="region"
   aria-label="ABHI Dynamic Island Notch"
 >
   <!-- ======================================================================= -->
-  <!-- 1. COLLAPSED NOTCH STATE (Small Floating Capsule Pill - Image 3)        -->
+  <!-- 1. COLLAPSED NOTCH PILL (Image 3 Style)                                 -->
   <!-- ======================================================================= -->
   @if (!isExpanded()) {
     <div
       class="notch-collapsed-pill"
-      (click)="toggleExpanded()"
-      title="Click or press Ctrl+Space to expand ABHI Island"
+      [class.extended]="isHoverExtended()"
+      (click)="openFullDeck()"
+      title="Hover to peek status, click to open full deck"
     >
-      <!-- Left: Ambient Glow Ring & Bot Mood Indicator -->
+      <!-- Left: Ambient Glow Ring & Bot Face -->
       <div class="pill-indicator-group">
         <span class="pulse-beacon" [class.singing]="isPlaying()" [class.listening]="speechService.isSpeaking()"></span>
         <span class="bot-face-mini">
@@ -31,486 +34,824 @@
         </span>
       </div>
 
-      <!-- Center: Status / Clock / Now Playing Track -->
-      <div class="pill-status-center">
-        @if (isPlaying()) {
-          <div class="pill-music-snippet">
-            <span class="music-icon">♫</span>
-            <span class="music-title-cut">{{ trackTitle() }}</span>
-            <div class="pill-eq-bars">
-              <span class="eq-bar bar-1"></span>
-              <span class="eq-bar bar-2"></span>
-              <span class="eq-bar bar-3"></span>
-            </div>
-          </div>
-        } @else if (isFocusActive()) {
-          <div class="pill-focus-snippet">
-            <span class="focus-glyph">⏱</span>
-            <span class="focus-time-mono">{{ formattedFocusTime() }}</span>
+      <!-- Center: Status / Clock / Real Music Track / Hover Extended Data -->
+      <div class="pill-status-center font-mono">
+        @if (isHoverExtended()) {
+          <div class="extended-hover-snippet animate-fade-in">
+            <span class="clock-time">{{ currentTimeStr() }}</span>
+            <span class="bullet-sep">•</span>
+            @if (isPlaying()) {
+              <span class="music-cut">♫ {{ trackTitle() }}</span>
+            } @else {
+              <span class="status-cut">ABHI NOTCH · CLICK TO OPEN</span>
+            }
+            <span class="bullet-sep">•</span>
+            <span class="weather-cut">{{ weatherTemp() }} {{ weatherCondition() }}</span>
           </div>
         } @else {
-          <div class="pill-clock-snippet">
-            <span class="clock-time">{{ currentTimeStr() }}</span>
-            <span class="status-dot-green">●</span>
-            <span class="status-tag">ABHI BOT</span>
+          <div class="compact-hover-snippet">
+            @if (isPlaying()) {
+              <div class="pill-music-snippet">
+                <span class="music-icon">♫</span>
+                <span class="music-title-cut">{{ trackTitle() }}</span>
+              </div>
+            } @else if (isTimerRunning()) {
+              <div class="pill-focus-snippet">
+                <span class="focus-glyph">⏱</span>
+                <span class="focus-time-mono">{{ formattedTimer() }}</span>
+              </div>
+            } @else {
+              <div class="pill-clock-snippet">
+                <span class="clock-time">{{ currentTimeStr() }}</span>
+                <span class="status-dot-green">●</span>
+                <span class="status-tag">ABHI BOT</span>
+              </div>
+            }
           </div>
         }
       </div>
 
-      <!-- Right: Action Pip & Expand Chevron -->
-      <div class="pill-actions-right">
-        <span class="vitals-micro-pill font-mono">{{ cpuPercent() }}% CPU</span>
-        <button type="button" class="pill-expand-btn" aria-label="Expand Island">
-          <svg class="chevron-svg" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
-            <path d="M1.5 5.5l6.5 6.5 6.5-6.5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
+      <!-- Right: Battery & Expand Chevron -->
+      <div class="pill-actions-right font-mono">
+        <span class="battery-label">⚡ {{ batteryPercent() }}%</span>
+        <span class="pill-chevron-btn">{{ isHoverExtended() ? 'CLICK TO OPEN ▾' : '▼' }}</span>
       </div>
     </div>
   }
 
   <!-- ======================================================================= -->
-  <!-- 2. EXPANDED HUD DUAL-PANEL ISLAND (Image 1 & Image 2 Full Experience)  -->
+  <!-- 2. EXPANDED HUD DYNAMIC ISLAND (Modular Single/Dual-Panel Deck)          -->
   <!-- ======================================================================= -->
   @if (isExpanded()) {
     <div class="notch-expanded-island">
       <!-- ------------------------------------------------------------------- -->
-      <!-- LEFT PANEL: Date, Weather, Sunset Artwork & Expressive ABHI Bot     -->
+      <!-- TOP STATUS & UNIVERSAL TAB BAR (Visible on All Tabs!)                -->
       <!-- ------------------------------------------------------------------- -->
-      <div class="island-left-panel">
-        <!-- Date & Weather Pill Header -->
-        <div class="date-weather-badge font-mono">
-          <span class="calendar-icon">📅</span>
-          <span>{{ currentDateStr() }} / {{ weatherTemp() }} {{ weatherCondition() }}</span>
+      <div class="panel-header-strip font-mono">
+        <!-- Left: Time & Tag -->
+        <div class="strip-left">
+          <span class="time-readout">{{ currentTimeStr() }}</span>
+          <span class="bullet-sep">•</span>
+          <span class="active-tag">ABHI ALL-IN-ONE NOTCH</span>
+          <span class="bullet-sep">•</span>
+          <span class="weather-brief">{{ weatherTemp() }} {{ weatherCondition() }}</span>
         </div>
 
-        <!-- Ambient Artwork & ABHI Bot Expressive Face Card (Image 1 Style) -->
-        <div class="ambient-art-card">
-          <!-- Animated Celestial Sun & Landscape Silhouette -->
-          <div class="celestial-sun-orb" [class.singing]="isPlaying()"></div>
-          <div class="mountain-silhouette"></div>
-
-          <!-- Expressive ABHI Bot Screen Overlay -->
-          <div class="bot-face-container">
-            <div class="bot-face-screen">
-              @switch (botMood()) {
-                @case ('happy') {
-                  <div class="eyes-row happy-eyes">
-                    <span class="eye arc-eye-left">⌒</span>
-                    <span class="eye arc-eye-right">⌒</span>
-                  </div>
-                  <div class="mouth smile-mouth">‿</div>
-                }
-                @case ('focus') {
-                  <div class="eyes-row focus-eyes">
-                    <span class="eye dot-eye">●</span>
-                    <span class="eye dot-eye">●</span>
-                  </div>
-                  <div class="mouth line-mouth">―</div>
-                }
-                @case ('listening') {
-                  <div class="eyes-row listen-eyes">
-                    <span class="eye wide-eye">◉</span>
-                    <span class="eye wide-eye">◉</span>
-                  </div>
-                  <div class="mouth open-mouth">o</div>
-                }
-                @case ('singing') {
-                  <div class="eyes-row sing-eyes">
-                    <span class="eye wink-left">^</span>
-                    <span class="eye wink-right">~</span>
-                  </div>
-                  <div class="mouth sing-mouth">♫</div>
-                }
-                @default {
-                  <div class="eyes-row happy-eyes">
-                    <span class="eye arc-eye-left">⌒</span>
-                    <span class="eye arc-eye-right">⌒</span>
-                  </div>
-                  <div class="mouth smile-mouth">‿</div>
-                }
-              }
-            </div>
-            <div class="bot-mood-tag font-mono">{{ botMood().toUpperCase() }}</div>
-          </div>
-        </div>
-
-        <!-- Sub-Navigation Rail (Image 1 Bottom Icon Strip) -->
-        <div class="island-nav-rail">
+        <!-- Center: Universal High-Tech Tab Pills -->
+        <nav class="island-top-tabs-nav font-mono" aria-label="Notch Tabs">
           <button
             type="button"
-            class="rail-icon-btn"
+            class="top-tab-pill"
+            [class.active]="activeTab() === 'CENTER'"
+            (click)="setTab('CENTER')"
+            title="Windows Control Center"
+          >
+            <span class="tab-glyph">⚙️</span>
+            <span class="tab-text">CENTER</span>
+          </button>
+
+          <button
+            type="button"
+            class="top-tab-pill"
+            [class.active]="activeTab() === 'CALENDAR'"
+            (click)="setTab('CALENDAR')"
+            title="Calendar & Focus Scheduler"
+          >
+            <span class="tab-glyph">📅</span>
+            <span class="tab-text">CALENDAR</span>
+          </button>
+
+          <button
+            type="button"
+            class="top-tab-pill"
             [class.active]="activeTab() === 'MUSIC'"
             (click)="setTab('MUSIC')"
-            title="Now Playing & Music Controls"
+            title="Online Music & Streams"
           >
-            <span>♫</span>
-            <span class="rail-label">MUSIC</span>
+            <span class="tab-glyph">♫</span>
+            <span class="tab-text">MUSIC</span>
           </button>
 
           <button
             type="button"
-            class="rail-icon-btn"
+            class="top-tab-pill"
             [class.active]="activeTab() === 'VITALS'"
             (click)="setTab('VITALS')"
-            title="Vayli System Vitals"
+            title="System Hardware Vitals"
           >
-            <span>⚡</span>
-            <span class="rail-label">VITALS</span>
+            <span class="tab-glyph">⚡</span>
+            <span class="tab-text">VITALS</span>
           </button>
 
           <button
             type="button"
-            class="rail-icon-btn"
-            [class.active]="activeTab() === 'FOCUS'"
-            (click)="setTab('FOCUS')"
-            title="Focus & Pomodoro Timer"
-          >
-            <span>⏱</span>
-            <span class="rail-label">FOCUS</span>
-          </button>
-
-          <button
-            type="button"
-            class="rail-icon-btn"
+            class="top-tab-pill"
             [class.active]="activeTab() === 'SHELF'"
             (click)="setTab('SHELF')"
-            title="Vayli Clipboard & Notes Shelf"
+            title="Clipboard & Quick Notes"
           >
-            <span>📋</span>
-            <span class="rail-label">SHELF</span>
+            <span class="tab-glyph">📋</span>
+            <span class="tab-text">SHELF</span>
           </button>
 
           <button
             type="button"
-            class="rail-icon-btn"
+            class="top-tab-pill"
             [class.active]="activeTab() === 'APPS'"
             (click)="setTab('APPS')"
-            title="Quick App Launchers"
+            title="Quick Apps Launcher"
           >
-            <span>🚀</span>
-            <span class="rail-label">APPS</span>
+            <span class="tab-glyph">🚀</span>
+            <span class="tab-text">APPS</span>
           </button>
+        </nav>
+
+        <!-- Right: Battery, Pin, Close -->
+        <div class="strip-right">
+          <span class="battery-tag font-mono">⚡ {{ batteryPercent() }}%</span>
+
+          <!-- Mood Quick Chips -->
+          <div class="mood-chips-group">
+            <button
+              type="button"
+              class="mood-chip"
+              [class.selected]="botMood() === 'happy'"
+              (click)="setMood('happy')"
+              title="Happy Expression"
+            >😊</button>
+            <button
+              type="button"
+              class="mood-chip"
+              [class.selected]="botMood() === 'focus'"
+              (click)="setMood('focus')"
+              title="Focus Expression"
+            >⚡</button>
+            <button
+              type="button"
+              class="mood-chip"
+              [class.selected]="botMood() === 'singing'"
+              (click)="setMood('singing')"
+              title="Singing Expression"
+            >♫</button>
+          </div>
+
+          <!-- Pin Button (Prevents auto-close on mouse leave) -->
+          <button
+            type="button"
+            class="panel-pin-btn font-mono"
+            [class.pinned]="isPinned()"
+            (click)="togglePin()"
+            [title]="isPinned() ? 'Unpin Notch (Auto-close on mouse leave)' : 'Pin Notch (Keep open)'"
+          >
+            {{ isPinned() ? '📌 Pinned' : '📌' }}
+          </button>
+
+          <!-- Minimize / Close Button -->
+          <button
+            type="button"
+            class="panel-close-btn"
+            (click)="toggleExpanded()"
+            title="Minimize Notch (Esc)"
+            aria-label="Close Notch"
+          >✕</button>
         </div>
       </div>
 
       <!-- ------------------------------------------------------------------- -->
-      <!-- RIGHT PANEL: Dynamic Workable Modules (Music / Vitals / Shelf / Apps)-->
+      <!-- ISLAND MAIN BODY: FULL-WIDTH UNIFIED DECK ACROSS ALL TABS!           -->
       <!-- ------------------------------------------------------------------- -->
-      <div class="island-right-panel">
-        <!-- Top Status Bar & Close Button -->
-        <div class="panel-header-strip font-mono">
-          <div class="strip-left">
-            <span class="time-readout">{{ currentTimeStr() }}</span>
-            <span class="bullet-sep">•</span>
-            <span class="active-tag">ABHI NOTCH v2.5</span>
-          </div>
+      <div class="island-body-container">
+        <!-- ================================================================= -->
+        <!-- MAIN CONTENT PANEL (Spans Full Width Cleanly on All Tabs!)        -->
+        <!-- ================================================================= -->
+        <div class="island-main-panel">
+          <!-- =============================================================== -->
+          <!-- TAB 1: WINDOWS CONTROL CENTER (Exact Match to References!)       -->
+          <!-- =============================================================== -->
+          @if (activeTab() === 'CENTER') {
+            <div class="module-content control-center-dual animate-fade-in">
+              <!-- Left Column: Sunset Artwork + Bot Faceplate (HAPPY) + Bottom Nav Rail -->
+              <div class="center-left-chassis">
+                <div class="date-weather-badge font-mono">
+                  <span class="calendar-icon">📅</span>
+                  <span>{{ currentDateStr() }} / {{ weatherTemp() }} {{ weatherCondition() }}</span>
+                </div>
 
-          <div class="strip-right">
-            <!-- Mood Quick Selector Chips -->
-            <div class="mood-chips-group">
-              <button
-                type="button"
-                class="mood-chip"
-                [class.selected]="botMood() === 'happy'"
-                (click)="setMood('happy')"
-                title="Happy Expression"
-              >😊</button>
-              <button
-                type="button"
-                class="mood-chip"
-                [class.selected]="botMood() === 'focus'"
-                (click)="setMood('focus')"
-                title="Focus Expression"
-              >⚡</button>
-              <button
-                type="button"
-                class="mood-chip"
-                [class.selected]="botMood() === 'singing'"
-                (click)="setMood('singing')"
-                title="Singing Expression"
-              >♫</button>
-            </div>
+                <div class="ambient-art-card">
+                  <div class="celestial-sun-orb" [class.singing]="isPlaying()"></div>
+                  <div class="mountain-silhouette"></div>
 
-            <!-- Minimize / Close Button -->
-            <button
-              type="button"
-              class="panel-close-btn"
-              (click)="toggleExpanded()"
-              title="Close Notch (Esc)"
-              aria-label="Close Notch"
-            >✕</button>
-          </div>
-        </div>
+                  <!-- Expressive ABHI Bot Screen Overlay with HAPPY -->
+                  <div class="bot-face-container">
+                    <div class="bot-face-screen">
+                      @switch (botMood()) {
+                        @case ('happy') {
+                          <div class="eyes-row happy-eyes">
+                            <span class="eye arc-eye-left">⌒</span>
+                            <span class="eye arc-eye-right">⌒</span>
+                          </div>
+                          <div class="mouth smile-mouth">‿</div>
+                        }
+                        @case ('focus') {
+                          <div class="eyes-row focus-eyes">
+                            <span class="eye dot-eye">●</span>
+                            <span class="eye dot-eye">●</span>
+                          </div>
+                          <div class="mouth line-mouth">―</div>
+                        }
+                        @case ('listening') {
+                          <div class="eyes-row listen-eyes">
+                            <span class="eye wide-eye">◉</span>
+                            <span class="eye wide-eye">◉</span>
+                          </div>
+                          <div class="mouth open-mouth">o</div>
+                        }
+                        @default {
+                          <div class="eyes-row happy-eyes">
+                            <span class="eye arc-eye-left">⌒</span>
+                            <span class="eye arc-eye-right">⌒</span>
+                          </div>
+                          <div class="mouth smile-mouth">‿</div>
+                        }
+                      }
+                    </div>
+                    <div class="bot-mood-tag font-mono">{{ botMood().toUpperCase() }}</div>
+                  </div>
+                </div>
 
-        <!-- MODULE 1: MUSIC & NOW PLAYING (Image 1 Style) -->
-        @if (activeTab() === 'MUSIC') {
-          <div class="module-content music-module animate-fade-in">
-            <!-- Track Info -->
-            <div class="track-info-row">
-              <div class="track-text-block">
-                <div class="artist-label font-mono">{{ trackArtist() }}</div>
-                <h2 class="track-title-text">{{ trackTitle() }}</h2>
-                <p class="track-lyrics-quote">“{{ trackLyrics() }}”</p>
-              </div>
-
-              <!-- Animated Equalizer Bars -->
-              <div class="large-eq-visualizer" [class.playing]="isPlaying()">
-                <span class="bar bar-a"></span>
-                <span class="bar bar-b"></span>
-                <span class="bar bar-c"></span>
-                <span class="bar bar-d"></span>
-                <span class="bar bar-e"></span>
-              </div>
-            </div>
-
-            <!-- Scrubable Progress Slider -->
-            <div class="progress-slider-wrapper">
-              <input
-                type="range"
-                class="time-scrubber"
-                min="0"
-                max="100"
-                [value]="progressPercent()"
-                (input)="seek($event)"
-                aria-label="Track progress"
-              />
-              <div class="timestamps-row font-mono">
-                <span class="time-elapsed">{{ formattedCurrentTime() }}</span>
-                <span class="time-remaining">{{ formattedRemainingTime() }}</span>
-              </div>
-            </div>
-
-            <!-- Media Controls Bar -->
-            <div class="media-controls-bar">
-              <div class="media-btn-cluster">
-                <button type="button" class="ctrl-btn prev-btn" (click)="prevTrack()" title="Previous Track">
-                  ⏮
-                </button>
-                <button
-                  type="button"
-                  class="ctrl-btn play-pause-btn"
-                  [class.playing]="isPlaying()"
-                  (click)="togglePlay()"
-                  [title]="isPlaying() ? 'Pause' : 'Play Track'"
-                >
-                  {{ isPlaying() ? '⏸' : '▶' }}
-                </button>
-                <button type="button" class="ctrl-btn next-btn" (click)="nextTrack()" title="Next Track">
-                  ⏭
-                </button>
-              </div>
-
-              <!-- Open in YouTube & Quick Controls -->
-              <div class="media-extra-cluster">
-                <button
-                  type="button"
-                  class="btn-youtube-launch font-mono"
-                  (click)="openYouTube()"
-                  title="Search & Play in YouTube"
-                >
-                  <span class="yt-icon">▶</span>
-                  <span>OPEN YOUTUBE</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- MODULE 2: SYSTEM VITALS (Image 2 Vayli Style Circular Rings) -->
-        @if (activeTab() === 'VITALS') {
-          <div class="module-content vitals-module animate-fade-in">
-            <div class="vitals-header-meta">
-              <div class="meta-item">
-                <span class="label font-mono">SCREEN TIME</span>
-                <span class="val font-mono">{{ screenTimeHours() }}</span>
-              </div>
-              <div class="meta-item">
-                <span class="label font-mono">ACTIVE WINDOW</span>
-                <span class="val text-truncate">{{ activeAppName() }}</span>
-              </div>
-              <div class="meta-item">
-                <span class="label font-mono">POWER STATUS</span>
-                <span class="val text-green font-mono">⚡ Plugged In</span>
-              </div>
-            </div>
-
-            <!-- 3 Radial Ring Gauges (CPU, RAM, DISK) -->
-            <div class="gauges-flex-row">
-              <!-- CPU Gauge -->
-              <div class="radial-gauge-card">
-                <svg class="radial-svg" viewBox="0 0 100 100">
-                  <circle class="gauge-bg-circle" cx="50" cy="50" r="40"/>
-                  <circle
-                    class="gauge-fill-circle cpu-circle"
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    [style.stroke-dashoffset]="251.2 * (1 - cpuPercent() / 100)"
-                  />
-                </svg>
-                <div class="gauge-center-text">
-                  <span class="gauge-percent font-mono">{{ cpuPercent() }}%</span>
-                  <span class="gauge-label font-mono">CPU</span>
+                <!-- Bottom Tab Nav Rail (from Reference Image) -->
+                <div class="bottom-tab-rail font-mono">
+                  <button type="button" class="tab-chip" [class.active]="activeTab() === 'CENTER'" (click)="setTab('CENTER')">
+                    <span class="chip-glyph">⚙️</span><span class="chip-label">CENTER</span>
+                  </button>
+                  <button type="button" class="tab-chip" [class.active]="activeTab() === 'CALENDAR'" (click)="setTab('CALENDAR')">
+                    <span class="chip-glyph">📅</span><span class="chip-label">CALENDAR</span>
+                  </button>
+                  <button type="button" class="tab-chip" [class.active]="activeTab() === 'MUSIC'" (click)="setTab('MUSIC')">
+                    <span class="chip-glyph">♫</span><span class="chip-label">MUSIC</span>
+                  </button>
+                  <button type="button" class="tab-chip" [class.active]="activeTab() === 'VITALS'" (click)="setTab('VITALS')">
+                    <span class="chip-glyph">⚡</span><span class="chip-label">VITALS</span>
+                  </button>
+                  <button type="button" class="tab-chip" [class.active]="activeTab() === 'SHELF'" (click)="setTab('SHELF')">
+                    <span class="chip-glyph">📋</span><span class="chip-label">SHELF</span>
+                  </button>
+                  <button type="button" class="tab-chip" [class.active]="activeTab() === 'APPS'" (click)="setTab('APPS')">
+                    <span class="chip-glyph">🚀</span><span class="chip-label">APPS</span>
+                  </button>
                 </div>
               </div>
 
-              <!-- RAM Gauge -->
-              <div class="radial-gauge-card">
-                <svg class="radial-svg" viewBox="0 0 100 100">
-                  <circle class="gauge-bg-circle" cx="50" cy="50" r="40"/>
-                  <circle
-                    class="gauge-fill-circle ram-circle"
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    [style.stroke-dashoffset]="251.2 * (1 - ramPercent() / 100)"
+              <!-- Right Column: Control Tiles, Sliders, and Integrated Chat Box -->
+              <div class="center-right-chassis">
+                <!-- 4 Quick Control Pills -->
+                <div class="control-pills-grid">
+                  <div class="control-pill-card" [class.active]="isWifiEnabled()" (click)="toggleWifi()" title="Toggle Wi-Fi">
+                    <div class="pill-icon-box">📶</div>
+                    <div class="pill-info-block font-mono">
+                      <span class="pill-title">Wi-Fi</span>
+                      <span class="pill-subtext">{{ isWifiEnabled() ? 'Connected · 5GHz' : 'Off' }}</span>
+                    </div>
+                  </div>
+
+                  <div class="control-pill-card" [class.active]="isDndEnabled()" (click)="toggleDnd()" title="Toggle DND">
+                    <div class="pill-icon-box">🌙</div>
+                    <div class="pill-info-block font-mono">
+                      <span class="pill-title">DND Mode</span>
+                      <span class="pill-subtext">{{ isDndEnabled() ? 'Do Not Disturb' : 'Alerts Active' }}</span>
+                    </div>
+                  </div>
+
+                  <div class="control-pill-card" [class.active]="isBluetoothEnabled()" (click)="toggleBluetooth()" title="Toggle Bluetooth">
+                    <div class="pill-icon-box">ᛒ</div>
+                    <div class="pill-info-block font-mono">
+                      <span class="pill-title">Bluetooth</span>
+                      <span class="pill-subtext">{{ isBluetoothEnabled() ? 'On · Audio Sync' : 'Off' }}</span>
+                    </div>
+                  </div>
+
+                  <div class="control-pill-card" [class.active]="isNotchDocked()" (click)="toggleNotchMode()" title="Toggle Notch Mode">
+                    <div class="pill-icon-box">🔝</div>
+                    <div class="pill-info-block font-mono">
+                      <span class="pill-title">Notch Mode</span>
+                      <span class="pill-subtext">{{ isNotchDocked() ? 'Fixed Top Dock' : 'Floating' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Sliders -->
+                <div class="control-sliders-group">
+                  <div class="slider-control-row">
+                    <span class="slider-icon font-mono">🔊 Volume</span>
+                    <input type="range" class="range-slider" min="0" max="100" [ngModel]="volumeLevel()" (ngModelChange)="onVolumeChange($event)" />
+                    <span class="slider-val font-mono">{{ volumeLevel() }}%</span>
+                  </div>
+                  <div class="slider-control-row">
+                    <span class="slider-icon font-mono">☀️ Brightness</span>
+                    <input type="range" class="range-slider" min="20" max="100" [ngModel]="brightnessLevel()" (ngModelChange)="onBrightnessChange($event)" />
+                    <span class="slider-val font-mono">{{ brightnessLevel() }}%</span>
+                  </div>
+                </div>
+
+                <!-- Integrated Chat Card (Matches Reference Screenshot!) -->
+                <div class="center-chat-card font-mono">
+                  <div class="chat-header-bar">
+                    <span class="chat-live-beacon">● REAL-TIME TRANSCRIPTION</span>
+                    <span class="chat-live-stream">● LIVE STREAM</span>
+                  </div>
+
+                  <div class="chat-messages-viewport">
+                    @for (msg of chatMessages(); track msg.id) {
+                      <div class="chat-bubble" [class.user-bubble]="msg.sender === 'mamu'" [class.bot-bubble]="msg.sender === 'abhi'">
+                        <div class="bubble-meta">
+                          <span class="bubble-sender">{{ msg.sender === 'mamu' ? 'MAMU (OPERATOR)' : 'F.R.I.D.A.Y.' }}</span>
+                          <span class="bubble-time">{{ msg.time }}</span>
+                        </div>
+                        <div class="bubble-text">{{ msg.text }}</div>
+                      </div>
+                    }
+                  </div>
+
+                  <div class="chat-input-strip">
+                    <input
+                      type="text"
+                      class="notch-chat-input"
+                      placeholder="Talk with ABHI Core or command your PC..."
+                      [ngModel]="chatInput()"
+                      (ngModelChange)="chatInput.set($event)"
+                      (keydown.enter)="sendChatMessage()"
+                    />
+                    <button type="button" class="chat-mic-btn" (click)="toggleVoiceDictation()" title="Voice Dictation">🎙️</button>
+                    <button type="button" class="chat-send-btn" (click)="sendChatMessage()" title="Send Command">SEND</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- =============================================================== -->
+          <!-- TAB 2: CALENDAR & FOCUS SCHEDULER (Full-Width, Smooth & Icons!) -->
+          <!-- =============================================================== -->
+          @if (activeTab() === 'CALENDAR') {
+            <div class="module-content calendar-module wide-calendar animate-fade-in">
+              <div class="calendar-layout-grid wide-grid">
+                <!-- Left: Interactive Month Calendar (Smoother with glowing borders and icons) -->
+                <div class="calendar-widget-card smooth-card">
+                  <div class="calendar-month-header font-mono">
+                    <div class="month-title-wrap">
+                      <span class="month-cal-glyph">📅</span>
+                      <span class="month-name-text">{{ calendarMonthName() }}</span>
+                    </div>
+                    <div class="cal-nav-buttons">
+                      <button type="button" class="cal-nav-btn prev-btn" (click)="prevMonth()" title="Previous Month">◀</button>
+                      <button type="button" class="cal-nav-btn today-btn" (click)="goToToday()" title="Jump to Today">Today</button>
+                      <button type="button" class="cal-nav-btn next-btn" (click)="nextMonth()" title="Next Month">▶</button>
+                    </div>
+                  </div>
+
+                  <!-- Selected Event Preview Banner -->
+                  <div class="selected-day-banner font-mono animate-fade-in">
+                    @if (selectedDayEvent()) {
+                      <span class="banner-event-icon">{{ selectedDayEvent()?.icon }}</span>
+                      <span class="banner-day-tag">Day {{ selectedDay() }}:</span>
+                      <span class="banner-event-title">{{ selectedDayEvent()?.title }}</span>
+                      <span class="banner-cat-badge">{{ selectedDayEvent()?.category }}</span>
+                    } @else {
+                      <span class="banner-event-icon">📅</span>
+                      <span class="banner-day-tag">Day {{ selectedDay() }}:</span>
+                      <span class="banner-event-title">No events scheduled · Clean slate</span>
+                    }
+                  </div>
+
+                  <!-- Days of week -->
+                  <div class="calendar-week-header font-mono">
+                    <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+                  </div>
+
+                  <!-- Day numbers grid with icons and smooth borders -->
+                  <div class="calendar-days-grid font-mono">
+                    @for (d of calendarDays(); track $index) {
+                      <div
+                        class="cal-day-cell smooth-cell"
+                        [class.outside-month]="!d.isCurrentMonth"
+                        [class.today]="d.isToday"
+                        [class.selected]="d.isSelected"
+                        [class.has-event]="d.hasEvent"
+                        (click)="selectCalendarDay(d)"
+                        [title]="d.hasEvent ? (d.eventIcon + ' ' + d.eventTitle) : ('Day ' + d.dayNum)"
+                      >
+                        <span class="day-num">{{ d.dayNum }}</span>
+                        @if (d.hasEvent && d.isCurrentMonth) {
+                          <span class="day-event-icon">{{ d.eventIcon }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Right: Countdown Timer, Presets & Automations (with rich icons and smooth borders) -->
+                <div class="scheduler-widget-card smooth-card">
+                  <div class="timer-display-box smooth-timer-box">
+                    <div class="timer-label-tag font-mono">
+                      <span>⏱ FOCUS INTERVAL TIMER</span>
+                      <span class="timer-state-dot" [class.running]="isTimerRunning()">●</span>
+                    </div>
+                    <div class="timer-big-digits font-mono">{{ formattedTimer() }}</div>
+                    <div class="timer-ctrl-row">
+                      <button
+                        type="button"
+                        class="btn-timer-action btn-start font-mono"
+                        [class.running]="isTimerRunning()"
+                        (click)="isTimerRunning() ? pauseTimer() : startTimer()"
+                      >
+                        {{ isTimerRunning() ? '⏸ Pause' : '▶ Start' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn-timer-action btn-reset font-mono"
+                        (click)="resetTimer()"
+                      >
+                        ↺ Reset
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- 4 Quick Preset Duration Chips with Icons -->
+                  <div class="timer-preset-chips-row font-mono">
+                    <button type="button" class="preset-chip" (click)="setTimerPreset(5)">⚡ 5m</button>
+                    <button type="button" class="preset-chip" (click)="setTimerPreset(15)">☕ 15m</button>
+                    <button type="button" class="preset-chip" (click)="setTimerPreset(25)">🎯 25m</button>
+                    <button type="button" class="preset-chip" (click)="setTimerPreset(50)">🧠 50m</button>
+                  </div>
+
+                  <!-- Automation Toast Feedback Banner -->
+                  @if (automationToast()) {
+                    <div class="automation-toast-box font-mono animate-fade-in">
+                      {{ automationToast() }}
+                    </div>
+                  }
+
+                  <!-- Scheduled Automations List with Dedicated Icons -->
+                  <div class="automations-list-box smooth-auto-box">
+                    <div class="auto-list-title font-mono">
+                      <span>ACTIVE AUTOMATIONS</span>
+                      <span class="auto-hint font-mono">1-click execute</span>
+                    </div>
+                    @for (task of scheduledAutomations(); track task.id) {
+                      <div
+                        class="auto-task-item smooth-task-item"
+                        [class.running]="task.status === 'RUNNING'"
+                        [class.done]="task.status === 'DONE'"
+                        (click)="executeScheduledTask(task)"
+                        title="Click to execute automation now"
+                      >
+                        <!-- High-Tech Dedicated Icons -->
+                        <span class="task-leading-icon">
+                          @switch (task.id) {
+                            @case ('auto_1') { 🌅 }
+                            @case ('auto_2') { 🛡️ }
+                            @case ('auto_3') { 📱 }
+                            @case ('auto_4') { 🔋 }
+                            @case ('auto_5') { 🧹 }
+                            @default { ⚙️ }
+                          }
+                        </span>
+                        <div class="task-details-col">
+                          <span class="task-name text-truncate">{{ task.name }}</span>
+                          <span class="task-meta font-mono">{{ task.frequency }} · {{ task.time }}</span>
+                        </div>
+                        <span class="task-action-pill font-mono">
+                          {{ task.status === 'RUNNING' ? '⏳ Running...' : (task.status === 'DONE' ? '✓ Done' : '⚡ Run') }}
+                        </span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- =============================================================== -->
+          <!-- TAB 3: IN-NOTCH ONLINE MUSIC SEARCH & AUDIO ENGINE (Zero Popups)-->
+          <!-- =============================================================== -->
+          @if (activeTab() === 'MUSIC') {
+            <div class="module-content music-module wide-music animate-fade-in">
+              <!-- 1. In-Notch Online Search Bar (No Browser Window!) -->
+              <div class="music-search-container">
+                <div class="search-input-box">
+                  <span class="search-glyph">🔍</span>
+                  <input
+                    type="text"
+                    class="music-search-input font-mono"
+                    placeholder="Search songs, lofi beats, synthwave, ambient..."
+                    [ngModel]="musicSearchQuery()"
+                    (ngModelChange)="musicSearchQuery.set($event)"
+                    aria-label="Search online songs"
                   />
-                </svg>
-                <div class="gauge-center-text">
-                  <span class="gauge-percent font-mono">{{ ramPercent() }}%</span>
-                  <span class="gauge-label font-mono">RAM</span>
+                  @if (musicSearchQuery()) {
+                    <button type="button" class="search-clear-btn" (click)="musicSearchQuery.set('')">✕</button>
+                  }
+                </div>
+
+                <!-- Category & Favorites Filter Chips -->
+                <div class="music-filter-chips font-mono">
+                  <button
+                    type="button"
+                    class="filter-chip"
+                    [class.active]="activeMusicCategory() === 'ALL'"
+                    (click)="setMusicCategory('ALL')"
+                  >All</button>
+                  <button
+                    type="button"
+                    class="filter-chip fav-chip"
+                    [class.active]="activeMusicCategory() === 'FAVORITES'"
+                    (click)="setMusicCategory('FAVORITES')"
+                  >⭐ Favorites ({{ favoriteTrackIds().size }})</button>
+                  <button
+                    type="button"
+                    class="filter-chip"
+                    [class.active]="activeMusicCategory() === 'LOFI'"
+                    (click)="setMusicCategory('LOFI')"
+                  >☕ Lo-Fi</button>
+                  <button
+                    type="button"
+                    class="filter-chip"
+                    [class.active]="activeMusicCategory() === 'SYNTH'"
+                    (click)="setMusicCategory('SYNTH')"
+                  >⚡ Synthwave</button>
+                  <button
+                    type="button"
+                    class="filter-chip"
+                    [class.active]="activeMusicCategory() === 'FOCUS'"
+                    (click)="setMusicCategory('FOCUS')"
+                  >🧠 Focus</button>
+                  <button
+                    type="button"
+                    class="filter-chip"
+                    [class.active]="activeMusicCategory() === 'CHILL'"
+                    (click)="setMusicCategory('CHILL')"
+                  >🌅 Chill</button>
                 </div>
               </div>
 
-              <!-- DISK Gauge -->
-              <div class="radial-gauge-card">
-                <svg class="radial-svg" viewBox="0 0 100 100">
-                  <circle class="gauge-bg-circle" cx="50" cy="50" r="40"/>
-                  <circle
-                    class="gauge-fill-circle disk-circle"
-                    cx="50"
-                    cy="50"
-                    r="40"
-                    [style.stroke-dashoffset]="251.2 * (1 - diskPercent() / 100)"
+              <!-- 2. Scrollable Online Streams Grid (Plays directly inside Notch!) -->
+              <div class="online-tracks-grid wide-tracks-grid">
+                @for (track of filteredPlaylist(); track track.id) {
+                  <div
+                    class="stream-track-card"
+                    [class.playing]="isPlaying() && trackTitle() === track.title"
+                    (click)="selectAndPlayTrack(track)"
+                    title="Click to play directly in ABHI Notch"
+                  >
+                    <span class="track-emoji-icon">{{ track.coverEmoji }}</span>
+                    <div class="track-info-cell">
+                      <span class="track-title-bold font-mono">{{ track.title }}</span>
+                      <span class="track-artist-sub">{{ track.artist }} · {{ track.category }}</span>
+                    </div>
+
+                    <!-- Favorite Star Button -->
+                    <button
+                      type="button"
+                      class="fav-star-btn"
+                      [class.favorited]="favoriteTrackIds().has(track.id)"
+                      (click)="toggleFavorite(track.id, $event)"
+                      [title]="favoriteTrackIds().has(track.id) ? 'Remove from favorites' : 'Add to favorites'"
+                    >
+                      {{ favoriteTrackIds().has(track.id) ? '★' : '☆' }}
+                    </button>
+
+                    <!-- Play glyph -->
+                    <span class="play-state-indicator font-mono">
+                      {{ isPlaying() && trackTitle() === track.title ? '❚❚' : '▶' }}
+                    </span>
+                  </div>
+                }
+              </div>
+
+              <!-- 3. Now Playing Card & Visualizer -->
+              <div class="now-playing-deck">
+                <div class="track-info-row">
+                  <div class="track-text-block">
+                    <div class="artist-label font-mono">{{ trackArtist() }}</div>
+                    <h3 class="track-title-text">{{ trackTitle() }}</h3>
+                    <p class="track-lyrics-quote">“{{ trackLyrics() }}”</p>
+                  </div>
+
+                  <!-- Animated Equalizer Bars -->
+                  <div class="large-eq-visualizer" [class.playing]="isPlaying()">
+                    <span class="bar bar-a"></span>
+                    <span class="bar bar-b"></span>
+                    <span class="bar bar-c"></span>
+                    <span class="bar bar-d"></span>
+                    <span class="bar bar-e"></span>
+                  </div>
+                </div>
+
+                <!-- Scrubable Progress Slider -->
+                <div class="progress-slider-wrapper">
+                  <input
+                    type="range"
+                    class="time-scrubber"
+                    min="0"
+                    max="100"
+                    [value]="progressPercent()"
+                    (input)="seek($event)"
+                    aria-label="Track progress"
                   />
-                </svg>
-                <div class="gauge-center-text">
-                  <span class="gauge-percent font-mono">{{ diskPercent() }}%</span>
-                  <span class="gauge-label font-mono">DISK</span>
+                  <div class="timestamps-row font-mono">
+                    <span class="time-elapsed">{{ formattedCurrentTime() }}</span>
+                    <span class="time-remaining">{{ formattedRemainingTime() }}</span>
+                  </div>
+                </div>
+
+                <!-- Media Controls Bar -->
+                <div class="media-controls-bar">
+                  <div class="media-btn-cluster">
+                    <button type="button" class="ctrl-btn prev-btn" (click)="prevTrack()" title="Previous Track">⏮</button>
+                    <button
+                      type="button"
+                      class="ctrl-btn play-pause-btn"
+                      [class.playing]="isPlaying()"
+                      (click)="togglePlay()"
+                      [title]="isPlaying() ? 'Pause' : 'Play Track'"
+                    >
+                      {{ isPlaying() ? '⏸' : '▶' }}
+                    </button>
+                    <button type="button" class="ctrl-btn next-btn" (click)="nextTrack()" title="Next Track">⏭</button>
+                  </div>
+
+                  <div class="media-extra-cluster">
+                    <span class="in-notch-badge font-mono">⚡ DIRECT STREAM · NO POPUPS</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        }
+          }
 
-        <!-- MODULE 3: FOCUS & POMODORO TIMER -->
-        @if (activeTab() === 'FOCUS') {
-          <div class="module-content focus-module animate-fade-in">
-            <div class="focus-timer-display">
-              <span class="focus-digits font-mono">{{ formattedFocusTime() }}</span>
-              <span class="focus-status-text font-mono">
-                {{ isFocusActive() ? 'FOCUS SESSION IN PROGRESS' : 'READY TO DEEP FOCUS' }}
-              </span>
-            </div>
-
-            <div class="focus-btn-row">
-              <button
-                type="button"
-                class="btn-focus-primary font-mono"
-                [class.active]="isFocusActive()"
-                (click)="toggleFocusTimer()"
-              >
-                {{ isFocusActive() ? 'PAUSE TIMER' : 'START FOCUS' }}
-              </button>
-              <button
-                type="button"
-                class="btn-focus-secondary font-mono"
-                (click)="resetFocusTimer()"
-              >
-                RESET (25M)
-              </button>
-            </div>
-          </div>
-        }
-
-        <!-- MODULE 4: VAYLI CLIPBOARD & NOTES SHELF -->
-        @if (activeTab() === 'SHELF') {
-          <div class="module-content shelf-module animate-fade-in">
-            <!-- Toast Feedback -->
-            @if (copyFeedback()) {
-              <div class="shelf-copy-toast font-mono animate-fade-in">
-                ✓ {{ copyFeedback() }}
+          <!-- =============================================================== -->
+          <!-- TAB 4: SYSTEM VITALS (Image 2 Radial Rings)                     -->
+          <!-- =============================================================== -->
+          @if (activeTab() === 'VITALS') {
+            <div class="module-content vitals-module wide-vitals animate-fade-in">
+              <div class="vitals-header-meta">
+                <div class="meta-item">
+                  <span class="label font-mono">SCREEN TIME</span>
+                  <span class="val font-mono">{{ screenTimeHours() }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="label font-mono">ACTIVE WINDOW</span>
+                  <span class="val text-truncate">{{ activeAppName() }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="label font-mono">POWER STATUS</span>
+                  <span class="val text-green font-mono">⚡ {{ batteryPercent() }}% Connected</span>
+                </div>
               </div>
-            }
 
-            <!-- Quick Note Input -->
-            <div class="shelf-note-input-row">
-              <input
-                type="text"
-                class="shelf-input"
-                placeholder="Type a quick note or link to store on Shelf..."
-                [ngModel]="quickNoteInput()"
-                (ngModelChange)="quickNoteInput.set($event)"
-                (keydown.enter)="saveQuickNote()"
-              />
-              <button type="button" class="btn-save-note font-mono" (click)="saveQuickNote()">
-                SAVE
-              </button>
+              <!-- 3 Radial Ring Gauges (CPU, RAM, DISK) -->
+              <div class="gauges-flex-row">
+                <div class="radial-gauge-card">
+                  <svg class="radial-svg" viewBox="0 0 100 100">
+                    <circle class="gauge-bg-circle" cx="50" cy="50" r="40"/>
+                    <circle
+                      class="gauge-fill-circle cpu-circle"
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      [style.stroke-dashoffset]="251.2 * (1 - cpuPercent() / 100)"
+                    />
+                  </svg>
+                  <div class="gauge-center-text">
+                    <span class="gauge-percent font-mono">{{ cpuPercent() }}%</span>
+                    <span class="gauge-label font-mono">CPU</span>
+                  </div>
+                </div>
+
+                <div class="radial-gauge-card">
+                  <svg class="radial-svg" viewBox="0 0 100 100">
+                    <circle class="gauge-bg-circle" cx="50" cy="50" r="40"/>
+                    <circle
+                      class="gauge-fill-circle ram-circle"
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      [style.stroke-dashoffset]="251.2 * (1 - ramPercent() / 100)"
+                    />
+                  </svg>
+                  <div class="gauge-center-text">
+                    <span class="gauge-percent font-mono">{{ ramPercent() }}%</span>
+                    <span class="gauge-label font-mono">RAM</span>
+                  </div>
+                </div>
+
+                <div class="radial-gauge-card">
+                  <svg class="radial-svg" viewBox="0 0 100 100">
+                    <circle class="gauge-bg-circle" cx="50" cy="50" r="40"/>
+                    <circle
+                      class="gauge-fill-circle disk-circle"
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      [style.stroke-dashoffset]="251.2 * (1 - diskPercent() / 100)"
+                    />
+                  </svg>
+                  <div class="gauge-center-text">
+                    <span class="gauge-percent font-mono">{{ diskPercent() }}%</span>
+                    <span class="gauge-label font-mono">DISK</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Micro App Strip (Image 1 Style) -->
+              <div class="bottom-tray-strip font-mono">
+                <div class="tray-title-tag">Tray:</div>
+                <div class="tray-icons-cluster">
+                  <button type="button" class="tray-icon" (click)="launchApp('youtube')" title="YouTube">▶</button>
+                  <button type="button" class="tray-icon" (click)="launchApp('whatsapp')" title="WhatsApp">💬</button>
+                  <button type="button" class="tray-icon" (click)="launchApp('gmail')" title="Gmail">✉</button>
+                  <button type="button" class="tray-icon" (click)="launchApp('github')" title="GitHub">🐙</button>
+                  <button type="button" class="tray-icon" (click)="openLaptopSettings()" title="Laptop Settings">⚙️</button>
+                  <button type="button" class="tray-icon" (click)="setTab('CENTER')" title="Control Center">📶</button>
+                  <button type="button" class="tray-icon" (click)="setTab('CALENDAR')" title="Calendar">📅</button>
+                </div>
+              </div>
             </div>
+          }
 
-            <!-- Recent Clips List -->
-            <div class="shelf-clips-list">
-              @for (item of clipboardHistory(); track item.id) {
-                <div class="shelf-clip-card" (click)="copyToClipboard(item)" title="Click to copy">
-                  <span class="clip-icon">📋</span>
-                  <span class="clip-text text-truncate">{{ item.text }}</span>
-                  <span class="clip-time font-mono">{{ item.timeAgo }}</span>
-                  <button type="button" class="clip-copy-glyph" aria-label="Copy to Clipboard">⎘</button>
+          <!-- =============================================================== -->
+          <!-- TAB 5: VAYLI CLIPBOARD & NOTES SHELF                            -->
+          <!-- =============================================================== -->
+          @if (activeTab() === 'SHELF') {
+            <div class="module-content shelf-module wide-shelf animate-fade-in">
+              @if (copyFeedback()) {
+                <div class="shelf-copy-toast font-mono animate-fade-in">
+                  ✓ {{ copyFeedback() }}
                 </div>
               }
+
+              <div class="shelf-note-input-row">
+                <input
+                  type="text"
+                  class="shelf-input"
+                  placeholder="Type a quick note or link to store on Shelf..."
+                  [ngModel]="quickNoteInput()"
+                  (ngModelChange)="quickNoteInput.set($event)"
+                  (keydown.enter)="saveQuickNote()"
+                />
+                <button type="button" class="btn-save-note font-mono" (click)="saveQuickNote()">SAVE</button>
+              </div>
+
+              <div class="shelf-clips-list wide-clips-list">
+                @for (item of clipboardHistory(); track item.id) {
+                  <div class="shelf-clip-card" (click)="copyToClipboard(item)" title="Click to copy">
+                    <span class="clip-icon">📋</span>
+                    <span class="clip-text text-truncate">{{ item.text }}</span>
+                    <span class="clip-time font-mono">{{ item.timeAgo }}</span>
+                    <button type="button" class="clip-copy-glyph" aria-label="Copy">⎘</button>
+                  </div>
+                }
+              </div>
             </div>
-          </div>
-        }
+          }
 
-        <!-- MODULE 5: QUICK APPS TRAY -->
-        @if (activeTab() === 'APPS') {
-          <div class="module-content apps-module animate-fade-in">
-            <div class="apps-grid">
-              <button type="button" class="app-launch-card" (click)="launchApp('youtube')">
-                <span class="app-icon">▶</span>
-                <span class="app-name font-mono">YouTube</span>
-              </button>
+          <!-- =============================================================== -->
+          <!-- TAB 6: QUICK APPS TRAY                                          -->
+          <!-- =============================================================== -->
+          @if (activeTab() === 'APPS') {
+            <div class="module-content apps-module wide-apps animate-fade-in">
+              <div class="apps-grid wide-apps-grid">
+                <button type="button" class="app-launch-card" (click)="launchApp('youtube')">
+                  <span class="app-icon">▶</span>
+                  <span class="app-name font-mono">YouTube</span>
+                </button>
 
-              <button type="button" class="app-launch-card" (click)="launchApp('whatsapp')">
-                <span class="app-icon">💬</span>
-                <span class="app-name font-mono">WhatsApp</span>
-              </button>
+                <button type="button" class="app-launch-card" (click)="launchApp('whatsapp')">
+                  <span class="app-icon">💬</span>
+                  <span class="app-name font-mono">WhatsApp</span>
+                </button>
 
-              <button type="button" class="app-launch-card" (click)="launchApp('gmail')">
-                <span class="app-icon">✉️</span>
-                <span class="app-name font-mono">Gmail</span>
-              </button>
+                <button type="button" class="app-launch-card" (click)="launchApp('gmail')">
+                  <span class="app-icon">✉️</span>
+                  <span class="app-name font-mono">Gmail</span>
+                </button>
 
-              <button type="button" class="app-launch-card" (click)="launchApp('github')">
-                <span class="app-icon">🐙</span>
-                <span class="app-name font-mono">GitHub</span>
-              </button>
+                <button type="button" class="app-launch-card" (click)="launchApp('github')">
+                  <span class="app-icon">🐙</span>
+                  <span class="app-name font-mono">GitHub</span>
+                </button>
 
-              <button type="button" class="app-launch-card" (click)="launchApp('terminal')">
-                <span class="app-icon">⌨️</span>
-                <span class="app-name font-mono">Terminal</span>
-              </button>
+                <button type="button" class="app-launch-card" (click)="launchApp('terminal')">
+                  <span class="app-icon">⌨️</span>
+                  <span class="app-name font-mono">Terminal</span>
+                </button>
 
-              <button type="button" class="app-launch-card" (click)="launchApp('chrome')">
-                <span class="app-icon">🌐</span>
-                <span class="app-name font-mono">Browser</span>
-              </button>
+                <button type="button" class="app-launch-card" (click)="openLaptopSettings()">
+                  <span class="app-icon">⚙️</span>
+                  <span class="app-name font-mono">Settings</span>
+                </button>
+              </div>
             </div>
-          </div>
-        }
-
-        <!-- Bottom Micro App Strip (Image 1 Style) -->
-        <div class="bottom-tray-strip font-mono">
-          <div class="tray-title-tag">Tray:</div>
-          <div class="tray-icons-cluster">
-            <button type="button" class="tray-icon" (click)="launchApp('youtube')" title="YouTube">▶</button>
-            <button type="button" class="tray-icon" (click)="launchApp('whatsapp')" title="WhatsApp">💬</button>
-            <button type="button" class="tray-icon" (click)="launchApp('gmail')" title="Gmail">✉</button>
-            <button type="button" class="tray-icon" (click)="launchApp('github')" title="GitHub">🐙</button>
-            <button type="button" class="tray-icon" (click)="setTab('FOCUS')" title="Focus">⏱</button>
-            <button type="button" class="tray-icon" (click)="setTab('SHELF')" title="Shelf">📋</button>
-          </div>
+          }
         </div>
       </div>
     </div>

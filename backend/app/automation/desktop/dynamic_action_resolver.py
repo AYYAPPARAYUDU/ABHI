@@ -222,7 +222,7 @@ class DynamicActionResolver:
         if raw_clean in [
             "hey abhi", "hi abhi", "hello abhi", "ok abhi", "abhi", "hay abhi",
             "yo abhi", "are abhi", "hey", "hi", "hello", "namaste",
-            "hi mamu", "hello mamu", "hey mamu"
+            "hi mamu", "hello mamu", "hey mamu", "hello hi", "hi hello", "hello there", "hey there"
         ]:
             return True, "greeting", "Hello Mamu! I am right here with you. How can I assist you right now?"
 

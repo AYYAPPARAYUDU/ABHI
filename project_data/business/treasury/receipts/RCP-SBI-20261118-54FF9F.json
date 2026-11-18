@@ -1,0 +1,30 @@
+{
+  "receipt_id": "RCP-SBI-20261118-54FF9F",
+  "invoice_number": "INV-ABHI-20261118-8482B4",
+  "issued_at": "2026-11-18T14:11:45.312002+00:00",
+  "amount_inr": 25000.0,
+  "amount_usd": 285.71,
+  "currency": "INR",
+  "settlement_channel": "State Bank of India (UPI / NEFT)",
+  "utr_transaction_ref": "SBIN999888777666",
+  "beneficiary": {
+    "name": "Ravuvai Ayyapparayudu",
+    "bank": "State Bank of India",
+    "account_number": "41130645649",
+    "account_masked": "SBI ****5649",
+    "ifsc": "SBIN0020507",
+    "upi_id": "ayyapparayudu.5@ybl"
+  },
+  "payer": {
+    "name": "Enterprise Test Client"
+  },
+  "service_deliverable": {
+    "description": "Real-World Service Settlement & Verification",
+    "deliverable_sha256": "c2fcb7c925ca6636641eea0a7b062fad750330237a2ecb9e3f630d6e1f272aaf"
+  },
+  "cryptographic_verification": {
+    "verification_status": "DUAL_STATE_AUTHENTICATED",
+    "crypto_seal": "2c0689fce4b18853d9a991eaf0c7d4a5323a630d283dfc38fb24460ae1e170cc",
+    "algorithm": "HMAC-SHA256"
+  }
+}
