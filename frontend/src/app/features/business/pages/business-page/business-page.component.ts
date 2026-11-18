@@ -38,8 +38,14 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
 
   readonly toastMessage = signal<string | null>(null);
 
-  // Active view tab: Executive Cashflow & PhonePe | SBI Settlement | Autonomous Engine & Vault
-  readonly activeTab = signal<'dashboard' | 'sbi' | 'automation'>('dashboard');
+  // Active view tab: Executive Cashflow & PhonePe | SBI Settlement | Self-Improving Quant | Autonomous Engine & Vault
+  readonly activeTab = signal<'dashboard' | 'sbi' | 'quant' | 'automation'>('dashboard');
+
+  // Quant Strategy & Deterministic Risk State
+  readonly quantTelemetry = signal<any>(null);
+  readonly isOptimizingQuant = signal<boolean>(false);
+  readonly isEvaluatingQuant = signal<boolean>(false);
+  readonly selectedStockSymbol = signal<string>('RELIANCE.NS');
 
   // Authoritative State Bank of India Settlement Channel (Mamu)
   readonly sbiProfile = {
@@ -319,7 +325,65 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
       this.refreshAffiliateData(),
       this.refreshVaultData(),
       this.refreshN8nData(),
+      this.refreshQuantData(),
     ]);
+  }
+
+  async refreshQuantData(): Promise<void> {
+    try {
+      this.businessService.fetchQuantTelemetry().subscribe((data) => {
+        if (data) {
+          this.quantTelemetry.set(data);
+        }
+      });
+    } catch {
+      // Clean fallback
+    }
+  }
+
+  async runQuantOptimization(): Promise<void> {
+    this.isOptimizingQuant.set(true);
+    this.showToast(`Starting Walk-Forward Self-Improvement cycle on ${this.selectedStockSymbol()}...`);
+    this.businessService.optimizeQuantStrategy(this.selectedStockSymbol()).subscribe({
+      next: (res) => {
+        this.isOptimizingQuant.set(false);
+        this.showToast(res.message || 'Optimization cycle completed.');
+        this.refreshQuantData();
+      },
+      error: (err) => {
+        this.isOptimizingQuant.set(false);
+        this.showToast('Optimization error: ' + (err.message || 'Network timeout'));
+      }
+    });
+  }
+
+  async evaluateQuantLive(): Promise<void> {
+    this.isEvaluatingQuant.set(true);
+    this.businessService.evaluateQuantOpportunity(this.selectedStockSymbol()).subscribe({
+      next: (res) => {
+        this.isEvaluatingQuant.set(false);
+        if (res.status === 'ORDER_EXECUTED') {
+          this.showToast(`Trade Approved by Risk Gatekeeper: ${res.order.action} ${res.order.quantity} ${res.order.symbol} @ ₹${res.order.entry_price}`);
+        } else if (res.status === 'RISK_REJECTED') {
+          this.showToast(`Risk Gatekeeper Blocked Trade: ${res.reason}`);
+        } else {
+          this.showToast(`Live scan complete: ${res.status} (No valid crossover trigger)`);
+        }
+        this.refreshQuantData();
+      },
+      error: () => {
+        this.isEvaluatingQuant.set(false);
+      }
+    });
+  }
+
+  async resetCircuitBreaker(): Promise<void> {
+    this.businessService.resetQuantCircuitBreaker('Mamu').subscribe({
+      next: () => {
+        this.showToast('Deterministic Risk Circuit Breaker RESET by Mamu.');
+        this.refreshQuantData();
+      }
+    });
   }
 
   async refreshTreasuryData(): Promise<void> {
