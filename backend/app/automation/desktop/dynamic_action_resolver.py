@@ -241,8 +241,16 @@ class DynamicActionResolver:
                 return True, cached_plan.get("action", "learned_action"), reply
 
         # ---------------------------------------------------------------------
-        # 0A. Conversational Corrections, Listening Validation & Negation
+        # 0A. Conversational Corrections, Listening Validation, Denial & Halts
         # ---------------------------------------------------------------------
+        if any(k in lower_clean for k in [
+            "did not say", "did not said", "didnot said", "didnt say", "didn't say",
+            "what are you executing", "why are you executing", "who told you to execute",
+            "i did not ask", "i didn't ask", "who asked you", "stop executing", "cancel that",
+            "don't execute", "dont execute", "why are you doing that"
+        ]):
+            return True, "clarification_stand_down", "My apologies, Mamu! I stood down and did not execute anything. I am right here listening—tell me what you actually need!"
+
         if any(k in lower_clean for k in ["still open", "still opened", "it's still open", "its still open"]):
             foremost = live_screen_vision.get_foremost_user_window()
             hwnd = foremost.get("hwnd")
@@ -284,7 +292,11 @@ class DynamicActionResolver:
         # ---------------------------------------------------------------------
         # 1A. Greetings & Pleasantries (Strictly Intercepted for Conversation)
         # ---------------------------------------------------------------------
-        greetings_list = ["hi", "hello", "hey", "namaste", "good morning", "good afternoon", "good evening", "what's up", "whats up", "yo"]
+        greetings_list = [
+            "hi", "hello", "hey", "namaste", "good morning", "good afternoon",
+            "good evening", "what's up", "whats up", "yo", "hello hi", "hi hello",
+            "hello there", "hey there", "vanakkam"
+        ]
         if (
             lower_clean in greetings_list
             or any(lower_clean == f"{g} abhi" or lower_clean == f"abhi {g}" for g in greetings_list)

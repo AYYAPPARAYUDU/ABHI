@@ -78,26 +78,7 @@
     </div>
   </header>
 
-  <!-- ======================================================================= -->
-  <!-- LIVE FINANCIAL MARKET STREAMING TICKER                                  -->
-  <!-- ======================================================================= -->
-  <div class="market-ticker-strip p-2 px-3 rounded-4 mb-4 d-flex align-items-center justify-content-between overflow-x-auto gap-3 font-mono small border border-themed shadow-sm" style="background: var(--abhi-surface-inset);">
-    <div class="d-flex align-items-center gap-2 text-nowrap">
-      <span class="badge bg-success bg-opacity-25 text-success">● LIVE NSE & CRYPTO TICKERS</span>
-      <span class="text-secondary small">Real-Time Volatility Feed:</span>
-    </div>
-    <div class="d-flex align-items-center gap-4 text-nowrap">
-      @for (tick of marketTicker(); track tick.symbol) {
-        <div class="d-flex align-items-center gap-2">
-          <strong class="text-white">{{ tick.symbol }}</strong>
-          <span class="text-secondary">{{ tick.price }}</span>
-          <span [ngClass]="tick.isUp ? 'text-success' : 'text-danger'">
-            {{ tick.isUp ? '▲' : '▼' }} {{ tick.change }}
-          </span>
-        </div>
-      }
-    </div>
-  </div>
+
 
   <!-- ======================================================================= -->
   <!-- SECTION 2: LIVE MULTI-METRIC EXECUTIVE KPI CARDS (SMOOTH NOTCH CARDS)   -->
@@ -741,7 +722,7 @@
           <div class="p-3 rounded-3 detail-box h-100">
             <div class="text-secondary text-uppercase font-mono small tracking-wider mb-1">Portfolio Equity</div>
             <div class="fs-4 fw-bold font-mono text-success mb-1">
-              ₹{{ (quantTelemetry()?.risk_gatekeeper?.current_equity || 50000) | number:'1.2-2' }}
+              ₹{{ (quantTelemetry()?.risk_gatekeeper?.current_equity || 500.0) | number:'1.2-2' }}
             </div>
             <div class="d-flex justify-content-between font-mono small text-secondary border-top border-themed pt-2 mt-2">
               <span>Realized PnL</span>
@@ -1032,49 +1013,7 @@
         </div>
       </div>
 
-      <!-- ================================================================= -->
-      <!-- SECTION E: REAL-WORLD B2B RETAINERS & RECURRING CASHFLOW          -->
-      <!-- ================================================================= -->
-      <div class="card rounded-4 p-4 shadow-sm mb-4 border border-themed">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-          <div>
-            <span class="badge bg-success bg-opacity-25 text-success font-mono small">B2B RECURRING REVENUE</span>
-            <h3 class="h6 fw-bold mb-0 font-mono card-title-themed mt-1">
-              Active Client Retainers & Agency Invoicing
-            </h3>
-            <span class="text-secondary small font-mono">
-              Automated high-ticket AI automation services ($1,500 - $3,000 / month recurring retainers)
-            </span>
-          </div>
-          <div class="font-mono text-success fw-bold fs-6">
-            Total MRR: ₹6,30,000 / mo ($7,300 USD)
-          </div>
-        </div>
 
-        <div class="row g-3">
-          @for (ret of quantTelemetry()?.b2b_retainers; track ret.client) {
-            <div class="col-12 col-md-4">
-              <div class="p-3 rounded-3 detail-box h-100 d-flex flex-column justify-content-between">
-                <div>
-                  <div class="d-flex justify-content-between align-items-start mb-2">
-                    <strong class="font-mono card-title-themed fs-6">{{ ret.client }}</strong>
-                    <span class="badge bg-success bg-opacity-25 text-success font-mono small">{{ ret.status }}</span>
-                  </div>
-                  <div class="text-secondary small font-mono mb-2">{{ ret.service }}</div>
-                </div>
-
-                <div class="pt-2 border-top border-themed mt-2 d-flex justify-content-between align-items-center font-mono small">
-                  <div>
-                    <strong class="text-success fs-5">₹{{ ret.mrr_inr | number:'1.0-0' }}</strong>
-                    <small class="text-secondary d-block">${{ ret.mrr_usd }} USD / mo</small>
-                  </div>
-                  <span class="badge bg-info bg-opacity-10 text-info">{{ ret.rails }}</span>
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
 
       <!-- Active Strategy Invariants & Parameters -->
       <div class="p-3 rounded-3 detail-box mb-4">
@@ -1196,7 +1135,7 @@
                 </div>
               </div>
               <div class="mt-3 pt-2 border-top border-themed d-flex justify-content-between align-items-center font-mono small">
-                <span class="text-secondary">{{ wf.total_runs || 2 }} Executions</span>
+                <span class="text-secondary">{{ wf.total_runs || 0 }} Executions</span>
                 <button
                   type="button"
                   class="btn btn-sm btn-outline-primary font-mono small"
@@ -1486,7 +1425,7 @@
               type="number"
               class="form-control font-mono small"
               [(ngModel)]="newInvoiceAmountInr"
-              placeholder="e.g. 50000"
+              placeholder="e.g. 500"
               style="background: var(--abhi-surface-inset); color: var(--abhi-text-primary); border-color: var(--abhi-border);"
             />
           </div>

@@ -31,32 +31,49 @@ def test_treasury_overview():
 
 
 def test_create_invoice_and_verify_settlement():
-    """Verify commercial tax invoice generation and dual-state receipt creation."""
-    inv_payload = {
-        "client_name": "Enterprise Test Client",
-        "service_description": "Autonomous Three.js 3D Office Dashboard",
-        "amount_inr": 25000.0,
-        "mark_as_settled": False
-    }
-    inv_res = client.post("/api/v1/business/treasury/invoices", json=inv_payload)
-    assert inv_res.status_code == 200
-    inv = inv_res.json()
-    assert "INV-ABHI-" in inv["invoice_number"]
-    assert "ayyapparayudu.5@ybl" in inv["upi_payment_link"]
+    """Verify commercial tax invoice generation and dual-state receipt creation without polluting production state."""
+    from backend.app.business.treasury import sovereign_treasury
+    orig_invoices = dict(sovereign_treasury._invoices)
+    orig_history = list(sovereign_treasury._settlement_history)
 
-    # Verify settlement with valid Bank UTR
-    utr_test = "SBIN999888777666"
-    settle_payload = {
-        "utr_number": utr_test,
-        "amount_inr": 25000.0,
-        "payer_name": "Enterprise Test Client",
-        "invoice_number": inv["invoice_number"]
-    }
-    settle_res = client.post("/api/v1/business/treasury/verify-settlement", json=settle_payload)
-    assert settle_res.status_code == 200
-    settle_data = settle_res.json()
-    assert settle_data["status"] == "SETTLED_TO_SBI_ACCOUNT"
-    assert settle_data["beneficiary_account"] == "SBI ****5649"
+    try:
+        inv_payload = {
+            "client_name": "Isolated Sandbox Client",
+            "service_description": "Verification Deliverable",
+            "amount_inr": 100.0,
+            "mark_as_settled": False
+        }
+        inv_res = client.post("/api/v1/business/treasury/invoices", json=inv_payload)
+        assert inv_res.status_code == 200
+        inv = inv_res.json()
+        assert "INV-ABHI-" in inv["invoice_number"]
+        assert "ayyapparayudu.5@ybl" in inv["upi_payment_link"]
+
+        # Verify settlement with valid Bank UTR
+        utr_test = "SBIN999888777666"
+        settle_payload = {
+            "utr_number": utr_test,
+            "amount_inr": 100.0,
+            "payer_name": "Isolated Sandbox Client",
+            "invoice_number": inv["invoice_number"]
+        }
+        settle_res = client.post("/api/v1/business/treasury/verify-settlement", json=settle_payload)
+        assert settle_res.status_code == 200
+        settle_data = settle_res.json()
+        assert settle_data["status"] == "SETTLED_TO_SBI_ACCOUNT"
+        assert settle_data["beneficiary_account"] == "SBI ****5649"
+    finally:
+        # Restore pure state so production ledger is NEVER polluted
+        sovereign_treasury._invoices = orig_invoices
+        sovereign_treasury._settlement_history = orig_history
+        sovereign_treasury._save_treasury_state()
+        # Clean up test receipts if generated
+        receipts_dir = sovereign_treasury.receipts_dir
+        for f in receipts_dir.glob("RCP-SBI-*"):
+            try:
+                f.unlink()
+            except Exception:
+                pass
 
 
 def test_live_monitor_endpoint():

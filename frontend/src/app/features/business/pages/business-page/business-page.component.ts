@@ -159,12 +159,12 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
         areaPath: 'M 20 150 Q 180 130, 360 145 T 700 140 L 700 200 L 20 200 Z',
         linePath: 'M 20 150 Q 180 130, 360 145 T 700 140',
         points: [] as { x: number; y: number; label: string; amount: number; isCredit: boolean }[],
-        maxVal: 10000,
+        maxVal: 1000,
       };
     }
 
     const slice = [...txns].reverse().slice(-14);
-    const maxAmount = Math.max(...slice.map((t) => t.amount_inr || 100), 10000);
+    const maxAmount = Math.max(...slice.map((t) => t.amount_inr || 100), 1000);
     const width = 720;
     const height = 180;
     const padding = 24;
@@ -430,7 +430,7 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
       status: 'WORKING',
       active_task: 'Compiling GenerationAlphaStrategy.py on git branch quant/gen-1',
       active_tool: 'CodeGenerator',
-      tasks_completed: 14,
+      tasks_completed: 0,
       last_active_at: new Date().toISOString()
     },
     {
@@ -442,55 +442,55 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
       status: 'WORKING',
       active_task: 'Enforcing 2.0% Daily Drawdown Circuit Breaker & SBI Treasury',
       active_tool: 'RiskFirewall',
-      tasks_completed: 28,
+      tasks_completed: 0,
       last_active_at: new Date().toISOString()
     },
     {
       agent_id: 'nexus_comms',
       name: 'Nexus-Comms',
-      role: 'Autonomous Client Retainer Communications & Invoicing',
+      role: 'Autonomous Client Communications & Invoicing',
       room_pod: 'INBOX',
       color_hex: '#f97316',
       status: 'WORKING',
-      active_task: 'Dispatching B2B Retainer Invoices with UPI ayyapparayudu.5@ybl',
+      active_task: 'Ready for Inbound Invoicing with UPI ayyapparayudu.5@ybl',
       active_tool: 'Mailer',
-      tasks_completed: 19,
+      tasks_completed: 0,
       last_active_at: new Date().toISOString()
     },
     {
       agent_id: 'aura_research',
       name: 'Aura-Research',
-      role: 'Walk-Forward Optimization & Live Market Ingestion',
+      role: 'Walk-Forward Optimization & Market Ingestion',
       room_pod: 'RESEARCH',
       color_hex: '#06b6d4',
       status: 'WORKING',
       active_task: 'Ingesting NSE Reliance/TCS live tick candles & RSI(14)',
       active_tool: 'MarketFeed',
-      tasks_completed: 32,
+      tasks_completed: 0,
       last_active_at: new Date().toISOString()
     },
     {
       agent_id: 'synthex_affiliate',
       name: 'Synthex-Web',
-      role: 'AI Content Syndication & Multimodal Media Repurposing',
+      role: 'Amazon Associates & Content Monetization',
       room_pod: 'MARKETING',
       color_hex: '#ec4899',
       status: 'WORKING',
-      active_task: 'Syndicating AI Automated Workflow Retainers to B2B Partners',
+      active_task: 'Monitoring Amazon Affiliate Tag ayyappa-21 conversions',
       active_tool: 'Syndicator',
-      tasks_completed: 21,
+      tasks_completed: 0,
       last_active_at: new Date().toISOString()
     },
     {
       agent_id: 'aegis_security',
       name: 'Aegis-Critic',
-      role: 'Deterministic Risk Gatekeeper & AST Code Vulnerability Audit',
+      role: 'Deterministic Risk Gatekeeper & AST Code Audit',
       room_pod: 'SECURITY',
       color_hex: '#3b82f6',
       status: 'WORKING',
       active_task: 'Zero-LLM Mathematical Invariant Verification for Trade Execution',
       active_tool: 'ASTScanner',
-      tasks_completed: 27,
+      tasks_completed: 0,
       last_active_at: new Date().toISOString()
     }
   ];

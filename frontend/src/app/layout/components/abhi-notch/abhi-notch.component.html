@@ -94,7 +94,7 @@
           <span class="bullet-sep">•</span>
           <span class="active-tag">ABHI ALL-IN-ONE NOTCH</span>
           <span class="bullet-sep">•</span>
-          <span class="weather-brief">{{ weatherTemp() }} {{ weatherCondition() }}</span>
+          <span class="weather-brief">{{ weatherTemp() }}</span>
         </div>
 
         <!-- Center: Universal High-Tech Tab Pills -->
@@ -107,7 +107,7 @@
             title="Windows Control Center"
           >
             <span class="tab-glyph">⚙️</span>
-            <span class="tab-text">CENTER</span>
+            <span class="tab-text">Center</span>
           </button>
 
           <button
@@ -118,7 +118,7 @@
             title="Calendar & Focus Scheduler"
           >
             <span class="tab-glyph">📅</span>
-            <span class="tab-text">CALENDAR</span>
+            <span class="tab-text">Calendar</span>
           </button>
 
           <button
@@ -129,7 +129,7 @@
             title="Online Music & Streams"
           >
             <span class="tab-glyph">♫</span>
-            <span class="tab-text">MUSIC</span>
+            <span class="tab-text">Music</span>
           </button>
 
           <button
@@ -140,7 +140,7 @@
             title="System Hardware Vitals"
           >
             <span class="tab-glyph">⚡</span>
-            <span class="tab-text">VITALS</span>
+            <span class="tab-text">Vitals</span>
           </button>
 
           <button
@@ -151,7 +151,7 @@
             title="Clipboard & Quick Notes"
           >
             <span class="tab-glyph">📋</span>
-            <span class="tab-text">SHELF</span>
+            <span class="tab-text">Shelf</span>
           </button>
 
           <button
@@ -162,38 +162,13 @@
             title="Quick Apps Launcher"
           >
             <span class="tab-glyph">🚀</span>
-            <span class="tab-text">APPS</span>
+            <span class="tab-text">Apps</span>
           </button>
         </nav>
 
         <!-- Right: Battery, Pin, Close -->
         <div class="strip-right">
           <span class="battery-tag font-mono">⚡ {{ batteryPercent() }}%</span>
-
-          <!-- Mood Quick Chips -->
-          <div class="mood-chips-group">
-            <button
-              type="button"
-              class="mood-chip"
-              [class.selected]="botMood() === 'happy'"
-              (click)="setMood('happy')"
-              title="Happy Expression"
-            >😊</button>
-            <button
-              type="button"
-              class="mood-chip"
-              [class.selected]="botMood() === 'focus'"
-              (click)="setMood('focus')"
-              title="Focus Expression"
-            >⚡</button>
-            <button
-              type="button"
-              class="mood-chip"
-              [class.selected]="botMood() === 'singing'"
-              (click)="setMood('singing')"
-              title="Singing Expression"
-            >♫</button>
-          </div>
 
           <!-- Pin Button (Prevents auto-close on mouse leave) -->
           <button
@@ -390,45 +365,30 @@
           }
 
           <!-- =============================================================== -->
-          <!-- TAB 2: CALENDAR & FOCUS SCHEDULER (Full-Width, Smooth & Icons!) -->
+          <!-- TAB 2: CALENDAR & FOCUS SCHEDULER (Exact Match to Image 3!)      -->
           <!-- =============================================================== -->
           @if (activeTab() === 'CALENDAR') {
             <div class="module-content calendar-module wide-calendar animate-fade-in">
               <div class="calendar-layout-grid wide-grid">
-                <!-- Left: Interactive Month Calendar (Smoother with glowing borders and icons) -->
+                <!-- Left: Interactive Month Calendar (Clean minimalist matching Image 3) -->
                 <div class="calendar-widget-card smooth-card">
                   <div class="calendar-month-header font-mono">
                     <div class="month-title-wrap">
-                      <span class="month-cal-glyph">📅</span>
                       <span class="month-name-text">{{ calendarMonthName() }}</span>
                     </div>
                     <div class="cal-nav-buttons">
-                      <button type="button" class="cal-nav-btn prev-btn" (click)="prevMonth()" title="Previous Month">◀</button>
+                      <button type="button" class="cal-nav-btn prev-btn" (click)="prevMonth()" title="Previous Month">‹</button>
                       <button type="button" class="cal-nav-btn today-btn" (click)="goToToday()" title="Jump to Today">Today</button>
-                      <button type="button" class="cal-nav-btn next-btn" (click)="nextMonth()" title="Next Month">▶</button>
+                      <button type="button" class="cal-nav-btn next-btn" (click)="nextMonth()" title="Next Month">›</button>
                     </div>
                   </div>
 
-                  <!-- Selected Event Preview Banner -->
-                  <div class="selected-day-banner font-mono animate-fade-in">
-                    @if (selectedDayEvent()) {
-                      <span class="banner-event-icon">{{ selectedDayEvent()?.icon }}</span>
-                      <span class="banner-day-tag">Day {{ selectedDay() }}:</span>
-                      <span class="banner-event-title">{{ selectedDayEvent()?.title }}</span>
-                      <span class="banner-cat-badge">{{ selectedDayEvent()?.category }}</span>
-                    } @else {
-                      <span class="banner-event-icon">📅</span>
-                      <span class="banner-day-tag">Day {{ selectedDay() }}:</span>
-                      <span class="banner-event-title">No events scheduled · Clean slate</span>
-                    }
-                  </div>
-
-                  <!-- Days of week -->
+                  <!-- Days of week: Clean S M T W T F S -->
                   <div class="calendar-week-header font-mono">
-                    <span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span>
+                    <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
                   </div>
 
-                  <!-- Day numbers grid with icons and smooth borders -->
+                  <!-- Day numbers grid (Clean numbers, selected day is solid white squircle button) -->
                   <div class="calendar-days-grid font-mono">
                     @for (d of calendarDays(); track $index) {
                       <div
@@ -436,24 +396,20 @@
                         [class.outside-month]="!d.isCurrentMonth"
                         [class.today]="d.isToday"
                         [class.selected]="d.isSelected"
-                        [class.has-event]="d.hasEvent"
                         (click)="selectCalendarDay(d)"
-                        [title]="d.hasEvent ? (d.eventIcon + ' ' + d.eventTitle) : ('Day ' + d.dayNum)"
+                        [title]="'Day ' + d.dayNum"
                       >
                         <span class="day-num">{{ d.dayNum }}</span>
-                        @if (d.hasEvent && d.isCurrentMonth) {
-                          <span class="day-event-icon">{{ d.eventIcon }}</span>
-                        }
                       </div>
                     }
                   </div>
                 </div>
 
-                <!-- Right: Countdown Timer, Presets & Automations (with rich icons and smooth borders) -->
+                <!-- Right: Digital Timer, Start/Reset Pills, & 2x2 Presets (Image 3) -->
                 <div class="scheduler-widget-card smooth-card">
                   <div class="timer-display-box smooth-timer-box">
                     <div class="timer-label-tag font-mono">
-                      <span>⏱ FOCUS INTERVAL TIMER</span>
+                      <span>FOCUS TIMER</span>
                       <span class="timer-state-dot" [class.running]="isTimerRunning()">●</span>
                     </div>
                     <div class="timer-big-digits font-mono">{{ formattedTimer() }}</div>
@@ -464,67 +420,24 @@
                         [class.running]="isTimerRunning()"
                         (click)="isTimerRunning() ? pauseTimer() : startTimer()"
                       >
-                        {{ isTimerRunning() ? '⏸ Pause' : '▶ Start' }}
+                        {{ isTimerRunning() ? 'Pause' : 'Start' }}
                       </button>
                       <button
                         type="button"
                         class="btn-timer-action btn-reset font-mono"
                         (click)="resetTimer()"
                       >
-                        ↺ Reset
+                        Reset
                       </button>
                     </div>
                   </div>
 
-                  <!-- 4 Quick Preset Duration Chips with Icons -->
-                  <div class="timer-preset-chips-row font-mono">
-                    <button type="button" class="preset-chip" (click)="setTimerPreset(5)">⚡ 5m</button>
-                    <button type="button" class="preset-chip" (click)="setTimerPreset(15)">☕ 15m</button>
-                    <button type="button" class="preset-chip" (click)="setTimerPreset(25)">🎯 25m</button>
-                    <button type="button" class="preset-chip" (click)="setTimerPreset(50)">🧠 50m</button>
-                  </div>
-
-                  <!-- Automation Toast Feedback Banner -->
-                  @if (automationToast()) {
-                    <div class="automation-toast-box font-mono animate-fade-in">
-                      {{ automationToast() }}
-                    </div>
-                  }
-
-                  <!-- Scheduled Automations List with Dedicated Icons -->
-                  <div class="automations-list-box smooth-auto-box">
-                    <div class="auto-list-title font-mono">
-                      <span>ACTIVE AUTOMATIONS</span>
-                      <span class="auto-hint font-mono">1-click execute</span>
-                    </div>
-                    @for (task of scheduledAutomations(); track task.id) {
-                      <div
-                        class="auto-task-item smooth-task-item"
-                        [class.running]="task.status === 'RUNNING'"
-                        [class.done]="task.status === 'DONE'"
-                        (click)="executeScheduledTask(task)"
-                        title="Click to execute automation now"
-                      >
-                        <!-- High-Tech Dedicated Icons -->
-                        <span class="task-leading-icon">
-                          @switch (task.id) {
-                            @case ('auto_1') { 🌅 }
-                            @case ('auto_2') { 🛡️ }
-                            @case ('auto_3') { 📱 }
-                            @case ('auto_4') { 🔋 }
-                            @case ('auto_5') { 🧹 }
-                            @default { ⚙️ }
-                          }
-                        </span>
-                        <div class="task-details-col">
-                          <span class="task-name text-truncate">{{ task.name }}</span>
-                          <span class="task-meta font-mono">{{ task.frequency }} · {{ task.time }}</span>
-                        </div>
-                        <span class="task-action-pill font-mono">
-                          {{ task.status === 'RUNNING' ? '⏳ Running...' : (task.status === 'DONE' ? '✓ Done' : '⚡ Run') }}
-                        </span>
-                      </div>
-                    }
+                  <!-- Clean 2x2 Grid of Presets (Image 3: 5m, 15m, 25m, 50m) -->
+                  <div class="timer-preset-grid-2x2 font-mono">
+                    <button type="button" class="preset-chip" (click)="setTimerPreset(5)">5m</button>
+                    <button type="button" class="preset-chip" (click)="setTimerPreset(15)">15m</button>
+                    <button type="button" class="preset-chip" (click)="setTimerPreset(25)">25m</button>
+                    <button type="button" class="preset-chip" (click)="setTimerPreset(50)">50m</button>
                   </div>
                 </div>
               </div>
@@ -532,158 +445,151 @@
           }
 
           <!-- =============================================================== -->
-          <!-- TAB 3: IN-NOTCH ONLINE MUSIC SEARCH & AUDIO ENGINE (Zero Popups)-->
+          <!-- TAB 3: NOW PLAYING MUSIC ENGINE (Exact Match to Image 2!)        -->
           <!-- =============================================================== -->
           @if (activeTab() === 'MUSIC') {
-            <div class="module-content music-module wide-music animate-fade-in">
-              <!-- 1. In-Notch Online Search Bar (No Browser Window!) -->
-              <div class="music-search-container">
-                <div class="search-input-box">
-                  <span class="search-glyph">🔍</span>
-                  <input
-                    type="text"
-                    class="music-search-input font-mono"
-                    placeholder="Search songs, lofi beats, synthwave, ambient..."
-                    [ngModel]="musicSearchQuery()"
-                    (ngModelChange)="musicSearchQuery.set($event)"
-                    aria-label="Search online songs"
-                  />
-                  @if (musicSearchQuery()) {
-                    <button type="button" class="search-clear-btn" (click)="musicSearchQuery.set('')">✕</button>
-                  }
+            <div class="module-content music-dual-deck animate-fade-in">
+              <!-- Left Column: Sunset Artwork Card (Image 2 style) -->
+              <div class="music-left-chassis">
+                <div class="date-weather-badge font-mono">
+                  <span>{{ currentDateStr() }} / {{ weatherTemp() }}</span>
                 </div>
 
-                <!-- Category & Favorites Filter Chips -->
-                <div class="music-filter-chips font-mono">
-                  <button
-                    type="button"
-                    class="filter-chip"
-                    [class.active]="activeMusicCategory() === 'ALL'"
-                    (click)="setMusicCategory('ALL')"
-                  >All</button>
-                  <button
-                    type="button"
-                    class="filter-chip fav-chip"
-                    [class.active]="activeMusicCategory() === 'FAVORITES'"
-                    (click)="setMusicCategory('FAVORITES')"
-                  >⭐ Favorites ({{ favoriteTrackIds().size }})</button>
-                  <button
-                    type="button"
-                    class="filter-chip"
-                    [class.active]="activeMusicCategory() === 'LOFI'"
-                    (click)="setMusicCategory('LOFI')"
-                  >☕ Lo-Fi</button>
-                  <button
-                    type="button"
-                    class="filter-chip"
-                    [class.active]="activeMusicCategory() === 'SYNTH'"
-                    (click)="setMusicCategory('SYNTH')"
-                  >⚡ Synthwave</button>
-                  <button
-                    type="button"
-                    class="filter-chip"
-                    [class.active]="activeMusicCategory() === 'FOCUS'"
-                    (click)="setMusicCategory('FOCUS')"
-                  >🧠 Focus</button>
-                  <button
-                    type="button"
-                    class="filter-chip"
-                    [class.active]="activeMusicCategory() === 'CHILL'"
-                    (click)="setMusicCategory('CHILL')"
-                  >🌅 Chill</button>
+                <div class="ambient-art-card">
+                  <div class="celestial-sun-orb" [class.singing]="isPlaying()"></div>
+                  <div class="mountain-silhouette"></div>
+                </div>
+
+                <!-- Sub-bar matching bottom left chips in Image 2 -->
+                <div class="music-bottom-nav font-mono">
+                  <span class="sub-nav-chip active">♫ MUSIC</span>
+                  <button type="button" class="sub-nav-chip search-chip" (click)="toggleMusicSearch()" title="Search & Browse All Online Streams">
+                    {{ isMusicSearchOpen() ? '✕ Close Library' : '🔍 Browse Songs' }}
+                  </button>
                 </div>
               </div>
 
-              <!-- 2. Scrollable Online Streams Grid (Plays directly inside Notch!) -->
-              <div class="online-tracks-grid wide-tracks-grid">
-                @for (track of filteredPlaylist(); track track.id) {
-                  <div
-                    class="stream-track-card"
-                    [class.playing]="isPlaying() && trackTitle() === track.title"
-                    (click)="selectAndPlayTrack(track)"
-                    title="Click to play directly in ABHI Notch"
-                  >
-                    <span class="track-emoji-icon">{{ track.coverEmoji }}</span>
-                    <div class="track-info-cell">
-                      <span class="track-title-bold font-mono">{{ track.title }}</span>
-                      <span class="track-artist-sub">{{ track.artist }} · {{ track.category }}</span>
+              <!-- Right Column: Track Details & Media Scrubber (Exact Match to Image 2) -->
+              <div class="music-right-chassis">
+                @if (!isMusicSearchOpen()) {
+                  <div class="music-player-image2 animate-fade-in">
+                    <!-- Top Subline -->
+                    <div class="music-top-meta font-mono">
+                      <div class="speaker-track-meta">
+                        <span class="meta-speaker-icon">🔊</span>
+                        <span class="meta-artist-text">{{ trackTitle() }} · {{ trackArtist() }}</span>
+                      </div>
+                      <span class="meta-clock-text">{{ currentTimeStr() }}</span>
                     </div>
 
-                    <!-- Favorite Star Button -->
-                    <button
-                      type="button"
-                      class="fav-star-btn"
-                      [class.favorited]="favoriteTrackIds().has(track.id)"
-                      (click)="toggleFavorite(track.id, $event)"
-                      [title]="favoriteTrackIds().has(track.id) ? 'Remove from favorites' : 'Add to favorites'"
-                    >
-                      {{ favoriteTrackIds().has(track.id) ? '★' : '☆' }}
-                    </button>
+                    <!-- Large Track Hero Title & Lyrics Quote -->
+                    <div class="music-hero-block">
+                      <h2 class="music-bold-title">{{ trackTitle() }}</h2>
+                      <p class="music-lyrics-sub">“{{ trackLyrics() }}”</p>
+                    </div>
 
-                    <!-- Play glyph -->
-                    <span class="play-state-indicator font-mono">
-                      {{ isPlaying() && trackTitle() === track.title ? '❚❚' : '▶' }}
-                    </span>
+                    <!-- Time Scrubber Bar -->
+                    <div class="progress-slider-wrapper">
+                      <input
+                        type="range"
+                        class="time-scrubber"
+                        min="0"
+                        max="100"
+                        [value]="progressPercent()"
+                        (input)="seek($event)"
+                        aria-label="Track progress"
+                      />
+                      <div class="timestamps-row font-mono">
+                        <span class="time-elapsed">{{ formattedCurrentTime() }}</span>
+                        <span class="time-remaining">{{ formattedRemainingTime() }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Hero Media Controls Bar (Large round white play button) -->
+                    <div class="music-hero-controls">
+                      <button type="button" class="ctrl-step-btn prev-btn" (click)="prevTrack()" title="Previous Track">⏮</button>
+                      <button
+                        type="button"
+                        class="hero-play-circle"
+                        [class.playing]="isPlaying()"
+                        (click)="togglePlay()"
+                        [title]="isPlaying() ? 'Pause' : 'Play Track'"
+                      >
+                        {{ isPlaying() ? '❚❚' : '▶' }}
+                      </button>
+                      <button type="button" class="ctrl-step-btn next-btn" (click)="nextTrack()" title="Next Track">⏭</button>
+                      <button type="button" class="ctrl-step-btn loop-btn" (click)="toggleMusicSearch()" title="Browse Streams">🔍</button>
+                    </div>
+
+                    <!-- Bottom Micro Tray (Image 2 style) -->
+                    <div class="bottom-tray-strip font-mono">
+                      <div class="tray-title-tag">Tray:</div>
+                      <div class="tray-icons-cluster">
+                        <button type="button" class="tray-icon" (click)="launchApp('youtube')" title="YouTube">▶</button>
+                        <button type="button" class="tray-icon" (click)="launchApp('whatsapp')" title="WhatsApp">💬</button>
+                        <button type="button" class="tray-icon" (click)="launchApp('gmail')" title="Gmail">✉</button>
+                        <button type="button" class="tray-icon" (click)="launchApp('github')" title="GitHub">🐙</button>
+                        <button type="button" class="tray-icon" (click)="openLaptopSettings()" title="Settings">⚙️</button>
+                        <button type="button" class="tray-icon" (click)="setTab('VITALS')" title="Vitals">📊</button>
+                        <button type="button" class="tray-icon" (click)="setTab('CALENDAR')" title="Calendar">📅</button>
+                      </div>
+                    </div>
+                  </div>
+                } @else {
+                  <!-- In-Notch Online Search & Stream Library (When user wants to switch songs) -->
+                  <div class="music-search-sheet font-mono animate-fade-in">
+                    <div class="search-sheet-header">
+                      <div class="search-input-box">
+                        <span class="search-glyph">🔍</span>
+                        <input
+                          type="text"
+                          class="music-search-input"
+                          placeholder="Search online songs, lofi, synthwave..."
+                          [ngModel]="musicSearchQuery()"
+                          (ngModelChange)="musicSearchQuery.set($event)"
+                        />
+                        @if (musicSearchQuery()) {
+                          <button type="button" class="search-clear-btn" (click)="musicSearchQuery.set('')">✕</button>
+                        }
+                      </div>
+                      <button type="button" class="btn-back-player" (click)="toggleMusicSearch()">Back to Player ✕</button>
+                    </div>
+
+                    <!-- Category filter chips -->
+                    <div class="music-filter-chips">
+                      <button type="button" class="filter-chip" [class.active]="activeMusicCategory() === 'ALL'" (click)="setMusicCategory('ALL')">All</button>
+                      <button type="button" class="filter-chip fav-chip" [class.active]="activeMusicCategory() === 'FAVORITES'" (click)="setMusicCategory('FAVORITES')">⭐ Favs</button>
+                      <button type="button" class="filter-chip" [class.active]="activeMusicCategory() === 'LOFI'" (click)="setMusicCategory('LOFI')">☕ Lo-Fi</button>
+                      <button type="button" class="filter-chip" [class.active]="activeMusicCategory() === 'SYNTH'" (click)="setMusicCategory('SYNTH')">⚡ Synth</button>
+                      <button type="button" class="filter-chip" [class.active]="activeMusicCategory() === 'FOCUS'" (click)="setMusicCategory('FOCUS')">🧠 Focus</button>
+                      <button type="button" class="filter-chip" [class.active]="activeMusicCategory() === 'CHILL'" (click)="setMusicCategory('CHILL')">🌅 Chill</button>
+                    </div>
+
+                    <!-- Online streams list -->
+                    <div class="online-tracks-grid">
+                      @for (track of filteredPlaylist(); track track.id) {
+                        <div
+                          class="stream-track-card"
+                          [class.playing]="isPlaying() && trackTitle() === track.title"
+                          (click)="selectAndPlayTrack(track)"
+                          title="Click to play directly"
+                        >
+                          <span class="track-emoji-icon">{{ track.coverEmoji }}</span>
+                          <div class="track-info-cell">
+                            <span class="track-title-bold">{{ track.title }}</span>
+                            <span class="track-artist-sub">{{ track.artist }} · {{ track.category }}</span>
+                          </div>
+                          <button type="button" class="fav-star-btn" [class.favorited]="favoriteTrackIds().has(track.id)" (click)="toggleFavorite(track.id, $event)">
+                            {{ favoriteTrackIds().has(track.id) ? '★' : '☆' }}
+                          </button>
+                          <span class="play-state-indicator">
+                            {{ isPlaying() && trackTitle() === track.title ? '❚❚' : '▶' }}
+                          </span>
+                        </div>
+                      }
+                    </div>
                   </div>
                 }
-              </div>
-
-              <!-- 3. Now Playing Card & Visualizer -->
-              <div class="now-playing-deck">
-                <div class="track-info-row">
-                  <div class="track-text-block">
-                    <div class="artist-label font-mono">{{ trackArtist() }}</div>
-                    <h3 class="track-title-text">{{ trackTitle() }}</h3>
-                    <p class="track-lyrics-quote">“{{ trackLyrics() }}”</p>
-                  </div>
-
-                  <!-- Animated Equalizer Bars -->
-                  <div class="large-eq-visualizer" [class.playing]="isPlaying()">
-                    <span class="bar bar-a"></span>
-                    <span class="bar bar-b"></span>
-                    <span class="bar bar-c"></span>
-                    <span class="bar bar-d"></span>
-                    <span class="bar bar-e"></span>
-                  </div>
-                </div>
-
-                <!-- Scrubable Progress Slider -->
-                <div class="progress-slider-wrapper">
-                  <input
-                    type="range"
-                    class="time-scrubber"
-                    min="0"
-                    max="100"
-                    [value]="progressPercent()"
-                    (input)="seek($event)"
-                    aria-label="Track progress"
-                  />
-                  <div class="timestamps-row font-mono">
-                    <span class="time-elapsed">{{ formattedCurrentTime() }}</span>
-                    <span class="time-remaining">{{ formattedRemainingTime() }}</span>
-                  </div>
-                </div>
-
-                <!-- Media Controls Bar -->
-                <div class="media-controls-bar">
-                  <div class="media-btn-cluster">
-                    <button type="button" class="ctrl-btn prev-btn" (click)="prevTrack()" title="Previous Track">⏮</button>
-                    <button
-                      type="button"
-                      class="ctrl-btn play-pause-btn"
-                      [class.playing]="isPlaying()"
-                      (click)="togglePlay()"
-                      [title]="isPlaying() ? 'Pause' : 'Play Track'"
-                    >
-                      {{ isPlaying() ? '⏸' : '▶' }}
-                    </button>
-                    <button type="button" class="ctrl-btn next-btn" (click)="nextTrack()" title="Next Track">⏭</button>
-                  </div>
-
-                  <div class="media-extra-cluster">
-                    <span class="in-notch-badge font-mono">⚡ DIRECT STREAM · NO POPUPS</span>
-                  </div>
-                </div>
               </div>
             </div>
           }

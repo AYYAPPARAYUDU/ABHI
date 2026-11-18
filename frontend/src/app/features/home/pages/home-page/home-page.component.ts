@@ -191,8 +191,8 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     accountFull: '41130645649',
     ifsc: 'SBIN0020507',
     upi: 'ayyapparayudu.5@ybl',
-    totalRevenueInr: 0.0,
-    totalRevenueUsd: 0.0,
+    totalRevenueInr: 500.0,
+    totalRevenueUsd: 5.71,
     pendingInvoicesInr: 0.0,
     invoicesCount: 0
   });

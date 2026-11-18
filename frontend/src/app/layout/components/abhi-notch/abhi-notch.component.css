@@ -726,198 +726,273 @@
 }
 
 /* ------------------------------------------------------------------------- */
-/* MODULE 1: MUSIC / NOW PLAYING (Exact match to Image 1)                    */
+/* MODULE 1: MUSIC / NOW PLAYING (Exact match to Image 2!)                   */
 /* ------------------------------------------------------------------------- */
 
-.music-module {
+.music-dual-deck {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-top: 4px;
+  gap: 14px;
+  width: 100%;
+  height: 340px;
+  overflow: hidden;
 }
 
-.track-info-row {
+.music-left-chassis {
+  width: 270px;
+  flex-shrink: 0;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+.music-bottom-nav {
+  display: flex;
+  gap: 6px;
+}
+
+.sub-nav-chip {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+}
+
+.sub-nav-chip.active {
+  background: #f97316;
+  color: #ffffff;
+  border-color: #f97316;
+}
+
+.sub-nav-chip.search-chip {
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  transition: all 160ms ease;
+  border: none;
+}
+
+.sub-nav-chip.search-chip:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.music-right-chassis {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: rgba(13, 21, 39, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 18px 24px;
+  height: 100%;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.music-player-image2 {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   justify-content: space-between;
 }
 
-.artist-label {
+.music-top-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 11px;
   color: #94a3b8;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.track-title-text {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #ffffff;
-  background: linear-gradient(to right, #ffffff, #94a3b8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-wrap: balance;
-}
-
-.track-lyrics-quote {
-  margin: 2px 0 0 0;
-  font-size: 12px;
-  color: #cbd5e1;
-  font-style: normal;
-  text-wrap: pretty;
-}
-
-/* Large Equalizer Visualizer */
-.large-eq-visualizer {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 28px;
-  padding: 4px;
-}
-
-.large-eq-visualizer .bar {
-  width: 3px;
-  border-radius: 2px;
-  background: #f97316;
-  opacity: 0.4;
-  height: 6px;
-  transition: height 200ms ease;
-}
-
-.large-eq-visualizer.playing .bar {
-  opacity: 1;
-}
-
-.large-eq-visualizer.playing .bar-a { animation: eq-anim 0.7s infinite ease-in-out; }
-.large-eq-visualizer.playing .bar-b { animation: eq-anim 0.7s infinite 0.15s ease-in-out; }
-.large-eq-visualizer.playing .bar-c { animation: eq-anim 0.7s infinite 0.3s ease-in-out; }
-.large-eq-visualizer.playing .bar-d { animation: eq-anim 0.7s infinite 0.45s ease-in-out; }
-.large-eq-visualizer.playing .bar-e { animation: eq-anim 0.7s infinite 0.6s ease-in-out; }
-
-@keyframes eq-anim {
-  0%, 100% { height: 6px; }
-  50% { height: 26px; }
-}
-
-/* Scrubable Progress Slider */
-.progress-slider-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.time-scrubber {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-}
-
-.time-scrubber::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  transition: transform 150ms ease;
-}
-
-.time-scrubber::-webkit-slider-thumb:hover {
-  transform: scale(1.3);
-}
-
-.timestamps-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 10px;
-  color: #64748b;
   font-weight: 600;
 }
 
-/* Controls Bar */
-.media-controls-bar {
+.speaker-track-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 6px;
 }
 
-.media-btn-cluster {
+.meta-speaker-icon {
+  font-size: 13px;
+  color: #f97316;
+}
+
+.music-hero-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.music-bold-title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0;
+}
+
+.music-lyrics-sub {
+  font-size: 13px;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 0;
+}
+
+.music-hero-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 24px;
+  margin: 8px 0;
 }
 
-.ctrl-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f8fafc;
+.ctrl-step-btn {
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 22px;
+  cursor: pointer;
+  transition: transform 140ms ease, color 140ms ease;
+}
+
+.ctrl-step-btn:hover {
+  color: #ffffff;
+  transform: scale(1.15);
+}
+
+.hero-play-circle {
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  background: #ffffff;
+  color: #0f172a;
+  border: none;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 180ms ease;
-  font-size: 13px;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.35);
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.ctrl-btn:hover {
-  background: rgba(255, 255, 255, 0.14);
-  transform: scale(1.05);
+.hero-play-circle:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(255, 255, 255, 0.5);
 }
 
-.ctrl-btn:active {
-  transform: scale(0.95);
+.hero-play-circle.playing {
+  background: #f97316;
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.5);
 }
 
-.ctrl-btn.play-pause-btn {
-  width: 38px;
-  height: 38px;
-  background: #ffffff;
-  color: #0f172a;
-  border-color: #ffffff;
-  box-shadow: 0 0 16px rgba(255, 255, 255, 0.4);
+/* Music Search Sheet */
+.music-search-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+}
+
+.search-sheet-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-back-player {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  border-radius: 8px;
+  font-size: 10px;
+  padding: 6px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-back-player:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.online-tracks-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  max-height: 200px;
+}
+
+.stream-track-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.stream-track-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.stream-track-card.playing {
+  background: rgba(249, 115, 22, 0.15);
+  border-color: #f97316;
+}
+
+.track-emoji-icon {
+  font-size: 16px;
+}
+
+.track-info-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.track-title-bold {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f8fafc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-artist-sub {
+  font-size: 9px;
+  color: #94a3b8;
+}
+
+.fav-star-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
   font-size: 14px;
 }
 
-.ctrl-btn.play-pause-btn.playing {
-  background: #f97316;
-  color: #ffffff;
-  border-color: #f97316;
-  box-shadow: 0 0 16px rgba(249, 115, 22, 0.5);
+.fav-star-btn.favorited {
+  color: #facc15;
 }
 
-.btn-youtube-launch {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: rgba(255, 0, 0, 0.15);
-  border: 1px solid rgba(255, 0, 0, 0.35);
-  color: #fca5a5;
-  border-radius: 8px;
-  font-size: 10px;
+.play-state-indicator {
+  font-size: 11px;
+  color: #f97316;
   font-weight: 700;
-  cursor: pointer;
-  transition: all 180ms ease;
-}
-
-.btn-youtube-launch:hover {
-  background: #dc2626;
-  color: #ffffff;
-  border-color: #dc2626;
-  box-shadow: 0 0 14px rgba(220, 38, 38, 0.45);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -1499,39 +1574,41 @@
 
 .calendar-layout-grid {
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
-  gap: 14px;
-  align-items: start;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 16px;
+  align-items: stretch;
+  height: 340px;
 }
 
 .calendar-widget-card {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 12px 14px;
+  border-radius: 18px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .calendar-month-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 14px;
+  font-weight: 700;
   color: #f8fafc;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
 }
 
 .cal-nav-buttons .cal-nav-btn {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 6px;
+  border-radius: 8px;
   color: #cbd5e1;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 3px 10px;
   cursor: pointer;
   transition: all 160ms ease;
 }
@@ -1546,29 +1623,29 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   color: #64748b;
-  padding-bottom: 2px;
+  padding: 4px 0;
 }
 
 .calendar-days-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
+  gap: 6px;
 }
 
 .cal-day-cell {
-  height: 26px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   color: #cbd5e1;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 160ms ease;
+  transition: all 140ms ease;
   position: relative;
 }
 
@@ -1579,7 +1656,7 @@
 
 .cal-day-cell.outside-month {
   color: #475569;
-  opacity: 0.4;
+  opacity: 0.35;
 }
 
 .cal-day-cell.today {
@@ -1591,28 +1668,20 @@
   background: #ffffff !important;
   color: #0f172a !important;
   font-weight: 800;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.35);
 }
 
-.cal-day-cell.has-event::after {
-  content: '';
-  position: absolute;
-  bottom: 2px;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #f97316;
-}
-
-/* Scheduler & Countdown Widget (Right Side) */
+/* Scheduler & Countdown Widget (Right Side - Image 3 Exact Match) */
 .scheduler-widget-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  background: rgba(15, 23, 42, 0.6);
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 12px 14px;
+  border-radius: 18px;
+  padding: 18px 22px;
 }
 
 .timer-display-box {
@@ -1620,29 +1689,43 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  width: 100%;
+  gap: 12px;
+}
+
+.timer-label-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .timer-big-digits {
-  font-size: 34px;
+  font-size: 56px;
   font-weight: 800;
   color: #ffffff;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   line-height: 1;
-  text-shadow: 0 0 16px rgba(255, 255, 255, 0.25);
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.25);
+  margin: 8px 0 12px;
 }
 
 .timer-ctrl-row {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
+  justify-content: center;
 }
 
 .btn-timer-action {
   flex: 1;
-  height: 32px;
-  border-radius: 8px;
-  font-size: 11px;
+  max-width: 140px;
+  height: 38px;
+  border-radius: 9999px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: all 180ms ease;
@@ -1652,12 +1735,13 @@
 .btn-timer-action.btn-start {
   background: #ffffff;
   color: #0f172a;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
 }
 
 .btn-timer-action.btn-start:hover {
-  background: #f1f5f9;
+  background: #f8fafc;
   transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(255, 255, 255, 0.35);
 }
 
 .btn-timer-action.btn-start.running {
@@ -1666,94 +1750,45 @@
 }
 
 .btn-timer-action.btn-reset {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #94a3b8;
-}
-
-.btn-timer-action.btn-reset:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   color: #ffffff;
 }
 
-/* Preset Chips (5m, 15m, 25m, 50m from Image 1) */
-.timer-preset-chips-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+.btn-timer-action.btn-reset:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
-.preset-chip {
+/* 2x2 Preset Grid (Image 3: 5m, 15m, 25m, 50m) */
+.timer-preset-grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  margin-top: 14px;
+}
+
+.timer-preset-grid-2x2 .preset-chip {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
-  border-radius: 8px;
-  padding: 6px 0;
-  font-size: 11px;
+  color: #f1f5f9;
+  border-radius: 12px;
+  padding: 12px 0;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: all 160ms ease;
   text-align: center;
 }
 
-.preset-chip:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+.timer-preset-grid-2x2 .preset-chip:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
 
-.preset-chip:active {
-  transform: scale(0.95);
-}
-
-/* Automations List */
-.automations-list-box {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  margin-top: 2px;
-}
-
-.auto-list-title {
-  font-size: 9px;
-  font-weight: 700;
-  color: #64748b;
-  letter-spacing: 0.08em;
-}
-
-.auto-task-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 160ms ease;
-}
-
-.auto-task-item:hover {
-  background: rgba(249, 115, 22, 0.12);
-  border-color: rgba(249, 115, 22, 0.3);
-}
-
-.auto-task-item .task-status-dot {
-  font-size: 8px;
-  color: #22c55e;
-}
-
-.auto-task-item .task-name {
-  flex: 1;
-  font-size: 10px;
-  font-weight: 600;
-  color: #e2e8f0;
-}
-
-.auto-task-item .task-time {
-  font-size: 9px;
-  color: #94a3b8;
+.timer-preset-grid-2x2 .preset-chip:active {
+  transform: scale(0.97);
 }
 
 
@@ -2116,11 +2151,10 @@
 .island-body-container {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .island-main-panel {
@@ -2129,13 +2163,13 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 12px;
+  gap: 8px;
   border-radius: 18px;
-  background: rgba(13, 21, 39, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 16px 20px;
-  overflow-y: auto;
-  max-height: 80vh;
+  background: transparent;
+  border: none;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
 }
 
 .center-sub-header {

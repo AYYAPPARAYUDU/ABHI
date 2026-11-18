@@ -12,19 +12,5 @@
     "channel": "Instant UPI Deposit (ayyapparayudu.5@ybl)",
     "settled_at": "2026-11-18T09:00:00+00:00",
     "status": "SETTLED_TO_SBI_ACCOUNT"
-  },
-  {
-    "transaction_id": "SBIN999888777666",
-    "utr_number": "SBIN999888777666",
-    "invoice_number": "INV-ABHI-20261118-8482B4",
-    "amount_inr": 25000.0,
-    "amount_usd": 285.71,
-    "client_name": "Enterprise Test Client",
-    "beneficiary_account": "SBI ****5649",
-    "account_holder": "Ravuvai Ayyapparayudu",
-    "ifsc": "SBIN0020507",
-    "channel": "UPI (ayyapparayudu.5@ybl)",
-    "settled_at": "2026-11-18T14:11:45.307959+00:00",
-    "status": "SETTLED_TO_SBI_ACCOUNT"
   }
 ]

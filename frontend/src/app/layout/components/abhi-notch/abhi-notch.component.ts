@@ -188,12 +188,13 @@ export class AbhiNotchComponent implements OnInit, OnDestroy {
   // 3. IN-NOTCH ONLINE MUSIC SEARCH & REAL AUDIO PLAYER (Zero Browser Popups!)
   // =========================================================================
   readonly isPlaying = signal<boolean>(false);
-  readonly trackTitle = signal<string>('Lofi Study Night');
-  readonly trackArtist = signal<string>('Chillhop Beats');
-  readonly trackLyrics = signal<string>('Rain on the window, coffee steam rising quietly');
+  readonly trackTitle = signal<string>('Golden Hour');
+  readonly trackArtist = signal<string>('Nova Lane');
+  readonly trackLyrics = signal<string>("windows down, the city's glowing");
   readonly currentTime = signal<number>(34);
-  readonly totalDuration = signal<number>(180);
+  readonly totalDuration = signal<number>(195);
   readonly isMuted = signal<boolean>(false);
+  readonly isMusicSearchOpen = signal<boolean>(false);
 
   // Direct Online Streaming Playlist (Directly Playable in HTML5 Audio)
   readonly allTracks: MusicTrack[] = [
@@ -269,7 +270,7 @@ export class AbhiNotchComponent implements OnInit, OnDestroy {
     }
   ];
 
-  readonly activeTrackIndex = signal<number>(0);
+  readonly activeTrackIndex = signal<number>(3); // Default to Golden Hour by Nova Lane (Image 2)
   readonly musicSearchQuery = signal<string>('');
   readonly activeMusicCategory = signal<string>('ALL'); // 'ALL' | 'FAVORITES' | 'LOFI' | 'SYNTH' | 'FOCUS' | 'CHILL'
   readonly favoriteTrackIds = signal<Set<string>>(new Set(['track_1', 'track_2', 'track_4']));
@@ -837,6 +838,10 @@ export class AbhiNotchComponent implements OnInit, OnDestroy {
       }
       return next;
     });
+  }
+
+  toggleMusicSearch(): void {
+    this.isMusicSearchOpen.update(v => !v);
   }
 
   selectAndPlayTrack(track: MusicTrack): void {
