@@ -43,12 +43,15 @@ from typing import Optional, Dict, Any
 
 # Win32 DPI Awareness for sharp 4K / High-DPI screens
 try:
-    ctypes.windll.shcore.SetProcessDpiAwareness(1)
+    ctypes.windll.shcore.SetProcessDpiAwareness(2)  # PROCESS_PER_MONITOR_DPI_AWARE_V2
 except Exception:
     try:
-        ctypes.windll.user32.SetProcessDPIAware()
+        ctypes.windll.shcore.SetProcessDpiAwareness(1)
     except Exception:
-        pass
+        try:
+            ctypes.windll.user32.SetProcessDPIAware()
+        except Exception:
+            pass
 
 # ==============================================================================
 # WIN32 SINGLE-INSTANCE MUTEX ENFORCEMENT
@@ -315,14 +318,14 @@ class AbhiGlobalTopNotch(ctk.CTk):
         self.is_pinned = False
         self.is_notch_docked = True
         self.active_tab = "CENTER"
-        self.screen_width = self.winfo_screenwidth()
-        self.screen_height = self.winfo_screenheight()
+        phys_screen_w = user32.GetSystemMetrics(0)
+        phys_screen_h = user32.GetSystemMetrics(1)
+        self.screen_width = max(self.winfo_screenwidth(), phys_screen_w)
+        self.screen_height = max(self.winfo_screenheight(), phys_screen_h)
 
         # Dimensions calibrated for High-DPI screens
-        self.compact_w, self.compact_h = 260, 32
-        self.hover_extended_w = 350
-        self.expanded_w, self.expanded_h = 780, 420
-        self.is_hover_extended = False
+        self.compact_w, self.compact_h = 280, 32
+        self.expanded_w, self.expanded_h = 720, 400
         self._is_animating = False
 
         # Dynamic Drag-and-Drop Positioning State
@@ -445,7 +448,7 @@ class AbhiGlobalTopNotch(ctk.CTk):
                     saved_y = data.get("pos_y")
                     is_docked = data.get("is_docked")
                     # If docked at top center, ensure mathematical precision
-                    if is_docked is True or (saved_y == 0 and abs(saved_x - center_x) < 250):
+                    if is_docked is True or saved_y == 0 or saved_y is None:
                         self.pos_x = center_x
                         self.pos_y = 0
                         self.is_notch_docked = True
@@ -516,29 +519,140 @@ class AbhiGlobalTopNotch(ctk.CTk):
         self.set_theme(next_key)
 
     def set_theme(self, theme_key: str):
-        if theme_key in THEMES:
-            self.current_theme_key = theme_key
-            self.theme = THEMES[theme_key]
-            t = self.theme
+        if theme_key not in THEMES:
+            return
+        self.current_theme_key = theme_key
+        self.theme = THEMES[theme_key]
+        t = self.theme
+
+        # 1. Frames & Outer Chassis
+        if hasattr(self, "compact_frame"):
             self.compact_frame.configure(fg_color=t["bg"], border_color=t["border"])
+        if hasattr(self, "expanded_frame"):
             self.expanded_frame.configure(fg_color=t["bg"], border_color=t["border"])
-            if hasattr(self, "input_entry"):
-                self.input_entry.configure(text_color=t["text_primary"])
-            if hasattr(self, "send_btn"):
-                self.send_btn.configure(fg_color=t["accent"], hover_color=t["accent_hover"])
-            if hasattr(self, "tag_lbl"):
-                self.tag_lbl.configure(text_color=t.get("accent", "#3882f6"))
-            if hasattr(self, "theme_btn"):
-                self.theme_btn.configure(text_color=t.get("accent", "#3882f6"))
-            if hasattr(self, "pill_chevron"):
-                self.pill_chevron.configure(text_color=t.get("text_muted", "#94a3b8"))
-            if hasattr(self, "pill_clock_lbl"):
-                self.pill_clock_lbl.configure(text_color=t.get("text_primary", "#f8fafc"))
-            if hasattr(self, "vol_slider"):
-                self.vol_slider.configure(button_color=t.get("accent", "#3882f6"), progress_color=t.get("accent", "#3882f6"))
-            if hasattr(self, "bri_slider"):
-                self.bri_slider.configure(button_color=t.get("accent", "#3882f6"), progress_color=t.get("accent", "#3882f6"))
-            self._save_notch_theme()
+        if hasattr(self, "header_strip"):
+            self.header_strip.configure(fg_color="transparent")
+        if hasattr(self, "header_div"):
+            self.header_div.configure(fg_color=t["border"])
+
+        # 2. Header Strip Labels & Buttons
+        if hasattr(self, "strip_clock_lbl"):
+            self.strip_clock_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "tag_lbl"):
+            self.tag_lbl.configure(text_color=t["accent"])
+        if hasattr(self, "strip_battery_lbl"):
+            self.strip_battery_lbl.configure(text_color=t["accent"])
+        if hasattr(self, "theme_btn"):
+            self.theme_btn.configure(text_color=t["accent"])
+        if hasattr(self, "center_btn"):
+            self.center_btn.configure(text_color=t["accent"])
+        if hasattr(self, "pin_btn"):
+            self.pin_btn.configure(text_color=t["text_secondary"])
+
+        # 3. Header Tab Buttons
+        if hasattr(self, "tab_buttons"):
+            for key, btn in self.tab_buttons.items():
+                if key == self.active_tab:
+                    btn.configure(fg_color=t["accent"], text_color="#ffffff")
+                else:
+                    btn.configure(fg_color="transparent", text_color=t["text_secondary"], hover_color=t["surface_card"])
+
+        # 4. Left Chassis
+        if hasattr(self, "left_chassis"):
+            self.left_chassis.configure(fg_color=t["surface"], border_color=t["border"])
+        if hasattr(self, "date_badge"):
+            self.date_badge.configure(fg_color=t["surface_card"])
+        if hasattr(self, "date_badge_lbl"):
+            self.date_badge_lbl.configure(text_color=t["text_secondary"])
+        if hasattr(self, "art_card"):
+            self.art_card.configure(fg_color=t["bg"], border_color=t["border_glow"])
+        if hasattr(self, "tab_rail"):
+            self.tab_rail.configure(fg_color=t["surface_card"])
+        if hasattr(self, "bot_screen"):
+            self.bot_screen.configure(border_color=t["accent"])
+        if hasattr(self, "rail_buttons"):
+            for btn, key in self.rail_buttons:
+                if key == self.active_tab:
+                    btn.configure(fg_color=t["accent"], text_color="#ffffff")
+                else:
+                    btn.configure(fg_color=t["surface"], text_color=t["text_secondary"], hover_color=t["surface_card"])
+
+        # 5. Right Chassis Control Cards
+        card_on_fg = t["surface_card"]
+        card_on_text = t["text_primary"]
+        card_off_fg = t["surface"]
+        card_off_text = t["text_muted"]
+
+        if hasattr(self, "wifi_card"):
+            self.wifi_card.configure(
+                fg_color=card_on_fg if self.is_wifi_on else card_off_fg,
+                text_color=card_on_text if self.is_wifi_on else card_off_text,
+                hover_color=t["border_secondary"]
+            )
+        if hasattr(self, "bt_card"):
+            self.bt_card.configure(
+                fg_color=card_on_fg if self.is_bt_on else card_off_fg,
+                text_color=card_on_text if self.is_bt_on else card_off_text,
+                hover_color=t["border_secondary"]
+            )
+        if hasattr(self, "dnd_card"):
+            self.dnd_card.configure(
+                fg_color=card_on_fg if self.is_dnd_on else card_off_fg,
+                text_color=card_on_text if self.is_dnd_on else card_off_text,
+                hover_color=t["border_secondary"]
+            )
+        if hasattr(self, "notch_mode_card"):
+            self.notch_mode_card.configure(
+                fg_color=card_on_fg,
+                text_color=card_on_text,
+                hover_color=t["border_secondary"]
+            )
+
+        # 6. Sliders
+        if hasattr(self, "sliders_box"):
+            self.sliders_box.configure(fg_color=t["surface"], border_color=t["border"])
+        if hasattr(self, "vol_lbl"):
+            self.vol_lbl.configure(text_color=t["text_secondary"])
+        if hasattr(self, "vol_val_lbl"):
+            self.vol_val_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "vol_slider"):
+            self.vol_slider.configure(button_color=t["accent"], progress_color=t["accent"])
+        if hasattr(self, "bri_lbl"):
+            self.bri_lbl.configure(text_color=t["text_secondary"])
+        if hasattr(self, "bri_val_lbl"):
+            self.bri_val_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "bri_slider"):
+            self.bri_slider.configure(button_color=t["accent"], progress_color=t["accent"])
+
+        # 7. Transcription / Chat Box
+        if hasattr(self, "chat_box"):
+            self.chat_box.configure(fg_color=t["surface"], border_color=t["border"])
+        if hasattr(self, "chat_hdr"):
+            self.chat_hdr.configure(fg_color=t["surface_card"])
+        if hasattr(self, "chat_display"):
+            self.chat_display.configure(text_color=t["text_primary"])
+
+        # 8. Bottom Input Bar
+        if hasattr(self, "input_bar"):
+            self.input_bar.configure(fg_color=t["surface"], border_color=t["border"])
+        if hasattr(self, "input_entry"):
+            self.input_entry.configure(text_color=t["text_primary"])
+        if hasattr(self, "send_btn"):
+            self.send_btn.configure(fg_color=t["accent"], hover_color=t["accent_hover"])
+        if hasattr(self, "mic_btn"):
+            self.mic_btn.configure(fg_color=t["surface_card"], text_color=t["accent"])
+
+        # 9. Compact Pill View
+        if hasattr(self, "pill_clock_lbl"):
+            self.pill_clock_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "pill_dot"):
+            self.pill_dot.configure(text_color=t["accent"])
+        if hasattr(self, "pill_chevron"):
+            self.pill_chevron.configure(text_color=t["text_muted"])
+        if hasattr(self, "pill_battery_lbl"):
+            self.pill_battery_lbl.configure(text_color=t["accent"])
+
+        self._save_notch_theme()
 
     def recenter_notch(self):
         """Snaps the notch back to the screen's top-center docking point."""
@@ -652,84 +766,68 @@ class AbhiGlobalTopNotch(ctk.CTk):
         if hasattr(self, "_hover_collapse_job") and self._hover_collapse_job:
             self.after_cancel(self._hover_collapse_job)
             self._hover_collapse_job = None
-        if not self.is_expanded and not self._is_animating:
-            self._animate_transition(expanding=True)
+        if self.is_expanded:
+            return
+
+        scale = ctk.ScalingTracker.get_window_scaling(self)
+        phys_w = round(self.expanded_w * scale)
+        phys_h = round(self.expanded_h * scale)
+
+        if getattr(self, "is_notch_docked", True):
+            self.pos_x = (self.screen_width - phys_w) // 2
+            self.pos_y = 0
+        else:
+            compact_phys_w = round(self.compact_w * scale)
+            center_x = self.pos_x + (compact_phys_w // 2)
+            self.pos_x = max(0, min(self.screen_width - phys_w, center_x - (phys_w // 2)))
+
+        self.is_expanded = True
+        self.is_hover_extended = False
+
+        self.compact_frame.pack_forget()
+        self.expanded_frame.pack(fill="both", expand=True)
+
+        self.geometry(f"{self.expanded_w}x{self.expanded_h}+{self.pos_x}+{self.pos_y}")
+        self.update_idletasks()
+        radius = round(20 * scale)
+        self._apply_native_round_region(phys_w, phys_h, radius)
+        self._save_notch_position()
+        if hasattr(self, "input_entry"):
+            self.input_entry.focus_set()
 
     def collapse_notch(self):
-        if self.is_expanded and not self.is_pinned and not self._is_animating:
-            self._animate_transition(expanding=False)
+        if not self.is_expanded or self.is_pinned:
+            return
+
+        scale = ctk.ScalingTracker.get_window_scaling(self)
+        phys_w = round(self.compact_w * scale)
+        phys_h = round(self.compact_h * scale)
+
+        if getattr(self, "is_notch_docked", True):
+            self.pos_x = (self.screen_width - phys_w) // 2
+            self.pos_y = 0
+        else:
+            expanded_phys_w = round(self.expanded_w * scale)
+            center_x = self.pos_x + (expanded_phys_w // 2)
+            self.pos_x = max(0, min(self.screen_width - phys_w, center_x - (phys_w // 2)))
+
+        self.is_expanded = False
+        self.is_hover_extended = False
+
+        self.expanded_frame.pack_forget()
+        self.compact_frame.pack(fill="both", expand=True)
+
+        self.geometry(f"{self.compact_w}x{self.compact_h}+{self.pos_x}+{self.pos_y}")
+        self.update_idletasks()
+        radius = phys_h // 2
+        self._apply_native_round_region(phys_w, phys_h, radius)
+        self._save_notch_position()
 
     def toggle_mode(self):
-        if not self._is_animating:
-            self._animate_transition(expanding=not self.is_expanded)
-
-    def _animate_transition(self, expanding: bool):
-        """Silky-smooth 60fps spring-ease animation between compact pill and expanded deck."""
-        self._is_animating = True
-        scale = ctk.ScalingTracker.get_window_scaling(self)
-
-        start_w = self.compact_w if expanding else self.expanded_w
-        start_h = self.compact_h if expanding else self.expanded_h
-        target_w = self.expanded_w if expanding else self.compact_w
-        target_h = self.expanded_h if expanding else self.compact_h
-
-        start_phys_w = round(start_w * scale)
-        target_phys_w = round(target_w * scale)
-        # Symmetrical anchor: center of screen if docked, or current center if moved
-        if getattr(self, "is_notch_docked", True):
-            anchor_center_x = self.screen_width // 2
+        if self.is_expanded:
+            self.collapse_notch()
         else:
-            anchor_center_x = self.pos_x + (start_phys_w // 2)
-
-        if expanding:
-            self.compact_frame.pack_forget()
-            self.expanded_frame.pack(fill="both", expand=True)
-        else:
-            self.expanded_frame.pack_forget()
-            self.compact_frame.pack(fill="both", expand=True)
-
-        steps = 6
-        step_duration = 16
-
-        def step_anim(current_step):
-            if current_step <= steps:
-                t = current_step / steps
-                progress = 1 - (1 - t) * (1 - t)
-
-                cur_w = int(round(start_w + (target_w - start_w) * progress))
-                cur_h = int(round(start_h + (target_h - start_h) * progress))
-
-                cur_phys_w = round(cur_w * scale)
-                cur_phys_h = round(cur_h * scale)
-
-                new_x = anchor_center_x - (cur_phys_w // 2)
-                new_x = max(0, min(self.screen_width - cur_phys_w, new_x))
-                new_y = self.pos_y
-                if new_y + cur_phys_h > self.screen_height:
-                    new_y = max(0, self.screen_height - cur_phys_h)
-
-                self.pos_x = new_x
-                self.pos_y = new_y
-                self.geometry(f"{cur_w}x{cur_h}+{self.pos_x}+{self.pos_y}")
-
-                radius = round(18 * scale) if (expanding and current_step > 2) else (cur_phys_h // 2)
-                self._apply_native_round_region(cur_phys_w, cur_phys_h, radius)
-
-                self.after(step_duration, lambda: step_anim(current_step + 1))
-            else:
-                self.is_expanded = expanding
-                self._is_animating = False
-                final_phys_w = round(target_w * scale)
-                final_phys_h = round(target_h * scale)
-                self.pos_x = max(0, min(self.screen_width - final_phys_w, anchor_center_x - (final_phys_w // 2)))
-                self.geometry(f"{target_w}x{target_h}+{self.pos_x}+{self.pos_y}")
-                final_radius = round(20 * scale) if expanding else (final_phys_h // 2)
-                self._apply_native_round_region(final_phys_w, final_phys_h, final_radius)
-                self._save_notch_position()
-                if expanding:
-                    self.input_entry.focus_set()
-
-        step_anim(1)
+            self.expand_notch()
 
     def toggle_pin(self):
         self.is_pinned = not self.is_pinned
@@ -755,15 +853,11 @@ class AbhiGlobalTopNotch(ctk.CTk):
         self._bind_drag_and_click(inner, self.expand_notch)
         cf.bind("<Enter>", self._on_compact_hover_enter)
         cf.bind("<Leave>", self._on_compact_hover_leave)
-        inner.bind("<Enter>", self._on_compact_hover_enter)
-        inner.bind("<Leave>", self._on_compact_hover_leave)
 
         # Left: Pulsing Green Dot + ABHI NOTCH
         left_box = ctk.CTkFrame(inner, fg_color="transparent")
         left_box.pack(side="left", fill="y")
         self._bind_drag_and_click(left_box, self.expand_notch)
-        left_box.bind("<Enter>", self._on_compact_hover_enter)
-        left_box.bind("<Leave>", self._on_compact_hover_leave)
 
         self.pill_beacon = ctk.CTkLabel(
             left_box,
@@ -792,8 +886,6 @@ class AbhiGlobalTopNotch(ctk.CTk):
         )
         self.pill_clock_lbl.pack(side="left", expand=True)
         self._bind_drag_and_click(self.pill_clock_lbl, self.expand_notch)
-        self.pill_clock_lbl.bind("<Enter>", self._on_compact_hover_enter)
-        self.pill_clock_lbl.bind("<Leave>", self._on_compact_hover_leave)
 
         self.pill_status_lbl = ctk.CTkLabel(
             inner,
@@ -803,15 +895,11 @@ class AbhiGlobalTopNotch(ctk.CTk):
         )
         self.pill_status_lbl.pack(side="left", padx=2)
         self._bind_drag_and_click(self.pill_status_lbl, self.expand_notch)
-        self.pill_status_lbl.bind("<Enter>", self._on_compact_hover_enter)
-        self.pill_status_lbl.bind("<Leave>", self._on_compact_hover_leave)
 
         # Right: Battery & Chevron
         right_box = ctk.CTkFrame(inner, fg_color="transparent")
         right_box.pack(side="right", fill="y")
         self._bind_drag_and_click(right_box, self.expand_notch)
-        right_box.bind("<Enter>", self._on_compact_hover_enter)
-        right_box.bind("<Leave>", self._on_compact_hover_leave)
 
         self.pill_battery_lbl = ctk.CTkLabel(
             right_box,
@@ -832,54 +920,25 @@ class AbhiGlobalTopNotch(ctk.CTk):
         self._bind_drag_and_click(self.pill_chevron, self.expand_notch)
 
     def _on_compact_hover_enter(self, event=None):
-        if not self.is_expanded and not getattr(self, "_is_animating", False) and not getattr(self, "_has_dragged", False):
-            self.is_hover_extended = True
-            scale = ctk.ScalingTracker.get_window_scaling(self)
-            w = self.hover_extended_w
-            h = self.compact_h
-
-            if getattr(self, "is_notch_docked", True):
-                center_x = self.screen_width // 2
-            else:
-                compact_phys_w = round(self.compact_w * scale)
-                center_x = self.pos_x + (compact_phys_w // 2)
-
-            hover_phys_w = round(w * scale)
-            hover_phys_h = round(h * scale)
-
-            pos_x = max(0, min(self.screen_width - hover_phys_w, center_x - (hover_phys_w // 2)))
-            self.geometry(f"{w}x{h}+{pos_x}+{self.pos_y}")
-            self._apply_native_round_region(hover_phys_w, hover_phys_h, hover_phys_h // 2)
-
+        if not self.is_expanded:
             self.compact_frame.configure(border_color=self.theme.get("border_glow", "#06b6d4"))
             self.pill_chevron.configure(text="▾", font=("Segoe UI", 8, "bold"), text_color=self.theme.get("accent", "#3882f6"))
-            win_snippet = self.active_window_title[:20] if self.active_window_title else "Windows"
-            self.pill_status_lbl.configure(text=f"• 28° Sunny • {win_snippet}")
 
     def _on_compact_hover_leave(self, event=None):
-        if not self.is_expanded and self.is_hover_extended and not getattr(self, "_is_animating", False) and not getattr(self, "_has_dragged", False):
-            self.is_hover_extended = False
-            scale = ctk.ScalingTracker.get_window_scaling(self)
-            w = self.compact_w
-            h = self.compact_h
-
-            if getattr(self, "is_notch_docked", True):
-                center_x = self.screen_width // 2
-            else:
-                hover_phys_w = round(self.hover_extended_w * scale)
-                center_x = self.winfo_x() + (hover_phys_w // 2)
-
-            compact_phys_w = round(w * scale)
-            compact_phys_h = round(h * scale)
-
-            pos_x = max(0, min(self.screen_width - compact_phys_w, center_x - (compact_phys_w // 2)))
-            self.pos_x = pos_x
-            self.geometry(f"{w}x{h}+{self.pos_x}+{self.pos_y}")
-            self._apply_native_round_region(compact_phys_w, compact_phys_h, compact_phys_h // 2)
-
+        if not self.is_expanded:
+            try:
+                x = self.winfo_pointerx()
+                y = self.winfo_pointery()
+                wx = self.winfo_rootx()
+                wy = self.winfo_rooty()
+                ww = self.winfo_width()
+                wh = self.winfo_height()
+                if wx <= x <= wx + ww and wy <= y <= wy + wh:
+                    return
+            except Exception:
+                pass
             self.compact_frame.configure(border_color=self.theme["border"])
             self.pill_chevron.configure(text="▼", font=("Segoe UI", 7), text_color=self.theme["text_muted"])
-            self.pill_status_lbl.configure(text="")
 
     # ==========================================================================
     # 2. EXPANDED NOTCH DECK VIEW (780x420, Ultra Responsive HUD)
@@ -972,16 +1031,17 @@ class AbhiGlobalTopNotch(ctk.CTk):
         self._bind_drag_and_click(header_strip)
         self._bind_drag_and_click(h_left)
 
+        self.header_strip = header_strip
         self.strip_clock_lbl = ctk.CTkLabel(
             h_left,
             text=time.strftime("%I:%M %p"),
-            font=("Segoe UI", 10, "bold"),
-            text_color="#f8fafc"
+            font=("Segoe UI", 9, "bold"),
+            text_color=t.get("text_primary", "#f8fafc")
         )
-        self.strip_clock_lbl.pack(side="left", padx=(0, 6))
+        self.strip_clock_lbl.pack(side="left", padx=(0, 4))
         self._bind_drag_and_click(self.strip_clock_lbl)
 
-        sep1 = ctk.CTkLabel(h_left, text="•", font=("Segoe UI", 9), text_color="#64748b")
+        sep1 = ctk.CTkLabel(h_left, text="•", font=("Segoe UI", 8), text_color=t.get("text_muted", "#64748b"))
         sep1.pack(side="left", padx=2)
 
         self.tag_lbl = ctk.CTkLabel(
@@ -990,22 +1050,10 @@ class AbhiGlobalTopNotch(ctk.CTk):
             font=("Segoe UI", 9, "bold"),
             text_color=t.get("accent", "#3882f6")
         )
-        self.tag_lbl.pack(side="left", padx=4)
+        self.tag_lbl.pack(side="left", padx=3)
         self._bind_drag_and_click(self.tag_lbl)
 
-        sep2 = ctk.CTkLabel(h_left, text="•", font=("Segoe UI", 9), text_color="#64748b")
-        sep2.pack(side="left", padx=2)
-
-        self.weather_lbl = ctk.CTkLabel(
-            h_left,
-            text="28° Sunny",
-            font=("Segoe UI", 9),
-            text_color="#cbd5e1"
-        )
-        self.weather_lbl.pack(side="left", padx=4)
-        self._bind_drag_and_click(self.weather_lbl)
-
-        # Center: High-Tech Tab Pills (Responsive spacing)
+        # Center: High-Tech Tab Pills (Responsive spacing, guaranteed no clipping)
         h_center = ctk.CTkFrame(header_strip, fg_color="transparent")
         h_center.pack(side="left", fill="x", expand=True, padx=4)
 
@@ -1022,19 +1070,21 @@ class AbhiGlobalTopNotch(ctk.CTk):
                 h_center,
                 text=label,
                 font=("Segoe UI", 8, "bold"),
-                height=26,
-                corner_radius=13,
-                fg_color="#ffffff" if tab_key == self.active_tab else "transparent",
-                text_color="#000000" if tab_key == self.active_tab else "#cbd5e1",
-                hover_color="#334155",
+                width=52,
+                height=24,
+                corner_radius=12,
+                fg_color=t["accent"] if tab_key == self.active_tab else "transparent",
+                text_color="#ffffff" if tab_key == self.active_tab else t["text_secondary"],
+                hover_color=t["surface_card"],
                 command=lambda k=tab_key: self.set_tab(k)
             )
             btn.pack(side="left", padx=2)
             self.tab_buttons[tab_key] = btn
 
         # Thin divider
-        div = ctk.CTkFrame(ef, fg_color="#1e293b", height=1)
-        div.pack(fill="x", padx=14, pady=(2, 8))
+        div = ctk.CTkFrame(ef, fg_color=t["border"], height=1)
+        div.pack(fill="x", padx=14, pady=(2, 6))
+        self.header_div = div
 
         # ----------------------------------------------------------------------
         # MAIN BODY CONTAINER (Houses the 6 Tabs)
@@ -1055,7 +1105,7 @@ class AbhiGlobalTopNotch(ctk.CTk):
         # ----------------------------------------------------------------------
         # BOTTOM INPUT & VOICE DISPATCH BAR
         # ----------------------------------------------------------------------
-        input_bar = ctk.CTkFrame(
+        self.input_bar = ctk.CTkFrame(
             ef,
             fg_color=t["surface"],
             border_color=t["border"],
@@ -1063,26 +1113,27 @@ class AbhiGlobalTopNotch(ctk.CTk):
             corner_radius=14,
             height=38
         )
-        input_bar.pack(fill="x", padx=14, pady=(2, 10))
-        input_bar.pack_propagate(False)
+        self.input_bar.pack(fill="x", padx=14, pady=(2, 10))
+        self.input_bar.pack_propagate(False)
 
         self.mic_btn = ctk.CTkButton(
-            input_bar,
+            self.input_bar,
             text="🎙️",
             width=28,
             height=28,
             corner_radius=14,
-            fg_color="#1e293b",
-            hover_color="#334155",
+            fg_color=t["surface_card"],
+            hover_color=t["border"],
+            text_color=t["accent"],
             font=("Segoe UI", 10),
             command=self.toggle_mic
         )
         self.mic_btn.pack(side="left", padx=(6, 4), pady=5)
 
         self.input_entry = ctk.CTkEntry(
-            input_bar,
+            self.input_bar,
             placeholder_text="Talk with Abhi or type command...",
-            placeholder_text_color="#64748b",
+            placeholder_text_color=t["text_muted"],
             font=("Segoe UI", 9),
             fg_color="transparent",
             border_width=0,
@@ -1092,11 +1143,11 @@ class AbhiGlobalTopNotch(ctk.CTk):
         self.input_entry.bind("<Return>", lambda e: self.submit_input())
 
         self.send_btn = ctk.CTkButton(
-            input_bar,
+            self.input_bar,
             text="Send",
             font=("Segoe UI", 8, "bold"),
-            fg_color=t["border"],
-            hover_color=t["border_secondary"],
+            fg_color=t["accent"],
+            hover_color=t["accent_hover"],
             text_color="#ffffff",
             width=58,
             height=26,
@@ -1107,12 +1158,21 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
     def set_tab(self, tab_key: str):
         self.active_tab = tab_key
-        # Update tab pill styles
+        t = self.theme
+        # Update tab pill styles with active theme
         for key, btn in self.tab_buttons.items():
             if key == tab_key:
-                btn.configure(fg_color="#ffffff", text_color="#000000")
+                btn.configure(fg_color=t["accent"], text_color="#ffffff")
             else:
-                btn.configure(fg_color="transparent", text_color="#cbd5e1")
+                btn.configure(fg_color="transparent", text_color=t["text_secondary"], hover_color=t["surface_card"])
+
+        # Update left rail buttons
+        if hasattr(self, "rail_buttons"):
+            for btn, key in self.rail_buttons:
+                if key == tab_key:
+                    btn.configure(fg_color=t["accent"], text_color="#ffffff")
+                else:
+                    btn.configure(fg_color=t["surface"], text_color=t["text_secondary"])
 
         # Switch visible tab frame
         for key, f in self.tab_frames.items():
@@ -1158,134 +1218,168 @@ class AbhiGlobalTopNotch(ctk.CTk):
         # ----------------------------------------------------------------------
         # LEFT CHASSIS: Sunset Artwork + Bot Faceplate (HAPPY) + Nav Rail
         # ----------------------------------------------------------------------
-        left_chassis = ctk.CTkFrame(
+        self.left_chassis = ctk.CTkFrame(
             dual_container,
-            fg_color="#070b14",
+            fg_color=t["surface"],
             corner_radius=16,
             border_width=1,
-            border_color="#1e293b",
+            border_color=t["border"],
             width=240
         )
-        left_chassis.pack(side="left", fill="y", padx=(0, 10))
-        left_chassis.pack_propagate(False)
+        self.left_chassis.pack(side="left", fill="y", padx=(0, 10))
+        self.left_chassis.pack_propagate(False)
 
         # Date & Weather Header Badge
         cur_date_str = time.strftime("%a, %d %b").upper()
-        date_badge = ctk.CTkFrame(left_chassis, fg_color="#0f172a", corner_radius=8, height=26)
-        date_badge.pack(fill="x", padx=10, pady=(10, 6))
-        ctk.CTkLabel(
-            date_badge,
+        self.date_badge = ctk.CTkFrame(self.left_chassis, fg_color=t["surface_card"], corner_radius=8, height=26)
+        self.date_badge.pack(fill="x", padx=10, pady=(8, 4))
+        self.date_badge_lbl = ctk.CTkLabel(
+            self.date_badge,
             text=f"📅  {cur_date_str} / 28° Sunny",
             font=("Segoe UI", 8, "bold"),
-            text_color="#cbd5e1"
-        ).pack(side="left", padx=8)
+            text_color=t["text_secondary"]
+        )
+        self.date_badge_lbl.pack(side="left", padx=8)
 
         # Sunset Ambient Art Card with Pink Glowing Orb & Mountain Silhouettes
-        art_card = ctk.CTkFrame(
-            left_chassis,
-            fg_color="#1a0c14",
+        self.art_card = ctk.CTkFrame(
+            self.left_chassis,
+            fg_color=t["bg"],
             corner_radius=14,
             border_width=1,
-            border_color="#be185d",
-            height=165
+            border_color=t["border_glow"],
+            height=130
         )
-        art_card.pack(fill="x", padx=10, pady=(4, 4))
-        art_card.pack_propagate(False)
+        self.art_card.pack(fill="x", padx=10, pady=(4, 6))
+        self.art_card.pack_propagate(False)
 
         # Celestial Sun Orb
         sun_orb = ctk.CTkLabel(
-            art_card,
+            self.art_card,
             text="●",
-            font=("Segoe UI", 34, "bold"),
+            font=("Segoe UI", 28, "bold"),
             text_color="#f43f5e"
         )
-        sun_orb.place(relx=0.5, rely=0.22, anchor="center")
+        sun_orb.place(relx=0.5, rely=0.20, anchor="center")
 
         # Mountain Silhouette Background
         mountains_lbl = ctk.CTkLabel(
-            art_card,
+            self.art_card,
             text="▲ ▲▲ ▲▲▲ ▲",
-            font=("Segoe UI", 16, "bold"),
+            font=("Segoe UI", 14, "bold"),
             text_color="#090510"
         )
-        mountains_lbl.place(relx=0.5, rely=0.82, anchor="center")
+        mountains_lbl.place(relx=0.5, rely=0.84, anchor="center")
 
         # Expressive Bot Screen Chassis
-        bot_screen = ctk.CTkFrame(
-            art_card,
+        self.bot_screen = ctk.CTkFrame(
+            self.art_card,
             fg_color="#050811",
-            corner_radius=12,
+            corner_radius=10,
             border_width=1.5,
-            border_color="#f97316",
-            width=110,
-            height=74
+            border_color=t["accent"],
+            width=100,
+            height=64
         )
-        bot_screen.place(relx=0.5, rely=0.48, anchor="center")
-        bot_screen.pack_propagate(False)
+        self.bot_screen.place(relx=0.5, rely=0.50, anchor="center")
+        self.bot_screen.pack_propagate(False)
 
         # Smiling Curved Eyes & Mouth
         self.bot_eyes_lbl = ctk.CTkLabel(
-            bot_screen,
+            self.bot_screen,
             text="⌒   ⌒",
-            font=("Segoe UI", 16, "bold"),
+            font=("Segoe UI", 15, "bold"),
             text_color="#fbbf24"
         )
-        self.bot_eyes_lbl.pack(pady=(10, 0))
+        self.bot_eyes_lbl.pack(pady=(6, 0))
 
         self.bot_mouth_lbl = ctk.CTkLabel(
-            bot_screen,
+            self.bot_screen,
             text="‿",
-            font=("Segoe UI", 13, "bold"),
+            font=("Segoe UI", 12, "bold"),
             text_color="#f97316"
         )
         self.bot_mouth_lbl.pack()
 
         # Bold "HAPPY" Tag Below Bot Screen
-        happy_tag = ctk.CTkLabel(
-            art_card,
+        self.happy_tag = ctk.CTkLabel(
+            self.art_card,
             text=" HAPPY ",
-            font=("Segoe UI", 8, "bold"),
+            font=("Segoe UI", 7, "bold"),
             text_color="#ffffff",
             fg_color="#050811",
             corner_radius=6
         )
-        happy_tag.place(relx=0.5, rely=0.74, anchor="center")
+        self.happy_tag.place(relx=0.5, rely=0.76, anchor="center")
 
-        # Bottom Tab Navigation Rail (6 Buttons matching references)
-        tab_rail = ctk.CTkFrame(left_chassis, fg_color="#0d1527", corner_radius=10)
-        tab_rail.pack(side="bottom", fill="x", padx=8, pady=(4, 8))
+        # Bottom Tab Navigation Rail (3 Distinct Rows - No Overlap, Guaranteed Fully Visible)
+        self.tab_rail = ctk.CTkFrame(self.left_chassis, fg_color=t["surface_card"], corner_radius=10)
+        self.tab_rail.pack(side="bottom", fill="x", padx=8, pady=(4, 6))
 
-        rail_row1 = ctk.CTkFrame(tab_rail, fg_color="transparent")
-        rail_row1.pack(fill="x", padx=2, pady=(4, 2))
-        rail_row2 = ctk.CTkFrame(tab_rail, fg_color="transparent")
-        rail_row2.pack(fill="x", padx=2, pady=(2, 4))
+        rail_row1 = ctk.CTkFrame(self.tab_rail, fg_color="transparent")
+        rail_row1.pack(fill="x", padx=4, pady=(4, 2))
+        rail_row2 = ctk.CTkFrame(self.tab_rail, fg_color="transparent")
+        rail_row2.pack(fill="x", padx=4, pady=2)
+        rail_row3 = ctk.CTkFrame(self.tab_rail, fg_color="transparent")
+        rail_row3.pack(fill="x", padx=4, pady=(2, 4))
 
-        quick_tabs = [
-            ("🏠 HOME", "HOME", rail_row1),
-            ("⚙️ CENTER", "CENTER", rail_row1),
-            ("📅 CAL", "CALENDAR", rail_row1),
-            ("♫ MUSIC", "MUSIC", rail_row2),
-            ("⚡ VITALS", "VITALS", rail_row2),
-        ]
-        for lbl, t_key, parent_row in quick_tabs:
+        self.rail_buttons = []
+        rail_items_row1 = [("🏠 HOME", "HOME"), ("⚙️ CENTER", "CENTER")]
+        for lbl, t_key in rail_items_row1:
             btn = ctk.CTkButton(
-                parent_row,
+                rail_row1,
                 text=lbl,
-                font=("Segoe UI", 7, "bold"),
-                height=22,
+                font=("Segoe UI", 8, "bold"),
+                height=24,
                 corner_radius=6,
-                fg_color="#f97316" if t_key == "CENTER" else "#1e293b",
-                text_color="#ffffff" if t_key == "CENTER" else "#cbd5e1",
-                hover_color="#ea580c",
+                fg_color=t["accent"] if t_key == self.active_tab else t["surface"],
+                text_color="#ffffff" if t_key == self.active_tab else t["text_secondary"],
+                hover_color=t["surface_card"],
                 command=lambda k=t_key: self.set_tab(k)
             )
             btn.pack(side="left", fill="x", expand=True, padx=2)
+            self.rail_buttons.append((btn, t_key))
+
+        rail_items_row2 = [("📅 CALENDAR", "CALENDAR"), ("♫ MUSIC", "MUSIC")]
+        for lbl, t_key in rail_items_row2:
+            btn = ctk.CTkButton(
+                rail_row2,
+                text=lbl,
+                font=("Segoe UI", 8, "bold"),
+                height=24,
+                corner_radius=6,
+                fg_color=t["accent"] if t_key == self.active_tab else t["surface"],
+                text_color="#ffffff" if t_key == self.active_tab else t["text_secondary"],
+                hover_color=t["surface_card"],
+                command=lambda k=t_key: self.set_tab(k)
+            )
+            btn.pack(side="left", fill="x", expand=True, padx=2)
+            self.rail_buttons.append((btn, t_key))
+
+        vitals_btn = ctk.CTkButton(
+            rail_row3,
+            text="⚡ SYSTEM VITALS",
+            font=("Segoe UI", 8, "bold"),
+            height=24,
+            corner_radius=6,
+            fg_color=t["accent"] if self.active_tab == "VITALS" else t["surface"],
+            text_color="#ffffff" if self.active_tab == "VITALS" else t["text_secondary"],
+            hover_color=t["surface_card"],
+            command=lambda: self.set_tab("VITALS")
+        )
+        vitals_btn.pack(fill="x", expand=True, padx=2)
+        self.rail_buttons.append((vitals_btn, "VITALS"))
 
         # ----------------------------------------------------------------------
         # RIGHT CHASSIS: Controls, Sliders & Integrated Live Transcription Feed
         # ----------------------------------------------------------------------
         right_chassis = ctk.CTkFrame(dual_container, fg_color="transparent")
         right_chassis.pack(side="left", fill="both", expand=True)
+
+        card_on_fg = t["surface_card"]
+        card_on_text = t["text_primary"]
+        card_off_fg = t["surface"]
+        card_off_text = t["text_muted"]
 
         # 4 Main Control Cards (2x2 Grid - 2 per row for balanced, responsive display)
         grid_frame = ctk.CTkFrame(right_chassis, fg_color="transparent")
@@ -1303,9 +1397,9 @@ class AbhiGlobalTopNotch(ctk.CTk):
             font=("Segoe UI", 9, "bold"),
             height=44,
             corner_radius=12,
-            fg_color="#ffffff",
-            text_color="#0f172a",
-            hover_color="#e2e8f0",
+            fg_color=card_on_fg if self.is_wifi_on else card_off_fg,
+            text_color=card_on_text if self.is_wifi_on else card_off_text,
+            hover_color=t["border_secondary"],
             command=self.toggle_wifi
         )
         self.wifi_card.pack(side="left", fill="x", expand=True, padx=(0, 3))
@@ -1316,9 +1410,9 @@ class AbhiGlobalTopNotch(ctk.CTk):
             font=("Segoe UI", 9, "bold"),
             height=44,
             corner_radius=12,
-            fg_color="#ffffff",
-            text_color="#0f172a",
-            hover_color="#e2e8f0",
+            fg_color=card_on_fg if self.is_bt_on else card_off_fg,
+            text_color=card_on_text if self.is_bt_on else card_off_text,
+            hover_color=t["border_secondary"],
             command=self.toggle_bluetooth
         )
         self.bt_card.pack(side="right", fill="x", expand=True, padx=(3, 0))
@@ -1330,9 +1424,9 @@ class AbhiGlobalTopNotch(ctk.CTk):
             font=("Segoe UI", 9, "bold"),
             height=44,
             corner_radius=12,
-            fg_color="#0d1527",
-            text_color="#f8fafc",
-            hover_color="#1e293b",
+            fg_color=card_on_fg if self.is_dnd_on else card_off_fg,
+            text_color=card_on_text if self.is_dnd_on else card_off_text,
+            hover_color=t["border_secondary"],
             command=self.toggle_dnd
         )
         self.dnd_card.pack(side="left", fill="x", expand=True, padx=(0, 3))
@@ -1343,62 +1437,62 @@ class AbhiGlobalTopNotch(ctk.CTk):
             font=("Segoe UI", 9, "bold"),
             height=44,
             corner_radius=12,
-            fg_color="#ffffff",
-            text_color="#0f172a",
-            hover_color="#e2e8f0",
+            fg_color=card_on_fg,
+            text_color=card_on_text,
+            hover_color=t["border_secondary"],
             command=self.toggle_pin
         )
         self.notch_mode_card.pack(side="right", fill="x", expand=True, padx=(3, 0))
 
         # Sliders Section (Volume & Brightness)
-        sliders_box = ctk.CTkFrame(right_chassis, fg_color="#0d1527", corner_radius=12, border_width=1, border_color="#1a2333")
-        sliders_box.pack(fill="x", pady=(2, 6), padx=0)
+        self.sliders_box = ctk.CTkFrame(right_chassis, fg_color=t["surface"], corner_radius=12, border_width=1, border_color=t["border"])
+        self.sliders_box.pack(fill="x", pady=(2, 6), padx=0)
 
         # Volume Row
-        vol_row = ctk.CTkFrame(sliders_box, fg_color="transparent")
+        vol_row = ctk.CTkFrame(self.sliders_box, fg_color="transparent")
         vol_row.pack(fill="x", padx=12, pady=(6, 2))
-        vol_lbl = ctk.CTkLabel(vol_row, text="🔊 Volume", font=("Segoe UI", 8, "bold"), text_color="#cbd5e1", width=75, anchor="w")
-        vol_lbl.pack(side="left")
-        self.vol_slider = ctk.CTkSlider(vol_row, from_=0, to=100, number_of_steps=100, command=self._on_volume_change)
+        self.vol_lbl = ctk.CTkLabel(vol_row, text="🔊 Volume", font=("Segoe UI", 8, "bold"), text_color=t["text_secondary"], width=75, anchor="w")
+        self.vol_lbl.pack(side="left")
+        self.vol_slider = ctk.CTkSlider(vol_row, from_=0, to=100, number_of_steps=100, command=self._on_volume_change, button_color=t["accent"], progress_color=t["accent"])
         self.vol_slider.set(self.current_volume)
         self.vol_slider.pack(side="left", fill="x", expand=True, padx=8)
-        self.vol_val_lbl = ctk.CTkLabel(vol_row, text=f"{self.current_volume}%", font=("Segoe UI", 8, "bold"), text_color="#f8fafc", width=34)
+        self.vol_val_lbl = ctk.CTkLabel(vol_row, text=f"{self.current_volume}%", font=("Segoe UI", 8, "bold"), text_color=t["text_primary"], width=34)
         self.vol_val_lbl.pack(side="right")
 
         # Brightness Row
-        bri_row = ctk.CTkFrame(sliders_box, fg_color="transparent")
+        bri_row = ctk.CTkFrame(self.sliders_box, fg_color="transparent")
         bri_row.pack(fill="x", padx=12, pady=(2, 6))
-        bri_lbl = ctk.CTkLabel(bri_row, text="☀️ Brightness", font=("Segoe UI", 8, "bold"), text_color="#cbd5e1", width=75, anchor="w")
-        bri_lbl.pack(side="left")
-        self.bri_slider = ctk.CTkSlider(bri_row, from_=10, to=100, number_of_steps=90, command=self._on_brightness_change)
+        self.bri_lbl = ctk.CTkLabel(bri_row, text="☀️ Brightness", font=("Segoe UI", 8, "bold"), text_color=t["text_secondary"], width=75, anchor="w")
+        self.bri_lbl.pack(side="left")
+        self.bri_slider = ctk.CTkSlider(bri_row, from_=10, to=100, number_of_steps=90, command=self._on_brightness_change, button_color=t["accent"], progress_color=t["accent"])
         self.bri_slider.set(self.current_brightness)
         self.bri_slider.pack(side="left", fill="x", expand=True, padx=8)
-        self.bri_val_lbl = ctk.CTkLabel(bri_row, text=f"{self.current_brightness}%", font=("Segoe UI", 8, "bold"), text_color="#f8fafc", width=34)
+        self.bri_val_lbl = ctk.CTkLabel(bri_row, text=f"{self.current_brightness}%", font=("Segoe UI", 8, "bold"), text_color=t["text_primary"], width=34)
         self.bri_val_lbl.pack(side="right")
 
         # Integrated Real-Time Transcription Chat Feed (Image 1 Style)
-        chat_box = ctk.CTkFrame(right_chassis, fg_color="#070b14", corner_radius=12, border_width=1, border_color="#1e293b")
-        chat_box.pack(fill="both", expand=True, pady=(2, 0))
+        self.chat_box = ctk.CTkFrame(right_chassis, fg_color=t["surface"], corner_radius=12, border_width=1, border_color=t["border"])
+        self.chat_box.pack(fill="both", expand=True, pady=(2, 0))
 
-        chat_hdr = ctk.CTkFrame(chat_box, fg_color="#0f172a", corner_radius=8, height=24)
-        chat_hdr.pack(fill="x", padx=8, pady=(6, 4))
+        self.chat_hdr = ctk.CTkFrame(self.chat_box, fg_color=t["surface_card"], corner_radius=8, height=24)
+        self.chat_hdr.pack(fill="x", padx=8, pady=(6, 4))
         ctk.CTkLabel(
-            chat_hdr,
+            self.chat_hdr,
             text="● REAL-TIME TRANSCRIPTION",
             font=("Segoe UI", 8, "bold"),
             text_color="#ef4444"
         ).pack(side="left", padx=8)
         ctk.CTkLabel(
-            chat_hdr,
+            self.chat_hdr,
             text="● LIVE STREAM",
             font=("Segoe UI", 7, "bold"),
             text_color="#22c55e"
         ).pack(side="right", padx=8)
 
         self.chat_display = ctk.CTkTextbox(
-            chat_box,
+            self.chat_box,
             fg_color="transparent",
-            text_color="#cbd5e1",
+            text_color=t["text_primary"],
             font=("Segoe UI", 8),
             wrap="word"
         )
@@ -1407,25 +1501,28 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
     def toggle_wifi(self):
         self.is_wifi_on = not self.is_wifi_on
+        t = self.theme
         if self.is_wifi_on:
-            self.wifi_card.configure(fg_color="#ffffff", text_color="#0f172a", text="📶  Wi-Fi\nConnected · 5GHz")
+            self.wifi_card.configure(fg_color=t["surface_card"], text_color=t["text_primary"], text="📶  Wi-Fi\nConnected · 5GHz")
         else:
-            self.wifi_card.configure(fg_color="#0d1527", text_color="#94a3b8", text="📶  Wi-Fi\nDisconnected")
+            self.wifi_card.configure(fg_color=t["surface"], text_color=t["text_muted"], text="📶  Wi-Fi\nDisconnected")
         subprocess.Popen(["cmd.exe", "/c", "start", "ms-settings:network-wifi"])
 
     def toggle_dnd(self):
         self.is_dnd_on = not self.is_dnd_on
+        t = self.theme
         if self.is_dnd_on:
-            self.dnd_card.configure(fg_color="#ffffff", text_color="#0f172a", text="🌙  DND Mode\nDo Not Disturb")
+            self.dnd_card.configure(fg_color=t["surface_card"], text_color=t["text_primary"], text="🌙  DND Mode\nDo Not Disturb")
         else:
-            self.dnd_card.configure(fg_color="#0d1527", text_color="#f8fafc", text="🌙  DND Mode\nAlerts Active")
+            self.dnd_card.configure(fg_color=t["surface"], text_color=t["text_muted"], text="🌙  DND Mode\nAlerts Active")
 
     def toggle_bluetooth(self):
         self.is_bt_on = not self.is_bt_on
+        t = self.theme
         if self.is_bt_on:
-            self.bt_card.configure(fg_color="#ffffff", text_color="#0f172a", text="🔊  Bluetooth\nOn · Audio Sync")
+            self.bt_card.configure(fg_color=t["surface_card"], text_color=t["text_primary"], text="🔊  Bluetooth\nOn · Audio Sync")
         else:
-            self.bt_card.configure(fg_color="#0d1527", text_color="#94a3b8", text="🔊  Bluetooth\nOff")
+            self.bt_card.configure(fg_color=t["surface"], text_color=t["text_muted"], text="🔊  Bluetooth\nOff")
         subprocess.Popen(["cmd.exe", "/c", "start", "ms-settings:bluetooth"])
 
     def toggle_night_light(self):
@@ -2106,6 +2203,18 @@ class AbhiGlobalTopNotch(ctk.CTk):
                     b_txt = f"⚡ {bp}%"
                     self.pill_battery_lbl.configure(text=b_txt)
                     self.strip_battery_lbl.configure(text=b_txt)
+            except Exception:
+                pass
+
+            # Dynamic Theme Auto-Sync with External Project Config
+            try:
+                theme_file = os.path.join(APP_ROOT, "project_data", "desktop", "notch_theme.json")
+                if os.path.exists(theme_file):
+                    with open(theme_file, "r", encoding="utf-8") as f:
+                        th_data = json.load(f)
+                        saved_th = th_data.get("theme")
+                        if saved_th and saved_th != self.current_theme_key and saved_th in THEMES:
+                            self.set_theme(saved_th)
             except Exception:
                 pass
 
