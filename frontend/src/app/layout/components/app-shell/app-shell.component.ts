@@ -4,7 +4,6 @@ import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs/operators';
 import { ContextualTopbarComponent } from '../contextual-topbar/contextual-topbar.component';
-import { AbhiNotchComponent } from '../abhi-notch/abhi-notch.component';
 import { ConsentModalComponent } from '../../../features/operator-console/components/consent-modal/consent-modal.component';
 import { CommandPaletteComponent } from '../../../shared/ui/command-palette/command-palette.component';
 import { WorkspaceLockScreenComponent } from '../../../features/perception/components/workspace-lock-screen/workspace-lock-screen.component';
@@ -18,7 +17,6 @@ import { SpatialEnvironmentMode } from '../../../core/models/agent-experience.mo
     CommonModule,
     RouterModule,
     ContextualTopbarComponent,
-    AbhiNotchComponent,
     ConsentModalComponent,
     CommandPaletteComponent,
     WorkspaceLockScreenComponent
