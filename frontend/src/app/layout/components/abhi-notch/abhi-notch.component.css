@@ -2415,3 +2415,497 @@
 .wide-apps-grid {
   grid-template-columns: repeat(6, 1fr) !important;
 }
+
+/* ========================================================================= */
+/* VITALS: LIVE APP SCREEN-TIME & DATA USAGE TELEMETRY (Fills Empty Space)   */
+/* ========================================================================= */
+
+.vitals-bottom-analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 6px;
+  width: 100%;
+}
+
+.vitals-analytics-card {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.analytics-card-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 6px;
+}
+
+.app-usage-rows-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.app-usage-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.app-usage-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+}
+
+.app-row-icon {
+  font-size: 12px;
+}
+
+.app-row-name {
+  flex: 1;
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.app-row-time {
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+.app-usage-bar-track {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.app-usage-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 300ms ease;
+}
+
+.network-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  text-align: center;
+}
+
+.net-metric-box {
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  padding: 6px 4px;
+  gap: 2px;
+}
+
+.net-metric-label {
+  font-size: 8px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.net-metric-val {
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.network-sparkline-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.sparkline-title {
+  font-size: 8px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.sparkline-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 32px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.sparkline-bar-col {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.sparkline-bar {
+  width: 100%;
+  background: linear-gradient(to top, #0284c7, #38bdf8);
+  border-radius: 2px 2px 0 0;
+  transition: height 300ms ease;
+}
+
+/* ========================================================================= */
+/* TAB 5: HOME DECK (Fenn.click / Vayli Notch - Exact Match to Image 2!)     */
+/* ========================================================================= */
+
+.home-deck-image2 {
+  width: 100%;
+  height: 340px;
+  overflow: hidden;
+}
+
+.home-deck-grid {
+  display: grid;
+  grid-template-columns: 180px 220px 200px 180px;
+  gap: 12px;
+  height: 100%;
+  align-items: stretch;
+}
+
+.home-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+}
+
+.home-tile {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  transition: all 180ms ease;
+}
+
+.home-tile:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.tile-header-mini {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.tile-micro-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.tile-micro-btn:hover {
+  color: #ffffff;
+}
+
+/* Tile 1: Timer */
+.tile-timer {
+  flex: 1.6;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dial-timer-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dial-circle-graphic {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 3px solid rgba(168, 85, 247, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.15);
+}
+
+.dial-digits {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.dial-bottom-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-micro-step {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-micro-play {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #a855f7;
+  border: none;
+  color: #ffffff;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.4);
+}
+
+/* Tile 2: Coffee Always */
+.tile-coffee {
+  flex: 1;
+  flex-direction: row !important;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.coffee-content-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.coffee-title-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.coffee-subtag {
+  font-size: 9px;
+  color: #94a3b8;
+}
+
+.coffee-toggle-pill {
+  width: 38px;
+  height: 20px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.12);
+  position: relative;
+  transition: all 200ms ease;
+}
+
+.coffee-toggle-pill .toggle-knob {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: all 200ms ease;
+}
+
+.coffee-toggle-pill.active {
+  background: #f97316;
+}
+
+.coffee-toggle-pill.active .toggle-knob {
+  left: 20px;
+  background: #ffffff;
+}
+
+/* Tile 3: Mini Music Player */
+.tile-mini-music {
+  flex: 1.3;
+  justify-content: space-between;
+}
+
+.mini-music-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mini-track-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.mini-track-artist {
+  font-size: 9px;
+  color: #94a3b8;
+}
+
+.mini-music-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}
+
+.mini-ctrl-action {
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.mini-ctrl-action.play-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+/* Tile 4: Notes */
+.tile-notes {
+  flex: 1;
+  justify-content: space-between;
+}
+
+.notes-scratch-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 11px;
+  color: #cbd5e1;
+  font-family: inherit;
+}
+
+/* Tile 5: Clipboard */
+.tile-clipboard {
+  flex: 1;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.clipboard-preview-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clip-highlight-card {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.clip-highlight-text {
+  font-size: 11px;
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.clip-highlight-time {
+  font-size: 9px;
+  color: #64748b;
+}
+
+.clipboard-footer-meta {
+  font-size: 9px;
+  color: #64748b;
+}
+
+/* Tile 6: 2x4 Tool Grid (Matches Image 2 Exact Grid!) */
+.col-tools-2x4 {
+  height: 100%;
+}
+
+.tools-grid-2x4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(4, 1fr);
+  gap: 8px;
+  height: 100%;
+}
+
+.tool-tile-btn {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #cbd5e1;
+  cursor: pointer;
+  position: relative;
+  transition: all 160ms ease;
+}
+
+.tool-tile-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.tool-tile-btn:active {
+  transform: scale(0.95);
+}
+
+.tile-text-bold {
+  font-size: 13px;
+  font-weight: 800;
+  color: #cbd5e1;
+}
+
+.tile-icon-glyph {
+  font-size: 15px;
+}
+
+.dot-online-green {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+}

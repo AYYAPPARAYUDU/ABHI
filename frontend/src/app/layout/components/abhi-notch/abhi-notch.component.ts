@@ -17,7 +17,7 @@ import { SpeechVoiceService } from '../../../core/services/speech-voice.service'
 import { AgentCommandService } from '../../../core/services/agent-command.service';
 import { getApiUrl } from '../../../core/config/api-config';
 
-export type NotchTab = 'CENTER' | 'CALENDAR' | 'MUSIC' | 'VITALS' | 'SHELF' | 'APPS';
+export type NotchTab = 'HOME' | 'CENTER' | 'CALENDAR' | 'MUSIC' | 'VITALS';
 export type BotMood = 'happy' | 'focus' | 'listening' | 'singing' | 'proud' | 'sleep';
 
 export interface NotchChatMessage {
@@ -87,6 +87,23 @@ export class AbhiNotchComponent implements OnInit, OnDestroy {
   readonly botMood = signal<BotMood>('happy');
   private hoverTimer: any = null;
 
+  // Coffee Always / Caffeine Toggle (Image 2)
+  readonly isCoffeeAlwaysOn = signal<boolean>(false);
+
+  // App Screen-Time History (For VITALS lower space)
+  readonly appUsageBreakdown = signal<Array<{ name: string; icon: string; time: string; percent: number; color: string }>>([
+    { name: 'Visual Studio Code', icon: '💻', time: '2h 45m', percent: 58, color: '#38bdf8' },
+    { name: 'Google Chrome', icon: '🌐', time: '1h 12m', percent: 25, color: '#f97316' },
+    { name: 'Windows Terminal', icon: '⌨️', time: '28m', percent: 10, color: '#a855f7' },
+    { name: 'Audio & Spotify Core', icon: '♫', time: '18m', percent: 7, color: '#22c55e' }
+  ]);
+
+  // Live Data & Network Telemetry (For VITALS lower space)
+  readonly downloadSpeed = signal<string>('2.4 MB/s');
+  readonly uploadSpeed = signal<string>('480 KB/s');
+  readonly totalDataSession = signal<string>('1.84 GB');
+  readonly networkSparkline = signal<number[]>([35, 65, 40, 85, 55, 95, 75, 88]);
+
   // Integrated Chat & Voice Assistant (For CENTER Tab)
   readonly chatInput = signal<string>('');
   readonly isSendingChat = signal<boolean>(false);
@@ -134,10 +151,16 @@ export class AbhiNotchComponent implements OnInit, OnDestroy {
     category: 'AI SYNC'
   });
 
-  // Scheduler Countdown Timer
-  readonly timerRemaining = signal<number>(0);
+  // Scheduler Countdown Timer (Defaults to 25:00 Focus Session)
+  readonly timerRemaining = signal<number>(25 * 60);
   readonly isTimerRunning = signal<boolean>(false);
   private timerInterval: any = null;
+
+  stepTimer(deltaMinutes: number): void {
+    const cur = this.timerRemaining();
+    const next = Math.max(0, cur + deltaMinutes * 60);
+    this.timerRemaining.set(next);
+  }
 
   // Active Scheduled Automations
   readonly automationToast = signal<string | null>(null);
@@ -441,6 +464,7 @@ export class AbhiNotchComponent implements OnInit, OnDestroy {
     }
     this.isExpanded.set(true);
     this.isHoverExtended.set(false);
+    this.activeTab.set('CENTER'); // Always default to CENTER tab as requested by Mamu!
   }
 
   closeDeck(): void {
@@ -603,13 +627,24 @@ export class AbhiNotchComponent implements OnInit, OnDestroy {
     this.isBatterySaverActive.update(v => !v);
   }
 
+  toggleCoffeeAlways(): void {
+    this.isCoffeeAlwaysOn.update(v => !v);
+    const enabled = this.isCoffeeAlwaysOn();
+    const state = enabled ? 'ON (Awake)' : 'OFF';
+    this.speechService.speak(`Coffee keep-awake mode ${state}, Mamu.`);
+    this.http.post(getApiUrl('/api/v1/desktop/quick-action'), {
+      action: 'coffee_always',
+      params: { enabled }
+    }).subscribe({ next: () => {}, error: () => {} });
+  }
+
   openLaptopSettings(): void {
-    try {
-      if (typeof window !== 'undefined') {
-        window.open('ms-settings:', '_self');
+    this.http.post(getApiUrl('/api/v1/desktop/quick-action'), { action: 'open_settings' }).subscribe({
+      next: () => {},
+      error: () => {
+        this.agentCommand.submitCommand('open settings');
       }
-    } catch {}
-    this.agentCommand.submitCommand('open settings');
+    });
   }
 
   openDashboard(route: string): void {
@@ -1026,8 +1061,16 @@ export class AbhiNotchComponent implements OnInit, OnDestroy {
   }
 
   launchApp(appType: string): void {
-    this.agentCommand.submitCommand(`open ${appType}`);
-    this.isExpanded.set(false);
+    if (appType === 'settings') {
+      this.openLaptopSettings();
+      return;
+    }
+    this.http.post(getApiUrl('/api/v1/desktop/quick-action'), { action: `open_${appType}` }).subscribe({
+      next: () => {},
+      error: () => {
+        this.agentCommand.submitCommand(`open ${appType}`);
+      }
+    });
   }
 
   // =========================================================================

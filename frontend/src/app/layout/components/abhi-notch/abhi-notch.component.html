@@ -42,8 +42,10 @@
             <span class="bullet-sep">•</span>
             @if (isPlaying()) {
               <span class="music-cut">♫ {{ trackTitle() }}</span>
+            } @else if (isTimerRunning()) {
+              <span class="status-cut">⏱ {{ formattedTimer() }} Focus Session</span>
             } @else {
-              <span class="status-cut">ABHI NOTCH · CLICK TO OPEN</span>
+              <span class="status-cut">ABHI OS • VS Code</span>
             }
             <span class="bullet-sep">•</span>
             <span class="weather-cut">{{ weatherTemp() }} {{ weatherCondition() }}</span>
@@ -74,7 +76,7 @@
       <!-- Right: Battery & Expand Chevron -->
       <div class="pill-actions-right font-mono">
         <span class="battery-label">⚡ {{ batteryPercent() }}%</span>
-        <span class="pill-chevron-btn">{{ isHoverExtended() ? 'CLICK TO OPEN ▾' : '▼' }}</span>
+        <span class="pill-chevron-btn">▾</span>
       </div>
     </div>
   }
@@ -99,6 +101,17 @@
 
         <!-- Center: Universal High-Tech Tab Pills -->
         <nav class="island-top-tabs-nav font-mono" aria-label="Notch Tabs">
+          <button
+            type="button"
+            class="top-tab-pill"
+            [class.active]="activeTab() === 'HOME'"
+            (click)="setTab('HOME')"
+            title="Notch Home Deck"
+          >
+            <span class="tab-glyph">🏠</span>
+            <span class="tab-text">Home</span>
+          </button>
+
           <button
             type="button"
             class="top-tab-pill"
@@ -137,32 +150,10 @@
             class="top-tab-pill"
             [class.active]="activeTab() === 'VITALS'"
             (click)="setTab('VITALS')"
-            title="System Hardware Vitals"
+            title="System Hardware & Data Vitals"
           >
             <span class="tab-glyph">⚡</span>
             <span class="tab-text">Vitals</span>
-          </button>
-
-          <button
-            type="button"
-            class="top-tab-pill"
-            [class.active]="activeTab() === 'SHELF'"
-            (click)="setTab('SHELF')"
-            title="Clipboard & Quick Notes"
-          >
-            <span class="tab-glyph">📋</span>
-            <span class="tab-text">Shelf</span>
-          </button>
-
-          <button
-            type="button"
-            class="top-tab-pill"
-            [class.active]="activeTab() === 'APPS'"
-            (click)="setTab('APPS')"
-            title="Quick Apps Launcher"
-          >
-            <span class="tab-glyph">🚀</span>
-            <span class="tab-text">Apps</span>
           </button>
         </nav>
 
@@ -256,6 +247,9 @@
 
                 <!-- Bottom Tab Nav Rail (from Reference Image) -->
                 <div class="bottom-tab-rail font-mono">
+                  <button type="button" class="tab-chip" [class.active]="activeTab() === 'HOME'" (click)="setTab('HOME')">
+                    <span class="chip-glyph">🏠</span><span class="chip-label">HOME</span>
+                  </button>
                   <button type="button" class="tab-chip" [class.active]="activeTab() === 'CENTER'" (click)="setTab('CENTER')">
                     <span class="chip-glyph">⚙️</span><span class="chip-label">CENTER</span>
                   </button>
@@ -267,12 +261,6 @@
                   </button>
                   <button type="button" class="tab-chip" [class.active]="activeTab() === 'VITALS'" (click)="setTab('VITALS')">
                     <span class="chip-glyph">⚡</span><span class="chip-label">VITALS</span>
-                  </button>
-                  <button type="button" class="tab-chip" [class.active]="activeTab() === 'SHELF'" (click)="setTab('SHELF')">
-                    <span class="chip-glyph">📋</span><span class="chip-label">SHELF</span>
-                  </button>
-                  <button type="button" class="tab-chip" [class.active]="activeTab() === 'APPS'" (click)="setTab('APPS')">
-                    <span class="chip-glyph">🚀</span><span class="chip-label">APPS</span>
                   </button>
                 </div>
               </div>
@@ -681,80 +669,202 @@
                   <button type="button" class="tray-icon" (click)="setTab('CALENDAR')" title="Calendar">📅</button>
                 </div>
               </div>
-            </div>
-          }
 
-          <!-- =============================================================== -->
-          <!-- TAB 5: VAYLI CLIPBOARD & NOTES SHELF                            -->
-          <!-- =============================================================== -->
-          @if (activeTab() === 'SHELF') {
-            <div class="module-content shelf-module wide-shelf animate-fade-in">
-              @if (copyFeedback()) {
-                <div class="shelf-copy-toast font-mono animate-fade-in">
-                  ✓ {{ copyFeedback() }}
-                </div>
-              }
-
-              <div class="shelf-note-input-row">
-                <input
-                  type="text"
-                  class="shelf-input"
-                  placeholder="Type a quick note or link to store on Shelf..."
-                  [ngModel]="quickNoteInput()"
-                  (ngModelChange)="quickNoteInput.set($event)"
-                  (keydown.enter)="saveQuickNote()"
-                />
-                <button type="button" class="btn-save-note font-mono" (click)="saveQuickNote()">SAVE</button>
-              </div>
-
-              <div class="shelf-clips-list wide-clips-list">
-                @for (item of clipboardHistory(); track item.id) {
-                  <div class="shelf-clip-card" (click)="copyToClipboard(item)" title="Click to copy">
-                    <span class="clip-icon">📋</span>
-                    <span class="clip-text text-truncate">{{ item.text }}</span>
-                    <span class="clip-time font-mono">{{ item.timeAgo }}</span>
-                    <button type="button" class="clip-copy-glyph" aria-label="Copy">⎘</button>
+              <!-- Live Application Usage & Network Data History (Fills Empty Space in Vitals!) -->
+              <div class="vitals-bottom-analytics-grid font-mono animate-fade-in">
+                <!-- Left: Application Usage & Screen-Time History -->
+                <div class="vitals-analytics-card">
+                  <div class="analytics-card-title">
+                    <span class="card-title-text">⏱ APPLICATION SCREEN-TIME BREAKDOWN</span>
+                    <span class="live-tag text-green">● LIVE</span>
                   </div>
-                }
+                  <div class="app-usage-rows-container">
+                    @for (app of appUsageBreakdown(); track app.name) {
+                      <div class="app-usage-row">
+                        <div class="app-usage-info">
+                          <span class="app-row-icon">{{ app.icon }}</span>
+                          <span class="app-row-name text-truncate">{{ app.name }}</span>
+                          <span class="app-row-time">{{ app.time }}</span>
+                        </div>
+                        <div class="app-usage-bar-track">
+                          <div class="app-usage-bar-fill" [style.width.%]="app.percent" [style.background-color]="app.color"></div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Right: Live Data Usage & Bandwidth Telemetry -->
+                <div class="vitals-analytics-card">
+                  <div class="analytics-card-title">
+                    <span class="card-title-text">📶 LIVE DATA USAGE & NETWORK TELEMETRY</span>
+                    <span class="rate-badge">Wi-Fi · 5GHz</span>
+                  </div>
+                  <div class="network-stats-row">
+                    <div class="net-metric-box">
+                      <span class="net-metric-label">DOWNLOAD</span>
+                      <span class="net-metric-val text-cyan">↓ {{ downloadSpeed() }}</span>
+                    </div>
+                    <div class="net-metric-box">
+                      <span class="net-metric-label">UPLOAD</span>
+                      <span class="net-metric-val text-orange">↑ {{ uploadSpeed() }}</span>
+                    </div>
+                    <div class="net-metric-box">
+                      <span class="net-metric-label">SESSION TOTAL</span>
+                      <span class="net-metric-val text-purple">{{ totalDataSession() }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Real-Time Bandwidth Histogram / Sparkline -->
+                  <div class="network-sparkline-box">
+                    <div class="sparkline-title">TRAFFIC THROUGHPUT (REAL-TIME STREAM)</div>
+                    <div class="sparkline-bars">
+                      @for (h of networkSparkline(); track $index) {
+                        <div class="sparkline-bar-col">
+                          <div class="sparkline-bar" [style.height.%]="h"></div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           }
 
           <!-- =============================================================== -->
-          <!-- TAB 6: QUICK APPS TRAY                                          -->
+          <!-- TAB 5: HOME DECK (Fenn.click / Vayli Notch - Exact Match to Image 2!) -->
           <!-- =============================================================== -->
-          @if (activeTab() === 'APPS') {
-            <div class="module-content apps-module wide-apps animate-fade-in">
-              <div class="apps-grid wide-apps-grid">
-                <button type="button" class="app-launch-card" (click)="launchApp('youtube')">
-                  <span class="app-icon">▶</span>
-                  <span class="app-name font-mono">YouTube</span>
-                </button>
+          @if (activeTab() === 'HOME') {
+            <div class="module-content home-deck-image2 animate-fade-in font-mono">
+              <div class="home-deck-grid">
+                <!-- Col 1: Timer Card & Coffee Always Toggle -->
+                <div class="home-col col-timer-coffee">
+                  <!-- Card 1: Dial Timer -->
+                  <div class="home-tile tile-timer">
+                    <div class="tile-header-mini">
+                      <span class="tile-glyph-tag">⏱ Timer</span>
+                      <button type="button" class="tile-micro-btn" (click)="resetTimer()" title="Reset">↻</button>
+                    </div>
+                    <div class="dial-timer-center">
+                      <div class="dial-circle-graphic">
+                        <span class="dial-ring-pulse" [class.running]="isTimerRunning()"></span>
+                        <span class="dial-digits">{{ formattedTimer() }}</span>
+                      </div>
+                    </div>
+                    <div class="dial-bottom-actions">
+                      <button type="button" class="btn-micro-step" (click)="stepTimer(-5)" title="Subtract 5 Minutes">-</button>
+                      <button type="button" class="btn-micro-play" (click)="isTimerRunning() ? pauseTimer() : startTimer()" title="Start/Pause Timer">
+                        {{ isTimerRunning() ? '❚❚' : '▶' }}
+                      </button>
+                      <button type="button" class="btn-micro-step" (click)="stepTimer(5)" title="Add 5 Minutes">+</button>
+                    </div>
+                  </div>
 
-                <button type="button" class="app-launch-card" (click)="launchApp('whatsapp')">
-                  <span class="app-icon">💬</span>
-                  <span class="app-name font-mono">WhatsApp</span>
-                </button>
+                  <!-- Card 2: Coffee Always Keep-Awake Switch -->
+                  <div class="home-tile tile-coffee" (click)="toggleCoffeeAlways()" title="Toggle Coffee Keep-Awake Mode">
+                    <div class="coffee-content-left">
+                      <div class="coffee-title-line">
+                        <span class="coffee-glyph">☕</span>
+                        <span class="coffee-title">Coffee</span>
+                      </div>
+                      <span class="coffee-subtag">{{ isCoffeeAlwaysOn() ? 'Always Awake' : 'Normal Sleep' }}</span>
+                    </div>
+                    <div class="coffee-toggle-pill" [class.active]="isCoffeeAlwaysOn()">
+                      <span class="toggle-knob"></span>
+                    </div>
+                  </div>
+                </div>
 
-                <button type="button" class="app-launch-card" (click)="launchApp('gmail')">
-                  <span class="app-icon">✉️</span>
-                  <span class="app-name font-mono">Gmail</span>
-                </button>
+                <!-- Col 2: Late Night Focus Mix Player & Notes Scratchpad -->
+                <div class="home-col col-music-notes">
+                  <!-- Card 3: Mini Music Track -->
+                  <div class="home-tile tile-mini-music">
+                    <div class="tile-header-mini">
+                      <span class="tile-glyph-tag">♫</span>
+                      <span class="tile-time-tag">{{ formattedCurrentTime() }} / {{ formattedRemainingTime() }}</span>
+                    </div>
+                    <div class="mini-music-meta">
+                      <div class="mini-track-name text-truncate">{{ trackTitle() }}</div>
+                      <div class="mini-track-artist text-truncate">{{ trackArtist() }} · Lo-Fi Radio</div>
+                    </div>
+                    <div class="mini-music-actions">
+                      <button type="button" class="mini-ctrl-action" (click)="prevTrack()" title="Previous">⏮</button>
+                      <button type="button" class="mini-ctrl-action play-btn" (click)="togglePlay()" title="Play/Pause">
+                        {{ isPlaying() ? '❚❚' : '▶' }}
+                      </button>
+                      <button type="button" class="mini-ctrl-action" (click)="nextTrack()" title="Next">⏭</button>
+                    </div>
+                  </div>
 
-                <button type="button" class="app-launch-card" (click)="launchApp('github')">
-                  <span class="app-icon">🐙</span>
-                  <span class="app-name font-mono">GitHub</span>
-                </button>
+                  <!-- Card 4: Quick Notes Scratchpad -->
+                  <div class="home-tile tile-notes">
+                    <div class="tile-header-mini">
+                      <span class="tile-glyph-tag">📝 Notes</span>
+                    </div>
+                    <input
+                      type="text"
+                      class="notes-scratch-input"
+                      placeholder="Write something..."
+                      [ngModel]="quickNoteInput()"
+                      (ngModelChange)="quickNoteInput.set($event)"
+                      (keydown.enter)="saveQuickNote()"
+                    />
+                  </div>
+                </div>
 
-                <button type="button" class="app-launch-card" (click)="launchApp('terminal')">
-                  <span class="app-icon">⌨️</span>
-                  <span class="app-name font-mono">Terminal</span>
-                </button>
+                <!-- Col 3: Clipboard Shelf -->
+                <div class="home-col col-clipboard">
+                  <div class="home-tile tile-clipboard">
+                    <div class="tile-header-mini">
+                      <span class="tile-glyph-tag">📋 Clipboard</span>
+                      <span class="tile-action-glyph">↗</span>
+                    </div>
+                    <div class="clipboard-preview-area">
+                      @if (clipboardHistory().length > 0) {
+                        <div class="clip-highlight-card" (click)="copyClip(clipboardHistory()[0])" title="Click to copy">
+                          <span class="clip-highlight-text text-truncate">{{ clipboardHistory()[0].text }}</span>
+                          <span class="clip-highlight-time">{{ clipboardHistory()[0].timeAgo }}</span>
+                        </div>
+                      } @else {
+                        <div class="clip-empty-text">Copy something</div>
+                      }
+                    </div>
+                    <div class="clipboard-footer-meta">
+                      <span>{{ clipboardHistory().length }} items in clipboard</span>
+                    </div>
+                  </div>
+                </div>
 
-                <button type="button" class="app-launch-card" (click)="openLaptopSettings()">
-                  <span class="app-icon">⚙️</span>
-                  <span class="app-name font-mono">Settings</span>
-                </button>
+                <!-- Col 4: 2x4 Tool Grid (Matches Image 2 Exact Grid!) -->
+                <div class="home-col col-tools-2x4">
+                  <div class="tools-grid-2x4">
+                    <button type="button" class="tool-tile-btn font-mono" title="Text Transform Tool" (click)="copyClip({ id: 'aa', text: 'Text tool ready', timeAgo: 'now' })">
+                      <span class="tile-text-bold">Aa</span>
+                    </button>
+                    <button type="button" class="tool-tile-btn" title="POCO Redwood Sync" (click)="launchApp('poco')">
+                      <span class="tile-icon-glyph">📱</span>
+                      <span class="dot-online-green"></span>
+                    </button>
+                    <button type="button" class="tool-tile-btn" title="Screenshot Capture" (click)="launchApp('screenshot')">
+                      <span class="tile-icon-glyph">⛶</span>
+                    </button>
+                    <button type="button" class="tool-tile-btn" title="Window PiP Dock" (click)="toggleNotchMode()">
+                      <span class="tile-icon-glyph">🗖</span>
+                    </button>
+                    <button type="button" class="tool-tile-btn" title="Copy Current URL / Link" (click)="copyClip({ id: 'link', text: 'http://localhost:4200', timeAgo: 'now' })">
+                      <span class="tile-icon-glyph">🔗</span>
+                    </button>
+                    <button type="button" class="tool-tile-btn" title="Snipping Tool" (click)="launchApp('snippingtool')">
+                      <span class="tile-icon-glyph">✂</span>
+                    </button>
+                    <button type="button" class="tool-tile-btn" title="Windows Terminal" (click)="launchApp('terminal')">
+                      <span class="tile-icon-glyph">⚡</span>
+                    </button>
+                    <button type="button" class="tool-tile-btn" title="Windows Laptop Settings (Global)" (click)="openLaptopSettings()">
+                      <span class="tile-icon-glyph">⚙️</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           }

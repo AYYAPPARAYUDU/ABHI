@@ -103,6 +103,51 @@ async def execute_quick_action(request: QuickActionRequest):
             success = res[0] if isinstance(res, tuple) else bool(res)
             message = "Windows Calculator launched, Mamu."
 
+        elif action in ("open_settings", "settings", "global_settings", "laptop_settings"):
+            subprocess.Popen("start ms-settings:", shell=True)
+            success = True
+            message = "Windows System Settings opened globally on your laptop screen, Mamu."
+
+        elif action in ("coffee_always", "coffee", "keep_awake"):
+            enabled = params.get("enabled", True)
+            try:
+                import ctypes
+                if enabled:
+                    ctypes.windll.kernel32.SetThreadExecutionState(0x80000000 | 0x00000001 | 0x00000002)
+                    message = "Coffee keep-awake mode enabled. Your PC will stay active, Mamu."
+                else:
+                    ctypes.windll.kernel32.SetThreadExecutionState(0x80000000)
+                    message = "Coffee keep-awake mode disabled. Standard sleep restored, Mamu."
+                success = True
+            except Exception as ex:
+                logger.error(f"SetThreadExecutionState error: {ex}")
+                success = False
+
+        elif action in ("screenshot", "open_screenshot", "screenclip"):
+            subprocess.Popen("start ms-screenclip:", shell=True)
+            success = True
+            message = "Screen snip tool triggered, Mamu."
+
+        elif action in ("snippingtool", "open_snippingtool"):
+            subprocess.Popen("start snippingtool:", shell=True)
+            success = True
+            message = "Windows Snipping Tool launched, Mamu."
+
+        elif action in ("poco", "open_poco", "phone_link"):
+            subprocess.Popen("start ms-phone-link:", shell=True)
+            success = True
+            message = "POCO Redwood Phone Link opened, Mamu."
+
+        elif action in ("charmap", "open_charmap", "text_tool"):
+            subprocess.Popen("start charmap", shell=True)
+            success = True
+            message = "Character Map and text inspector launched, Mamu."
+
+        elif action in ("paint", "open_paint", "color_picker"):
+            subprocess.Popen("start ms-paint:", shell=True)
+            success = True
+            message = "Windows Paint and Color Studio launched, Mamu."
+
         elif action in ("open_explorer", "explorer", "files"):
             res = os_control_engine.launch_application("explorer")
             success = res[0] if isinstance(res, tuple) else bool(res)
