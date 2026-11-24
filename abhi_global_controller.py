@@ -387,7 +387,7 @@ class AbhiGlobalTopNotch(ctk.CTk):
             self,
             width=self.compact_w,
             height=self.compact_h,
-            fg_color="#070b14",
+            fg_color=self.theme["bg"],
             border_color=self.theme["border"],
             border_width=1,
             corner_radius=16
@@ -397,7 +397,7 @@ class AbhiGlobalTopNotch(ctk.CTk):
             self,
             width=self.expanded_w,
             height=self.expanded_h,
-            fg_color="#070b14",
+            fg_color=self.theme["bg"],
             border_color=self.theme["border"],
             border_width=1,
             corner_radius=20
@@ -405,6 +405,9 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
         self._build_compact_notch_view()
         self._build_expanded_notch_view()
+
+        # Apply active saved theme to all widgets across the application
+        self.set_theme(self.current_theme_key)
 
         # Launch docked at position
         self._update_geometry()

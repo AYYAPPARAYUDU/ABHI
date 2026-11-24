@@ -3,6 +3,40 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { getApiUrl } from '../config/api-config';
 
+export interface ContactThread {
+  contact_id: string;
+  name: string;
+  handle: string;
+  channel: 'whatsapp' | 'gmail' | 'sms' | 'banking' | 'otp' | 'calls' | string;
+  avatar: string;
+  avatar_color: string;
+  unread_count: number;
+  priority: number;
+  is_pinned: boolean;
+  is_online: boolean;
+  category: string;
+  last_message: string;
+  last_timestamp: string;
+  total_messages: number;
+  metadata?: Record<string, any>;
+  messages?: ThreadMessage[];
+}
+
+export interface ThreadMessage {
+  message_id?: string;
+  direction?: 'incoming' | 'outgoing' | string;
+  sender?: string;
+  body: string;
+  timestamp: string;
+  status?: 'read' | 'delivered' | 'pending' | 'unread' | string;
+  channel?: string;
+  amount_inr?: number | null;
+  utr?: string | null;
+  otp_code?: string | null;
+  account?: string | null;
+  subject?: string;
+}
+
 export interface CommunicationsProfile {
   operator_name?: string;
   email: string | null;
@@ -111,6 +145,13 @@ export class CommunicationsAssistantService {
   readonly isModalOpen = signal<boolean>(false);
   readonly notificationAlert = signal<string | null>(null);
 
+  // Chat-Centric Conversational Threads & Contacts Signals
+  readonly contacts = signal<ContactThread[]>([]);
+  readonly activeContact = signal<ContactThread | null>(null);
+  readonly threadMessages = signal<ThreadMessage[]>([]);
+  readonly activeChannelFilter = signal<string>('all');
+  readonly contactSearchQuery = signal<string>('');
+
   constructor() {
     this.initData();
   }
@@ -119,6 +160,7 @@ export class CommunicationsAssistantService {
     await Promise.all([
       this.loadProfile(),
       this.fetchInbox(),
+      this.fetchContacts(),
       this.loadBrainStatus()
     ]);
   }
@@ -449,6 +491,126 @@ export class CommunicationsAssistantService {
       return false;
     } finally {
       this.isUpgradingBrain.set(false);
+    }
+  }
+
+  // =========================================================================
+  // Chat-Centric Conversational Threads & DSA Search Methods
+  // =========================================================================
+
+  async fetchContacts(channel: string = this.activeChannelFilter(), query: string = this.contactSearchQuery()): Promise<void> {
+    try {
+      this.activeChannelFilter.set(channel);
+      this.contactSearchQuery.set(query);
+      const q = encodeURIComponent(query);
+      const url = getApiUrl(`/api/v1/assistant/contacts?channel=${channel}&q=${q}`);
+      const res: any = await firstValueFrom(this.http.get(url));
+      if (res && res.success) {
+        this.contacts.set(res.contacts || []);
+        if (res.summary) {
+          this.deviceSummary.update((s: any) => ({ ...s, ...res.summary }));
+        }
+        // Auto-select first contact if none selected
+        if (!this.activeContact() && res.contacts?.length > 0) {
+          this.selectContact(res.contacts[0]);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to fetch communications contacts', e);
+    }
+  }
+
+  async selectContact(contact: ContactThread): Promise<void> {
+    this.activeContact.set(contact);
+    try {
+      const url = getApiUrl(`/api/v1/assistant/threads/${contact.contact_id}`);
+      const res: any = await firstValueFrom(this.http.get(url));
+      if (res && res.success) {
+        this.threadMessages.set(res.messages || []);
+        contact.unread_count = 0;
+      }
+    } catch (e) {
+      console.error('Failed to load thread messages', e);
+      this.threadMessages.set(contact.messages || []);
+    }
+  }
+
+  async sendChatMessage(text: string): Promise<boolean> {
+    const contact = this.activeContact();
+    if (!contact || !text.trim()) return false;
+
+    this.isSendingReply.set(true);
+    try {
+      const url = getApiUrl('/api/v1/assistant/messages/send');
+      const payload = {
+        contact_id: contact.contact_id,
+        recipient: contact.handle || contact.name,
+        message: text.trim(),
+        channel: contact.channel,
+        subject: `Message to ${contact.name}`
+      };
+      const res: any = await firstValueFrom(this.http.post(url, payload));
+      if (res && res.success) {
+        const newMsg: ThreadMessage = {
+          direction: 'outgoing',
+          sender: 'Mamu',
+          body: text.trim(),
+          timestamp: new Date().toISOString(),
+          status: 'delivered',
+          channel: contact.channel
+        };
+        this.threadMessages.update(msgs => [...msgs, newMsg]);
+        contact.last_message = text.trim();
+        contact.last_timestamp = newMsg.timestamp;
+        this.setAlert(`Message sent to ${contact.name} via ${contact.channel.toUpperCase()}`);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error('Error sending chat message', e);
+      return false;
+    } finally {
+      this.isSendingReply.set(false);
+    }
+  }
+
+  async saveGoogleAppPassword(password: string): Promise<boolean> {
+    try {
+      const url = getApiUrl('/api/v1/assistant/credentials/google');
+      const payload = {
+        email: this.profile()?.email || 'ayyapparayudu.ravuvari@gmail.com',
+        app_password: password
+      };
+      const res: any = await firstValueFrom(this.http.post(url, payload));
+      if (res && res.success) {
+        this.setAlert('Google App Password encrypted in Sovereign Vault! Live email sync engaged.');
+        await this.fetchContacts();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error('Error saving Google App Password', e);
+      return false;
+    }
+  }
+
+  async callContact(phone: string): Promise<void> {
+    try {
+      const url = getApiUrl('/api/v1/assistant/messages/action');
+      await firstValueFrom(this.http.post(url, { action: 'dial', phone }));
+      this.setAlert(`Dialing ${phone} on POCO Redwood mobile...`);
+    } catch (e) {
+      console.error('Dial error', e);
+    }
+  }
+
+  async openWhatsAppChat(phone: string): Promise<void> {
+    try {
+      const url = getApiUrl('/api/v1/assistant/messages/action');
+      await firstValueFrom(this.http.post(url, { action: 'whatsapp', phone }));
+      this.setAlert(`Opening WhatsApp chat for ${phone}...`);
+    } catch (e) {
+      console.error('WhatsApp action error', e);
     }
   }
 

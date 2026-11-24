@@ -107,19 +107,21 @@
             @if (isActive('/architecture')) { <span class="active-glow-pip"></span> }
           </a>
 
-          <!-- 6. Brain (Dedicated Sovereign Communications & Intelligence Page) -->
+          <!-- 6. Messages (Sovereign Communications & Neural Intelligence) -->
           <a
-            routerLink="/brain"
+            routerLink="/messages"
             class="rail-nav-link"
-            [class.active]="isActive('/brain')"
-            title="ABHI Cognitive Brain & Communications Command Center"
+            [class.active]="isActive('/messages') || isActive('/brain')"
+            title="Messages & Neural Communications Hub"
           >
-            <span class="nav-icon">🧠</span>
-            <span class="nav-label">Brain</span>
-            @if (!assistantService.isConfigured()) {
-              <span class="brain-alert-badge" title="Configuration Alert">!</span>
+            <span class="nav-icon">💬</span>
+            <span class="nav-label">Messages</span>
+            @if (assistantService.deviceSummary()?.unread_contacts_count > 0) {
+              <span class="active-pill-badge">{{ assistantService.deviceSummary()?.unread_contacts_count }}</span>
+            } @else if (assistantService.deviceSummary()?.total > 0) {
+              <span class="active-pill-badge">{{ assistantService.deviceSummary()?.total }}</span>
             }
-            @if (isActive('/brain')) { <span class="active-glow-pip"></span> }
+            @if (isActive('/messages') || isActive('/brain')) { <span class="active-glow-pip"></span> }
           </a>
 
           <!-- 7. Gallery -->

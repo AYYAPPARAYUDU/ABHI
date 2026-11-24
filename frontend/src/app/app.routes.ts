@@ -59,15 +59,20 @@ export const routes: Routes = [
       )
   },
   {
-    path: 'brain',
+    path: 'messages',
     loadComponent: () =>
       import('./features/brain/pages/brain-page/brain-page.component').then(
         (m) => m.BrainPageComponent
       )
   },
   {
+    path: 'brain',
+    redirectTo: 'messages',
+    pathMatch: 'full'
+  },
+  {
     path: 'assistant',
-    redirectTo: 'brain',
+    redirectTo: 'messages',
     pathMatch: 'full'
   },
   {

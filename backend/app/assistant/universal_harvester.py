@@ -535,6 +535,28 @@ class UniversalCommunicationsHarvester:
         except Exception as e:
             logger.error(f"Error reading communications for daily briefing: {e}")
 
+        # Fallback to communications_engine if records are empty
+        if not records:
+            from backend.app.assistant.communications_engine import communications_engine
+            communications_engine.initialize_if_needed()
+            for c in communications_engine._contacts_cache:
+                for m in communications_engine._messages_cache.get(c["contact_id"], []):
+                    records.append({
+                        "message_id": m.get("message_id") or f"msg_{abs(hash(c['name'] + m.get('body', '')))}",
+                        "channel": c["channel"],
+                        "sender": m.get("sender") or c["name"],
+                        "recipient": "Mamu",
+                        "subject": m.get("subject") or f"{c['channel'].title()} from {c['name']}",
+                        "body": m.get("body", ""),
+                        "timestamp": m.get("timestamp", datetime.now(timezone.utc).isoformat()),
+                        "reply_status": m.get("status") or "verified",
+                        "category": c["category"],
+                        "amount_inr": m.get("amount_inr"),
+                        "utr": m.get("utr"),
+                        "otp_code": m.get("otp_code"),
+                        "account": m.get("account")
+                    })
+
         # TIER 1: Basic Data Summary Counts
         total_messages = len(records)
         whatsapp_records = [r for r in records if r["channel"] == "whatsapp" or r["category"] == "whatsapp"]

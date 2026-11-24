@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CommunicationsAssistantService, InboxMessage } from '../../../../core/services/communications-assistant.service';
+import { CommunicationsAssistantService, ContactThread, ThreadMessage } from '../../../../core/services/communications-assistant.service';
 
 @Component({
   selector: 'app-brain-page',
@@ -13,37 +13,43 @@ import { CommunicationsAssistantService, InboxMessage } from '../../../../core/s
 export class BrainPageComponent implements OnInit, OnDestroy {
   readonly assistant = inject(CommunicationsAssistantService);
 
-  readonly activeTab = signal<'STREAM' | 'BRIEFING' | 'PROFILE'>('STREAM');
-  isEditingProfile = signal<boolean>(false);
+  // Search & Filter State
+  readonly searchQuery = signal<string>('');
+  readonly activeChannel = signal<string>('all');
+  readonly chatDraftText = signal<string>('');
+
+  // Right Neural Intelligence Sidebar & Modal Controls
+  readonly isRightSidebarOpen = signal<boolean>(true);
+  readonly isGooglePasswordModalOpen = signal<boolean>(false);
+  readonly isProfileDrawerOpen = signal<boolean>(false);
+  readonly inputGooglePassword = signal<string>('');
+  readonly aiPromptQuery = signal<string>('');
+
+  // Profile Edit Inputs
   inputEmail = '';
   inputPhone = '';
   inputWhatsapp = true;
   inputMode: 'HUMAN_CONFIRMATION' | 'FULLY_AUTONOMOUS' | 'SOVEREIGN_OPERATOR' = 'SOVEREIGN_OPERATOR';
   inputThreads = '';
 
-  customReplyText = signal<string>('');
-  userQuery = signal<string>('');
-
   private pollInterval: any = null;
 
-  readonly filteredMessages = computed(() => {
-    return this.assistant.getFilteredInbox();
-  });
-
-  readonly summary = computed(() => {
-    return this.assistant.deviceSummary();
-  });
+  // Reactive Computed Signals
+  readonly contacts = computed(() => this.assistant.contacts());
+  readonly activeContact = computed(() => this.assistant.activeContact());
+  readonly threadMessages = computed(() => this.assistant.threadMessages());
+  readonly summary = computed(() => this.assistant.deviceSummary());
 
   ngOnInit(): void {
-    this.assistant.fetchInbox();
+    this.assistant.fetchContacts();
     this.assistant.loadProfile();
     this.assistant.loadBrainStatus();
     this.assistant.loadDailyBriefing();
 
-    // Auto-refresh every 25 seconds for live background sync updates
+    // Auto-refresh contacts & messages every 20 seconds
     this.pollInterval = setInterval(() => {
-      this.assistant.fetchInbox();
-    }, 25000);
+      this.assistant.fetchContacts(this.activeChannel(), this.searchQuery());
+    }, 20000);
   }
 
   ngOnDestroy(): void {
@@ -52,18 +58,113 @@ export class BrainPageComponent implements OnInit, OnDestroy {
     }
   }
 
-  triggerDailyBriefing(): void {
-    this.userQuery.set('Give me my full daily executive briefing: basic summary of messages, mails and calls, then important alerts and specific actions.');
-    this.assistant.loadDailyBriefing();
-    this.assistant.askIntelligence('Give me my full daily executive briefing: basic summary of messages, mails and calls, then important alerts and specific actions.');
+  // Channel & Filter Navigation
+  setChannel(channel: string): void {
+    this.activeChannel.set(channel);
+    this.assistant.fetchContacts(channel, this.searchQuery());
   }
 
-  sendQuickQuery(q: string): void {
-    this.userQuery.set(q);
+  onSearchChange(query: string): void {
+    this.searchQuery.set(query);
+    this.assistant.fetchContacts(this.activeChannel(), query);
+  }
+
+  onSelectContact(contact: ContactThread): void {
+    this.assistant.selectContact(contact);
+  }
+
+  // Messaging Actions
+  async sendChat(): Promise<void> {
+    const text = this.chatDraftText().trim();
+    if (!text) return;
+    const ok = await this.assistant.sendChatMessage(text);
+    if (ok) {
+      this.chatDraftText.set('');
+    }
+  }
+
+  async sendQuickReply(replyText: string): Promise<void> {
+    this.chatDraftText.set(replyText);
+  }
+
+  // AI & RAG Intelligence
+  async askAI(): Promise<void> {
+    const q = this.aiPromptQuery().trim();
+    if (!q) return;
+    await this.assistant.askIntelligence(q);
+  }
+
+  triggerThreadSummary(): void {
+    const contact = this.activeContact();
+    const target = contact ? contact.name : 'my communications';
+    const q = `Summarize the recent conversations, promises, and action items with ${target}.`;
+    this.aiPromptQuery.set(q);
     this.assistant.askIntelligence(q);
   }
 
-  toggleEditProfile(): void {
+  triggerActionExtraction(): void {
+    const contact = this.activeContact();
+    const target = contact ? contact.name : 'my messages';
+    const q = `Extract all pending tasks, payments, meetings, and follow-ups from ${target}.`;
+    this.aiPromptQuery.set(q);
+    this.assistant.askIntelligence(q);
+  }
+
+  clearAIAnswer(): void {
+    this.assistant.clearIntelligenceAnswer();
+    this.aiPromptQuery.set('');
+  }
+
+  // One-Click Operational Actions
+  copyToClipboard(text: string, label: string): void {
+    this.assistant.copyToClipboard(text, label);
+  }
+
+  callActiveContact(): void {
+    const contact = this.activeContact();
+    if (contact && contact.handle) {
+      this.assistant.callContact(contact.handle);
+    }
+  }
+
+  openWhatsAppActiveContact(): void {
+    const contact = this.activeContact();
+    if (contact && contact.handle) {
+      this.assistant.openWhatsAppChat(contact.handle);
+    } else {
+      this.assistant.launchWhatsAppWeb();
+    }
+  }
+
+  openEmailActiveContact(): void {
+    const contact = this.activeContact();
+    const to = contact?.handle && contact.handle.includes('@') ? contact.handle : 'ayyapparayudu.ravuvari@gmail.com';
+    const encTo = encodeURIComponent(to);
+    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encTo}&su=Follow-up`, '_blank');
+  }
+
+  // Credential Modal & Setup
+  openGooglePasswordModal(): void {
+    this.inputGooglePassword.set('');
+    this.isGooglePasswordModalOpen.set(true);
+  }
+
+  closeGooglePasswordModal(): void {
+    this.isGooglePasswordModalOpen.set(false);
+  }
+
+  async saveGooglePassword(): Promise<void> {
+    const pwd = this.inputGooglePassword().trim();
+    if (!pwd) return;
+    const ok = await this.assistant.saveGoogleAppPassword(pwd);
+    if (ok) {
+      this.isGooglePasswordModalOpen.set(false);
+      this.inputGooglePassword.set('');
+    }
+  }
+
+  // Profile Drawer
+  toggleProfileDrawer(): void {
     const prof = this.assistant.profile();
     if (prof) {
       this.inputEmail = prof.email || 'ayyapparayudu.ravuvari@gmail.com';
@@ -72,7 +173,7 @@ export class BrainPageComponent implements OnInit, OnDestroy {
       this.inputMode = (prof.auto_reply_mode as any) || 'SOVEREIGN_OPERATOR';
       this.inputThreads = (prof.monitored_threads || []).join(', ');
     }
-    this.isEditingProfile.set(!this.isEditingProfile());
+    this.isProfileDrawerOpen.set(!this.isProfileDrawerOpen());
   }
 
   async saveProfile(): Promise<void> {
@@ -89,67 +190,11 @@ export class BrainPageComponent implements OnInit, OnDestroy {
       threads
     );
     if (ok) {
-      this.isEditingProfile.set(false);
+      this.isProfileDrawerOpen.set(false);
     }
   }
 
-  onSelectMessage(msg: InboxMessage): void {
-    this.assistant.selectMessage(msg);
-    this.customReplyText.set('');
-  }
-
-  selectReplyOption(text: string): void {
-    this.customReplyText.set(text);
-  }
-
-  async sendSelectedReply(): Promise<void> {
-    const msg = this.assistant.activeMessage();
-    const text = this.customReplyText().trim();
-    if (!msg || !text) return;
-    await this.assistant.sendReply(msg, text);
-    this.customReplyText.set('');
-  }
-
-  async sendQuickReply(replyText: string): Promise<void> {
-    const msg = this.assistant.activeMessage();
-    if (!msg || !replyText) return;
-    await this.assistant.sendReply(msg, replyText);
-  }
-
-  setFilter(filter: 'all' | 'banking' | 'otp' | 'calls' | 'mail' | 'whatsapp' | 'notifications'): void {
-    this.assistant.setFilter(filter);
-  }
-
-  async askAI(): Promise<void> {
-    const q = this.userQuery().trim();
-    if (!q) return;
-    await this.assistant.askIntelligence(q);
-  }
-
-  clearAIAnswer(): void {
-    this.assistant.clearIntelligenceAnswer();
-    this.userQuery.set('');
-  }
-
-  openEmail(to: string, subject: string = 'Re: Information'): void {
-    const encTo = encodeURIComponent(to);
-    const encSubj = encodeURIComponent(subject);
-    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encTo}&su=${encSubj}`, '_blank');
-  }
-
-  launchWhatsAppForMessage(msg: InboxMessage): void {
-    const contact = msg.sender.replace(/[^\d+]/g, '');
-    if (contact) {
-      this.assistant.executePhoneAction('whatsapp', contact);
-    } else {
-      this.assistant.launchWhatsAppWeb();
-    }
-  }
-
-  dialPhone(phone: string): void {
-    const clean = phone.replace(/[^\d+]/g, '');
-    if (clean) {
-      this.assistant.executePhoneAction('dial', clean);
-    }
+  toggleRightSidebar(): void {
+    this.isRightSidebarOpen.set(!this.isRightSidebarOpen());
   }
 }
