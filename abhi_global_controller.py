@@ -316,7 +316,7 @@ class AbhiGlobalTopNotch(ctk.CTk):
         # Geometry & Notch States
         self.is_expanded = False
         self.is_pinned = False
-        self.is_notch_docked = True
+        self.dock_mode = "TOP_CENTER"
         self.active_tab = "CENTER"
         phys_screen_w = user32.GetSystemMetrics(0)
         phys_screen_h = user32.GetSystemMetrics(1)
@@ -337,6 +337,9 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
         # Load persisted position or default to screen top-center
         self._load_saved_position()
+
+        # Keyboard shortcuts: Escape collapses expanded HUD
+        self.bind("<Escape>", lambda e: self.collapse_notch())
 
         self._hover_collapse_job = None
         self.animation_tick = 0
@@ -444,47 +447,52 @@ class AbhiGlobalTopNotch(ctk.CTk):
             if os.path.exists(pos_file):
                 with open(pos_file, "r", encoding="utf-8") as f:
                     data = json.load(f)
+                    saved_mode = data.get("dock_mode", "TOP_CENTER")
                     saved_x = data.get("pos_x")
                     saved_y = data.get("pos_y")
-                    is_docked = data.get("is_docked")
-                    # If docked at top center, ensure mathematical precision
-                    if is_docked is True or saved_y == 0 or saved_y is None:
+                    self.dock_mode = saved_mode
+
+                    if saved_mode == "TOP_CENTER" or (saved_y == 0 and abs(saved_x - center_x) < 200):
+                        self.dock_mode = "TOP_CENTER"
                         self.pos_x = center_x
                         self.pos_y = 0
-                        self.is_notch_docked = True
                         return
-                    if isinstance(saved_x, int) and isinstance(saved_y, int):
+                    elif saved_mode == "TOP_LEFT":
+                        self.pos_x = 40
+                        self.pos_y = 0
+                        return
+                    elif saved_mode == "TOP_RIGHT":
+                        self.pos_x = self.screen_width - phys_w - 40
+                        self.pos_y = 0
+                        return
+                    elif isinstance(saved_x, int) and isinstance(saved_y, int):
                         if 0 <= saved_x <= (self.screen_width - phys_w) and 0 <= saved_y <= (self.screen_height - phys_h):
                             self.pos_x = saved_x
                             self.pos_y = saved_y
-                            self.is_notch_docked = False
                             return
         except Exception:
             pass
-        # Mathematically perfect top-center
+        # Default fallback: Mathematically perfect top-center
+        self.dock_mode = "TOP_CENTER"
         self.pos_x = center_x
         self.pos_y = 0
-        self.is_notch_docked = True
 
     def _save_notch_position(self):
         try:
             pos_file = self._get_position_file()
             os.makedirs(os.path.dirname(pos_file), exist_ok=True)
-            scale = ctk.ScalingTracker.get_window_scaling(self)
-            cur_w = self.expanded_w if self.is_expanded else self.compact_w
-            cur_phys_w = round(cur_w * scale)
-            ideal_center_x = (self.screen_width - cur_phys_w) // 2
-            is_docked = (self.pos_y == 0 and abs(self.pos_x - ideal_center_x) < 40)
             with open(pos_file, "w", encoding="utf-8") as f:
                 json.dump({
                     "pos_x": self.pos_x,
                     "pos_y": self.pos_y,
-                    "is_docked": is_docked,
+                    "dock_mode": getattr(self, "dock_mode", "TOP_CENTER"),
+                    "is_docked": (self.pos_y == 0),
                     "screen_w": self.screen_width,
                     "screen_h": self.screen_height,
                     "timestamp": time.time()
                 }, f, indent=2)
         except Exception:
+            pass
             pass
 
     def _save_notch_theme(self):
@@ -654,20 +662,59 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
         self._save_notch_theme()
 
-    def recenter_notch(self):
-        """Snaps the notch back to the screen's top-center docking point."""
-        self.is_notch_docked = True
+    def set_dock_mode(self, mode: str):
+        """Sets the dynamic positioning dock mode and updates window placement."""
+        self.dock_mode = mode
         scale = ctk.ScalingTracker.get_window_scaling(self)
-        w = self.expanded_w if self.is_expanded else self.compact_w
-        h = self.expanded_h if self.is_expanded else self.compact_h
-        phys_w = round(w * scale)
-        phys_h = round(h * scale)
-        self.pos_x = (self.screen_width - phys_w) // 2
-        self.pos_y = 0
-        self.geometry(f"{w}x{h}+{self.pos_x}+{self.pos_y}")
+        cur_w = self.expanded_w if self.is_expanded else self.compact_w
+        cur_h = self.expanded_h if self.is_expanded else self.compact_h
+        phys_w = round(cur_w * scale)
+        phys_h = round(cur_h * scale)
+
+        if mode == "TOP_CENTER":
+            self.pos_x = (self.screen_width - phys_w) // 2
+            self.pos_y = 0
+        elif mode == "TOP_LEFT":
+            self.pos_x = 40
+            self.pos_y = 0
+        elif mode == "TOP_RIGHT":
+            self.pos_x = self.screen_width - phys_w - 40
+            self.pos_y = 0
+        elif mode == "FLOATING":
+            self.pos_x = (self.screen_width - phys_w) // 2
+            self.pos_y = 80
+
+        self.geometry(f"{cur_w}x{cur_h}+{self.pos_x}+{self.pos_y}")
+        self.update_idletasks()
         radius = round(20 * scale) if self.is_expanded else (phys_h // 2)
         self._apply_native_round_region(phys_w, phys_h, radius)
+        self._update_notch_mode_card_label()
         self._save_notch_position()
+
+    def cycle_dock_mode(self):
+        """Cycles through dynamic positioning presets: Center -> Left -> Right -> Floating."""
+        modes = ["TOP_CENTER", "TOP_LEFT", "TOP_RIGHT", "FLOATING"]
+        current = getattr(self, "dock_mode", "TOP_CENTER")
+        idx = modes.index(current) if current in modes else 0
+        next_mode = modes[(idx + 1) % len(modes)]
+        self.set_dock_mode(next_mode)
+
+    def recenter_notch(self):
+        """Snaps the notch back to the screen's top-center docking point."""
+        self.set_dock_mode("TOP_CENTER")
+
+    def _update_notch_mode_card_label(self):
+        if hasattr(self, "notch_mode_card"):
+            mode = getattr(self, "dock_mode", "TOP_CENTER")
+            if mode == "TOP_CENTER":
+                lbl = "🔝 Notch Mode\nTop Center Dock"
+            elif mode == "TOP_LEFT":
+                lbl = "◀️ Notch Mode\nTop Left Dock"
+            elif mode == "TOP_RIGHT":
+                lbl = "▶️ Notch Mode\nTop Right Dock"
+            else:
+                lbl = "🪟 Notch Mode\nFree Floating"
+            self.notch_mode_card.configure(text=lbl)
 
     def _bind_drag_and_click(self, widget, click_action=None):
         widget.bind("<ButtonPress-1>", self._on_drag_press, add="+")
@@ -684,10 +731,10 @@ class AbhiGlobalTopNotch(ctk.CTk):
     def _on_drag_motion(self, event):
         dx = event.x_root - self._drag_start_x
         dy = event.y_root - self._drag_start_y
-        if abs(dx) > 4 or abs(dy) > 4:
+        if abs(dx) > 10 or abs(dy) > 10:
             self._has_dragged = True
             scale = ctk.ScalingTracker.get_window_scaling(self)
-            cur_w = self.expanded_w if self.is_expanded else (self.hover_extended_w if self.is_hover_extended else self.compact_w)
+            cur_w = self.expanded_w if self.is_expanded else self.compact_w
             cur_h = self.expanded_h if self.is_expanded else self.compact_h
             phys_w = round(cur_w * scale)
             phys_h = round(cur_h * scale)
@@ -706,25 +753,35 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
     def _on_drag_release(self, event, click_action=None):
         scale = ctk.ScalingTracker.get_window_scaling(self)
-        cur_w = self.expanded_w if self.is_expanded else (self.hover_extended_w if self.is_hover_extended else self.compact_w)
+        cur_w = self.expanded_w if self.is_expanded else self.compact_w
         cur_h = self.expanded_h if self.is_expanded else self.compact_h
         phys_w = round(cur_w * scale)
         phys_h = round(cur_h * scale)
 
-        if self._has_dragged:
+        if getattr(self, "_has_dragged", False):
             self._has_dragged = False
             # Dynamic Snap / Auto-Docking Physics:
-            if self.pos_y < 45:
-                self.pos_y = 0
             center_x = (self.screen_width - phys_w) // 2
-            if abs(self.pos_x - center_x) < 120 and self.pos_y == 0:
-                self.pos_x = center_x
-                self.is_notch_docked = True
+            if self.pos_y < 50:
+                self.pos_y = 0
+                if abs(self.pos_x - center_x) < 200:
+                    self.pos_x = center_x
+                    self.dock_mode = "TOP_CENTER"
+                elif self.pos_x < 250:
+                    self.pos_x = 40
+                    self.dock_mode = "TOP_LEFT"
+                elif self.pos_x > (self.screen_width - phys_w - 250):
+                    self.pos_x = self.screen_width - phys_w - 40
+                    self.dock_mode = "TOP_RIGHT"
+                else:
+                    self.dock_mode = "TOP_CUSTOM"
             else:
-                self.is_notch_docked = False
+                self.dock_mode = "FLOATING"
+
             self.geometry(f"{cur_w}x{cur_h}+{self.pos_x}+{self.pos_y}")
             radius = round(20 * scale) if self.is_expanded else (phys_h // 2)
             self._apply_native_round_region(phys_w, phys_h, radius)
+            self._update_notch_mode_card_label()
             self._save_notch_position()
         else:
             if click_action:
@@ -763,26 +820,30 @@ class AbhiGlobalTopNotch(ctk.CTk):
         self._apply_native_round_region(phys_w, phys_h, radius)
 
     def expand_notch(self):
-        if hasattr(self, "_hover_collapse_job") and self._hover_collapse_job:
-            self.after_cancel(self._hover_collapse_job)
-            self._hover_collapse_job = None
         if self.is_expanded:
             return
 
         scale = ctk.ScalingTracker.get_window_scaling(self)
         phys_w = round(self.expanded_w * scale)
         phys_h = round(self.expanded_h * scale)
+        compact_phys_w = round(self.compact_w * scale)
 
-        if getattr(self, "is_notch_docked", True):
+        mode = getattr(self, "dock_mode", "TOP_CENTER")
+        if mode == "TOP_CENTER":
             self.pos_x = (self.screen_width - phys_w) // 2
             self.pos_y = 0
+        elif mode == "TOP_LEFT":
+            self.pos_x = 40
+            self.pos_y = 0
+        elif mode == "TOP_RIGHT":
+            self.pos_x = self.screen_width - phys_w - 40
+            self.pos_y = 0
         else:
-            compact_phys_w = round(self.compact_w * scale)
             center_x = self.pos_x + (compact_phys_w // 2)
             self.pos_x = max(0, min(self.screen_width - phys_w, center_x - (phys_w // 2)))
+            self.pos_y = max(0, min(self.screen_height - phys_h, self.pos_y))
 
         self.is_expanded = True
-        self.is_hover_extended = False
 
         self.compact_frame.pack_forget()
         self.expanded_frame.pack(fill="both", expand=True)
@@ -802,17 +863,24 @@ class AbhiGlobalTopNotch(ctk.CTk):
         scale = ctk.ScalingTracker.get_window_scaling(self)
         phys_w = round(self.compact_w * scale)
         phys_h = round(self.compact_h * scale)
+        expanded_phys_w = round(self.expanded_w * scale)
 
-        if getattr(self, "is_notch_docked", True):
+        mode = getattr(self, "dock_mode", "TOP_CENTER")
+        if mode == "TOP_CENTER":
             self.pos_x = (self.screen_width - phys_w) // 2
             self.pos_y = 0
+        elif mode == "TOP_LEFT":
+            self.pos_x = 40
+            self.pos_y = 0
+        elif mode == "TOP_RIGHT":
+            self.pos_x = self.screen_width - phys_w - 40
+            self.pos_y = 0
         else:
-            expanded_phys_w = round(self.expanded_w * scale)
             center_x = self.pos_x + (expanded_phys_w // 2)
             self.pos_x = max(0, min(self.screen_width - phys_w, center_x - (phys_w // 2)))
+            self.pos_y = max(0, min(self.screen_height - phys_h, self.pos_y))
 
         self.is_expanded = False
-        self.is_hover_extended = False
 
         self.expanded_frame.pack_forget()
         self.compact_frame.pack(fill="both", expand=True)
@@ -947,9 +1015,6 @@ class AbhiGlobalTopNotch(ctk.CTk):
     def _build_expanded_notch_view(self):
         ef = self.expanded_frame
         t = self.theme
-
-        # Auto-collapse on leave
-        ef.bind("<Leave>", self._on_notch_leave)
 
         # ----------------------------------------------------------------------
         # TOP HEADER STRIP (Time, Tag, Weather, Responsive Tabs, Theme, Controls)
@@ -1433,16 +1498,17 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
         self.notch_mode_card = ctk.CTkButton(
             grid_row2,
-            text="🔝  Notch Mode\nFixed Top Dock",
+            text="🔝  Notch Mode\nTop Center Dock",
             font=("Segoe UI", 9, "bold"),
             height=44,
             corner_radius=12,
             fg_color=card_on_fg,
             text_color=card_on_text,
             hover_color=t["border_secondary"],
-            command=self.toggle_pin
+            command=self.cycle_dock_mode
         )
         self.notch_mode_card.pack(side="right", fill="x", expand=True, padx=(3, 0))
+        self._update_notch_mode_card_label()
 
         # Sliders Section (Volume & Brightness)
         self.sliders_box = ctk.CTkFrame(right_chassis, fg_color=t["surface"], corner_radius=12, border_width=1, border_color=t["border"])
