@@ -663,7 +663,161 @@ class AbhiGlobalTopNotch(ctk.CTk):
         if hasattr(self, "pill_battery_lbl"):
             self.pill_battery_lbl.configure(text_color=t["accent"])
 
+        # 10. Music Tab Dynamic Theming
+        if hasattr(self, "music_card"):
+            self.music_card.configure(fg_color=t["surface_card"], border_color=t["border"])
+        if hasattr(self, "music_artist_lbl"):
+            self.music_artist_lbl.configure(text_color=t["text_secondary"])
+        if hasattr(self, "music_title_lbl"):
+            self.music_title_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "music_lyrics_lbl"):
+            self.music_lyrics_lbl.configure(text_color=t["text_secondary"])
+        if hasattr(self, "eq_lbl"):
+            self.eq_lbl.configure(text_color=t["accent"])
+        if hasattr(self, "scrub_slider"):
+            self.scrub_slider.configure(button_color=t["accent"], progress_color=t["accent"])
+        if hasattr(self, "cur_time_lbl"):
+            self.cur_time_lbl.configure(text_color=t["text_muted"])
+        if hasattr(self, "tot_time_lbl"):
+            self.tot_time_lbl.configure(text_color=t["text_muted"])
+        if hasattr(self, "music_prev_btn"):
+            self.music_prev_btn.configure(fg_color=t["surface"], text_color=t["text_primary"], hover_color=t["border_secondary"])
+        if hasattr(self, "play_btn"):
+            self.play_btn.configure(fg_color=t["accent"], text_color="#ffffff", hover_color=t["accent_hover"])
+        if hasattr(self, "music_next_btn"):
+            self.music_next_btn.configure(fg_color=t["surface"], text_color=t["text_primary"], hover_color=t["border_secondary"])
+        if hasattr(self, "music_tray_btns"):
+            for b in self.music_tray_btns:
+                b.configure(fg_color=t["surface"], text_color=t["text_secondary"], hover_color=t["border_secondary"])
+
+        # 11. Calendar Tab Dynamic Theming
+        if hasattr(self, "cal_left_card"):
+            self.cal_left_card.configure(fg_color=t["surface_card"], border_color=t["border"])
+        if hasattr(self, "cal_right_card"):
+            self.cal_right_card.configure(fg_color=t["surface_card"], border_color=t["border"])
+        if hasattr(self, "cal_m_title"):
+            self.cal_m_title.configure(text_color=t["text_primary"])
+        if hasattr(self, "cal_today_btn"):
+            self.cal_today_btn.configure(fg_color=t["surface"], text_color=t["text_secondary"], hover_color=t["border_secondary"])
+        if hasattr(self, "timer_lbl"):
+            self.timer_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "start_timer_btn"):
+            self.start_timer_btn.configure(
+                fg_color="#f97316" if getattr(self, "is_timer_running", False) else t["accent"],
+                text_color="#ffffff",
+                hover_color=t["accent_hover"]
+            )
+        if hasattr(self, "cal_reset_btn"):
+            self.cal_reset_btn.configure(fg_color=t["surface"], text_color=t["text_secondary"], hover_color=t["border_secondary"])
+        if hasattr(self, "cal_preset_btns"):
+            for pb in self.cal_preset_btns:
+                pb.configure(fg_color=t["surface"], text_color=t["text_primary"], hover_color=t["border_secondary"])
+        if hasattr(self, "cal_day_cells"):
+            for cell, is_today, has_ev in self.cal_day_cells:
+                if is_today:
+                    cell.configure(fg_color=t["accent"], text_color="#ffffff")
+                elif has_ev:
+                    cell.configure(fg_color="transparent", text_color=t["accent"])
+                else:
+                    cell.configure(fg_color="transparent", text_color=t["text_secondary"])
+
+        # 12. Vitals Tab Dynamic Theming
+        if hasattr(self, "vitals_card"):
+            self.vitals_card.configure(fg_color=t["surface_card"], border_color=t["border"])
+        if hasattr(self, "screen_time_lbl"):
+            self.screen_time_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "active_win_lbl"):
+            self.active_win_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "cpu_card"):
+            self.cpu_card.configure(fg_color=t["surface"], border_color=t["border"])
+        if hasattr(self, "ram_card"):
+            self.ram_card.configure(fg_color=t["surface"], border_color=t["border"])
+        if hasattr(self, "disk_card"):
+            self.disk_card.configure(fg_color=t["surface"], border_color=t["border"])
+        if hasattr(self, "cpu_pct_lbl"):
+            self.cpu_pct_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "ram_pct_lbl"):
+            self.ram_pct_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "disk_pct_lbl"):
+            self.disk_pct_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "app_usage_card"):
+            self.app_usage_card.configure(fg_color=t["surface"], border_color=t["border"])
+        if hasattr(self, "net_card"):
+            self.net_card.configure(fg_color=t["surface"], border_color=t["border"])
+        if hasattr(self, "spark_f"):
+            self.spark_f.configure(fg_color=t["surface_card"])
+        if hasattr(self, "vitals_tray_btns"):
+            for vb in self.vitals_tray_btns:
+                vb.configure(fg_color=t["surface"], hover_color=t["border_secondary"])
+
+        # 13. Home Tab Dynamic Theming
+        if hasattr(self, "home_timer_card"):
+            self.home_timer_card.configure(fg_color=t["surface_card"], border_color=t["border"])
+        if hasattr(self, "dial_frame"):
+            self.dial_frame.configure(fg_color=t["surface"], border_color=t["accent"])
+        if hasattr(self, "home_timer_lbl"):
+            self.home_timer_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "home_coffee_card"):
+            self.home_coffee_card.configure(fg_color=t["surface_card"], border_color=t["border"])
+        if hasattr(self, "home_music_card"):
+            self.home_music_card.configure(fg_color=t["surface_card"], border_color=t["border"])
+        if hasattr(self, "home_notes_card"):
+            self.home_notes_card.configure(fg_color=t["surface_card"], border_color=t["border"])
+        if hasattr(self, "home_notes_entry"):
+            self.home_notes_entry.configure(fg_color=t["surface"], border_color=t["border"], text_color=t["text_primary"])
+        if hasattr(self, "clip_card"):
+            self.clip_card.configure(fg_color=t["surface_card"], border_color=t["border"])
+        if hasattr(self, "tools_card"):
+            self.tools_card.configure(fg_color=t["surface_card"], border_color=t["border"])
+        if hasattr(self, "home_tool_btns"):
+            for tb in self.home_tool_btns:
+                tb.configure(fg_color=t["surface"], border_color=t["border"], hover_color=t["border_secondary"])
+
         self._save_notch_theme()
+
+    def toggle_floating_mode(self):
+        """Toggles strictly between Docked Top-Center and Free-Floating mode as requested by Mamu."""
+        scale = ctk.ScalingTracker.get_window_scaling(self)
+        cur_w = self.expanded_w if self.is_expanded else self.compact_w
+        cur_h = self.expanded_h if self.is_expanded else self.compact_h
+        phys_w = round(cur_w * scale)
+        phys_h = round(cur_h * scale)
+
+        if getattr(self, "dock_mode", "TOP_CENTER") == "FLOATING":
+            # Snap back to top center dock
+            self.dock_mode = "TOP_CENTER"
+            self.pos_x = (self.screen_width - phys_w) // 2
+            self.pos_y = 0
+        else:
+            # Switch to free floating: place gently below top bar so user can drag freely
+            self.dock_mode = "FLOATING"
+            self.pos_x = (self.screen_width - phys_w) // 2
+            self.pos_y = 60
+
+        self.geometry(f"{cur_w}x{cur_h}+{self.pos_x}+{self.pos_y}")
+        radius = round(20 * scale) if self.is_expanded else (phys_h // 2)
+        self._apply_native_round_region(phys_w, phys_h, radius)
+        self._update_top_navbar_toggles()
+        self._update_notch_mode_card_label()
+        self._save_notch_position()
+
+    def _update_top_navbar_toggles(self):
+        t = self.theme
+        if hasattr(self, "float_toggle_btn"):
+            is_float = (getattr(self, "dock_mode", "TOP_CENTER") == "FLOATING")
+            self.float_toggle_btn.configure(
+                text="⚓ Dock" if is_float else "🪟 Float",
+                fg_color=t["accent"] if is_float else t["surface_card"],
+                text_color="#ffffff" if is_float else t["text_primary"],
+                hover_color=t["border_secondary"]
+            )
+        if hasattr(self, "sticky_toggle_btn"):
+            self.sticky_toggle_btn.configure(
+                text="📌 Sticky" if self.is_pinned else "🔓 Auto",
+                fg_color=t["accent"] if self.is_pinned else t["surface_card"],
+                text_color="#ffffff" if self.is_pinned else t["text_muted"],
+                hover_color=t["border_secondary"]
+            )
 
     def set_dock_mode(self, mode: str):
         """Sets the dynamic positioning dock mode and updates window placement."""
@@ -785,6 +939,7 @@ class AbhiGlobalTopNotch(ctk.CTk):
             radius = round(20 * scale) if self.is_expanded else (phys_h // 2)
             self._apply_native_round_region(phys_w, phys_h, radius)
             self._update_notch_mode_card_label()
+            self._update_top_navbar_toggles()
             self._save_notch_position()
         else:
             if click_action:
@@ -823,76 +978,127 @@ class AbhiGlobalTopNotch(ctk.CTk):
         self._apply_native_round_region(phys_w, phys_h, radius)
 
     def expand_notch(self):
-        if self.is_expanded:
+        if self.is_expanded or getattr(self, "_is_animating", False):
             return
 
         scale = ctk.ScalingTracker.get_window_scaling(self)
-        phys_w = round(self.expanded_w * scale)
-        phys_h = round(self.expanded_h * scale)
-        compact_phys_w = round(self.compact_w * scale)
+        target_w = self.expanded_w
+        target_h = self.expanded_h
+        phys_target_w = round(target_w * scale)
+        phys_target_h = round(target_h * scale)
 
         mode = getattr(self, "dock_mode", "TOP_CENTER")
         if mode == "TOP_CENTER":
-            self.pos_x = (self.screen_width - phys_w) // 2
+            self.pos_x = (self.screen_width - phys_target_w) // 2
             self.pos_y = 0
         elif mode == "TOP_LEFT":
             self.pos_x = 40
             self.pos_y = 0
         elif mode == "TOP_RIGHT":
-            self.pos_x = self.screen_width - phys_w - 40
+            self.pos_x = self.screen_width - phys_target_w - 40
             self.pos_y = 0
         else:
+            compact_phys_w = round(self.compact_w * scale)
             center_x = self.pos_x + (compact_phys_w // 2)
-            self.pos_x = max(0, min(self.screen_width - phys_w, center_x - (phys_w // 2)))
-            self.pos_y = max(0, min(self.screen_height - phys_h, self.pos_y))
+            self.pos_x = max(0, min(self.screen_width - phys_target_w, center_x - (phys_target_w // 2)))
+            self.pos_y = max(0, min(self.screen_height - phys_target_h, self.pos_y))
 
         self.is_expanded = True
+        self._is_animating = True
 
         self.compact_frame.pack_forget()
         self.expanded_frame.pack(fill="both", expand=True)
 
-        self.geometry(f"{self.expanded_w}x{self.expanded_h}+{self.pos_x}+{self.pos_y}")
-        self.update_idletasks()
-        radius = round(20 * scale)
-        self._apply_native_round_region(phys_w, phys_h, radius)
-        self._save_notch_position()
-        if hasattr(self, "input_entry"):
-            self.input_entry.focus_set()
+        # Smooth dynamic easing steps (macOS Dynamic Island physics over ~56ms)
+        h_steps = [140, 260, 350, target_h]
+        w_steps = [420, 560, 660, target_w]
+
+        def _step_expand(idx):
+            if idx >= len(h_steps):
+                self._is_animating = False
+                self.geometry(f"{target_w}x{target_h}+{self.pos_x}+{self.pos_y}")
+                self.update_idletasks()
+                self._apply_native_round_region(phys_target_w, phys_target_h, round(20 * scale))
+                self._update_top_navbar_toggles()
+                self._save_notch_position()
+                if hasattr(self, "input_entry"):
+                    self.input_entry.focus_set()
+                return
+
+            cur_w_step = w_steps[idx]
+            cur_h_step = h_steps[idx]
+            step_phys_w = round(cur_w_step * scale)
+            step_phys_h = round(cur_h_step * scale)
+
+            if mode == "TOP_CENTER":
+                step_x = (self.screen_width - step_phys_w) // 2
+            else:
+                step_x = self.pos_x
+
+            self.geometry(f"{cur_w_step}x{cur_h_step}+{step_x}+{self.pos_y}")
+            self._apply_native_round_region(step_phys_w, step_phys_h, round(20 * scale))
+            self.after(14, lambda: _step_expand(idx + 1))
+
+        _step_expand(0)
 
     def collapse_notch(self):
-        if not self.is_expanded or self.is_pinned:
+        if not self.is_expanded or self.is_pinned or getattr(self, "_is_animating", False):
             return
 
         scale = ctk.ScalingTracker.get_window_scaling(self)
-        phys_w = round(self.compact_w * scale)
-        phys_h = round(self.compact_h * scale)
-        expanded_phys_w = round(self.expanded_w * scale)
+        target_w = self.compact_w
+        target_h = self.compact_h
+        phys_target_w = round(target_w * scale)
+        phys_target_h = round(target_h * scale)
 
         mode = getattr(self, "dock_mode", "TOP_CENTER")
         if mode == "TOP_CENTER":
-            self.pos_x = (self.screen_width - phys_w) // 2
+            self.pos_x = (self.screen_width - phys_target_w) // 2
             self.pos_y = 0
         elif mode == "TOP_LEFT":
             self.pos_x = 40
             self.pos_y = 0
         elif mode == "TOP_RIGHT":
-            self.pos_x = self.screen_width - phys_w - 40
+            self.pos_x = self.screen_width - phys_target_w - 40
             self.pos_y = 0
         else:
+            expanded_phys_w = round(self.expanded_w * scale)
             center_x = self.pos_x + (expanded_phys_w // 2)
-            self.pos_x = max(0, min(self.screen_width - phys_w, center_x - (phys_w // 2)))
-            self.pos_y = max(0, min(self.screen_height - phys_h, self.pos_y))
+            self.pos_x = max(0, min(self.screen_width - phys_target_w, center_x - (phys_target_w // 2)))
+            self.pos_y = max(0, min(self.screen_height - phys_target_h, self.pos_y))
 
         self.is_expanded = False
+        self._is_animating = True
 
-        self.expanded_frame.pack_forget()
-        self.compact_frame.pack(fill="both", expand=True)
+        h_steps = [280, 160, target_h]
+        w_steps = [540, 390, target_w]
 
-        self.geometry(f"{self.compact_w}x{self.compact_h}+{self.pos_x}+{self.pos_y}")
-        self.update_idletasks()
-        radius = phys_h // 2
-        self._apply_native_round_region(phys_w, phys_h, radius)
-        self._save_notch_position()
+        def _step_collapse(idx):
+            if idx >= len(h_steps):
+                self._is_animating = False
+                self.expanded_frame.pack_forget()
+                self.compact_frame.pack(fill="both", expand=True)
+                self.geometry(f"{target_w}x{target_h}+{self.pos_x}+{self.pos_y}")
+                self.update_idletasks()
+                self._apply_native_round_region(phys_target_w, phys_target_h, phys_target_h // 2)
+                self._save_notch_position()
+                return
+
+            cur_w_step = w_steps[idx]
+            cur_h_step = h_steps[idx]
+            step_phys_w = round(cur_w_step * scale)
+            step_phys_h = round(cur_h_step * scale)
+
+            if mode == "TOP_CENTER":
+                step_x = (self.screen_width - step_phys_w) // 2
+            else:
+                step_x = self.pos_x
+
+            self.geometry(f"{cur_w_step}x{cur_h_step}+{step_x}+{self.pos_y}")
+            self._apply_native_round_region(step_phys_w, step_phys_h, round(16 * scale))
+            self.after(14, lambda: _step_collapse(idx + 1))
+
+        _step_collapse(0)
 
     def toggle_mode(self):
         if self.is_expanded:
@@ -902,10 +1108,7 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
     def toggle_pin(self):
         self.is_pinned = not self.is_pinned
-        if self.is_pinned:
-            self.pin_btn.configure(text="📌 Pinned", fg_color="#0369a1")
-        else:
-            self.pin_btn.configure(text="📌", fg_color="transparent")
+        self._update_top_navbar_toggles()
 
     # ==========================================================================
     # 1. COMPACT NOTCH PILL VIEW (270x34 Resting, 380x34 Extended on Hover)
@@ -939,30 +1142,30 @@ class AbhiGlobalTopNotch(ctk.CTk):
         self.pill_beacon.pack(side="left", padx=(0, 4))
         self._bind_drag_and_click(self.pill_beacon, self.expand_notch)
 
-        pill_title = ctk.CTkLabel(
+        self.pill_title = ctk.CTkLabel(
             left_box,
             text="ABHI NOTCH",
             font=("Segoe UI", 8, "bold"),
-            text_color="#94a3b8"
+            text_color=t.get("accent", "#3882f6")
         )
-        pill_title.pack(side="left")
-        self._bind_drag_and_click(pill_title, self.expand_notch)
+        self.pill_title.pack(side="left")
+        self._bind_drag_and_click(self.pill_title, self.expand_notch)
 
         # Center: Live Clock & Dynamic Status Snippet
         self.pill_clock_lbl = ctk.CTkLabel(
             inner,
             text=time.strftime("%I:%M %p"),
             font=("Segoe UI", 8, "bold"),
-            text_color="#f8fafc"
+            text_color=t.get("text_primary", "#f8fafc")
         )
         self.pill_clock_lbl.pack(side="left", expand=True)
         self._bind_drag_and_click(self.pill_clock_lbl, self.expand_notch)
 
         self.pill_status_lbl = ctk.CTkLabel(
             inner,
-            text="",
+            text="• 28° Sunny",
             font=("Segoe UI", 8),
-            text_color="#cbd5e1"
+            text_color=t.get("text_muted", "#64748b")
         )
         self.pill_status_lbl.pack(side="left", padx=2)
         self._bind_drag_and_click(self.pill_status_lbl, self.expand_notch)
@@ -974,9 +1177,9 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
         self.pill_battery_lbl = ctk.CTkLabel(
             right_box,
-            text="⚡ 75%",
+            text="⚡ 99%",
             font=("Segoe UI", 8, "bold"),
-            text_color="#38bdf8"
+            text_color=t.get("accent", "#3882f6")
         )
         self.pill_battery_lbl.pack(side="left", padx=(0, 4))
         self._bind_drag_and_click(self.pill_battery_lbl, self.expand_notch)
@@ -985,7 +1188,7 @@ class AbhiGlobalTopNotch(ctk.CTk):
             right_box,
             text="▼",
             font=("Segoe UI", 7),
-            text_color="#94a3b8"
+            text_color=t.get("text_muted", "#94a3b8")
         )
         self.pill_chevron.pack(side="left")
         self._bind_drag_and_click(self.pill_chevron, self.expand_notch)
@@ -1032,72 +1235,73 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
         self.strip_battery_lbl = ctk.CTkLabel(
             h_right,
-            text="⚡ 75%",
+            text="⚡ 99%",
             font=("Segoe UI", 9, "bold"),
-            text_color="#38bdf8"
+            text_color=t.get("accent", "#3882f6")
         )
         self.strip_battery_lbl.pack(side="left", padx=(0, 6))
 
-        self.theme_btn = ctk.CTkButton(
+        # TWO STREAMLINED CONTROLS AS INSTRUCTED BY MAMU:
+        # 1. Free Floating Toggle
+        # 2. Sticky Pin Toggle
+        # Plus clean close button
+        is_float = (getattr(self, "dock_mode", "TOP_CENTER") == "FLOATING")
+        self.float_toggle_btn = ctk.CTkButton(
             h_right,
-            text="🎨",
-            width=26,
+            text="⚓ Dock" if is_float else "🪟 Float",
+            width=58,
             height=26,
-            corner_radius=8,
-            fg_color="transparent",
-            hover_color="#1e293b",
-            text_color=t.get("accent", "#3882f6"),
-            font=("Segoe UI", 9),
-            command=self.cycle_theme
+            corner_radius=13,
+            fg_color=t["accent"] if is_float else t["surface_card"],
+            text_color="#ffffff" if is_float else t["text_primary"],
+            hover_color=t["border_secondary"],
+            font=("Segoe UI", 8, "bold"),
+            command=self.toggle_floating_mode
         )
-        self.theme_btn.pack(side="left", padx=2)
+        self.float_toggle_btn.pack(side="left", padx=3)
 
-        self.center_btn = ctk.CTkButton(
+        self.sticky_toggle_btn = ctk.CTkButton(
             h_right,
-            text="🎯",
-            width=26,
+            text="📌 Sticky" if self.is_pinned else "🔓 Auto",
+            width=62,
             height=26,
-            corner_radius=8,
-            fg_color="transparent",
-            hover_color="#1e293b",
-            text_color="#38bdf8",
-            font=("Segoe UI", 9),
-            command=self.recenter_notch
-        )
-        self.center_btn.pack(side="left", padx=2)
-
-        self.pin_btn = ctk.CTkButton(
-            h_right,
-            text="📌",
-            width=26,
-            height=26,
-            corner_radius=8,
-            fg_color="transparent",
-            hover_color="#1e293b",
-            font=("Segoe UI", 9),
+            corner_radius=13,
+            fg_color=t["accent"] if self.is_pinned else t["surface_card"],
+            text_color="#ffffff" if self.is_pinned else t["text_muted"],
+            hover_color=t["border_secondary"],
+            font=("Segoe UI", 8, "bold"),
             command=self.toggle_pin
         )
-        self.pin_btn.pack(side="left", padx=2)
+        self.sticky_toggle_btn.pack(side="left", padx=3)
 
         close_btn = ctk.CTkButton(
             h_right,
             text="✕",
             width=26,
             height=26,
-            corner_radius=8,
+            corner_radius=13,
             fg_color="transparent",
             hover_color="#ef4444",
-            text_color="#94a3b8",
+            text_color=t.get("text_muted", "#64748b"),
             font=("Segoe UI", 9, "bold"),
-            command=self.toggle_mode
+            command=self.collapse_notch
         )
-        close_btn.pack(side="left", padx=2)
+        close_btn.pack(side="left", padx=(3, 0))
 
-        # Left: Time & Tag (Draggable header handle)
+        # Left: Live Beacon + Time + Tag + Weather
         h_left = ctk.CTkFrame(header_strip, fg_color="transparent")
         h_left.pack(side="left", fill="y")
         self._bind_drag_and_click(header_strip)
         self._bind_drag_and_click(h_left)
+
+        self.strip_beacon = ctk.CTkLabel(
+            h_left,
+            text="●",
+            font=("Segoe UI", 9, "bold"),
+            text_color="#22c55e"
+        )
+        self.strip_beacon.pack(side="left", padx=(0, 4))
+        self._bind_drag_and_click(self.strip_beacon)
 
         self.header_strip = header_strip
         self.strip_clock_lbl = ctk.CTkLabel(
@@ -1120,6 +1324,19 @@ class AbhiGlobalTopNotch(ctk.CTk):
         )
         self.tag_lbl.pack(side="left", padx=3)
         self._bind_drag_and_click(self.tag_lbl)
+        self.tag_lbl.bind("<Button-3>", lambda e: self.cycle_theme())
+
+        sep2 = ctk.CTkLabel(h_left, text="•", font=("Segoe UI", 8), text_color=t.get("text_muted", "#64748b"))
+        sep2.pack(side="left", padx=2)
+
+        self.strip_weather_lbl = ctk.CTkLabel(
+            h_left,
+            text="28° Sunny",
+            font=("Segoe UI", 8),
+            text_color=t.get("text_muted", "#64748b")
+        )
+        self.strip_weather_lbl.pack(side="left", padx=(2, 0))
+        self._bind_drag_and_click(self.strip_weather_lbl)
 
         # Center: High-Tech Tab Pills (Responsive spacing, guaranteed no clipping)
         h_center = ctk.CTkFrame(header_strip, fg_color="transparent")
@@ -1628,32 +1845,33 @@ class AbhiGlobalTopNotch(ctk.CTk):
     def _build_tab_calendar(self):
         f = ctk.CTkFrame(self.body_container, fg_color="transparent")
         self.tab_frames["CALENDAR"] = f
+        t = self.theme
 
         cal_grid = ctk.CTkFrame(f, fg_color="transparent")
         cal_grid.pack(fill="both", expand=True)
 
         # Left: Interactive Month Calendar
-        left_card = ctk.CTkFrame(cal_grid, fg_color="#0d1527", corner_radius=16, border_width=1, border_color="#1a2333")
-        left_card.pack(side="left", fill="both", expand=True, padx=(0, 6), pady=2)
+        self.cal_left_card = ctk.CTkFrame(cal_grid, fg_color=t["surface_card"], corner_radius=16, border_width=1, border_color=t["border"])
+        self.cal_left_card.pack(side="left", fill="both", expand=True, padx=(0, 6), pady=2)
 
         # Month Header
-        m_hdr = ctk.CTkFrame(left_card, fg_color="transparent")
+        m_hdr = ctk.CTkFrame(self.cal_left_card, fg_color="transparent")
         m_hdr.pack(fill="x", padx=12, pady=(10, 6))
 
-        m_title = ctk.CTkLabel(m_hdr, text="📅  November 2026", font=("Segoe UI", 10, "bold"), text_color="#f8fafc")
-        m_title.pack(side="left")
+        self.cal_m_title = ctk.CTkLabel(m_hdr, text="📅  November 2026", font=("Segoe UI", 10, "bold"), text_color=t["text_primary"])
+        self.cal_m_title.pack(side="left")
 
-        today_btn = ctk.CTkButton(m_hdr, text="Today", width=46, height=22, font=("Segoe UI", 7, "bold"), fg_color="#1e293b", corner_radius=6)
-        today_btn.pack(side="right")
+        self.cal_today_btn = ctk.CTkButton(m_hdr, text="Today", width=46, height=22, font=("Segoe UI", 7, "bold"), fg_color=t["surface"], text_color=t["text_secondary"], hover_color=t["border_secondary"], corner_radius=6)
+        self.cal_today_btn.pack(side="right")
 
         # Days Header
-        days_hdr = ctk.CTkFrame(left_card, fg_color="transparent")
+        days_hdr = ctk.CTkFrame(self.cal_left_card, fg_color="transparent")
         days_hdr.pack(fill="x", padx=12, pady=2)
         for day_name in ["S", "M", "T", "W", "T", "F", "S"]:
-            ctk.CTkLabel(days_hdr, text=day_name, font=("Segoe UI", 7, "bold"), text_color="#64748b", width=44).pack(side="left", expand=True)
+            ctk.CTkLabel(days_hdr, text=day_name, font=("Segoe UI", 7, "bold"), text_color=t["text_muted"], width=44).pack(side="left", expand=True)
 
         # Days Grid (7 Columns)
-        days_box = ctk.CTkFrame(left_card, fg_color="transparent")
+        days_box = ctk.CTkFrame(self.cal_left_card, fg_color="transparent")
         days_box.pack(fill="both", expand=True, padx=12, pady=(2, 10))
 
         events_map = {
@@ -1665,6 +1883,7 @@ class AbhiGlobalTopNotch(ctk.CTk):
             28: "🛡️ Security"
         }
 
+        self.cal_day_cells = []
         row_f = None
         for i in range(1, 31):
             if (i - 1) % 7 == 0:
@@ -1678,68 +1897,61 @@ class AbhiGlobalTopNotch(ctk.CTk):
                 row_f,
                 text=txt,
                 font=("Segoe UI", 8, "bold" if is_today else "normal"),
-                text_color="#000000" if is_today else ("#f97316" if has_ev else "#cbd5e1"),
-                fg_color="#ffffff" if is_today else ("#2e1d10" if has_ev else "transparent"),
-                corner_radius=6 if (is_today or has_ev) else 0,
+                text_color="#ffffff" if is_today else (t["accent"] if has_ev else t["text_secondary"]),
+                fg_color=t["accent"] if is_today else ("transparent"),
+                corner_radius=6 if is_today else 0,
                 width=44,
                 height=24
             )
             cell.pack(side="left", expand=True, padx=1, pady=1)
+            self.cal_day_cells.append((cell, is_today, has_ev))
 
-        # Right: Focus Timer & 2x2 Presets (Image 3 Exact Match)
-        right_card = ctk.CTkFrame(cal_grid, fg_color="#0d1527", corner_radius=16, border_width=1, border_color="#1a2333")
-        right_card.pack(side="right", fill="both", expand=True, padx=(6, 0), pady=2)
+        # Right: Focus Timer & 2x2 Presets
+        self.cal_right_card = ctk.CTkFrame(cal_grid, fg_color=t["surface_card"], corner_radius=16, border_width=1, border_color=t["border"])
+        self.cal_right_card.pack(side="right", fill="both", expand=True, padx=(6, 0), pady=2)
 
         # Timer Display
-        timer_box = ctk.CTkFrame(right_card, fg_color="transparent")
+        timer_box = ctk.CTkFrame(self.cal_right_card, fg_color="transparent")
         timer_box.pack(fill="both", expand=True, padx=16, pady=16)
 
-        ctk.CTkLabel(timer_box, text="FOCUS INTERVAL TIMER", font=("Segoe UI", 8, "bold"), text_color="#94a3b8").pack(pady=(4, 2))
+        ctk.CTkLabel(timer_box, text="FOCUS INTERVAL TIMER", font=("Segoe UI", 8, "bold"), text_color=t["text_muted"]).pack(pady=(4, 2))
 
-        self.timer_lbl = ctk.CTkLabel(timer_box, text="00:00", font=("Segoe UI", 36, "bold"), text_color="#ffffff")
+        self.timer_lbl = ctk.CTkLabel(timer_box, text="00:00", font=("Segoe UI", 36, "bold"), text_color=t["text_primary"])
         self.timer_lbl.pack(pady=8)
 
-        # Timer Buttons (Solid White Start pill, Dark Reset pill)
+        # Timer Buttons
         t_btns = ctk.CTkFrame(timer_box, fg_color="transparent")
         t_btns.pack(fill="x", pady=6)
 
         self.start_timer_btn = ctk.CTkButton(
-            t_btns, text="Start", font=("Segoe UI", 9, "bold"), fg_color="#ffffff", text_color="#000000",
-            hover_color="#f1f5f9", height=32, corner_radius=16, command=self.toggle_timer
+            t_btns, text="Start", font=("Segoe UI", 9, "bold"), fg_color=t["accent"], text_color="#ffffff",
+            hover_color=t["accent_hover"], height=32, corner_radius=16, command=self.toggle_timer
         )
         self.start_timer_btn.pack(side="left", fill="x", expand=True, padx=(0, 6))
 
-        reset_btn = ctk.CTkButton(
-            t_btns, text="Reset", font=("Segoe UI", 9, "bold"), fg_color="#1e293b", text_color="#cbd5e1",
-            hover_color="#334155", height=32, corner_radius=16, command=self.reset_timer
+        self.cal_reset_btn = ctk.CTkButton(
+            t_btns, text="Reset", font=("Segoe UI", 9, "bold"), fg_color=t["surface"], text_color=t["text_secondary"],
+            hover_color=t["border_secondary"], height=32, corner_radius=16, command=self.reset_timer
         )
-        reset_btn.pack(side="left", fill="x", expand=True, padx=(6, 0))
+        self.cal_reset_btn.pack(side="left", fill="x", expand=True, padx=(6, 0))
 
-        # 2x2 Preset Grid (Image 3: 5m, 15m, 25m, 50m)
+        # 2x2 Preset Grid
         presets_grid = ctk.CTkFrame(timer_box, fg_color="transparent")
         presets_grid.pack(fill="x", pady=(10, 4))
 
         row1 = ctk.CTkFrame(presets_grid, fg_color="transparent")
         row1.pack(fill="x", pady=2)
-        ctk.CTkButton(
-            row1, text="5m", font=("Segoe UI", 8, "bold"), fg_color="#111c34", text_color="#f1f5f9",
-            hover_color="#1e293b", height=28, corner_radius=8, command=lambda: self.set_timer_preset(5)
-        ).pack(side="left", fill="x", expand=True, padx=(0, 3))
-        ctk.CTkButton(
-            row1, text="15m", font=("Segoe UI", 8, "bold"), fg_color="#111c34", text_color="#f1f5f9",
-            hover_color="#1e293b", height=28, corner_radius=8, command=lambda: self.set_timer_preset(15)
-        ).pack(side="left", fill="x", expand=True, padx=(3, 0))
-
         row2 = ctk.CTkFrame(presets_grid, fg_color="transparent")
         row2.pack(fill="x", pady=2)
-        ctk.CTkButton(
-            row2, text="25m", font=("Segoe UI", 8, "bold"), fg_color="#111c34", text_color="#f1f5f9",
-            hover_color="#1e293b", height=28, corner_radius=8, command=lambda: self.set_timer_preset(25)
-        ).pack(side="left", fill="x", expand=True, padx=(0, 3))
-        ctk.CTkButton(
-            row2, text="50m", font=("Segoe UI", 8, "bold"), fg_color="#111c34", text_color="#f1f5f9",
-            hover_color="#1e293b", height=28, corner_radius=8, command=lambda: self.set_timer_preset(50)
-        ).pack(side="left", fill="x", expand=True, padx=(3, 0))
+
+        self.cal_preset_btns = []
+        for parent_row, min_val, side_pad in [(row1, 5, (0, 3)), (row1, 15, (3, 0)), (row2, 25, (0, 3)), (row2, 50, (3, 0))]:
+            btn = ctk.CTkButton(
+                parent_row, text=f"{min_val}m", font=("Segoe UI", 8, "bold"), fg_color=t["surface"], text_color=t["text_primary"],
+                hover_color=t["border_secondary"], height=28, corner_radius=8, command=lambda m=min_val: self.set_timer_preset(m)
+            )
+            btn.pack(side="left", fill="x", expand=True, padx=side_pad)
+            self.cal_preset_btns.append(btn)
 
     def toggle_timer(self):
         self.is_timer_running = not self.is_timer_running
@@ -1749,13 +1961,13 @@ class AbhiGlobalTopNotch(ctk.CTk):
                 self.timer_thread = threading.Thread(target=self._timer_worker, daemon=True)
                 self.timer_thread.start()
         else:
-            self.start_timer_btn.configure(text="Start", fg_color="#ffffff", text_color="#000000")
+            self.start_timer_btn.configure(text="Start", fg_color=self.theme["accent"], text_color="#ffffff")
 
     def reset_timer(self):
         self.is_timer_running = False
         self.timer_seconds = 0
         self.timer_lbl.configure(text="00:00")
-        self.start_timer_btn.configure(text="Start", fg_color="#ffffff", text_color="#000000")
+        self.start_timer_btn.configure(text="Start", fg_color=self.theme["accent"], text_color="#ffffff")
 
     def set_timer_preset(self, minutes: int):
         self.timer_seconds = minutes * 60
@@ -1780,67 +1992,71 @@ class AbhiGlobalTopNotch(ctk.CTk):
     def _build_tab_music(self):
         f = ctk.CTkFrame(self.body_container, fg_color="transparent")
         self.tab_frames["MUSIC"] = f
+        t = self.theme
 
-        card = ctk.CTkFrame(f, fg_color="#0d1527", corner_radius=16, border_width=1, border_color="#1a2333")
-        card.pack(fill="both", expand=True, padx=2, pady=2)
+        self.music_card = ctk.CTkFrame(f, fg_color=t["surface_card"], corner_radius=16, border_width=1, border_color=t["border"])
+        self.music_card.pack(fill="both", expand=True, padx=2, pady=2)
 
         # Track Header & Artwork Banner
-        top_row = ctk.CTkFrame(card, fg_color="transparent")
+        top_row = ctk.CTkFrame(self.music_card, fg_color="transparent")
         top_row.pack(fill="x", padx=16, pady=(12, 4))
 
         info_box = ctk.CTkFrame(top_row, fg_color="transparent")
         info_box.pack(side="left", fill="both", expand=True)
 
-        self.music_artist_lbl = ctk.CTkLabel(info_box, text="NOVA LANE · GOLDEN HOUR", font=("Segoe UI", 8, "bold"), text_color="#94a3b8", anchor="w")
+        self.music_artist_lbl = ctk.CTkLabel(info_box, text="NOVA LANE · GOLDEN HOUR", font=("Segoe UI", 8, "bold"), text_color=t["text_secondary"], anchor="w")
         self.music_artist_lbl.pack(fill="x")
 
-        self.music_title_lbl = ctk.CTkLabel(info_box, text="Golden Hour", font=("Segoe UI", 18, "bold"), text_color="#ffffff", anchor="w")
+        self.music_title_lbl = ctk.CTkLabel(info_box, text="Golden Hour", font=("Segoe UI", 18, "bold"), text_color=t["text_primary"], anchor="w")
         self.music_title_lbl.pack(fill="x", pady=(2, 0))
 
-        self.music_lyrics_lbl = ctk.CTkLabel(info_box, text='"Windows down, the city\'s glowing..."', font=("Segoe UI", 9, "italic"), text_color="#cbd5e1", anchor="w")
+        self.music_lyrics_lbl = ctk.CTkLabel(info_box, text='"Windows down, the city\'s glowing..."', font=("Segoe UI", 9, "italic"), text_color=t["text_secondary"], anchor="w")
         self.music_lyrics_lbl.pack(fill="x", pady=(2, 0))
 
         # Animated Equalizer Bars
-        self.eq_lbl = ctk.CTkLabel(top_row, text="  ▂ ▃ ▅ ▆ ▇ ▆ ▅ ▃  ", font=("Segoe UI", 12, "bold"), text_color="#f97316")
+        self.eq_lbl = ctk.CTkLabel(top_row, text="  ▂ ▃ ▅ ▆ ▇ ▆ ▅ ▃  ", font=("Segoe UI", 12, "bold"), text_color=t["accent"])
         self.eq_lbl.pack(side="right", padx=10)
 
         # Scrubber Slider
-        scrub_row = ctk.CTkFrame(card, fg_color="transparent")
+        scrub_row = ctk.CTkFrame(self.music_card, fg_color="transparent")
         scrub_row.pack(fill="x", padx=16, pady=6)
 
-        self.scrub_slider = ctk.CTkSlider(scrub_row, from_=0, to=self.music_duration, number_of_steps=self.music_duration)
+        self.scrub_slider = ctk.CTkSlider(scrub_row, from_=0, to=self.music_duration, number_of_steps=self.music_duration, button_color=t["accent"], progress_color=t["accent"])
         self.scrub_slider.set(self.music_progress)
         self.scrub_slider.pack(fill="x")
 
-        time_row = ctk.CTkFrame(card, fg_color="transparent")
+        time_row = ctk.CTkFrame(self.music_card, fg_color="transparent")
         time_row.pack(fill="x", padx=16)
-        self.cur_time_lbl = ctk.CTkLabel(time_row, text="0:34", font=("Segoe UI", 7, "bold"), text_color="#64748b")
+        self.cur_time_lbl = ctk.CTkLabel(time_row, text="0:34", font=("Segoe UI", 7, "bold"), text_color=t["text_muted"])
         self.cur_time_lbl.pack(side="left")
-        self.tot_time_lbl = ctk.CTkLabel(time_row, text="2:41", font=("Segoe UI", 7, "bold"), text_color="#64748b")
+        self.tot_time_lbl = ctk.CTkLabel(time_row, text="2:41", font=("Segoe UI", 7, "bold"), text_color=t["text_muted"])
         self.tot_time_lbl.pack(side="right")
 
         # Media Controls (Prev, Play/Pause, Next)
-        ctrl_row = ctk.CTkFrame(card, fg_color="transparent")
+        ctrl_row = ctk.CTkFrame(self.music_card, fg_color="transparent")
         ctrl_row.pack(fill="x", padx=16, pady=(6, 10))
 
-        prev_btn = ctk.CTkButton(ctrl_row, text="⏮", width=42, height=36, corner_radius=18, fg_color="#111c34", font=("Segoe UI", 12), command=self.media_prev)
-        prev_btn.pack(side="left", padx=6)
+        self.music_prev_btn = ctk.CTkButton(ctrl_row, text="⏮", width=42, height=36, corner_radius=18, fg_color=t["surface"], text_color=t["text_primary"], hover_color=t["border_secondary"], font=("Segoe UI", 12), command=self.media_prev)
+        self.music_prev_btn.pack(side="left", padx=6)
 
-        self.play_btn = ctk.CTkButton(ctrl_row, text="▶", width=52, height=36, corner_radius=18, fg_color="#ffffff", text_color="#000000", font=("Segoe UI", 13, "bold"), command=self.media_toggle_play)
+        self.play_btn = ctk.CTkButton(ctrl_row, text="▶", width=52, height=36, corner_radius=18, fg_color=t["accent"], text_color="#ffffff", hover_color=t["accent_hover"], font=("Segoe UI", 13, "bold"), command=self.media_toggle_play)
         self.play_btn.pack(side="left", padx=6)
 
-        next_btn = ctk.CTkButton(ctrl_row, text="⏭", width=42, height=36, corner_radius=18, fg_color="#111c34", font=("Segoe UI", 12), command=self.media_next)
-        next_btn.pack(side="left", padx=6)
+        self.music_next_btn = ctk.CTkButton(ctrl_row, text="⏭", width=42, height=36, corner_radius=18, fg_color=t["surface"], text_color=t["text_primary"], hover_color=t["border_secondary"], font=("Segoe UI", 12), command=self.media_next)
+        self.music_next_btn.pack(side="left", padx=6)
 
         # Quick Tray App Launchers
-        tray_lbl = ctk.CTkLabel(ctrl_row, text="Tray:", font=("Segoe UI", 8, "bold"), text_color="#64748b")
+        tray_lbl = ctk.CTkLabel(ctrl_row, text="Tray:", font=("Segoe UI", 8, "bold"), text_color=t["text_muted"])
         tray_lbl.pack(side="left", padx=(18, 6))
 
+        self.music_tray_btns = []
         for icon, app_url in [("🎵 Spotify", "spotify:"), ("▶ YouTube Music", "https://music.youtube.com")]:
-            ctk.CTkButton(
+            tb = ctk.CTkButton(
                 ctrl_row, text=icon, font=("Segoe UI", 7, "bold"), height=26, corner_radius=8,
-                fg_color="#111c34", text_color="#cbd5e1", command=lambda u=app_url: subprocess.Popen(["cmd.exe", "/c", "start", u])
-            ).pack(side="left", padx=3)
+                fg_color=t["surface"], text_color=t["text_secondary"], hover_color=t["border_secondary"], command=lambda u=app_url: subprocess.Popen(["cmd.exe", "/c", "start", u])
+            )
+            tb.pack(side="left", padx=3)
+            self.music_tray_btns.append(tb)
 
     def media_toggle_play(self):
         self.is_playing = not self.is_playing
@@ -1872,67 +2088,70 @@ class AbhiGlobalTopNotch(ctk.CTk):
     def _build_tab_vitals(self):
         f = ctk.CTkFrame(self.body_container, fg_color="transparent")
         self.tab_frames["VITALS"] = f
+        t = self.theme
 
-        card = ctk.CTkFrame(f, fg_color="#0d1527", corner_radius=16, border_width=1, border_color="#1a2333")
-        card.pack(fill="both", expand=True, padx=2, pady=2)
+        self.vitals_card = ctk.CTkFrame(f, fg_color=t["surface_card"], corner_radius=16, border_width=1, border_color=t["border"])
+        self.vitals_card.pack(fill="both", expand=True, padx=2, pady=2)
 
         # Telemetry Top Banner
-        top_ban = ctk.CTkFrame(card, fg_color="transparent")
+        top_ban = ctk.CTkFrame(self.vitals_card, fg_color="transparent")
         top_ban.pack(fill="x", padx=16, pady=(12, 8))
 
         # Screen Time
         st_box = ctk.CTkFrame(top_ban, fg_color="transparent")
         st_box.pack(side="left", fill="both", expand=True)
-        ctk.CTkLabel(st_box, text="SCREEN TIME", font=("Segoe UI", 7, "bold"), text_color="#64748b", anchor="w").pack(fill="x")
-        self.screen_time_lbl = ctk.CTkLabel(st_box, text="0h 00m", font=("Segoe UI", 12, "bold"), text_color="#f8fafc", anchor="w")
+        ctk.CTkLabel(st_box, text="SCREEN TIME", font=("Segoe UI", 7, "bold"), text_color=t["text_muted"], anchor="w").pack(fill="x")
+        self.screen_time_lbl = ctk.CTkLabel(st_box, text="0h 00m", font=("Segoe UI", 12, "bold"), text_color=t["text_primary"], anchor="w")
         self.screen_time_lbl.pack(fill="x")
 
         # Active Window
         aw_box = ctk.CTkFrame(top_ban, fg_color="transparent")
         aw_box.pack(side="left", fill="both", expand=True)
-        ctk.CTkLabel(aw_box, text="ACTIVE FOREGROUND WINDOW", font=("Segoe UI", 7, "bold"), text_color="#64748b", anchor="w").pack(fill="x")
-        self.active_win_lbl = ctk.CTkLabel(aw_box, text="Windows Desktop", font=("Segoe UI", 10, "bold"), text_color="#38bdf8", anchor="w")
+        ctk.CTkLabel(aw_box, text="ACTIVE FOREGROUND WINDOW", font=("Segoe UI", 7, "bold"), text_color=t["text_muted"], anchor="w").pack(fill="x")
+        self.active_win_lbl = ctk.CTkLabel(aw_box, text="Windows Desktop", font=("Segoe UI", 10, "bold"), text_color=t["accent"], anchor="w")
         self.active_win_lbl.pack(fill="x")
 
         # Power Status
         pw_box = ctk.CTkFrame(top_ban, fg_color="transparent")
         pw_box.pack(side="right")
-        ctk.CTkLabel(pw_box, text="POWER STATUS", font=("Segoe UI", 7, "bold"), text_color="#64748b", anchor="e").pack(fill="x")
-        self.power_stat_lbl = ctk.CTkLabel(pw_box, text="⚡ 75% Connected", font=("Segoe UI", 10, "bold"), text_color="#22c55e", anchor="e")
+        ctk.CTkLabel(pw_box, text="POWER STATUS", font=("Segoe UI", 7, "bold"), text_color=t["text_muted"], anchor="e").pack(fill="x")
+        self.power_stat_lbl = ctk.CTkLabel(pw_box, text="⚡ 99% Connected", font=("Segoe UI", 10, "bold"), text_color="#22c55e", anchor="e")
         self.power_stat_lbl.pack(fill="x")
 
-        # 3 Big Radial / Gauge Cards (CPU, RAM, DISK)
-        gauges_row = ctk.CTkFrame(card, fg_color="transparent")
+        # 3 Big Gauge Cards (CPU, RAM, DISK)
+        gauges_row = ctk.CTkFrame(self.vitals_card, fg_color="transparent")
         gauges_row.pack(fill="x", padx=16, pady=(4, 6))
 
         # CPU Card
-        cpu_card = ctk.CTkFrame(gauges_row, fg_color="#111c34", corner_radius=12)
-        cpu_card.pack(side="left", fill="both", expand=True, padx=(0, 4))
-        ctk.CTkLabel(cpu_card, text="CPU USAGE", font=("Segoe UI", 7, "bold"), text_color="#38bdf8").pack(pady=(6, 1))
-        self.cpu_pct_lbl = ctk.CTkLabel(cpu_card, text="24%", font=("Segoe UI", 18, "bold"), text_color="#f8fafc")
+        self.cpu_card = ctk.CTkFrame(gauges_row, fg_color=t["surface"], corner_radius=12, border_width=1, border_color=t["border"])
+        self.cpu_card.pack(side="left", fill="both", expand=True, padx=(0, 4))
+        ctk.CTkLabel(self.cpu_card, text="CPU USAGE", font=("Segoe UI", 7, "bold"), text_color="#38bdf8").pack(pady=(6, 1))
+        self.cpu_pct_lbl = ctk.CTkLabel(self.cpu_card, text="24%", font=("Segoe UI", 18, "bold"), text_color=t["text_primary"])
         self.cpu_pct_lbl.pack(pady=2)
-        ctk.CTkLabel(cpu_card, text="Multi-Core", font=("Segoe UI", 7), text_color="#64748b").pack(pady=(0, 6))
+        ctk.CTkLabel(self.cpu_card, text="Multi-Core", font=("Segoe UI", 7), text_color=t["text_muted"]).pack(pady=(0, 6))
 
         # RAM Card
-        ram_card = ctk.CTkFrame(gauges_row, fg_color="#111c34", corner_radius=12)
-        ram_card.pack(side="left", fill="both", expand=True, padx=2)
-        ctk.CTkLabel(ram_card, text="RAM USAGE", font=("Segoe UI", 7, "bold"), text_color="#f97316").pack(pady=(6, 1))
-        self.ram_pct_lbl = ctk.CTkLabel(ram_card, text="45%", font=("Segoe UI", 18, "bold"), text_color="#f8fafc")
+        self.ram_card = ctk.CTkFrame(gauges_row, fg_color=t["surface"], corner_radius=12, border_width=1, border_color=t["border"])
+        self.ram_card.pack(side="left", fill="both", expand=True, padx=2)
+        ctk.CTkLabel(self.ram_card, text="RAM USAGE", font=("Segoe UI", 7, "bold"), text_color="#f97316").pack(pady=(6, 1))
+        self.ram_pct_lbl = ctk.CTkLabel(self.ram_card, text="45%", font=("Segoe UI", 18, "bold"), text_color=t["text_primary"])
         self.ram_pct_lbl.pack(pady=2)
-        ctk.CTkLabel(ram_card, text="16 GB Total", font=("Segoe UI", 7), text_color="#64748b").pack(pady=(0, 6))
+        ctk.CTkLabel(self.ram_card, text="16 GB Total", font=("Segoe UI", 7), text_color=t["text_muted"]).pack(pady=(0, 6))
 
         # Disk Card
-        disk_card = ctk.CTkFrame(gauges_row, fg_color="#111c34", corner_radius=12)
-        disk_card.pack(side="left", fill="both", expand=True, padx=(4, 0))
-        ctk.CTkLabel(disk_card, text="DISK USAGE", font=("Segoe UI", 7, "bold"), text_color="#a855f7").pack(pady=(6, 1))
-        self.disk_pct_lbl = ctk.CTkLabel(disk_card, text="32%", font=("Segoe UI", 18, "bold"), text_color="#f8fafc")
+        self.disk_card = ctk.CTkFrame(gauges_row, fg_color=t["surface"], corner_radius=12, border_width=1, border_color=t["border"])
+        self.disk_card.pack(side="left", fill="both", expand=True, padx=(4, 0))
+        ctk.CTkLabel(self.disk_card, text="DISK USAGE", font=("Segoe UI", 7, "bold"), text_color="#a855f7").pack(pady=(6, 1))
+        self.disk_pct_lbl = ctk.CTkLabel(self.disk_card, text="32%", font=("Segoe UI", 18, "bold"), text_color=t["text_primary"])
         self.disk_pct_lbl.pack(pady=2)
-        ctk.CTkLabel(disk_card, text="NVMe SSD", font=("Segoe UI", 7), text_color="#64748b").pack(pady=(0, 6))
+        ctk.CTkLabel(self.disk_card, text="NVMe SSD", font=("Segoe UI", 7), text_color=t["text_muted"]).pack(pady=(0, 6))
 
-        # Tray Icons Row (Matches Image 5 & Image 7)
-        tray_f = ctk.CTkFrame(card, fg_color="transparent")
+        # Tray Icons Row
+        tray_f = ctk.CTkFrame(self.vitals_card, fg_color="transparent")
         tray_f.pack(fill="x", padx=16, pady=(2, 4))
-        ctk.CTkLabel(tray_f, text="Tray:", font=("Segoe UI", 8, "bold"), text_color="#64748b").pack(side="left", padx=(0, 6))
+        ctk.CTkLabel(tray_f, text="Tray:", font=("Segoe UI", 8, "bold"), text_color=t["text_muted"]).pack(side="left", padx=(0, 6))
+
+        self.vitals_tray_btns = []
         for icon, cmd in [
             ("▶", lambda: self.toggle_music()),
             ("💬", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "whatsapp://"])),
@@ -1942,23 +2161,25 @@ class AbhiGlobalTopNotch(ctk.CTk):
             ("📊", lambda: subprocess.Popen(["taskmgr.exe"])),
             ("📅", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "outlookcal:"]))
         ]:
-            ctk.CTkButton(
+            vb = ctk.CTkButton(
                 tray_f, text=icon, width=24, height=22, corner_radius=6,
-                fg_color="#111c34", hover_color="#1e293b", font=("Segoe UI", 8), command=cmd
-            ).pack(side="left", padx=2)
+                fg_color=t["surface"], hover_color=t["border_secondary"], font=("Segoe UI", 8), command=cmd
+            )
+            vb.pack(side="left", padx=2)
+            self.vitals_tray_btns.append(vb)
 
-        # Bottom Analytics 2-Card Grid (Fills Bottom Space Perfectly!)
-        analytics_grid = ctk.CTkFrame(card, fg_color="transparent")
+        # Bottom Analytics 2-Card Grid
+        analytics_grid = ctk.CTkFrame(self.vitals_card, fg_color="transparent")
         analytics_grid.pack(fill="both", expand=True, padx=16, pady=(4, 8))
 
         # Left Analytics: Live Application Screen-Time History Breakdown
-        app_usage_card = ctk.CTkFrame(analytics_grid, fg_color="#111c34", corner_radius=12, border_width=1, border_color="#1e293b")
-        app_usage_card.pack(side="left", fill="both", expand=True, padx=(0, 4))
+        self.app_usage_card = ctk.CTkFrame(analytics_grid, fg_color=t["surface"], corner_radius=12, border_width=1, border_color=t["border"])
+        self.app_usage_card.pack(side="left", fill="both", expand=True, padx=(0, 4))
 
-        au_hdr = ctk.CTkFrame(app_usage_card, fg_color="transparent")
+        au_hdr = ctk.CTkFrame(self.app_usage_card, fg_color="transparent")
         au_hdr.pack(fill="x", padx=10, pady=(6, 3))
         ctk.CTkLabel(au_hdr, text="📊 Live Screen-Time History", font=("Segoe UI", 8, "bold"), text_color="#38bdf8").pack(side="left")
-        ctk.CTkLabel(au_hdr, text="4h 24m Total", font=("Segoe UI", 7), text_color="#64748b").pack(side="right")
+        ctk.CTkLabel(au_hdr, text="4h 24m Total", font=("Segoe UI", 7), text_color=t["text_muted"]).pack(side="right")
 
         app_stats = [
             ("Visual Studio Code", "3h 12m", 0.75, "#38bdf8"),
@@ -1967,39 +2188,39 @@ class AbhiGlobalTopNotch(ctk.CTk):
             ("ABHI Audio Core", "6m", 0.12, "#a855f7")
         ]
         for name, dur, ratio, bar_col in app_stats:
-            row = ctk.CTkFrame(app_usage_card, fg_color="transparent")
+            row = ctk.CTkFrame(self.app_usage_card, fg_color="transparent")
             row.pack(fill="x", padx=10, pady=1)
-            ctk.CTkLabel(row, text=name, font=("Segoe UI", 7), text_color="#cbd5e1", width=110, anchor="w").pack(side="left")
-            p_bar = ctk.CTkProgressBar(row, height=5, corner_radius=3, fg_color="#070b14", progress_color=bar_col)
+            ctk.CTkLabel(row, text=name, font=("Segoe UI", 7), text_color=t["text_secondary"], width=110, anchor="w").pack(side="left")
+            p_bar = ctk.CTkProgressBar(row, height=5, corner_radius=3, fg_color=t["surface_card"], progress_color=bar_col)
             p_bar.set(ratio)
             p_bar.pack(side="left", fill="x", expand=True, padx=6)
-            ctk.CTkLabel(row, text=dur, font=("Segoe UI", 7, "bold"), text_color="#94a3b8", width=42, anchor="e").pack(side="right")
+            ctk.CTkLabel(row, text=dur, font=("Segoe UI", 7, "bold"), text_color=t["text_muted"], width=42, anchor="e").pack(side="right")
 
         # Right Analytics: Live Network Bandwidth & Data Usage Sparkline
-        net_card = ctk.CTkFrame(analytics_grid, fg_color="#111c34", corner_radius=12, border_width=1, border_color="#1e293b")
-        net_card.pack(side="left", fill="both", expand=True, padx=(4, 0))
+        self.net_card = ctk.CTkFrame(analytics_grid, fg_color=t["surface"], corner_radius=12, border_width=1, border_color=t["border"])
+        self.net_card.pack(side="left", fill="both", expand=True, padx=(4, 0))
 
-        net_hdr = ctk.CTkFrame(net_card, fg_color="transparent")
+        net_hdr = ctk.CTkFrame(self.net_card, fg_color="transparent")
         net_hdr.pack(fill="x", padx=10, pady=(6, 3))
         ctk.CTkLabel(net_hdr, text="⚡ Live Network & Data Usage", font=("Segoe UI", 8, "bold"), text_color="#22c55e").pack(side="left")
-        ctk.CTkLabel(net_hdr, text="Session 1.84 GB", font=("Segoe UI", 7), text_color="#64748b").pack(side="right")
+        ctk.CTkLabel(net_hdr, text="Session 1.84 GB", font=("Segoe UI", 7), text_color=t["text_muted"]).pack(side="right")
 
         # Speed Stats Row
-        spd_row = ctk.CTkFrame(net_card, fg_color="transparent")
+        spd_row = ctk.CTkFrame(self.net_card, fg_color="transparent")
         spd_row.pack(fill="x", padx=10, pady=2)
         ctk.CTkLabel(spd_row, text="↓ 2.4 MB/s", font=("Segoe UI", 10, "bold"), text_color="#38bdf8").pack(side="left")
-        ctk.CTkLabel(spd_row, text="  |  ", font=("Segoe UI", 9), text_color="#475569").pack(side="left")
+        ctk.CTkLabel(spd_row, text="  |  ", font=("Segoe UI", 9), text_color=t["text_muted"]).pack(side="left")
         ctk.CTkLabel(spd_row, text="↑ 480 KB/s", font=("Segoe UI", 10, "bold"), text_color="#f97316").pack(side="left")
-        ctk.CTkLabel(spd_row, text="Latency: 14ms", font=("Segoe UI", 7), text_color="#64748b").pack(side="right")
+        ctk.CTkLabel(spd_row, text="Latency: 14ms", font=("Segoe UI", 7), text_color=t["text_muted"]).pack(side="right")
 
         # 8-Bar Sparkline Histogram
-        spark_f = ctk.CTkFrame(net_card, fg_color="#070b14", corner_radius=6, height=28)
-        spark_f.pack(fill="x", padx=10, pady=(4, 6))
-        spark_f.pack_propagate(False)
+        self.spark_f = ctk.CTkFrame(self.net_card, fg_color=t["surface_card"], corner_radius=6, height=28)
+        self.spark_f.pack(fill="x", padx=10, pady=(4, 6))
+        self.spark_f.pack_propagate(False)
 
         bar_heights = [10, 18, 14, 24, 20, 26, 16, 22]
         for bh in bar_heights:
-            b_item = ctk.CTkFrame(spark_f, fg_color="#38bdf8" if bh > 16 else "#6366f1", width=12, height=bh, corner_radius=2)
+            b_item = ctk.CTkFrame(self.spark_f, fg_color="#38bdf8" if bh > 16 else "#6366f1", width=12, height=bh, corner_radius=2)
             b_item.pack(side="left", fill="none", expand=True, anchor="s", pady=(0, 2), padx=2)
 
     # ==========================================================================
@@ -2009,8 +2230,8 @@ class AbhiGlobalTopNotch(ctk.CTk):
     def _build_tab_home(self):
         f = ctk.CTkFrame(self.body_container, fg_color="transparent")
         self.tab_frames["HOME"] = f
+        t = self.theme
 
-        # 4-Column Grid Frame (Image 10 Fenn.click Authentic Match)
         deck_grid = ctk.CTkFrame(f, fg_color="transparent")
         deck_grid.pack(fill="both", expand=True, padx=2, pady=2)
 
@@ -2019,43 +2240,43 @@ class AbhiGlobalTopNotch(ctk.CTk):
         col1.pack(side="left", fill="both", expand=True, padx=(0, 4))
 
         # Timer Card (Row 1)
-        timer_card = ctk.CTkFrame(col1, fg_color="#0d1527", corner_radius=14, border_width=1, border_color="#1a2333")
-        timer_card.pack(fill="both", expand=True, pady=(0, 4))
+        self.home_timer_card = ctk.CTkFrame(col1, fg_color=t["surface_card"], corner_radius=14, border_width=1, border_color=t["border"])
+        self.home_timer_card.pack(fill="both", expand=True, pady=(0, 4))
 
-        t_hdr = ctk.CTkFrame(timer_card, fg_color="transparent")
+        t_hdr = ctk.CTkFrame(self.home_timer_card, fg_color="transparent")
         t_hdr.pack(fill="x", padx=10, pady=(8, 2))
-        ctk.CTkLabel(t_hdr, text="⌛ Timer", font=("Segoe UI", 8, "bold"), text_color="#f8fafc").pack(side="left")
-        ctk.CTkButton(t_hdr, text="↺", width=20, height=20, corner_radius=6, fg_color="transparent", hover_color="#1e293b", font=("Segoe UI", 9), command=self.reset_home_timer).pack(side="right")
+        ctk.CTkLabel(t_hdr, text="⌛ Timer", font=("Segoe UI", 8, "bold"), text_color=t["text_primary"]).pack(side="left")
+        ctk.CTkButton(t_hdr, text="↺", width=20, height=20, corner_radius=6, fg_color="transparent", hover_color=t["border_secondary"], font=("Segoe UI", 9), command=self.reset_home_timer).pack(side="right")
 
         # Circular dial representation
-        dial_frame = ctk.CTkFrame(timer_card, fg_color="#111c34", corner_radius=32, width=64, height=64, border_width=2, border_color="#6366f1")
-        dial_frame.pack(pady=2)
-        dial_frame.pack_propagate(False)
-        self.home_timer_lbl = ctk.CTkLabel(dial_frame, text="25:00", font=("Segoe UI", 12, "bold"), text_color="#ffffff")
+        self.dial_frame = ctk.CTkFrame(self.home_timer_card, fg_color=t["surface"], corner_radius=32, width=64, height=64, border_width=2, border_color=t["accent"])
+        self.dial_frame.pack(pady=2)
+        self.dial_frame.pack_propagate(False)
+        self.home_timer_lbl = ctk.CTkLabel(self.dial_frame, text="25:00", font=("Segoe UI", 12, "bold"), text_color=t["text_primary"])
         self.home_timer_lbl.place(relx=0.5, rely=0.5, anchor="center")
 
         # Timer Controls (- ▶ +)
-        t_ctrls = ctk.CTkFrame(timer_card, fg_color="transparent")
+        t_ctrls = ctk.CTkFrame(self.home_timer_card, fg_color="transparent")
         t_ctrls.pack(pady=(2, 6))
-        ctk.CTkButton(t_ctrls, text="−", width=24, height=22, corner_radius=6, fg_color="#1e293b", hover_color="#334155", font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_home_timer(-5)).pack(side="left", padx=2)
-        self.home_timer_play_btn = ctk.CTkButton(t_ctrls, text="▶", width=28, height=22, corner_radius=6, fg_color="#6366f1", hover_color="#4f46e5", font=("Segoe UI", 9, "bold"), command=self.toggle_home_timer)
+        ctk.CTkButton(t_ctrls, text="−", width=24, height=22, corner_radius=6, fg_color=t["surface"], hover_color=t["border_secondary"], font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_home_timer(-5)).pack(side="left", padx=2)
+        self.home_timer_play_btn = ctk.CTkButton(t_ctrls, text="▶", width=28, height=22, corner_radius=6, fg_color=t["accent"], hover_color=t["accent_hover"], font=("Segoe UI", 9, "bold"), command=self.toggle_home_timer)
         self.home_timer_play_btn.pack(side="left", padx=2)
-        ctk.CTkButton(t_ctrls, text="+", width=24, height=22, corner_radius=6, fg_color="#1e293b", hover_color="#334155", font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_home_timer(5)).pack(side="left", padx=2)
+        ctk.CTkButton(t_ctrls, text="+", width=24, height=22, corner_radius=6, fg_color=t["surface"], hover_color=t["border_secondary"], font=("Segoe UI", 10, "bold"), command=lambda: self.adjust_home_timer(5)).pack(side="left", padx=2)
 
         # Coffee Always Card (Row 2)
-        coffee_card = ctk.CTkFrame(col1, fg_color="#0d1527", corner_radius=14, border_width=1, border_color="#1a2333")
-        coffee_card.pack(fill="x", pady=(0, 2))
+        self.home_coffee_card = ctk.CTkFrame(col1, fg_color=t["surface_card"], corner_radius=14, border_width=1, border_color=t["border"])
+        self.home_coffee_card.pack(fill="x", pady=(0, 2))
 
-        c_row = ctk.CTkFrame(coffee_card, fg_color="transparent")
+        c_row = ctk.CTkFrame(self.home_coffee_card, fg_color="transparent")
         c_row.pack(fill="x", padx=10, pady=8)
 
         c_left = ctk.CTkFrame(c_row, fg_color="transparent")
         c_left.pack(side="left", fill="y")
-        ctk.CTkLabel(c_left, text="☕ Coffee Always", font=("Segoe UI", 8, "bold"), text_color="#f8fafc", anchor="w").pack(fill="x")
-        self.coffee_status_lbl = ctk.CTkLabel(c_left, text="Keep awake" if self.is_coffee_on else "Off", font=("Segoe UI", 7), text_color="#38bdf8" if self.is_coffee_on else "#64748b", anchor="w")
+        ctk.CTkLabel(c_left, text="☕ Coffee Always", font=("Segoe UI", 8, "bold"), text_color=t["text_primary"], anchor="w").pack(fill="x")
+        self.coffee_status_lbl = ctk.CTkLabel(c_left, text="Keep awake" if self.is_coffee_on else "Off", font=("Segoe UI", 7), text_color=t["accent"] if self.is_coffee_on else t["text_muted"], anchor="w")
         self.coffee_status_lbl.pack(fill="x")
 
-        self.coffee_switch = ctk.CTkSwitch(c_row, text="", width=36, height=18, switch_width=36, switch_height=18, fg_color="#1e293b", progress_color="#22c55e", command=self.toggle_coffee_always)
+        self.coffee_switch = ctk.CTkSwitch(c_row, text="", width=36, height=18, switch_width=36, switch_height=18, fg_color=t["surface"], progress_color="#22c55e", command=self.toggle_coffee_always)
         self.coffee_switch.pack(side="right")
         if self.is_coffee_on:
             self.coffee_switch.select()
@@ -2065,39 +2286,40 @@ class AbhiGlobalTopNotch(ctk.CTk):
         col2.pack(side="left", fill="both", expand=True, padx=3)
 
         # Mini Music Card (Row 1)
-        music_card = ctk.CTkFrame(col2, fg_color="#0d1527", corner_radius=14, border_width=1, border_color="#1a2333")
-        music_card.pack(fill="both", expand=True, pady=(0, 4))
+        self.home_music_card = ctk.CTkFrame(col2, fg_color=t["surface_card"], corner_radius=14, border_width=1, border_color=t["border"])
+        self.home_music_card.pack(fill="both", expand=True, pady=(0, 4))
 
-        m_hdr = ctk.CTkFrame(music_card, fg_color="transparent")
+        m_hdr = ctk.CTkFrame(self.home_music_card, fg_color="transparent")
         m_hdr.pack(fill="x", padx=10, pady=(8, 2))
-        ctk.CTkLabel(m_hdr, text="♫ Late Night Focus", font=("Segoe UI", 8, "bold"), text_color="#f8fafc").pack(side="left")
-        ctk.CTkLabel(m_hdr, text="16:13", font=("Segoe UI", 7), text_color="#94a3b8").pack(side="right")
+        ctk.CTkLabel(m_hdr, text="♫ Late Night Focus", font=("Segoe UI", 8, "bold"), text_color=t["text_primary"]).pack(side="left")
+        ctk.CTkLabel(m_hdr, text="16:13", font=("Segoe UI", 7), text_color=t["text_muted"]).pack(side="right")
 
-        ctk.CTkLabel(music_card, text="Lo-Fi Radio · Continuous", font=("Segoe UI", 7), text_color="#64748b", anchor="w").pack(fill="x", padx=10, pady=(1, 2))
+        ctk.CTkLabel(self.home_music_card, text="Lo-Fi Radio · Continuous", font=("Segoe UI", 7), text_color=t["text_muted"], anchor="w").pack(fill="x", padx=10, pady=(1, 2))
 
         # Media Control Buttons (|<< ▶ >>|)
-        m_ctrls = ctk.CTkFrame(music_card, fg_color="transparent")
+        m_ctrls = ctk.CTkFrame(self.home_music_card, fg_color="transparent")
         m_ctrls.pack(pady=2)
-        ctk.CTkButton(m_ctrls, text="⏮", width=26, height=22, corner_radius=6, fg_color="#1e293b", hover_color="#334155", font=("Segoe UI", 8), command=lambda: self.toggle_music()).pack(side="left", padx=2)
-        self.home_music_play_btn = ctk.CTkButton(m_ctrls, text="▶", width=32, height=22, corner_radius=6, fg_color="#f97316", hover_color="#ea580c", font=("Segoe UI", 9, "bold"), command=self.toggle_music)
+        ctk.CTkButton(m_ctrls, text="⏮", width=26, height=22, corner_radius=6, fg_color=t["surface"], hover_color=t["border_secondary"], font=("Segoe UI", 8), command=lambda: self.toggle_music()).pack(side="left", padx=2)
+        self.home_music_play_btn = ctk.CTkButton(m_ctrls, text="▶", width=32, height=22, corner_radius=6, fg_color=t["accent"], hover_color=t["accent_hover"], font=("Segoe UI", 9, "bold"), command=self.toggle_music)
         self.home_music_play_btn.pack(side="left", padx=2)
-        ctk.CTkButton(m_ctrls, text="⏭", width=26, height=22, corner_radius=6, fg_color="#1e293b", hover_color="#334155", font=("Segoe UI", 8), command=lambda: self.toggle_music()).pack(side="left", padx=2)
+        ctk.CTkButton(m_ctrls, text="⏭", width=26, height=22, corner_radius=6, fg_color=t["surface"], hover_color=t["border_secondary"], font=("Segoe UI", 8), command=lambda: self.toggle_music()).pack(side="left", padx=2)
 
         # Notes Card (Row 2)
-        notes_card = ctk.CTkFrame(col2, fg_color="#0d1527", corner_radius=14, border_width=1, border_color="#1a2333")
-        notes_card.pack(fill="both", expand=True, pady=(0, 2))
+        self.home_notes_card = ctk.CTkFrame(col2, fg_color=t["surface_card"], corner_radius=14, border_width=1, border_color=t["border"])
+        self.home_notes_card.pack(fill="both", expand=True, pady=(0, 2))
 
-        n_hdr = ctk.CTkFrame(notes_card, fg_color="transparent")
+        n_hdr = ctk.CTkFrame(self.home_notes_card, fg_color="transparent")
         n_hdr.pack(fill="x", padx=10, pady=(6, 2))
-        ctk.CTkLabel(n_hdr, text="📝 Notes", font=("Segoe UI", 8, "bold"), text_color="#f8fafc").pack(side="left")
+        ctk.CTkLabel(n_hdr, text="📝 Notes", font=("Segoe UI", 8, "bold"), text_color=t["text_primary"]).pack(side="left")
 
         self.home_notes_entry = ctk.CTkEntry(
-            notes_card,
+            self.home_notes_card,
             placeholder_text="Write something...",
             font=("Segoe UI", 8),
             height=26,
-            fg_color="#111c34",
-            border_color="#1e293b",
+            fg_color=t["surface"],
+            border_color=t["border"],
+            text_color=t["text_primary"],
             corner_radius=6
         )
         self.home_notes_entry.pack(fill="x", padx=8, pady=(1, 6))
@@ -2106,33 +2328,33 @@ class AbhiGlobalTopNotch(ctk.CTk):
         col3 = ctk.CTkFrame(deck_grid, fg_color="transparent")
         col3.pack(side="left", fill="both", expand=True, padx=3)
 
-        clip_card = ctk.CTkFrame(col3, fg_color="#0d1527", corner_radius=14, border_width=1, border_color="#1a2333")
-        clip_card.pack(fill="both", expand=True, pady=(0, 4))
+        self.clip_card = ctk.CTkFrame(col3, fg_color=t["surface_card"], corner_radius=14, border_width=1, border_color=t["border"])
+        self.clip_card.pack(fill="both", expand=True, pady=(0, 4))
 
-        cl_hdr = ctk.CTkFrame(clip_card, fg_color="transparent")
+        cl_hdr = ctk.CTkFrame(self.clip_card, fg_color="transparent")
         cl_hdr.pack(fill="x", padx=10, pady=(8, 2))
-        ctk.CTkLabel(cl_hdr, text="📋 Clipboard", font=("Segoe UI", 8, "bold"), text_color="#f8fafc").pack(side="left")
-        ctk.CTkLabel(cl_hdr, text="⤢", font=("Segoe UI", 9), text_color="#64748b").pack(side="right")
+        ctk.CTkLabel(cl_hdr, text="📋 Clipboard", font=("Segoe UI", 8, "bold"), text_color=t["text_primary"]).pack(side="left")
+        ctk.CTkLabel(cl_hdr, text="⤢", font=("Segoe UI", 9), text_color=t["text_muted"]).pack(side="right")
 
         # Clipboard preview area
-        clip_preview = ctk.CTkFrame(clip_card, fg_color="#111c34", corner_radius=8)
+        clip_preview = ctk.CTkFrame(self.clip_card, fg_color=t["surface"], corner_radius=8)
         clip_preview.pack(fill="both", expand=True, padx=8, pady=3)
         clip_text = self.clipboard_history[0] if self.clipboard_history else "Copy something..."
-        self.home_clip_lbl = ctk.CTkLabel(clip_preview, text=clip_text, font=("Segoe UI", 7), text_color="#cbd5e1", wraplength=120, justify="left", anchor="nw")
+        self.home_clip_lbl = ctk.CTkLabel(clip_preview, text=clip_text, font=("Segoe UI", 7), text_color=t["text_secondary"], wraplength=120, justify="left", anchor="nw")
         self.home_clip_lbl.pack(fill="both", expand=True, padx=6, pady=6)
 
         # Quick action snippet buttons
         clip_actions = ctk.CTkFrame(col3, fg_color="transparent")
         clip_actions.pack(fill="x", pady=(0, 2))
-        ctk.CTkButton(clip_actions, text="🔗 Link", font=("Segoe UI", 7, "bold"), height=24, corner_radius=6, fg_color="#0d1527", hover_color="#1e293b", border_width=1, border_color="#1a2333", command=lambda: self._copy_to_system_clipboard("https://github.com/elayadesign/ai-design-skills")).pack(side="left", fill="x", expand=True, padx=(0, 2))
-        ctk.CTkButton(clip_actions, text="✂️ Snip", font=("Segoe UI", 7, "bold"), height=24, corner_radius=6, fg_color="#0d1527", hover_color="#1e293b", border_width=1, border_color="#1a2333", command=lambda: subprocess.Popen(["cmd.exe", "/c", "start", "ms-screenclip:"])).pack(side="left", fill="x", expand=True, padx=(2, 0))
+        ctk.CTkButton(clip_actions, text="🔗 Link", font=("Segoe UI", 7, "bold"), height=24, corner_radius=6, fg_color=t["surface_card"], hover_color=t["border_secondary"], border_width=1, border_color=t["border"], command=lambda: self._copy_to_system_clipboard("https://github.com/elayadesign/ai-design-skills")).pack(side="left", fill="x", expand=True, padx=(0, 2))
+        ctk.CTkButton(clip_actions, text="✂️ Snip", font=("Segoe UI", 7, "bold"), height=24, corner_radius=6, fg_color=t["surface_card"], hover_color=t["border_secondary"], border_width=1, border_color=t["border"], command=lambda: subprocess.Popen(["cmd.exe", "/c", "start", "ms-screenclip:"])).pack(side="left", fill="x", expand=True, padx=(2, 0))
 
-        # COLUMN 4: 2x4 Tool Button Grid (Image 10 Match)
+        # COLUMN 4: 2x4 Tool Button Grid
         col4 = ctk.CTkFrame(deck_grid, fg_color="transparent")
         col4.pack(side="left", fill="both", expand=True, padx=(3, 0))
 
-        tools_card = ctk.CTkFrame(col4, fg_color="#0d1527", corner_radius=14, border_width=1, border_color="#1a2333")
-        tools_card.pack(fill="both", expand=True, pady=0)
+        self.tools_card = ctk.CTkFrame(col4, fg_color=t["surface_card"], corner_radius=14, border_width=1, border_color=t["border"])
+        self.tools_card.pack(fill="both", expand=True, pady=0)
 
         tools = [
             ("Aa", "Font Inspector", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "charmap"])),
@@ -2145,9 +2367,9 @@ class AbhiGlobalTopNotch(ctk.CTk):
             ("⚙️", "Settings", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "ms-settings:"]))
         ]
 
-        # 4 rows of 2 buttons each
+        self.home_tool_btns = []
         for row_idx in range(4):
-            r_frame = ctk.CTkFrame(tools_card, fg_color="transparent")
+            r_frame = ctk.CTkFrame(self.tools_card, fg_color="transparent")
             r_frame.pack(fill="x", expand=True, padx=6, pady=2)
             for col_idx in range(2):
                 tool_idx = row_idx * 2 + col_idx
@@ -2158,13 +2380,14 @@ class AbhiGlobalTopNotch(ctk.CTk):
                     font=("Segoe UI", 9, "bold"),
                     height=30,
                     corner_radius=8,
-                    fg_color="#111c34",
-                    hover_color="#1e293b",
+                    fg_color=t["surface"],
+                    hover_color=t["border_secondary"],
                     border_width=1,
-                    border_color="#1a2333",
+                    border_color=t["border"],
                     command=cmd
                 )
                 btn.pack(side="left", fill="x", expand=True, padx=2)
+                self.home_tool_btns.append(btn)
 
     def toggle_coffee_always(self):
         self.is_coffee_on = not self.is_coffee_on
