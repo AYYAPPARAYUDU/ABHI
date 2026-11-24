@@ -71,18 +71,37 @@ if kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
     sys.exit(0)
 
 # ==============================================================================
-# THIRD-PARTY AUDIO & UI LIBRARIES
+# SAFE SITE-PACKAGES INJECTION & ROBUST MULTI-ENV IMPORT GUARD
 # ==============================================================================
-import sounddevice as sd
-import numpy as np
-import speech_recognition as sr
-import customtkinter as ctk
-import psutil
-
-# ABHI In-Process Engines
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 if APP_ROOT not in sys.path:
     sys.path.insert(0, APP_ROOT)
+
+for extra_p in [
+    os.path.join(APP_ROOT, ".venv", "Lib", "site-packages"),
+    r"C:\Python314\Lib\site-packages",
+    r"C:\Users\AYYAPPA RAYUDU\AppData\Roaming\Python\Python314\site-packages",
+]:
+    if os.path.exists(extra_p) and extra_p not in sys.path:
+        sys.path.insert(0, extra_p)
+
+try:
+    import sounddevice as sd
+except Exception:
+    sd = None
+
+try:
+    import numpy as np
+except Exception:
+    np = None
+
+try:
+    import speech_recognition as sr
+except Exception:
+    sr = None
+
+import customtkinter as ctk
+import psutil
 
 try:
     from backend.app.automation.desktop.dynamic_action_resolver import dynamic_action_resolver
@@ -324,8 +343,9 @@ class AbhiGlobalTopNotch(ctk.CTk):
         self.screen_height = max(self.winfo_screenheight(), phys_screen_h)
 
         # Dimensions calibrated for High-DPI screens
-        self.compact_w, self.compact_h = 280, 32
-        self.expanded_w, self.expanded_h = 720, 400
+        self.compact_w, self.compact_h = 320, 36
+        self.compact_hover_w = 460
+        self.expanded_w, self.expanded_h = 760, 420
         self._is_animating = False
 
         # Dynamic Drag-and-Drop Positioning State
@@ -699,6 +719,12 @@ class AbhiGlobalTopNotch(ctk.CTk):
             self.cal_m_title.configure(text_color=t["text_primary"])
         if hasattr(self, "cal_today_btn"):
             self.cal_today_btn.configure(fg_color=t["surface"], text_color=t["text_secondary"], hover_color=t["border_secondary"])
+        if hasattr(self, "cal_event_banner"):
+            self.cal_event_banner.configure(fg_color=t["surface"])
+        if hasattr(self, "cal_banner_lbl"):
+            self.cal_banner_lbl.configure(text_color=t["text_primary"])
+        if hasattr(self, "cal_sync_btn"):
+            self.cal_sync_btn.configure(fg_color=t["accent"], text_color="#ffffff", hover_color=t["accent_hover"])
         if hasattr(self, "timer_lbl"):
             self.timer_lbl.configure(text_color=t["text_primary"])
         if hasattr(self, "start_timer_btn"):
@@ -712,6 +738,9 @@ class AbhiGlobalTopNotch(ctk.CTk):
         if hasattr(self, "cal_preset_btns"):
             for pb in self.cal_preset_btns:
                 pb.configure(fg_color=t["surface"], text_color=t["text_primary"], hover_color=t["border_secondary"])
+        if hasattr(self, "cal_auto_btns"):
+            for ab in self.cal_auto_btns:
+                ab.configure(fg_color=t["surface_card"], text_color=t["accent"], hover_color=t["border_secondary"])
         if hasattr(self, "cal_day_cells"):
             for cell, is_today, has_ev in self.cal_day_cells:
                 if is_today:
@@ -1111,7 +1140,7 @@ class AbhiGlobalTopNotch(ctk.CTk):
         self._update_top_navbar_toggles()
 
     # ==========================================================================
-    # 1. COMPACT NOTCH PILL VIEW (270x34 Resting, 380x34 Extended on Hover)
+    # 1. COMPACT NOTCH PILL VIEW (320x36 Resting, 460x36 Extended on Hover)
     # ==========================================================================
 
     def _build_compact_notch_view(self):
@@ -1120,18 +1149,22 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
         # Sub-container for clean alignment
         inner = ctk.CTkFrame(cf, fg_color="transparent")
-        inner.pack(fill="both", expand=True, padx=10, pady=1)
+        inner.pack(fill="both", expand=True, padx=12, pady=1)
 
         # Drag-and-drop & expansion bindings
         self._bind_drag_and_click(cf, self.expand_notch)
         self._bind_drag_and_click(inner, self.expand_notch)
         cf.bind("<Enter>", self._on_compact_hover_enter)
         cf.bind("<Leave>", self._on_compact_hover_leave)
+        inner.bind("<Enter>", self._on_compact_hover_enter)
+        inner.bind("<Leave>", self._on_compact_hover_leave)
 
         # Left: Pulsing Green Dot + ABHI NOTCH
         left_box = ctk.CTkFrame(inner, fg_color="transparent")
         left_box.pack(side="left", fill="y")
         self._bind_drag_and_click(left_box, self.expand_notch)
+        left_box.bind("<Enter>", self._on_compact_hover_enter)
+        left_box.bind("<Leave>", self._on_compact_hover_leave)
 
         self.pill_beacon = ctk.CTkLabel(
             left_box,
@@ -1139,67 +1172,100 @@ class AbhiGlobalTopNotch(ctk.CTk):
             font=("Segoe UI", 10, "bold"),
             text_color="#22c55e"
         )
-        self.pill_beacon.pack(side="left", padx=(0, 4))
+        self.pill_beacon.pack(side="left", padx=(0, 5))
         self._bind_drag_and_click(self.pill_beacon, self.expand_notch)
+        self.pill_beacon.bind("<Enter>", self._on_compact_hover_enter)
 
         self.pill_title = ctk.CTkLabel(
             left_box,
             text="ABHI NOTCH",
-            font=("Segoe UI", 8, "bold"),
+            font=("Segoe UI", 9, "bold"),
             text_color=t.get("accent", "#3882f6")
         )
         self.pill_title.pack(side="left")
         self._bind_drag_and_click(self.pill_title, self.expand_notch)
+        self.pill_title.bind("<Enter>", self._on_compact_hover_enter)
 
         # Center: Live Clock & Dynamic Status Snippet
+        self.pill_center_box = ctk.CTkFrame(inner, fg_color="transparent")
+        self.pill_center_box.pack(side="left", fill="both", expand=True, padx=6)
+        self._bind_drag_and_click(self.pill_center_box, self.expand_notch)
+        self.pill_center_box.bind("<Enter>", self._on_compact_hover_enter)
+        self.pill_center_box.bind("<Leave>", self._on_compact_hover_leave)
+
         self.pill_clock_lbl = ctk.CTkLabel(
-            inner,
+            self.pill_center_box,
             text=time.strftime("%I:%M %p"),
             font=("Segoe UI", 8, "bold"),
             text_color=t.get("text_primary", "#f8fafc")
         )
-        self.pill_clock_lbl.pack(side="left", expand=True)
+        self.pill_clock_lbl.pack(side="left", padx=(0, 4))
         self._bind_drag_and_click(self.pill_clock_lbl, self.expand_notch)
+        self.pill_clock_lbl.bind("<Enter>", self._on_compact_hover_enter)
 
         self.pill_status_lbl = ctk.CTkLabel(
-            inner,
+            self.pill_center_box,
             text="• 28° Sunny",
             font=("Segoe UI", 8),
             text_color=t.get("text_muted", "#64748b")
         )
         self.pill_status_lbl.pack(side="left", padx=2)
         self._bind_drag_and_click(self.pill_status_lbl, self.expand_notch)
+        self.pill_status_lbl.bind("<Enter>", self._on_compact_hover_enter)
 
         # Right: Battery & Chevron
         right_box = ctk.CTkFrame(inner, fg_color="transparent")
         right_box.pack(side="right", fill="y")
         self._bind_drag_and_click(right_box, self.expand_notch)
+        right_box.bind("<Enter>", self._on_compact_hover_enter)
+        right_box.bind("<Leave>", self._on_compact_hover_leave)
 
         self.pill_battery_lbl = ctk.CTkLabel(
             right_box,
-            text="⚡ 99%",
+            text="⚡ 75%",
             font=("Segoe UI", 8, "bold"),
             text_color=t.get("accent", "#3882f6")
         )
         self.pill_battery_lbl.pack(side="left", padx=(0, 4))
         self._bind_drag_and_click(self.pill_battery_lbl, self.expand_notch)
+        self.pill_battery_lbl.bind("<Enter>", self._on_compact_hover_enter)
 
         self.pill_chevron = ctk.CTkLabel(
             right_box,
-            text="▼",
-            font=("Segoe UI", 7),
-            text_color=t.get("text_muted", "#94a3b8")
+            text="▾",
+            font=("Segoe UI", 9, "bold"),
+            text_color=t.get("text_secondary", "#94a3b8")
         )
         self.pill_chevron.pack(side="left")
         self._bind_drag_and_click(self.pill_chevron, self.expand_notch)
+        self.pill_chevron.bind("<Enter>", self._on_compact_hover_enter)
 
     def _on_compact_hover_enter(self, event=None):
-        if not self.is_expanded:
-            self.compact_frame.configure(border_color=self.theme.get("border_glow", "#06b6d4"))
-            self.pill_chevron.configure(text="▾", font=("Segoe UI", 8, "bold"), text_color=self.theme.get("accent", "#3882f6"))
+        if not self.is_expanded and not getattr(self, "_is_animating", False):
+            t = self.theme
+            self.compact_frame.configure(border_color=t.get("border_glow", "#06b6d4"))
+            self.pill_chevron.configure(text="▾ Open", font=("Segoe UI", 8, "bold"), text_color=t.get("accent", "#3882f6"))
+            act_w = getattr(self, "active_window_title", "Visual Studio Code")
+            short_act = act_w[:18] + "..." if len(act_w) > 18 else act_w
+            self.pill_status_lbl.configure(
+                text=f"• {short_act} • 28° Sunny",
+                text_color=t.get("text_primary", "#f8fafc")
+            )
+            # Smoothly extend pill width to hover extended size
+            scale = ctk.ScalingTracker.get_window_scaling(self)
+            target_w = getattr(self, "compact_hover_w", 460)
+            phys_w = round(target_w * scale)
+            phys_h = round(self.compact_h * scale)
+            mode = getattr(self, "dock_mode", "TOP_CENTER")
+            if mode == "TOP_CENTER":
+                pos_x = (self.screen_width - phys_w) // 2
+            else:
+                pos_x = self.pos_x
+            self.geometry(f"{target_w}x{self.compact_h}+{pos_x}+{self.pos_y}")
+            self._apply_native_round_region(phys_w, phys_h, phys_h // 2)
 
     def _on_compact_hover_leave(self, event=None):
-        if not self.is_expanded:
+        if not self.is_expanded and not getattr(self, "_is_animating", False):
             try:
                 x = self.winfo_pointerx()
                 y = self.winfo_pointery()
@@ -1211,8 +1277,22 @@ class AbhiGlobalTopNotch(ctk.CTk):
                     return
             except Exception:
                 pass
-            self.compact_frame.configure(border_color=self.theme["border"])
-            self.pill_chevron.configure(text="▼", font=("Segoe UI", 7), text_color=self.theme["text_muted"])
+            t = self.theme
+            self.compact_frame.configure(border_color=t["border"])
+            self.pill_chevron.configure(text="▾", font=("Segoe UI", 9, "bold"), text_color=t["text_secondary"])
+            self.pill_status_lbl.configure(text="• 28° Sunny", text_color=t["text_muted"])
+            # Return smoothly to compact resting width
+            scale = ctk.ScalingTracker.get_window_scaling(self)
+            target_w = self.compact_w
+            phys_w = round(target_w * scale)
+            phys_h = round(self.compact_h * scale)
+            mode = getattr(self, "dock_mode", "TOP_CENTER")
+            if mode == "TOP_CENTER":
+                pos_x = (self.screen_width - phys_w) // 2
+            else:
+                pos_x = self.pos_x
+            self.geometry(f"{target_w}x{self.compact_h}+{pos_x}+{self.pos_y}")
+            self._apply_native_round_region(phys_w, phys_h, phys_h // 2)
 
     # ==========================================================================
     # 2. EXPANDED NOTCH DECK VIEW (780x420, Ultra Responsive HUD)
@@ -1856,13 +1936,42 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
         # Month Header
         m_hdr = ctk.CTkFrame(self.cal_left_card, fg_color="transparent")
-        m_hdr.pack(fill="x", padx=12, pady=(10, 6))
+        m_hdr.pack(fill="x", padx=12, pady=(10, 4))
 
         self.cal_m_title = ctk.CTkLabel(m_hdr, text="📅  November 2026", font=("Segoe UI", 10, "bold"), text_color=t["text_primary"])
         self.cal_m_title.pack(side="left")
 
         self.cal_today_btn = ctk.CTkButton(m_hdr, text="Today", width=46, height=22, font=("Segoe UI", 7, "bold"), fg_color=t["surface"], text_color=t["text_secondary"], hover_color=t["border_secondary"], corner_radius=6)
         self.cal_today_btn.pack(side="right")
+
+        # Autonomous AI Sync Highlight Banner (Image 6 / Two-Code Exact Match)
+        self.cal_event_banner = ctk.CTkFrame(self.cal_left_card, fg_color=t["surface"], corner_radius=8, height=30)
+        self.cal_event_banner.pack(fill="x", padx=12, pady=(0, 6))
+
+        b_left = ctk.CTkFrame(self.cal_event_banner, fg_color="transparent")
+        b_left.pack(side="left", padx=8, pady=4)
+        ctk.CTkLabel(b_left, text="⚡", font=("Segoe UI", 9), text_color="#f97316").pack(side="left", padx=(0, 4))
+        self.cal_banner_lbl = ctk.CTkLabel(
+            b_left,
+            text=f"Day {time.strftime('%d')}: ABHI AI Autonomous Neural Sync",
+            font=("Segoe UI", 8, "bold"),
+            text_color=t["text_primary"]
+        )
+        self.cal_banner_lbl.pack(side="left")
+
+        self.cal_sync_btn = ctk.CTkButton(
+            self.cal_event_banner,
+            text="AI SYNC",
+            font=("Segoe UI", 7, "bold"),
+            width=54,
+            height=20,
+            corner_radius=6,
+            fg_color=t["accent"],
+            text_color="#ffffff",
+            hover_color=t["accent_hover"],
+            command=lambda: self.submit_input_text("sync system state")
+        )
+        self.cal_sync_btn.pack(side="right", padx=6, pady=4)
 
         # Days Header
         days_hdr = ctk.CTkFrame(self.cal_left_card, fg_color="transparent")
@@ -1890,7 +1999,7 @@ class AbhiGlobalTopNotch(ctk.CTk):
                 row_f = ctk.CTkFrame(days_box, fg_color="transparent")
                 row_f.pack(fill="x", expand=True)
 
-            is_today = (i == 18)
+            is_today = (i == int(time.strftime('%d')) if time.strftime('%d').lstrip('0') == str(i) else False) or (i == 18)
             has_ev = i in events_map
             txt = f"{i} •" if has_ev else str(i)
             cell = ctk.CTkLabel(
@@ -1901,57 +2010,94 @@ class AbhiGlobalTopNotch(ctk.CTk):
                 fg_color=t["accent"] if is_today else ("transparent"),
                 corner_radius=6 if is_today else 0,
                 width=44,
-                height=24
+                height=22
             )
             cell.pack(side="left", expand=True, padx=1, pady=1)
             self.cal_day_cells.append((cell, is_today, has_ev))
 
-        # Right: Focus Timer & 2x2 Presets
+        # Right: Focus Timer & Active Automations (Image 6 Exact Match)
         self.cal_right_card = ctk.CTkFrame(cal_grid, fg_color=t["surface_card"], corner_radius=16, border_width=1, border_color=t["border"])
         self.cal_right_card.pack(side="right", fill="both", expand=True, padx=(6, 0), pady=2)
 
         # Timer Display
         timer_box = ctk.CTkFrame(self.cal_right_card, fg_color="transparent")
-        timer_box.pack(fill="both", expand=True, padx=16, pady=16)
+        timer_box.pack(fill="both", expand=True, padx=14, pady=10)
 
-        ctk.CTkLabel(timer_box, text="FOCUS INTERVAL TIMER", font=("Segoe UI", 8, "bold"), text_color=t["text_muted"]).pack(pady=(4, 2))
+        ctk.CTkLabel(timer_box, text="FOCUS INTERVAL TIMER", font=("Segoe UI", 8, "bold"), text_color=t["text_muted"]).pack(pady=(2, 1))
 
-        self.timer_lbl = ctk.CTkLabel(timer_box, text="00:00", font=("Segoe UI", 36, "bold"), text_color=t["text_primary"])
-        self.timer_lbl.pack(pady=8)
+        self.timer_lbl = ctk.CTkLabel(timer_box, text="00:00", font=("Segoe UI", 32, "bold"), text_color=t["text_primary"])
+        self.timer_lbl.pack(pady=4)
 
         # Timer Buttons
         t_btns = ctk.CTkFrame(timer_box, fg_color="transparent")
-        t_btns.pack(fill="x", pady=6)
+        t_btns.pack(fill="x", pady=4)
 
         self.start_timer_btn = ctk.CTkButton(
             t_btns, text="Start", font=("Segoe UI", 9, "bold"), fg_color=t["accent"], text_color="#ffffff",
-            hover_color=t["accent_hover"], height=32, corner_radius=16, command=self.toggle_timer
+            hover_color=t["accent_hover"], height=30, corner_radius=15, command=self.toggle_timer
         )
-        self.start_timer_btn.pack(side="left", fill="x", expand=True, padx=(0, 6))
+        self.start_timer_btn.pack(side="left", fill="x", expand=True, padx=(0, 4))
 
         self.cal_reset_btn = ctk.CTkButton(
             t_btns, text="Reset", font=("Segoe UI", 9, "bold"), fg_color=t["surface"], text_color=t["text_secondary"],
-            hover_color=t["border_secondary"], height=32, corner_radius=16, command=self.reset_timer
+            hover_color=t["border_secondary"], height=30, corner_radius=15, command=self.reset_timer
         )
-        self.cal_reset_btn.pack(side="left", fill="x", expand=True, padx=(6, 0))
+        self.cal_reset_btn.pack(side="left", fill="x", expand=True, padx=(4, 0))
 
-        # 2x2 Preset Grid
-        presets_grid = ctk.CTkFrame(timer_box, fg_color="transparent")
-        presets_grid.pack(fill="x", pady=(10, 4))
-
-        row1 = ctk.CTkFrame(presets_grid, fg_color="transparent")
-        row1.pack(fill="x", pady=2)
-        row2 = ctk.CTkFrame(presets_grid, fg_color="transparent")
-        row2.pack(fill="x", pady=2)
+        # Presets Row
+        presets_row = ctk.CTkFrame(timer_box, fg_color="transparent")
+        presets_row.pack(fill="x", pady=(6, 4))
 
         self.cal_preset_btns = []
-        for parent_row, min_val, side_pad in [(row1, 5, (0, 3)), (row1, 15, (3, 0)), (row2, 25, (0, 3)), (row2, 50, (3, 0))]:
+        for min_val, p_icon in [(5, "⚡ 5m"), (15, "☕ 15m"), (25, "🎯 25m"), (50, "🧠 50m")]:
             btn = ctk.CTkButton(
-                parent_row, text=f"{min_val}m", font=("Segoe UI", 8, "bold"), fg_color=t["surface"], text_color=t["text_primary"],
-                hover_color=t["border_secondary"], height=28, corner_radius=8, command=lambda m=min_val: self.set_timer_preset(m)
+                presets_row, text=p_icon, font=("Segoe UI", 7, "bold"), fg_color=t["surface"], text_color=t["text_primary"],
+                hover_color=t["border_secondary"], height=24, corner_radius=6, command=lambda m=min_val: self.set_timer_preset(m)
             )
-            btn.pack(side="left", fill="x", expand=True, padx=side_pad)
+            btn.pack(side="left", fill="x", expand=True, padx=2)
             self.cal_preset_btns.append(btn)
+
+        # Active Automations Section (Image 6 Exact Match)
+        auto_hdr = ctk.CTkFrame(timer_box, fg_color="transparent")
+        auto_hdr.pack(fill="x", pady=(8, 2))
+        ctk.CTkLabel(auto_hdr, text="ACTIVE AUTOMATIONS", font=("Segoe UI", 7, "bold"), text_color=t["text_muted"]).pack(side="left")
+        ctk.CTkLabel(auto_hdr, text="1-click execute", font=("Segoe UI", 7), text_color=t["accent"]).pack(side="right")
+
+        automations = [
+            ("🌅", "Executive Morning Briefing & Mails", "Daily · 08:00 AM", lambda: self.submit_input_text("run executive morning briefing")),
+            ("🛡️", "System Security & Memory Audit", "Every 4 Hours · 12:00 PM", lambda: self.submit_input_text("run security and memory audit")),
+            ("📱", "POCO Redwood Wireless ADB Sync", "Daily · 06:30 PM", lambda: self.submit_input_text("sync poco redwood adb"))
+        ]
+        self.cal_auto_btns = []
+        for icon, title, sched, act in automations:
+            a_row = ctk.CTkFrame(timer_box, fg_color=t["surface"], corner_radius=8, height=30)
+            a_row.pack(fill="x", pady=2)
+            a_row.pack_propagate(False)
+
+            i_lbl = ctk.CTkLabel(a_row, text=icon, font=("Segoe UI", 9))
+            i_lbl.pack(side="left", padx=(8, 4))
+
+            t_box = ctk.CTkFrame(a_row, fg_color="transparent")
+            t_box.pack(side="left", fill="both", expand=True, pady=1)
+            t_lbl = ctk.CTkLabel(t_box, text=title, font=("Segoe UI", 7, "bold"), text_color=t["text_primary"], anchor="w")
+            t_lbl.pack(fill="x")
+            s_lbl = ctk.CTkLabel(t_box, text=sched, font=("Segoe UI", 6), text_color=t["text_muted"], anchor="w")
+            s_lbl.pack(fill="x")
+
+            r_btn = ctk.CTkButton(
+                a_row,
+                text="⚡ Run",
+                font=("Segoe UI", 7, "bold"),
+                width=44,
+                height=20,
+                corner_radius=5,
+                fg_color=t["surface_card"],
+                text_color=t["accent"],
+                hover_color=t["border_secondary"],
+                command=act
+            )
+            r_btn.pack(side="right", padx=6, pady=4)
+            self.cal_auto_btns.append(r_btn)
 
     def toggle_timer(self):
         self.is_timer_running = not self.is_timer_running
@@ -2315,14 +2461,17 @@ class AbhiGlobalTopNotch(ctk.CTk):
         self.home_notes_entry = ctk.CTkEntry(
             self.home_notes_card,
             placeholder_text="Write something...",
+            placeholder_text_color=t["text_muted"],
             font=("Segoe UI", 8),
-            height=26,
+            height=28,
             fg_color=t["surface"],
             border_color=t["border"],
+            border_width=1,
             text_color=t["text_primary"],
-            corner_radius=6
+            corner_radius=8
         )
         self.home_notes_entry.pack(fill="x", padx=8, pady=(1, 6))
+        self.home_notes_entry.bind("<Return>", lambda e: self._save_home_note())
 
         # COLUMN 3: Clipboard Shelf + Snippet Quick Actions
         col3 = ctk.CTkFrame(deck_grid, fg_color="transparent")
@@ -2358,7 +2507,7 @@ class AbhiGlobalTopNotch(ctk.CTk):
 
         tools = [
             ("Aa", "Font Inspector", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "charmap"])),
-            ("📱", "Phone Sync", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "ms-phone-link:"])),
+            ("📱 ●", "Phone Link / POCO Sync", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "ms-phone-link:"])),
             ("📸", "Screenshot", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "ms-screenclip:"])),
             ("🗔", "Pin Dock", self.toggle_pin),
             ("🎨", "Color Picker", lambda: subprocess.Popen(["cmd.exe", "/c", "start", "ms-paint:"])),
@@ -2517,6 +2666,22 @@ class AbhiGlobalTopNotch(ctk.CTk):
     # ==========================================================================
     # INPUT SUBMISSION & AI VOICE DISPATCH
     # ==========================================================================
+
+    def submit_input_text(self, text: str):
+        """Programmatically inputs and executes a system command into the HUD."""
+        if hasattr(self, "input_entry") and self.input_entry:
+            self.input_entry.delete(0, "end")
+            self.input_entry.insert(0, text)
+            self.submit_input()
+
+    def _save_home_note(self):
+        """Saves quick scratchpad note from the Home deck."""
+        if hasattr(self, "home_notes_entry") and self.home_notes_entry:
+            txt = self.home_notes_entry.get().strip()
+            if txt:
+                self.home_notes_text = txt
+                self.home_notes_entry.delete(0, "end")
+                self.home_notes_entry.configure(placeholder_text=f"Saved: {txt[:22]}...")
 
     def submit_input(self):
         text = self.input_entry.get().strip()
