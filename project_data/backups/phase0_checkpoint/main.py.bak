@@ -1,0 +1,227 @@
+"""Main FastAPI Application Entry Point."""
+
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, APIRouter
+from fastapi.middleware.cors import CORSMiddleware
+from backend.app.api.v1.health import router as health_router
+from backend.app.api.v1.models import router as models_router
+from backend.app.api.v1.tasks import router as tasks_router
+from backend.app.api.v1.perception import router as perception_router
+from backend.app.api.v1.runtime import router as runtime_router
+from backend.app.api.v1.memory import router as memory_router
+from backend.app.api.v1.knowledge import router as knowledge_router
+from backend.app.api.v1.evaluation import router as evaluation_router
+from backend.app.api.v1.skills import router as skills_router
+from backend.app.api.v1.applications import router as applications_router
+from backend.app.api.v1.browser import router as browser_router
+from backend.app.api.v1.workflow import workflow_router
+from backend.app.api.v1.procedures import router as procedures_router
+from backend.app.api.v1.resources import router as resources_router
+from backend.app.api.v1.media import router as media_router
+from backend.app.api.v1.agent import router as agent_router, gateway_router
+from backend.app.api.v1.business import router as business_router
+from backend.app.api.v1.decisions import router as decisions_router
+from backend.app.api.v1.devices import router as devices_router
+from backend.app.api.v1.quantum import router as quantum_router
+from backend.app.api.v1.desktop import router as desktop_router
+from backend.app.api.v1.monitors import router as monitors_router
+from backend.app.api.v1.analytics import router as analytics_router
+from backend.app.api.websockets.telemetry import router as ws_router
+from backend.app.core.config import settings
+from backend.app.core.logging import logger
+from backend.app.core.security import SecurityHeadersMiddleware
+from backend.app.services.llm.ollama_client import ollama_client
+from backend.app.services.memory.database import init_db
+from backend.app.runtime.resources import resource_manager
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager handling startup and shutdown events."""
+    logger.info("Initializing Local-First AI Backend Gateway & Cognitive Core...")
+
+    # Configure Windows asyncio Proactor resilience for socket closures
+    import asyncio
+    try:
+        loop = asyncio.get_running_loop()
+        orig_handler = loop.get_exception_handler()
+
+        def win_exception_handler(current_loop, context):
+            exc = context.get("exception")
+            if isinstance(exc, (ConnectionResetError, ConnectionAbortedError, BrokenPipeError)):
+                return
+            if isinstance(exc, OSError) and getattr(exc, "winerror", None) in (64, 121, 10054):
+                return
+            if orig_handler:
+                orig_handler(current_loop, context)
+            else:
+                current_loop.default_exception_handler(context)
+
+        loop.set_exception_handler(win_exception_handler)
+    except Exception:
+        pass
+
+    # 1. Initialize SQLite database & WAL mode
+    await init_db()
+
+    # 2. Check Ollama connectivity
+    ollama_ok = await ollama_client.is_healthy()
+    if ollama_ok:
+        models = await ollama_client.list_models()
+        logger.info(f"Ollama connected successfully. Available models: {[m.name for m in models]}")
+    else:
+        logger.warning(f"Ollama service is unreachable at {settings.OLLAMA_BASE_URL}.")
+
+    # 3. Initialize Resource Manager & Hardware Discovery
+    try:
+        res_startup = resource_manager.startup()
+        logger.info(f"Resource Manager initialized: mode={res_startup['mode']}, degraded={res_startup['degraded_mode']}")
+    except Exception as e:
+        logger.error(f"Resource manager startup error: {e}")
+
+    # 4. Initialize & Register Cognitive Agents and Desktop Adapters
+    try:
+        from backend.app.cognitive.registry.builtin_agents import register_builtin_agents
+        register_builtin_agents()
+        from backend.app.automation.orchestration.agents import register_grounded_agents
+        register_grounded_agents()
+        from backend.app.cognitive.registry.registry import agent_registry
+        agents = agent_registry.list_agents()
+        logger.info(f"Cognitive Agent Registry active with {len(agents)} agents: {[a.agent_id for a in agents]}")
+    except Exception as e:
+        logger.error(f"Agent registration error during startup: {e}")
+
+    # 5. Start Daily Evolution & Autonomous Knowledge Auto-Upgrade Loop
+    evolution_task = None
+    try:
+        from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_service
+
+        async def run_evolution_scheduler():
+            await asyncio.sleep(5)
+            await asyncio.to_thread(daily_evolution_service.execute_daily_evolution_cycle)
+            while True:
+                await asyncio.sleep(86400)
+                try:
+                    await asyncio.to_thread(daily_evolution_service.execute_daily_evolution_cycle)
+                except Exception as ex:
+                    logger.error(f"Error during daily evolution cycle: {ex}")
+
+        evolution_task = asyncio.create_task(run_evolution_scheduler())
+        logger.info("Autonomous Daily Evolution background loop started.")
+    except Exception as e:
+        logger.error(f"Failed to start daily evolution scheduler: {e}")
+
+    # 6. Start 24/7 Autonomous Multi-Agent Live Work Daemon (The 4 Intelligence Tiers in Action)
+    try:
+        from backend.app.intelligence.autonomous_autopilot import autonomous_autopilot
+        autonomous_autopilot.start_live_work()
+        logger.info("24/7 Autonomous Multi-Agent Live Work Daemon initialized.")
+    except Exception as e:
+        logger.error(f"Failed to start live work daemon: {e}")
+
+    # 7. Start Universal Communications & Mobile Harvester (Auto-syncs POCO SMS, Calls, OTPs, Emails into Brain RAG)
+    harvester_task = None
+    try:
+        from backend.app.assistant.universal_harvester import universal_harvester
+        harvester_task = asyncio.create_task(universal_harvester.start_background_sync(interval_seconds=45))
+        logger.info("Autonomous Universal Communications & Mobile Harvester background loop started.")
+    except Exception as e:
+        logger.error(f"Failed to start communications harvester: {e}")
+
+    logger.info("Backend Gateway & Cognitive Core startup complete.")
+    yield
+    if evolution_task and not evolution_task.done():
+        evolution_task.cancel()
+    if harvester_task and not harvester_task.done():
+        harvester_task.cancel()
+    try:
+        from backend.app.intelligence.autonomous_autopilot import autonomous_autopilot
+        autonomous_autopilot.stop_live_work()
+    except Exception:
+        pass
+    logger.info("Shutting down Backend Gateway...")
+
+
+# Create FastAPI instance
+app = FastAPI(
+    title="Local-First Personal AI Computer Automation System",
+    description="Foundational Gateway & Multi-Agent Cognitive Core API",
+    version="0.1.0",
+    lifespan=lifespan
+)
+
+# Add Middleware
+app.add_middleware(SecurityHeadersMiddleware)
+from fastapi.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=r"https?://.*",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+from backend.app.api.v1.self_healing import router as self_healing_router
+from backend.app.api.v1.automation import router as automation_router
+from backend.app.assistant.communications_assistant import router as assistant_router
+from backend.app.api.v1.intelligence import router as intelligence_router
+
+# Register API Routers
+app.include_router(health_router, prefix="/api/v1")
+app.include_router(intelligence_router, prefix="/api/v1")
+app.include_router(automation_router, prefix="/api/v1")
+app.include_router(assistant_router, prefix="/api/v1")
+app.include_router(models_router, prefix="/api/v1")
+app.include_router(tasks_router, prefix="/api/v1")
+app.include_router(skills_router, prefix="/api/v1")
+app.include_router(applications_router, prefix="/api/v1")
+app.include_router(browser_router, prefix="/api/v1")
+app.include_router(workflow_router, prefix="/api/v1")
+app.include_router(perception_router, prefix="/api/v1")
+app.include_router(runtime_router, prefix="/api/v1")
+app.include_router(memory_router, prefix="/api/v1")
+app.include_router(procedures_router, prefix="/api/v1")
+app.include_router(knowledge_router, prefix="/api/v1")
+app.include_router(evaluation_router, prefix="/api/v1")
+app.include_router(resources_router, prefix="/api/v1")
+app.include_router(media_router, prefix="/api/v1")
+app.include_router(agent_router, prefix="/api/v1")
+app.include_router(gateway_router, prefix="/api/v1")
+app.include_router(quantum_router, prefix="/api/v1")
+
+# Support both /api/v1/agent-gateway and /api/v1/agent legacy compatibility
+agent_compat_router = APIRouter(prefix="/api/v1/agent", tags=["Agent Compatibility"])
+for r in agent_router.routes:
+    sub = r.path[len(agent_router.prefix):] if r.path.startswith(agent_router.prefix) else r.path
+    agent_compat_router.add_api_route(
+        sub,
+        r.endpoint,
+        methods=r.methods,
+        response_model=getattr(r, "response_model", None),
+        status_code=getattr(r, "status_code", None),
+        tags=getattr(r, "tags", None),
+        summary=getattr(r, "summary", None),
+        description=getattr(r, "description", None),
+    )
+app.include_router(agent_compat_router)
+app.include_router(business_router, prefix="/api/v1")
+app.include_router(desktop_router, prefix="/api/v1")
+app.include_router(monitors_router, prefix="/api/v1")
+app.include_router(decisions_router, prefix="/api/v1")
+app.include_router(analytics_router, prefix="/api/v1")
+app.include_router(devices_router, prefix="/api/v1")
+app.include_router(self_healing_router, prefix="/api/v1")
+app.include_router(ws_router)
+
+
+
+@app.get("/")
+async def root():
+    return {
+        "system": "Local-First Personal AI Computer Automation System",
+        "status": "online",
+        "version": "0.1.0",
+        "docs": "/docs"
+    }

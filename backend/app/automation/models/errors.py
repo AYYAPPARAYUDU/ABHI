@@ -48,3 +48,10 @@ class AutomationError(BaseModel):
 
     def to_dict(self) -> Dict[str, Any]:
         return self.model_dump()
+
+
+class AutomationException(Exception):
+    """Exception wrapper for AutomationError data envelope."""
+    def __init__(self, error: AutomationError):
+        self.error = error
+        super().__init__(f"[{error.error_code.value}] {error.message}")

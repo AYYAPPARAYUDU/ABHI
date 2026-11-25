@@ -339,28 +339,47 @@ class NeuralInspectRequest(BaseModel):
 
 @router.get("/neural/telemetry")
 async def get_neural_telemetry() -> Dict[str, Any]:
-    """Retrieve live neural architecture specifications and layer parameters."""
+    """Retrieve live neural architecture, model registry, and hardware telemetry."""
+    from backend.app.cognitive.registry.registry import agent_registry
+    from backend.app.cognitive.supervisor.supervisor import central_supervisor
+    from backend.app.intelligence.model_registry import ModelRole, model_capability_registry
+    from backend.app.intelligence.model_scheduler import model_resource_scheduler
+    from backend.app.services.rag.vector_store import vector_store
+
+    hw = model_resource_scheduler.inspect_hardware()
+    primary_model = model_capability_registry.get_model_for_role(ModelRole.MASTER_MODEL)
+    profiles = model_capability_registry.list_all_profiles()
+    role_bindings = model_capability_registry.get_role_bindings()
+    active_profile = next((p for p in profiles if p.model_id == primary_model), None)
+
+    active_states = {"PLANNING", "DISPATCHING", "EXECUTING", "VERIFYING", "WAITING_USER_CONSENT"}
+    active_tasks_count = sum(
+        1 for t in central_supervisor._active_tasks.values()
+        if t.state.value in active_states
+    )
+
     return {
-        "model_name": "ABHI-Neural-Core-8B (Native Embedded Engine)",
-        "architecture": "Decoder-Only Autoregressive Transformer with SwiGLU & RoPE",
-        "total_parameters": 8214902144,
-        "active_parameters": 8214902144,
-        "quantization": "Q4_K_M (Native Tensor Core Hybrid)",
-        "hidden_dimension": 4096,
-        "num_layers": 32,
-        "num_attention_heads": 32,
-        "num_key_value_heads": 8,
-        "head_dimension": 128,
-        "vocab_size": 152064,
-        "max_context_length": 131072,
-        "rope_theta": 1000000.0,
-        "rms_norm_eps": 1e-06,
-        "inference_engine": "ABHI Native Neural Core / Direct In-Process Engine",
-        "device": "NVIDIA GPU / CUDA 13.1 + AVX2 Vector Acceleration",
-        "active_kv_cache_mb": 56.4,
-        "temperature": 0.2,
-        "top_p": 0.95,
-        "top_k": 40
+        "model_name": primary_model,
+        "family": active_profile.family if active_profile else "ollama",
+        "max_context_length": active_profile.context_length if active_profile else 0,
+        "vram_footprint_mb": active_profile.vram_footprint_mb if active_profile else 0,
+        "installed_models_count": sum(1 for p in profiles if p.is_installed),
+        "role_bindings": role_bindings,
+        "inference_engine": "Ollama Local Runtime",
+        "device": hw.gpu_name,
+        "vram_total_mb": hw.total_vram_mb,
+        "vram_used_mb": hw.used_vram_mb,
+        "vram_free_mb": hw.free_vram_mb,
+        "gpu_temperature_c": hw.gpu_temperature_c,
+        "gpu_utilization_pct": hw.gpu_utilization_pct,
+        "system_ram_total_mb": hw.system_ram_total_mb,
+        "system_ram_used_mb": hw.system_ram_used_mb,
+        "system_ram_free_mb": hw.system_ram_free_mb,
+        "npu_present": hw.npu_present,
+        "npu_device_name": hw.npu_device_name,
+        "vector_chunks": vector_store.count_chunks(),
+        "registered_agents": len(agent_registry.list_agents()),
+        "active_tasks": active_tasks_count,
     }
 
 
@@ -716,7 +735,7 @@ class BiometricFramePayload(BaseModel):
 
 
 class RemoveBiometricsPayload(BaseModel):
-    master_password: Optional[str] = "143"
+    master_password: str = Field(..., description="Operator authorization credentials")
 
 
 class RecordIntruderPayload(BaseModel):
@@ -766,7 +785,7 @@ async def enroll_biometric_frame(payload: BiometricFramePayload):
 
 @router.post("/biometrics/remove")
 async def remove_operator_biometrics(payload: RemoveBiometricsPayload):
-    """Remove registered face lock from SQLite WAL using Master Password (143)."""
+    """Remove registered face lock from SQLite WAL using verified operator authorization."""
     from backend.app.perception.vision.face_tracker import face_tracker
     ok, msg = face_tracker.remove_enrolled_biometrics(payload.master_password)
     if not ok:
@@ -1028,6 +1047,64 @@ async def get_sovereign_operator_profile():
             "verified": True,
             "role": "SOVEREIGN_OWNER_HOST"
         }
+    }
+
+
+@router.get("/workspace/telemetry")
+async def get_workspace_telemetry() -> Dict[str, Any]:
+    """Authoritative real-time telemetry for Agent HQ and Agent Office views."""
+    from datetime import datetime, timezone
+    from backend.app.cognitive.registry.registry import agent_registry
+    from backend.app.cognitive.supervisor.supervisor import central_supervisor
+    from backend.app.core.event_bus import event_bus
+    from backend.app.services.memory.repository import memory_repo
+    from backend.app.services.rag.vector_store import vector_store
+
+    agents = agent_registry.list_agents()
+    total_agents = len(agents)
+
+    active_states = {"PLANNING", "DISPATCHING", "EXECUTING", "VERIFYING", "WAITING_USER_CONSENT"}
+    active_tasks = [
+        t for t in central_supervisor._active_tasks.values()
+        if t.state.value in active_states
+    ]
+    running_agents = len(active_tasks)
+
+    tasks_total = await memory_repo.count_tasks()
+    memories_total = await memory_repo.count_memories()
+    vector_chunks = vector_store.count_chunks()
+    shared_notes = memories_total + vector_chunks
+
+    today_date = datetime.now(timezone.utc).date()
+    recent_tasks = await memory_repo.list_tasks(limit=200)
+    tasks_today = sum(
+        1 for t in recent_tasks
+        if t.created_at and (
+            t.created_at.date() if t.created_at.tzinfo is None else t.created_at.astimezone(timezone.utc).date()
+        ) == today_date
+    )
+
+    recent_events = event_bus.get_recent_events(limit=8)
+    recent_messages = [
+        {
+            "id": evt.event_id,
+            "sender": evt.source,
+            "role": evt.category.value,
+            "message": f"{evt.event_type}: {evt.data.get('goal') or evt.data.get('summary') or evt.data.get('title') or evt.correlation_id or ''}".strip(": "),
+            "time": time.strftime("%H:%M:%S", time.localtime(evt.timestamp)),
+        }
+        for evt in recent_events
+    ]
+
+    return {
+        "success": True,
+        "total_agents": total_agents,
+        "running_agents": running_agents,
+        "tasks_today": tasks_today,
+        "tasks_total": tasks_total,
+        "shared_notes": shared_notes,
+        "vector_chunks": vector_chunks,
+        "recent_messages": recent_messages,
     }
 
 

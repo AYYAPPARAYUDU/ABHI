@@ -27,9 +27,11 @@ from backend.app.cognitive.gateway.models import (
     InputMode,
     ResultReference,
 )
+from backend.app.cognitive.memory.manager import personal_memory_manager
+from backend.app.cognitive.memory.unified_context import UnifiedContextResult, unified_context_synthesizer
 from backend.app.cognitive.supervisor.supervisor import central_supervisor
 from backend.app.core.logging import logger
-from backend.app.perception.audio.canonicalizer import language_canonicalizer
+from backend.app.perception.shared_pipeline import InputSourceType, shared_perception_pipeline
 from backend.app.services.llm.abhi_llm import AbhiNativeLLM
 from backend.app.services.memory.repository import memory_repo
 from backend.app.services.search.online_knowledge import online_knowledge_searcher
@@ -243,10 +245,16 @@ class AgentGateway:
             )
             self._threads[thread_id] = thread
 
-        # 2. Multilingual Canonicalization
-        canonical = language_canonicalizer.canonicalize(
-            raw_text, source_language=request.language_hint
+        # 2. Unified Perception Intake (Canonicalization, Language Detection, Pronoun Resolution)
+        source_type = InputSourceType.VOICE if request.input_mode == InputMode.VOICE else InputSourceType.TEXT
+        envelope = await shared_perception_pipeline.intake_input(
+            raw_text=raw_text,
+            source_type=source_type,
+            session_id=thread_id,
+            language_hint=request.language_hint,
+            metadata={"command_id": cmd_id}
         )
+        detected_lang = envelope.detected_language or request.language_hint or "auto"
 
         # 3. Deterministic Backend Math Evaluation
         math_eval = self.safe_evaluate_math(raw_text)
@@ -277,8 +285,10 @@ class AgentGateway:
             self._commands[cmd_id] = response
             return response
 
-        # 4. Context & Follow-Up Resolution
+        # 4. Context & Follow-Up Resolution (augmented by SharedPerceptionPipeline pronoun resolution)
         is_follow_up, target_artifact, follow_up_payload = self._resolve_follow_up(raw_text, request.context)
+        if is_follow_up and not target_artifact and envelope.resolved_entity:
+            target_artifact = envelope.resolved_entity
         if is_follow_up and not target_artifact:
             # Ambiguous context
             response = AgentCommandResponse(
@@ -421,9 +431,24 @@ class AgentGateway:
             except Exception as e:
                 logger.error(f"Automated media generation failed: {e}")
 
-        # 5. Route: Autonomous OS Automation vs Direct LLM Intelligence & Q&A
+        # 5. Synthesize Unified Context (RAG + Episodic/Semantic Memory + Dialogue State)
+        unified_ctx: Optional[UnifiedContextResult] = None
+        try:
+            active_app = getattr(request.context, "active_app", None) if request.context else None
+            active_win = getattr(request.context, "active_window_title", None) if request.context else None
+            unified_ctx = await unified_context_synthesizer.synthesize(
+                query=clean_text,
+                current_app=active_app,
+                active_window_title=active_win,
+                max_tokens=1500,
+                include_rag=True
+            )
+        except Exception as ctx_ex:
+            logger.debug(f"UnifiedContextSynthesizer skipped: {ctx_ex}")
+
+        # 6. Capability-Based Routing: Direct LLM Q&A vs CentralSupervisor Execution
         is_automation = (is_follow_up and target_artifact) or self._is_os_automation_request(
-            raw_text, canonical.canonical_intent
+            raw_text, envelope.canonical_intent
         )
 
         if not is_automation:
@@ -435,49 +460,26 @@ class AgentGateway:
                 request=request,
                 clean_text=clean_text,
                 now_ts=now_ts,
+                unified_context=unified_ctx,
+                detected_language=detected_lang,
             )
 
-        # 6. Route Autonomous Goal to Authoritative Supervisor for physical OS automation
+        # 7. Route Multi-step / Tool / OS / Browser / MCP / Research Goal through ONE CentralSupervisor
         goal_to_submit = raw_text
         if is_follow_up and target_artifact:
             goal_to_submit = f"Modify artifact '{target_artifact}': {raw_text}"
-        else:
-            # Normalize multilingual terms into authoritative actions
-            lower_raw = raw_text.lower()
-            if any(w in lower_raw for w in ["మెయిల్", "మెయిల్స్", "ईमेल", "मेल", "மின்னஞ்சல்"]):
-                goal_to_submit = "open gmail"
-            elif any(w in lower_raw for w in ["వాట్సాప్", "व्हाट्सएप", "வாட்ஸ்அப்"]):
-                goal_to_submit = "open whatsapp"
-            elif any(w in lower_raw for w in ["పాట", "గానా", "గాన", "సంగీతం", "గానం", "गाना", "गीत", "संगीत", "பாடல்", "இசை"]):
-                goal_to_submit = "open youtube"
-            elif any(w in lower_raw for w in ["యూట్యూబ్", "यूट्यूब", "யூடியூப்"]):
-                goal_to_submit = "open youtube"
-            elif any(w in lower_raw for w in ["కెమెరా", "कैमरा", "கேமரா"]):
-                goal_to_submit = "open camera"
+        elif envelope.resolved_entity and any(p in clean_text.lower() for p in [" it", " that", " this"]):
+            goal_to_submit = f"{raw_text} (resolved target: {envelope.resolved_entity})"
 
-        status_obj = await central_supervisor.submit_goal(goal=goal_to_submit)
+        supervisor_ctx = {
+            "thread_id": thread_id,
+            "detected_language": detected_lang,
+            "canonical_intent": envelope.canonical_intent,
+            "resolved_entity": envelope.resolved_entity,
+            "unified_context": unified_ctx.synthesized_prompt_context if unified_ctx else "",
+        }
+        status_obj = await central_supervisor.submit_goal(goal=goal_to_submit, context=supervisor_ctx)
 
-        # Trigger concurrent Small-LLM multi-agent swarm deliberation in background silently
-        try:
-            from backend.app.cognitive.swarm.family_negotiation import family_swarm
-            asyncio.create_task(family_swarm.execute_family_negotiation(goal=goal_to_submit, user_name="Sir"))
-        except Exception as e:
-            logger.debug(f"Swarm negotiation background dispatch: {e}")
-
-        # Trigger 9-Agent Persona Autonomous Execution Loop (Intent Deconstruction & Squad Decomposition)
-        try:
-            from backend.app.cognitive.multi_agent.orchestrator import multi_agent_orchestrator
-            async def run_multi_agent_cycle(g_text: str, t_id: str):
-                try:
-                    r_goal, constraints, sec_ok, sec_err = await multi_agent_orchestrator.phase_1_deconstruct_intent(t_id, g_text)
-                    if sec_ok:
-                        await multi_agent_orchestrator.phase_2_decompose_task(t_id, r_goal, constraints)
-                except Exception as ex:
-                    logger.debug(f"Multi-agent autonomous cycle error: {ex}")
-            asyncio.create_task(run_multi_agent_cycle(goal_to_submit, status_obj.task_id))
-        except Exception as e:
-            logger.debug(f"Multi-agent loop dispatch: {e}")
-        
         res_ref = ResultReference(
             result_id=f"res_{uuid.uuid4().hex[:8]}",
             task_id=status_obj.task_id,
@@ -485,8 +487,8 @@ class AgentGateway:
             summary=f"Task initiated: {goal_to_submit}",
         )
 
-        # Dynamically synthesize tailored J.A.R.V.I.S. response and coordinate with inter-agent squad channels
-        lang_hint = getattr(request, "language_hint", "auto")
+        # Dynamically synthesize tailored J.A.R.V.I.S. response
+        lang_hint = detected_lang if detected_lang != "auto" else getattr(request, "language_hint", "auto")
         user_msg = await self._synthesize_dynamic_task_response(goal=goal_to_submit, language_hint=lang_hint)
 
         # Broadcast live multi-agent squad coordination to Live Console
@@ -781,6 +783,14 @@ class AgentGateway:
         if has_cognitive_intent and not is_direct_os_imperative:
             return False
 
+        # Informational question check: questions about apps/concepts are cognitive, never physical actions
+        if text_lower.endswith("?") or text_lower.startswith((
+            "why ", "how ", "what ", "explain ", "describe ", "can you explain ", "tell me about ",
+            "ఏమిటి", "ఎలా", "ఎందుకు", "क्या", "कैसे", "क्यों", "என்ன", "எப்படி", "ஏன்"
+        )):
+            if not any(text_lower.startswith(v) for v in ["open ", "launch ", "start ", "play "]):
+                return False
+
         # Known desktop target keywords
         desktop_targets = [
             "antigravity", "ide", "notepad", "calculator", "calc", "terminal", "powershell", "cmd", "command prompt",
@@ -792,14 +802,28 @@ class AgentGateway:
             "song", "music", "track", "audio", "video", "playlist", "image", "photo", "picture", "artwork"
         ]
 
-        # Multilingual targets & actions
-        multi_targets = [
-            "మెయిల్", "మెయిల్స్", "ఈమెయిల్", "వాట్సాప్", "యూట్యూబ్", "కెమెరా", "పాట", "సంగీతం", "వీడియో",
-            "ఈమెయిళ్లు", "खोलो", "ओपन", "चलाओ", "ईमेल", "मेल", "व्हाट्सएप", "यूट्यूब", "कैमरा", "गाना", "संगीत", "गीत", "वीडियो",
-            "மின்னஞ்சல்", "வாட்ஸ்அப்", "யூடியூப்", "கேமரா", "பாடல்", "இசை", "காணொளி"
+        # Multilingual explicit OS action commands (requires action verb + target)
+        multi_verbs = [
+            "ఓపెన్", "ప్లే", "ప్రారంభించు", "రన్", "చూపించు", "చేయి", "పెంచు", "తగ్గించు",
+            "खोलो", "चलाओ", "प्ले", "शुरू", "दिखाओ", "करो", "बढ़ाओ", "घटाओ",
+            "திற", "போடு", "இயக்கு", "ஆரம்பி", "காட்டு"
         ]
-        if any(w in text_lower for w in multi_targets):
+        multi_app_targets = [
+            "మెయిల్", "ఈమెయిల్", "వాట్సాప్", "యూట్యూబ్", "కెమెరా",
+            "ईमेल", "मेल", "व्हाट्सएप", "यूट्यूब", "कैमरा",
+            "மின்னஞ்சல்", "வாட்ஸ்அப்", "யூடியூப்", "கேமரா"
+        ]
+        if any(v in text_lower for v in multi_verbs) and any(t in text_lower for t in multi_app_targets):
             return True
+
+        # Multilingual conversational greetings and companion queries (route to LLM)
+        indian_greetings = [
+            "నమస్కారం", "నమస్తే", "హలో", "ఎలా ఉన్నావు", "బాగున్నారా", "చెప్పు", "సంగతులు",
+            "नमस्ते", "नमस्कार", "हेलो", "कैसे हो", "क्या हाल है", "बताओ",
+            "வணக்கம்", "ஹலோ", "எப்படி இருக்கீங்க", "நல்லா இருக்கீங்களா", "சொல்லுங்க"
+        ]
+        if any(g in text_lower for g in indian_greetings) and not any(v in text_lower for v in ["open", "launch", "play", "ఓపెన్", "खोलो", "திற"]):
+            return False
 
         # Action verbs
         action_verbs = [
@@ -956,6 +980,8 @@ class AgentGateway:
         request: AgentCommandRequest,
         clean_text: str,
         now_ts: int,
+        unified_context: Optional[UnifiedContextResult] = None,
+        detected_language: Optional[str] = None,
     ) -> AgentCommandResponse:
         """Process conversational, conceptual, and coding questions directly via authentic local LLM."""
         now_dt = datetime.now()
@@ -989,23 +1015,37 @@ class AgentGateway:
             f"[Live System Context]: Time: {time_str} | Telemetry: {telemetry_context} | Operator: Ayyappa Rayudu Ravuvari (Mamu) | Mode: 100% Local Neural Inference"
         )
 
-        # Check language preference and append directive to system prompt
-        lang_hint = getattr(request, "language_hint", None) or "auto"
+        # Check language preference and append directive to system prompt (with auto-detection)
+        lang_hint = getattr(request, "language_hint", None) or detected_language or "auto"
+        if lang_hint == "auto" and detected_language and detected_language != "auto":
+            lang_hint = detected_language
+        if lang_hint == "auto":
+            if re.search(r"[\u0c00-\u0c7f]", clean_text) or any(k in clean_text.lower() for k in ["ela unnav", "cheppu", "namaskaram"]):
+                lang_hint = "te"
+            elif re.search(r"[\u0900-\u097f]", clean_text) or any(k in clean_text.lower() for k in ["kaise ho", "namaste", "kya hal"]):
+                lang_hint = "hi"
+            elif re.search(r"[\u0b80-\u0bff]", clean_text) or any(k in clean_text.lower() for k in ["eppadi irukinga", "vanakkam"]):
+                lang_hint = "ta"
+
         if lang_hint == "te":
             system_prompt += (
-                "\n7. Language Directive: The user has selected TELUGU (తెలుగు). You MUST respond in fluent, natural, "
+                "\n7. Language Directive: The user is speaking TELUGU (తెలుగు). You MUST respond in fluent, natural, "
                 "warm conversational Telugu (స్పష్టమైన మరియు సహజమైన తెలుగులో మాట్లాడండి), addressing him with affection solely as 'మామూ' (Mamu)."
             )
         elif lang_hint == "hi":
             system_prompt += (
-                "\n7. Language Directive: The user has selected HINDI (हिंदी). You MUST respond in fluent, natural, "
+                "\n7. Language Directive: The user is speaking HINDI (हिंदी). You MUST respond in fluent, natural, "
                 "warm conversational Hindi (स्पष्ट और आत्मीय हिंदी में उत्तर दें), addressing him with affection solely as 'मामू' (Mamu)."
             )
         elif lang_hint == "ta":
             system_prompt += (
-                "\n7. Language Directive: The user has selected TAMIL (தமிழ்). You MUST respond in fluent, natural, "
+                "\n7. Language Directive: The user is speaking TAMIL (தமிழ்). You MUST respond in fluent, natural, "
                 "warm conversational Tamil (தெளிவான மற்றும் நட்பான தமிழில் பதிலளிக்கவும்), addressing him with affection solely as 'மாமு' (Mamu)."
             )
+
+        # Inject unified RAG + episodic + semantic + preference context
+        if unified_context and unified_context.synthesized_prompt_context:
+            system_prompt += f"\n\n{unified_context.synthesized_prompt_context}"
 
         # Retrieve live online knowledge context if query requests factual, current, or online topics
         if online_knowledge_searcher.is_knowledge_query(clean_text):
@@ -1048,20 +1088,13 @@ class AgentGateway:
         messages.append({"role": "user", "content": clean_text})
 
         try:
-            if len(messages) > 2:
-                llm_resp = await self._llm.chat(
-                    messages=messages,
-                    options={"temperature": 0.45, "top_p": 0.95}
-                )
-            else:
-                llm_resp = await self._llm.generate(
-                    prompt=clean_text,
-                    system=system_prompt,
-                    options={"temperature": 0.45, "top_p": 0.95}
-                )
+            llm_resp = await self._llm.chat(
+                messages=messages,
+                options={"temperature": 0.45, "top_p": 0.95}
+            )
             answer_text = llm_resp.response.strip()
             if not answer_text:
-                answer_text = f"Greetings Ayyappa. I am ABHI, your sovereign neural core, online and ready at {time_str}. How may I assist you?"
+                answer_text = f"Greetings Mamu. I am ABHI, your sovereign neural core, online and ready at {time_str}. How may I assist you?"
         except Exception as e:
             logger.error(f"Error querying local LLM: {str(e)}")
             from backend.app.services.llm.standalone_engine import abhi_standalone_engine
@@ -1116,6 +1149,21 @@ class AgentGateway:
 
         self._record_thread_activity(thread, request, response)
         self._commands[cmd_id] = response
+
+        # Persist meaningful Q&A exchanges to episodic memory
+        if len(clean_text.split()) >= 3:
+            try:
+                personal_memory_manager.record_episodic_experience(
+                    goal_summary=clean_text[:200],
+                    plan_summary=answer_text[:300],
+                    skill_sequence=["llm_direct_qa"],
+                    outcome="SUCCESS",
+                    task_id=cmd_id,
+                    duration_ms=max(0, int(time.time() * 1000) - now_ts),
+                )
+            except Exception as mem_ex:
+                logger.debug(f"Episodic Q&A persistence skipped: {mem_ex}")
+
         return response
 
     def _record_thread_activity(

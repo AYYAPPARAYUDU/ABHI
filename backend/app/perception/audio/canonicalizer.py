@@ -34,7 +34,8 @@ class LanguageCanonicalizer:
             "read", "padho", "view", "dikhao", "display", "choodu", "చూడు", "చదువు", "lire", "leer"
         ],
         "SYSTEM_STATUS": [
-            "status", "health", "system", "kaise ho", "diagnostics", "halat", "stithi", "స్థితి", "நிலை"
+            "status", "health", "system", "kaise ho", "diagnostics", "halat", "stithi", "స్థితి", "நிலை",
+            "सिस्टम", "स्टेटस", "हालत", "स्थिति"
         ],
         "ABHI_LOCK": [
             "lock", "lock abhi", "band karo", "లాక్", "பூட்டு"

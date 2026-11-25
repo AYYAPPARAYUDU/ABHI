@@ -230,5 +230,39 @@
     "type": "youtube_play",
     "query": "any telugu songs",
     "reply": "Opened YouTube and searching for 'any telugu songs' for you, Mamu!"
+  },
+  "play devara trailer on youtube": {
+    "type": "youtube_play",
+    "query": "devara trailer",
+    "reply": "Opened YouTube and searching for 'devara trailer' for you, Mamu!"
+  },
+  "pause it": {
+    "type": "hotkey",
+    "key": "SPACE",
+    "reply": "Paused video playback for you, Mamu."
+  },
+  "resume": {
+    "type": "hotkey",
+    "key": "SPACE",
+    "reply": "Resumed playback, Mamu."
+  },
+  "next video": {
+    "type": "hotkey",
+    "key": "SHIFT+N",
+    "reply": "Changed the song and playing the next track for you, Mamu."
+  },
+  "open youtube.": {
+    "type": "url",
+    "url": "https://www.youtube.com",
+    "reply": "Opened YouTube - Google Chrome in your browser for you, Mamu."
+  },
+  "pause it.": {
+    "type": "hotkey",
+    "key": "SPACE",
+    "reply": "Paused video playback for you, Mamu."
+  },
+  "close this window": {
+    "type": "window_close",
+    "reply": "Closed active window, Mamu."
   }
 }

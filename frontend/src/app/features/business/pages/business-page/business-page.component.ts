@@ -7,6 +7,9 @@ import { getApiUrl } from '../../../../core/config/api-config';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { ThreeSceneManagerService } from '../../../../shared/3d/three-scene-manager.service';
 import { BusinessService } from '../../services/business.service';
+import { FinancialLedgerComponent } from '../../components/financial-ledger/financial-ledger.component';
+import { ProjectInitiativesComponent } from '../../components/project-initiatives/project-initiatives.component';
+import { BusinessProject } from '../../models/business.model';
 
 export interface SpecialistWorker {
   agent_id: string;
@@ -25,7 +28,7 @@ export interface SpecialistWorker {
 @Component({
   selector: 'app-business-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, RouterModule, FinancialLedgerComponent, ProjectInitiativesComponent],
   templateUrl: './business-page.component.html',
   styleUrl: './business-page.component.css',
 })
@@ -38,8 +41,51 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
 
   readonly toastMessage = signal<string | null>(null);
 
-  // Active view tab: Executive Cashflow & PhonePe | SBI Settlement | Self-Improving Quant | Autonomous Engine & Vault
-  readonly activeTab = signal<'dashboard' | 'sbi' | 'quant' | 'automation'>('dashboard');
+  // Active view tab: Executive Cashflow & PhonePe | Project Initiatives | Quant Risk Shield | Autonomous Monetization & n8n | SBI Settlement
+  readonly activeTab = signal<'dashboard' | 'initiatives' | 'quant' | 'automation' | 'sbi'>('dashboard');
+
+  // Project Initiatives & Milestones State (persisted from /api/v1/business/projects)
+  readonly projects = signal<BusinessProject[]>([]);
+  readonly selectedProject = signal<BusinessProject | null>(null);
+  readonly isExecutingProjectStep = signal<boolean>(false);
+  readonly projectSearchQuery = signal<string>('');
+  readonly projectStatusFilter = signal<string>('ALL');
+  readonly projectSectorFilter = signal<string>('ALL');
+
+  // Modal: New Project Initiative
+  readonly showNewProjectModal = signal<boolean>(false);
+  readonly isCreatingProject = signal<boolean>(false);
+  newProjName = '';
+  newProjSectorId = 'software_tools';
+  newProjObjective = '';
+  newProjBudgetUsd = 100.0;
+  newProjAutonomyLevel = 3;
+  newProjAutopilotMode = 'LOCAL_BUILD_AUTOPILOT';
+
+  readonly filteredProjects = computed(() => {
+    let list = this.projects();
+    const query = this.projectSearchQuery().trim().toLowerCase();
+    const status = this.projectStatusFilter();
+    const sector = this.projectSectorFilter();
+
+    if (query) {
+      list = list.filter((p) =>
+        p.name.toLowerCase().includes(query) ||
+        p.objective.toLowerCase().includes(query) ||
+        (p.milestones && p.milestones.some((m) => m.title.toLowerCase().includes(query)))
+      );
+    }
+
+    if (status !== 'ALL') {
+      list = list.filter((p) => p.status === status);
+    }
+
+    if (sector !== 'ALL') {
+      list = list.filter((p) => p.sector_id === sector);
+    }
+
+    return list;
+  });
 
   // Quant Strategy & Deterministic Risk State
   readonly quantTelemetry = signal<any>(null);
@@ -547,8 +593,10 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
   }
 
   async refreshAllData(): Promise<void> {
+    this.businessService.fetchFinancials().subscribe();
     await Promise.all([
       this.refreshTreasuryData(),
+      this.refreshProjects(),
       this.refreshMobileData(),
       this.refreshOfficeData(),
       this.refreshLiveMonitor(),
@@ -775,24 +823,127 @@ export class BusinessPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  setActiveTab(tab: 'dashboard' | 'sbi' | 'automation' | string): void {
-    let target: 'dashboard' | 'sbi' | 'automation' = 'dashboard';
-    if (tab === 'sbi' || tab === 'invoices' || tab === 'receipts' || tab === 'overview') {
+  async refreshProjects(): Promise<void> {
+    this.businessService.fetchProjects().subscribe({
+      next: (projs) => {
+        if (Array.isArray(projs)) {
+          this.projects.set(projs);
+          if (projs.length > 0 && !this.selectedProject()) {
+            this.selectedProject.set(projs[0]);
+          } else if (this.selectedProject()) {
+            const updated = projs.find((p) => p.id === this.selectedProject()?.id);
+            if (updated) this.selectedProject.set(updated);
+          }
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  onSelectProject(proj: BusinessProject): void {
+    this.selectedProject.set(proj);
+  }
+
+  onExecuteProjectStep(projectId: string): void {
+    this.isExecutingProjectStep.set(true);
+    this.speechVoice.speak('Executing milestone verification step, Mamu.');
+    this.showToast(`▶ Executing next verified step for project ${projectId}...`);
+    this.businessService.executeNextStep(projectId).subscribe({
+      next: (res) => {
+        this.isExecutingProjectStep.set(false);
+        this.showToast(`✓ ${res.message || 'Milestone executed and physically verified!'}`);
+        this.speechVoice.speak('Milestone verified and recorded, Mamu.');
+        this.refreshProjects();
+        this.refreshTreasuryData();
+      },
+      error: (err) => {
+        this.isExecutingProjectStep.set(false);
+        this.showToast(`⚠️ Execution failed: ${err.message || 'Policy check failure'}`);
+      },
+    });
+  }
+
+  onResolveApproval(event: { projectId: string; approvalId: string; approve: boolean }): void {
+    this.businessService.resolveApproval(event.projectId, event.approvalId, event.approve).subscribe({
+      next: (res) => {
+        this.showToast(`✓ Approval updated: ${res.message || 'Resolved'}`);
+        this.refreshProjects();
+      },
+      error: () => this.showToast('⚠️ Could not resolve approval'),
+    });
+  }
+
+  openCreateProjectModal(): void {
+    this.newProjName = '';
+    this.newProjSectorId = 'software_tools';
+    this.newProjObjective = '';
+    this.newProjBudgetUsd = 100.0;
+    this.newProjAutonomyLevel = 3;
+    this.newProjAutopilotMode = 'LOCAL_BUILD_AUTOPILOT';
+    this.showNewProjectModal.set(true);
+  }
+
+  closeCreateProjectModal(): void {
+    this.showNewProjectModal.set(false);
+  }
+
+  submitCreateProject(): void {
+    if (!this.newProjName.trim() || !this.newProjObjective.trim()) {
+      this.showToast('⚠️ Project Name and Objective are required.');
+      return;
+    }
+    this.isCreatingProject.set(true);
+    this.businessService
+      .createProject({
+        sector_id: this.newProjSectorId,
+        name: this.newProjName.trim(),
+        objective: this.newProjObjective.trim(),
+        budget_limit_usd: Number(this.newProjBudgetUsd) || 50.0,
+        autonomy_level: Number(this.newProjAutonomyLevel) || 3,
+        autopilot_mode: this.newProjAutopilotMode,
+      })
+      .subscribe({
+        next: (newProj) => {
+          this.isCreatingProject.set(false);
+          if (newProj) {
+            this.showToast(`✓ Created initiative: ${newProj.name}`);
+            this.speechVoice.speak(`New autonomous initiative ${newProj.name} registered, Mamu.`);
+            this.showNewProjectModal.set(false);
+            this.refreshProjects();
+            this.selectedProject.set(newProj);
+          }
+        },
+        error: (err) => {
+          this.isCreatingProject.set(false);
+          this.showToast(`⚠️ Failed to create project: ${err.message || 'Error'}`);
+        },
+      });
+  }
+
+  setActiveTab(tab: 'dashboard' | 'initiatives' | 'quant' | 'automation' | 'sbi' | string): void {
+    let target: 'dashboard' | 'initiatives' | 'quant' | 'automation' | 'sbi' = 'dashboard';
+    if (tab === 'initiatives' || tab === 'projects') {
+      target = 'initiatives';
+      this.refreshProjects();
+    } else if (tab === 'sbi' || tab === 'invoices' || tab === 'receipts' || tab === 'overview') {
       target = 'sbi';
+      this.refreshTreasuryData();
+    } else if (tab === 'quant' || tab === 'trading') {
+      target = 'quant';
+      this.refreshQuantData();
+      this.refreshLiveTradeStatus();
     } else if (tab === 'automation' || tab === 'n8n' || tab === 'vault' || tab === 'agents' || tab === 'affiliate') {
       target = 'automation';
-    } else {
-      target = 'dashboard';
-    }
-    this.activeTab.set(target);
-    if (target === 'dashboard') this.refreshMobileData();
-    if (target === 'sbi') this.refreshTreasuryData();
-    if (target === 'automation') {
       this.refreshN8nData();
       this.refreshVaultData();
       this.refreshAffiliateData();
       this.refreshOfficeData();
+    } else {
+      target = 'dashboard';
+      this.refreshTreasuryData();
+      this.refreshMobileData();
     }
+    this.activeTab.set(target);
   }
 
   // --- MOBILE ADB & PHONEPE ACTIONS ---

@@ -95,6 +95,30 @@
   flex-shrink: 0;
 }
 
+/* Sidebar Toggle Button (Desktop & Mobile) */
+.sidebar-toggle-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--abhi-surface-inset, rgba(7, 12, 22, 0.75));
+  border: 1px solid var(--abhi-border, rgba(255, 255, 255, 0.12));
+  color: var(--abhi-text-primary, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.sidebar-toggle-btn:hover {
+  background: var(--abhi-surface-raised, rgba(255, 255, 255, 0.1));
+  border-color: var(--abhi-cyan, #3882f6);
+  color: var(--abhi-cyan, #3882f6);
+  transform: translateY(-1px);
+}
+
 /* Mobile Hamburger (< 992px) */
 .mobile-nav-hamburger-btn {
   width: 34px;
@@ -547,6 +571,7 @@
 }
 
 :host-context([data-mode="light"]) .brand-identity-capsule,
+:host-context([data-mode="light"]) .sidebar-toggle-btn,
 :host-context([data-mode="light"]) .mobile-nav-hamburger-btn,
 :host-context([data-mode="light"]) .topbar-tool-btn {
   background: rgba(241, 245, 249, 0.9) !important;
@@ -1111,4 +1136,92 @@
 .item-desc {
   font-size: 10px;
   color: var(--abhi-text-muted, #94a3b8);
+}
+
+/* =========================================================================
+   MORE OVERFLOW DROPDOWN & COMMAND PALETTE TRIGGER
+   ========================================================================= */
+.btn-more-nav {
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.more-nav-sheet {
+  top: calc(100% + 8px);
+  right: 0;
+  width: 260px;
+  background: var(--surface-raised, rgba(13, 20, 36, 0.95));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-active, rgba(0, 240, 255, 0.3));
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 240, 255, 0.15);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 2000;
+  animation: fadeInDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.more-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--text-primary, #f8fafc);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.more-sheet-item:hover,
+.more-sheet-item.active {
+  background: rgba(0, 240, 255, 0.14);
+  color: var(--accent-primary, #00f0ff);
+}
+
+.more-sheet-item .item-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.more-sheet-item .item-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.more-sheet-item .item-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.cmd-palette-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cmd-palette-trigger:hover {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: var(--accent-primary, #00f0ff);
+  color: var(--accent-primary, #00f0ff);
+}
+
+.cmd-kbd-badge {
+  font-size: 0.68rem;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--text-muted, #94a3b8);
 }

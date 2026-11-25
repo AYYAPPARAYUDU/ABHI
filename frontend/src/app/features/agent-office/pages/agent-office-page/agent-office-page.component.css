@@ -77,36 +77,323 @@
 }
 
 /* =========================================================================
-   Left HUD Panel (Matches Reference Claw3D / Agent Office)
+   Left Floating HUD (Matches Reference Image 5)
    ========================================================================= */
-.office-left-panel {
+.office-left-floating-hud {
   position: absolute;
-  top: 16px;
-  left: 16px;
-  bottom: 16px;
-  width: 360px;
-  max-width: 90vw;
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(51, 65, 85, 0.5);
-  border-radius: 16px;
-  padding: 16px;
-  z-index: 15;
-  overflow-y: auto;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+  top: 70px;
+  left: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  z-index: 20;
 }
 
-/* Custom Scrollbar for Left Panel */
-.office-left-panel::-webkit-scrollbar {
-  width: 5px;
+.floating-team-card {
+  width: 320px;
+  max-width: 90vw;
+  background: rgba(10, 16, 29, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: card-appear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.office-left-panel::-webkit-scrollbar-thumb {
-  background: rgba(71, 85, 105, 0.5);
-  border-radius: 4px;
+
+@keyframes card-appear {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.team-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.team-avatar-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.team-avatar-icon {
+  font-size: 16px;
+}
+
+.team-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.team-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.team-lead-meta {
+  font-size: 10.5px;
+  color: #94a3b8;
+  margin: 2px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.lead-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.team-close-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.team-close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* 3 Mini Stats Cards Row */
+.team-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.metric-mini-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-mini-label {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.metric-mini-val-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.metric-mini-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.metric-mini-badge {
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.text-green { color: #34d399 !important; }
+.text-cyan { color: #38bdf8 !important; }
+.text-amber { color: #fbbf24 !important; }
+
+/* Sections */
+.team-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.team-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.team-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.team-section-badge {
+  font-size: 9.5px;
+  color: #94a3b8;
+}
+
+/* Connected Tools List */
+.connected-tools-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.connected-tool-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 7px 10px;
+}
+
+.tool-icon-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+.tool-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.tool-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+  line-height: 1.2;
+}
+
+.tool-status {
+  font-size: 9.5px;
+  color: #64748b;
+}
+
+/* Skills Progress List */
+.skills-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skill-progress-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.skill-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.skill-name {
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.skill-pct {
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.skill-bar-track {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.skill-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+/* Sam · QA Status Pill Card (Matches Image 5) */
+.agent-status-pill-card {
+  width: 320px;
+  max-width: 90vw;
+  background: rgba(10, 16, 29, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.agent-pill-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6, #6366f1);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.agent-pill-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.agent-pill-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.agent-pill-desc {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.agent-pill-tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: #d97706;
+  background: rgba(217, 119, 6, 0.15);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  padding: 2px 8px;
+  border-radius: 9999px;
 }
 
 /* 1. Quad KPI Grid (2x2) */
@@ -555,34 +842,35 @@
    ========================================================================= */
 .office-right-panel {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 70px;
+  right: 24px;
   width: 320px;
   max-width: 85vw;
   max-height: calc(100vh - 120px);
-  background: rgba(15, 23, 42, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(51, 65, 85, 0.5);
-  border-radius: 16px;
-  padding: 14px 16px;
-  z-index: 15;
+  background: rgba(10, 16, 29, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px;
+  z-index: 20;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+  gap: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  animation: card-appear 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .comm-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(51, 65, 85, 0.4);
-  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 10px;
 }
 
 .comm-title {
-  font-size: 0.72rem;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -591,11 +879,12 @@
 }
 
 .comm-channel {
-  font-size: 0.72rem;
-  color: #64748b;
+  font-size: 11px;
+  color: #4ade80;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  font-weight: 600;
 }
 
 .channel-dot {
@@ -603,38 +892,56 @@
   height: 6px;
   border-radius: 50%;
   background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
 }
 
 .comm-message-feed {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   overflow-y: auto;
   max-height: 440px;
   padding-right: 4px;
 }
 
 .comm-message-feed::-webkit-scrollbar {
-  width: 4px;
+  width: 3px;
 }
 .comm-message-feed::-webkit-scrollbar-thumb {
-  background: rgba(71, 85, 105, 0.4);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
 }
 
 .comm-message-row {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 4px 6px;
-  border-radius: 6px;
-  background: rgba(30, 41, 59, 0.3);
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .msg-author-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.msg-sender {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.msg-time {
+  font-size: 10px;
+  color: #64748b;
+}
+
+.msg-body {
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.35;
 }
 
 .msg-sender {

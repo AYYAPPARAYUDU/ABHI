@@ -66,4 +66,10 @@ export class ProjectInitiativesComponent {
         return `Level ${level}`;
     }
   }
+
+  getMilestoneProgress(proj: BusinessProject): number {
+    if (!proj.milestones || proj.milestones.length === 0) return 0;
+    const completed = proj.milestones.filter((m) => m.status === 'COMPLETED').length;
+    return Math.round((completed / proj.milestones.length) * 100);
+  }
 }

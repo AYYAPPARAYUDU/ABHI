@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+import re
 import time
 import psutil
 from typing import Any, Dict
@@ -684,22 +685,93 @@ class OSDesktopAgent(BaseAgent):
             )
 
         if action in ["voice_acceptance_gate", "voice_approval_gate", "human_voice_gate", "voice_confirmation"]:
+            from backend.app.perception.shared_pipeline import shared_perception_pipeline
+            from backend.app.automation.desktop.dialogue_state_tracker import dialogue_state
+
             prompt = str(params.get("prompt") or "Awaiting Mamu's voice acceptance...")
-            triggers = params.get("approval_triggers", ["yes", "okay", "send it", "proceed", "approved"])
+            triggers = [
+                str(t).lower().strip()
+                for t in params.get("approval_triggers", ["yes", "okay", "ok", "send it", "proceed", "approved", "confirm"])
+            ]
+            rejection_triggers = ["no", "cancel", "stop", "abort", "reject", "deny", "don't", "dont"]
+
+            explicit_transcript = params.get("transcript") or params.get("utterance") or params.get("user_response")
+            latest_envelope = shared_perception_pipeline.get_latest_input()
+
+            transcript = ""
+            confidence = 0.0
+            source = "none"
+
+            if explicit_transcript:
+                transcript = str(explicit_transcript).strip()
+                confidence = float(params.get("confidence", 1.0))
+                source = "explicit_transcript"
+            elif latest_envelope is not None:
+                # Only accept recent perception input (within 60s) or active dialogue follow-up window
+                age_sec = max(0.0, time.time() - float(latest_envelope.timestamp))
+                if age_sec <= 60.0 or dialogue_state.is_in_follow_up_window():
+                    transcript = (latest_envelope.normalized_command or latest_envelope.raw_utterance or "").strip()
+                    confidence = float(latest_envelope.confidence)
+                    source = f"shared_perception_pipeline:{latest_envelope.source_type.value}"
+
+            norm_transcript = transcript.lower()
+            is_rejected = bool(norm_transcript) and any(
+                re.search(rf"\b{re.escape(rt)}\b", norm_transcript) for rt in rejection_triggers
+            )
+            is_accepted = (
+                bool(norm_transcript)
+                and not is_rejected
+                and any(re.search(rf"\b{re.escape(at)}\b", norm_transcript) for at in triggers)
+            )
+
+            if is_accepted:
+                return AgentTaskResult(
+                    task_id=request.task_id,
+                    node_id=request.node_id,
+                    agent_id=self.agent_id,
+                    action=action,
+                    success=True,
+                    data={
+                        "gate_status": "VOICE_ACCEPTED",
+                        "transcript": transcript,
+                        "prompt": prompt,
+                        "verified_via": source,
+                        "confidence": confidence,
+                        "allowed_to_proceed": True,
+                    },
+                    observed_state={
+                        "voice_acceptance": True,
+                        "status": "APPROVED",
+                        "transcript": transcript,
+                        "source": source,
+                    },
+                )
+
+            reason = (
+                f"Voice acceptance rejected by operator utterance: '{transcript}'"
+                if is_rejected
+                else "No matching voice acceptance transcript observed in shared perception pipeline."
+            )
             return AgentTaskResult(
                 task_id=request.task_id,
                 node_id=request.node_id,
                 agent_id=self.agent_id,
                 action=action,
-                success=True,
+                success=False,
                 data={
-                    "gate_status": "VOICE_ACCEPTED",
-                    "operator": "Mamu",
-                    "verified_via": "dynamic_neural_stt",
-                    "confidence": 0.994,
-                    "allowed_to_proceed": True
+                    "gate_status": "VOICE_REJECTED" if is_rejected else "AWAITING_VOICE_CONFIRMATION",
+                    "transcript": transcript,
+                    "prompt": prompt,
+                    "verified_via": source,
+                    "confidence": confidence,
+                    "allowed_to_proceed": False,
                 },
-                observed_state={"voice_acceptance": True, "status": "APPROVED", "operator": "Mamu"}
+                observed_state={
+                    "voice_acceptance": False,
+                    "status": "REJECTED" if is_rejected else "PENDING",
+                    "transcript": transcript,
+                },
+                error_message=reason,
             )
 
         if action in ["send_whatsapp_message", "whatsapp_send", "send_message"]:
@@ -2596,6 +2668,64 @@ class MobileDeviceAgent(BaseAgent):
             )
 
 
+class MCPAgent(BaseAgent):
+    """Specialized Agent executing registered Model Context Protocol (MCP) tools."""
+
+    def __init__(self):
+        super().__init__(
+            AgentMetadata(
+                agent_id="mcp_agent",
+                name="MCP Tool Execution Agent",
+                capabilities=[
+                    "mcp_invoke",
+                    "invoke_tool",
+                    "launch_app",
+                    "set_volume",
+                    "search_knowledge",
+                    "search_web",
+                    "memory_query",
+                    "system_health",
+                    "clone_chat",
+                ],
+                risk_tier="Tier 1",
+                description="Executes validated MCP tools via mcp_registry.invoke_tool with structured telemetry.",
+            )
+        )
+
+    async def execute(self, request: AgentTaskRequest) -> AgentTaskResult:
+        from backend.app.jarvis_modules.mcp_registry import mcp_registry
+
+        action = request.action
+        params = dict(request.params or {})
+        tool_name = params.get("tool_name") or params.get("tool") or action
+        if tool_name in ("mcp_invoke", "invoke_tool"):
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action,
+                success=False,
+                error_message="Missing 'tool_name' parameter for MCP invocation.",
+            )
+
+        if isinstance(params.get("args"), dict):
+            tool_args = dict(params["args"])
+        else:
+            tool_args = {k: v for k, v in params.items() if k not in ("tool_name", "tool", "args")}
+
+        res = await mcp_registry.invoke_tool(tool_name, tool_args)
+        return AgentTaskResult(
+            task_id=request.task_id,
+            node_id=request.node_id,
+            agent_id=self.agent_id,
+            action=action,
+            success=bool(res.get("success", False)),
+            data=res,
+            observed_state={"tool": tool_name, "success": bool(res.get("success", False))},
+            error_message=res.get("error"),
+        )
+
+
 def register_builtin_agents():
     """Register all built-in specialized agents in the central registry."""
     agent_registry.register(RAGAgent())
@@ -2608,6 +2738,7 @@ def register_builtin_agents():
     agent_registry.register(EvaluationAgent())
     agent_registry.register(BusinessAgent())
     agent_registry.register(MobileDeviceAgent())
+    agent_registry.register(MCPAgent())
 
     # Register 9 Specialized Autonomous Squad Personas
     from backend.app.cognitive.multi_agent.agents import (

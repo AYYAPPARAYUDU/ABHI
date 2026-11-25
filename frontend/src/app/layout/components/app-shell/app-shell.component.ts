@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs/operators';
+import { FloatingActionMenuComponent } from '../floating-action-menu/floating-action-menu.component';
 import { ContextualTopbarComponent } from '../contextual-topbar/contextual-topbar.component';
 import { ConsentModalComponent } from '../../../features/operator-console/components/consent-modal/consent-modal.component';
 import { CommandPaletteComponent } from '../../../shared/ui/command-palette/command-palette.component';
@@ -16,6 +17,7 @@ import { SpatialEnvironmentMode } from '../../../core/models/agent-experience.mo
   imports: [
     CommonModule,
     RouterModule,
+    FloatingActionMenuComponent,
     ContextualTopbarComponent,
     ConsentModalComponent,
     CommandPaletteComponent,

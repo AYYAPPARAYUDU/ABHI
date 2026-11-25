@@ -55,16 +55,27 @@ export class TelemetryService implements OnDestroy {
         try {
           const raw = event.data;
           const parsed = JSON.parse(raw);
-          const telemetryEvent: TelemetryEvent = {
-            id: parsed.id || `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-            channel: parsed.channel || 'telemetry',
-            type: parsed.type || 'UNKNOWN',
-            task_id: parsed.task_id,
-            timestamp: parsed.timestamp || Date.now(),
-            component: parsed.component || parsed.source,
-            status: parsed.status,
-            payload: parsed.payload || {},
-            rawJson: raw
+          const data = parsed.data || parsed.payload || {};
+          const rawTs = parsed.timestamp;
+          const timestamp =
+            typeof rawTs === 'number'
+              ? (rawTs < 1e12 ? Math.round(rawTs * 1000) : rawTs)
+              : Date.now();
+          const category = parsed.category || parsed.channel || 'telemetry';
+          const source = parsed.source || parsed.component;
+
+          const telemetryEvent: TelemetryEvent & { category?: string; source?: string } = {
+            id: parsed.event_id || parsed.id || `evt_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            channel: category,
+            type: parsed.event_type || parsed.type || 'UNKNOWN',
+            task_id: parsed.correlation_id || parsed.task_id || data?.task_id,
+            timestamp,
+            component: source,
+            status: parsed.status || data?.status,
+            payload: data,
+            rawJson: raw,
+            category,
+            source
           };
 
           this.handleIncomingEvent(telemetryEvent);

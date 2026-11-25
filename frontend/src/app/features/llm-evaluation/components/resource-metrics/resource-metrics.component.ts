@@ -14,10 +14,10 @@ export class ResourceMetricsComponent {
 
   get resource() {
     return this.evalService.selectedRun()?.resource_metrics || {
-      cpu_percent: 14.5,
-      memory_mb: 480.0,
-      gpu_memory_mb: 1240.0,
-      duration_seconds: 2.15
+      cpu_percent: 'N/A',
+      memory_mb: 'N/A',
+      gpu_memory_mb: 'N/A',
+      duration_seconds: 'N/A'
     };
   }
 }

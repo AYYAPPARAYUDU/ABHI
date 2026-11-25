@@ -1,0 +1,92 @@
+<div class="abhi-fam-container" role="region" aria-label="ABHI Contextual Action Menu">
+  <!-- Toast Notification Bar for Actions -->
+  @if (actionToast()) {
+    <div class="fam-action-toast font-monospace" role="status">
+      {{ actionToast() }}
+    </div>
+  }
+
+  <!-- Expanded Floating Glass Action Surface -->
+  @if (isOpen()) {
+    <div
+      class="fam-glass-surface"
+      role="menu"
+      aria-label="Contextual Actions"
+    >
+      <div class="fam-surface-header">
+        <div class="fam-header-brand">
+          <span class="fam-pulse-dot"></span>
+          <span class="fam-header-title font-monospace">ABHI // CONTEXT ACTIONS</span>
+        </div>
+        <button
+          type="button"
+          class="fam-close-btn"
+          (click)="close()"
+          aria-label="Close Action Menu"
+          title="Close (Esc)"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="fam-actions-stack">
+        @for (item of contextualActions(); track item.id) {
+          <button
+            type="button"
+            class="fam-action-card"
+            [class.destructive]="item.isDestructive"
+            (click)="item.action()"
+            [title]="item.tooltip"
+            role="menuitem"
+          >
+            <div class="action-card-left">
+              <span class="action-icon">{{ item.icon }}</span>
+              <div class="action-text-col">
+                <span class="action-label">{{ item.label }}</span>
+                <span class="action-tooltip">{{ item.tooltip }}</span>
+              </div>
+            </div>
+
+            @if (item.statusBadge) {
+              <span
+                class="action-badge font-monospace"
+                [ngClass]="'badge-' + (item.badgeType || 'cyan')"
+              >
+                {{ item.statusBadge }}
+              </span>
+            }
+          </button>
+        }
+      </div>
+
+      <div class="fam-surface-footer font-monospace">
+        <span>PRESS <strong>ESC</strong> OR CLICK OUTSIDE TO CLOSE</span>
+      </div>
+    </div>
+  }
+
+  <!-- Closed State: Compact Circular Floating Trigger -->
+  <button
+    type="button"
+    class="fam-trigger-button"
+    [class.active]="isOpen()"
+    (click)="toggle()"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="true"
+    aria-label="Open ABHI Contextual Action Menu"
+    title="ABHI Context Actions (Click to expand)"
+  >
+    <div class="trigger-orb-core">
+      <div class="trigger-ring ring-1"></div>
+      <div class="trigger-ring ring-2"></div>
+      <div class="trigger-center">
+        @if (isOpen()) {
+          <span class="trigger-symbol-close">✕</span>
+        } @else {
+          <span class="trigger-symbol font-monospace">⚡</span>
+        }
+      </div>
+    </div>
+    <div class="trigger-ambient-glow"></div>
+  </button>
+</div>

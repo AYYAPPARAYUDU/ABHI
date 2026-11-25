@@ -34,19 +34,8 @@
   <nav class="navbar navbar-expand-lg abhi-navbar-container p-0" role="navigation" aria-label="Main Sovereign Navigation">
     <div class="container-fluid d-flex align-items-center justify-content-between flex-nowrap px-2 px-md-3 h-100">
 
-      <!-- LEFT: Brand Identity & Active Colony Status -->
+      <!-- LEFT: Brand Identity & Active Colony Status (Sidebar-Free Architecture) -->
       <div class="navbar-left-cluster d-flex align-items-center gap-2 flex-shrink-0">
-        <!-- Mobile Menu Hamburger Toggler (< 992px) -->
-        <button
-          type="button"
-          class="mobile-nav-hamburger-btn d-lg-none"
-          (click)="toggleMobileNav()"
-          aria-label="Toggle Navigation"
-          title="Open Navigation Menu"
-        >
-          <span class="hamburger-icon">☰</span>
-        </button>
-
         <!-- Brand Identity Pill -->
         <a routerLink="/home" class="brand-identity-capsule" title="Return to Sovereign HUD Home">
           <div class="brand-orb-core">
@@ -69,7 +58,7 @@
         </div>
       </div>
 
-      <!-- CENTER: Sovereign Navigation Rail (Strictly Single Row, Centered, Never Wraps) -->
+      <!-- CENTER: Horizontal Top Navigation Bar (All Registered Routes with Animated More Overflow) -->
       <div class="navbar-center-cluster d-none d-lg-flex align-items-center justify-content-center flex-grow-1 mx-2">
         <div class="sovereign-nav-rail d-flex align-items-center gap-1">
           <!-- 1. Home -->
@@ -79,70 +68,133 @@
             @if (isActive('/home')) { <span class="active-glow-pip"></span> }
           </a>
 
-          <!-- 2. Core -->
+          <!-- 2. Core (Protected 3D Neural Space) -->
           <a routerLink="/core" class="rail-nav-link" [class.active]="isActive('/core')" title="3D Arc Reactor Intelligence Core">
             <span class="nav-icon">🌀</span>
             <span class="nav-label">Core</span>
             @if (isActive('/core')) { <span class="active-glow-pip"></span> }
           </a>
 
-          <!-- 3. Business -->
-          <a routerLink="/business" class="rail-nav-link" [class.active]="isActive('/business')" title="Sovereign Business, n8n Hub & SBI Treasury">
-            <span class="nav-icon">🏛️</span>
-            <span class="nav-label">Business</span>
-            @if (isActive('/business')) { <span class="active-glow-pip"></span> }
-          </a>
-
-          <!-- 4. Workspace -->
+          <!-- 3. Workspace (Protected 3D Colony Space) -->
           <a routerLink="/workspace" class="rail-nav-link" [class.active]="isActive('/workspace')" title="3D Workspace Colony & Autonomous Swarm">
             <span class="nav-icon">🛰️</span>
             <span class="nav-label">Workspace</span>
             @if (isActive('/workspace')) { <span class="active-glow-pip"></span> }
           </a>
 
-          <!-- 5. Architecture -->
-          <a routerLink="/architecture" class="rail-nav-link" [class.active]="isActive('/architecture')" title="System Architecture, Execution Workflows & ER Schemas">
-            <span class="nav-icon">🗺️</span>
-            <span class="nav-label">Architecture</span>
-            @if (isActive('/architecture')) { <span class="active-glow-pip"></span> }
-          </a>
-
-          <!-- 6. Messages (Sovereign Communications & Neural Intelligence) -->
+          <!-- 4. Messages (Dual-Mode Chat & Communications Hub) -->
           <a
             routerLink="/messages"
             class="rail-nav-link"
             [class.active]="isActive('/messages') || isActive('/brain')"
-            title="Messages & Neural Communications Hub"
+            title="Messages & Communications Hub"
           >
             <span class="nav-icon">💬</span>
             <span class="nav-label">Messages</span>
             @if (assistantService.deviceSummary()?.unread_contacts_count > 0) {
               <span class="active-pill-badge">{{ assistantService.deviceSummary()?.unread_contacts_count }}</span>
-            } @else if (assistantService.deviceSummary()?.total > 0) {
-              <span class="active-pill-badge">{{ assistantService.deviceSummary()?.total }}</span>
             }
             @if (isActive('/messages') || isActive('/brain')) { <span class="active-glow-pip"></span> }
           </a>
 
-          <!-- 7. Gallery -->
-          <a
-            routerLink="/media"
-            [queryParams]="{ tab: 'vault' }"
-            class="rail-nav-link"
-            [class.active]="isActive('/media')"
-            title="Media Studio & Security Vault Gallery"
-          >
-            <span class="nav-icon">🖼️</span>
-            <span class="nav-label">Gallery</span>
-            @if (mediaVaultCount() > 0) {
-              <span class="vault-count-badge font-monospace">{{ mediaVaultCount() }}</span>
-            }
+          <!-- 5. Business (Sovereign Revenue & Treasury) -->
+          <a routerLink="/business" class="rail-nav-link" [class.active]="isActive('/business')" title="Business Sectors & SBI Treasury">
+            <span class="nav-icon">⛃</span>
+            <span class="nav-label">Business</span>
+            @if (isActive('/business')) { <span class="active-glow-pip"></span> }
           </a>
+
+          <!-- 6. Architecture (Full-Canvas 5-Stage System Explorer) -->
+          <a routerLink="/architecture" class="rail-nav-link" [class.active]="isActive('/architecture')" title="System Architecture & Flow Explorer">
+            <span class="nav-icon">📐</span>
+            <span class="nav-label">Architecture</span>
+            @if (isActive('/architecture')) { <span class="active-glow-pip"></span> }
+          </a>
+
+          <!-- 7. More Overflow Dropdown -->
+          <div class="more-nav-dropdown-wrapper position-relative">
+            <button
+              type="button"
+              class="rail-nav-link btn-more-nav"
+              [class.active]="isMoreDropdownOpen() || isActive('/applications') || isActive('/media') || isActive('/agent-office') || isActive('/hub-spoke') || isActive('/decision-pipeline') || isActive('/memory')"
+              (click)="toggleMoreDropdown($event)"
+              title="More Registered Views & Studios"
+              aria-haspopup="true"
+              [attr.aria-expanded]="isMoreDropdownOpen()"
+            >
+              <span class="nav-icon">⋯</span>
+              <span class="nav-label">More</span>
+              <span class="dropdown-caret">▾</span>
+            </button>
+
+            @if (isMoreDropdownOpen()) {
+              <div class="more-nav-sheet position-absolute font-monospace" (click)="$event.stopPropagation()">
+                <a routerLink="/applications" class="more-sheet-item" (click)="closeMoreDropdown()" [class.active]="isActive('/applications')">
+                  <span class="item-icon">💻</span>
+                  <div class="item-meta">
+                    <span class="item-title">OS Applications</span>
+                    <span class="item-sub">Win32 UIAutomation Apps</span>
+                  </div>
+                </a>
+
+                <a routerLink="/media" class="more-sheet-item" (click)="closeMoreDropdown()" [class.active]="isActive('/media')">
+                  <span class="item-icon">✦</span>
+                  <div class="item-meta">
+                    <span class="item-title">Creative Media Studio</span>
+                    <span class="item-sub">YouTube, Whisper STT & FFmpeg</span>
+                  </div>
+                </a>
+
+                <a routerLink="/agent-office" class="more-sheet-item" (click)="closeMoreDropdown()" [class.active]="isActive('/agent-office')">
+                  <span class="item-icon">🏢</span>
+                  <div class="item-meta">
+                    <span class="item-title">Agent Office</span>
+                    <span class="item-sub">Claw3D Floorplan & Desks</span>
+                  </div>
+                </a>
+
+                <a routerLink="/hub-spoke" class="more-sheet-item" (click)="closeMoreDropdown()" [class.active]="isActive('/hub-spoke')">
+                  <span class="item-icon">🌐</span>
+                  <div class="item-meta">
+                    <span class="item-title">Hub & Spoke HQ</span>
+                    <span class="item-sub">8-Pod Radial Architecture</span>
+                  </div>
+                </a>
+
+                <a routerLink="/decision-pipeline" class="more-sheet-item" (click)="closeMoreDropdown()" [class.active]="isActive('/decision-pipeline')">
+                  <span class="item-icon">⚡</span>
+                  <div class="item-meta">
+                    <span class="item-title">Decision Pipeline</span>
+                    <span class="item-sub">Confidence Stream & 12 Scenarios</span>
+                  </div>
+                </a>
+
+                <a routerLink="/memory" class="more-sheet-item" (click)="closeMoreDropdown()" [class.active]="isActive('/memory')">
+                  <span class="item-icon">💾</span>
+                  <div class="item-meta">
+                    <span class="item-title">Memory & RAG</span>
+                    <span class="item-sub">LanceDB Vector & Procedural</span>
+                  </div>
+                </a>
+              </div>
+            }
+          </div>
         </div>
       </div>
 
       <!-- RIGHT: Companion Utility Controls (Compact, Single-Row Tray) -->
       <div class="navbar-right-cluster d-flex align-items-center gap-1 gap-sm-2 flex-shrink-0">
+        <!-- COMMAND PALETTE SEARCH TRIGGER (Ctrl+K) -->
+        <button
+          type="button"
+          class="topbar-tool-btn cmd-palette-trigger font-monospace"
+          (click)="openCommandPalette()"
+          title="Search Actions & Pages (Ctrl+K)"
+          aria-label="Open Command Palette"
+        >
+          <span class="tool-icon">🔍</span>
+          <span class="cmd-kbd-badge d-none d-xl-inline">Ctrl+K</span>
+        </button>
 
         <!-- COMPACT THEME STUDIO TRIGGER (Just the icon, small, elegant with color indicator) -->
         <button

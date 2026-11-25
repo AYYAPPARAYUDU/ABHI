@@ -218,16 +218,8 @@ class DynamicActionResolver:
     ) -> Tuple[bool, str, str]:
         """Resolves any OS, browser, media, or dynamic action and executes immediately."""
         raw_clean = raw_query.lower().strip()
-        # Direct Wake Words & Conversational Triggers
-        if raw_clean in [
-            "hey abhi", "hi abhi", "hello abhi", "ok abhi", "abhi", "hay abhi",
-            "yo abhi", "are abhi", "hey", "hi", "hello", "namaste",
-            "hi mamu", "hello mamu", "hey mamu", "hello hi", "hi hello", "hello there", "hey there"
-        ]:
-            return True, "greeting", "Hello Mamu! I am right here with you. How can I assist you right now?"
-
         clean = self.clean_query(raw_query)
-        lower_clean = clean.lower()
+        lower_clean = clean.lower().strip(" \t\r\n.?!")
 
         logger.info(f"DynamicActionResolver evaluating: '{clean}' (raw: '{raw_query}')")
 
@@ -288,47 +280,6 @@ class DynamicActionResolver:
 
         if lower_clean in ["search", "search for"]:
             return True, "ask_clarification", "What would you like me to search for, Mamu?"
-
-        # ---------------------------------------------------------------------
-        # 1A. Greetings & Pleasantries (Strictly Intercepted for Conversation)
-        # ---------------------------------------------------------------------
-        greetings_list = [
-            "hi", "hello", "hey", "namaste", "good morning", "good afternoon",
-            "good evening", "what's up", "whats up", "yo", "hello hi", "hi hello",
-            "hello there", "hey there", "vanakkam"
-        ]
-        if (
-            lower_clean in greetings_list
-            or any(lower_clean == f"{g} abhi" or lower_clean == f"abhi {g}" for g in greetings_list)
-            or any(lower_clean == f"{g} mamu" or lower_clean == f"mamu {g}" for g in greetings_list)
-        ):
-            return True, "greeting", "Hello Mamu! I am right here with you. How can I assist you right now?"
-
-        if any(lower_clean == q for q in ["how are you", "how are you doing", "how r u"]):
-            return True, "greeting", "I am running at peak performance and ready for your commands, Mamu! How can I assist you?"
-
-        if any(lower_clean == q for q in ["thank you", "thanks", "thanks abhi", "thank you abhi"]):
-            return True, "gratitude", "You are always welcome, Mamu! I am always at your service."
-
-        # ---------------------------------------------------------------------
-        # 1B. Presence, Identity, Time & Date
-        # ---------------------------------------------------------------------
-        if any(k in lower_clean for k in ["are you listening", "can you hear me", "are you there", "do you hear me"]):
-            return True, "presence_check", "Yes Mamu, I am listening to your every word clearly! The entire OS controller and multi-agent swarm are at your command."
-
-        if any(k in lower_clean for k in ["recognise", "recognize", "can you recognise", "can you recognize", "who am i", "do you know me", "my name", "what is my name"]):
-            return True, "voice_identity", "Yes Mamu! I recognize your voice with 100% fidelity. You are Ravuvai Ayyappa Rayudu, supreme commander of ABHI."
-
-        if lower_clean in ["who are you", "what can you do", "what are you", "tell me about yourself", "who r u"]:
-            return True, "capabilities", "I am ABHI — your unified central AI companion. I provide full Windows OS control, browser manipulation, autonomous multi-step execution, and live intelligence without limits, Mamu!"
-
-        if any(k in lower_clean for k in ["what is the time", "what's the time", "time now", "current time", "what time is it", "tell me the time"]):
-            curr_time = time.strftime("%I:%M %p")
-            return True, "current_time", f"Mamu, it is currently {curr_time}."
-
-        if any(k in lower_clean for k in ["what is the date", "what's the date", "date today", "today date", "what's today's date"]):
-            curr_date = time.strftime("%A, %B %d, %Y")
-            return True, "current_date", f"Mamu, today is {curr_date}."
 
         # ---------------------------------------------------------------------
         # 1D. Real-Time Screen Perception & Computer Vision Analysis
@@ -485,11 +436,27 @@ class DynamicActionResolver:
         # ---------------------------------------------------------------------
         # 2B. Media Track Change & Next Song (Prioritized BEFORE Song Search!)
         # ---------------------------------------------------------------------
+        # 2B. Media Context Query ("what is this video about?")
+        # ---------------------------------------------------------------------
+        if any(p in lower_clean for p in ["what is this video about", "what's this video about", "what is the video about", "tell me about this video", "describe this video", "what is this about"]):
+            media_ctx = getattr(dialogue_state, "active_media_metadata", {})
+            title = media_ctx.get("title") or dialogue_state.get_last_entity() or "the playing video"
+            desc = media_ctx.get("description", "")
+            if desc:
+                reply = f"Mamu, this video is '{title}'. {desc}"
+            else:
+                reply = f"Mamu, this video is '{title}'. It is playing on your media screen."
+            return True, "media_description", reply
+
+        # ---------------------------------------------------------------------
+        # 2C. Media Switching & Skipping ('change the song', 'next video', 'skip')
+        # ---------------------------------------------------------------------
         if any(k in lower_clean for k in [
             "change the song", "change song", "change the track", "change track",
             "switch song", "switch track", "play another song", "another song",
             "different song", "play different song", "next song", "next video",
-            "next track", "play next video", "play next song", "skip track", "skip to next song"
+            "next track", "play next video", "play next song", "skip track", "skip to next song",
+            "skip it", "skip", "next"
         ]):
             os_control_engine.send_hotkey("SHIFT+N")
             os_control_engine.send_hotkey("VK_MEDIA_NEXT_TRACK")
@@ -550,13 +517,13 @@ class DynamicActionResolver:
         if any(lower_clean == p or p in lower_clean for p in [
             "stop the song", "stop song", "stop music", "stop video", "stop playing",
             "stop the video", "stop", "pause the song", "pause song", "pause music", "pause video",
-            "pause the video", "pause", "shut up", "be quiet", "halt playback"
+            "pause the video", "pause", "pause it", "stop it", "shut up", "be quiet", "halt playback"
         ]):
             os_control_engine.send_hotkey("SPACE")
             self._cache_action(lower_clean, {"type": "hotkey", "key": "SPACE", "reply": "Paused video playback for you, Mamu."})
             return True, "stop_media", "Paused video playback for you, Mamu."
 
-        if any(lower_clean == p or lower_clean.startswith(f"{p} ") for p in ["resume", "resume video", "resume the video", "unpause", "continue video", "play video"]):
+        if any(lower_clean == p or lower_clean.startswith(f"{p} ") for p in ["resume", "resume video", "resume the video", "unpause", "continue video", "play video", "resume it"]):
             os_control_engine.send_hotkey("SPACE")
             self._cache_action(lower_clean, {"type": "hotkey", "key": "SPACE", "reply": "Resumed playback, Mamu."})
             return True, "resume_media", "Resumed playback for you, Mamu."
@@ -612,9 +579,12 @@ class DynamicActionResolver:
             "home page of youtube", "youtube home page", "youtube homepage",
             "youtube home", "go to youtube", "open youtube", "youtube"
         ]) and not any(k in lower_clean for k in ["search", "download", "song", "songs", "music", "play", "movie", "film"]):
-            os_control_engine.open_url("https://www.youtube.com")
-            self._cache_action(lower_clean, {"type": "url", "url": "https://www.youtube.com", "reply": "Opened YouTube home page for you, Mamu."})
-            return True, "open_youtube", "Opened YouTube home page for you, Mamu."
+            ok, err = os_control_engine.open_url("https://www.youtube.com")
+            win = os_control_engine.verify_window_by_keyword("youtube", timeout_sec=1.5) or os_control_engine.get_active_browser_window()
+            win_title = win.get("title", "YouTube") if win else "YouTube"
+            reply = f"Opened {win_title} in your browser for you, Mamu."
+            self._cache_action(lower_clean, {"type": "url", "url": "https://www.youtube.com", "reply": reply})
+            return True, "open_youtube", reply
 
         # Case B: YouTube Search & Topic Playing (e.g. "in youtube search for new telugu trailers", "open youtube search for any telegu songs")
         if "youtube" in lower_clean or any(k in lower_clean for k in ["song", "songs", "music", "track", "film", "picture film", "movie", "trailer"]):
@@ -743,9 +713,24 @@ class DynamicActionResolver:
         # ---------------------------------------------------------------------
         # 6. Browser Navigation & Tabs
         # ---------------------------------------------------------------------
-        if any(k in lower_clean for k in ["new tab", "open new tab", "open a tab", "create tab"]):
+        if any(k in lower_clean for k in ["new tab", "open new tab", "open a tab", "create tab", "open another tab", "another tab"]):
             os_control_engine.new_tab()
             return True, "new_tab", "Opened a new tab, Mamu."
+
+        if any(k in lower_clean for k in ["go back", "back page", "previous page", "history back", "go back to previous page", "go back to the previous page"]):
+            os_control_engine.send_hotkey("ALT+LEFT")
+            return True, "history_back", "Navigated back to the previous page, Mamu."
+
+        if any(k in lower_clean for k in ["go forward", "forward page", "next page in history", "history forward"]):
+            os_control_engine.send_hotkey("ALT+RIGHT")
+            return True, "history_forward", "Navigated forward to the next page, Mamu."
+
+        m_search_topic = re.match(r"^(?:please\s+)?search\s+(?:for\s+)?(?:this\s+topic|this|that\s+topic|that)$", lower_clean)
+        if m_search_topic:
+            topic = dialogue_state.get_last_entity() or "latest updates"
+            target_url = f"https://www.google.com/search?q={urllib.parse.quote(topic)}"
+            os_control_engine.open_url(target_url)
+            return True, "search_topic", f"Searching for '{topic}' for you, Mamu."
 
         if any(k in lower_clean for k in ["reopen tab", "restore tab", "undo close tab"]):
             os_control_engine.reopen_tab()
@@ -865,13 +850,9 @@ class DynamicActionResolver:
         # ---------------------------------------------------------------------
         # 10. Dynamic Agentic Fallback with Live Screen Vision & Local LLM (Open-Jarvis Style)
         # ---------------------------------------------------------------------
-        foremost_w = live_screen_vision.get_foremost_user_window()
-        active_title = foremost_w.get("title", "Windows Desktop") or "Windows Desktop"
-        ok_agentic, act_name, agentic_reply = self._agentic_dynamic_resolve(raw_query, active_title)
-        if ok_agentic and agentic_reply:
-            return True, act_name, agentic_reply
-
-        return True, "screen_aware_companion", f"I'm tuned into your screen on '{active_title}', Mamu. I'm right here with you—tell me what you'd like to do."
+        # If no physical desktop action was resolved, return False so the central
+        # conversational pipeline handles multi-turn reasoning and multilingual LLM generation.
+        return False, "", ""
 
     def _agentic_dynamic_resolve(self, query: str, active_window: str) -> Tuple[bool, str, str]:
         """

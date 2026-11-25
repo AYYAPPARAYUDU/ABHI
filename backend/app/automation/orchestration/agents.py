@@ -6,6 +6,7 @@ from backend.app.automation.orchestration.orchestrator import supervisor_orchest
 from backend.app.cognitive.registry.base_agent import BaseAgent
 from backend.app.cognitive.registry.models import AgentMetadata, AgentTaskRequest, AgentTaskResult
 from backend.app.cognitive.registry.registry import agent_registry
+from backend.app.core.logging import logger
 
 
 class GroundedDesktopAgent(BaseAgent):
@@ -126,6 +127,7 @@ class GroundedBrowserAgent(BaseAgent):
             params["url"] = url
 
         res = None
+        orch_error_msg = None
         try:
             res = await self.orchestrator.execute_browser_intent(
                 task_id=request.task_id,
@@ -139,7 +141,8 @@ class GroundedBrowserAgent(BaseAgent):
                 user_consent_granted=consent_granted
             )
         except Exception as ex:
-            logger.warning(f"GroundedBrowserAgent direct orchestrator execution: {ex}. Falling back to OS Desktop engine.")
+            orch_error_msg = str(ex)
+            logger.warning(f"GroundedBrowserAgent orchestrator execution raised: {ex}")
 
         # If orchestrator execution succeeded
         if res and res.is_success:
@@ -154,44 +157,69 @@ class GroundedBrowserAgent(BaseAgent):
                     "duration_ms": res.duration_ms,
                     "executed_actions_count": len(res.executed_actions),
                     "url": url,
+                    "current_url": url,
+                    "verified": True,
                     "username": params.get("username", "admin1")
                 },
                 observed_state={
                     "target": target,
                     "verified": True,
-                    "opened": True,
-                    "navigated": True,
-                    "filled": True,
-                    "clicked": True,
+                    "current_url": url,
+                    "opened": canonical_type == ActionType.BROWSER_NAVIGATE,
+                    "navigated": canonical_type == ActionType.BROWSER_NAVIGATE,
+                    "filled": canonical_type == ActionType.BROWSER_FILL,
+                    "clicked": canonical_type == ActionType.BROWSER_CLICK,
                     "state": res.state.value
                 },
                 error_message=None
             )
 
-        # Fallback to authentic OS Desktop Browser Driver
-        from backend.app.automation.desktop.os_control_engine import os_control_engine
+        # Fallback ONLY for explicit navigation via os_control_engine.open_url
         if canonical_type == ActionType.BROWSER_NAVIGATE:
+            from backend.app.automation.desktop.os_control_engine import os_control_engine
             ok, err = os_control_engine.open_url(url=url, browser=params.get("browser", "chrome"))
-        else:
-            ok, err = True, None
+            return AgentTaskResult(
+                task_id=request.task_id,
+                node_id=request.node_id,
+                agent_id=self.agent_id,
+                action=action_name,
+                success=ok,
+                data={"url": url, "current_url": url if ok else None, "executed": ok, "verified": ok},
+                observed_state={
+                    "target": target,
+                    "verified": ok,
+                    "opened": ok,
+                    "navigated": ok,
+                    "current_url": url if ok else None,
+                    "state": "COMPLETED" if ok else "FAILED"
+                },
+                error_message=err
+            )
 
+        # Honest failure for non-navigate browser actions when orchestrator fails
+        failure_msg = (
+            (res.error.message if res and res.error else None)
+            or orch_error_msg
+            or f"Browser action '{action_name}' on '{target}' failed."
+        )
         return AgentTaskResult(
             task_id=request.task_id,
             node_id=request.node_id,
             agent_id=self.agent_id,
             action=action_name,
-            success=ok,
-            data={"url": url, "executed": ok, "username": params.get("username", "admin1")},
+            success=False,
+            data={
+                "state": res.state.value if res else "FAILED",
+                "url": url,
+                "executed": False,
+                "verified": False,
+            },
             observed_state={
                 "target": target,
-                "verified": ok,
-                "opened": ok,
-                "navigated": ok,
-                "filled": ok,
-                "clicked": ok,
-                "state": "COMPLETED" if ok else "FAILED"
+                "verified": False,
+                "state": res.state.value if res else "FAILED",
             },
-            error_message=err
+            error_message=failure_msg
         )
 
 

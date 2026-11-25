@@ -561,6 +561,262 @@ class PlaywrightBrowserWorker:
         """Clear idempotency cache (useful for test fixtures)."""
         self._executed_actions.clear()
 
+    # =========================================================================
+    # HIGH-LEVEL REAL BROWSER & MEDIA INTERACTION API (Milestone 2.3)
+    # =========================================================================
+
+    def navigate(self, url: str, wait_until: str = "domcontentloaded", timeout_ms: int = 20000) -> Dict[str, Any]:
+        """Navigate to a target URL and return active page telemetry."""
+        if not self._page or self.state == BrowserWorkerState.STOPPED:
+            self.start()
+        self.state = BrowserWorkerState.NAVIGATING
+        self.emit_telemetry("NAVIGATION_STARTED", {"url": url})
+        self._page.goto(url, wait_until=wait_until, timeout=timeout_ms)
+        self.state = BrowserWorkerState.READY
+        info = self.get_active_tab_info()
+        self.emit_telemetry("NAVIGATION_COMPLETED", info)
+        return info
+
+    def get_active_tab_info(self) -> Dict[str, Any]:
+        """Identify the active tab, title, URL, and headless/headed visibility state."""
+        if not self._page:
+            return {
+                "success": False,
+                "title": "No Browser Active",
+                "url": "",
+                "is_visible": not self.headless,
+                "is_crashed": self.is_crashed,
+                "is_disconnected": self.is_disconnected
+            }
+        return {
+            "success": True,
+            "title": self.current_title,
+            "url": self.current_url,
+            "is_visible": not self.headless,
+            "is_crashed": self.is_crashed,
+            "is_disconnected": self.is_disconnected
+        }
+
+    def inspect_page_content(self, max_items: int = 15) -> Dict[str, Any]:
+        """Inspect visible page content, headings, interactive elements, and video candidates."""
+        if not self._page or self.is_crashed:
+            return {"error": "Browser not active", "items": []}
+
+        info = self.get_active_tab_info()
+        items = []
+        try:
+            selectors = [
+                "a#video-title",
+                "ytd-rich-item-renderer #video-title",
+                "a[href^='/watch']",
+                "#video-title",
+                "h1, h2, h3",
+                "#track_title",
+                ".video-viewport",
+                "#video_description"
+            ]
+            for sel in selectors:
+                locs = self._page.locator(sel)
+                count = min(locs.count(), max_items - len(items))
+                for i in range(count):
+                    try:
+                        txt = locs.nth(i).inner_text().strip()
+                        href = locs.nth(i).get_attribute("href") or ""
+                        if txt and txt not in [it["text"] for it in items]:
+                            items.append({"text": txt, "href": href, "selector": sel})
+                    except Exception:
+                        continue
+                if len(items) >= max_items:
+                    break
+        except Exception as e:
+            logger.debug(f"inspect_page_content exception: {e}")
+
+        return {
+            "tab_info": info,
+            "visible_items": items,
+            "item_count": len(items)
+        }
+
+    def get_media_playback_state(self) -> Dict[str, Any]:
+        """Retrieve real DOM media state from <video> element or global window state."""
+        if not self._page or self.is_crashed:
+            return {"playing": False, "status": "unavailable"}
+
+        try:
+            window_state = self._page.evaluate("() => window.ABHI_MEDIA_STATE || null")
+            if window_state and isinstance(window_state, dict):
+                return {
+                    "source": "window_state",
+                    "playing": bool(window_state.get("playing")),
+                    "title": window_state.get("title", ""),
+                    "description": window_state.get("description", ""),
+                    "currentTime": window_state.get("currentTime", 0),
+                    "duration": window_state.get("duration", 0),
+                    "status": "PLAYING" if window_state.get("playing") else "PAUSED"
+                }
+
+            video_state = self._page.evaluate("""() => {
+                const v = document.querySelector('video');
+                if (!v) return null;
+                return {
+                    source: 'html5_video',
+                    playing: !v.paused && !v.ended && v.readyState >= 2,
+                    paused: v.paused,
+                    currentTime: v.currentTime,
+                    duration: v.duration || 0,
+                    readyState: v.readyState,
+                    muted: v.muted
+                };
+            }""")
+            if video_state:
+                video_state["status"] = "PLAYING" if video_state.get("playing") else "PAUSED"
+                return video_state
+
+        except Exception as e:
+            logger.debug(f"get_media_playback_state error: {e}")
+
+        return {"playing": False, "status": "no_media_element"}
+
+    def media_play(self) -> Dict[str, Any]:
+        """Play media via DOM or keyboard shortcut."""
+        if not self._page:
+            return {"success": False, "error": "No browser page"}
+        try:
+            res = self._page.evaluate("""() => {
+                const btn = document.getElementById('play_btn') || document.querySelector('.ytp-play-button');
+                if (btn) {
+                    btn.click();
+                    return { clicked: true };
+                }
+                const v = document.querySelector('video');
+                if (v) {
+                    v.play();
+                    return { played: true };
+                }
+                return null;
+            }""")
+            if not res:
+                self._page.keyboard.press("k")
+            time.sleep(0.3)
+            return {"success": True, "state": self.get_media_playback_state()}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def play_discovered_video(self, index: int = 0) -> Dict[str, Any]:
+        """Click and open a discovered video card on YouTube or media site."""
+        if not self._page:
+            return {"success": False, "error": "No browser page"}
+        try:
+            # Query for video cards or anchor links
+            video_locators = self._page.locator("ytd-rich-item-renderer #video-title, ytd-video-renderer #video-title, a[href^='/watch'], #play_btn, .video-card-title, .track-item, button:has-text('Play')")
+            count = video_locators.count()
+            if count == 0:
+                return {"success": False, "error": "No video elements found on page"}
+
+            target_idx = min(index, count - 1)
+            target = video_locators.nth(target_idx)
+            video_title = target.text_content() or f"Video {target_idx + 1}"
+            
+            # Click video
+            target.click()
+            time.sleep(1.0)
+            
+            # Return fresh tab info and playback state
+            return {
+                "success": True,
+                "video_title": video_title.strip(),
+                "url": self._page.url,
+                "state": self.get_media_playback_state()
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def select_video_by_title(self, query: str) -> Dict[str, Any]:
+        """Search or match video by keyword and click it."""
+        if not self._page:
+            return {"success": False, "error": "No browser page"}
+        try:
+            loc = self._page.locator(f"a:has-text('{query}'), span:has-text('{query}'), h3:has-text('{query}')").first
+            if loc.count() > 0:
+                title = loc.text_content() or query
+                loc.click()
+                time.sleep(1.0)
+                return {
+                    "success": True,
+                    "video_title": title.strip(),
+                    "url": self._page.url,
+                    "state": self.get_media_playback_state()
+                }
+            return {"success": False, "error": f"No video found matching '{query}'"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def verify_youtube_watch_playback(self) -> Dict[str, Any]:
+        """Verify playback attributes specifically on a YouTube /watch page."""
+        if not self._page:
+            return {"verified": False, "error": "No browser page"}
+        try:
+            is_watch_page = "watch?v=" in self._page.url
+            media_state = self.get_media_playback_state()
+            return {
+                "is_watch_page": is_watch_page,
+                "url": self._page.url,
+                "title": self.current_title,
+                "media_state": media_state,
+                "verified": is_watch_page and media_state.get("status") in ["PLAYING", "PAUSED"]
+            }
+        except Exception as e:
+            return {"verified": False, "error": str(e)}
+
+    def media_pause(self) -> Dict[str, Any]:
+        """Pause media via DOM or keyboard shortcut."""
+        if not self._page:
+            return {"success": False, "error": "No browser page"}
+        try:
+            res = self._page.evaluate("""() => {
+                const btn = document.getElementById('pause_btn') || document.querySelector('.ytp-play-button');
+                const v = document.querySelector('video');
+                if (v && !v.paused && btn) {
+                    btn.click();
+                    return { clicked: true };
+                }
+                if (v && !v.paused) {
+                    v.pause();
+                    return { paused: true };
+                }
+                return null;
+            }""")
+            if not res:
+                self._page.keyboard.press("k")
+            time.sleep(0.3)
+            return {"success": True, "state": self.get_media_playback_state()}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def media_resume(self) -> Dict[str, Any]:
+        """Resume media playback."""
+        return self.media_play()
+
+    def media_next_video(self) -> Dict[str, Any]:
+        """Advance to the next video."""
+        if not self._page:
+            return {"success": False, "error": "No browser page"}
+        try:
+            res = self._page.evaluate("""() => {
+                const nextBtn = document.getElementById('next_btn') || document.querySelector('.ytp-next-button') || document.querySelector('a.ytp-next-button');
+                if (nextBtn) {
+                    nextBtn.click();
+                    return { clicked: true };
+                }
+                return null;
+            }""")
+            if not res:
+                self._page.keyboard.press("Shift+N")
+            time.sleep(0.5)
+            return {"success": True, "state": self.get_media_playback_state()}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
 
 # Global Singleton Instance
 playwright_browser_worker = PlaywrightBrowserWorker()

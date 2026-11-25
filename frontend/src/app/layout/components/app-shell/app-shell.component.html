@@ -1,9 +1,12 @@
 <!-- Contextual High-Tech Ambient Background (3D Core and 3D Workspace manage their own canvas) -->
 <div class="contextual-page-bg" [ngClass]="pageBackgroundClass()"></div>
 
-<!-- Main Shell Container -->
+<!-- Main Shell Container (Sidebar-Free Next-Gen Floating Architecture) -->
 <div class="abhi-app-shell" [class.main-agent-shell]="isMainAgent()">
-  <!-- Workspace Container (Spans full viewport with zero sidebar) -->
+  <!-- Global Next-Gen Floating Contextual Action Menu (Android Floating Reference Inspired) -->
+  <app-floating-action-menu></app-floating-action-menu>
+
+  <!-- Workspace Container (Flex alongside sidebar with smooth margin/padding adjustments) -->
   <div
     class="workspace-container"
     [class.main-agent-view]="isMainAgent()"
@@ -24,8 +27,10 @@
     </main>
   </div>
 
-  <!-- Command Palette (Ctrl+K) -->
-  <app-command-palette></app-command-palette>
+  <!-- Command Palette (Ctrl+K) — Only mounted when explicitly opened -->
+  @if (stateService.commandPaletteOpen()) {
+    <app-command-palette></app-command-palette>
+  }
 
   <!-- Consent Gate Modal -->
   <app-consent-modal></app-consent-modal>

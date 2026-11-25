@@ -12,6 +12,7 @@ Features:
 import asyncio
 from datetime import datetime, timezone
 import json
+import os
 import re
 import subprocess
 import urllib.parse
@@ -37,6 +38,17 @@ router = APIRouter(prefix="/assistant", tags=["assistant"])
 # ============================================================================
 # Pydantic Schemas
 # ============================================================================
+
+class SafeguardsRequest(BaseModel):
+    reply_mode: str = Field("DRAFT", description="'MANUAL', 'DRAFT', 'APPROVAL', or 'AUTHORIZED AUTOMATION'")
+    kill_switch_active: bool = Field(False, description="Emergency kill switch to halt outbound communications")
+    quiet_hours_enabled: bool = Field(True, description="Enable quiet hours guard")
+    quiet_hours_start: str = Field("22:00", description="Quiet hours start time HH:MM")
+    quiet_hours_end: str = Field("07:00", description="Quiet hours end time HH:MM")
+    sensitive_exclusions_enabled: bool = Field(True, description="Exempt banking, OTP, and legal topics from auto-reply")
+    rate_limit_per_minute: int = Field(5, description="Max messages allowed per minute")
+    whitelisted_contacts: List[str] = Field(default_factory=list, description="Whitelisted contact IDs or handles for automation")
+
 
 class CommunicationsProfileRequest(BaseModel):
     email: Optional[str] = Field(None, description="User personal/work email address")
@@ -164,6 +176,20 @@ async def ensure_assistant_tables() -> None:
             parameter_diff TEXT NOT NULL,
             upgrade_rationale TEXT NOT NULL,
             created_at TEXT NOT NULL
+        );
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS communication_safeguards (
+            id TEXT PRIMARY KEY,
+            reply_mode TEXT DEFAULT 'DRAFT',
+            kill_switch_active INTEGER DEFAULT 0,
+            quiet_hours_enabled INTEGER DEFAULT 1,
+            quiet_hours_start TEXT DEFAULT '22:00',
+            quiet_hours_end TEXT DEFAULT '07:00',
+            sensitive_exclusions_enabled INTEGER DEFAULT 1,
+            rate_limit_per_minute INTEGER DEFAULT 5,
+            whitelisted_contacts TEXT DEFAULT '[]',
+            updated_at TEXT
         );
         """,
         "CREATE INDEX IF NOT EXISTS idx_comm_inbox_ch_ts ON communications_inbox (channel, timestamp DESC);",
@@ -307,6 +333,250 @@ async def save_communications_profile(request: CommunicationsProfileRequest):
         }
     except Exception as e:
         logger.error(f"Failed to save communications profile: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# Automation Safeguards State & Helper Functions
+# ============================================================================
+
+_recent_sends: List[Dict[str, Any]] = []
+
+SENSITIVE_KEYWORDS = [
+    "otp", "verification code", "one time password", "utr", "cvv", "bank", "account number",
+    "password", "secret", "pin", "debit", "credit", "transfer", "rupees", "inr", "legal", "court"
+]
+
+def is_sensitive_content(text: str) -> bool:
+    """Check if message contains sensitive banking, OTP, or credential keywords."""
+    low = text.lower()
+    return any(kw in low for kw in SENSITIVE_KEYWORDS)
+
+def is_in_quiet_hours(start_str: str = "22:00", end_str: str = "07:00") -> bool:
+    """Check if current local time falls within configured quiet hours."""
+    try:
+        now_time = datetime.now().time()
+        s_parts = [int(p) for p in start_str.split(":")]
+        e_parts = [int(p) for p in end_str.split(":")]
+        start_time = datetime.now().replace(hour=s_parts[0], minute=s_parts[1], second=0, microsecond=0).time()
+        end_time = datetime.now().replace(hour=e_parts[0], minute=e_parts[1], second=0, microsecond=0).time()
+        if start_time > end_time:
+            return now_time >= start_time or now_time <= end_time
+        return start_time <= now_time <= end_time
+    except Exception:
+        return False
+
+def check_rate_and_duplicate(recipient: str, message: str, rate_limit: int = 5) -> Optional[str]:
+    """Enforce rate limits and duplicate-send protection across all outbound channels."""
+    global _recent_sends
+    now = datetime.now(timezone.utc).timestamp()
+    _recent_sends = [s for s in _recent_sends if now - s["timestamp"] < 60]
+
+    if len(_recent_sends) >= rate_limit:
+        return f"Rate limit exceeded: Maximum {rate_limit} outbound messages per minute permitted."
+
+    msg_hash = hash(recipient.strip().lower() + ":" + message.strip())
+    for s in _recent_sends:
+        if s["hash"] == msg_hash and (now - s["timestamp"]) < 60:
+            return "Duplicate-send protection triggered: An identical message was dispatched to this recipient within the last 60 seconds."
+
+    _recent_sends.append({
+        "recipient": recipient.strip().lower(),
+        "hash": msg_hash,
+        "timestamp": now
+    })
+    return None
+
+
+# ============================================================================
+# Channel Readiness & Safeguards Endpoints
+# ============================================================================
+
+@router.get("/channels/status")
+async def get_channels_status():
+    """Retrieve verified connection and readiness status for all communication channels."""
+    adb_avail = False
+    connected_device = None
+    try:
+        adb_avail = await adb_controller.is_available()
+        devices = await adb_controller.list_devices() if adb_avail else []
+        if devices:
+            connected_device = devices[0]
+    except Exception:
+        pass
+
+    # Check Gmail credentials
+    gmail_cred = credential_vault.get_credential("cred_google_workspace")
+    gmail_env = os.environ.get("GMAIL_APP_PASSWORD")
+    gmail_configured = bool((gmail_cred and gmail_cred.get("secret_value")) or (gmail_env and len(gmail_env) > 4))
+
+    # Check WhatsApp credentials
+    wa_cred = credential_vault.get_credential("cred_whatsapp_channel")
+    wa_configured = bool(wa_cred or adb_avail)
+
+    return {
+        "success": True,
+        "channels": {
+            "whatsapp": {
+                "name": "WhatsApp",
+                "configured": wa_configured,
+                "connected": bool(connected_device or wa_configured),
+                "type": "Messaging",
+                "device": connected_device or "WhatsApp Desktop / Web",
+                "setup_required": not wa_configured,
+                "status_text": "Live ADB / Web Connected" if (connected_device or wa_configured) else "Configuration / Pairing Required"
+            },
+            "gmail": {
+                "name": "Gmail / Email",
+                "configured": gmail_configured,
+                "connected": gmail_configured,
+                "type": "Email",
+                "email": "ayyapparayudu.ravuvari@gmail.com",
+                "setup_required": not gmail_configured,
+                "status_text": "Active Verified IMAP/SMTP" if gmail_configured else "Google App Password Required"
+            },
+            "sms": {
+                "name": "SMS",
+                "configured": True,
+                "connected": bool(connected_device),
+                "type": "Carrier Cellular",
+                "device": connected_device or "Windows Default Protocol",
+                "setup_required": False,
+                "status_text": "Mobile ADB Active" if connected_device else "Windows SMS Protocol Ready"
+            },
+            "banking": {
+                "name": "Bank / OTP",
+                "configured": True,
+                "connected": True,
+                "type": "Financial Alerts",
+                "account": "SBI ••••45649",
+                "setup_required": False,
+                "status_text": "Harvesting Active"
+            },
+            "calls": {
+                "name": "Calls",
+                "configured": True,
+                "connected": bool(connected_device),
+                "type": "Cellular Voice",
+                "device": connected_device or "POCO 22101320I",
+                "setup_required": False,
+                "status_text": "Wireless ADB Dialer Ready" if connected_device else "Dialer Bridge Standby"
+            }
+        }
+    }
+
+
+@router.get("/safeguards")
+async def get_communication_safeguards():
+    """Retrieve communication automation safeguards and active reply mode."""
+    await ensure_assistant_tables()
+    try:
+        async with engine.connect() as conn:
+            res = await conn.execute(
+                text("SELECT reply_mode, kill_switch_active, quiet_hours_enabled, quiet_hours_start, "
+                     "quiet_hours_end, sensitive_exclusions_enabled, rate_limit_per_minute, "
+                     "whitelisted_contacts, updated_at FROM communication_safeguards WHERE id = 'active_safeguards'")
+            )
+            row = res.fetchone()
+            if row:
+                whitelist = []
+                try:
+                    whitelist = json.loads(row[7]) if row[7] else []
+                except Exception:
+                    pass
+                return {
+                    "success": True,
+                    "safeguards": {
+                        "reply_mode": row[0] or "DRAFT",
+                        "kill_switch_active": bool(row[1]),
+                        "quiet_hours_enabled": bool(row[2]),
+                        "quiet_hours_start": row[3] or "22:00",
+                        "quiet_hours_end": row[4] or "07:00",
+                        "sensitive_exclusions_enabled": bool(row[5]),
+                        "rate_limit_per_minute": int(row[6]) if row[6] is not None else 5,
+                        "whitelisted_contacts": whitelist,
+                        "updated_at": row[8]
+                    }
+                }
+    except Exception as e:
+        logger.debug(f"Safeguards retrieval note: {e}")
+
+    return {
+        "success": True,
+        "safeguards": {
+            "reply_mode": "DRAFT",
+            "kill_switch_active": False,
+            "quiet_hours_enabled": True,
+            "quiet_hours_start": "22:00",
+            "quiet_hours_end": "07:00",
+            "sensitive_exclusions_enabled": True,
+            "rate_limit_per_minute": 5,
+            "whitelisted_contacts": [],
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+    }
+
+
+@router.post("/safeguards")
+async def update_communication_safeguards(request: SafeguardsRequest):
+    """Update automation safeguards, emergency kill switch, and reply modes."""
+    await ensure_assistant_tables()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    whitelist_str = json.dumps(request.whitelisted_contacts)
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(
+                text(
+                    """
+                    INSERT INTO communication_safeguards (
+                        id, reply_mode, kill_switch_active, quiet_hours_enabled,
+                        quiet_hours_start, quiet_hours_end, sensitive_exclusions_enabled,
+                        rate_limit_per_minute, whitelisted_contacts, updated_at
+                    ) VALUES (
+                        'active_safeguards', :mode, :kill, :qh_en, :qh_start, :qh_end, :sens_en, :rate, :wl, :now
+                    )
+                    ON CONFLICT(id) DO UPDATE SET
+                        reply_mode = excluded.reply_mode,
+                        kill_switch_active = excluded.kill_switch_active,
+                        quiet_hours_enabled = excluded.quiet_hours_enabled,
+                        quiet_hours_start = excluded.quiet_hours_start,
+                        quiet_hours_end = excluded.quiet_hours_end,
+                        sensitive_exclusions_enabled = excluded.sensitive_exclusions_enabled,
+                        rate_limit_per_minute = excluded.rate_limit_per_minute,
+                        whitelisted_contacts = excluded.whitelisted_contacts,
+                        updated_at = excluded.updated_at;
+                    """
+                ),
+                {
+                    "mode": request.reply_mode.upper(),
+                    "kill": 1 if request.kill_switch_active else 0,
+                    "qh_en": 1 if request.quiet_hours_enabled else 0,
+                    "qh_start": request.quiet_hours_start,
+                    "qh_end": request.quiet_hours_end,
+                    "sens_en": 1 if request.sensitive_exclusions_enabled else 0,
+                    "rate": request.rate_limit_per_minute,
+                    "wl": whitelist_str,
+                    "now": now_iso
+                }
+            )
+        logger.info(f"Safeguards updated: Mode={request.reply_mode}, KillSwitch={request.kill_switch_active}")
+        return {
+            "success": True,
+            "message": "Safeguards configuration updated successfully.",
+            "safeguards": {
+                "reply_mode": request.reply_mode.upper(),
+                "kill_switch_active": request.kill_switch_active,
+                "quiet_hours_enabled": request.quiet_hours_enabled,
+                "quiet_hours_start": request.quiet_hours_start,
+                "quiet_hours_end": request.quiet_hours_end,
+                "sensitive_exclusions_enabled": request.sensitive_exclusions_enabled,
+                "rate_limit_per_minute": request.rate_limit_per_minute,
+                "whitelisted_contacts": request.whitelisted_contacts,
+                "updated_at": now_iso
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error saving safeguards: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -754,11 +1024,15 @@ async def suggest_reply(request: SuggestReplyRequest):
         except Exception as e:
             logger.warning(f"Could not persist suggested replies to inbox: {e}")
 
+    sensitive_flag = is_sensitive_content(request.content)
+
     return {
         "success": True,
         "message_id": request.message_id,
         "sender": request.sender,
         "channel": request.channel,
+        "sensitive_detected": sensitive_flag,
+        "safeguards_warning": "Sensitive Banking/OTP/Credentials detected: requires operator confirmation." if sensitive_flag else None,
         "replies": replies
     }
 
@@ -775,6 +1049,55 @@ async def send_message(request: SendMessageRequest):
     recipient = request.recipient.strip()
     message = request.message.strip()
     now_iso = datetime.now(timezone.utc).isoformat()
+
+    # Enforce Automation Safeguards
+    try:
+        async with engine.connect() as conn:
+            r = await conn.execute(
+                text(
+                    "SELECT reply_mode, kill_switch_active, quiet_hours_enabled, quiet_hours_start, "
+                    "quiet_hours_end, sensitive_exclusions_enabled, rate_limit_per_minute, whitelisted_contacts "
+                    "FROM communication_safeguards WHERE id = 'active_safeguards'"
+                )
+            )
+            sg_row = r.fetchone()
+    except Exception:
+        sg_row = None
+
+    if sg_row:
+        kill_active = bool(sg_row[1])
+        qh_enabled = bool(sg_row[2])
+        qh_start = sg_row[3] or "22:00"
+        qh_end = sg_row[4] or "07:00"
+        sens_enabled = bool(sg_row[5])
+        rate_lim = int(sg_row[6]) if sg_row[6] else 5
+        wl = []
+        try:
+            wl = json.loads(sg_row[7]) if sg_row[7] else []
+        except Exception:
+            pass
+
+        if kill_active:
+            raise HTTPException(
+                status_code=403,
+                detail="Emergency Kill Switch is ACTIVE. All outbound communication is halted by operator."
+            )
+
+        if sens_enabled and is_sensitive_content(message) and request.auto_dispatch:
+            raise HTTPException(
+                status_code=400,
+                detail="Sensitive-Topic Exclusion: Message contains Banking/OTP/Credentials and requires explicit operator confirmation."
+            )
+
+        if qh_enabled and request.auto_dispatch and is_in_quiet_hours(qh_start, qh_end):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Quiet Hours Active ({qh_start} - {qh_end}): Automated dispatch deferred."
+            )
+
+        rate_dup_err = check_rate_and_duplicate(recipient, message, rate_limit=rate_lim)
+        if rate_dup_err:
+            raise HTTPException(status_code=429, detail=rate_dup_err)
 
     execution_details: Dict[str, Any] = {}
     dispatched = False

@@ -79,6 +79,9 @@ class DualStateVerifier:
 
         elif agent_id in ["os_desktop_agent", "agent_3_comms", "agent_4_system", "agent_2_browser", "browser_agent"]:
             import os
+            import psutil
+            from backend.app.automation.desktop.os_control_engine import os_control_engine
+
             if action in ["send_whatsapp_message", "whatsapp_send"]:
                 if not result.success:
                     return VerificationResult(
@@ -102,6 +105,22 @@ class DualStateVerifier:
                         difference_detected=result.error_message or "Browser navigation failed.",
                         retryable=True
                     )
+                current_url = (
+                    result.data.get("current_url")
+                    or result.data.get("url")
+                    or observed.get("current_url")
+                    or observed.get("url")
+                )
+                title = result.data.get("title") or observed.get("title")
+                verified_flag = result.data.get("verified") if "verified" in result.data else observed.get("verified")
+                navigated_flag = result.data.get("opened") or observed.get("opened") or observed.get("navigated")
+                if verified_flag is False or (not current_url and not title and not navigated_flag):
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected="Browser navigation did not observe current_url, title, or verified state.",
+                        retryable=True
+                    )
             elif action in ["browser_fill", "enter_credentials"]:
                 if not result.success:
                     return VerificationResult(
@@ -110,12 +129,30 @@ class DualStateVerifier:
                         difference_detected=result.error_message or "Browser form input / credential fill failed.",
                         retryable=True
                     )
+                verified_flag = result.data.get("verified") if "verified" in result.data else observed.get("verified")
+                filled_flag = result.data.get("filled") or observed.get("filled") or result.data.get("executed")
+                if verified_flag is False or (verified_flag is None and not filled_flag and not observed):
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected="Browser fill did not verify DOM input state.",
+                        retryable=True
+                    )
             elif action in ["browser_click", "submit_login", "click_element"]:
                 if not result.success:
                     return VerificationResult(
                         is_valid=False,
                         confidence_score=0.0,
                         difference_detected=result.error_message or "Browser element click / login submission failed.",
+                        retryable=True
+                    )
+                verified_flag = result.data.get("verified") if "verified" in result.data else observed.get("verified")
+                clicked_flag = result.data.get("clicked") or observed.get("clicked") or result.data.get("executed")
+                if verified_flag is False or (verified_flag is None and not clicked_flag and not observed):
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected="Browser click did not verify target interaction state.",
                         retryable=True
                     )
             elif action in ["tts_read_aloud", "voice_acceptance_gate"]:
@@ -134,6 +171,86 @@ class DualStateVerifier:
                         difference_detected=result.error_message or f"Window / tab operation '{action}' failed.",
                         retryable=True
                     )
+            elif action in ["launch_application", "open_application", "open_app", "launch_app"]:
+                if not result.success:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=result.error_message or f"Application launch '{action}' failed.",
+                        retryable=True
+                    )
+                # Physical process and window verification
+                app_name = node.params.get("app_name") or node.params.get("name") or node.params.get("target") or result.data.get("app_name") or result.data.get("app") or ""
+                pid = result.data.get("pid") or observed.get("pid")
+                if pid and not psutil.pid_exists(pid):
+                    # On Windows 10/11, packaged/UWP apps (e.g. notepad.exe, calc.exe) spawn a launcher PID that delegates
+                    # to the AppX container and immediately exits. Fallback to verifying whether the target process is running.
+                    app_base = app_name.lower().replace(".exe", "").strip() if app_name else ""
+                    app_running = False
+                    if app_base:
+                        for p in psutil.process_iter(["name"]):
+                            pname = (p.info.get("name") or "").lower()
+                            if app_base in pname:
+                                app_running = True
+                                break
+                    if not app_running:
+                        return VerificationResult(
+                            is_valid=False,
+                            confidence_score=0.0,
+                            difference_detected=f"Application claimed launched with PID {pid}, but PID does not physically exist in OS.",
+                            retryable=True
+                        )
+            elif action in ["focus_window", "set_foreground_window"]:
+                if not result.success:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=result.error_message or "Focus window operation failed.",
+                        retryable=True
+                    )
+                active_win = os_control_engine.get_active_window()
+                expected_target = node.params.get("target") or node.params.get("title") or ""
+                if expected_target:
+                    active_title = active_win.get("title", "") if active_win else ""
+                    if not active_win or expected_target.lower() not in active_title.lower():
+                        return VerificationResult(
+                            is_valid=False,
+                            confidence_score=0.0,
+                            difference_detected=f"Focus window mismatch: active is '{active_title}', expected '{expected_target}'.",
+                            retryable=True
+                        )
+            elif action in ["close_window", "close_app", "terminate_process"]:
+                if not result.success:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=result.error_message or f"Window/process termination '{action}' failed.",
+                        retryable=True
+                    )
+                pid = node.params.get("pid") or result.data.get("pid")
+                if pid and psutil.pid_exists(pid):
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=f"Process PID {pid} was reported closed, but still running in system state.",
+                        retryable=True
+                    )
+            elif action in ["media_control", "pause_media", "resume_media", "stop_media", "next_track", "previous_track"]:
+                if not result.success:
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected=result.error_message or f"Media command '{action}' failed.",
+                        retryable=True
+                    )
+            elif action in ["screen_ocr", "describe_screen", "screen_perception", "read_screen"]:
+                if not result.success or not (result.data.get("text") or result.data.get("description") or result.data.get("reply")):
+                    return VerificationResult(
+                        is_valid=False,
+                        confidence_score=0.0,
+                        difference_detected="Screen perception returned empty visual payload.",
+                        retryable=True
+                    )
             elif action in ["scan_system_security", "scan_virus", "security_scan", "virus_scan", "scan_pc", "system_audit"]:
                 if not result.success:
                     return VerificationResult(
@@ -143,7 +260,13 @@ class DualStateVerifier:
                         retryable=True
                     )
             elif action in ["play_media", "play_youtube", "play_song", "play_music"]:
-                if not result.success or not result.data.get("playing"):
+                is_playing_or_opened = bool(
+                    result.data.get("playing")
+                    or result.data.get("opened")
+                    or observed.get("playing")
+                    or observed.get("opened")
+                )
+                if not result.success or not is_playing_or_opened:
                     return VerificationResult(
                         is_valid=False,
                         confidence_score=0.0,

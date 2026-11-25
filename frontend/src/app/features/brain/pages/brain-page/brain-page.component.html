@@ -1,696 +1,1309 @@
-<div class="communications-hub-container">
-  <!-- Toast Alert -->
-  @if (assistant.notificationAlert()) {
-    <div class="hub-toast-banner font-mono animate-fade-in">
-      <span>🔔 {{ assistant.notificationAlert() }}</span>
-    </div>
-  }
+<div class="sovereign-communications-container">
 
-  <!-- ========================================================================= -->
-  <!-- 1. TOP EXECUTIVE COMMAND STRIP                                            -->
-  <!-- ========================================================================= -->
-  <header class="hub-header-card">
-    <div class="header-main-row">
-      <div class="title-meta-group">
-        <div class="title-badge-row">
-          <span class="hub-glyph">💬</span>
-          <div>
-            <div class="title-flex">
-              <h1 class="page-title font-mono">MESSAGES & NEURAL COMMUNICATIONS</h1>
-              <span class="version-tag font-mono">{{ assistant.brainStatus()?.version || 'v2.5 Sovereign' }}</span>
-              <span class="status-indicator-live font-mono">● LIVE SYNC</span>
-            </div>
-            <p class="subtitle-text">
-              Unified Sovereign Communications • Real-Time WhatsApp, Gmail, Banking, OTPs & POCO Redwood Telemetry
-            </p>
-          </div>
-        </div>
-      </div>
+  <!-- ======================================================================== -->
+  <!-- 0. TOP WORKSPACE SWITCHER BAR                                            -->
+  <!-- ======================================================================== -->
+  <header class="top-workspace-switcher-bar">
+    <div class="switcher-tabs-cluster">
+      <button
+        class="workspace-tab-btn"
+        [class.active]="activeWorkspaceTab() === 'agent-chat'"
+        (click)="setWorkspaceTab('agent-chat')"
+        title="Switch to ABHI AI & Agent Chat"
+      >
+        <span class="tab-icon">🤖</span>
+        <span class="tab-label">ABHI AI & Agent Chat</span>
+        <span class="tab-badge-tiny">Sovereign OS</span>
+      </button>
 
-      <div class="header-actions-group">
-        <!-- Phone Connection Status -->
-        @if (summary()?.device?.connected || summary()?.mobile_connected) {
-          <div class="status-pill status-connected font-mono" title="Connected to POCO Redwood via ADB">
-            <span class="pulse-dot green"></span>
-            <span>POCO 22101320I • ⚡ {{ summary()?.battery?.level || 14 }}% Connected</span>
-          </div>
-        } @else {
-          <div class="status-pill status-offline font-mono" title="Mobile storage & local bridge active">
-            <span class="pulse-dot amber"></span>
-            <span>Mobile Storage Synced</span>
-          </div>
+      <button
+        class="workspace-tab-btn"
+        [class.active]="activeWorkspaceTab() === 'personal-hub'"
+        (click)="setWorkspaceTab('personal-hub')"
+        title="Switch to Personal Communication Hub"
+      >
+        <span class="tab-icon">📱</span>
+        <span class="tab-label">Personal Communication Hub</span>
+        @if (channelUnreadCounts().total > 0) {
+          <span class="tab-badge-unread">{{ channelUnreadCounts().total }}</span>
         }
-
-        <!-- AI Alignment Pill -->
-        <div class="status-pill status-aligned font-mono">
-          <span class="lightning-glyph">⚡</span>
-          <span>{{ ((assistant.brainStatus()?.alignment_score || 0.986) * 100).toFixed(1) }}% ALIGNED</span>
-        </div>
-
-        <!-- Google Key Setup -->
-        <button
-          type="button"
-          class="btn-action btn-google font-mono"
-          (click)="openGooglePasswordModal()"
-          title="Configure Google Workspace / Gmail App Password"
-        >
-          <span>🔑 GMAIL KEY</span>
-        </button>
-
-        <!-- Sync All Feeds -->
-        <button
-          type="button"
-          class="btn-action btn-sync font-mono"
-          (click)="assistant.fetchContacts(activeChannel(), searchQuery())"
-          [disabled]="assistant.isSyncing()"
-          title="Refresh All Contacts, Chats & Messages"
-        >
-          <span [class.spin]="assistant.isSyncing()">🔄</span>
-          <span>{{ assistant.isSyncing() ? 'SYNCING...' : 'SYNC ALL' }}</span>
-        </button>
-
-        <!-- Profile Toggle -->
-        <button type="button" class="btn-action btn-profile font-mono" (click)="toggleProfileDrawer()">
-          {{ isProfileDrawerOpen() ? '✕ CLOSE' : '✎ PROFILE' }}
-        </button>
-      </div>
+      </button>
     </div>
 
-    <!-- SOVEREIGN IDENTITY & QUICK SHORTCUTS STRIP -->
-    <div class="hub-identity-strip">
-      <div class="identity-info font-mono">
-        <span class="sovereign-tag">👑 OPERATOR:</span>
-        <strong class="operator-name">Ravuvai Ayyapparayudu (Mamu)</strong>
-        <span class="id-sep">•</span>
-        <span class="id-sub">{{ assistant.profile()?.email || 'ayyapparayudu.ravuvari@gmail.com' }}</span>
-        <span class="id-sep">•</span>
-        <span class="id-sub">{{ assistant.profile()?.phone_number || '+91 9390598938' }}</span>
-        <span class="treasury-badge">🏦 SBI: ****5649 (ayyapparayudu.5@ybl)</span>
-      </div>
+    <!-- Right Quick Controls -->
+    <div class="switcher-actions-cluster">
+      @if (activeWorkspaceTab() === 'personal-hub') {
+        <!-- Emergency Kill Switch Toggle -->
+        <button
+          class="btn-kill-switch"
+          [class.active-kill]="killSwitchActive()"
+          (click)="toggleKillSwitch()"
+          [title]="killSwitchActive() ? 'Click to Disengage Kill Switch' : 'Click to Instantly Pause All Outbound Messages'"
+        >
+          <span class="kill-icon">{{ killSwitchActive() ? '🚨' : '🛡️' }}</span>
+          <span class="kill-label">
+            {{ killSwitchActive() ? 'KILL SWITCH ACTIVE' : 'Kill Switch: OFF' }}
+          </span>
+        </button>
 
-      <div class="identity-quick-links font-mono">
-        <button type="button" class="btn-mini-link" (click)="assistant.launchWhatsAppWeb()" title="Open WhatsApp Web">
-          💬 WhatsApp Web
-        </button>
-        <button type="button" class="btn-mini-link" (click)="openEmailActiveContact()" title="Open Gmail Compose">
-          📧 Open Gmail
-        </button>
-        <button type="button" class="btn-mini-link" (click)="toggleRightSidebar()" title="Toggle Neural Intelligence Panel">
-          🧠 {{ isRightSidebarOpen() ? 'Hide Intelligence' : 'Show Intelligence' }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Collapsible Edit Profile Drawer -->
-    @if (isProfileDrawerOpen()) {
-      <div class="profile-drawer-card animate-slide-down">
-        <div class="drawer-title font-mono">⚙️ Configure Sovereign Communications Profile</div>
-        <div class="drawer-grid">
-          <div class="input-group">
-            <label class="font-mono">Email Address</label>
-            <input type="email" class="ctrl-input font-mono" [(ngModel)]="inputEmail" placeholder="operator email" />
-          </div>
-          <div class="input-group">
-            <label class="font-mono">Phone Number</label>
-            <input type="tel" class="ctrl-input font-mono" [(ngModel)]="inputPhone" placeholder="+91..." />
-          </div>
-          <div class="input-group">
-            <label class="font-mono">Key Monitored Threads</label>
-            <input type="text" class="ctrl-input font-mono" [(ngModel)]="inputThreads" placeholder="e.g. Dheenu, SBI, Jio, Family" />
-          </div>
-          <div class="drawer-action-col">
-            <button
-              type="button"
-              class="btn-save-profile font-mono"
-              (click)="saveProfile()"
-              [disabled]="assistant.isLoading()"
-            >
-              {{ assistant.isLoading() ? 'SAVING...' : 'SAVE CHANGES' }}
-            </button>
-          </div>
+        <!-- Active Mode Pill -->
+        <div class="mode-indicator-pill" (click)="toggleSafeguardsDrawer()" title="Click to configure reply mode and safeguards">
+          <span class="mode-tag-icon">⚡</span>
+          <span class="mode-tag-text">Mode: {{ replyMode() }}</span>
         </div>
-      </div>
-    }
+
+        <!-- Safeguards Drawer Button -->
+        <button
+          class="btn-header-tool"
+          [class.active]="isSafeguardsDrawerOpen()"
+          (click)="toggleSafeguardsDrawer()"
+          title="Toggle Automation Safeguards Panel"
+        >
+          <span class="tool-icon">⚙️</span>
+          <span>Safeguards</span>
+        </button>
+
+        <!-- Sync POCO Mobile Device -->
+        <button
+          class="btn-header-tool sync-btn"
+          [class.syncing]="comms.isSyncing()"
+          (click)="syncMobileDevice()"
+          title="Sync POCO Mobile Device via Wireless ADB"
+        >
+          <span class="tool-icon">🔄</span>
+          <span>Sync Device</span>
+        </button>
+      } @else {
+        <!-- Context Drawer Button for Tab A -->
+        <button
+          class="btn-header-tool"
+          [class.active]="isContextDrawerOpen()"
+          (click)="toggleContextDrawer()"
+          title="Toggle Context Drawer"
+        >
+          <span class="tool-icon">🧠</span>
+          <span>Context</span>
+        </button>
+      }
+    </div>
   </header>
 
-  <!-- ========================================================================= -->
-  <!-- 2. EXECUTIVE 3-COLUMN CHAT COMMAND CENTER                                 -->
-  <!-- ========================================================================= -->
-  <main class="hub-chat-deck-grid" [class.no-sidebar]="!isRightSidebarOpen()">
-    <!-- ======================================================================= -->
-    <!-- COLUMN 1: CONVERSATIONS & CHANNELS RAIL                                  -->
-    <!-- ======================================================================= -->
-    <aside class="threads-rail-pane">
-      <!-- Search Bar with DSA Trie Instant Filtering -->
-      <div class="rail-search-box">
-        <span class="search-glyph">🔍</span>
-        <input
-          type="text"
-          class="rail-search-input font-mono"
-          placeholder="Search chats, OTPs, amounts..."
-          [ngModel]="searchQuery()"
-          (ngModelChange)="onSearchChange($event)"
-        />
-        @if (searchQuery()) {
-          <button type="button" class="btn-clear-search" (click)="onSearchChange('')">✕</button>
-        }
-      </div>
+  <!-- Notification Banner -->
+  @if (personalStatusNotice()) {
+    <div class="personal-notice-banner">
+      <span class="notice-icon">ℹ️</span>
+      <span class="notice-text">{{ personalStatusNotice() }}</span>
+      <button class="btn-dismiss-notice" (click)="personalStatusNotice.set(null)">✕</button>
+    </div>
+  }
 
-      <!-- Channel Segment Tabs -->
-      <nav class="channel-segments-bar font-mono" aria-label="Channel Filters">
-        <button
-          type="button"
-          class="channel-tab-btn"
-          [class.active]="activeChannel() === 'all'"
-          (click)="setChannel('all')"
-          title="All Communications"
-        >
-          <span>All</span>
-          <span class="tab-count-pill">{{ summary()?.total || contacts().length }}</span>
-        </button>
+  <!-- ======================================================================== -->
+  <!-- TAB A: 🤖 ABHI AI & AGENT CHAT                                           -->
+  <!-- ======================================================================== -->
+  @if (activeWorkspaceTab() === 'agent-chat') {
+    <div class="tab-a-workspace-grid">
 
-        <button
-          type="button"
-          class="channel-tab-btn tab-whatsapp"
-          [class.active]="activeChannel() === 'whatsapp'"
-          (click)="setChannel('whatsapp')"
-          title="WhatsApp Chats"
-        >
-          <span>💬 WA</span>
-          <span class="tab-count-pill">{{ summary()?.whatsapp || 0 }}</span>
-        </button>
-
-        <button
-          type="button"
-          class="channel-tab-btn tab-gmail"
-          [class.active]="activeChannel() === 'mail'"
-          (click)="setChannel('mail')"
-          title="Gmail Inbox"
-        >
-          <span>📧 Mail</span>
-          <span class="tab-count-pill">{{ summary()?.emails || 0 }}</span>
-        </button>
-
-        <button
-          type="button"
-          class="channel-tab-btn tab-bank"
-          [class.active]="activeChannel() === 'banking'"
-          (click)="setChannel('banking')"
-          title="Banking & UPI Alerts"
-        >
-          <span>🏦 Bank</span>
-          <span class="tab-count-pill">{{ summary()?.banking || 0 }}</span>
-        </button>
-
-        <button
-          type="button"
-          class="channel-tab-btn tab-otp"
-          [class.active]="activeChannel() === 'otp'"
-          (click)="setChannel('otp')"
-          title="Security Verification OTPs"
-        >
-          <span>🔐 OTP</span>
-          <span class="tab-count-pill">{{ summary()?.otps || 0 }}</span>
-        </button>
-
-        <button
-          type="button"
-          class="channel-tab-btn tab-call"
-          [class.active]="activeChannel() === 'calls'"
-          (click)="setChannel('calls')"
-          title="Voice Calls"
-        >
-          <span>📞 Calls</span>
-          <span class="tab-count-pill">{{ summary()?.calls || 0 }}</span>
-        </button>
-      </nav>
-
-      <!-- Contacts Thread List -->
-      <div class="threads-list-scroll custom-scrollbar">
-        @if (contacts().length === 0) {
-          <div class="empty-threads-box font-mono">
-            <span class="empty-glyph">📭</span>
-            <div class="empty-headline">No matching chats</div>
-            <p class="empty-hint">Try searching for a different keyword or click 'SYNC ALL'.</p>
-          </div>
-        }
-
-        @for (c of contacts(); track c.contact_id) {
-          <div
-            class="thread-card"
-            [class.active-thread]="activeContact()?.contact_id === c.contact_id"
-            (click)="onSelectContact(c)"
-          >
-            <!-- Avatar with Status Dot -->
-            <div class="thread-avatar-wrap">
-              <div class="thread-avatar-circle" [style.background]="c.avatar_color">
-                <span>{{ c.avatar }}</span>
-              </div>
-              @if (c.is_online) {
-                <span class="avatar-online-dot"></span>
-              }
+      <!-- 1. Left Sidebar: Conversation Sessions -->
+      <aside class="conversations-sidebar">
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+          <div class="hub-branding">
+            <div class="hub-icon-core">
+              <span class="hub-pulse-ring"></span>
+              <span class="hub-symbol">⌘</span>
             </div>
-
-            <!-- Content Middle -->
-            <div class="thread-content-col">
-              <div class="thread-top-line">
-                <strong class="contact-name text-truncate">{{ c.name }}</strong>
-                <span class="thread-time font-mono">{{ c.last_timestamp | date:'shortTime' }}</span>
-              </div>
-
-              <div class="thread-preview-line text-truncate">
-                @if (c.channel === 'whatsapp') {
-                  <span class="channel-chip-micro wa">WA</span>
-                } @else if (c.channel === 'banking') {
-                  <span class="channel-chip-micro bank">UPI</span>
-                } @else if (c.channel === 'otp') {
-                  <span class="channel-chip-micro otp">OTP</span>
-                } @else if (c.channel === 'gmail') {
-                  <span class="channel-chip-micro mail">MAIL</span>
-                } @else if (c.channel === 'calls') {
-                  <span class="channel-chip-micro call">CALL</span>
-                }
-                <span class="preview-text">{{ c.last_message || 'No messages yet' }}</span>
-              </div>
-            </div>
-
-            <!-- Badges Right -->
-            <div class="thread-meta-col">
-              @if (c.unread_count > 0) {
-                <span class="unread-count-badge">{{ c.unread_count }}</span>
-              }
-              @if (c.is_pinned) {
-                <span class="pin-glyph" title="Pinned Conversation">📌</span>
-              }
-            </div>
-          </div>
-        }
-      </div>
-    </aside>
-
-    <!-- ======================================================================= -->
-    <!-- COLUMN 2: REAL CHAT CONVERSATION STREAM                                 -->
-    <!-- ======================================================================= -->
-    <section class="chat-stage-pane">
-      @if (activeContact(); as curContact) {
-        <!-- Stage Top Bar -->
-        <div class="chat-stage-header">
-          <div class="header-contact-info">
-            <div class="stage-avatar-circle" [style.background]="curContact.avatar_color">
-              <span>{{ curContact.avatar }}</span>
-            </div>
-            <div>
-              <div class="stage-name-flex">
-                <h2 class="stage-contact-name">{{ curContact.name }}</h2>
-                <span class="channel-pill-tag font-mono" [ngClass]="'pill-' + curContact.channel">
-                  {{ curContact.channel.toUpperCase() }}
-                </span>
-                @if (curContact.is_online) {
-                  <span class="online-status-text font-mono">● Online</span>
-                }
-              </div>
-              <div class="stage-handle-sub font-mono">{{ curContact.handle }}</div>
+            <div class="hub-text">
+              <span class="hub-title">Agent Sessions</span>
+              <span class="hub-subtitle">Neural Dialogue</span>
             </div>
           </div>
 
-          <div class="header-stage-actions font-mono">
-            @if (curContact.channel === 'whatsapp' || curContact.channel === 'calls') {
-              <button
-                type="button"
-                class="stage-action-btn btn-call"
-                (click)="callActiveContact()"
-                title="Dial Contact via POCO Phone"
-              >
-                <span>📞 Dial</span>
-              </button>
-              <button
-                type="button"
-                class="stage-action-btn btn-wa"
-                (click)="openWhatsAppActiveContact()"
-                title="Open WhatsApp Chat"
-              >
-                <span>💬 WhatsApp</span>
-              </button>
-            } @else if (curContact.channel === 'gmail') {
-              <button
-                type="button"
-                class="stage-action-btn btn-email"
-                (click)="openEmailActiveContact()"
-                title="Compose Email in Gmail"
-              >
-                <span>📧 Compose</span>
-              </button>
-            }
-
-            <button
-              type="button"
-              class="stage-action-btn btn-toggle-intel"
-              (click)="toggleRightSidebar()"
-              title="Toggle Intelligence Sidebar"
-            >
-              <span>🧠 {{ isRightSidebarOpen() ? 'Hide AI' : 'Show AI' }}</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Chat Messages Flow Container -->
-        <div class="chat-messages-container custom-scrollbar">
-          <!-- Date Separator -->
-          <div class="chat-date-separator font-mono">
-            <span>TODAY • SOVEREIGN ENCRYPTED THREAD</span>
-          </div>
-
-          @for (m of threadMessages(); track $index) {
-            <div
-              class="message-row-bubble animate-fade-in"
-              [class.msg-incoming]="m.direction !== 'outgoing'"
-              [class.msg-outgoing]="m.direction === 'outgoing'"
-            >
-              <div class="bubble-card">
-                <!-- Header (Sender) -->
-                @if (m.direction !== 'outgoing') {
-                  <div class="bubble-sender-title font-mono">{{ m.sender || curContact.name }}</div>
-                }
-
-                @if (m.subject) {
-                  <div class="bubble-subject font-mono"><strong>Sub:</strong> {{ m.subject }}</div>
-                }
-
-                <!-- Body Text -->
-                <div class="bubble-text-body">{{ m.body }}</div>
-
-                <!-- Structured Financial Card -->
-                @if (m.amount_inr != null) {
-                  <div class="embedded-financial-card font-mono">
-                    <div class="fin-amount-tag">
-                      <span class="fin-glyph">₹</span>
-                      <span class="fin-val">{{ m.amount_inr.toFixed(2) }}</span>
-                    </div>
-                    @if (m.utr) {
-                      <div class="fin-utr-row">
-                        <span>UTR: <code>{{ m.utr }}</code></span>
-                        <button type="button" class="btn-micro-copy" (click)="copyToClipboard(m.utr, 'UTR')">
-                          Copy UTR
-                        </button>
-                      </div>
-                    }
-                    @if (m.account) {
-                      <div class="fin-account-tag">SBI A/C: {{ m.account }}</div>
-                    }
-                  </div>
-                }
-
-                <!-- Structured Security OTP Card -->
-                @if (m.otp_code) {
-                  <div class="embedded-otp-card font-mono">
-                    <div class="otp-badge-top">🔐 VERIFICATION OTP CODE</div>
-                    <div class="otp-number-display">{{ m.otp_code }}</div>
-                    <button
-                      type="button"
-                      class="btn-otp-fill-copy font-mono"
-                      (click)="copyToClipboard(m.otp_code, 'Security OTP')"
-                    >
-                      📋 COPY OTP CODE
-                    </button>
-                  </div>
-                }
-
-                <!-- Bubble Footer Meta -->
-                <div class="bubble-footer-meta font-mono">
-                  <span class="bubble-time">{{ m.timestamp | date:'shortTime' }}</span>
-                  @if (m.direction === 'outgoing') {
-                    <span class="delivery-ticks" title="Delivered to Sovereign Network">✓✓</span>
-                  }
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-
-        <!-- AI Suggested Quick Responses Bar -->
-        <div class="ai-suggested-responses-bar font-mono">
-          <span class="suggest-lead">⚡ AI Draft:</span>
-          <button
-            type="button"
-            class="chip-suggest-reply"
-            (click)="sendQuickReply('Thank you for the update. All automated verification tests have passed successfully.')"
-          >
-            "Verification passed, proceed"
-          </button>
-          <button
-            type="button"
-            class="chip-suggest-reply"
-            (click)="sendQuickReply('Received your message, Mamu. Working on this right now and will update you in 15 minutes.')"
-          >
-            "Working on it now, 15m update"
-          </button>
-          <button
-            type="button"
-            class="chip-suggest-reply"
-            (click)="sendQuickReply('Sure, let\'s connect over coffee in 30 minutes to review the live dashboard.')"
-          >
-            "Connect over coffee in 30m"
+          <button class="btn-new-chat" (click)="onNewChat()" title="Start New Conversation">
+            <span class="plus-icon">+</span>
+            <span class="btn-text">New Chat</span>
           </button>
         </div>
 
-        <!-- Message Composer -->
-        <div class="chat-composer-strip">
-          <textarea
-            class="composer-input font-mono"
-            rows="2"
-            placeholder="Write a message to {{ curContact.name }} (Press Enter to send)..."
-            [ngModel]="chatDraftText()"
-            (ngModelChange)="chatDraftText.set($event)"
-            (keydown.enter)="$event.preventDefault(); sendChat()"
-          ></textarea>
-
-          <div class="composer-actions-col">
-            <button
-              type="button"
-              class="btn-send-chat font-mono"
-              (click)="sendChat()"
-              [disabled]="assistant.isSendingReply() || !chatDraftText().trim()"
-            >
-              <span>{{ assistant.isSendingReply() ? 'SENDING...' : 'SEND ➔' }}</span>
-            </button>
-          </div>
-        </div>
-      } @else {
-        <!-- Empty State When No Contact Selected -->
-        <div class="empty-stage-box font-mono">
-          <span class="empty-stage-icon">💬</span>
-          <h2 class="empty-stage-title">Select a Conversation</h2>
-          <p class="empty-stage-desc">
-            Choose a contact from the left rail to view authentic message history, copy OTPs, or send live replies.
-          </p>
-        </div>
-      }
-    </section>
-
-    <!-- ======================================================================= -->
-    <!-- COLUMN 3: NEURAL BRAIN INTELLIGENCE & RAG MEMORY SIDEBAR                -->
-    <!-- ======================================================================= -->
-    @if (isRightSidebarOpen()) {
-      <aside class="intelligence-sidebar-pane animate-fade-in custom-scrollbar">
-        <!-- Contact Profile Card -->
-        <div class="intel-card profile-intel-card font-mono">
-          <div class="intel-card-header">
-            <span>👤 CONTACT INTELLIGENCE</span>
-          </div>
-          @if (activeContact(); as curC) {
-            <div class="intel-profile-body">
-              <div class="intel-name-badge">
-                <strong class="intel-cname">{{ curC.name }}</strong>
-                <span class="intel-handle">{{ curC.handle }}</span>
-              </div>
-              <div class="intel-stats-row">
-                <div class="intel-stat-box">
-                  <span class="stat-l">Channel</span>
-                  <span class="stat-v">{{ curC.channel.toUpperCase() }}</span>
-                </div>
-                <div class="intel-stat-box">
-                  <span class="stat-l">Messages</span>
-                  <span class="stat-v">{{ threadMessages().length }}</span>
-                </div>
-                <div class="intel-stat-box">
-                  <span class="stat-l">Status</span>
-                  <span class="stat-v text-emerald">Active</span>
-                </div>
-              </div>
-              @if (curC.metadata) {
-                <div class="intel-metadata-box">
-                  @for (entry of curC.metadata | keyvalue; track entry.key) {
-                    <div class="meta-entry">
-                      <span class="meta-k">{{ entry.key }}:</span>
-                      <span class="meta-val">{{ entry.value }}</span>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          } @else {
-            <div class="intel-empty-note">Select a contact to view telemetry</div>
-          }
-        </div>
-
-        <!-- RAG Neural Knowledge Search Box -->
-        <div class="intel-card rag-search-card font-mono">
-          <div class="intel-card-header">
-            <span>🧠 ASK BRAIN INTELLIGENCE (RAG)</span>
-          </div>
-          <div class="rag-search-body">
-            <p class="rag-subtext">
-              Natural language hybrid search across your entire communications archive, bank ledgers, and POCO telemetry:
-            </p>
-
-            <div class="rag-input-wrap">
-              <input
-                type="text"
-                class="rag-query-input font-mono"
-                placeholder="Ask e.g. 'What is my SBI balance?', 'Show Jio OTP'..."
-                [ngModel]="aiPromptQuery()"
-                (ngModelChange)="aiPromptQuery.set($event)"
-                (keydown.enter)="askAI()"
-              />
-              <button
-                type="button"
-                class="btn-rag-submit font-mono"
-                (click)="askAI()"
-                [disabled]="assistant.isAskingAI() || !aiPromptQuery().trim()"
-              >
-                {{ assistant.isAskingAI() ? '⚡ REASONING...' : '⚡ ASK' }}
-              </button>
-            </div>
-
-            <!-- Quick Semantic Prompts -->
-            <div class="rag-quick-prompts">
-              <button type="button" class="btn-micro-prompt" (click)="triggerThreadSummary()">
-                📋 Summarize Chat
-              </button>
-              <button type="button" class="btn-micro-prompt" (click)="triggerActionExtraction()">
-                ⚡ Extract Tasks
-              </button>
-            </div>
-
-            <!-- AI Output Card -->
-            @if (assistant.intelligenceAnswer(); as ans) {
-              <div class="rag-answer-container animate-fade-in">
-                <div class="answer-header-row">
-                  <span class="answer-badge font-mono">🤖 BRAIN SYNTHESIS</span>
-                  <button type="button" class="btn-clear-answer" (click)="clearAIAnswer()">✕</button>
-                </div>
-
-                @if (ans.thinking) {
-                  <div class="reasoning-chain font-mono">
-                    <span class="chain-lead">Chain of Thought:</span>
-                    <p>{{ ans.thinking }}</p>
-                  </div>
-                }
-
-                <div class="answer-text-body font-mono">{{ ans.answer }}</div>
-
-                @if (ans.retrieved_count != null) {
-                  <div class="retrieval-meta font-mono">
-                    <span>Retrieved {{ ans.retrieved_count }} contextual memory vectors</span>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-        </div>
-
-        <!-- Autonomous Swarm Automations -->
-        <div class="intel-card automations-card font-mono">
-          <div class="intel-card-header">
-            <span>🤖 AUTONOMOUS AGENT AUTOMATIONS</span>
-          </div>
-          <div class="automations-body">
-            <div class="auto-item">
-              <div class="auto-info">
-                <strong class="auto-title">Auto-Triage & Sentiment Scoring</strong>
-                <span class="auto-sub">Scores incoming messages and flags urgent OTPs</span>
-              </div>
-              <span class="auto-active-badge">Active</span>
-            </div>
-            <div class="auto-item">
-              <div class="auto-info">
-                <strong class="auto-title">SBI Sovereign Seed Ledger Sync</strong>
-                <span class="auto-sub">Automatically reconciles payments via ₹500 pool</span>
-              </div>
-              <span class="auto-active-badge">Active</span>
-            </div>
-            <div class="auto-item">
-              <div class="auto-info">
-                <strong class="auto-title">WhatsApp Web Auto-Bridge</strong>
-                <span class="auto-sub">Prepares stage drafts and opens verified contacts</span>
-              </div>
-              <span class="auto-active-badge">Active</span>
-            </div>
-          </div>
-        </div>
-      </aside>
-    }
-  </main>
-
-  <!-- ========================================================================= -->
-  <!-- 3. GOOGLE APP PASSWORD SETUP MODAL                                        -->
-  <!-- ========================================================================= -->
-  @if (isGooglePasswordModalOpen()) {
-    <div class="modal-backdrop-overlay animate-fade-in" (click)="closeGooglePasswordModal()">
-      <div class="google-modal-card font-mono animate-scale-up" (click)="$event.stopPropagation()">
-        <div class="modal-header-row">
-          <div class="modal-title-wrap">
-            <span class="google-icon">🔑</span>
-            <h3>Connect Google Workspace / Gmail</h3>
-          </div>
-          <button type="button" class="btn-modal-close" (click)="closeGooglePasswordModal()">✕</button>
-        </div>
-
-        <div class="modal-body-content">
-          <p class="modal-desc">
-            To enable authentic live email sync with zero mock data, enter your official 16-character Google App Password:
-          </p>
-
-          <div class="instruction-steps-box">
-            <div class="step-line">1. Visit <strong>myaccount.google.com/apppasswords</strong></div>
-            <div class="step-line">2. Create an App Password labeled <code>ABHI AI Brain</code></div>
-            <div class="step-line">3. Paste the generated 16-character code below:</div>
-          </div>
-
-          <div class="modal-input-group">
-            <label>Google Account Email</label>
+        <!-- Search & Filter Bar -->
+        <div class="sidebar-search-row">
+          <div class="search-box-inset">
+            <span class="search-icon">🔍</span>
             <input
               type="text"
-              class="modal-text-input font-mono"
-              [value]="assistant.profile()?.email || 'ayyapparayudu.ravuvari@gmail.com'"
-              readonly
+              class="search-input"
+              placeholder="Search discussions..."
+              [ngModel]="searchQuery()"
+              (ngModelChange)="onSearchChange($event)"
             />
+            @if (searchQuery()) {
+              <button class="clear-search-btn" (click)="onSearchChange('')" title="Clear search">✕</button>
+            }
           </div>
 
-          <div class="modal-input-group">
-            <label>16-Character App Password</label>
+          <button
+            class="filter-archive-btn"
+            [class.active]="showArchived()"
+            (click)="toggleArchivedFilter()"
+            [title]="showArchived() ? 'Showing all including archived' : 'Click to show archived'"
+          >
+            <span class="archive-icon">📦</span>
+          </button>
+        </div>
+
+        <!-- Conversations List -->
+        <div class="conversations-list-viewport">
+          @if (isLoading()) {
+            <div class="sidebar-state-message">
+              <div class="spinner-dot"></div>
+              <span>Synchronizing sessions...</span>
+            </div>
+          } @else if (filteredConversations().length === 0) {
+            <div class="sidebar-empty-state">
+              <span class="empty-icon">💬</span>
+              <p class="empty-title">No conversations found</p>
+              <p class="empty-sub">Click "New Chat" to initiate a dialogue with ABHI.</p>
+            </div>
+          } @else {
+            <div class="conversations-stack">
+              @for (convo of filteredConversations(); track convo.id) {
+                <div
+                  class="conversation-item-card"
+                  [class.active]="activeConversation()?.id === convo.id"
+                  (click)="onSelectConversation(convo)"
+                >
+                  <div class="item-main-row">
+                    @if (editingTitleId() === convo.id) {
+                      <div class="rename-inline-box" (click)="$event.stopPropagation()">
+                        <input
+                          type="text"
+                          class="rename-input"
+                          [(ngModel)]="editingTitleText"
+                          (keydown.enter)="saveRename(convo.id)"
+                          (keydown.escape)="cancelRename()"
+                          autoFocus
+                        />
+                        <button class="rename-action-btn check" (click)="saveRename(convo.id)" title="Save">✓</button>
+                        <button class="rename-action-btn cancel" (click)="cancelRename()" title="Cancel">✕</button>
+                      </div>
+                    } @else {
+                      <span class="convo-title" [title]="convo.title">
+                        {{ convo.title }}
+                      </span>
+                    }
+
+                    <span class="convo-time">{{ formatTimestamp(convo.updated_at) }}</span>
+                  </div>
+
+                  <div class="item-snippet-row">
+                    <span class="snippet-text">
+                      {{ convo.last_message || 'No messages yet' }}
+                    </span>
+                  </div>
+
+                  <div class="item-footer-row">
+                    <div class="badge-cluster">
+                      <span class="model-pill-tiny" [class.qwen]="convo.model.includes('qwen')">
+                        {{ convo.model }}
+                      </span>
+                      @if (convo.is_archived) {
+                        <span class="archived-pill-tiny">Archived</span>
+                      }
+                      <span class="msg-count-pill">{{ convo.message_count }} msgs</span>
+                    </div>
+
+                    <div class="inline-actions-group">
+                      <button
+                        class="btn-icon-subtle"
+                        (click)="startRename(convo, $event)"
+                        title="Rename Discussion"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        class="btn-icon-subtle"
+                        (click)="toggleArchive(convo, $event)"
+                        [title]="convo.is_archived ? 'Unarchive' : 'Archive'"
+                      >
+                        {{ convo.is_archived ? '📤' : '📦' }}
+                      </button>
+                      <button
+                        class="btn-icon-subtle danger"
+                        (click)="onDeleteConversation(convo.id, $event)"
+                        title="Delete Permanently"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </aside>
+
+      <!-- 2. Main Conversation Workspace -->
+      <main class="conversation-main-workspace">
+        <header class="chat-header-bar">
+          <div class="header-left-cluster">
+            @if (activeConversation(); as active) {
+              @if (editingTitleId() === active.id) {
+                <div class="header-rename-box">
+                  <input
+                    type="text"
+                    class="header-rename-input"
+                    [(ngModel)]="editingTitleText"
+                    (keydown.enter)="saveRename(active.id)"
+                    (keydown.escape)="cancelRename()"
+                  />
+                  <button class="header-rename-btn" (click)="saveRename(active.id)">Save</button>
+                  <button class="header-rename-btn secondary" (click)="cancelRename()">Cancel</button>
+                </div>
+              } @else {
+                <div class="title-with-edit">
+                  <h2 class="active-convo-title">{{ active.title }}</h2>
+                  <button
+                    class="btn-edit-title"
+                    (click)="startRename(active)"
+                    title="Edit Conversation Title"
+                  >
+                    ✏️
+                  </button>
+                </div>
+              }
+
+              <div class="header-badges-row">
+                <span class="model-badge" [class.qwen]="active.model.includes('qwen')">
+                  ⚡ {{ active.model }}
+                </span>
+                @if (active.is_archived) {
+                  <span class="archive-status-badge">Archived Session</span>
+                }
+                <span class="token-count-badge">
+                  🪙 {{ active.total_tokens || 0 }} tokens
+                </span>
+              </div>
+            } @else {
+              <h2 class="active-convo-title">No Active Conversation</h2>
+            }
+          </div>
+        </header>
+
+        <!-- Message History Stream Viewport -->
+        <div class="messages-history-viewport" #messagesScrollContainer>
+          @if (!activeConversation() || activeConversation()?.messages?.length === 0) {
+            <div class="conversation-empty-state">
+              <div class="empty-hero-core">
+                <div class="core-hologram">
+                  <div class="holo-ring outer"></div>
+                  <div class="holo-ring inner"></div>
+                  <div class="holo-orb">⌘</div>
+                </div>
+                <h1 class="hero-title">Sovereign Intelligence Core</h1>
+                <p class="hero-subtitle">
+                  Namaste Mamu! I am ready to reason, plan, or automate native Windows OS workflows. Select a workflow or speak directly.
+                </p>
+              </div>
+
+              <div class="starter-prompts-grid">
+                @for (prompt of starterPrompts; track prompt.title) {
+                  <div class="starter-card-neumorphic" (click)="selectStarterPrompt(prompt.prompt)">
+                    <div class="card-icon-spark">⚡</div>
+                    <div class="card-copy">
+                      <span class="card-title">{{ prompt.title }}</span>
+                      <span class="card-subtitle">{{ prompt.subtitle }}</span>
+                    </div>
+                    <span class="card-arrow">→</span>
+                  </div>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="messages-thread-container">
+              @for (msg of activeConversation()?.messages; track msg.id) {
+                <div
+                  class="message-row"
+                  [class.operator-row]="msg.role === 'user'"
+                  [class.assistant-row]="msg.role === 'assistant'"
+                >
+                  <div class="msg-avatar-col">
+                    @if (msg.role === 'user') {
+                      <div class="avatar-bubble operator-avatar" title="Operator (Mamu)">
+                        👨‍💻
+                      </div>
+                    } @else {
+                      <div class="avatar-bubble assistant-avatar" title="ABHI Sovereign Agent">
+                        ⌘
+                      </div>
+                    }
+                  </div>
+
+                  <div class="msg-content-col">
+                    <div class="bubble-header-meta">
+                      <span class="sender-name">
+                        {{ msg.role === 'user' ? 'Operator (Mamu)' : 'ABHI Sovereign' }}
+                      </span>
+                      @if (msg.role === 'assistant' && msg.model) {
+                        <span class="msg-model-tag">{{ msg.model }}</span>
+                      }
+                      <span class="msg-timestamp">{{ formatTimestamp(msg.created_at) }}</span>
+                    </div>
+
+                    <div
+                      class="message-bubble-surface"
+                      [class.operator-bubble]="msg.role === 'user'"
+                      [class.assistant-bubble]="msg.role === 'assistant'"
+                    >
+                      @for (block of parseMessageContent(msg.content); track $index) {
+                        @if (block.type === 'code') {
+                          <div class="code-snippet-box">
+                            <div class="code-header-bar">
+                              <span class="code-lang-label">{{ block.language || 'code' }}</span>
+                              <button
+                                class="btn-copy-code"
+                                (click)="copyCode(block.content, block)"
+                                [class.copied]="block.copied"
+                                title="Copy code to clipboard"
+                              >
+                                <span class="copy-icon">{{ block.copied ? '✓' : '📋' }}</span>
+                                <span>{{ block.copied ? 'Copied!' : 'Copy Code' }}</span>
+                              </button>
+                            </div>
+                            <pre class="code-pre"><code>{{ block.content }}</code></pre>
+                          </div>
+                        } @else {
+                          <div class="markdown-text-chunk">
+                            <p class="formatted-paragraph">{{ block.content }}</p>
+                          </div>
+                        }
+                      }
+
+                      @if (msg.status === 'streaming') {
+                        <span class="streaming-cursor-pulse"></span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Composer Dock -->
+        <footer class="composer-dock-container">
+          <div class="composer-dock-surface">
+            <div class="composer-top-controls">
+              <div class="model-selector-group">
+                <button
+                  class="model-tab-btn"
+                  [class.active]="selectedModel() === 'abhi:latest'"
+                  (click)="setModel('abhi:latest')"
+                  title="Sovereign Master Orchestrator"
+                >
+                  👑 abhi:latest
+                </button>
+                <button
+                  class="model-tab-btn"
+                  [class.active]="selectedModel() === 'qwen3:8b'"
+                  (click)="setModel('qwen3:8b')"
+                  title="Fast Reasoning & Code Synthesis"
+                >
+                  ⚡ qwen3:8b
+                </button>
+              </div>
+
+              <div class="composer-status-meta">
+                @if (isStreaming()) {
+                  <div class="streaming-pill">
+                    <span class="pulsing-indicator"></span>
+                    <span>Generating response...</span>
+                  </div>
+                } @else if (speechVoice.isListening()) {
+                  <div class="listening-pill">
+                    <span class="pulsing-red-mic"></span>
+                    <span>Voice Listening active...</span>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div class="composer-input-row">
+              <textarea
+                #composerInput
+                class="composer-textarea"
+                rows="1"
+                placeholder="Message ABHI or speak directive (Enter to send, Shift+Enter for newline)..."
+                [value]="messageInput()"
+                (input)="onInputText($event)"
+                (keydown)="onKeyDown($event)"
+              ></textarea>
+
+              <div class="composer-actions-cluster">
+                <button
+                  class="btn-composer-icon mic-btn"
+                  [class.active-mic]="speechVoice.isListening()"
+                  (click)="toggleVoiceInput()"
+                  [title]="speechVoice.isListening() ? 'Stop Voice Listening' : 'Voice Input (Speech recognition)'"
+                >
+                  🎤
+                </button>
+
+                @if (isStreaming()) {
+                  <button
+                    class="btn-composer-icon stop-btn"
+                    (click)="stopGeneration()"
+                    title="Stop Generation"
+                  >
+                    ⏹
+                  </button>
+                } @else {
+                  <button
+                    class="btn-composer-send"
+                    [disabled]="!messageInput().trim()"
+                    (click)="sendMessage()"
+                    title="Send Message"
+                  >
+                    <span class="send-label">Send</span>
+                    <span class="send-arrow">➔</span>
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        </footer>
+      </main>
+
+      <!-- 3. Right Context Drawer -->
+      @if (isContextDrawerOpen()) {
+        <aside class="context-drawer-panel">
+          <div class="drawer-header">
+            <div class="drawer-title-row">
+              <span class="drawer-brand-icon">🧬</span>
+              <span class="drawer-heading">Active Context</span>
+            </div>
+            <button class="btn-close-drawer" (click)="toggleContextDrawer()" title="Close Drawer">✕</button>
+          </div>
+
+          <div class="drawer-scroll-content">
+            <div class="drawer-card-neumorphic">
+              <div class="card-header-bar">
+                <span class="card-label">System State</span>
+                <span class="state-pill-healthy">
+                  {{ activeConversation()?.context?.system_status || 'HEALTHY' }}
+                </span>
+              </div>
+              <div class="stat-metric-row">
+                <span class="metric-label">Execution Plane:</span>
+                <span class="metric-value">Local Windows 11</span>
+              </div>
+              <div class="stat-metric-row">
+                <span class="metric-label">Engine:</span>
+                <span class="metric-value">{{ activeConversation()?.model || selectedModel() }}</span>
+              </div>
+            </div>
+
+            <div class="drawer-card-neumorphic">
+              <div class="card-header-bar">
+                <span class="card-label">Token Consumption</span>
+                <span class="token-sum">{{ activeConversation()?.total_tokens || 0 }} total</span>
+              </div>
+              <div class="token-bars-cluster">
+                <div class="token-sub-row">
+                  <span class="sub-label">Prompt Tokens</span>
+                  <span class="sub-val">{{ activeConversation()?.context?.token_usage?.prompt || 0 }}</span>
+                </div>
+                <div class="token-sub-row">
+                  <span class="sub-label">Completion Tokens</span>
+                  <span class="sub-val">{{ activeConversation()?.context?.token_usage?.completion || 0 }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="drawer-card-neumorphic">
+              <div class="card-header-bar">
+                <span class="card-label">Retrieved Memory</span>
+                <span class="count-tag">
+                  {{ (activeConversation()?.context?.memory_snippets || []).length }}
+                </span>
+              </div>
+              <div class="snippets-stack">
+                @for (snippet of activeConversation()?.context?.memory_snippets || []; track snippet) {
+                  <div class="snippet-pill-item">
+                    <span class="snippet-bullet">◆</span>
+                    <span class="snippet-content">{{ snippet }}</span>
+                  </div>
+                }
+                @if (!(activeConversation()?.context?.memory_snippets?.length)) {
+                  <span class="snippet-empty">No external memory pinned for this session.</span>
+                }
+              </div>
+            </div>
+
+            <div class="drawer-card-neumorphic">
+              <div class="card-header-bar">
+                <span class="card-label">DAG & Tool Invocations</span>
+                <span class="count-tag">
+                  {{ (activeConversation()?.context?.dag_nodes || []).length }}
+                </span>
+              </div>
+              <div class="tools-stack">
+                @for (dag of activeConversation()?.context?.dag_nodes || []; track dag) {
+                  <div class="dag-item-pill">
+                    <span class="dag-gear">⚙️</span>
+                    <span class="dag-name">{{ dag }}</span>
+                  </div>
+                }
+                @for (tool of activeConversation()?.context?.active_tools || []; track tool) {
+                  <div class="tool-item-pill">
+                    <span class="tool-icon">🔧</span>
+                    <span class="tool-name">{{ tool }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </aside>
+      }
+    </div>
+  }
+
+  <!-- ======================================================================== -->
+  <!-- TAB B: 📱 PERSONAL COMMUNICATION HUB                                    -->
+  <!-- ======================================================================== -->
+  @if (activeWorkspaceTab() === 'personal-hub') {
+    <div class="tab-b-workspace-grid">
+
+      <!-- 1. Left Column: Channel Filters & Thread List -->
+      <aside class="personal-threads-sidebar">
+        <!-- Channel Filter Pills -->
+        <div class="channel-filter-pills-row">
+          <button
+            class="channel-pill"
+            [class.active]="selectedChannel() === 'all'"
+            (click)="selectChannelFilter('all')"
+          >
+            <span class="pill-title">All</span>
+            <span class="pill-count">{{ comms.contacts().length }}</span>
+          </button>
+
+          <button
+            class="channel-pill whatsapp"
+            [class.active]="selectedChannel() === 'whatsapp'"
+            (click)="selectChannelFilter('whatsapp')"
+          >
+            <span class="pill-icon">🟢</span>
+            <span class="pill-title">WhatsApp</span>
+            @if (channelUnreadCounts().wa > 0) {
+              <span class="pill-badge">{{ channelUnreadCounts().wa }}</span>
+            }
+          </button>
+
+          <button
+            class="channel-pill gmail"
+            [class.active]="selectedChannel() === 'gmail'"
+            (click)="selectChannelFilter('gmail')"
+          >
+            <span class="pill-icon">✉️</span>
+            <span class="pill-title">Gmail</span>
+            @if (channelUnreadCounts().gmail > 0) {
+              <span class="pill-badge">{{ channelUnreadCounts().gmail }}</span>
+            }
+          </button>
+
+          <button
+            class="channel-pill sms"
+            [class.active]="selectedChannel() === 'sms'"
+            (click)="selectChannelFilter('sms')"
+          >
+            <span class="pill-icon">💬</span>
+            <span class="pill-title">SMS</span>
+            @if (channelUnreadCounts().sms > 0) {
+              <span class="pill-badge">{{ channelUnreadCounts().sms }}</span>
+            }
+          </button>
+
+          <button
+            class="channel-pill banking"
+            [class.active]="selectedChannel() === 'banking'"
+            (click)="selectChannelFilter('banking')"
+          >
+            <span class="pill-icon">🏦</span>
+            <span class="pill-title">Bank / OTP</span>
+            @if (channelUnreadCounts().bank > 0) {
+              <span class="pill-badge">{{ channelUnreadCounts().bank }}</span>
+            }
+          </button>
+
+          <button
+            class="channel-pill calls"
+            [class.active]="selectedChannel() === 'calls'"
+            (click)="selectChannelFilter('calls')"
+          >
+            <span class="pill-icon">📞</span>
+            <span class="pill-title">Calls</span>
+            @if (channelUnreadCounts().calls > 0) {
+              <span class="pill-badge">{{ channelUnreadCounts().calls }}</span>
+            }
+          </button>
+        </div>
+
+        <!-- Search Threads Bar -->
+        <div class="sidebar-search-row">
+          <div class="search-box-inset">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search contacts, messages..."
+              [(ngModel)]="personalSearchQuery"
+            />
+            @if (personalSearchQuery()) {
+              <button class="clear-search-btn" (click)="personalSearchQuery.set('')" title="Clear">✕</button>
+            }
+          </div>
+        </div>
+
+        <!-- Threads List Viewport -->
+        <div class="threads-list-viewport">
+          @if (filteredPersonalContacts().length === 0) {
+            <div class="sidebar-empty-state">
+              <span class="empty-icon">📭</span>
+              <p class="empty-title">No threads in this channel</p>
+              <p class="empty-sub">Syncing active traces from POCO mobile & local adapters.</p>
+            </div>
+          } @else {
+            <div class="threads-stack">
+              @for (contact of filteredPersonalContacts(); track contact.contact_id) {
+                <div
+                  class="thread-card-item"
+                  [class.active]="comms.activeContact()?.contact_id === contact.contact_id"
+                  (click)="selectPersonalContact(contact)"
+                >
+                  <div class="thread-avatar-slot" [style.border-color]="contact.avatar_color || 'var(--accent-cyan)'">
+                    <span class="avatar-letter">{{ contact.avatar || (contact.name | slice:0:1) }}</span>
+                    @if (contact.is_online) {
+                      <span class="online-dot"></span>
+                    }
+                  </div>
+
+                  <div class="thread-info-slot">
+                    <div class="thread-top-line">
+                      <span class="thread-contact-name">{{ contact.name }}</span>
+                      <span class="thread-time">{{ formatMessageTime(contact.last_timestamp) }}</span>
+                    </div>
+
+                    <div class="thread-preview-line">
+                      <span class="thread-preview-text">{{ contact.last_message || 'No messages' }}</span>
+                    </div>
+
+                    <div class="thread-badges-line">
+                      <span
+                        class="channel-tag-tiny"
+                        [class.wa]="contact.channel === 'whatsapp'"
+                        [class.gm]="contact.channel === 'gmail'"
+                        [class.sm]="contact.channel === 'sms'"
+                        [class.bk]="contact.category === 'banking' || contact.category === 'otp'"
+                        [class.cl]="contact.category === 'calls' || contact.channel === 'call'"
+                      >
+                        {{ contact.channel | uppercase }}
+                      </span>
+
+                      @if (isContactWhitelisted(contact.contact_id) || isContactWhitelisted(contact.name)) {
+                        <span class="whitelist-badge-tiny">Auto-Whitelisted</span>
+                      }
+
+                      @if (contact.unread_count > 0) {
+                        <span class="unread-count-bubble">{{ contact.unread_count }}</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </aside>
+
+      <!-- 2. Center Column: Active Conversation & Smart Reply Engine -->
+      <main class="personal-conversation-viewport">
+        <!-- Active Contact Header -->
+        <header class="personal-chat-header">
+          @if (comms.activeContact(); as active) {
+            <div class="active-contact-profile">
+              <div class="active-avatar-core" [style.border-color]="active.avatar_color || 'var(--accent-cyan)'">
+                <span>{{ active.avatar || (active.name | slice:0:1) }}</span>
+              </div>
+              <div class="active-contact-details">
+                <div class="name-status-row">
+                  <h3 class="active-name">{{ active.name }}</h3>
+                  <span class="active-channel-chip">{{ active.channel | uppercase }}</span>
+                  @if (isContactWhitelisted(active.contact_id) || isContactWhitelisted(active.name)) {
+                    <span class="active-whitelist-chip">⚡ Automation Authorized</span>
+                  }
+                </div>
+                <div class="active-sub-meta">
+                  <span class="active-handle">{{ active.handle || active.name }}</span>
+                  <span class="active-divider">•</span>
+                  <span class="active-category">{{ active.category | titlecase }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Communication Actions -->
+            <div class="active-contact-actions">
+              @if (active.channel === 'whatsapp' || active.category === 'whatsapp') {
+                <button
+                  class="btn-action-icon"
+                  (click)="openWhatsAppChat(active.handle)"
+                  title="Open in WhatsApp Desktop/Web"
+                >
+                  🟢 WhatsApp
+                </button>
+              }
+
+              @if (active.handle && !active.handle.includes('@')) {
+                <button
+                  class="btn-action-icon"
+                  (click)="dialContact(active.handle)"
+                  title="Dial via Connected POCO Phone"
+                >
+                  📞 Call
+                </button>
+              }
+
+              <button
+                class="btn-action-icon subtle"
+                (click)="toggleWhitelistContact(active.contact_id)"
+                [title]="isContactWhitelisted(active.contact_id) ? 'Remove from Auto-Whitelist' : 'Add to Auto-Whitelist'"
+              >
+                {{ isContactWhitelisted(active.contact_id) ? '⭐ Whitelisted' : '☆ Whitelist' }}
+              </button>
+            </div>
+          } @else {
+            <div class="active-contact-profile">
+              <h3 class="active-name">Select a conversation thread</h3>
+            </div>
+          }
+        </header>
+
+        <!-- Unconfigured / Disconnected Channel Honest Card -->
+        @if (!isSelectedChannelConfigured()) {
+          @if (selectedChannel() === 'gmail') {
+            <div class="channel-config-required-card">
+              <div class="config-card-icon">✉️</div>
+              <div class="config-card-content">
+                <h4 class="config-title">Google Workspace / Gmail Configuration Required</h4>
+                <p class="config-sub">
+                  No 16-character Google App Password was detected in your Sovereign Vault. Connect your official Gmail App Password to enable live IMAP inbox harvesting and authenticated email dispatch.
+                </p>
+                <div class="config-actions">
+                  <button class="btn-setup-modal" (click)="openGoogleSetupModal()">
+                    🔐 Configure Google App Password
+                  </button>
+                </div>
+              </div>
+            </div>
+          } @else if (selectedChannel() === 'whatsapp') {
+            <div class="channel-config-required-card">
+              <div class="config-card-icon">🟢</div>
+              <div class="config-card-content">
+                <h4 class="config-title">WhatsApp Standby / Pairing Required</h4>
+                <p class="config-sub">
+                  Neither Wireless ADB on your POCO device nor an active WhatsApp Web session is currently detected. Launch WhatsApp Web or pair your device to synchronize active WhatsApp communications.
+                </p>
+                <div class="config-actions">
+                  <button class="btn-setup-modal" (click)="launchWhatsAppWeb()">
+                    🌐 Launch WhatsApp Web
+                  </button>
+                  <button class="btn-setup-modal secondary" (click)="launchWhatsAppDesktop()">
+                    💻 Launch Desktop App
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        }
+
+        <!-- Messages History Stream -->
+        <div class="personal-messages-stream" #personalScrollContainer>
+          @if (comms.threadMessages().length === 0) {
+            <div class="messages-empty-placeholder">
+              <span class="empty-emoji">💬</span>
+              <p>No messages in this thread yet.</p>
+              <p class="sub">Choose an AI suggested reply below to initiate or reply.</p>
+            </div>
+          } @else {
+            <div class="messages-flow-stack">
+              @for (msg of comms.threadMessages(); track $index) {
+                <div
+                  class="personal-msg-bubble"
+                  [class.outgoing]="msg.direction === 'outgoing'"
+                  [class.incoming]="msg.direction !== 'outgoing'"
+                  [class.banking-card]="msg.amount_inr != null || !!msg.utr"
+                  [class.otp-card]="!!msg.otp_code"
+                >
+                  <!-- Sender / Time Bar -->
+                  <div class="msg-bubble-meta">
+                    <span class="bubble-sender">{{ msg.sender || (msg.direction === 'outgoing' ? 'Mamu' : 'Incoming') }}</span>
+                    <span class="bubble-time">{{ formatMessageTime(msg.timestamp) }}</span>
+                    @if (msg.status) {
+                      <span class="bubble-status-tag">{{ msg.status }}</span>
+                    }
+                  </div>
+
+                  <!-- Subject if email -->
+                  @if (msg.subject) {
+                    <div class="bubble-subject-line">
+                      <strong>Subject:</strong> {{ msg.subject }}
+                    </div>
+                  }
+
+                  <!-- Body Text -->
+                  <div class="bubble-body-content">
+                    <p>{{ msg.body }}</p>
+                  </div>
+
+                  <!-- Financial / Banking Highlight Badge -->
+                  @if (msg.amount_inr != null || msg.utr) {
+                    <div class="financial-intel-row">
+                      @if (msg.amount_inr != null) {
+                        <div class="fin-chip amount">
+                          <span class="fin-label">Amount:</span>
+                          <span class="fin-val">₹{{ msg.amount_inr | number:'1.2-2' }}</span>
+                        </div>
+                      }
+                      @if (msg.utr) {
+                        <div class="fin-chip utr" (click)="copyText(msg.utr, 'UTR Copied')">
+                          <span class="fin-label">UTR:</span>
+                          <span class="fin-val">{{ msg.utr }}</span>
+                          <span class="copy-icon-mini">📋</span>
+                        </div>
+                      }
+                      @if (msg.account) {
+                        <div class="fin-chip acct">
+                          <span class="fin-label">Account:</span>
+                          <span class="fin-val">{{ msg.account }}</span>
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <!-- OTP Highlight Badge -->
+                  @if (msg.otp_code) {
+                    <div class="otp-intel-row">
+                      <div class="otp-chip" (click)="copyText(msg.otp_code, 'OTP Copied')">
+                        <span class="otp-label">Security OTP:</span>
+                        <span class="otp-digits">{{ msg.otp_code }}</span>
+                        <span class="copy-btn-bubble">Copy OTP 📋</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- ================================================================== -->
+        <!-- SMART REPLY & COMMUNICATION AUTOMATION DOCK                        -->
+        <!-- ================================================================== -->
+        <div class="automation-reply-dock">
+
+          <!-- 1. Approval Mode Queue Banner (if approval mode has queued reply) -->
+          @if (queuedApprovalReply(); as queued) {
+            <div class="queued-approval-card">
+              <div class="queued-card-header">
+                <span class="queue-icon">⏳</span>
+                <span class="queue-title">Awaiting Operator Authorization</span>
+                <span class="queue-tag">{{ queued.category }} ({{ queued.tone }})</span>
+              </div>
+              <div class="queued-card-body">
+                <p class="queued-text">"{{ queued.text }}"</p>
+              </div>
+              <div class="queued-card-actions">
+                <button class="btn-approve-dispatch" (click)="approveQueuedReply()" [disabled]="isSendingPersonal()">
+                  <span class="btn-icon">✓</span>
+                  <span>Approve & Dispatch Outbound</span>
+                </button>
+                <button class="btn-edit-queue" (click)="editQueuedReply()">
+                  <span class="btn-icon">✏️</span>
+                  <span>Edit in Composer</span>
+                </button>
+                <button class="btn-reject-queue" (click)="rejectQueuedReply()">
+                  <span class="btn-icon">✕</span>
+                  <span>Dismiss</span>
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- 2. AI Suggested Reply Selector (3 tones) -->
+          <div class="suggested-replies-section">
+            <div class="suggested-replies-header">
+              <span class="section-label">⚡ AI Context-Aware Reply Generator</span>
+              <span class="mode-rule-hint">
+                @if (replyMode() === 'MANUAL') {
+                  Manual Mode: Suggestions for inspiration.
+                } @else if (replyMode() === 'DRAFT') {
+                  Draft Mode: Click to pre-fill for 1-click edit.
+                } @else if (replyMode() === 'APPROVAL') {
+                  Approval Mode: Click to queue for authorization.
+                } @else {
+                  Auto Mode: Whitelisted contacts sent autonomously.
+                }
+              </span>
+            </div>
+
+            <div class="suggested-replies-grid">
+              @if (isGeneratingPersonalSuggestions()) {
+                <div class="suggestions-loading-pill">
+                  <span class="pulsing-indicator"></span>
+                  <span>Synthesizing 3 context-aware replies via Ollama...</span>
+                </div>
+              } @else {
+                @for (rep of personalSuggestedReplies(); track rep.category) {
+                  <div
+                    class="suggestion-card"
+                    [class.polite]="rep.tone === 'polite'"
+                    [class.brief]="rep.tone === 'brief'"
+                    [class.enthusiastic]="rep.tone === 'enthusiastic'"
+                    (click)="applySuggestedReply(rep)"
+                    title="Click to apply reply"
+                  >
+                    <div class="card-tone-header">
+                      <span class="tone-badge">{{ rep.category }}</span>
+                      <span class="click-action-hint">
+                        {{ replyMode() === 'APPROVAL' ? 'Queue ➔' : 'Use ➔' }}
+                      </span>
+                    </div>
+                    <p class="card-reply-text">{{ rep.text }}</p>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- 3. Personal Composer Input Row -->
+          <div class="personal-composer-surface">
+            <!-- Mode Switcher Pills -->
+            <div class="composer-mode-bar">
+              <span class="mode-bar-label">Reply Mode:</span>
+              <button
+                class="mode-switch-btn"
+                [class.active]="replyMode() === 'MANUAL'"
+                (click)="setReplyMode('MANUAL')"
+                title="Always requires manual typing and sending"
+              >
+                1. MANUAL
+              </button>
+              <button
+                class="mode-switch-btn"
+                [class.active]="replyMode() === 'DRAFT'"
+                (click)="setReplyMode('DRAFT')"
+                title="Pre-fills AI suggestions for 1-click editing"
+              >
+                2. DRAFT
+              </button>
+              <button
+                class="mode-switch-btn"
+                [class.active]="replyMode() === 'APPROVAL'"
+                (click)="setReplyMode('APPROVAL')"
+                title="Queues reply and awaits operator approval"
+              >
+                3. APPROVAL
+              </button>
+              <button
+                class="mode-switch-btn"
+                [class.active]="replyMode() === 'AUTHORIZED AUTOMATION'"
+                (click)="setReplyMode('AUTHORIZED AUTOMATION')"
+                title="Automated replies only for whitelisted contacts"
+              >
+                4. AUTO
+              </button>
+            </div>
+
+            <!-- Composer Input Row -->
+            <div class="personal-input-row">
+              <textarea
+                #personalComposerInput
+                class="personal-composer-textarea"
+                rows="2"
+                placeholder="Type response or select an AI suggestion above (Enter to send, Shift+Enter for newline)..."
+                [(ngModel)]="personalMessageInput"
+                (keydown)="onPersonalKeyDown($event)"
+              ></textarea>
+
+              <button
+                class="btn-personal-send"
+                [disabled]="!personalMessageInput().trim() || isSendingPersonal()"
+                (click)="sendPersonalMessage()"
+                title="Dispatch Outbound Message"
+              >
+                <span class="send-text">
+                  {{ isSendingPersonal() ? 'Sending...' : 'Send' }}
+                </span>
+                <span class="send-arrow">➔</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- 3. Right Column: Automation Safeguards Drawer -->
+      @if (isSafeguardsDrawerOpen()) {
+        <aside class="safeguards-drawer-panel">
+          <div class="drawer-header">
+            <div class="drawer-title-row">
+              <span class="drawer-brand-icon">🛡️</span>
+              <span class="drawer-heading">Automation Safeguards</span>
+            </div>
+            <button class="btn-close-drawer" (click)="toggleSafeguardsDrawer()" title="Close Drawer">✕</button>
+          </div>
+
+          <div class="drawer-scroll-content">
+            <!-- Emergency Kill Switch Card -->
+            <div class="safeguard-card danger-zone">
+              <div class="sg-card-header">
+                <span class="sg-icon">🚨</span>
+                <span class="sg-title">Emergency Kill Switch</span>
+              </div>
+              <p class="sg-desc">
+                Instantly halt all automated and scheduled outbound communications across all channels.
+              </p>
+              <button
+                class="btn-kill-switch-large"
+                [class.engaged]="killSwitchActive()"
+                (click)="toggleKillSwitch()"
+              >
+                {{ killSwitchActive() ? 'DISENGAGE KILL SWITCH' : 'ENGAGE EMERGENCY KILL SWITCH' }}
+              </button>
+            </div>
+
+            <!-- 4 Reply Modes Overview -->
+            <div class="safeguard-card">
+              <div class="sg-card-header">
+                <span class="sg-icon">🎛️</span>
+                <span class="sg-title">Active Reply Mode</span>
+              </div>
+              <div class="reply-modes-list">
+                <div
+                  class="mode-option"
+                  [class.selected]="replyMode() === 'MANUAL'"
+                  (click)="setReplyMode('MANUAL')"
+                >
+                  <span class="mode-radio">{{ replyMode() === 'MANUAL' ? '●' : '○' }}</span>
+                  <div class="mode-copy">
+                    <strong>1. MANUAL</strong>
+                    <span>Always requires operator typing and sending. AI suggests for reference.</span>
+                  </div>
+                </div>
+
+                <div
+                  class="mode-option"
+                  [class.selected]="replyMode() === 'DRAFT'"
+                  (click)="setReplyMode('DRAFT')"
+                >
+                  <span class="mode-radio">{{ replyMode() === 'DRAFT' ? '●' : '○' }}</span>
+                  <div class="mode-copy">
+                    <strong>2. DRAFT</strong>
+                    <span>AI pre-fills suggested replies in composer for 1-click verification & editing.</span>
+                  </div>
+                </div>
+
+                <div
+                  class="mode-option"
+                  [class.selected]="replyMode() === 'APPROVAL'"
+                  (click)="setReplyMode('APPROVAL')"
+                >
+                  <span class="mode-radio">{{ replyMode() === 'APPROVAL' ? '●' : '○' }}</span>
+                  <div class="mode-copy">
+                    <strong>3. APPROVAL</strong>
+                    <span>AI queues suggested reply and requests operator approval before sending.</span>
+                  </div>
+                </div>
+
+                <div
+                  class="mode-option"
+                  [class.selected]="replyMode() === 'AUTHORIZED AUTOMATION'"
+                  (click)="setReplyMode('AUTHORIZED AUTOMATION')"
+                >
+                  <span class="mode-radio">{{ replyMode() === 'AUTHORIZED AUTOMATION' ? '●' : '○' }}</span>
+                  <div class="mode-copy">
+                    <strong>4. AUTHORIZED AUTOMATION</strong>
+                    <span>Automated replies enabled strictly for whitelisted contacts and standard queries.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quiet Hours Guard -->
+            <div class="safeguard-card">
+              <div class="sg-card-header">
+                <span class="sg-icon">🌙</span>
+                <span class="sg-title">Quiet Hours Guard</span>
+                <input
+                  type="checkbox"
+                  class="toggle-checkbox"
+                  [checked]="quietHoursEnabled()"
+                  (change)="toggleQuietHours()"
+                />
+              </div>
+              <p class="sg-desc">
+                Pauses all autonomous outbound notifications during rest hours (10:00 PM to 7:00 AM).
+              </p>
+              <div class="time-range-row">
+                <label>
+                  <span>Start:</span>
+                  <input type="text" class="time-input" [(ngModel)]="quietHoursStart" (blur)="saveSafeguards()" />
+                </label>
+                <label>
+                  <span>End:</span>
+                  <input type="text" class="time-input" [(ngModel)]="quietHoursEnd" (blur)="saveSafeguards()" />
+                </label>
+              </div>
+            </div>
+
+            <!-- Sensitive-Topic Exclusions -->
+            <div class="safeguard-card">
+              <div class="sg-card-header">
+                <span class="sg-icon">🔐</span>
+                <span class="sg-title">Sensitive-Topic Exclusions</span>
+                <input
+                  type="checkbox"
+                  class="toggle-checkbox"
+                  [checked]="sensitiveExclusionsEnabled()"
+                  (change)="toggleSensitiveExclusions()"
+                />
+              </div>
+              <p class="sg-desc">
+                Banking alerts, OTP codes, Passwords, and Legal inquiries are strictly exempt from automated replies and require explicit human operator confirmation.
+              </p>
+            </div>
+
+            <!-- Rate Limits & Duplicate Protection -->
+            <div class="safeguard-card">
+              <div class="sg-card-header">
+                <span class="sg-icon">⏱️</span>
+                <span class="sg-title">Rate Limits & Anti-Duplicate</span>
+              </div>
+              <div class="sg-stat-row">
+                <span>Max Outbound:</span>
+                <strong>{{ rateLimitPerMinute() }} msgs / min</strong>
+              </div>
+              <div class="sg-stat-row">
+                <span>Duplicate Window:</span>
+                <strong>60 seconds deduplication</strong>
+              </div>
+            </div>
+
+            <!-- Whitelisted Contacts Manager -->
+            <div class="safeguard-card">
+              <div class="sg-card-header">
+                <span class="sg-icon">⭐</span>
+                <span class="sg-title">Automation Whitelist</span>
+                <span class="count-pill">{{ whitelistedContacts().length }}</span>
+              </div>
+              <p class="sg-desc">
+                Contacts authorized for autonomous replies under Mode 4.
+              </p>
+              <div class="whitelist-items-stack">
+                @for (c of comms.contacts(); track c.contact_id) {
+                  <label class="whitelist-check-item">
+                    <input
+                      type="checkbox"
+                      [checked]="isContactWhitelisted(c.contact_id)"
+                      (change)="toggleWhitelistContact(c.contact_id)"
+                    />
+                    <span class="wl-name">{{ c.name }}</span>
+                    <span class="wl-channel">({{ c.channel }})</span>
+                  </label>
+                }
+              </div>
+            </div>
+          </div>
+        </aside>
+      }
+    </div>
+  }
+
+  <!-- ======================================================================== -->
+  <!-- MODALS: CONFIGURATION CARDS SETUP                                        -->
+  <!-- ======================================================================== -->
+
+  <!-- Google App Password Modal -->
+  @if (showGoogleSetupModal()) {
+    <div class="modal-backdrop" (click)="closeGoogleSetupModal()">
+      <div class="modal-card-surface" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-cluster">
+            <span class="modal-icon">✉️</span>
+            <h3>Configure Google App Password</h3>
+          </div>
+          <button class="btn-close-modal" (click)="closeGoogleSetupModal()">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <p class="modal-instructions">
+            Enter your official 16-character Google App Password for <strong>{{ comms.profile()?.email || 'ayyapparayudu.ravuvari@gmail.com' }}</strong>. This enables live IMAP harvesting and authenticated email dispatch via Sovereign Vault encryption.
+          </p>
+
+          <div class="input-field-group">
+            <label>16-Character App Password:</label>
             <input
               type="password"
-              class="modal-text-input font-mono"
+              class="neumorphic-modal-input"
               placeholder="e.g. abcd efgh ijkl mnop"
-              [ngModel]="inputGooglePassword()"
-              (ngModelChange)="inputGooglePassword.set($event)"
+              [(ngModel)]="googleAppPasswordInput"
             />
           </div>
+        </div>
 
-          <div class="modal-actions-row">
-            <button type="button" class="btn-modal-cancel" (click)="closeGooglePasswordModal()">Cancel</button>
-            <button
-              type="button"
-              class="btn-modal-save"
-              (click)="saveGooglePassword()"
-              [disabled]="!inputGooglePassword().trim()"
-            >
-              🔒 Encrypt & Connect
-            </button>
-          </div>
+        <div class="modal-footer">
+          <button class="btn-modal-cancel" (click)="closeGoogleSetupModal()">Cancel</button>
+          <button class="btn-modal-save" [disabled]="!googleAppPasswordInput().trim()" (click)="saveGooglePassword()">
+            Encrypt in Sovereign Vault & Sync
+          </button>
         </div>
       </div>
     </div>
   }
+
+  <!-- WhatsApp Setup Modal -->
+  @if (showWhatsAppSetupModal()) {
+    <div class="modal-backdrop" (click)="closeWhatsAppSetupModal()">
+      <div class="modal-card-surface" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div class="modal-title-cluster">
+            <span class="modal-icon">🟢</span>
+            <h3>WhatsApp Standby Configuration</h3>
+          </div>
+          <button class="btn-close-modal" (click)="closeWhatsAppSetupModal()">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <p class="modal-instructions">
+            Enter your WhatsApp registered mobile number with country code. ABHI connects directly via Wireless ADB on your POCO device or triggers native WhatsApp Web.
+          </p>
+
+          <div class="input-field-group">
+            <label>WhatsApp Phone Number:</label>
+            <input
+              type="text"
+              class="neumorphic-modal-input"
+              placeholder="+91 9390598938"
+              [(ngModel)]="whatsAppPhoneInput"
+            />
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-modal-cancel" (click)="closeWhatsAppSetupModal()">Cancel</button>
+          <button class="btn-modal-save" [disabled]="!whatsAppPhoneInput().trim()" (click)="saveWhatsAppPhone()">
+            Save Configuration
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
 </div>

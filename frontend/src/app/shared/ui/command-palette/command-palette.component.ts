@@ -2,6 +2,7 @@ import { Component, HostListener, inject, computed, ElementRef, effect, signal, 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { getApiUrl } from '../../../core/config/api-config';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
 import { AgentCommandService } from '../../../core/services/agent-command.service';
 import { SpeechVoiceService } from '../../../core/services/speech-voice.service';
@@ -73,10 +74,82 @@ export class CommandPaletteComponent implements AfterViewInit {
 
   private allActions: CommandPaletteAction[] = [
     {
+      id: 'cmd_workspace',
+      title: 'Workspace — 3D Cybernetic Bot HQ',
+      subtitle: 'Living architectural command center & multi-agent swarm',
+      icon: '🛰️',
+      category: 'NAVIGATION',
+      shortcut: 'G W',
+      handler: () => this.router.navigate(['/workspace']),
+    },
+    {
+      id: 'cmd_core',
+      title: 'Core — Sovereign Intelligence Hub',
+      subtitle: '3D neural orbital core & multimodal perception',
+      icon: '🌀',
+      category: 'NAVIGATION',
+      shortcut: 'G C',
+      handler: () => this.router.navigate(['/core']),
+    },
+    {
+      id: 'cmd_messages',
+      title: 'Messages & Communications Hub',
+      subtitle: 'Dual-mode AI assistant chat and multi-channel comms',
+      icon: '💬',
+      category: 'NAVIGATION',
+      shortcut: 'G M',
+      handler: () => this.router.navigate(['/messages']),
+    },
+    {
+      id: 'cmd_business',
+      title: 'Business — Sovereign Revenue & Treasury',
+      subtitle: '8 enterprise sectors, SBI treasury & autonomous commerce',
+      icon: '⛃',
+      category: 'NAVIGATION',
+      shortcut: 'G B',
+      handler: () => this.router.navigate(['/business']),
+    },
+    {
+      id: 'cmd_architecture',
+      title: 'Architecture — Full-Canvas System Explorer',
+      subtitle: '5-stage pipeline, 18 component nodes & live event stream',
+      icon: '📐',
+      category: 'NAVIGATION',
+      shortcut: 'G R',
+      handler: () => this.router.navigate(['/architecture']),
+    },
+    {
+      id: 'cmd_act_health',
+      title: 'Action: Check System Health',
+      subtitle: 'Run physical PSUtil hardware and diagnostic check',
+      icon: '🩺',
+      category: 'ACTIONS',
+      shortcut: 'A H',
+      handler: () => this.commandService.submitCommand('Check system health and diagnostics'),
+    },
+    {
+      id: 'cmd_act_ast',
+      title: 'Action: Run AST Code Audit',
+      subtitle: 'Verify syntax boundaries and security constraints',
+      icon: '🛡️',
+      category: 'ACTIONS',
+      shortcut: 'A A',
+      handler: () => this.commandService.submitCommand('Run AST code audit and verification'),
+    },
+    {
+      id: 'cmd_act_estop',
+      title: 'Action: Emergency Stop All Agents',
+      subtitle: 'Revoke all leases and halt background execution immediately',
+      icon: '🛑',
+      category: 'ACTIONS',
+      shortcut: 'A E',
+      handler: () => fetch(getApiUrl('/api/v1/swarm/emergency-stop'), { method: 'POST' }),
+    },
+    {
       id: 'cmd_home',
-      title: 'Home — 3D Intelligence Core',
-      subtitle: 'Central AI Space & Arc Reactor Core',
-      icon: '🌐',
+      title: 'Home — 3D Intelligence Cockpit',
+      subtitle: 'Central AI Space & Adaptive Operational Overview',
+      icon: '🖥️',
       category: 'NAVIGATION',
       shortcut: 'G H',
       handler: () => this.router.navigate(['/home']),

@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
-import { getApiUrl } from '../../../core/config/api-config';
+import { getApiUrl, getApiHeaders } from '../../../core/config/api-config';
 import { TelemetryService } from '../../../core/websocket/telemetry.service';
 import { TaskApiService } from '../../../core/api/task-api.service';
 import { TelemetryEvent } from '../../../core/models/telemetry.model';
@@ -28,6 +28,42 @@ export class PerceptionService implements OnDestroy {
   // Gesture temporal stabilization buffer (3-frame window)
   private gestureBuffer: SupportedGesture[] = [];
   private readonly STABILIZATION_THRESHOLD = 3;
+  private lastEmergencyStopDispatch = 0;
+
+  /**
+   * Deterministic physical emergency stop dispatched immediately to backend on OPEN_PALM.
+   */
+  async dispatchEmergencyStop(reason = 'OPEN_PALM'): Promise<void> {
+    const now = Date.now();
+    if (now - this.lastEmergencyStopDispatch < 2500) {
+      return;
+    }
+    this.lastEmergencyStopDispatch = now;
+    console.warn(`[SAFETY] Physical Emergency Stop triggered: ${reason}`);
+
+    try {
+      const url = getApiUrl(`/api/v1/tasks/emergency-stop?reason=${encodeURIComponent(reason)}`);
+      const headers = getApiHeaders({ 'Content-Type': 'application/json' });
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 3000);
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers,
+        signal: controller.signal
+      });
+      clearTimeout(timer);
+
+      if (res.ok) {
+        const payload = await res.json();
+        console.warn('[SAFETY] Backend emergency stop confirmed:', payload);
+      } else {
+        console.error('[SAFETY] Backend emergency stop returned status:', res.status);
+      }
+    } catch (e) {
+      console.error('[SAFETY] Failed to dispatch emergency stop to backend:', e);
+    }
+  }
 
   // 1. Voice State Signal
   readonly voice = signal<VoiceStateInfo>({
@@ -282,6 +318,7 @@ export class PerceptionService implements OnDestroy {
     if (isStabilized) {
       if (gestureName === 'OPEN_PALM') {
         safetyState = 'EMERGENCY_STOP_TRIGGERED';
+        this.dispatchEmergencyStop('OPEN_PALM');
       } else if (gestureName === 'THUMBS_UP' && safetyState === 'CONSENT_TRIGGERED') {
         safetyState = 'NORMAL';
       }

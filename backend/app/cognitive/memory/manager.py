@@ -1,5 +1,6 @@
 """Master Orchestrator for Personal & Procedural Memory (Stage 7.5)."""
 
+import asyncio
 import math
 import re
 import uuid
@@ -36,7 +37,8 @@ from backend.app.cognitive.memory.policy import (
 )
 from backend.app.cognitive.memory.procedural import ProceduralMemoryEngine
 from backend.app.core.logging import logger
-from backend.app.services.rag.vector_store import vector_store
+from backend.app.services.rag.vector_store import vector_store, LocalVectorStore
+from backend.app.services.memory.repository import memory_repo, MemoryRepository
 
 
 class PersonalMemoryManager:
@@ -44,16 +46,155 @@ class PersonalMemoryManager:
 
     def __init__(self):
         # In-memory fast stores (synced with persistent SQLite/LanceDB where needed)
+        self.repository: MemoryRepository = memory_repo
+        self.vector_store: LocalVectorStore = vector_store
         self.working_memories: Dict[str, WorkingMemory] = {}
         self.memories: Dict[str, MemoryContract] = {}
         self.procedures: Dict[str, ProcedureModel] = {}
         self.conflicts: Dict[str, MemoryConflict] = {}
         self.audit_log: List[MemoryAuditEntry] = []
+        self._pending_tasks: set = set()
+        self._last_persistence_task: Optional[asyncio.Task] = None
+        self._loaded_from_repo: bool = False
+        self._load_persisted_sync()
         self._seed_default_preferences()
 
+    def _schedule_persistence(self, coro: Any) -> None:
+        """Schedule async persistence to SQLite/LanceDB in strict FIFO order."""
+        try:
+            loop = asyncio.get_running_loop()
+            prev = self._last_persistence_task
+
+            async def _chained():
+                if prev is not None and not prev.done():
+                    try:
+                        await prev
+                    except Exception:
+                        pass
+                await coro
+
+            task = loop.create_task(_chained())
+            self._last_persistence_task = task
+            self._pending_tasks.add(task)
+            task.add_done_callback(self._pending_tasks.discard)
+        except RuntimeError:
+            try:
+                asyncio.run(coro)
+            except Exception as e:
+                logger.debug(f"Sync persistence fallback notice: {e}")
+
+    async def flush_persistence(self) -> None:
+        """Await any pending background persistence tasks."""
+        if self._pending_tasks:
+            pending = list(self._pending_tasks)
+            await asyncio.gather(*pending, return_exceptions=True)
+
+    def _load_persisted_sync(self) -> None:
+        """Load persisted memories from SQLite on startup if no event loop is running."""
+        if self.memories:
+            return
+        try:
+            asyncio.get_running_loop()
+            # Event loop is already running; caller can await ensure_loaded()
+            return
+        except RuntimeError:
+            pass
+        try:
+            asyncio.run(self.load_from_repository())
+        except Exception as e:
+            logger.debug(f"Startup repository preload skipped: {e}")
+
+    async def ensure_loaded(self) -> None:
+        """Ensure persisted memories from SQLite are loaded into memory."""
+        if not self._loaded_from_repo:
+            await self.load_from_repository()
+
+    async def load_from_repository(self) -> int:
+        """Reload persisted preferences, semantic facts, and episodic memories from SQLite."""
+        loaded_count = 0
+        deleted_ids: set = set()
+        try:
+            profiles = await self.repository.list_all_user_profiles()
+            for rec in profiles:
+                val = rec.value_json
+                if not isinstance(val, dict):
+                    continue
+                if rec.key.startswith("memory:"):
+                    if val.get("deleted"):
+                        mid = val.get("memory_id") or rec.key.split("memory:", 1)[1]
+                        deleted_ids.add(mid)
+                        self.memories.pop(mid, None)
+                        continue
+                    try:
+                        contract = MemoryContract.model_validate(val)
+                        self.memories[contract.memory_id] = contract
+                        loaded_count += 1
+                    except Exception as ex:
+                        logger.debug(f"Skipping malformed persisted contract {rec.key}: {ex}")
+        except Exception as e:
+            logger.debug(f"Could not load user profiles from repository: {e}")
+
+        try:
+            episodics = await self.repository.list_memories_paginated(limit=200, offset=0)
+            for ep in episodics:
+                if ep.memory_id in deleted_ids or ep.memory_id in self.memories:
+                    continue
+                ep_dt = ep.created_at
+                if ep_dt is None:
+                    ep_dt = datetime.now(timezone.utc)
+                elif ep_dt.tzinfo is None:
+                    ep_dt = ep_dt.replace(tzinfo=timezone.utc)
+
+                contract = MemoryContract(
+                    memory_id=ep.memory_id,
+                    memory_type=MemoryType.EPISODIC,
+                    title=f"Task: {ep.context_summary[:60]}",
+                    content={
+                        "memory_id": ep.memory_id,
+                        "task_id": ep.task_id,
+                        "goal_summary": ep.context_summary,
+                        "plan_summary": ep.solution_summary,
+                        "outcome": ep.outcome,
+                    },
+                    summary=f"Task '{ep.context_summary}' completed with outcome {ep.outcome}.",
+                    source=MemorySource.WORKFLOW_RESULT if ep.task_id else MemorySource.EXECUTION_RESULT,
+                    source_reference=ep.task_id,
+                    confidence=0.95 if ep.outcome == "SUCCESS" else 0.70,
+                    privacy_classification=PrivacyClassification.PERSONAL,
+                    status=MemoryStatus.ACTIVE,
+                    tags=[t for t in (ep.tags or "").split(",") if t],
+                    created_at=ep_dt,
+                    updated_at=ep_dt,
+                )
+                self.memories[contract.memory_id] = contract
+                loaded_count += 1
+        except Exception as e:
+            logger.debug(f"Could not load episodic memories from repository: {e}")
+
+        self._loaded_from_repo = True
+        return loaded_count
+
+    def _persist_contract(self, contract: MemoryContract) -> None:
+        """Persist a MemoryContract snapshot to SQLite via memory_repo."""
+        payload = contract.model_dump(mode="json")
+        key = f"memory:{contract.memory_id}"
+
+        async def _save():
+            try:
+                await self.repository.set_user_profile(key, payload)
+            except Exception as e:
+                logger.debug(f"SQLite contract persist notice ({key}): {e}")
+
+        self._schedule_persistence(_save())
+
     def _seed_default_preferences(self) -> None:
-        """Seed baseline personal preferences and procedures."""
+        """Seed baseline personal preferences and procedures if not already persisted."""
         from backend.app.core.paths import get_project_root
+        existing_pref_keys = {
+            m.content.get("key")
+            for m in self.memories.values()
+            if m.memory_type == MemoryType.PREFERENCE and isinstance(m.content, dict) and "key" in m.content
+        }
         base_prefs = [
             ("editor", "VS Code", "editor", MemorySource.USER_EXPLICIT),
             ("theme", "dark", "ui", MemorySource.USER_EXPLICIT),
@@ -62,6 +203,8 @@ class PersonalMemoryManager:
             ("response_format", "concise", "interaction", MemorySource.USER_EXPLICIT),
         ]
         for key, val, cat, src in base_prefs:
+            if key in existing_pref_keys:
+                continue
             mid = f"mem_pref_{key}_{uuid.uuid4().hex[:8]}"
             contract = MemoryContract(
                 memory_id=mid,
@@ -211,6 +354,40 @@ class PersonalMemoryManager:
 
         self.memories[mid] = contract
         self._audit("episodic_memory_recorded", memory_id=mid, details={"goal": goal_summary, "outcome": outcome})
+
+        # Physical persistence to SQLite WAL and LanceDB Vector Store
+        try:
+            contract_payload = contract.model_dump(mode="json")
+
+            async def _persist_sqlite_and_lance():
+                try:
+                    await self.repository.set_user_profile(f"memory:{mid}", contract_payload)
+                    await self.repository.save_episodic_memory(
+                        task_id=task_id,
+                        category="episodic",
+                        context_summary=goal_summary,
+                        solution_summary=plan_summary,
+                        outcome=outcome,
+                        tags=",".join(contract.tags)
+                    )
+                except Exception as ex_sql:
+                    logger.debug(f"SQLite WAL save episodic notice: {ex_sql}")
+
+                if privacy not in [PrivacyClassification.SENSITIVE, PrivacyClassification.RESTRICTED]:
+                    try:
+                        sanitized_text = SensitivityDetector.sanitize_text(f"{goal_summary}: {plan_summary}")
+                        await self.vector_store.ingest_document(
+                            source=f"episodic_memory:{mid}",
+                            content=sanitized_text,
+                            tags=",".join(contract.tags)
+                        )
+                    except Exception as ex_vec:
+                        logger.debug(f"LanceDB episodic ingest notice: {ex_vec}")
+
+            self._schedule_persistence(_persist_sqlite_and_lance())
+        except Exception as e:
+            logger.debug(f"Persistence to SQLite/LanceDB deferred: {e}")
+
         return epi
 
     # -------------------------------------------------------------------------
@@ -267,6 +444,18 @@ class PersonalMemoryManager:
 
         self.memories[mid] = contract
         self._audit("preference_set", memory_id=mid, details={"key": key, "category": category})
+        self._persist_contract(contract)
+
+        async def _save_profile_key():
+            try:
+                await self.repository.set_user_profile(
+                    key,
+                    {"value": val_sanitized, "category": category, "memory_id": mid}
+                )
+            except Exception as ex:
+                logger.debug(f"SQLite preference key persist notice: {ex}")
+
+        self._schedule_persistence(_save_profile_key())
         return contract, conflict
 
     def set_semantic_fact(
@@ -315,6 +504,7 @@ class PersonalMemoryManager:
 
         self.memories[mid] = contract
         self._audit("semantic_fact_stored", memory_id=mid, details={"key": key})
+        self._persist_contract(contract)
         return contract, conflict
 
     # -------------------------------------------------------------------------
@@ -331,6 +521,7 @@ class PersonalMemoryManager:
         mem.status = MemoryStatus.ACTIVE
         mem.updated_at = datetime.now(timezone.utc)
         self._audit("memory_confirmed", memory_id=memory_id)
+        self._persist_contract(mem)
         return mem
 
     def reject_memory(self, memory_id: str, reason: str = "") -> Optional[MemoryContract]:
@@ -342,6 +533,40 @@ class PersonalMemoryManager:
         mem.confidence = 0.0
         mem.updated_at = datetime.now(timezone.utc)
         self._audit("memory_rejected", memory_id=memory_id, details={"reason": reason})
+        self._persist_contract(mem)
+        return mem
+
+    def correct_memory(self, memory_id: str, updates: Dict[str, Any]) -> Optional[MemoryContract]:
+        """User-controlled memory correction with audit tracking."""
+        mem = self.memories.get(memory_id)
+        if not mem:
+            return None
+        if "title" in updates and updates["title"]:
+            mem.title = updates["title"]
+        if "summary" in updates and updates["summary"]:
+            mem.summary = updates["summary"]
+        if "content" in updates and isinstance(updates["content"], dict):
+            if isinstance(mem.content, dict):
+                mem.content.update(updates["content"])
+            else:
+                mem.content = updates["content"]
+        if "tags" in updates and isinstance(updates["tags"], list):
+            mem.tags = updates["tags"]
+        mem.updated_at = datetime.now(timezone.utc)
+        self._audit("memory_corrected", memory_id=memory_id, details={"updated_fields": list(updates.keys())})
+        self._persist_contract(mem)
+        if mem.memory_type == MemoryType.EPISODIC:
+            async def _update_epi():
+                try:
+                    await self.repository.update_episodic_memory(
+                        memory_id=memory_id,
+                        context_summary=updates.get("title"),
+                        solution_summary=updates.get("summary"),
+                        tags=",".join(mem.tags) if mem.tags else None,
+                    )
+                except Exception as ex:
+                    logger.debug(f"SQLite episodic update notice: {ex}")
+            self._schedule_persistence(_update_epi())
         return mem
 
     def delete_memory(self, memory_id: str, deletion_type: DeletionType = DeletionType.SOFT_DELETE) -> bool:
@@ -354,10 +579,18 @@ class PersonalMemoryManager:
             mem.status = MemoryStatus.DELETED
             mem.updated_at = datetime.now(timezone.utc)
             self._audit("memory_soft_deleted", memory_id=memory_id)
+            self._persist_contract(mem)
             return True
         elif deletion_type == DeletionType.HARD_DELETE:
             self.memories.pop(memory_id, None)
             self._audit("memory_hard_deleted", memory_id=memory_id)
+            async def _hard_delete():
+                try:
+                    await self.repository.set_user_profile(f"memory:{memory_id}", {"deleted": True, "memory_id": memory_id})
+                    await self.repository.delete_episodic_memory(memory_id)
+                except Exception as ex:
+                    logger.debug(f"SQLite hard delete notice: {ex}")
+            self._schedule_persistence(_hard_delete())
             return True
         elif deletion_type == DeletionType.PRIVACY_ERASURE:
             # Complete scrub from memories, conflicts, and audit scrub
@@ -367,6 +600,13 @@ class PersonalMemoryManager:
             for cid in to_remove_conflicts:
                 self.conflicts.pop(cid, None)
             self._audit("privacy_erasure_executed", memory_id=memory_id)
+            async def _erasure():
+                try:
+                    await self.repository.set_user_profile(f"memory:{memory_id}", {"deleted": True, "memory_id": memory_id})
+                    await self.repository.delete_episodic_memory(memory_id)
+                except Exception as ex:
+                    logger.debug(f"SQLite privacy erasure notice: {ex}")
+            self._schedule_persistence(_erasure())
             return True
         return False
 
@@ -480,7 +720,8 @@ class PersonalMemoryManager:
             auth_score = auth_level.value / 100.0
 
             # 3. Recency score (newer / recently confirmed gets higher score)
-            recency_delta = max(0.0, (now - mem.updated_at).total_seconds())
+            mem_updated = mem.updated_at.replace(tzinfo=timezone.utc) if mem.updated_at.tzinfo is None else mem.updated_at
+            recency_delta = max(0.0, (now - mem_updated).total_seconds())
             recency_score = max(0.1, math.exp(-recency_delta / 2592000.0))  # 30 day decay
 
             # 4. Verification bonus

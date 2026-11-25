@@ -282,7 +282,26 @@ class FourTierAgenticOrchestrator:
         worker.set_working(f"Vector search for '{query}'", "LocalVectorRAG.query")
 
         t0 = time.perf_counter()
-        retrieved_docs = self.rag.query(query, top_k=3)
+        retrieved_docs = []
+        try:
+            from backend.app.services.rag.vector_store import vector_store
+            vs_results = await vector_store.hybrid_search(query, top_k=3)
+            if vs_results:
+                retrieved_docs = [
+                    {
+                        "doc_id": r.chunk_id,
+                        "title": r.source,
+                        "content": r.text,
+                        "category": r.tags or "GENERAL"
+                    }
+                    for r in vs_results
+                ]
+        except Exception as e:
+            logger.debug(f"Direct vector store hybrid search exception: {e}")
+
+        if not retrieved_docs:
+            retrieved_docs = self.rag.query(query, top_k=3)
+
         context_str = "\n".join([f"- [{d['title']}]: {d['content']}" for d in retrieved_docs])
 
         augmented_prompt = f"Context from Local Knowledge Base:\n{context_str}\n\nQuestion: {query}"

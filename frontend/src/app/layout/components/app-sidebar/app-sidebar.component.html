@@ -1,0 +1,132 @@
+<!-- Mobile Backdrop Dismiss (< 992px) -->
+@if (sidebar.isMobile() && sidebar.isOpen()) {
+  <div class="sidebar-mobile-backdrop" (click)="onBackdropClick()" aria-hidden="true"></div>
+}
+
+<aside
+  class="abhi-sidebar-container"
+  [class.compact]="sidebar.isCompact()"
+  [class.closed]="!sidebar.isOpen()"
+  [class.mobile-drawer]="sidebar.isMobile()"
+  [class.mobile-open]="sidebar.isMobile() && sidebar.isOpen()"
+  role="navigation"
+  aria-label="Sidebar Navigation"
+>
+  <!-- Sidebar Header / Brand Area -->
+  <div class="sidebar-header">
+    <a routerLink="/home" class="brand-block" (click)="onLinkClick()" title="Return to Sovereign HUD Home">
+      <div class="brand-orb-core">
+        <span class="brand-orb-center"></span>
+      </div>
+      @if (!sidebar.isCompact()) {
+        <div class="brand-text-block">
+          <span class="brand-title">ABHI</span>
+          <span class="brand-subtitle">NEURAL OS</span>
+        </div>
+      }
+    </a>
+
+    <!-- Compact Toggle Button (Desktop Only) -->
+    @if (!sidebar.isMobile()) {
+      <button
+        type="button"
+        class="sidebar-compact-btn"
+        (click)="toggleSidebarMode()"
+        [title]="sidebar.isCompact() ? 'Expand sidebar (240px)' : 'Collapse sidebar (64px)'"
+        [attr.aria-label]="sidebar.isCompact() ? 'Expand sidebar' : 'Collapse sidebar'"
+      >
+        <span class="compact-icon">{{ sidebar.isCompact() ? '›' : '‹' }}</span>
+      </button>
+    } @else {
+      <!-- Mobile Close Button -->
+      <button
+        type="button"
+        class="sidebar-close-btn"
+        (click)="sidebar.close()"
+        aria-label="Close sidebar navigation"
+      >
+        ✕
+      </button>
+    }
+  </div>
+
+  <!-- Navigation Content -->
+  <div class="sidebar-nav-scroll" role="menu">
+    @for (section of navSections; track section.category) {
+      <div class="nav-section">
+        @if (!sidebar.isCompact()) {
+          <div class="section-heading font-monospace">{{ section.category }}</div>
+        } @else {
+          <div class="section-divider-compact"></div>
+        }
+
+        <ul class="nav-items-list" role="none">
+          @for (item of section.items; track item.route) {
+            <li class="nav-item-wrapper" role="none">
+              <a
+                [routerLink]="item.route"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: item.route === '/home' }"
+                class="nav-link-btn"
+                [title]="item.label"
+                (click)="onLinkClick()"
+                role="menuitem"
+              >
+                <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
+                @if (!sidebar.isCompact()) {
+                  <span class="nav-label">{{ item.label }}</span>
+                }
+                <span class="active-indicator" aria-hidden="true"></span>
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  </div>
+
+  <!-- Bottom Status Cluster -->
+  <div class="sidebar-footer">
+    <!-- Operator Profile Indicator -->
+    <div
+      class="operator-profile-card"
+      [title]="'Operator: Mamu · Sovereign Authority'"
+    >
+      <div class="operator-avatar">
+        <span class="operator-badge">AR</span>
+      </div>
+      @if (!sidebar.isCompact()) {
+        <div class="operator-meta">
+          <span class="operator-name">Mamu</span>
+          <span class="operator-role font-monospace">SOVEREIGN</span>
+        </div>
+      }
+    </div>
+
+    <!-- Status & Theme Controls Row -->
+    <div class="sidebar-status-cluster" [class.compact-cluster]="sidebar.isCompact()">
+      <!-- System Primed Status Pill -->
+      <div
+        class="system-health-pill font-monospace"
+        [class.working]="isWorking()"
+        [title]="'System Telemetry: ' + systemStatusLabel()"
+      >
+        <span class="status-pip"></span>
+        @if (!sidebar.isCompact()) {
+          <span class="status-name">{{ systemStatusLabel() }}</span>
+        }
+      </div>
+
+      <!-- Quick Theme Switcher Button -->
+      <button
+        type="button"
+        class="sidebar-tool-btn theme-quick-toggle"
+        (click)="toggleTheme()"
+        [title]="themeService.isLightMode() ? 'Switch to Obsidian Dark' : 'Switch to Modern Light'"
+        aria-label="Toggle theme mode"
+      >
+        <span class="tool-icon">{{ themeService.isLightMode() ? '🌙' : '☀️' }}</span>
+      </button>
+    </div>
+  </div>
+</aside>

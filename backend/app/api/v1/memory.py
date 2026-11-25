@@ -51,6 +51,16 @@ class DeleteMemoryRequest(BaseModel):
     deletion_type: str = "SOFT_DELETE"  # SOFT_DELETE, HARD_DELETE, PRIVACY_ERASURE
 
 
+class UpdateMemoryRequest(BaseModel):
+    title: Optional[str] = None
+    summary: Optional[str] = None
+    context_summary: Optional[str] = None
+    solution_summary: Optional[str] = None
+    outcome: Optional[str] = None
+    category: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+
 @router.get("", response_model=Dict[str, Any])
 async def list_memories(
     limit: int = Query(default=50, ge=1, le=100),
@@ -381,6 +391,41 @@ async def reject_memory(memory_id: str, reason: str = ""):
     if not rejected:
         raise HTTPException(status_code=404, detail=f"Memory '{memory_id}' not found.")
     return {"status": "rejected", "memory": rejected.model_dump(mode="json")}
+
+
+@router.put("/{memory_id}", response_model=Dict[str, Any])
+@router.patch("/{memory_id}", response_model=Dict[str, Any])
+async def update_memory_endpoint(memory_id: str, request: UpdateMemoryRequest):
+    """User-controlled correction and updating of existing memory records."""
+    updates: Dict[str, Any] = {}
+    if request.title or request.context_summary:
+        updates["title"] = request.title or request.context_summary
+    if request.summary or request.solution_summary:
+        updates["summary"] = request.summary or request.solution_summary
+    if request.outcome:
+        updates["outcome"] = request.outcome
+    if request.tags:
+        updates["tags"] = request.tags
+
+    manager_mem = personal_memory_manager.correct_memory(memory_id, updates)
+    repo_rec = await memory_repo.update_episodic_memory(
+        memory_id=memory_id,
+        context_summary=request.context_summary or request.title,
+        solution_summary=request.solution_summary or request.summary,
+        outcome=request.outcome,
+        category=request.category,
+        tags=",".join(request.tags) if request.tags else None
+    )
+
+    if not manager_mem and not repo_rec:
+        raise HTTPException(status_code=404, detail=f"Memory '{memory_id}' not found.")
+
+    return {
+        "status": "updated",
+        "memory_id": memory_id,
+        "title": updates.get("title") or (repo_rec.context_summary if repo_rec else ""),
+        "summary": updates.get("summary") or (repo_rec.solution_summary if repo_rec else "")
+    }
 
 
 @router.delete("/{memory_id}", response_model=Dict[str, Any])

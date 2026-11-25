@@ -1,168 +1,116 @@
 <div class="hub-spoke-container" role="region" aria-label="Hub and Spoke 3D AI Agent Command HQ">
-  <!-- 1. Master Top Navigation Bar (Matches Reference Bexruz Khamidullaev UI) -->
-  <header class="hub-top-navbar">
-    <div class="nav-left-brand">
-      <div class="brand-pill" (click)="resetToHubOverview()" title="Reset to Master Hub Overview">
-        <span class="brand-icon">⚡</span>
-        <span class="brand-title">Agent HQ</span>
-        <span class="brand-badge">abhiai.internal</span>
-      </div>
-    </div>
-
-    <!-- Center Navigation Tabs -->
-    <nav class="nav-center-pills" aria-label="HQ View Switcher">
+  <!-- 1. Top Pod Category Selector Tabs (Matches Image 4 Reference) -->
+  <div class="hub-pod-selector-row" aria-label="Department Pod Switcher">
+    <div class="pod-sliding-pill-indicator" #podPill></div>
+    @for (pod of primaryPods; track pod.id) {
       <button
         type="button"
-        class="nav-tab-btn"
-        [class.active]="activeNavTab() === 'office'"
-        (click)="activeNavTab.set('office'); resetToHubOverview()"
+        class="pod-select-chip"
+        [class.active]="selectedPod()?.id === pod.id"
+        [style.--pod-color]="pod.color"
+        (click)="selectPodWithAnimation(pod, $event.currentTarget)"
+        [title]="pod.name + ' (' + pod.statusText + ')'"
       >
-        <span class="tab-icon">🏢</span> Office
+        <span class="pod-chip-icon">{{ pod.icon }}</span>
+        <div class="pod-chip-text">
+          <span class="pod-chip-name">{{ pod.name }}</span>
+          <span class="pod-chip-agents">{{ pod.agentsCount }} agents · {{ pod.runningCount ?? 0 }} running</span>
+        </div>
       </button>
-      <button
-        type="button"
-        class="nav-tab-btn"
-        [class.active]="activeNavTab() === 'feed'"
-        (click)="activeNavTab.set('feed')"
-      >
-        <span class="tab-icon">📡</span> Feed
-        <span class="tab-counter">{{ feedMessages().length }}</span>
-      </button>
-      <button
-        type="button"
-        class="nav-tab-btn"
-        [class.active]="activeNavTab() === 'brain'"
-        (click)="activeNavTab.set('brain'); focusBrainCore()"
-      >
-        <span class="tab-icon">🧠</span> The Brain
-      </button>
-    </nav>
-
-    <!-- Right Controls & Active Counter -->
-    <div class="nav-right-controls">
-      <div class="agent-live-badge" title="31 Autonomous Specialist Agents across 8 Floating Pods">
-        <span class="pulse-green-dot"></span>
-        <span class="badge-text font-monospace">
-          <strong>{{ totalAgentsCount() }} agents</strong> · {{ runningAgentsCount() }} running
-        </span>
-      </div>
-
-      <div class="operator-profile-chip" title="Sovereign Architect & Operator">
-        <span class="op-avatar">👨‍💻</span>
-        <span class="op-name">Mamu</span>
-      </div>
-    </div>
-  </header>
+    }
+  </div>
 
   <!-- 2. Central 3D WebGL Canvas Layer -->
   <div class="hub-canvas-viewport">
     <canvas #hubCanvas class="hub-three-canvas"></canvas>
-
-    <!-- Quick Camera Reset Button Floating Top Center -->
-    <button
-      type="button"
-      class="quick-recenter-btn"
-      (click)="resetToHubOverview()"
-      title="Recenter 3D View on The Brain & All 8 Pods"
-    >
-      <span>🎯</span> Hub Overview
-    </button>
   </div>
 
-  <!-- 3. Bottom Directive Command Bar (Dispatches to Real Backend) -->
-  <div class="hub-bottom-command-bar">
-    <div class="command-input-group">
-      <span class="command-prefix">⚡</span>
-      <input
-        type="text"
-        class="command-text-input"
-        placeholder="Send directive to selected squad (e.g. 'Audit SBI settled ledger', 'Run vector RAG search', 'Switch to YouTube')..."
-        [(ngModel)]="taskCommandInput"
-        (keydown.enter)="dispatchHubTask()"
-        [disabled]="isDispatching()"
-      />
-      <button
-        type="button"
-        class="command-exec-btn"
-        (click)="dispatchHubTask()"
-        [disabled]="isDispatching() || !taskCommandInput.trim()"
-      >
-        @if (isDispatching()) {
-          <span class="spinner-dot"></span> Dispatching...
-        } @else {
-          Execute
-        }
-      </button>
-    </div>
-  </div>
-
-  <!-- 4. Interactive Bottom-Right 2D Minimap / Radar (Matches Reference Video) -->
-  <aside class="hub-minimap-panel" aria-label="Spatial Radar Minimap">
-    <div class="minimap-header">
-      <span class="minimap-title">RADAR // 8 PODS</span>
-      <span class="minimap-status">LIVE SYNC</span>
-    </div>
-
-    <div class="radar-display">
-      <div class="radar-sweep-hand"></div>
-      <div class="radar-center-brain" (click)="focusBrainCore()" title="Click to focus on The Brain">
-        <span class="radar-brain-dot"></span>
-      </div>
-
-      <!-- 8 Radial Pod Nodes on Minimap -->
-      @for (pod of pods; track pod.id) {
-        <button
-          type="button"
-          class="radar-pod-node"
-          [class.selected]="selectedPod()?.id === pod.id"
-          [style.left.%]="50 + (pod.x / 18) * 42"
-          [style.top.%]="50 + (pod.z / 18) * 42"
-          [style.backgroundColor]="pod.color"
-          (click)="selectPod(pod)"
-          [title]="pod.name + ' (' + pod.statusText + ')'"
-        ></button>
-      }
-    </div>
-  </aside>
-
-  <!-- 5. Selected Pod Inspector Drawer (Left/Bottom Floating) -->
+  <!-- 3. Floating Left Team Inspector Card (Matches Reference Image 1) -->
   @if (selectedPod(); as curPod) {
-    <aside class="hub-pod-inspector" [style.borderColor]="curPod.color" aria-label="Department Inspector">
-      <div class="inspector-header">
-        <div class="pod-identity">
-          <div class="pod-color-box" [style.backgroundColor]="curPod.color"></div>
-          <div>
-            <div class="pod-badge-row">
-              <span class="pod-badge-title">{{ curPod.name }}</span>
-              <span class="pod-agent-count font-monospace" [style.color]="curPod.color">
-                ● {{ curPod.statusText }}
-              </span>
+    <aside class="floating-team-card" [style.--pod-accent]="curPod.color" aria-label="Department Inspector">
+      <div class="team-card-header">
+        <div class="team-avatar-badge" [style.backgroundColor]="curPod.color + '22'" [style.borderColor]="curPod.color">
+          <span class="team-avatar-icon" [style.color]="curPod.color">{{ curPod.icon || '◈' }}</span>
+        </div>
+        <div class="team-identity">
+          <div class="team-title-row">
+            <h3 class="team-title">{{ curPod.teamTitle || curPod.name + ' Team' }}</h3>
+          </div>
+          <p class="team-lead-meta">
+            <span class="lead-dot" [style.backgroundColor]="curPod.color"></span>
+            {{ curPod.agentsCount }} agents · lead: {{ curPod.leadRole || curPod.leadAgent }}
+          </p>
+        </div>
+        <button type="button" class="team-close-btn" (click)="selectedPod.set(null)" title="Close Panel">✕</button>
+      </div>
+
+      <!-- 3 Stats Cards in a Row -->
+      <div class="team-metrics-row">
+        <div class="metric-mini-card">
+          <span class="metric-mini-label">Tasks today</span>
+          <div class="metric-mini-val-row">
+            <span class="metric-mini-val font-monospace">{{ curPod.tasksToday ?? '—' }}</span>
+            <span class="metric-mini-badge text-green">{{ curPod.tasksTrend || '—' }}</span>
+          </div>
+        </div>
+
+        <div class="metric-mini-card">
+          <span class="metric-mini-label">Running</span>
+          <div class="metric-mini-val-row">
+            <span class="metric-mini-val font-monospace">{{ curPod.runningCount ?? '—' }}</span>
+            <span class="metric-mini-badge text-cyan">● Active</span>
+          </div>
+        </div>
+
+        <div class="metric-mini-card">
+          <span class="metric-mini-label">Avg. turnaround</span>
+          <div class="metric-mini-val-row">
+            <span class="metric-mini-val font-monospace">{{ curPod.turnaround || '—' }}</span>
+            <span class="metric-mini-badge text-amber">⚡ Fast</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connected Tools -->
+      <div class="team-section">
+        <div class="team-section-header">
+          <span class="team-section-label">CONNECTED TOOLS</span>
+          <span class="team-section-badge font-monospace">{{ curPod.connectedTools?.length || 3 }} live</span>
+        </div>
+        <div class="connected-tools-list">
+          @for (tool of curPod.connectedTools; track tool.name) {
+            <div class="connected-tool-item">
+              <div class="tool-icon-avatar" [style.backgroundColor]="tool.avatarBg || 'rgba(56, 189, 248, 0.2)'">{{ tool.letter }}</div>
+              <div class="tool-meta">
+                <span class="tool-name">{{ tool.name }}</span>
+                <span class="tool-status">● {{ tool.protocol }}</span>
+              </div>
             </div>
-            <p class="pod-role-subtitle">{{ curPod.role }}</p>
-          </div>
-        </div>
-
-        <div class="inspector-actions">
-          <button type="button" class="action-btn" (click)="selectPod(curPod)">
-            🎯 Focus Pod
-          </button>
-          <button type="button" class="close-btn" (click)="selectedPod.set(null)">
-            ✕
-          </button>
+          }
         </div>
       </div>
 
-      <!-- Real-World Metrics Grid -->
-      <div class="inspector-metrics-grid">
-        @for (metric of curPod.realMetrics; track metric.label) {
-          <div class="metric-card">
-            <span class="metric-label">{{ metric.label }}</span>
-            <span class="metric-val font-monospace" [style.color]="curPod.color">{{ metric.value }}</span>
-          </div>
-        }
+      <!-- Skills -->
+      <div class="team-section">
+        <div class="team-section-header">
+          <span class="team-section-label">SKILLS</span>
+          <span class="team-section-badge font-monospace">{{ curPod.skills?.length || 2 }} running in parallel</span>
+        </div>
+        <div class="skills-progress-list">
+          @for (skill of curPod.skills; track skill.name) {
+            <div class="skill-progress-item">
+              <div class="skill-info-row">
+                <span class="skill-dot" [style.backgroundColor]="curPod.color"></span>
+                <span class="skill-name">{{ skill.name }}</span>
+                <span class="skill-pct font-monospace">{{ skill.progress }}%</span>
+              </div>
+              <div class="skill-bar-track">
+                <div class="skill-bar-fill" [style.width.%]="skill.progress" [style.backgroundColor]="curPod.color"></div>
+              </div>
+            </div>
+          }
+        </div>
       </div>
-
-      <p class="pod-description">{{ curPod.description }}</p>
     </aside>
   }
 

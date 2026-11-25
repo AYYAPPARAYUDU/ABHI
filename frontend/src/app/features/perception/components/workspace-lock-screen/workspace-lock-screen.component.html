@@ -179,7 +179,7 @@
         (click)="togglePasscodeInput()"
       >
         <span class="btn-icon">🔑</span>
-        <span>{{ showPasscodeInput() ? 'HIDE PASSCODE' : 'PASSCODE (143)' }}</span>
+        <span>{{ showPasscodeInput() ? 'HIDE PASSCODE' : 'OPERATOR PASSCODE' }}</span>
       </button>
     </div>
 
@@ -192,7 +192,7 @@
             class="passcode-input"
             [(ngModel)]="passcodeValue"
             (keyup.enter)="submitPasscode()"
-            placeholder="Enter Master Password (143)"
+            placeholder="Enter Operator Passcode"
             autocomplete="off"
           />
           <button type="button" class="passcode-submit-btn" (click)="submitPasscode()">

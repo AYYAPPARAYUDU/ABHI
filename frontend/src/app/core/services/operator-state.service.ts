@@ -68,6 +68,12 @@ export class OperatorStateService {
   // Execution Timeline Items (Bounded)
   readonly timeline = signal<TimelineItem[]>([]);
 
+  // Live Error Stream (Bounded)
+  readonly errors = signal<{ id: string; type: string; message: string; source?: string; timestamp: number }[]>([]);
+
+  // Live Hardware Telemetry Snapshot
+  readonly hardwareTelemetry = signal<Record<string, any> | null>(null);
+
   // Phase 9: 3D Spatial & Agentic UX State Projections
   readonly userMode = signal<import('../models/agent-experience.model').UserExperienceMode>('USER');
   readonly spatialMode = signal<import('../models/agent-experience.model').SpatialEnvironmentMode>('DEFAULT');
@@ -349,16 +355,37 @@ export class OperatorStateService {
    * Process incoming structured telemetry event.
    */
   processTelemetryEvent(event: TelemetryEvent): void {
-    const type = event.type;
+    const rawType = (event.type || 'UNKNOWN').toUpperCase();
     const payload = event.payload || {};
-    const taskId = event.task_id || this.currentTask()?.taskId || 'active_task';
+    const type =
+      rawType.startsWith('EVENT_') && typeof payload['event_type'] === 'string'
+        ? payload['event_type'].toUpperCase()
+        : rawType;
+    const taskId = event.task_id || payload['task_id'] || this.currentTask()?.taskId || 'active_task';
     const timestamp = event.timestamp || Date.now();
+    const source = (event as TelemetryEvent & { source?: string }).source || event.component;
 
-    // 1. Append to timeline
-    this.appendTimelineItem(taskId, type, payload, timestamp);
+    // 1. Append to timeline (skip high-frequency hardware ticks)
+    if (type !== 'HARDWARE_TELEMETRY') {
+      this.appendTimelineItem(taskId, type, payload, timestamp);
+    }
 
     // 2. Dispatch state updates by event type
     switch (type) {
+      case 'HARDWARE_TELEMETRY':
+        this.hardwareTelemetry.set({ ...payload, timestamp, source });
+        break;
+
+      case 'MCP_TOOL_INVOKED':
+        if (this.currentTask()) {
+          this.updateCurrentTaskState(
+            'EXECUTING',
+            this.currentTask()!.progressPercent,
+            `MCP Tool: ${payload['tool_name'] || payload['tool'] || 'invoked'}`
+          );
+        }
+        break;
+
       case 'TASK_CREATED':
         this.currentTask.set({
           taskId,
@@ -376,6 +403,7 @@ export class OperatorStateService {
         break;
 
       case 'TASK_PLANNED':
+        this.ensureCurrentTask(taskId, payload, timestamp);
         this.updateCurrentTaskState('PLANNING', 15, 'Action Planned');
         this.avatarState.set('THINKING');
         break;
@@ -385,7 +413,10 @@ export class OperatorStateService {
           ...prev,
           policyStatus: payload['approved'] ? 'APPROVED' : 'DENIED'
         }));
-        this.updateCurrentTaskState('POLICY_EVALUATION', 25, 'Policy Approved');
+        if (payload['approved'] === false) {
+          this.recordError(type, payload['reason'] || 'Policy evaluation denied', source, timestamp);
+        }
+        this.updateCurrentTaskState('POLICY_EVALUATION', 25, payload['approved'] === false ? 'Policy Denied' : 'Policy Approved');
         break;
 
       case 'CONSENT_REQUIRED':
@@ -480,6 +511,7 @@ export class OperatorStateService {
           mismatchDetails: payload['details'] || 'Postcondition state mismatch',
           timestamp
         });
+        this.recordError(type, payload['details'] || 'Postcondition state mismatch', source, timestamp);
         this.updateCurrentTaskState('VERIFICATION_FAILED', 70, 'Verification Failed');
         break;
 
@@ -496,10 +528,12 @@ export class OperatorStateService {
           windowsWorker: payload['worker'] === 'WindowsAutomationWorker' ? 'DEGRADED' : prev.windowsWorker,
           browserWorker: payload['worker'] === 'BrowserAutomationWorker' ? 'DEGRADED' : prev.browserWorker
         }));
+        this.recordError(type, payload['error'] || payload['reason'] || `Worker failure: ${payload['worker'] || 'unknown'}`, source, timestamp);
         break;
 
       case 'TASK_COMPLETED':
         this.avatarState.set('SUCCESS');
+        this.ensureCurrentTask(taskId, payload, timestamp);
         this.currentTask.update((prev) => {
           if (!prev) return null;
           return {
@@ -516,6 +550,8 @@ export class OperatorStateService {
 
       case 'TASK_FAILED':
         this.avatarState.set('ERROR');
+        this.ensureCurrentTask(taskId, payload, timestamp);
+        this.recordError(type, payload['error'] || payload['message'] || 'Task failed execution', source, timestamp);
         this.currentTask.update((prev) => {
           if (!prev) return null;
           return {
@@ -545,6 +581,7 @@ export class OperatorStateService {
 
       case 'TASK_EMERGENCY_STOPPED':
         this.avatarState.set('EMERGENCY_STOP');
+        this.recordError(type, payload['reason'] || 'Immediate Emergency Stop triggered', source, timestamp);
         this.safety.update((prev) => ({
           ...prev,
           emergencyStopped: true,
@@ -578,6 +615,37 @@ export class OperatorStateService {
         }));
         break;
     }
+  }
+
+  private ensureCurrentTask(taskId: string, payload: Record<string, any>, timestamp: number): void {
+    if (this.currentTask() || taskId === 'active_task') return;
+    this.currentTask.set({
+      taskId,
+      executionId: payload['execution_id'],
+      goal: payload['goal'] || 'Executing task intent',
+      state: 'EXECUTING',
+      isSuccess: false,
+      progressPercent: 0,
+      currentStep: 'Synchronized from telemetry',
+      startTime: timestamp,
+      durationMs: 0,
+      actionsExecuted: 0
+    });
+  }
+
+  private recordError(type: string, message: string, source: string | undefined, timestamp: number): void {
+    this.errors.update((prev) =>
+      [
+        {
+          id: `err_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+          type,
+          message,
+          source,
+          timestamp
+        },
+        ...prev
+      ].slice(0, 50)
+    );
   }
 
   /**
@@ -700,18 +768,19 @@ export class OperatorStateService {
       return 'UNAVAILABLE';
     };
 
+    const overall = mapStatus(raw.status || 'unknown');
     this.health.set({
-      overall: mapStatus(raw.status || 'unknown'),
+      overall,
       environment: raw.environment || 'production',
-      gateway: mapStatus(subs.api_gateway || 'healthy'),
-      database: mapStatus(subs.database_sqlite || 'healthy'),
-      ollama: mapStatus(subs.abhi_llm_core || subs.ollama_service || 'healthy'),
-      perception: 'HEALTHY',
-      windowsWorker: 'HEALTHY',
-      browserWorker: 'HEALTHY',
-      safetyPolicy: 'HEALTHY',
-      leaseManager: 'HEALTHY',
-      mobileBridge: mapStatus(subs.mobile_bridge || 'ready'),
+      gateway: mapStatus(subs.api_gateway || raw.status || 'unknown'),
+      database: mapStatus(subs.database_sqlite || 'unknown'),
+      ollama: mapStatus(subs.abhi_llm_core || subs.ollama_service || 'unknown'),
+      perception: mapStatus(subs.perception || raw.status || 'unknown'),
+      windowsWorker: mapStatus(subs.windows_worker || raw.status || 'unknown'),
+      browserWorker: mapStatus(subs.browser_worker || raw.status || 'unknown'),
+      safetyPolicy: mapStatus(subs.safety_policy || raw.status || 'unknown'),
+      leaseManager: mapStatus(subs.lease_manager || raw.status || 'unknown'),
+      mobileBridge: mapStatus(subs.mobile_bridge || 'unknown'),
       availableModels: subs.available_models || []
     });
   }

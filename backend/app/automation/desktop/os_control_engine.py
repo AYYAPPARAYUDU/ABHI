@@ -940,6 +940,19 @@ class OSControlEngine:
         """Find an existing open browser window currently displaying YouTube or open browser."""
         return self.get_active_browser_window(prefer_youtube=True)
 
+    def verify_window_by_keyword(self, keyword: str, timeout_sec: float = 3.0) -> Optional[Dict[str, Any]]:
+        """Verify presence of a window whose title matches keyword within timeout."""
+        start_t = time.time()
+        kw = keyword.lower()
+        while time.time() - start_t < timeout_sec:
+            windows = self.list_windows()
+            for w in windows:
+                title = w.get("title", "").lower()
+                if kw in title:
+                    return w
+            time.sleep(0.15)
+        return None
+
     def open_whatsapp(
         self,
         phone: Optional[str] = None,

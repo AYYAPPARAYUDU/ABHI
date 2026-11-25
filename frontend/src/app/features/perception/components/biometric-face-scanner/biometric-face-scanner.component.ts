@@ -278,13 +278,13 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
   }
 
   startEnrollmentFlow(): void {
-    // If a face is already registered, check if old face is verified in scanner or require password 143
+    // If a face is already registered, check if old face is verified in scanner or require operator authorization
     if (this.isFaceEnrolled()) {
       if (this.scanStage() === 'AUTHENTICATED' || this.pass2MatchScore() >= 28) {
         // Old face is already verified!
         this.executeEnrollment();
       } else {
-        // Need Master Password (143) to overwrite
+        // Need Operator Passcode to overwrite
         this.authAction.set('ENROLL');
         this.authPasswordInput = '';
         this.authErrorMessage.set('');
@@ -311,12 +311,7 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
   async submitAuthAction(): Promise<void> {
     const pwd = this.authPasswordInput.trim();
     if (!pwd) {
-      this.authErrorMessage.set('Please enter Master Password (143).');
-      return;
-    }
-
-    if (pwd !== '143' && pwd !== 'abhi' && pwd !== 'jarvis' && pwd !== 'admin' && pwd !== '1234') {
-      this.authErrorMessage.set('Invalid password. Master Password is 143.');
+      this.authErrorMessage.set('Please enter Operator Authorization Key.');
       return;
     }
 
@@ -345,9 +340,9 @@ export class BiometricFaceScannerComponent implements OnInit, AfterViewInit, OnD
     } catch (err: any) {
       const msg = err?.message || 'Biometric enrollment failed.';
       this.statusMessage.set(`⚠️ Enrollment error: ${msg}`);
-      if (msg.includes('Security Gate') || msg.includes('Master Password')) {
+      if (msg.includes('Security Gate') || msg.includes('Passcode') || msg.includes('Authorization')) {
         this.authAction.set('ENROLL');
-        this.authErrorMessage.set('Master Password (143) required to replace registered Face Lock.');
+        this.authErrorMessage.set('Operator Passcode required to replace registered Face Lock.');
         this.showAuthModal.set(true);
       }
     }

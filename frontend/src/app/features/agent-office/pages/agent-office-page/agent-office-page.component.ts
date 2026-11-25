@@ -19,6 +19,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { getApiUrl } from '../../../../core/config/api-config';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { ThemeService } from '../../../../core/services/theme.service';
+import { landCards } from '../../../../core/motion';
 
 export interface OfficeAgent {
   id: string;
@@ -72,15 +73,19 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
   private readonly speechVoice = inject(SpeechVoiceService);
   private readonly cdr = inject(ChangeDetectorRef);
 
-  // 2D HUD Metrics (Identical to reference Claw3D / Agent Office)
-  readonly activeAgentsCount = signal<number>(0);
-  readonly totalAgentsCount = signal<number>(5);
+  // 2D HUD Metrics (Bound to real backend telemetry)
+  readonly activeAgentsCount = signal<number | null>(null);
+  readonly totalAgentsCount = signal<number | null>(null);
+  readonly tasksTodayCount = signal<number | null>(null);
+  readonly avgTurnaroundLabel = signal<string>('—');
+  readonly connectedTools = signal<{ name: string; letter: string; protocol: string; color: string }[]>([]);
+  readonly activeSkills = signal<{ name: string; progress: number }[]>([]);
   readonly runningTasksCount = signal<number>(0);
   readonly completedTasksCount = signal<number>(0);
   readonly projectProgress = signal<number>(0);
 
   readonly activeProjectTitle = signal<string>('No project yet');
-  readonly activeProjectStatus = signal<'IDLE' | 'IN PROGRESS' | 'COMPLETED'>('IDLE');
+  readonly activeProjectStatus = signal<'IDLE' | 'IN PROGRESS' | 'COMPLETED' | 'FAILED'>('IDLE');
 
   teamTaskInput = '';
   readonly isExecutingTeamTask = signal<boolean>(false);
@@ -101,8 +106,8 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
       suitMark: 'MARK-VII',
       modelName: 'DeepSeek-R1 Distill Qwen 8B',
       deskIndex: 0,
-      deskPos: [-14, 0, -8],
-      loungePos: [0, 0, 0]
+      deskPos: [-3.2, 0, -8],
+      loungePos: [-2, 0, 4]
     },
     {
       id: 'leo_research',
@@ -117,8 +122,8 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
       suitMark: 'MARK-IV',
       modelName: 'Qwen 2.5 Coder 7B',
       deskIndex: 1,
-      deskPos: [8, 0, -6],
-      loungePos: [4, 0, 3]
+      deskPos: [-3.2, 0, -4],
+      loungePos: [-4, 0, 5]
     },
     {
       id: 'max_developer',
@@ -133,8 +138,8 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
       suitMark: 'MARK-V',
       modelName: 'DeepSeek-Coder V2',
       deskIndex: 2,
-      deskPos: [8, 0, 0],
-      loungePos: [-2, 0, 4]
+      deskPos: [-3.2, 0, 0],
+      loungePos: [-5, 0, 3]
     },
     {
       id: 'mia_designer',
@@ -149,8 +154,8 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
       suitMark: 'MARK-II',
       modelName: 'Gemini 1.5 Pro Flash',
       deskIndex: 3,
-      deskPos: [14, 0, -6],
-      loungePos: [2, 0, -2]
+      deskPos: [3.2, 0, -8],
+      loungePos: [2, 0, 4]
     },
     {
       id: 'sam_qa',
@@ -165,63 +170,47 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
       suitMark: 'MARK-VI',
       modelName: 'Claude 3.5 Sonnet Engine',
       deskIndex: 4,
-      deskPos: [14, 0, 0],
-      loungePos: [-4, 0, 1]
+      deskPos: [3.2, 0, -4],
+      loungePos: [-6.5, 0, 4]
     }
   ];
 
   // Task Timeline
   readonly taskTimeline = signal<TaskTimelineStep[]>([]);
 
-  // Team Channel Communication Feed
+  // Team Channel Communication Feed (Matches Reference Image 5)
   readonly teamChannelMessages = signal<TeamMessage[]>([
     {
       id: 'msg-1',
-      sender: 'Olivia',
-      role: 'Manager',
-      color: '#f97316',
-      message: 'Grabbing a coffee.',
-      time: '18:25:35'
-    },
-    {
-      id: 'msg-2',
       sender: 'Mia',
       role: 'Designer',
       color: '#ec4899',
-      message: 'Grabbing a coffee.',
-      time: '18:25:48'
+      message: 'Finalizing UI component kits for the e-commerce mockups.',
+      time: '13:24:01'
+    },
+    {
+      id: 'msg-2',
+      sender: 'Max',
+      role: 'Developer',
+      color: '#38bdf8',
+      message: 'Building responsive navigation bar in Angular. Shaders look crisp.',
+      time: '13:24:28'
     },
     {
       id: 'msg-3',
-      sender: 'Max',
-      role: 'Developer',
-      color: '#3b82f6',
-      message: 'Grabbing a coffee.',
-      time: '18:25:54'
+      sender: 'Sam',
+      role: 'QA',
+      color: '#60a5fa',
+      message: 'Two minutes at the coffee bar then testing end-to-end checkout.',
+      time: '13:25:12'
     },
     {
       id: 'msg-4',
-      sender: 'Sam',
-      role: 'QA',
-      color: '#8b5cf6',
-      message: 'Grabbing a coffee.',
-      time: '18:26:01'
-    },
-    {
-      id: 'msg-5',
-      sender: 'Max',
-      role: 'Developer',
-      color: '#3b82f6',
-      message: 'Two minutes at the coffee bar.',
-      time: '18:26:15'
-    },
-    {
-      id: 'msg-6',
-      sender: 'Leo',
-      role: 'Research',
-      color: '#10b981',
-      message: 'Grabbing a coffee.',
-      time: '18:26:22'
+      sender: 'Olivia',
+      role: 'Manager',
+      color: '#eab308',
+      message: 'Great velocity team. Keep the pull requests coming.',
+      time: '13:25:40'
     }
   ]);
 
@@ -264,10 +253,94 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
   ngOnInit(): void {
     // Select first agent as default preview
     this.selectedAgent.set(this.agents[0]);
+
+    // Connect to real backend telemetry
+    const url = getApiUrl('/api/v1/agent/workspace/telemetry');
+    this.http.get<any>(url).subscribe({
+      next: (data) => {
+        if (data?.recent_messages && data.recent_messages.length > 0) {
+          this.teamChannelMessages.set(data.recent_messages);
+        }
+        if (typeof data?.total_agents === 'number') {
+          this.totalAgentsCount.set(data.total_agents);
+        }
+        if (typeof data?.running_agents === 'number') {
+          this.activeAgentsCount.set(data.running_agents);
+        }
+        if (typeof data?.tasks_today === 'number' || typeof data?.completed_tasks === 'number') {
+          this.tasksTodayCount.set(data.tasks_today ?? data.completed_tasks);
+        }
+        if (data?.avg_turnaround) {
+          this.avgTurnaroundLabel.set(String(data.avg_turnaround));
+        }
+        if (Array.isArray(data?.skills)) {
+          this.activeSkills.set(data.skills);
+        }
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.debug('Agent office telemetry fetch notice:', err)
+    });
+
+    // Fetch real connected MCP tools (with fallback to /api/v1/swarm/models)
+    this.http.get<any>(getApiUrl('/api/v1/swarm/mcp/tools')).subscribe({
+      next: (res) => {
+        const rawTools: any[] = Array.isArray(res) ? res : (res?.tools || []);
+        if (rawTools.length > 0) {
+          this.connectedTools.set(
+            rawTools.slice(0, 6).map((t: any, idx: number) => {
+              const name = t.name || t.tool_name || String(t);
+              const colors = ['rgba(56, 189, 248, 0.25)', 'rgba(59, 130, 246, 0.25)', 'rgba(16, 185, 129, 0.25)'];
+              return {
+                name,
+                letter: name.charAt(0).toUpperCase() || 'T',
+                protocol: t.protocol || 'Connected · MCP',
+                color: colors[idx % colors.length]
+              };
+            })
+          );
+          this.cdr.markForCheck();
+        } else {
+          this.loadSwarmModelsAsTools();
+        }
+      },
+      error: () => this.loadSwarmModelsAsTools()
+    });
+  }
+
+  private loadSwarmModelsAsTools(): void {
+    this.http.get<any>(getApiUrl('/api/v1/swarm/models')).subscribe({
+      next: (res) => {
+        const models: any[] = Array.isArray(res) ? res : (res?.models || []);
+        this.connectedTools.set(
+          models.slice(0, 6).map((m: any, idx: number) => {
+            const name = m.name || m.model || String(m);
+            const colors = ['rgba(56, 189, 248, 0.25)', 'rgba(59, 130, 246, 0.25)', 'rgba(16, 185, 129, 0.25)'];
+            return {
+              name,
+              letter: name.charAt(0).toUpperCase() || 'M',
+              protocol: 'Connected · Swarm',
+              color: colors[idx % colors.length]
+            };
+          })
+        );
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.connectedTools.set([]);
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   ngAfterViewInit(): void {
     this.initThreeScene();
+
+    setTimeout(() => {
+      const cards = document.querySelectorAll('.floating-team-card, .agent-status-pill-card, .office-right-panel, .comm-message-row');
+      if (cards.length > 0) {
+        landCards(cards, { y: 20, stagger: 0.05, duration: 0.7 });
+      }
+    }, 150);
   }
 
   ngOnDestroy(): void {
@@ -279,6 +352,21 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
     }
     if (this.controls) {
       this.controls.dispose();
+    }
+    if (this.scene) {
+      this.scene.traverse((obj) => {
+        if ((obj as THREE.Mesh).geometry) {
+          (obj as THREE.Mesh).geometry.dispose();
+        }
+        if ((obj as THREE.Mesh).material) {
+          const mat = (obj as THREE.Mesh).material;
+          if (Array.isArray(mat)) {
+            mat.forEach((m) => m.dispose());
+          } else {
+            mat.dispose();
+          }
+        }
+      });
     }
     if (this.renderer) {
       this.renderer.dispose();
@@ -377,45 +465,11 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
       `Mamu gave us a new directive: "${query}". Team, split into your assigned stations!`
     );
 
-    // Step 1: Simulate rapid progress
-    setTimeout(() => {
-      this.projectProgress.set(35);
-      const cur = [...this.taskTimeline()];
-      cur[0].status = 'completed';
-      cur[1].status = 'in_progress';
-      this.taskTimeline.set(cur);
-
-      this.appendTeamMessage(
-        'Leo',
-        'Research',
-        '#10b981',
-        `RAG search complete: retrieved 14 relevant schema references from local vector store.`
-      );
-      this.cdr.markForCheck();
-    }, 1200);
-
-    setTimeout(() => {
-      this.projectProgress.set(65);
-      const cur = [...this.taskTimeline()];
-      cur[1].status = 'completed';
-      cur[2].status = 'completed';
-      cur[3].status = 'in_progress';
-      this.taskTimeline.set(cur);
-
-      this.appendTeamMessage(
-        'Mia',
-        'Designer',
-        '#ec4899',
-        `UI components styled with Tailwind dark-slate theme and responsive layouts.`
-      );
-      this.appendTeamMessage(
-        'Max',
-        'Developer',
-        '#3b82f6',
-        `Writing business controllers and hooking up state observables.`
-      );
-      this.cdr.markForCheck();
-    }, 2400);
+    // Real Execution Pipeline: set initial step active without synthetic timeouts
+    const curInit = [...this.taskTimeline()];
+    curInit[0].status = 'in_progress';
+    this.taskTimeline.set(curInit);
+    this.projectProgress.set(20);
 
     // Call Real Backend Endpoint
     const url = getApiUrl('/api/v1/desktop/ask-bot');
@@ -462,23 +516,26 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
         }
         this.cdr.markForCheck();
       },
-      error: () => {
-        // Fallback smooth completion
-        this.projectProgress.set(100);
+      error: (err) => {
+        this.projectProgress.set(0);
         this.runningTasksCount.set(0);
-        this.completedTasksCount.update((c) => c + 1);
-        this.activeProjectStatus.set('COMPLETED');
+        this.activeProjectStatus.set('FAILED');
         this.isExecutingTeamTask.set(false);
 
         const cur = [...this.taskTimeline()];
-        cur.forEach((s) => (s.status = 'completed'));
+        cur.forEach((s) => {
+          if (s.status === 'in_progress') {
+            s.status = 'pending';
+          }
+        });
         this.taskTimeline.set(cur);
 
+        const errMsg = err?.error?.detail || err?.message || 'Failed to reach backend gateway.';
         this.appendTeamMessage(
           'Olivia',
           'Manager',
-          '#f97316',
-          `Directive finished: Decomposed and executed across all specialist squads for Mamu.`
+          '#ef4444',
+          `Directive failed: ${errMsg}`
         );
         this.cdr.markForCheck();
       }
@@ -657,251 +714,88 @@ export class AgentOfficePageComponent implements OnInit, OnDestroy, AfterViewIni
     if (!this.scene) return;
 
     // -------------------------------------------------------------
-    // Ground: Asphalt Street & Sidewalk Outside
+    // 1. Dark Blue Architectural Ground & Isometric Grid (Matches Reference Image 2)
     // -------------------------------------------------------------
-    const groundGeo = new THREE.PlaneGeometry(80, 80);
+    const groundGeo = new THREE.BoxGeometry(34, 0.4, 34);
     const groundMat = new THREE.MeshStandardMaterial({
-      color: 0x0b0f17,
-      roughness: 0.9
+      color: 0x07111e,
+      roughness: 0.95
     });
     const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.05;
+    ground.position.y = -0.2;
     ground.receiveShadow = true;
     this.scene.add(ground);
 
-    // Green Grass Lawn Frontage
-    const lawnGeo = new THREE.BoxGeometry(48, 0.2, 10);
-    const lawnMat = new THREE.MeshStandardMaterial({
-      color: 0x143621,
-      roughness: 0.8
-    });
-    const lawn = new THREE.Mesh(lawnGeo, lawnMat);
-    lawn.position.set(0, 0, 18);
-    lawn.receiveShadow = true;
-    this.scene.add(lawn);
-
-    // Concrete Sidewalk
-    const sidewalkGeo = new THREE.BoxGeometry(44, 0.25, 4);
-    const sidewalkMat = new THREE.MeshStandardMaterial({
-      color: 0x334155,
-      roughness: 0.6
-    });
-    const sidewalk = new THREE.Mesh(sidewalkGeo, sidewalkMat);
-    sidewalk.position.set(0, 0.05, 14.5);
-    sidewalk.receiveShadow = true;
-    this.scene.add(sidewalk);
-
-    // Row of Pine Trees along lawn (exact matching reference image)
-    const treePositions: [number, number][] = [
-      [-22, 19],
-      [-17, 19.5],
-      [-12, 18.5],
-      [-7, 19.2],
-      [-2, 18.8],
-      [3, 19.4],
-      [8, 18.6],
-      [13, 19.2],
-      [18, 18.9],
-      [22, 19.5]
-    ];
-    treePositions.forEach(([tx, tz]) => {
-      const tree = this.createPineTree(tx, tz);
-      this.scene?.add(tree);
-    });
+    // Cyan-Blue Coordinate Floor Grid
+    const grid = new THREE.GridHelper(32, 32, 0x1e3a5f, 0x0f2238);
+    grid.position.y = 0.02;
+    this.scene.add(grid);
 
     // -------------------------------------------------------------
-    // Building Foundation & Dual Floors (Hardwood Lounge + Carpet Bullpen)
+    // 2. Translucent Volumetric Bounding Box & Wireframe Ceiling
     // -------------------------------------------------------------
-    // Total Office Dimensions: Width 38, Depth 28
-    // Hardwood Floor (Left & Lounge)
-    const woodFloorGeo = new THREE.BoxGeometry(20, 0.3, 26);
-    const woodFloorMat = new THREE.MeshStandardMaterial({
-      color: 0x4a2c1d, // Rich walnut parquet
-      roughness: 0.45,
-      metalness: 0.05
-    });
-    const woodFloor = new THREE.Mesh(woodFloorGeo, woodFloorMat);
-    woodFloor.position.set(-9, 0.1, -1);
-    woodFloor.receiveShadow = true;
-    this.scene.add(woodFloor);
-
-    // Executive Charcoal Carpet (Right Bullpen)
-    const carpetGeo = new THREE.BoxGeometry(18, 0.3, 26);
-    const carpetMat = new THREE.MeshStandardMaterial({
-      color: 0x1e293b,
-      roughness: 0.85
-    });
-    const carpetFloor = new THREE.Mesh(carpetGeo, carpetMat);
-    carpetFloor.position.set(10, 0.1, -1);
-    carpetFloor.receiveShadow = true;
-    this.scene.add(carpetFloor);
-
-    // -------------------------------------------------------------
-    // Outer Walls (Cutaway low architectural walls for isometric view)
-    // -------------------------------------------------------------
-    const wallMat = new THREE.MeshStandardMaterial({
-      color: 0x334155, // Dark slate architectural wall
-      roughness: 0.7
-    });
-    const wallCapMat = new THREE.MeshStandardMaterial({
-      color: 0x475569,
-      roughness: 0.4
-    });
-
-    // Back Outer Wall (Depth -14)
-    this.createWall(0, 2.5, -14, 38.4, 4.5, 0.8, wallMat);
-    // Left Outer Wall (Width -19)
-    this.createWall(-19, 2.5, -1, 0.8, 4.5, 26.8, wallMat);
-    // Right Outer Wall (Width 19)
-    this.createWall(19, 2.5, -1, 0.8, 4.5, 26.8, wallMat);
-    // Front Low Wall with Entrance Opening
-    this.createWall(-12, 1.2, 12, 14, 2.2, 0.8, wallMat);
-    this.createWall(11, 1.2, 12, 16, 2.2, 0.8, wallMat);
-
-    // -------------------------------------------------------------
-    // Front Entrance Portico Canopy & Glowing Sign: "AGENT OFFICE"
-    // -------------------------------------------------------------
-    const canopyMat = new THREE.MeshStandardMaterial({
-      color: 0x0f172a,
-      metalness: 0.6,
-      roughness: 0.3
-    });
-    const canopy = new THREE.Mesh(new THREE.BoxGeometry(8, 0.4, 5), canopyMat);
-    canopy.position.set(-3, 4.2, 13);
-    canopy.castShadow = true;
-    this.scene.add(canopy);
-
-    // Pillars for Canopy
-    const pillarMat = new THREE.MeshStandardMaterial({ color: 0x475569 });
-    const p1 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 4.2), pillarMat);
-    p1.position.set(-6.8, 2.1, 15.2);
-    p1.castShadow = true;
-    this.scene.add(p1);
-    const p2 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 4.2), pillarMat);
-    p2.position.set(0.8, 2.1, 15.2);
-    p2.castShadow = true;
-    this.scene.add(p2);
-
-    // Glowing 3D "AGENT OFFICE" Signboard (Canvas Texture)
-    const signCanvas = document.createElement('canvas');
-    signCanvas.width = 512;
-    signCanvas.height = 128;
-    const ctx = signCanvas.getContext('2d');
-    if (ctx) {
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, 512, 128);
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 6;
-      ctx.strokeRect(6, 6, 500, 116);
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = 'bold 44px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('AGENT OFFICE', 256, 64);
-    }
-    const signTex = new THREE.CanvasTexture(signCanvas);
-    const signMat = new THREE.MeshStandardMaterial({
-      map: signTex,
-      emissive: 0x38bdf8,
-      emissiveIntensity: 0.35
-    });
-    const signBoard = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1.2, 0.2), signMat);
-    signBoard.position.set(-3, 4.8, 14.8);
-    this.scene.add(signBoard);
-
-    // -------------------------------------------------------------
-    // Interior Rooms:
-    // 1. Manager Office (Upper Left: x = -14, z = -8)
-    // -------------------------------------------------------------
-    // Glass Partition
-    const glassMat = new THREE.MeshPhysicalMaterial({
-      color: 0x93c5fd,
+    const roomBoxGeo = new THREE.BoxGeometry(30, 8, 30);
+    const roomBoxMat = new THREE.MeshBasicMaterial({
+      color: 0x0a1d36,
       transparent: true,
-      opacity: 0.3,
-      roughness: 0.1,
-      metalness: 0.1,
-      transmission: 0.8
+      opacity: 0.12,
+      side: THREE.BackSide
     });
-    const mgrWallZ = new THREE.Mesh(new THREE.BoxGeometry(10, 3.8, 0.15), glassMat);
-    mgrWallZ.position.set(-14, 2, -3);
-    this.scene.add(mgrWallZ);
-    const mgrWallX = new THREE.Mesh(new THREE.BoxGeometry(0.15, 3.8, 10), glassMat);
-    mgrWallX.position.set(-9, 2, -8);
-    this.scene.add(mgrWallX);
+    const roomBox = new THREE.Mesh(roomBoxGeo, roomBoxMat);
+    roomBox.position.set(0, 4, 0);
+    this.scene.add(roomBox);
 
-    // Manager Desk (Wood)
-    const mgrDesk = this.createOfficeDesk(-14, -8, 0x1e1b18, true);
-    this.scene.add(mgrDesk);
-
-    // Bookshelf against back wall
-    const shelf = this.createBookshelf(-17.5, -13);
-    this.scene.add(shelf);
-
-    // -------------------------------------------------------------
-    // 2. Conference Room (Top Center: x = -2, z = -9)
-    // -------------------------------------------------------------
-    // Big Conference Table & 6 Chairs
-    const confTable = this.createConferenceTable(-2, -9);
-    this.scene.add(confTable);
-
-    // Whiteboard / Projector Screen on Back Wall
-    const projGeo = new THREE.BoxGeometry(8, 3.2, 0.1);
-    const projMat = new THREE.MeshStandardMaterial({
-      color: 0xf8fafc,
-      emissive: 0xffffff,
-      emissiveIntensity: 0.25,
-      roughness: 0.2
+    // Wireframe Perimeter Lines
+    const edges = new THREE.EdgesGeometry(roomBoxGeo);
+    const lineMat = new THREE.LineBasicMaterial({
+      color: 0x1e40af,
+      transparent: true,
+      opacity: 0.4
     });
-    this.projectorScreen = new THREE.Mesh(projGeo, projMat);
-    this.projectorScreen.position.set(-2, 3.2, -13.5);
-    this.scene.add(this.projectorScreen);
+    const wireframe = new THREE.LineSegments(edges, lineMat);
+    wireframe.position.set(0, 4, 0);
+    this.scene.add(wireframe);
+
+    // Ceiling Wireframe Grid at y = 8.0
+    const ceilingGrid = new THREE.GridHelper(30, 15, 0x1e3a5f, 0x112240);
+    ceilingGrid.position.set(0, 8.0, 0);
+    this.scene.add(ceilingGrid);
 
     // -------------------------------------------------------------
-    // 3. Central Break Room & Social Lounge (Pool Table + Coffee Bar)
+    // 3. Central Bullpen: 6 Workstations with Glowing Blue Screens (Matches Reference Image 2)
     // -------------------------------------------------------------
-    // Authentic Green-Felt Pool Table (Exact reference)
-    const poolTable = this.createPoolTable(0, 2);
-    this.scene.add(poolTable);
-
-    // Espresso Coffee Bar Counter
-    const coffeeBar = this.createCoffeeBar(-6.5, 6);
-    this.scene.add(coffeeBar);
-
-    // Lounge Leather Sofa & Coffee Table
-    const sofa = this.createSofa(-2, 8.5);
-    this.scene.add(sofa);
-
-    // Potted Plants
-    const plant1 = this.createPottedPlant(-8, -2.5);
-    const plant2 = this.createPottedPlant(3, 8);
-    const plant3 = this.createPottedPlant(-18, 11);
-    this.scene.add(plant1);
-    this.scene.add(plant2);
-    this.scene.add(plant3);
-
-    // -------------------------------------------------------------
-    // 4. Open-Plan Bullpen: 6 Cubicles with Dual Glowing Screens
-    // -------------------------------------------------------------
-    // Divider wall between lounge and bullpen
-    const centerDivider = new THREE.Mesh(new THREE.BoxGeometry(0.3, 3, 20), wallMat);
-    centerDivider.position.set(1.5, 1.6, -2);
-    this.scene.add(centerDivider);
-
-    // Cubicle Layout (2 rows of 3 desks)
-    const cubiclePositions: [number, number][] = [
-      [7, -8],
-      [12, -8],
-      [16, -8],
-      [7, -1],
-      [12, -1],
-      [16, -1]
+    const bullpenLayout: [number, number][] = [
+      [-3.2, -8],
+      [-3.2, -4],
+      [-3.2, 0],
+      [3.2, -8],
+      [3.2, -4],
+      [3.2, 0]
     ];
 
-    cubiclePositions.forEach(([cx, cz], i) => {
-      const desk = this.createOfficeDesk(cx, cz, 0x27272a, false);
+    bullpenLayout.forEach(([cx, cz]) => {
+      const desk = this.createOfficeDesk(cx, cz, 0x1e293b, false);
       this.scene?.add(desk);
     });
+
+    // -------------------------------------------------------------
+    // 4. Foreground Left: Green-Felt Pool Table / Lounge Table (Matches Reference Image 2)
+    // -------------------------------------------------------------
+    const poolTable = this.createPoolTable(-6.5, 6);
+    this.scene.add(poolTable);
+
+    // -------------------------------------------------------------
+    // 5. Foreground Right: Side Utility Table / Coffee Console (Matches Reference Image 2)
+    // -------------------------------------------------------------
+    const sideTableMat = new THREE.MeshStandardMaterial({
+      color: 0x334155,
+      roughness: 0.5
+    });
+    const sideTable = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.2, 1.6), sideTableMat);
+    sideTable.position.set(6.5, 0.6, 6);
+    sideTable.castShadow = true;
+    sideTable.receiveShadow = true;
+    this.scene.add(sideTable);
   }
 
   // Helper: Create a Pine Tree with layered conical foliage

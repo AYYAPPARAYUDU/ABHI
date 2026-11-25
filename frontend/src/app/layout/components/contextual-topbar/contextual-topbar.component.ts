@@ -5,6 +5,7 @@ import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs/operators';
 import { OperatorStateService } from '../../../core/services/operator-state.service';
+import { SidebarService } from '../../../core/services/sidebar.service';
 import { UserExperienceMode } from '../../../core/models/agent-experience.model';
 import { ThemeService, AbhiTheme } from '../../../core/services/theme.service';
 import { SpeechVoiceService, AppLanguage } from '../../../core/services/speech-voice.service';
@@ -35,6 +36,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
   @ViewChild('voiceCenter') voiceCenter?: VoiceSettingsCenterComponent;
 
   readonly stateService = inject(OperatorStateService);
+  readonly sidebarService = inject(SidebarService);
   readonly themeService = inject(ThemeService);
   readonly speechVoice = inject(SpeechVoiceService);
   readonly mediaService = inject(MediaService);
@@ -51,8 +53,22 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
   // Theme Side Popup & Mobile Navigation Signals
   readonly isThemeDrawerOpen = signal<boolean>(false);
   readonly isMobileNavOpen = signal<boolean>(false);
+  readonly isMoreDropdownOpen = signal<boolean>(false);
   readonly glowMode = signal<'SOFT' | 'VIVID' | 'MINIMAL'>('SOFT');
   readonly contrastMode = signal<'NORMAL' | 'HIGH'>('NORMAL');
+
+  toggleMoreDropdown(event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    this.isMoreDropdownOpen.update((v) => !v);
+  }
+
+  closeMoreDropdown(): void {
+    this.isMoreDropdownOpen.set(false);
+  }
+
+  openCommandPalette(): void {
+    this.stateService.commandPaletteOpen.set(true);
+  }
 
   readonly isMobileConnected = computed(() => this.mobileStatus()?.connected === true);
   readonly mobileLabel = computed(() => {
@@ -144,11 +160,12 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   private documentClickHandler = (event: MouseEvent) => {
-    if (this.isLangDropdownOpen()) {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.lang-selector-wrapper')) {
-        this.closeLangDropdown();
-      }
+    const target = event.target as HTMLElement;
+    if (this.isLangDropdownOpen() && !target.closest('.lang-selector-wrapper')) {
+      this.closeLangDropdown();
+    }
+    if (this.isMoreDropdownOpen() && !target.closest('.more-nav-dropdown-wrapper')) {
+      this.closeMoreDropdown();
     }
   };
 
@@ -157,6 +174,7 @@ export class ContextualTopbarComponent implements OnInit, OnDestroy, AfterViewIn
       if (this.isThemeDrawerOpen()) this.closeThemeDrawer();
       if (this.isMobileNavOpen()) this.closeMobileNav();
       if (this.isLangDropdownOpen()) this.closeLangDropdown();
+      if (this.isMoreDropdownOpen()) this.closeMoreDropdown();
     }
   };
 

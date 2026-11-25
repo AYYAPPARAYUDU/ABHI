@@ -1,0 +1,404 @@
+:host {
+  display: block;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  pointer-events: auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  user-select: none;
+}
+
+.abhi-fam-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+/* =========================================================================
+   1. ACTION TOAST NOTIFICATION
+   ========================================================================= */
+.fam-action-toast {
+  padding: 8px 16px;
+  background: var(--surface-raised, rgba(15, 23, 42, 0.95));
+  border: 1px solid var(--accent-primary, #00f0ff);
+  border-radius: 8px;
+  color: var(--text-primary, #f8fafc);
+  font-size: 0.82rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(0, 240, 255, 0.25);
+  animation: slideToastIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 320px;
+  word-break: break-word;
+}
+
+/* =========================================================================
+   2. CLOSED STATE: COMPACT CIRCULAR FLOATING TRIGGER
+   ========================================================================= */
+.fam-trigger-button {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid var(--border-active, rgba(0, 240, 255, 0.5));
+  background: var(--surface-raised, #131d31);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 240, 255, 0.2);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  outline: none;
+  padding: 0;
+}
+
+.fam-trigger-button:hover {
+  transform: scale(1.08) translateY(-2px);
+  border-color: var(--accent-primary, #00f0ff);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.65), 0 0 28px rgba(0, 240, 255, 0.4);
+}
+
+.fam-trigger-button:active {
+  transform: scale(0.96);
+}
+
+.fam-trigger-button.active {
+  background: rgba(15, 23, 42, 0.95);
+  border-color: var(--accent-secondary, #8b5cf6);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 24px rgba(139, 92, 246, 0.35);
+}
+
+.trigger-orb-core {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trigger-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ring-1 {
+  border: 1.5px dashed var(--accent-primary, rgba(0, 240, 255, 0.55));
+  animation: rotateClockwise 12s linear infinite;
+}
+
+.ring-2 {
+  inset: 4px;
+  border: 1px solid rgba(139, 92, 246, 0.45);
+  animation: rotateCounter 16s linear infinite;
+}
+
+.trigger-center {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-primary, #00f0ff) 0%, rgba(0, 240, 255, 0.2) 70%, transparent 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #020617;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 0 12px var(--accent-primary, #00f0ff);
+}
+
+.fam-trigger-button.active .trigger-center {
+  background: radial-gradient(circle, #f43f5e 0%, rgba(244, 63, 94, 0.3) 70%, transparent 100%);
+  box-shadow: 0 0 12px #f43f5e;
+}
+
+.trigger-symbol {
+  color: #020617;
+}
+
+.trigger-symbol-close {
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.trigger-ambient-glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--core-glow, rgba(0, 240, 255, 0.35)) 0%, transparent 70%);
+  opacity: 0.6;
+  animation: pulseAura 2.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* =========================================================================
+   3. EXPANDED STATE: FLOATING GLASS SURFACE
+   ========================================================================= */
+.fam-glass-surface {
+  width: min(360px, calc(100vw - 36px));
+  background: #090d16 !important;
+  backdrop-filter: blur(28px) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
+  border: 1px solid rgba(0, 240, 255, 0.4) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(0, 240, 255, 0.2) !important;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: expandSurfaceIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-bottom: 8px;
+}
+
+.fam-surface-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.95) !important;
+}
+
+.fam-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fam-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-primary, #00f0ff);
+  box-shadow: 0 0 10px var(--accent-primary, #00f0ff);
+  animation: pulseDot 2s infinite;
+}
+
+.fam-header-title {
+  font-size: 0.76rem;
+  letter-spacing: 0.09em;
+  font-weight: 700;
+  color: var(--accent-primary, #00f0ff);
+}
+
+.fam-close-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(30, 41, 59, 0.6);
+  color: #cbd5e1;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fam-close-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #fff;
+}
+
+.fam-actions-stack {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  gap: 8px;
+  max-height: min(440px, 65vh);
+  overflow-y: auto;
+  background: #090d16 !important;
+}
+
+.fam-action-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border-radius: 12px;
+  background: rgba(20, 30, 50, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+  outline: none;
+}
+
+.fam-action-card:hover {
+  background: rgba(0, 240, 255, 0.14) !important;
+  border-color: rgba(0, 240, 255, 0.5) !important;
+  transform: translateX(-3px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 12px rgba(0, 240, 255, 0.15);
+}
+
+.fam-action-card:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-primary, #00f0ff);
+}
+
+.fam-action-card.destructive {
+  background: rgba(30, 20, 35, 0.7) !important;
+  border-color: rgba(244, 63, 94, 0.2) !important;
+}
+
+.fam-action-card.destructive:hover {
+  background: rgba(244, 63, 94, 0.2) !important;
+  border-color: rgba(244, 63, 94, 0.6) !important;
+}
+
+.action-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.action-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.action-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.action-label {
+  font-size: 0.90rem;
+  font-weight: 700;
+  color: #f8fafc !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fam-action-card:hover .action-label {
+  color: var(--accent-primary, #00f0ff) !important;
+}
+
+.action-tooltip {
+  font-size: 0.74rem;
+  color: #94a3b8 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.action-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  letter-spacing: 0.05em;
+}
+
+.badge-cyan {
+  background: rgba(0, 240, 255, 0.18) !important;
+  color: #00f0ff !important;
+  border: 1px solid rgba(0, 240, 255, 0.45) !important;
+}
+
+.badge-emerald {
+  background: rgba(16, 185, 129, 0.18) !important;
+  color: #10b981 !important;
+  border: 1px solid rgba(16, 185, 129, 0.45) !important;
+}
+
+.badge-violet {
+  background: rgba(139, 92, 246, 0.2) !important;
+  color: #c084fc !important;
+  border: 1px solid rgba(139, 92, 246, 0.45) !important;
+}
+
+.badge-amber {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #f59e0b !important;
+  border: 1px solid rgba(245, 158, 11, 0.45) !important;
+}
+
+.badge-coral {
+  background: rgba(244, 63, 94, 0.22) !important;
+  color: #f43f5e !important;
+  border: 1px solid rgba(244, 63, 94, 0.5) !important;
+}
+
+.fam-surface-footer {
+  padding: 10px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(11, 15, 25, 0.95) !important;
+  font-size: 0.70rem;
+  color: #64748b;
+  text-align: center;
+}
+
+/* =========================================================================
+   4. ANIMATIONS & RESPONSIVE RULES
+   ========================================================================= */
+@keyframes expandSurfaceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes slideToastIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rotateClockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rotateCounter {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-360deg); }
+}
+
+@keyframes pulseAura {
+  0%, 100% { transform: scale(1); opacity: 0.45; }
+  50% { transform: scale(1.15); opacity: 0.8; }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@media (max-width: 768px) {
+  :host {
+    bottom: 20px;
+    right: 18px;
+  }
+  .fam-glass-surface {
+    width: calc(100vw - 36px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fam-trigger-button,
+  .fam-glass-surface,
+  .trigger-ring,
+  .trigger-ambient-glow {
+    animation: none !important;
+    transition: none !important;
+  }
+}

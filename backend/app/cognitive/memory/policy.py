@@ -22,6 +22,9 @@ class SensitivityDetector:
         "credit_card": re.compile(r'\b(?:\d{4}[-\s]?){3}\d{4}\b'),
         "otp_pin": re.compile(r'(?i)\b(?:otp|one[- ]time[- ]password|pin|verification[- ]code)[\s:=]+["\']?(\d{4,8})["\']?\b'),
         "jwt_token": re.compile(r'\beyJ[a-zA-Z0-9_\-]+\.eyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\b'),
+        "biometric_voice": re.compile(r'(?i)(voice[_-]?print|voice[_-]?biometric|speaker[_-]?embedding|acoustic[_-]?signature)[\s:=]+["\']?([a-zA-Z0-9_\-\.+,/]{12,})["\']?'),
+        "biometric_face": re.compile(r'(?i)(face[_-]?vector|face[_-]?embedding|facial[_-]?template)[\s:=]+["\']?([a-zA-Z0-9_\-\.+,/]{12,})["\']?'),
+        "biometric_fingerprint": re.compile(r'(?i)(fingerprint[_-]?minutiae|biometric[_-]?template)[\s:=]+["\']?([a-zA-Z0-9_\-\.+,/]{12,})["\']?'),
     }
 
     @classmethod
@@ -49,6 +52,9 @@ class SensitivityDetector:
         sanitized = cls.PATTERNS["password"].sub(r'\1: [REDACTED_PASSWORD]', sanitized)
         sanitized = cls.PATTERNS["api_key"].sub(r'\1: [REDACTED_API_KEY]', sanitized)
         sanitized = cls.PATTERNS["otp_pin"].sub(r'code: [REDACTED_OTP]', sanitized)
+        sanitized = cls.PATTERNS["biometric_voice"].sub(r'\1: [REDACTED_VOICE_BIOMETRIC]', sanitized)
+        sanitized = cls.PATTERNS["biometric_face"].sub(r'\1: [REDACTED_FACE_BIOMETRIC]', sanitized)
+        sanitized = cls.PATTERNS["biometric_fingerprint"].sub(r'\1: [REDACTED_FINGERPRINT_BIOMETRIC]', sanitized)
         return sanitized
 
     @classmethod
@@ -57,7 +63,11 @@ class SensitivityDetector:
         sanitized: Dict[str, Any] = {}
         for k, v in data.items():
             k_lower = str(k).lower()
-            if any(s in k_lower for s in ["password", "secret", "token", "api_key", "secret_key", "private_key", "auth_key", "pin", "credential", "bearer"]):
+            if any(s in k_lower for s in [
+                "password", "secret", "token", "api_key", "secret_key", "private_key",
+                "auth_key", "pin", "credential", "bearer", "biometric", "voice_print",
+                "voiceprint", "face_vector", "face_embedding", "fingerprint"
+            ]):
                 sanitized[k] = "[REDACTED_CONFIDENTIAL]"
             elif isinstance(v, str):
                 sanitized[k] = cls.sanitize_text(v)

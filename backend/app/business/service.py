@@ -188,7 +188,7 @@ class BusinessSectorService:
             autopilot_mode=AutopilotMode.LOCAL_BUILD_AUTOPILOT,
             status=ProjectStatus.ACTIVE,
             budget_limit_usd=100.0,
-            spent_usd=2.40,
+            spent_usd=0.0,
             next_milestone_id="ms_yt_review",
             milestones=[
                 BusinessMilestone(
@@ -261,7 +261,7 @@ class BusinessSectorService:
             autopilot_mode=AutopilotMode.APPROVED_WORKFLOW_AUTOPILOT,
             status=ProjectStatus.ACTIVE,
             budget_limit_usd=150.0,
-            spent_usd=5.80,
+            spent_usd=0.0,
             next_milestone_id="ms_ws_cockpit",
             milestones=[
                 BusinessMilestone(
@@ -734,47 +734,43 @@ class BusinessSectorService:
         return list(self._opportunities.values())
 
     def get_financial_summary(self) -> FinancialSummaryResponse:
-        """Calculate aggregate financial metrics with strict authenticity labeling."""
-        actual_received = 0.0
-        gross_sales = 0.0
-        refunds = 0.0
-        operating_expenses = 0.0
-        pending_payments = 0.0
-        forecast_revenue = 0.0
-
-        for p in self._projects.values():
-            for exp in p.expenses:
-                operating_expenses += exp.amount_usd
-            for rev in p.revenue_records:
-                if rev.category == RevenueCategory.ACTUAL_RECEIVED and rev.provenance == RevenueProvenance.MEASURED:
-                    actual_received += rev.amount_usd
-                elif rev.category == RevenueCategory.GROSS_SALES:
-                    gross_sales += rev.amount_usd
-                elif rev.category == RevenueCategory.REFUNDS:
-                    refunds += rev.amount_usd
-                elif rev.category == RevenueCategory.PENDING_PAYMENTS:
-                    pending_payments += rev.amount_usd
-                elif rev.category == RevenueCategory.FORECAST:
-                    forecast_revenue += rev.amount_usd
-
-        # Link Sovereign Treasury (Mamu's Official State Bank of India account)
+        """Calculate aggregate financial metrics with strict authenticity labeling directly from Sovereign Treasury."""
+        # Sovereign Treasury (Mamu's Official State Bank of India account: settlement_ledger.json and invoices.json)
         from backend.app.business.treasury import sovereign_treasury
         t_overview = sovereign_treasury.get_financial_overview()
-        treasury_settled_usd = float(t_overview.get("total_settled_revenue_usd", 0.0))
-        treasury_pending_usd = float(t_overview.get("pending_invoices_usd", 0.0))
 
-        actual_received += treasury_settled_usd
-        gross_sales += (treasury_settled_usd + treasury_pending_usd)
-        pending_payments += treasury_pending_usd
+        # Real settled revenue and pending pipeline computed strictly from sovereign treasury
+        actual_received = float(t_overview.get("total_settled_revenue_usd", 0.0))
+        pending_payments = float(t_overview.get("pending_invoices_usd", 0.0))
+        gross_sales = round(actual_received + pending_payments, 2)
+        refunds = 0.0
 
-        net_result = actual_received - operating_expenses
-        has_verified_connection = True
+        # Real operating expenses from tracked project expenses
+        operating_expenses = round(sum(exp.amount_usd for p in self._projects.values() for exp in p.expenses), 2)
+        net_result = round(actual_received - operating_expenses, 2)
+        forecast_revenue = round(pending_payments, 2)
+        potential_revenue = round(pending_payments, 2)
 
-        disclaimer_text = (
-            f"Authenticated Sovereign Banking: State Bank of India "
-            f"(A/C: {t_overview.get('account_number_masked')}, IFSC: {t_overview.get('ifsc_code')}, UPI: ayyapparayudu.5@ybl) "
-            f"for operator Ravuvai Ayyapparayudu. Real commercial deliverables settled."
-        )
+        tx_count = int(t_overview.get("settled_transactions_count", 0))
+        settled_inr = float(t_overview.get("total_settled_revenue_inr", 0.0))
+        account_masked = t_overview.get("account_number_masked", "****5649")
+        ifsc_code = t_overview.get("ifsc_code", "SBIN0020507")
+        invoices_count = int(t_overview.get("invoices_count", 0))
+
+        has_verified_connection = tx_count > 0 or invoices_count > 0
+
+        if tx_count == 0:
+            disclaimer_text = (
+                f"Sovereign Treasury: State Bank of India "
+                f"(A/C: {account_masked}, IFSC: {ifsc_code}, UPI: ayyapparayudu.5@ybl) "
+                f"for operator Ravuvai Ayyapparayudu. Zero transactions recorded yet (Honest empty state)."
+            )
+        else:
+            disclaimer_text = (
+                f"Authenticated Sovereign Banking: State Bank of India "
+                f"(A/C: {account_masked}, IFSC: {ifsc_code}, UPI: ayyapparayudu.5@ybl) "
+                f"for operator Ravuvai Ayyapparayudu. {tx_count} verified settlement(s) totaling ₹{settled_inr:,.2f} INR."
+            )
 
         return FinancialSummaryResponse(
             actual_revenue_received_usd=round(actual_received, 2),
@@ -784,7 +780,7 @@ class BusinessSectorService:
             net_result_usd=round(net_result, 2),
             pending_payments_usd=round(pending_payments, 2),
             forecast_revenue_usd=round(forecast_revenue, 2),
-            potential_revenue_usd=round(forecast_revenue * 1.5, 2),
+            potential_revenue_usd=round(potential_revenue, 2),
             revenue_provenance=RevenueProvenance.MEASURED,
             has_verified_financial_connection=has_verified_connection,
             disclaimer=disclaimer_text,

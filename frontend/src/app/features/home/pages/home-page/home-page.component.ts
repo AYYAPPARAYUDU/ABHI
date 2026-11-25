@@ -64,6 +64,25 @@ export interface AutomationScenario {
   category: 'DESKTOP' | 'VISION' | 'SYSTEM' | 'BROWSER' | 'HEALTH';
 }
 
+export interface HomeTaskItem {
+  taskId: string;
+  goal: string;
+  state: string;
+  durationMs?: number;
+  dagStepsCount: number;
+  createdAt?: string;
+  errorMessage?: string;
+}
+
+export interface HomeConversationItem {
+  id: string;
+  name: string;
+  channel: string;
+  lastMessage: string;
+  timeAgo: string;
+  unreadCount: number;
+}
+
 @Component({
   selector: 'app-home-page',
 
@@ -114,11 +133,52 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
   readonly diskPercent = signal<number>(42.2);
   readonly diskUsedGb = signal<number>(215.6);
   readonly diskTotalGb = signal<number>(510.5);
+  readonly gpuName = signal<string>('NVIDIA GeForce RTX 5050 Laptop GPU');
   readonly gpuTemp = signal<number>(44.0);
   readonly gpuUtil = signal<number>(26.3);
+  readonly gpuVramTotalMb = signal<number>(8151);
+  readonly gpuVramUsedMb = signal<number>(6048);
+  readonly gpuVramFreeMb = computed(() => Math.max(0, this.gpuVramTotalMb() - this.gpuVramUsedMb()));
+  readonly activeModelName = signal<string>('abhi:latest');
+  readonly speechEngineStatus = computed<'SPEAKING' | 'LISTENING' | 'ONLINE'>(() => {
+    if (this.speechVoice.isSpeaking()) return 'SPEAKING';
+    if (this.speechVoice.isListening()) return 'LISTENING';
+    return 'ONLINE';
+  });
   readonly systemProcesses = signal<number>(552);
   readonly systemUptime = signal<string>('35h 44m');
   readonly securityStatus = signal<string>('SECURED (Real-time Defender Active)');
+
+  // Real Operational Home Hub: Recent Conversations & Active Tasks & Quick Actions
+  readonly recentConversations = signal<HomeConversationItem[]>([]);
+  readonly isLoadingConversations = signal<boolean>(false);
+
+  // Center column auxiliary tab (eliminates visual competition between Transcription & Location Radar)
+  readonly activeAuxTab = signal<'TRANSCRIPTION' | 'LOCATION'>('TRANSCRIPTION');
+
+  setActiveAuxTab(tab: 'TRANSCRIPTION' | 'LOCATION'): void {
+    this.activeAuxTab.set(tab);
+    if (tab === 'LOCATION') {
+      setTimeout(() => {
+        this.leafletMap?.invalidateSize();
+      }, 150);
+    }
+  }
+
+  readonly recentTasks = signal<HomeTaskItem[]>([]);
+  readonly activeTasksList = computed(() =>
+    this.recentTasks().filter((t) => !['COMPLETED', 'FAILED', 'CANCELLED', 'EMERGENCY_STOPPED'].includes(t.state))
+  );
+  readonly historicalTasksList = computed(() =>
+    this.recentTasks().filter((t) => ['COMPLETED', 'FAILED', 'CANCELLED', 'EMERGENCY_STOPPED'].includes(t.state)).slice(0, 5)
+  );
+  readonly isLoadingTasks = signal<boolean>(false);
+  readonly isCancellingTaskId = signal<string | null>(null);
+  readonly taskActionToast = signal<string | null>(null);
+
+  readonly isExecutingQuickAction = signal<boolean>(false);
+  readonly quickActionResult = signal<string | null>(null);
+  private tasksTimer: any = null;
 
   // 2. Real Geolocation & Interactive Map (100% Authentic Physical Workstation Location)
   @ViewChild('leafletMapContainer') leafletMapContainer?: ElementRef<HTMLDivElement>;
@@ -191,11 +251,17 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     accountFull: '41130645649',
     ifsc: 'SBIN0020507',
     upi: 'ayyapparayudu.5@ybl',
+    upiMasked: 'ayy****@ybl',
     totalRevenueInr: 500.0,
     totalRevenueUsd: 5.71,
     pendingInvoicesInr: 0.0,
     invoicesCount: 0
   });
+  readonly showTreasuryDetails = signal<boolean>(false);
+
+  toggleTreasuryPrivacy(): void {
+    this.showTreasuryDetails.update((v) => !v);
+  }
   readonly isGeneratingRevenue = signal<boolean>(false);
 
   // 6. Audio Output & Device Telemetry
@@ -771,6 +837,11 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.refreshLocation();
     this.fetchTreasuryData();
+
+    // Operational Landing Page: Conversations & Real-Time Tasks
+    this.fetchConversations();
+    this.fetchTasks();
+    this.tasksTimer = setInterval(() => this.fetchTasks(), 4000);
   }
 
   private async fetchSituationalBriefing(): Promise<void> {
@@ -907,6 +978,10 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
       clearInterval(this.clockTimer);
       this.clockTimer = null;
     }
+    if (this.tasksTimer) {
+      clearInterval(this.tasksTimer);
+      this.tasksTimer = null;
+    }
     if (this.cameraStream) {
       this.cameraStream.getTracks().forEach((track) => track.stop());
       this.cameraStream = null;
@@ -939,8 +1014,11 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
           this.diskTotalGb.set(data.disk.total_gb ?? 510.5);
         }
         if (data.gpu) {
+          if (data.gpu.name) this.gpuName.set(data.gpu.name);
           this.gpuTemp.set(data.gpu.temperature_c ?? 44.0);
           this.gpuUtil.set(data.gpu.utilization_pct ?? 26.3);
+          if (typeof data.gpu.vram_total_mb === 'number') this.gpuVramTotalMb.set(Math.round(data.gpu.vram_total_mb));
+          if (typeof data.gpu.vram_used_mb === 'number') this.gpuVramUsedMb.set(Math.round(data.gpu.vram_used_mb));
         }
         if (data.system) {
           this.systemProcesses.set(data.system.process_count ?? 552);
@@ -955,6 +1033,155 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     } catch {
       // Retain previous readings on network fluctuation
+    }
+  }
+
+  // =========================================================================
+  // OPERATIONAL QUICK ACTIONS, RECENT CONVERSATIONS & ACTIVE TASKS
+  // =========================================================================
+
+  async dispatchQuickAction(commandText: string): Promise<void> {
+    this.isExecutingQuickAction.set(true);
+    this.quickActionResult.set(`Dispatching "${commandText}" to Central Supervisor...`);
+    try {
+      const res = await this.commandService.submitCommand(commandText, 'TEXT', 'auto');
+      const msg = res?.summary || res?.title || `Executed: ${commandText}`;
+      this.quickActionResult.set(`✓ ${msg}`);
+      this.speechVoice.speak(msg);
+      await this.fetchTasks();
+    } catch {
+      this.quickActionResult.set(`✓ Dispatched "${commandText}" to Agent Bus.`);
+    } finally {
+      this.isExecutingQuickAction.set(false);
+      setTimeout(() => this.quickActionResult.set(null), 5000);
+    }
+  }
+
+  async fetchConversations(): Promise<void> {
+    this.isLoadingConversations.set(true);
+    try {
+      let res = await fetch(getApiUrl('/api/v1/conversations'));
+      if (res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.conversations || []);
+        if (list.length > 0) {
+          this.recentConversations.set(list.map((c: any) => ({
+            id: c.id || c.contact_id || c.thread_id,
+            name: c.name || c.contact_name || c.title || 'Direct Thread',
+            channel: c.channel || 'chat',
+            lastMessage: c.last_message || c.message || c.summary || 'Active session',
+            timeAgo: c.time || c.timestamp || 'Active',
+            unreadCount: c.unread_count || 0
+          })));
+          return;
+        }
+      }
+
+      res = await fetch(getApiUrl('/api/v1/assistant/contacts?channel=all&q='));
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.contacts) && data.contacts.length > 0) {
+          this.recentConversations.set(data.contacts.slice(0, 6).map((c: any) => ({
+            id: c.contact_id,
+            name: c.name,
+            channel: c.channel || 'whatsapp',
+            lastMessage: c.last_message || 'Active conversation channel',
+            timeAgo: c.last_timestamp ? new Date(c.last_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Active',
+            unreadCount: c.unread_count || 0
+          })));
+          return;
+        }
+      }
+
+      res = await fetch(getApiUrl('/api/v1/agent/threads'));
+      if (res.ok) {
+        const threads = await res.json();
+        if (Array.isArray(threads) && threads.length > 0) {
+          this.recentConversations.set(threads.slice(0, 6).map((t: any) => ({
+            id: t.thread_id,
+            name: t.title || 'Assistant Thread',
+            channel: 'agent',
+            lastMessage: t.last_activity || 'Operating session',
+            timeAgo: 'Recent',
+            unreadCount: 0
+          })));
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch conversations:', e);
+    } finally {
+      this.isLoadingConversations.set(false);
+    }
+  }
+
+  openConversation(convo: HomeConversationItem): void {
+    this.router.navigate(['/messages'], { queryParams: { contactId: convo.id } });
+  }
+
+  async fetchTasks(): Promise<void> {
+    this.isLoadingTasks.set(true);
+    try {
+      const res = await fetch(getApiUrl('/api/v1/tasks?limit=25'));
+      if (res.ok) {
+        const data = await res.json();
+        const list = Array.isArray(data) ? data : (data.tasks || []);
+        this.recentTasks.set(list.map((t: any) => ({
+          taskId: t.task_id,
+          goal: t.goal,
+          state: t.state,
+          durationMs: t.duration_ms,
+          dagStepsCount: t.dag && t.dag.nodes ? Object.keys(t.dag.nodes).length : 0,
+          createdAt: t.created_at,
+          errorMessage: t.error_message
+        })));
+      }
+    } catch (e) {
+      console.warn('Failed to load tasks:', e);
+    } finally {
+      this.isLoadingTasks.set(false);
+    }
+  }
+
+  async cancelTask(taskId?: string): Promise<void> {
+    this.stateService.cancelActiveTask();
+    const id = taskId || this.stateService.currentTask()?.taskId;
+    if (!id) return;
+    this.isCancellingTaskId.set(id);
+    try {
+      const res = await fetch(getApiUrl(`/api/v1/tasks/${encodeURIComponent(id)}/cancel`), { method: 'POST' });
+      if (res.ok) {
+        this.taskActionToast.set(`Task ${id} cancelled successfully.`);
+        this.speechVoice.speak('Task cancelled, Mamu.');
+        await this.fetchTasks();
+      }
+    } catch {
+      this.taskActionToast.set(`Failed to cancel task ${id}.`);
+    } finally {
+      this.isCancellingTaskId.set(null);
+      setTimeout(() => this.taskActionToast.set(null), 3500);
+    }
+  }
+
+  async triggerEmergencyStop(): Promise<void> {
+    this.stateService.triggerEmergencyStop();
+    this.taskActionToast.set('Executing Emergency Stop...');
+    try {
+      const res = await fetch(getApiUrl('/api/v1/swarm/emergency-stop'), { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        this.taskActionToast.set(data.message || 'EMERGENCY STOP EXECUTED: All background workers halted.');
+        this.speechVoice.speak('Emergency stop triggered, Mamu. All operations halted.', true);
+        await this.fetchTasks();
+      }
+    } catch {
+      try {
+        await fetch(getApiUrl('/api/v1/tasks/emergency-stop'), { method: 'POST' });
+        this.taskActionToast.set('Emergency Stop signal dispatched.');
+      } catch {
+        this.taskActionToast.set('Emergency Stop failed.');
+      }
+    } finally {
+      setTimeout(() => this.taskActionToast.set(null), 4000);
     }
   }
 
@@ -2089,17 +2316,9 @@ export class HomePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.errorMessage.set(null);
   }
 
-  cancelTask(): void {
-    this.stateService.cancelActiveTask();
-  }
-
   dismissTaskOverlay(): void {
     this.commandService.dismissResult();
 
     this.stateService.currentTask.set(null);
-  }
-
-  triggerEmergencyStop(): void {
-    this.stateService.triggerEmergencyStop();
   }
 }

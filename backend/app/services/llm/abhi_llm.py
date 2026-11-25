@@ -64,6 +64,28 @@ def get_live_thoughts() -> List[str]:
     return list(_latest_thought_buffer)
 
 
+from enum import Enum
+
+
+class ConversationalIntentCategory(str, Enum):
+    QUESTION = "QUESTION"
+    ACTION = "ACTION"
+    EXPLANATION = "EXPLANATION"
+    CLARIFICATION = "CLARIFICATION"
+    SCREEN_PERCEPTION = "SCREEN_PERCEPTION"
+    FOLLOW_UP = "FOLLOW_UP"
+
+
+class StructuredIntent(BaseModel):
+    category: ConversationalIntentCategory = Field(default=ConversationalIntentCategory.QUESTION)
+    confidence: float = Field(default=1.0)
+    action_name: Optional[str] = Field(default=None)
+    target: Optional[str] = Field(default=None)
+    parameters: Dict[str, Any] = Field(default_factory=dict)
+    reasoning: Optional[str] = Field(default=None)
+    language: str = Field(default="en")
+
+
 class AbhiNativeLLM:
     """Authoritative local AI cognitive engine powered by local neural models."""
 
@@ -86,6 +108,124 @@ class AbhiNativeLLM:
             "mobile_device_control",
             "real_time_companion",
         ]
+
+    async def classify_intent(
+        self,
+        user_input: str,
+        active_window: str = "Desktop",
+        screen_ocr: Optional[str] = None,
+        recent_turns: Optional[List[Dict[str, str]]] = None,
+    ) -> StructuredIntent:
+        """Classify user intent with typed schema using local LLM inference or fast deterministic rules."""
+        raw_clean = user_input.strip()
+        lower = raw_clean.lower()
+
+        # 1. Screen Perception Fast Path
+        if any(p in lower for p in [
+            "what's on my screen", "whats on my screen", "what do you see", "look at my screen",
+            "read my screen", "describe my screen", "what is open", "what you seeing"
+        ]):
+            return StructuredIntent(
+                category=ConversationalIntentCategory.SCREEN_PERCEPTION,
+                action_name="describe_screen",
+                target="active_screen",
+                confidence=0.98,
+            )
+
+        # 2. Follow-Up Media Controls Fast Path
+        if any(lower == p or lower.startswith(f"{p} ") for p in [
+            "pause", "pause it", "pause video", "resume", "resume video", "play it",
+            "next video", "next track", "change the song", "change song", "skip song"
+        ]):
+            return StructuredIntent(
+                category=ConversationalIntentCategory.FOLLOW_UP,
+                action_name="media_control",
+                target=lower,
+                confidence=0.95,
+            )
+
+        # 3. Direct App Launch Fast Path
+        launch_match = re.match(r"^(?:open|launch|start|run)\s+([a-zA-Z0-9_\s]+)$", lower)
+        if launch_match and not any(w in lower for w in ["why", "how", "what", "explain", "if"]):
+            target_app = launch_match.group(1).strip()
+            return StructuredIntent(
+                category=ConversationalIntentCategory.ACTION,
+                action_name="launch_application",
+                target=target_app,
+                confidence=0.99,
+            )
+
+        # 4. LLM Structured Intent Classification (Fallback for nuanced queries)
+        system_prompt = (
+            "You are ABHI's Cognitive Intent Classifier.\n"
+            f"Active Window: '{active_window}'\n"
+            "Classify the user's intent into one category:\n"
+            "- 'QUESTION': General knowledge, chat, or informational queries (e.g. 'Why did Chrome crash?')\n"
+            "- 'ACTION': Imperative requests to change OS state or launch software (e.g. 'Open YouTube')\n"
+            "- 'EXPLANATION': Explaining screen content, code, or active windows (e.g. 'What is this video about?')\n"
+            "- 'CLARIFICATION': Ambiguous or incomplete input requiring user input\n"
+            "- 'SCREEN_PERCEPTION': Asking about what is visible on the display\n"
+            "- 'FOLLOW_UP': Modifying or controlling prior action ('Pause it', 'Next video')\n\n"
+            "Respond in JSON ONLY with keys: category, action_name, target, reasoning."
+        )
+
+        try:
+            resp = await self.generate(
+                prompt=f"User Utterance: \"{raw_clean}\"",
+                system=system_prompt,
+                format_schema="json",
+                options={"temperature": 0.0, "num_predict": 80}
+            )
+            if resp.response:
+                data = json.loads(clean_json_markdown(resp.response))
+                cat = data.get("category", "QUESTION").upper()
+                if cat not in ConversationalIntentCategory.__members__:
+                    cat = "QUESTION"
+                return StructuredIntent(
+                    category=ConversationalIntentCategory(cat),
+                    action_name=data.get("action_name"),
+                    target=data.get("target"),
+                    reasoning=data.get("reasoning"),
+                    confidence=0.90,
+                )
+        except Exception as e:
+            logger.debug(f"LLM intent classification fallback: {e}")
+
+        # Default fallback
+        return StructuredIntent(category=ConversationalIntentCategory.QUESTION, confidence=0.7)
+
+    def resolve_optimal_model(
+        self,
+        prompt: str,
+        system: Optional[str] = None,
+        explicit_model: Optional[str] = None
+    ) -> str:
+        """Dynamically route requests to specialized local models based on semantic intent."""
+        if explicit_model:
+            return explicit_model
+
+        combined = f"{system or ''} {prompt}".lower()
+
+        # 1. Polyglot Code Synthesis, Unit Tests, Git & Refactoring -> qwen2.5-coder:7b
+        code_markers = [
+            "def ", "class ", "import ", "function", "refactor", "traceback",
+            "syntaxerror", "npm ", "pytest", "typescript", "python", "angular",
+            "sql", "fastapi", "docker", "algorithm", "git ", "const ", "async def"
+        ]
+        if any(marker in combined for marker in code_markers) or "```" in combined:
+            return "qwen2.5-coder:7b" if hasattr(self, "_available_models") and "qwen2.5-coder:7b" in self._available_models else self.model_id
+
+        # 2. Deep Analytical Reasoning, Mathematical Invariants & Complex Planning -> deepseek-r1:8b
+        reasoning_markers = [
+            "prove", "step-by-step", "analytical", "theorem",
+            "logic puzzle", "root cause analysis", "quantum",
+            "probability", "evaluate the hypothesis", "deep reasoning"
+        ]
+        if any(marker in combined for marker in reasoning_markers):
+            return "deepseek-r1:8b" if hasattr(self, "_available_models") and "deepseek-r1:8b" in self._available_models else self.model_id
+
+        # 3. Conversational Companion, Multilingual (Telugu, Hindi, Tamil) & Desktop Automation -> abhi:latest
+        return self.model_id
 
     async def is_healthy(self) -> bool:
         """Check if local neural model is ready (Ollama or Standalone)."""
@@ -116,7 +256,7 @@ class AbhiNativeLLM:
         **kwargs: Any
     ) -> LLMResponse:
         """Dynamically generate completions or structured DAG plans."""
-        target_model = model or self.model_id
+        target_model = self.resolve_optimal_model(prompt=prompt, system=system, explicit_model=model)
         start_t = time.perf_counter()
 
         # 1. Try local Ollama model first for authentic intelligence
@@ -145,14 +285,31 @@ class AbhiNativeLLM:
                 if resp.response:
                     thought, cleaned = extract_thinking_and_clean_text(resp.response)
                     if thought:
-                        record_live_thought(f"Reasoning: {thought[:120]}")
+                        record_live_thought("Autonomous cognitive evaluation and action plan synthesized.")
                     if format_schema:
                         resp.response = clean_json_markdown(cleaned)
                     else:
                         resp.response = cleaned
                 return resp
             except Exception as e:
-                logger.warning(f"Ollama generation fallback to standalone engine: {e}")
+                # If specialized model failed, attempt with base model before falling back
+                if target_model != self.model_id:
+                    try:
+                        logger.info(f"Model {target_model} unavailable, falling back to primary {self.model_id}")
+                        resp = await ollama_client.generate(
+                            prompt=prompt,
+                            system=system,
+                            model=self.model_id,
+                            format_schema=format_schema,
+                            stream=stream,
+                            options=options,
+                            **kwargs
+                        )
+                        return resp
+                    except Exception as inner_e:
+                        logger.warning(f"Ollama generation fallback to standalone engine: {inner_e}")
+                else:
+                    logger.warning(f"Ollama generation fallback to standalone engine: {e}")
 
         # 2. Resilient standalone engine fallback
         try:
@@ -233,7 +390,8 @@ class AbhiNativeLLM:
         **kwargs: Any
     ) -> LLMResponse:
         """Multi-turn chat using local neural model with persistent context."""
-        target_model = model or self.model_id
+        last_msg = str(messages[-1].get("content", "")) if messages else ""
+        target_model = self.resolve_optimal_model(prompt=last_msg, explicit_model=model)
 
         if await ollama_client.is_healthy():
             try:
@@ -249,11 +407,27 @@ class AbhiNativeLLM:
                 if resp.response:
                     thought, cleaned = extract_thinking_and_clean_text(resp.response)
                     if thought:
-                        record_live_thought(f"Thought: {thought[:120]}")
+                        record_live_thought("Autonomous cognitive evaluation and action plan synthesized.")
                     resp.response = cleaned
                 return resp
             except Exception as e:
-                logger.warning(f"Ollama chat fallback to standalone engine: {e}")
+                if target_model != self.model_id:
+                    try:
+                        logger.info(f"Model {target_model} unavailable for chat, falling back to {self.model_id}")
+                        resp = await ollama_client.chat(
+                            messages=messages,
+                            model=self.model_id,
+                            tools=tools,
+                            format_schema=format_schema,
+                            stream=stream,
+                            options=options,
+                            **kwargs
+                        )
+                        return resp
+                    except Exception as inner_e:
+                        logger.warning(f"Ollama chat fallback to standalone engine: {inner_e}")
+                else:
+                    logger.warning(f"Ollama chat fallback to standalone engine: {e}")
 
         return await abhi_standalone_engine.chat(
             messages=messages,

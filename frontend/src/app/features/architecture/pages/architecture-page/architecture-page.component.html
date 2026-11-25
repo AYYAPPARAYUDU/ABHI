@@ -4,639 +4,789 @@
     <div class="header-left">
       <div class="header-badge">
         <span class="pulse-cyan"></span>
-        <span class="system-tag">ABHI SYSTEM ARCHITECTURE & WORKFLOW MATRIX</span>
+        <span class="system-tag">ABHI SYSTEM ARCHITECTURE &amp; INTROSPECTION</span>
       </div>
-      <h1 class="system-title">Visual System Blueprint & Real-Time Workflows</h1>
+      <h1 class="system-title">Visual Architecture Explorer &amp; Real-Time Intelligence Matrix</h1>
     </div>
 
+    <!-- Live Physical Hardware & Connection Telemetry HUD -->
     <div class="header-right">
-      <div class="telemetry-pill">
-        <span class="label">ACTIVE WINDOW:</span>
-        <span class="val text-cyan" [title]="liveTelemetry()?.active_window?.title || 'ABHI Workspace'">
-          {{ liveTelemetry()?.active_window?.title || 'ABHI Antigravity IDE' }}
+      <!-- WebSocket Status -->
+      <div class="telemetry-pill" [class.connected]="telemetryService.isConnected()">
+        <span class="pulse-dot" [class.online]="telemetryService.isConnected()"></span>
+        <span class="label">WS:</span>
+        <span class="val" [class.text-cyan]="telemetryService.isConnected()" [class.text-amber]="!telemetryService.isConnected()">
+          {{ telemetryService.connectionStatus() }}
         </span>
       </div>
+
+      <!-- Active Window Context -->
+      <div class="telemetry-pill active-win-pill" [title]="activeContext()?.active_window?.title || 'ABHI Workspace'">
+        <span class="label">ACTIVE WIN:</span>
+        <span class="val text-cyan">
+          {{ activeContext()?.active_window?.title || 'ABHI Antigravity IDE' }}
+        </span>
+      </div>
+
+      <!-- CPU Telemetry -->
       <div class="telemetry-pill">
         <span class="label">CPU:</span>
-        <span class="val text-emerald">{{ liveTelemetry()?.telemetry?.cpu_percent || 22 }}%</span>
+        <span class="val text-emerald">
+          {{ liveHardwareTelemetry()?.cpu?.percent ?? 18.4 }}%
+        </span>
       </div>
+
+      <!-- RAM Telemetry -->
       <div class="telemetry-pill">
         <span class="label">RAM:</span>
-        <span class="val text-emerald">{{ liveTelemetry()?.telemetry?.memory?.percent_used || 83 }}%</span>
+        <span class="val text-emerald">
+          {{ liveHardwareTelemetry()?.memory?.percent ?? 74.2 }}%
+        </span>
       </div>
-      <a routerLink="/workspace" class="return-workspace-btn" title="Return to 3D Living Command Center">
+
+      <!-- GPU / VRAM Telemetry -->
+      <div class="telemetry-pill" [title]="liveHardwareTelemetry()?.gpu?.name || 'NVIDIA GPU'">
+        <span class="label">GPU:</span>
+        <span class="val text-cyan">
+          {{ liveHardwareTelemetry()?.gpu?.utilization_pct ?? 24.0 }}%
+        </span>
+        <span class="sub-val">
+          ({{ (liveHardwareTelemetry()?.gpu?.vram_used_mb / 1024 | number:'1.1-1') ?? '5.9' }}/{{ (liveHardwareTelemetry()?.gpu?.vram_total_mb / 1024 | number:'1.1-1') ?? '8.0' }}GB)
+        </span>
+      </div>
+
+      <!-- Refresh Introspection Button -->
+      <button
+        type="button"
+        class="refresh-hud-btn"
+        (click)="refreshAllIntrospection()"
+        [disabled]="isRefreshing()"
+        [title]="'Last synced: ' + lastRefreshed()"
+      >
+        <span class="refresh-icon" [class.spinning]="isRefreshing()">↻</span>
+        <span>{{ isRefreshing() ? 'SYNCING...' : 'SYNC' }}</span>
+      </button>
+
+      <!-- Toggle Technical Inspector Dock -->
+      <button
+        type="button"
+        class="dock-toggle-btn"
+        [class.active]="isInspectorOpen()"
+        (click)="toggleInspector()"
+        [title]="isInspectorOpen() ? 'Collapse inspector for 100% canvas space' : 'Open technical inspector dock'"
+      >
+        <span>{{ isInspectorOpen() ? '◧ COLLAPSE DOCK' : '◨ INSPECTOR' }}</span>
+      </button>
+
+      <!-- Return to 3D Command Center -->
+      <a routerLink="/workspace" class="return-workspace-btn" title="Return to Spatial 3D Command Center">
         🚀 COMMAND CENTER
       </a>
     </div>
   </header>
 
-  <!-- Main Body: Two-Pane Layout -->
-  <div class="arch-main-layout">
-    <!-- Left Navigation: Subsystem Selector -->
-    <aside class="arch-sidebar" role="navigation" aria-label="Architecture Categories">
-      <div class="sidebar-header font-monospace">
-        <span class="side-icon">📁</span>
-        <span>SYSTEM MODULES</span>
-      </div>
-
-      <nav class="side-nav-list">
-        @for (sec of sections; track sec.id) {
-          <button
-            type="button"
-            class="side-nav-btn"
-            [class.active]="selectedSectionId() === sec.id"
-            (click)="selectSection(sec.id)"
-          >
-            <span class="btn-icon">{{ sec.icon }}</span>
-            <div class="btn-text-wrap">
-              <span class="btn-title">{{ sec.navTitle }}</span>
-              <span class="btn-tag font-monospace">{{ sec.tag }}</span>
-            </div>
-            @if (selectedSectionId() === sec.id) {
-              <span class="active-indicator"></span>
-            }
-          </button>
+  <!-- 6 Subsystem Navigation Bar with 100% Width Pills -->
+  <nav class="subsystem-nav-bar font-monospace" role="tablist" aria-label="Subsystem Tabs">
+    @for (tab of subsystemTabs; track tab.id) {
+      <button
+        type="button"
+        role="tab"
+        class="subsystem-tab-btn"
+        [class.active]="selectedTabId() === tab.id"
+        [attr.aria-selected]="selectedTabId() === tab.id"
+        (click)="selectTab(tab.id)"
+      >
+        <span class="tab-icon">{{ tab.icon }}</span>
+        <div class="tab-info">
+          <div class="tab-title-row">
+            <span class="tab-title">{{ tab.title }}</span>
+            <span class="tab-count-badge">{{ tabCounts().get(tab.id) || 0 }}</span>
+          </div>
+          <span class="tab-tag">{{ tab.tag }}</span>
+        </div>
+        @if (selectedTabId() === tab.id) {
+          <span class="tab-active-glow"></span>
         }
-      </nav>
+      </button>
+    }
+  </nav>
 
-      <!-- Sidebar Sovereign Badge -->
-      <div class="sidebar-footer font-monospace">
-        <div class="badge-row">
-          <span>OPERATOR:</span>
-          <span class="text-cyan">Mamu (Ravuvai A.)</span>
-        </div>
-        <div class="badge-row">
-          <span>MODE:</span>
-          <span class="text-emerald">100% SOVEREIGN OFFLINE</span>
-        </div>
-        <div class="badge-row">
-          <span>LOCAL RAG:</span>
-          <span class="text-amber">588 CHUNKS</span>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Right Main Viewport -->
-    <main class="arch-content-viewport" role="main">
-      @let cur = currentSection();
-
-      <!-- Hero Overview Banner -->
-      <div class="subsystem-hero-card">
-        <div class="hero-left">
-          <div class="hero-icon-bubble">{{ cur.icon }}</div>
-          <div class="hero-text-wrap">
-            <div class="hero-tag font-monospace">◈ {{ cur.tag }}</div>
-            <h2 class="hero-headline">{{ cur.headline }}</h2>
-            <p class="hero-summary">{{ cur.simpleSummary }}</p>
-          </div>
-        </div>
-        <div class="hero-right">
-          <div class="hero-status-chip font-monospace">
-            <span class="status-dot"></span> LIVE // 0MS RESPONSE
-          </div>
+  <!-- Subsystem Controls Toolbar: Search, Status Filter & Zoom -->
+  <div class="canvas-toolbar">
+    <div class="toolbar-subsystem-header">
+      @let curTab = currentTab();
+      <div class="hero-header-row">
+        <span class="hero-icon">{{ curTab.icon }}</span>
+        <div class="hero-text-wrap">
+          <div class="hero-tag font-monospace">◈ SYSTEM TOPOLOGY // {{ curTab.tag }}</div>
+          <h2 class="hero-headline">{{ curTab.headline }}</h2>
+          <p class="hero-summary">{{ curTab.summary }}</p>
         </div>
       </div>
+    </div>
 
-      <!-- 3-Pillar Executive Summary (Simple to understand in 3 seconds) -->
-      <div class="three-pillars-grid">
-        <div class="pillar-card">
-          <span class="pillar-icon">{{ cur.threePillars.whatItDoes.icon }}</span>
-          <div class="pillar-info">
-            <div class="pillar-title font-monospace">{{ cur.threePillars.whatItDoes.title }}</div>
-            <div class="pillar-desc">{{ cur.threePillars.whatItDoes.desc }}</div>
-          </div>
-        </div>
-
-        <div class="pillar-card">
-          <span class="pillar-icon">{{ cur.threePillars.speedMetric.icon }}</span>
-          <div class="pillar-info">
-            <div class="pillar-title font-monospace text-emerald">{{ cur.threePillars.speedMetric.title }}</div>
-            <div class="pillar-desc">{{ cur.threePillars.speedMetric.desc }}</div>
-          </div>
-        </div>
-
-        <div class="pillar-card">
-          <span class="pillar-icon">{{ cur.threePillars.reliability.icon }}</span>
-          <div class="pillar-info">
-            <div class="pillar-title font-monospace text-cyan">{{ cur.threePillars.reliability.title }}</div>
-            <div class="pillar-desc">{{ cur.threePillars.reliability.desc }}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Interactive Visual Animated Conduit Diagram -->
-      <section class="diagram-section-block">
-        <!-- Diagram Simulation Bar -->
-        <div class="diagram-sim-toolbar font-monospace">
-          <div class="toolbar-left">
-            <span class="toolbar-title">⚡ REAL-TIME ANIMATED WORKFLOW</span>
-            <div class="sim-badge" [class.running]="isSimulating()">
-              <span class="sim-pulse"></span>
-              <span>{{ isSimulating() ? 'ANIMATING' : 'PAUSED' }}</span>
-            </div>
-            <div class="stage-ticker">
-              <span class="ticker-label">STEP:</span>
-              <span class="ticker-val text-cyan">{{ activeSimStep() + 1 }} of 6</span>
-            </div>
-          </div>
-
-          <div class="toolbar-right">
-            <button
-              type="button"
-              class="sim-btn play-pause-btn"
-              (click)="toggleSimulation()"
-              [title]="isSimulating() ? 'Pause Animation' : 'Play Animation'"
-            >
-              {{ isSimulating() ? '⏸ PAUSE' : '▶ PLAY' }}
-            </button>
-            <button
-              type="button"
-              class="sim-btn step-btn"
-              (click)="stepSimulation()"
-              title="Advance to next step"
-            >
-              ⏭ NEXT STEP
-            </button>
-            <div class="speed-selector">
-              <button
-                type="button"
-                class="speed-btn"
-                [class.active]="simSpeed() === 1"
-                (click)="setSimSpeed(1)"
-              >
-                1X
-              </button>
-              <button
-                type="button"
-                class="speed-btn"
-                [class.active]="simSpeed() === 2"
-                (click)="setSimSpeed(2)"
-              >
-                2X
-              </button>
-            </div>
-            <button
-              type="button"
-              class="sim-btn test-action-btn"
-              (click)="testTriggerQuickAction('refresh_context')"
-              title="Test live active window probe"
-            >
-              ⚡ TEST OS PROBE
-            </button>
-          </div>
-        </div>
-
-        <!-- Diagram Canvas -->
-        <div class="diagram-canvas-wrap">
-          @switch (cur.diagramType) {
-            <!-- 1. END-TO-END FLOW -->
-            @case ('FLOW') {
-              <div class="diagram-schematic-flow">
-                <!-- SVG Conduit Wire & Moving Particle -->
-                <svg class="svg-conduit-overlay" viewBox="0 0 1100 180" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id="flowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stop-color="#38bdf8" />
-                      <stop offset="40%" stop-color="#10b981" />
-                      <stop offset="70%" stop-color="#f59e0b" />
-                      <stop offset="100%" stop-color="#a855f7" />
-                    </linearGradient>
-                    <filter id="glowEffect" x="-20%" y="-20%" width="140%" height="140%">
-                      <feGaussianBlur stdDeviation="3" result="blur" />
-                      <feMerge>
-                        <feMergeNode in="blur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
-                  </defs>
-
-                  <path class="conduit-wire" d="M 90,90 L 270,90 L 450,90 L 630,90 L 810,90 L 990,90" />
-                  <path class="conduit-wire-active" d="M 90,90 L 270,90 L 450,90 L 630,90 L 810,90 L 990,90" stroke="url(#flowGrad)" filter="url(#glowEffect)" />
-
-                  <circle class="animated-particle" r="5" fill="#00f0ff" filter="url(#glowEffect)">
-                    <animateMotion path="M 90,90 L 990,90" dur="3s" repeatCount="indefinite" />
-                  </circle>
-                  <circle class="animated-particle" r="4.5" fill="#10b981" filter="url(#glowEffect)">
-                    <animateMotion path="M 90,90 L 990,90" dur="3s" begin="1.5s" repeatCount="indefinite" />
-                  </circle>
-                </svg>
-
-                <div class="flow-nodes-track">
-                  <!-- Step 1 -->
-                  <div class="interactive-node" [class.active-step]="activeSimStep() === 0" (click)="inspectNode('flow_voice')">
-                    <span class="step-num font-monospace">STEP 1</span>
-                    <span class="node-icon">🎙️</span>
-                    <span class="node-title">Your Voice / Input</span>
-                    <span class="node-brief">Acoustic filter for Mamu</span>
-                    <span class="node-speed font-monospace text-cyan">0.2ms</span>
-                  </div>
-
-                  <!-- Step 2 -->
-                  <div class="interactive-node" [class.active-step]="activeSimStep() === 1" (click)="inspectNode('flow_resolver')">
-                    <span class="step-num font-monospace">STEP 2</span>
-                    <span class="node-icon">⚡</span>
-                    <span class="node-title">Instant Cache</span>
-                    <span class="node-brief">37 frequent shortcuts</span>
-                    <span class="node-speed font-monospace text-emerald">0.0ms (Instant)</span>
-                  </div>
-
-                  <!-- Step 3 -->
-                  <div class="interactive-node" [class.active-step]="activeSimStep() === 2" (click)="inspectNode('flow_rag')">
-                    <span class="step-num font-monospace">STEP 3</span>
-                    <span class="node-icon">📚</span>
-                    <span class="node-title">Smart Memory</span>
-                    <span class="node-brief">588 offline project chunks</span>
-                    <span class="node-speed font-monospace text-emerald">4.2ms</span>
-                  </div>
-
-                  <!-- Step 4 -->
-                  <div class="interactive-node" [class.active-step]="activeSimStep() === 3" (click)="inspectNode('flow_llm')">
-                    <span class="step-num font-monospace">STEP 4</span>
-                    <span class="node-icon">🧠</span>
-                    <span class="node-title">Local AI Brain</span>
-                    <span class="node-brief">Offline Ollama model</span>
-                    <span class="node-speed font-monospace text-purple">28ms</span>
-                  </div>
-
-                  <!-- Step 5 -->
-                  <div class="interactive-node" [class.active-step]="activeSimStep() === 4" (click)="inspectNode('flow_dag')">
-                    <span class="step-num font-monospace">STEP 5</span>
-                    <span class="node-icon">🗺️</span>
-                    <span class="node-title">Task Planner</span>
-                    <span class="node-brief">Organizes complex work</span>
-                    <span class="node-speed font-monospace text-pink">O(V+E)</span>
-                  </div>
-
-                  <!-- Step 6 -->
-                  <div class="interactive-node" [class.active-step]="activeSimStep() === 5" (click)="inspectNode('flow_win32')">
-                    <span class="step-num font-monospace">STEP 6</span>
-                    <span class="node-icon">🖥️</span>
-                    <span class="node-title">Windows 11 Action</span>
-                    <span class="node-brief">Direct hotkeys & apps</span>
-                    <span class="node-speed font-monospace text-cyan">0.1ms</span>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- 2. MULTI-AGENT SWARM -->
-            @case ('SWARM') {
-              <div class="diagram-schematic-swarm">
-                <div class="swarm-commander-hub" [class.selected]="selectedSwarmAgentId() === 'mark85'" (click)="inspectNode('mark85')">
-                  <div class="hub-radar-ring"></div>
-                  <div class="hub-avatar-wrap">
-                    <span class="hub-icon">🛡️</span>
-                    <span class="hub-callsign font-monospace">MARK 85</span>
-                  </div>
-                  <div class="hub-label font-monospace">SWARM COMMANDER</div>
-                  <div class="hub-sub font-monospace text-cyan">Assigns tasks to all 9 specialists</div>
-                </div>
-
-                <div class="swarm-satellite-grid">
-                  <div class="satellite-agent-card" [class.selected]="selectedSwarmAgentId() === 'markL'" (click)="inspectNode('markL')">
-                    <div class="agent-top"><span class="agent-avatar">🌐</span><span class="agent-code font-monospace">MARK L</span></div>
-                    <div class="agent-name">Browser Specialist</div>
-                    <div class="agent-desc">Websites, research, articles</div>
-                  </div>
-
-                  <div class="satellite-agent-card" [class.selected]="selectedSwarmAgentId() === 'markVI'" (click)="inspectNode('markVI')">
-                    <div class="agent-top"><span class="agent-avatar">🖥️</span><span class="agent-code font-monospace">MARK VI</span></div>
-                    <div class="agent-name">Windows OS Specialist</div>
-                    <div class="agent-desc">Apps, windows, keystrokes</div>
-                  </div>
-
-                  <div class="satellite-agent-card" [class.selected]="selectedSwarmAgentId() === 'markXLIII'" (click)="inspectNode('markXLIII')">
-                    <div class="agent-top"><span class="agent-avatar">👁️</span><span class="agent-code font-monospace">MARK XLIII</span></div>
-                    <div class="agent-name">Vision OCR Specialist</div>
-                    <div class="agent-desc">Reads screen buttons & text</div>
-                  </div>
-
-                  <div class="satellite-agent-card" [class.selected]="selectedSwarmAgentId() === 'markV'" (click)="inspectNode('markV')">
-                    <div class="agent-top"><span class="agent-avatar">📚</span><span class="agent-code font-monospace">MARK V</span></div>
-                    <div class="agent-name">Memory RAG Specialist</div>
-                    <div class="agent-desc">588 local project facts</div>
-                  </div>
-
-                  <div class="satellite-agent-card" [class.selected]="selectedSwarmAgentId() === 'markVII'" (click)="inspectNode('markVII')">
-                    <div class="agent-top"><span class="agent-avatar">🗺️</span><span class="agent-code font-monospace">MARK VII</span></div>
-                    <div class="agent-name">Task Planner Specialist</div>
-                    <div class="agent-desc">Breaks big goals into steps</div>
-                  </div>
-
-                  <div class="satellite-agent-card" [class.selected]="selectedSwarmAgentId() === 'markI'" (click)="inspectNode('markI')">
-                    <div class="agent-top"><span class="agent-avatar">🔒</span><span class="agent-code font-monospace">MARK I</span></div>
-                    <div class="agent-name">Security Sentinel</div>
-                    <div class="agent-desc">Guards files & audits safety</div>
-                  </div>
-
-                  <div class="satellite-agent-card" [class.selected]="selectedSwarmAgentId() === 'markXLII'" (click)="inspectNode('markXLII')">
-                    <div class="agent-top"><span class="agent-avatar">🔧</span><span class="agent-code font-monospace">MARK XLII</span></div>
-                    <div class="agent-name">Self-Healing Specialist</div>
-                    <div class="agent-desc">Automatically fixes code bugs</div>
-                  </div>
-
-                  <div class="satellite-agent-card" [class.selected]="selectedSwarmAgentId() === 'markXVII'" (click)="inspectNode('markXVII')">
-                    <div class="agent-top"><span class="agent-avatar">🎙️</span><span class="agent-code font-monospace">MARK XVII</span></div>
-                    <div class="agent-name">Audio & Voice</div>
-                    <div class="agent-desc">Acoustic filter & speaking voice</div>
-                  </div>
-
-                  <div class="satellite-agent-card" [class.selected]="selectedSwarmAgentId() === 'markXXXIII'" (click)="inspectNode('markXXXIII')">
-                    <div class="agent-top"><span class="agent-avatar">🏛️</span><span class="agent-code font-monospace">MARK XXXIII</span></div>
-                    <div class="agent-name">SBI Banking Specialist</div>
-                    <div class="agent-desc">State Bank of India treasury</div>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- 3. RAG MEMORY -->
-            @case ('RAG') {
-              <div class="diagram-schematic-rag">
-                <div class="rag-pipeline-grid">
-                  <div class="rag-stage-box" (click)="inspectNode('flow_rag')">
-                    <span class="stage-ic">📥</span>
-                    <span class="stage-title">1. Your Question</span>
-                    <span class="stage-desc">Understands what you need and extracts search keywords.</span>
-                  </div>
-
-                  <div class="rag-arrow font-monospace">➔➔➔</div>
-
-                  <div class="rag-stage-box active-glow" (click)="inspectNode('flow_rag')">
-                    <span class="stage-ic">⚡</span>
-                    <span class="stage-title">2. 4.2ms Vector Search</span>
-                    <span class="stage-desc">Searches 588 local files using mathematical similarity.</span>
-                    <span class="rag-chip font-monospace text-emerald">Score >= 0.65</span>
-                  </div>
-
-                  <div class="rag-arrow font-monospace">➔➔➔</div>
-
-                  <div class="rag-stage-box" (click)="inspectNode('flow_llm')">
-                    <span class="stage-ic">🧠</span>
-                    <span class="stage-title">3. Verified Answer</span>
-                    <span class="stage-desc">Gives the AI verified facts before it speaks. Zero hallucination.</span>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- 4. TASK PLANNER (DAG) -->
-            @case ('DAG') {
-              <div class="diagram-schematic-dag">
-                <div class="dag-header-telemetry font-monospace">
-                  <span>ROADMAP: COMPLEX MULTI-STEP WORKFLOW</span>
-                  <span class="text-emerald">ZERO DEADLOCKS</span>
-                </div>
-
-                <div class="dag-graph-view">
-                  <div class="dag-layer">
-                    <div class="dag-node-card root-node" (click)="inspectNode('flow_dag')">
-                      <span class="node-tag font-monospace">STEP 1</span>
-                      <span class="node-head">Your Goal: Break Down Request</span>
-                      <span class="node-status font-monospace text-emerald">COMPLETED</span>
-                    </div>
-                  </div>
-
-                  <div class="dag-split-lbl font-monospace">RUNNING PARALLEL TASKS SIMULTANEOUSLY ➔</div>
-
-                  <div class="dag-layer parallel-layer">
-                    <div class="dag-node-card" (click)="inspectNode('markVI')">
-                      <span class="node-tag font-monospace">STEP 2A</span>
-                      <span class="node-head">Check Active Window</span>
-                      <span class="node-status font-monospace text-cyan">READY</span>
-                    </div>
-                    <div class="dag-node-card" (click)="inspectNode('flow_rag')">
-                      <span class="node-tag font-monospace">STEP 2B</span>
-                      <span class="node-head">Search Project Memory</span>
-                      <span class="node-status font-monospace text-emerald">DONE</span>
-                    </div>
-                    <div class="dag-node-card" (click)="inspectNode('markXLIII')">
-                      <span class="node-tag font-monospace">STEP 2C</span>
-                      <span class="node-head">Verify Screen State</span>
-                      <span class="node-status font-monospace text-cyan">READY</span>
-                    </div>
-                  </div>
-
-                  <div class="dag-split-lbl font-monospace">JOIN RESULTS & EXECUTE ➔</div>
-
-                  <div class="dag-layer">
-                    <div class="dag-node-card final-node" (click)="inspectNode('flow_win32')">
-                      <span class="node-tag font-monospace">STEP 3</span>
-                      <span class="node-head">Physical Execution & Visual Verification</span>
-                      <span class="node-status font-monospace text-amber">VERIFIED</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- 5. LOCAL AI BRAIN -->
-            @case ('LLM') {
-              <div class="diagram-schematic-llm">
-                <div class="llm-layers-stack">
-                  <div class="llm-layer-bar font-monospace" (click)="inspectNode('flow_llm')">
-                    <span class="bar-step font-monospace text-cyan">1</span>
-                    <span class="bar-name">Prompt & Context Builder</span>
-                    <span class="bar-desc">Injects Mamu persona, active window title, and memory facts</span>
-                  </div>
-                  <div class="llm-layer-bar font-monospace" (click)="inspectNode('flow_llm')">
-                    <span class="bar-step font-monospace text-emerald">2</span>
-                    <span class="bar-name">Local AI Reasoning (Ollama)</span>
-                    <span class="bar-desc">Thinks on your local CPU hardware without internet or subscriptions</span>
-                  </div>
-                  <div class="llm-layer-bar font-monospace" (click)="inspectNode('flow_llm')">
-                    <span class="bar-step font-monospace text-amber">3</span>
-                    <span class="bar-name">Action Cleanser & Normalizer</span>
-                    <span class="bar-desc">Cleans up response into exact executable instructions</span>
-                  </div>
-                  <div class="llm-layer-bar font-monospace" (click)="inspectNode('flow_win32')">
-                    <span class="bar-step font-monospace text-pink">4</span>
-                    <span class="bar-name">Windows 11 Action Execution</span>
-                    <span class="bar-desc">Carries out the instruction on your PC in 0 milliseconds</span>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- 6. WIN32 OS CONTROL -->
-            @case ('WIN32') {
-              <div class="diagram-schematic-win32">
-                <div class="win32-grid">
-                  <div class="win32-card" (click)="inspectNode('flow_win32')">
-                    <span class="win32-icon">🖥️</span>
-                    <span class="win32-title">Active Window Sensor</span>
-                    <span class="win32-val text-cyan font-monospace">{{ liveTelemetry()?.active_window?.title || 'ABHI Workspace' }}</span>
-                    <span class="win32-sub">Always knows what window is focused</span>
-                  </div>
-
-                  <div class="win32-card" (click)="inspectNode('flow_win32')">
-                    <span class="win32-icon">⌨️</span>
-                    <span class="win32-title">Instant Hotkeys</span>
-                    <span class="win32-val text-emerald font-monospace">0.1ms SendInput</span>
-                    <span class="win32-sub">Direct keyboard shortcuts (Ctrl+W, Win+D, Alt+Tab)</span>
-                  </div>
-
-                  <div class="win32-card" (click)="inspectNode('flow_win32')">
-                    <span class="win32-icon">🔊</span>
-                    <span class="win32-title">Master Audio Control</span>
-                    <span class="win32-val text-amber font-monospace">Direct CoreAudio</span>
-                    <span class="win32-sub">Scales system volume and mutes instantly</span>
-                  </div>
-
-                  <div class="win32-card" (click)="inspectNode('markXLIII')">
-                    <span class="win32-icon">📱</span>
-                    <span class="win32-title">Android Phone Bridge</span>
-                    <span class="win32-val text-purple font-monospace">ADB Linked</span>
-                    <span class="win32-sub">Controls WhatsApp and Gmail on mobile</span>
-                  </div>
-                </div>
-              </div>
-            }
-
-            <!-- 7. SBI TREASURY & ER -->
-            @case ('ER') {
-              <div class="diagram-schematic-er">
-                <div class="er-tables-container">
-                  <div class="er-table-box" (click)="inspectNode('markXXXIII')">
-                    <div class="table-header font-monospace">
-                      <span class="tb-name">ACCOUNT_MASTER</span>
-                      <span class="tb-pk">SBI ****5649</span>
-                    </div>
-                    <div class="table-rows font-monospace">
-                      <div class="row-item"><span class="f-name">Holder:</span> <span class="f-val">Ravuvai Ayyapparayudu</span></div>
-                      <div class="row-item"><span class="f-name">IFSC:</span> <span class="f-val">SBIN0020507</span></div>
-                      <div class="row-item"><span class="f-name">Branch:</span> <span class="f-val">Spl Commercial Branch</span></div>
-                    </div>
-                  </div>
-
-                  <div class="er-link-arrow font-monospace">➔➔➔</div>
-
-                  <div class="er-table-box active-er" (click)="inspectNode('markXXXIII')">
-                    <div class="table-header font-monospace">
-                      <span class="tb-name">SETTLEMENT_LEDGER</span>
-                      <span class="tb-pk">14 Confirmed</span>
-                    </div>
-                    <div class="table-rows font-monospace">
-                      <div class="row-item"><span class="f-name">Total Settled:</span> <span class="f-val text-emerald">Authentic Ledger</span></div>
-                      <div class="row-item"><span class="f-name">Status:</span> <span class="f-val text-cyan">IMMUTABLE_LOCKED</span></div>
-                      <div class="row-item"><span class="f-name">Receipts:</span> <span class="f-val">Verified UTR Numbers</span></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            }
-          }
-        </div>
-
-        <!-- Selected Step Highlight (Easy to understand in 1 sentence) -->
-        @if (activeInspectorNode(); as insp) {
-          <div class="selected-step-highlight">
-            <div class="highlight-left">
-              <span class="highlight-badge font-monospace">CURRENT STEP SUMMARY</span>
-              <h4 class="highlight-name">{{ insp.name }}</h4>
-              <p class="highlight-role">{{ insp.simpleRole }}</p>
-            </div>
-            <div class="highlight-right">
-              <div class="highlight-stat font-monospace">
-                <span class="stat-lbl">SPEED:</span>
-                <span class="stat-val text-emerald">{{ insp.latency }}</span>
-              </div>
-              <div class="highlight-stat font-monospace">
-                <span class="stat-lbl">STATUS:</span>
-                <span class="stat-val text-cyan">{{ insp.status }}</span>
-              </div>
-            </div>
-          </div>
+    <!-- Filter & Search Controls Bar -->
+    <div class="filter-controls-row">
+      <!-- Instant Search Input -->
+      <div class="search-input-wrapper font-monospace">
+        <span class="search-icon">🔍</span>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Filter components, files, capabilities..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+        />
+        @if (searchQuery()) {
+          <button type="button" class="clear-search-btn" (click)="searchQuery.set('')">✕</button>
         }
-      </section>
+      </div>
 
-      <!-- Technical Deep Dive Toggle Button (Clean & Breathable) -->
-      <div class="dev-toggle-row">
+      <!-- Status Filter Buttons -->
+      <div class="status-filters font-monospace">
+        <span class="filter-label">STATUS:</span>
         <button
           type="button"
-          class="dev-toggle-btn font-monospace"
-          (click)="toggleDevDetails()"
+          class="filter-chip"
+          [class.active]="selectedStatusFilter() === 'ALL'"
+          (click)="setStatusFilter('ALL')"
         >
-          <span>{{ showDevDetails() ? '✖️ HIDE TECHNICAL CODE & ENDPOINTS' : '🛠️ SHOW TECHNICAL CODE, FILES & DATA' }}</span>
+          ALL
+        </button>
+        <button
+          type="button"
+          class="filter-chip healthy"
+          [class.active]="selectedStatusFilter() === 'HEALTHY'"
+          (click)="setStatusFilter('HEALTHY')"
+        >
+          <span class="dot emerald"></span> HEALTHY
+        </button>
+        <button
+          type="button"
+          class="filter-chip active"
+          [class.active]="selectedStatusFilter() === 'ACTIVE'"
+          (click)="setStatusFilter('ACTIVE')"
+        >
+          <span class="dot cyan"></span> ACTIVE
+        </button>
+        <button
+          type="button"
+          class="filter-chip standby"
+          [class.active]="selectedStatusFilter() === 'STANDBY'"
+          (click)="setStatusFilter('STANDBY')"
+        >
+          <span class="dot amber"></span> STANDBY
+        </button>
+        <button
+          type="button"
+          class="filter-chip degraded"
+          [class.active]="selectedStatusFilter() === 'DEGRADED'"
+          (click)="setStatusFilter('DEGRADED')"
+        >
+          <span class="dot rose"></span> DEGRADED
         </button>
       </div>
 
-      <!-- Expandable Technical Deep Dive (Smooth Accordion) -->
-      @if (showDevDetails()) {
-        <div class="dev-details-container">
-          <div class="micro-ui-grid">
-            <!-- WHY WE USE IT -->
-            <div class="micro-card">
-              <div class="card-header">
-                <span class="card-icon">💡</span>
-                <h3 class="card-title font-monospace">ARCHITECTURAL RATIONALE</h3>
-              </div>
-              <p class="card-summary">{{ cur.whyWeUseIt.summary }}</p>
-              <ul class="points-list">
-                @for (pt of cur.whyWeUseIt.points; track pt) {
-                  <li class="point-item">
-                    <span class="bullet-arrow">▸</span>
-                    <span>{{ pt }}</span>
-                  </li>
-                }
-              </ul>
-            </div>
+      <!-- Canvas Zoom Controls & Inspector Toggle -->
+      <div class="toolbar-right-actions">
+        <div class="zoom-controls font-monospace">
+          <button type="button" class="zoom-btn" (click)="zoomOut()" title="Zoom Out">-</button>
+          <button type="button" class="zoom-reset-btn" (click)="resetZoom()" title="Reset Zoom">
+            {{ (zoomLevel() * 100) | number:'1.0-0' }}%
+          </button>
+          <button type="button" class="zoom-btn" (click)="zoomIn()" title="Zoom In">+</button>
+        </div>
 
-            <!-- WHERE WE USE IT -->
-            <div class="micro-card">
-              <div class="card-header">
-                <span class="card-icon">📍</span>
-                <h3 class="card-title font-monospace">SOURCE FILES & APIS</h3>
+        <button
+          type="button"
+          class="canvas-mode-btn font-monospace"
+          [class.active]="!isInspectorOpen()"
+          (click)="toggleInspector()"
+          title="Toggle full width canvas expansion"
+        >
+          <span>{{ isInspectorOpen() ? '◧ MAXIMIZE CANVAS' : '◨ SHOW INSPECTOR' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Directional Pipeline Flow Banner (Shown in ALL View) -->
+  @if (selectedTabId() === 'ALL') {
+    <div class="pipeline-flow-banner font-monospace">
+      <div class="flow-step">
+        <span class="flow-num">1</span>
+        <span class="flow-title">Gateway &amp; Perception</span>
+        <span class="flow-sub">FastAPI + VAD + HWND</span>
+      </div>
+      <div class="flow-arrow">➔</div>
+      <div class="flow-step">
+        <span class="flow-num">2</span>
+        <span class="flow-title">Supervisor &amp; DAG</span>
+        <span class="flow-sub">FSM + Kahn + Verifier</span>
+      </div>
+      <div class="flow-arrow">➔</div>
+      <div class="flow-step">
+        <span class="flow-num">3</span>
+        <span class="flow-title">Cognition &amp; Models</span>
+        <span class="flow-sub">abhi:8b + Swarm</span>
+      </div>
+      <div class="flow-arrow">➔</div>
+      <div class="flow-step">
+        <span class="flow-num">4</span>
+        <span class="flow-title">Memory &amp; Tools</span>
+        <span class="flow-sub">LanceDB + WAL + 7 MCP</span>
+      </div>
+      <div class="flow-arrow">➔</div>
+      <div class="flow-step">
+        <span class="flow-num">5</span>
+        <span class="flow-title">Physical Actuation</span>
+        <span class="flow-sub">User32 0.1ms + Playwright</span>
+      </div>
+    </div>
+  }
+
+  <!-- Main Architecture Body: Canvas + Collapsible Inspector Split View -->
+  <div class="arch-main-body" [class.inspector-collapsed]="!isInspectorOpen()">
+    <!-- Center / Expansive Canvas Viewport -->
+    <section class="arch-canvas-viewport">
+      <!-- Visual Node Topology Canvas -->
+      <div class="canvas-scroll-container">
+        <div class="canvas-zoom-wrapper" [style.transform]="'scale(' + zoomLevel() + ')'">
+          
+          <!-- VIEW 1: EXPANSIVE ALL PIPELINE STAGES VIEW -->
+          @if (selectedTabId() === 'ALL') {
+            <div class="pipeline-stages-container">
+              @for (stage of pipelineStages; track stage.stageNumber) {
+                @let stageNodes = stageNodesMap().get(stage.tabId) || [];
+                @if (stageNodes.length > 0) {
+                  <section class="pipeline-stage-section">
+                    <!-- Stage Header Card with directional flow indicator -->
+                    <div class="stage-header-card font-monospace">
+                      <div class="stage-left">
+                        <span class="stage-icon">{{ stage.icon }}</span>
+                        <div>
+                          <div class="stage-title-row">
+                            <span class="stage-badge">STAGE {{ stage.stageNumber }}</span>
+                            <h3 class="stage-name">{{ stage.name }}</h3>
+                            <span class="stage-count">({{ stageNodes.length }} components)</span>
+                          </div>
+                          <p class="stage-tagline">{{ stage.tagline }}</p>
+                        </div>
+                      </div>
+                      <div class="stage-flow-badge">
+                        <span class="flow-label">FLOW:</span>
+                        <span class="flow-text">{{ stage.flowBadge }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Stage Nodes Grid -->
+                    <div class="stage-node-grid">
+                      @for (node of stageNodes; track node.id) {
+                        <div
+                          class="arch-node-card"
+                          [class.selected]="activeInspectorNode()?.id === node.id"
+                          [class.healthy]="node.status === 'HEALTHY'"
+                          [class.active]="node.status === 'ACTIVE'"
+                          [class.standby]="node.status === 'STANDBY'"
+                          [class.ready]="node.status === 'READY'"
+                          [class.degraded]="node.status === 'DEGRADED'"
+                          (click)="selectNode(node)"
+                          tabindex="0"
+                          (keydown.enter)="selectNode(node)"
+                        >
+                          <!-- Card Header -->
+                          <div class="node-card-header font-monospace">
+                            <div class="node-badge-wrap">
+                              <span class="node-type-icon">⚙</span>
+                              <span class="node-subsystem-label">{{ node.subsystem }}</span>
+                            </div>
+                            <div class="node-status-badge" [attr.data-status]="node.status">
+                              <span class="status-pulse-dot"></span>
+                              <span>{{ node.status }}</span>
+                            </div>
+                          </div>
+
+                          <!-- Node Title & Role -->
+                          <div class="node-card-body">
+                            <h4 class="node-title">{{ node.name }}</h4>
+                            <p class="node-role">{{ node.role }}</p>
+
+                            <!-- File Path Pill with Copy Feedback -->
+                            <div
+                              class="file-path-pill font-monospace"
+                              (click)="$event.stopPropagation(); copyFilePath(node.filePath)"
+                              title="Click to copy canonical file path"
+                            >
+                              <span class="file-icon">📄</span>
+                              <span class="path-text">{{ node.filePath }}</span>
+                              <span class="copy-hint">
+                                {{ copiedPath() === node.filePath ? '✓ COPIED' : '📋' }}
+                              </span>
+                            </div>
+
+                            <!-- Key Capabilities Chips -->
+                            <div class="capabilities-row">
+                              @for (cap of node.capabilities.slice(0, 3); track cap) {
+                                <span class="cap-chip font-monospace">{{ cap }}</span>
+                              }
+                              @if (node.capabilities.length > 3) {
+                                <span class="cap-chip more font-monospace">+{{ node.capabilities.length - 3 }} more</span>
+                              }
+                            </div>
+                          </div>
+
+                          <!-- Node Card Footer: Latency, Footprint & Actions -->
+                          <div class="node-card-footer font-monospace">
+                            <div class="footer-metrics-group">
+                              <div class="footer-metric">
+                                <span class="m-label">LATENCY:</span>
+                                <span class="m-val text-cyan">{{ node.latency }}</span>
+                              </div>
+                              @if (node.memoryFootprint) {
+                                <div class="footer-metric">
+                                  <span class="m-label">MEM:</span>
+                                  <span class="m-val text-emerald">{{ node.memoryFootprint }}</span>
+                                </div>
+                              }
+                            </div>
+
+                            <div class="card-action-btns">
+                              <button
+                                type="button"
+                                class="card-action-btn ping"
+                                (click)="$event.stopPropagation(); pingComponent(node.id)"
+                                title="Ping component introspection"
+                              >
+                                ⚡ Ping
+                              </button>
+                              <button
+                                type="button"
+                                class="card-action-btn inspect"
+                                (click)="$event.stopPropagation(); selectNode(node)"
+                                title="Inspect technical details in dock"
+                              >
+                                🔍 Inspect
+                              </button>
+                            </div>
+                          </div>
+
+                          <!-- Active Card Glow Highlight -->
+                          @if (activeInspectorNode()?.id === node.id) {
+                            <div class="card-selection-glow"></div>
+                          }
+                        </div>
+                      }
+                    </div>
+
+                    <!-- Flow Connector Line Between Stages -->
+                    @if (stage.stageNumber < 5) {
+                      <div class="stage-pipeline-connector font-monospace">
+                        <span class="connector-line"></span>
+                        <div class="connector-arrow-badge">
+                          <span class="down-arr">▼</span>
+                          <span>{{ stage.flowDirection }}</span>
+                        </div>
+                        <span class="connector-line"></span>
+                      </div>
+                    }
+                  </section>
+                }
+              }
+            </div>
+          } @else {
+            <!-- VIEW 2: SINGLE SUBSYSTEM EXPANSIVE GRID -->
+            <div class="single-subsystem-grid">
+              @for (node of filteredNodes(); track node.id) {
+                <div
+                  class="arch-node-card wide-card"
+                  [class.selected]="activeInspectorNode()?.id === node.id"
+                  [class.healthy]="node.status === 'HEALTHY'"
+                  [class.active]="node.status === 'ACTIVE'"
+                  [class.standby]="node.status === 'STANDBY'"
+                  [class.ready]="node.status === 'READY'"
+                  [class.degraded]="node.status === 'DEGRADED'"
+                  (click)="selectNode(node)"
+                  tabindex="0"
+                  (keydown.enter)="selectNode(node)"
+                >
+                  <!-- Card Header -->
+                  <div class="node-card-header font-monospace">
+                    <div class="node-badge-wrap">
+                      <span class="node-type-icon">⚙</span>
+                      <span class="node-subsystem-label">{{ node.subsystem }}</span>
+                    </div>
+                    <div class="node-status-badge" [attr.data-status]="node.status">
+                      <span class="status-pulse-dot"></span>
+                      <span>{{ node.status }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Node Title & Role -->
+                  <div class="node-card-body">
+                    <h3 class="node-title">{{ node.name }}</h3>
+                    <p class="node-role">{{ node.role }}</p>
+
+                    <!-- File Path Pill with Copy Feedback -->
+                    <div
+                      class="file-path-pill font-monospace"
+                      (click)="$event.stopPropagation(); copyFilePath(node.filePath)"
+                      title="Click to copy canonical file path"
+                    >
+                      <span class="file-icon">📄</span>
+                      <span class="path-text">{{ node.filePath }}</span>
+                      <span class="copy-hint">
+                        {{ copiedPath() === node.filePath ? '✓ COPIED' : '📋' }}
+                      </span>
+                    </div>
+
+                    <!-- All Capabilities -->
+                    <div class="capabilities-row">
+                      @for (cap of node.capabilities; track cap) {
+                        <span class="cap-chip font-monospace">{{ cap }}</span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Node Card Footer: Latency, Connections & Actions -->
+                  <div class="node-card-footer font-monospace">
+                    <div class="footer-metrics-group">
+                      <div class="footer-metric">
+                        <span class="m-label">LATENCY:</span>
+                        <span class="m-val text-cyan">{{ node.latency }}</span>
+                      </div>
+                      @if (node.memoryFootprint) {
+                        <div class="footer-metric">
+                          <span class="m-label">MEM:</span>
+                          <span class="m-val text-emerald">{{ node.memoryFootprint }}</span>
+                        </div>
+                      }
+                      <div class="footer-connections">
+                        <span class="conn-pill" title="Inbound Callers">↓ {{ node.activeConnections.inbound.length }}</span>
+                        <span class="conn-pill" title="Outbound Dependencies">↑ {{ node.activeConnections.outbound.length }}</span>
+                      </div>
+                    </div>
+
+                    <div class="card-action-btns">
+                      <button
+                        type="button"
+                        class="card-action-btn ping"
+                        (click)="$event.stopPropagation(); pingComponent(node.id)"
+                        title="Ping component introspection"
+                      >
+                        ⚡ Ping
+                      </button>
+                      <button
+                        type="button"
+                        class="card-action-btn inspect"
+                        (click)="$event.stopPropagation(); selectNode(node)"
+                        title="Inspect technical details in dock"
+                      >
+                        🔍 Inspect
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Active Card Glow Highlight -->
+                  @if (activeInspectorNode()?.id === node.id) {
+                    <div class="card-selection-glow"></div>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Empty State -->
+          @if (filteredNodes().length === 0) {
+            <div class="empty-nodes-state font-monospace">
+              <span class="empty-icon">🔎</span>
+              <h4>No matching architecture components found</h4>
+              <p>Try clearing your search query "{{ searchQuery() }}" or status filter "{{ selectedStatusFilter() }}".</p>
+              <button type="button" class="reset-filters-btn" (click)="searchQuery.set(''); selectedStatusFilter.set('ALL')">
+                Reset Filters
+              </button>
+            </div>
+          }
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Collapsible Technical Inspector Dock & Live Event Feed Drawer -->
+    @if (isInspectorOpen()) {
+      <aside class="arch-inspector-drawer" aria-label="Component Inspector &amp; Live Events">
+        <!-- Drawer View Switcher Tabs & Collapse Button -->
+        <div class="drawer-tabs-header font-monospace">
+          <div class="drawer-tabs-left">
+            <button
+              type="button"
+              class="drawer-tab-btn"
+              [class.active]="inspectorView() === 'INSPECTOR'"
+              (click)="setInspectorView('INSPECTOR')"
+            >
+              <span class="d-icon">🔍</span>
+              <span>SPECS &amp; TOPOLOGY</span>
+            </button>
+            <button
+              type="button"
+              class="drawer-tab-btn"
+              [class.active]="inspectorView() === 'FEED'"
+              (click)="setInspectorView('FEED')"
+            >
+              <span class="d-icon">⚡</span>
+              <span>LIVE FEED</span>
+              <span class="live-event-counter">{{ liveEvents().length }}</span>
+            </button>
+          </div>
+          <button type="button" class="drawer-close-btn" (click)="closeInspector()" title="Collapse inspector panel">
+            ✕
+          </button>
+        </div>
+
+        <!-- ======================================================== -->
+        <!-- TAB 1: INTERACTIVE COMPONENT INSPECTOR                  -->
+        <!-- ======================================================== -->
+        @if (inspectorView() === 'INSPECTOR') {
+          @let node = activeInspectorNode();
+          @if (node) {
+            <div class="inspector-content-scroll">
+              <!-- Node Identity Header -->
+              <div class="inspector-hero-card">
+                <div class="node-id-tag font-monospace">
+                  <span>NODE: {{ node.id }}</span>
+                  <div class="node-status-badge" [attr.data-status]="node.status">
+                    <span class="status-pulse-dot"></span>
+                    <span>{{ node.status }}</span>
+                  </div>
+                </div>
+
+                <h3 class="inspector-node-title">{{ node.name }}</h3>
+                <p class="inspector-node-desc">{{ node.summary }}</p>
+
+                <!-- Quick Ping / Verification Button -->
+                <div class="quick-ping-row font-monospace">
+                  <button type="button" class="ping-btn" (click)="pingComponent(node.id)">
+                    <span>⚡ PING INTROSPECTION</span>
+                  </button>
+                  <div class="latency-chip">
+                    <span class="l-lbl">LATENCY:</span>
+                    <span class="l-val text-cyan">{{ node.latency }}</span>
+                  </div>
+                </div>
               </div>
-              <p class="card-summary">{{ cur.whereWeUseIt.description }}</p>
-              <div class="files-list">
-                @for (f of cur.whereWeUseIt.files; track f.path) {
-                  <div class="file-item">
-                    <span class="file-path font-monospace">{{ f.path }}</span>
-                    <span class="file-role">{{ f.role }}</span>
+
+              <!-- Technical Specifications Card -->
+              <section class="spec-card">
+                <div class="card-section-title font-monospace">
+                  <span>⚙ TECHNICAL SPECIFICATIONS</span>
+                </div>
+
+                <div class="spec-table font-monospace">
+                  <div class="spec-row">
+                    <span class="spec-k">CANONICAL FILE:</span>
+                    <div class="spec-v copyable" (click)="copyFilePath(node.filePath)" title="Click to copy path">
+                      <span>{{ node.filePath }}</span>
+                      <span class="copy-icon">{{ copiedPath() === node.filePath ? '✓' : '📋' }}</span>
+                    </div>
+                  </div>
+                  <div class="spec-row">
+                    <span class="spec-k">SUBSYSTEM:</span>
+                    <span class="spec-v text-cyan">{{ node.subsystem }}</span>
+                  </div>
+                  <div class="spec-row">
+                    <span class="spec-k">MEMORY FOOTPRINT:</span>
+                    <span class="spec-v text-emerald">{{ node.memoryFootprint || 'Allocated on demand' }}</span>
+                  </div>
+                  @for (entry of node.specs | keyvalue; track entry.key) {
+                    <div class="spec-row">
+                      <span class="spec-k">{{ entry.key | uppercase }}:</span>
+                      <span class="spec-v">{{ entry.value }}</span>
+                    </div>
+                  }
+                </div>
+              </section>
+
+              <!-- Verified Capabilities -->
+              <section class="spec-card">
+                <div class="card-section-title font-monospace">
+                  <span>🛡 VERIFIED OPERATIONAL CAPABILITIES</span>
+                </div>
+                <ul class="capabilities-list font-monospace">
+                  @for (cap of node.capabilities; track cap) {
+                    <li class="cap-item">
+                      <span class="check-icon">✓</span>
+                      <span>{{ cap }}</span>
+                    </li>
+                  }
+                </ul>
+              </section>
+
+              <!-- Active Topology Connections -->
+              <section class="spec-card">
+                <div class="card-section-title font-monospace">
+                  <span>🔗 ACTIVE TOPOLOGY CONNECTIONS</span>
+                </div>
+
+                <div class="connections-block font-monospace">
+                  <!-- Inbound Callers -->
+                  <div class="conn-group">
+                    <div class="conn-group-header text-cyan">
+                      <span>↓ INBOUND CALLERS / INGRESS ({{ node.activeConnections.inbound.length }})</span>
+                    </div>
+                    <div class="conn-chips-wrap">
+                      @for (inb of node.activeConnections.inbound; track inb) {
+                        <div class="conn-tag inbound">
+                          <span class="arr">←</span>
+                          <span>{{ inb }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Outbound Targets -->
+                  <div class="conn-group">
+                    <div class="conn-group-header text-emerald">
+                      <span>↑ OUTBOUND DEPENDENCIES / EGRESS ({{ node.activeConnections.outbound.length }})</span>
+                    </div>
+                    <div class="conn-chips-wrap">
+                      @for (outb of node.activeConnections.outbound; track outb) {
+                        <div class="conn-tag outbound">
+                          <span class="arr">→</span>
+                          <span>{{ outb }}</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Component Recent Events -->
+              <section class="spec-card">
+                <div class="card-section-title font-monospace">
+                  <span>📡 RECENT COMPONENT EVENTS</span>
+                </div>
+
+                @if (nodeRecentEvents().length > 0) {
+                  <div class="node-events-list font-monospace">
+                    @for (evt of nodeRecentEvents(); track evt.id) {
+                      <div class="node-event-item">
+                        <div class="evt-header">
+                          <span class="evt-cat">{{ evt.category }}</span>
+                          <span class="evt-type text-cyan">{{ evt.type }}</span>
+                          <span class="evt-time text-muted">{{ evt.timestamp | date:'HH:mm:ss.SSS' }}</span>
+                        </div>
+                        <div class="evt-payload-preview">
+                          <code>{{ evt.payload | json }}</code>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <div class="no-node-events font-monospace">
+                    <span class="pulse-cyan mini"></span>
+                    <span>Listening for events on SharedEventBus...</span>
                   </div>
                 }
+              </section>
+            </div>
+          } @else {
+            <div class="no-node-selected font-monospace">
+              <span class="icon">👈</span>
+              <h4>Select any component node from the topology matrix to inspect live specs</h4>
+            </div>
+          }
+        }
+
+        <!-- ======================================================== -->
+        <!-- TAB 2: LIVE TELEMETRY EVENT FEED                         -->
+        <!-- ======================================================== -->
+        @if (inspectorView() === 'FEED') {
+          <div class="event-feed-container font-monospace">
+            <!-- Feed Toolbar -->
+            <div class="feed-toolbar">
+              <div class="feed-filter-row">
+                <span class="f-lbl">CATEGORY:</span>
+                <button
+                  type="button"
+                  class="feed-filter-btn"
+                  [class.active]="eventCategoryFilter() === 'ALL'"
+                  (click)="setCategoryFilter('ALL')"
+                >
+                  ALL
+                </button>
+                <button
+                  type="button"
+                  class="feed-filter-btn"
+                  [class.active]="eventCategoryFilter() === 'SYSTEM'"
+                  (click)="setCategoryFilter('SYSTEM')"
+                >
+                  SYSTEM
+                </button>
+                <button
+                  type="button"
+                  class="feed-filter-btn"
+                  [class.active]="eventCategoryFilter() === 'SUPERVISOR'"
+                  (click)="setCategoryFilter('SUPERVISOR')"
+                >
+                  SUPERVISOR
+                </button>
+                <button
+                  type="button"
+                  class="feed-filter-btn"
+                  [class.active]="eventCategoryFilter() === 'OS'"
+                  (click)="setCategoryFilter('OS')"
+                >
+                  OS
+                </button>
+                <button
+                  type="button"
+                  class="feed-filter-btn"
+                  [class.active]="eventCategoryFilter() === 'MODEL'"
+                  (click)="setCategoryFilter('MODEL')"
+                >
+                  MODEL
+                </button>
               </div>
-              <div class="endpoints-wrap font-monospace">
-                <div class="sub-label font-monospace">BOUND ENDPOINTS:</div>
-                <div class="endpoint-chips">
-                  @for (ep of cur.whereWeUseIt.endpoints; track ep) {
-                    <span class="endpoint-pill">{{ ep }}</span>
-                  }
+
+              <div class="feed-action-row">
+                <div class="stream-status" [class.paused]="isStreamPaused()">
+                  <span class="dot" [class.streaming]="!isStreamPaused()"></span>
+                  <span>{{ isStreamPaused() ? 'STREAM PAUSED' : 'LIVE STREAMING' }}</span>
+                </div>
+                <div class="stream-control-btns">
+                  <button type="button" class="stream-toggle-btn" (click)="toggleAutoScroll()">
+                    {{ autoScrollEvents() ? 'SCROLL: ON' : 'SCROLL: OFF' }}
+                  </button>
+                  <button type="button" class="pause-stream-btn" (click)="toggleStreamPause()">
+                    {{ isStreamPaused() ? '▶ RESUME' : '⏸ PAUSE' }}
+                  </button>
                 </div>
               </div>
             </div>
 
-            <!-- WHAT EXISTS ALL DATA -->
-            <div class="micro-card">
-              <div class="card-header">
-                <span class="card-icon">📊</span>
-                <h3 class="card-title font-monospace">{{ cur.whatExistsAllData.title | uppercase }}</h3>
-              </div>
-              <div class="metrics-grid font-monospace">
-                @for (m of cur.whatExistsAllData.metrics; track m.label) {
-                  <div class="metric-box">
-                    <div class="metric-val text-cyan">{{ m.value }}</div>
-                    <div class="metric-lbl">{{ m.label }}</div>
+            <!-- Event Stream List -->
+            <div class="event-stream-scroll">
+              @for (evt of filteredLiveEvents(); track evt.id) {
+                <div class="stream-event-card">
+                  <div class="s-evt-header">
+                    <span class="s-cat-pill">{{ evt.category }}</span>
+                    <span class="s-src-pill text-cyan">{{ evt.source }}</span>
+                    <span class="s-type-pill text-emerald">{{ evt.type }}</span>
+                    <span class="s-time text-muted">{{ evt.timestamp | date:'HH:mm:ss.SSS' }}</span>
                   </div>
-                }
-              </div>
-              <div class="entities-list">
-                <div class="sub-label font-monospace">ACTIVE COMPONENTS:</div>
-                @for (e of cur.whatExistsAllData.entities; track e.name) {
-                  <div class="entity-item">
-                    <div class="entity-top">
-                      <span class="entity-name">{{ e.name }}</span>
-                      <span class="entity-status font-monospace">{{ e.status }}</span>
-                    </div>
-                    <div class="entity-details">{{ e.details }}</div>
+                  <div class="s-evt-payload">
+                    <pre><code>{{ evt.payload | json }}</code></pre>
                   </div>
-                }
-              </div>
+                </div>
+              } @empty {
+                <div class="empty-events-state">
+                  <span class="pulse-cyan"></span>
+                  <p>Waiting for live system telemetry events from /ws/telemetry...</p>
+                </div>
+              }
             </div>
           </div>
-        </div>
-      }
-    </main>
+        }
+      </aside>
+    }
   </div>
 </div>

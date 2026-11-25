@@ -107,22 +107,18 @@ export const routes: Routes = [
   },
   {
     path: 'automation',
-    loadComponent: () =>
-      import('./features/automation/pages/automation-page/automation-page.component').then(
-        (m) => m.AutomationPageComponent
-      )
+    redirectTo: 'workspace',
+    pathMatch: 'full'
   },
   {
     path: 'network',
-    redirectTo: 'automation',
+    redirectTo: 'workspace',
     pathMatch: 'full'
   },
   {
     path: 'intelligence',
-    loadComponent: () =>
-      import('./features/intelligence/pages/intelligence-page/intelligence-page.component').then(
-        (m) => m.IntelligencePageComponent
-      )
+    redirectTo: 'core',
+    pathMatch: 'full'
   },
   {
     path: 'business',
@@ -143,27 +139,27 @@ export const routes: Routes = [
   },
   {
     path: 'console',
-    redirectTo: 'automation',
+    redirectTo: 'workspace',
     pathMatch: 'full'
   },
   {
     path: 'tasks',
-    redirectTo: 'automation',
+    redirectTo: 'workspace',
     pathMatch: 'full'
   },
   {
     path: 'applications',
-    redirectTo: 'automation',
+    redirectTo: 'workspace',
     pathMatch: 'full'
   },
   {
     path: 'browser',
-    redirectTo: 'automation',
+    redirectTo: 'workspace',
     pathMatch: 'full'
   },
   {
     path: 'memory',
-    redirectTo: 'automation',
+    redirectTo: 'workspace',
     pathMatch: 'full'
   },
   {
@@ -196,31 +192,27 @@ export const routes: Routes = [
   },
   {
     path: 'runtime',
-    loadComponent: () =>
-      import('./features/runtime/pages/runtime-page/runtime-page.component').then(
-        (m) => m.RuntimePageComponent
-      )
+    redirectTo: 'core',
+    pathMatch: 'full'
   },
   {
     path: 'system',
-    loadComponent: () =>
-      import('./features/system/pages/system-page/system-page.component').then(
-        (m) => m.SystemPageComponent
-      )
+    redirectTo: 'home',
+    pathMatch: 'full'
   },
   {
     path: 'decision-pipeline',
-    redirectTo: 'intelligence',
+    redirectTo: 'core',
     pathMatch: 'full'
   },
   {
     path: 'workflows',
-    redirectTo: 'intelligence',
+    redirectTo: 'architecture',
     pathMatch: 'full'
   },
   {
     path: 'llm-evaluation',
-    redirectTo: 'intelligence',
+    redirectTo: 'core',
     pathMatch: 'full'
   },
   {
@@ -251,7 +243,7 @@ export const routes: Routes = [
   },
   {
     path: 'dev-ui',
-    redirectTo: 'system',
+    redirectTo: 'home',
     pathMatch: 'full'
   },
   {

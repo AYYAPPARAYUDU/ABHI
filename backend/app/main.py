@@ -26,6 +26,9 @@ from backend.app.api.v1.quantum import router as quantum_router
 from backend.app.api.v1.desktop import router as desktop_router
 from backend.app.api.v1.monitors import router as monitors_router
 from backend.app.api.v1.analytics import router as analytics_router
+from backend.app.api.v1.swarm import router as swarm_router
+from backend.app.api.v1.conversations import router as conversations_router
+from backend.app.api.v1.architecture import router as architecture_router
 from backend.app.api.websockets.telemetry import router as ws_router
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
@@ -151,15 +154,16 @@ app = FastAPI(
 )
 
 # Add Middleware
+from backend.app.core.security import SecurityHeadersMiddleware, LocalAuthMiddleware
+app.add_middleware(LocalAuthMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 from fastapi.middleware.gzip import GZipMiddleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
-    allow_origin_regex=r"https?://.*",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
 
@@ -167,9 +171,11 @@ from backend.app.api.v1.self_healing import router as self_healing_router
 from backend.app.api.v1.automation import router as automation_router
 from backend.app.assistant.communications_assistant import router as assistant_router
 from backend.app.api.v1.intelligence import router as intelligence_router
+from backend.app.api.v1.auth import router as auth_router
 
 # Register API Routers
 app.include_router(health_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")
 app.include_router(intelligence_router, prefix="/api/v1")
 app.include_router(automation_router, prefix="/api/v1")
 app.include_router(assistant_router, prefix="/api/v1")
@@ -213,6 +219,9 @@ app.include_router(decisions_router, prefix="/api/v1")
 app.include_router(analytics_router, prefix="/api/v1")
 app.include_router(devices_router, prefix="/api/v1")
 app.include_router(self_healing_router, prefix="/api/v1")
+app.include_router(swarm_router, prefix="/api/v1")
+app.include_router(conversations_router, prefix="/api/v1")
+app.include_router(architecture_router, prefix="/api/v1")
 app.include_router(ws_router)
 
 

@@ -2,7 +2,7 @@
 
 import time
 from sqlalchemy import Column, String, Integer, Float, Boolean, Text, JSON, Index
-from backend.app.core.database import Base
+from backend.app.services.memory.database import Base
 
 
 class MediaUnderstandingDBRecord(Base):

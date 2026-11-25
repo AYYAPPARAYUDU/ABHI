@@ -454,7 +454,7 @@ class LiveScreenVisionEngine:
                 sample_items = ", ".join([f"'{e}'" for e in entities[:3]])
                 desc_parts.append(f"Visible elements include: {sample_items}.")
 
-        full_msg = f"Mamu, I am analyzing your screen right now: {' '.join(desc_parts)}"
+        full_msg = f"Mamu, I am analyzing your screen right now: {' '.join(desc_parts)} What would you like to do next, Mamu?"
         self.record_spoken(full_msg)
         return full_msg
 

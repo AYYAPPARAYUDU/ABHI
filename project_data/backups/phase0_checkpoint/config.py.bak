@@ -1,0 +1,99 @@
+"""Application Configuration & Environment Settings."""
+
+import os
+from pathlib import Path
+from typing import List
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    # Application Environment
+    APP_ENV: str = Field(default="development", description="Application runtime environment")
+    APP_DEBUG: bool = Field(default=True, description="Enable debug mode and verbose logs")
+    APP_HOST: str = Field(default="127.0.0.1", description="Host address for FastAPI server")
+    APP_PORT: int = Field(default=8000, description="Port for FastAPI server")
+    APP_SECRET_KEY: str = Field(
+        default="local_dev_secret_key_abhi_personal_ai_2026",
+        description="Secret key for local session tokens"
+    )
+
+    # Sovereign Operator Identity & Personal Communication Links (Mamu)
+    OPERATOR_NAME: str = Field(default="Ayyappa Rayudu Ravuvari", description="Sovereign operator name")
+    OPERATOR_CALLSIGN: str = Field(default="Mamu", description="Revered callsign")
+    OPERATOR_EMAIL: str = Field(default="ayyapparayudu.ravuvari@gmail.com", description="Personal Gmail for data analysis & intelligence")
+    OPERATOR_PHONE: str = Field(default="9390598938", description="Mobile number for messaging & hardware device link")
+    MAMU_EMAIL: str = Field(default="ayyapparayudu.ravuvari@gmail.com", description="Alias for Mamu Gmail")
+    MAMU_PHONE: str = Field(default="9390598938", description="Alias for Mamu mobile phone")
+
+    # CORS Settings
+    CORS_ORIGINS: List[str] = Field(
+        default=["http://localhost:4200", "http://127.0.0.1:4200"],
+        description="Allowed CORS origins for the frontend"
+    )
+
+    # LLM Settings (ABHI Native Core)
+    OLLAMA_BASE_URL: str = Field(default="http://localhost:11434", description="Ollama API base URL")
+    OLLAMA_DEFAULT_MODEL: str = Field(default="abhi:latest", description="Default local LLM model name")
+    NATIVE_LLM_MODEL: str = Field(default="abhi:latest", description="Primary native embedded LLM model")
+    OLLAMA_TIMEOUT_SECONDS: int = Field(default=60, description="Timeout for LLM inference in seconds")
+    OLLAMA_KEEP_ALIVE: str = Field(default="60m", description="Ollama model keep-alive duration")
+    OLLAMA_NUM_CTX: int = Field(default=8192, description="Default context window size in tokens")
+
+    # Storage Paths
+    DATABASE_DIR: str = Field(default="./database", description="Base persistent database root")
+    DATABASE_SQLITE_URL: str = Field(
+        default="sqlite+aiosqlite:///./database/relational/system.db",
+        description="Async SQLite database connection string"
+    )
+    LANCEDB_DIR: str = Field(default="./database/vector", description="LanceDB vector store directory")
+    MEDIA_STORAGE_DIR: str = Field(default="./database/media", description="Generated media directory")
+
+    # TTS Local-First & Privacy Policy Settings
+    TTS_BACKEND: str = Field(default="piper", description="TTS engine backend: piper, kokoro, or edge_tts_online")
+    TTS_ALLOW_ONLINE_FALLBACK: bool = Field(
+        default=False,
+        description="Whether to permit online cloud TTS fallback when local TTS is unavailable. Default False (strict local-first)."
+    )
+
+    # Evaluation & Evolution Lab Settings
+    DAILY_EVAL_MAX_CPU: float = Field(default=0.80, description="Max CPU utilization threshold for daily evaluation")
+    DAILY_EVAL_MAX_MEMORY_MB: int = Field(default=16384, description="Max RAM allowed for evaluation runs")
+    DAILY_EVAL_MAX_GPU_MB: int = Field(default=6144, description="Max VRAM allowed for evaluation runs")
+    DEEP_EVAL_ENABLED: bool = Field(default=False, description="Enable deep academic benchmark suites")
+    CANDIDATE_TRAINING_ENABLED: bool = Field(default=False, description="Permit local candidate training/fine-tuning")
+    RESEARCH_SYNC_ENABLED: bool = Field(default=True, description="Enable online research metadata synchronization")
+    RESEARCH_STORAGE_DIR: str = Field(default="./project_data/research", description="Research papers and metadata directory")
+    EVALUATION_REPORT_DIR: str = Field(default="./project_data/status/llm_evaluations", description="Persistent evaluation reports directory")
+
+    # Logging Settings
+    LOG_LEVEL: str = Field(default="INFO", description="Log level: DEBUG, INFO, WARNING, ERROR")
+    LOG_DIR: str = Field(default="./logs", description="Directory to store audit log files")
+    LOG_MAX_BYTES: int = Field(default=52428800, description="50 MB maximum per log file")
+    LOG_BACKUP_COUNT: int = Field(default=5, description="Number of rotating log backups")
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore"
+    )
+
+    def ensure_directories(self) -> None:
+        """Ensure all required persistent directories exist dynamically."""
+        for path_str in [
+            self.DATABASE_DIR,
+            os.path.join(self.DATABASE_DIR, "relational"),
+            os.path.join(self.DATABASE_DIR, "memory"),
+            os.path.join(self.DATABASE_DIR, "vector"),
+            os.path.join(self.DATABASE_DIR, "media"),
+            os.path.join(self.DATABASE_DIR, "migrations"),
+            self.LOG_DIR,
+            self.RESEARCH_STORAGE_DIR,
+            self.EVALUATION_REPORT_DIR
+        ]:
+            Path(path_str).mkdir(parents=True, exist_ok=True)
+
+
+# Global settings singleton
+settings = Settings()
+settings.ensure_directories()

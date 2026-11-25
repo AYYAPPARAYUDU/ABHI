@@ -112,7 +112,7 @@ class TaskPlanner:
             '    {\n'
             '      "node_id": "step_1",\n'
             '      "title": "Short descriptive title",\n'
-            '      "agent_id": "os_desktop_agent | mobile_device_agent | coding_agent | rag_agent | memory_agent | browser_agent | media_studio_agent | perception_agent | evaluation_agent | business_agent | engineering_repair_agent",\n'
+            '      "agent_id": "os_desktop_agent | grounded_desktop_agent | mcp_agent | mobile_device_agent | coding_agent | rag_agent | agent_5_researcher | memory_agent | browser_agent | media_studio_agent | perception_agent | evaluation_agent | business_agent | engineering_repair_agent",\n'
             '      "action": "action_name",\n'
             '      "params": {},\n'
             '      "dependencies": [],\n'
@@ -627,7 +627,7 @@ class TaskPlanner:
                     status=NodeStatus.PENDING
                 )
 
-        elif any(b in goal_lower for b in ["chrome", "edge", "firefox", "browser", "web"]) and any(s in goal_lower for s in ["search", "google", "find", "open", "browse", "lookup", "look up", "navigate", "analyze", "analyse"]):
+        elif any(re.search(rf"\b{b}\b", goal_lower) for b in ["chrome", "edge", "firefox", "browser", "web"]) and any(s in goal_lower for s in ["search", "google", "find", "open", "browse", "lookup", "look up", "navigate", "analyze", "analyse"]):
             url_match = re.search(r"(https?://\S+|www\.\S+|\b[a-zA-Z0-9\.\-_]+\.(?:com|org|net|io|edu|gov)\b\S*)", goal)
             has_analyze_intent = any(a in goal_lower for a in ["analyze", "analyse", "description", "summary", "inspect", "read"])
 
@@ -1059,6 +1059,92 @@ class TaskPlanner:
                 action="open_url",
                 params={"url": "https://mail.google.com", "browser": "chrome"},
                 risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["mcp ", "mcp tool", "invoke tool", "system health", "hardware health"]):
+            if "system health" in goal_lower or "hardware health" in goal_lower:
+                tool_name = "system_health"
+                tool_args: Dict[str, Any] = {}
+            elif "memory" in goal_lower:
+                tool_name = "memory_query"
+                tool_args = {"query": goal}
+            elif "knowledge" in goal_lower or "rag" in goal_lower:
+                tool_name = "search_knowledge"
+                tool_args = {"query": goal}
+            elif "search" in goal_lower or "web" in goal_lower:
+                tool_name = "search_web"
+                tool_args = {"query": goal}
+            else:
+                tool_match = re.search(r"(?:mcp(?:\s+tool)?|invoke(?:\s+tool)?)\s+([a-zA-Z0-9_]+)", goal_lower)
+                tool_name = tool_match.group(1) if tool_match else "system_health"
+                tool_args = {"query": goal} if tool_name in ("search_knowledge", "search_web", "memory_query", "clone_chat") else {}
+
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Invoke MCP Tool: {tool_name}",
+                agent_id="mcp_agent",
+                action=tool_name,
+                params={"tool_name": tool_name, "args": tool_args},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["deep research", "research ", "web research", "investigate "]):
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Deep Research: {goal[:35]}",
+                agent_id="agent_5_researcher",
+                action="research_topic",
+                params={"query": goal, "topic": goal},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["rag", "knowledge base", "vector search", "search documents", "search knowledge", "lookup knowledge"]):
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Knowledge Base Search: {goal[:35]}",
+                agent_id="rag_agent",
+                action="hybrid_search",
+                params={"query": goal, "top_k": 5},
+                risk_tier="Tier 1",
+                status=NodeStatus.PENDING
+            )
+
+        elif any(k in goal_lower for k in ["memory", "remember", "recall", "what did i", "my preference"]):
+            if any(k in goal_lower for k in ["remember ", "save memory", "store memory", "note that"]):
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Store Memory: {goal[:35]}",
+                    agent_id="memory_agent",
+                    action="store_fact",
+                    params={"fact": goal, "content": goal},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+            else:
+                nodes["step_1"] = DAGNode(
+                    node_id="step_1",
+                    title=f"Recall Memory: {goal[:35]}",
+                    agent_id="memory_agent",
+                    action="retrieve_memory",
+                    params={"query": goal},
+                    risk_tier="Tier 1",
+                    status=NodeStatus.PENDING
+                )
+
+        elif any(k in goal_lower for k in ["playwright", "browser click", "browser fill", "browser navigate", "fill form", "submit form"]):
+            url_match = re.search(r"https?://[^\s]+", goal)
+            target_url = url_match.group(0) if url_match else "https://httpbin.org/forms/post"
+            b_action = "browser_fill" if "fill" in goal_lower else ("browser_click" if "click" in goal_lower else "browser_navigate")
+            nodes["step_1"] = DAGNode(
+                node_id="step_1",
+                title=f"Grounded Browser Action: {b_action}",
+                agent_id="browser_agent",
+                action=b_action,
+                params={"url": target_url, "target": target_url},
+                risk_tier="Tier 2",
                 status=NodeStatus.PENDING
             )
 

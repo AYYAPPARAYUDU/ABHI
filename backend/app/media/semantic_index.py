@@ -4,6 +4,7 @@ import os
 import re
 import uuid
 import time
+import hashlib
 from typing import Any, Dict, List, Optional, Tuple
 
 try:
@@ -17,6 +18,7 @@ except Exception:
 
 from backend.app.core.config import settings
 from backend.app.core.logging import logger
+from backend.app.services.rag.embeddings import embedding_generator
 from backend.app.media.understanding_models import (
     MediaEmbeddingRecord,
     MediaSearchRequest,
@@ -101,22 +103,12 @@ class MediaSemanticVectorIndex:
                 return self.db.open_table(self.SCENE_TABLE_NAME)
 
     def generate_embedding(self, text: str) -> List[float]:
-        """Compute deterministic L2-normalized 384-dimensional embedding vector."""
-        tokens = re.findall(r'\w+', text.lower())
-        vec = [0.0] * self.VECTOR_DIM
-        if not tokens:
-            return vec
+        """Compute deterministic 384-dimensional normalized embedding vector."""
+        return embedding_generator.embed_text(text)
 
-        for idx, token in enumerate(tokens):
-            h = hash(token)
-            pos = abs(h) % self.VECTOR_DIM
-            sign = 1.0 if (h > 0) else -1.0
-            vec[pos] += sign * (1.0 / (idx + 1.0) ** 0.5)
-
-        norm = sum(x * x for x in vec) ** 0.5
-        if norm > 0:
-            vec = [x / norm for x in vec]
-        return vec
+    async def generate_embedding_async(self, text: str) -> List[float]:
+        """Compute deterministic 384-dimensional normalized embedding vector asynchronously."""
+        return await embedding_generator.embed_text_async(text)
 
     async def index_artifact_semantic(
         self,
@@ -132,7 +124,7 @@ class MediaSemanticVectorIndex:
     ) -> MediaEmbeddingRecord:
         """Embed and index a media artifact in the semantic index."""
         emb_id = f"emb_{uuid.uuid4().hex[:12]}"
-        vector = self.generate_embedding(searchable_text)
+        vector = await self.generate_embedding_async(searchable_text)
         now_ts = int(time.time() * 1000)
 
         record_dict = {
@@ -168,7 +160,7 @@ class MediaSemanticVectorIndex:
             artifact_id=artifact_id,
             content_type=content_type,
             vector=vector,
-            input_hash=str(hash(searchable_text)),
+            input_hash=hashlib.sha256(searchable_text.encode("utf-8")).hexdigest()[:16],
             created_at=now_ts,
         )
 

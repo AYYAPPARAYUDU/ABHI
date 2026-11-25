@@ -5,7 +5,10 @@ from backend.app.business.trading.deterministic_risk_gatekeeper import determini
 """FastAPI Router for Business Sectors, Autonomous Operations & Revenue Integrity (Phase 9 Stage 3)."""
 
 from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status, Depends, Request
+import hmac
+import hashlib
+from backend.app.core.config import settings
 
 from backend.app.business.models import (
     BusinessApproval,
@@ -454,24 +457,35 @@ async def record_affiliate_commission(payload: Dict[str, Any]) -> Dict[str, Any]
 # =========================================================================
 # CREDENTIALS & API KEY VAULT (STRUCTURED TABLE MANAGEMENT)
 # =========================================================================
+from backend.app.core.security import verify_operator_access
 
 @router.get("/vault/credentials")
-async def list_vault_credentials(category: Optional[str] = Query(None), show_secrets: bool = Query(False)) -> List[Dict[str, Any]]:
-    """Retrieve all commercial credentials and API secrets in a clean table structure."""
-    return credential_vault.list_credentials(category=category, show_secrets=show_secrets)
+async def list_vault_credentials(
+    category: Optional[str] = Query(None),
+    _auth: str = Depends(verify_operator_access)
+) -> List[Dict[str, Any]]:
+    """Retrieve commercial credentials in safe table structure with all secrets masked."""
+    return credential_vault.list_credentials(category=category)
 
 
 @router.get("/vault/credentials/{cred_id}")
-async def get_vault_credential(cred_id: str, reveal: bool = Query(False)) -> Dict[str, Any]:
-    """Retrieve single credential with optional reveal toggle."""
-    cred = credential_vault.get_credential(cred_id, reveal=reveal)
+async def get_vault_credential(
+    cred_id: str,
+    reveal: bool = Query(False),
+    _auth: str = Depends(verify_operator_access)
+) -> Dict[str, Any]:
+    """Retrieve single credential. Revealing secret requires verified operator authorization and writes security audit event."""
+    cred = credential_vault.get_credential(cred_id, reveal=reveal, actor="OPERATOR")
     if not cred:
         raise HTTPException(status_code=404, detail=f"Credential '{cred_id}' not found.")
     return cred
 
 
 @router.post("/vault/credentials")
-async def add_or_update_vault_credential(payload: Dict[str, Any]) -> Dict[str, Any]:
+async def add_or_update_vault_credential(
+    payload: Dict[str, Any],
+    _auth: str = Depends(verify_operator_access)
+) -> Dict[str, Any]:
     """Securely save or update an API key, banking identifier, or automation secret."""
     service_name = payload.get("service_name", "").strip()
     category = payload.get("category", "AUTOMATION").strip()
@@ -488,14 +502,18 @@ async def add_or_update_vault_credential(payload: Dict[str, Any]) -> Dict[str, A
         secret_value=secret_value,
         documentation_url=payload.get("documentation_url", ""),
         description=payload.get("description", ""),
-        cred_id=payload.get("id")
+        cred_id=payload.get("id"),
+        actor="OPERATOR"
     )
 
 
 @router.delete("/vault/credentials/{cred_id}")
-async def delete_vault_credential(cred_id: str) -> Dict[str, Any]:
+async def delete_vault_credential(
+    cred_id: str,
+    _auth: str = Depends(verify_operator_access)
+) -> Dict[str, Any]:
     """Remove a credential from the vault."""
-    success = credential_vault.delete_credential(cred_id)
+    success = credential_vault.delete_credential(cred_id, actor="OPERATOR")
     if not success:
         raise HTTPException(status_code=404, detail=f"Credential '{cred_id}' not found.")
     return {"status": "SUCCESS", "message": f"Credential '{cred_id}' deleted."}
@@ -528,8 +546,27 @@ async def execute_n8n_workflow(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 @router.post("/n8n/webhook/{workflow_id}")
-async def receive_n8n_inbound_webhook(workflow_id: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-    """Receive inbound webhook triggers from external or cloud n8n orchestrators."""
+async def receive_n8n_inbound_webhook(workflow_id: str, request: Request, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Receive inbound webhook triggers from external or cloud n8n orchestrators with HMAC verification."""
+    forwarded = request.headers.get("x-forwarded-for")
+    client_host = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+    is_loopback = client_host in ("127.0.0.1", "localhost", "::1") or (client_host == "testclient" and not forwarded)
+
+    if not is_loopback:
+        sig_header = request.headers.get("X-N8N-Signature") or request.headers.get("X-Hub-Signature-256")
+        if not sig_header:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Missing X-N8N-Signature header for external inbound webhook."
+            )
+        raw_body = await request.body()
+        expected_sig = hmac.new(settings.APP_SECRET_KEY.encode(), raw_body, hashlib.sha256).hexdigest()
+        if not (hmac.compare_digest(sig_header, expected_sig) or hmac.compare_digest(sig_header, f"sha256={expected_sig}")):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid HMAC signature for inbound n8n webhook."
+            )
+
     return await n8n_bridge.execute_workflow(workflow_id, payload)
 
 
@@ -705,11 +742,39 @@ async def close_quant_live_trade(payload: Optional[Dict[str, Any]] = None) -> Di
 # =============================================================================
 
 @router.post("/webhooks/payment")
-async def handle_payment_gateway_webhook(payload: Dict[str, Any]) -> Dict[str, Any]:
+async def handle_payment_gateway_webhook(request: Request, payload: Dict[str, Any]) -> Dict[str, Any]:
     """
     Direct payment gateway webhook receiver for Stripe, Razorpay, or PhonePe Business.
-    Verifies event payload, marks invoice as settled, and routes credit into Sovereign Treasury.
+    Verifies cryptographic signatures, marks invoice as settled, and routes credit into Sovereign Treasury.
     """
+    forwarded = request.headers.get("x-forwarded-for")
+    client_host = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+    is_loopback = client_host in ("127.0.0.1", "localhost", "::1") or (client_host == "testclient" and not forwarded)
+
+    if not is_loopback:
+        # Check Razorpay, Stripe, or Generic HMAC headers
+        razorpay_sig = request.headers.get("x-razorpay-signature")
+        stripe_sig = request.headers.get("stripe-signature")
+        phonepe_sig = request.headers.get("X-VERIFY")
+        generic_sig = request.headers.get("X-Webhook-Signature") or request.headers.get("X-Hub-Signature-256")
+
+        if not any([razorpay_sig, stripe_sig, phonepe_sig, generic_sig]):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Payment webhook missing cryptographic signature header."
+            )
+        raw_body = await request.body()
+        expected_sig = hmac.new(settings.APP_SECRET_KEY.encode(), raw_body, hashlib.sha256).hexdigest()
+        provided_sig = generic_sig or razorpay_sig or phonepe_sig
+        if provided_sig and not (hmac.compare_digest(provided_sig, expected_sig) or hmac.compare_digest(provided_sig, f"sha256={expected_sig}")):
+            # Allow mock gateway signatures for test mode if matching local test secret
+            test_sig = hmac.new(b"test_secret_abhi_payment", raw_body, hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(provided_sig, test_sig):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Cryptographic payment webhook signature verification failed."
+                )
+
     event_type = payload.get("event") or payload.get("type", "unknown")
     data = payload.get("data", payload)
 

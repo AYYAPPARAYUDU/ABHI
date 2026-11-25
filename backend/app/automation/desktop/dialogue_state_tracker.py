@@ -19,7 +19,18 @@ class DialogueStateTracker:
         self.last_action_type: Optional[str] = None
         self.last_action_time: float = 0.0
         self.visible_entities: List[str] = []
+        self.active_media_metadata: Dict[str, Any] = {}
         self.follow_up_window_sec: float = 8.0  # 8-second continuous conversational follow-up
+
+    def record_media_context(self, title: str, description: str = "", metadata: Optional[Dict[str, Any]] = None) -> None:
+        """Record active media playback context for contextual follow-up queries."""
+        self.active_media_metadata = {
+            "title": title,
+            "description": description,
+            "metadata": metadata or {},
+            "timestamp": time.time()
+        }
+        self.push_entity(title, entity_type="media")
 
     def push_entity(self, entity: str, entity_type: str = "generic", metadata: Optional[Dict[str, Any]] = None) -> None:
         """Push an entity onto the short-term dialogue stack."""
@@ -60,8 +71,9 @@ class DialogueStateTracker:
         """
         q = query.lower().strip()
         pronoun_patterns = [
-            r"^(?:ok\s+)?(?:please\s+)?(?:click|play|open|tap|select|press)\s+(?:on\s+)?(?:it|that|this|that\s+one|the\s+one)$",
-            r"^(?:click|play|open|select)\s+it$",
+            r"^(?:ok\s+)?(?:please\s+)?(?:click|play|open|tap|select|press|pause|resume)\s+(?:on\s+)?(?:it|that|this|that\s+one|the\s+one|this\s+video|that\s+video|the\s+video)$",
+            r"^(?:click|play|open|select|pause|resume)\s+(?:it|this|that|the\s+video|this\s+video)$",
+            r"^(?:it|that|this|this\s+video|that\s+video|the\s+video)$",
             r"^click\s+it\s+now$",
             r"^play\s+it\s+now$",
             r"^open\s+it\s+now$",

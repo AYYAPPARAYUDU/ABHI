@@ -19,6 +19,8 @@ from backend.app.automation.orchestration.models import (
     OrchestrationTaskResult,
     SupervisorDecisionTrace
 )
+from backend.app.core.config import settings
+
 
 
 class ExecutionJournal:
@@ -26,7 +28,7 @@ class ExecutionJournal:
 
     def __init__(self, db_path: Optional[str] = None):
         if db_path is None:
-            base_dir = Path("./database/relational")
+            base_dir = Path(settings.DATABASE_DIR) / "relational"
             base_dir.mkdir(parents=True, exist_ok=True)
             self.db_path = str(base_dir / "execution_journal.db")
         else:

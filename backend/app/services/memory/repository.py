@@ -208,6 +208,43 @@ class MemoryRepository:
                 await s.commit()
                 return res.rowcount > 0
 
+    async def update_episodic_memory(
+        self,
+        memory_id: str,
+        context_summary: Optional[str] = None,
+        solution_summary: Optional[str] = None,
+        outcome: Optional[str] = None,
+        category: Optional[str] = None,
+        tags: Optional[str] = None,
+        session: Optional[AsyncSession] = None
+    ) -> Optional[EpisodicMemoryRecord]:
+        """Correct or update an existing episodic memory record."""
+        async def _do_update(s: AsyncSession) -> Optional[EpisodicMemoryRecord]:
+            stmt = select(EpisodicMemoryRecord).where(EpisodicMemoryRecord.memory_id == memory_id)
+            res = await s.execute(stmt)
+            rec = res.scalar_one_or_none()
+            if not rec:
+                return None
+            if context_summary is not None:
+                rec.context_summary = context_summary
+            if solution_summary is not None:
+                rec.solution_summary = solution_summary
+            if outcome is not None:
+                rec.outcome = outcome
+            if category is not None:
+                rec.category = category
+            if tags is not None:
+                rec.tags = tags
+            await s.commit()
+            await s.refresh(rec)
+            return rec
+
+        if session:
+            return await _do_update(session)
+        else:
+            async with AsyncSessionFactory() as s:
+                return await _do_update(s)
+
     async def list_recent_memories(
         self,
         limit: int = 10,

@@ -14,6 +14,7 @@ import * as THREE from 'three';
 import { AgentApiService } from '../../../../core/api/agent-api.service';
 import { OperatorStateService } from '../../../../core/services/operator-state.service';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
+import { getApiUrl, setSessionToken } from '../../../../core/config/api-config';
 
 export type GatekeeperStage = 'STANDBY' | 'CONNECTING' | 'SCANNING_PASS_1' | 'SCANNING_PASS_2' | 'AUTHENTICATED' | 'FAILED' | 'OVERRIDE';
 
@@ -260,11 +261,11 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
       if (isVerified) {
         this.unlockSuccessfully(verifiedName, pass1.confidence, rawMatch);
       } else {
-        // Face does not match: Directly ask for Master Password (143)
+        // Face does not match: Directly ask for Operator Passcode
         // Do NOT capture photos on regular failed matches!
         this.stage.set('STANDBY');
         this.showPasscodeInput.set(true);
-        this.statusMessage.set(`Biometric signature not recognized (${matchPct}% match). Please enter Master Password (143) to unlock.`);
+        this.statusMessage.set(`Biometric signature not recognized (${matchPct}% match). Please enter Operator Passcode to unlock.`);
 
         // If unknown person lingers for 20s without entering password, capture exactly 1 snapshot
         if (!this.noPasswordTimer && !this.intruderSnapshotCaptured) {
@@ -320,7 +321,11 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
   }
 
   async reEnrollFace(): Promise<void> {
-    const pwd = this.passcodeValue.trim() || '143';
+    const pwd = this.passcodeValue.trim();
+    if (!pwd) {
+      this.statusMessage.set('Please enter Operator Passcode.');
+      return;
+    }
     this.stage.set('SCANNING_PASS_1');
     this.statusMessage.set('Position face in camera view to update biometric signature...');
     try {
@@ -350,45 +355,68 @@ export class WorkspaceLockScreenComponent implements OnInit, AfterViewInit, OnDe
     this.passError.set('');
   }
 
-  submitPasscode(): void {
-    const code = this.passcodeValue.trim().toLowerCase();
-    // Master Password '143' plus trusted system overrides
-    if (code === '143' || code === '1234' || code === 'abhi' || code === 'jarvis' || code === 'admin' || code === 'system') {
-      if (this.noPasswordTimer) {
-        clearTimeout(this.noPasswordTimer);
-        this.noPasswordTimer = null;
-      }
-      this.failedPasswordAttempts = 0;
-      this.stage.set('AUTHENTICATED');
-      this.statusMessage.set('Master Password accepted. Unlocking workspace...');
-      this.passError.set('');
-      this.speechVoice.speak('Master Password accepted. Welcome, Sir.');
+  async submitPasscode(): Promise<void> {
+    const code = this.passcodeValue.trim();
+    if (!code) {
+      this.passError.set('Please enter operator passcode');
+      return;
+    }
 
-      setTimeout(() => {
-        this.operatorState.unlockWorkspace('OVERRIDE');
-      }, 600);
-    } else {
-      this.failedPasswordAttempts++;
-      // Only capture 1 intruder picture on wrong password attempts
-      if (!this.intruderSnapshotCaptured) {
-        const snapFrame = this.captureFrameBase64();
-        if (snapFrame) {
-          this.agentApi.recordIntruder(snapFrame, `Wrong password attempt (${this.failedPasswordAttempts}): '${code}'`).then((res: any) => {
-            this.intruderSnapshotCaptured = true;
-            if (res?.snapshot_filename) {
-              this.intruderSnapshotUrl.set(`/api/v1/agent-gateway/security/snapshot/${res.snapshot_filename}`);
-            }
-          }).catch(() => {});
+    try {
+      const url = getApiUrl('/api/v1/auth/verify-passcode');
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passcode: code })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.session_token) {
+          setSessionToken(data.session_token);
         }
-      }
+        if (this.noPasswordTimer) {
+          clearTimeout(this.noPasswordTimer);
+          this.noPasswordTimer = null;
+        }
+        this.failedPasswordAttempts = 0;
+        this.stage.set('AUTHENTICATED');
+        this.statusMessage.set('Operator credentials accepted. Unlocking workspace...');
+        this.passError.set('');
+        this.speechVoice.speak('Operator credentials accepted. Welcome, Mamu.');
 
-      if (this.failedPasswordAttempts >= 2) {
-        this.passError.set(`Invalid Master Password (Attempt ${this.failedPasswordAttempts}). Security snapshot logged.`);
-        this.statusMessage.set('🚨 Security incident logged: Incorrect Master Password entered.');
+        setTimeout(() => {
+          this.operatorState.unlockWorkspace('OVERRIDE');
+        }, 600);
       } else {
-        this.passError.set('Invalid Master Password. Master Password is 143.');
+        this.handleFailedPasscode();
+      }
+    } catch {
+      this.handleFailedPasscode();
+    }
+  }
+
+  private handleFailedPasscode(): void {
+    this.failedPasswordAttempts++;
+    if (!this.intruderSnapshotCaptured) {
+      const snapFrame = this.captureFrameBase64();
+      if (snapFrame) {
+        this.agentApi.recordIntruder(snapFrame, `Wrong passcode attempt (${this.failedPasswordAttempts})`).then((res: any) => {
+          this.intruderSnapshotCaptured = true;
+          if (res?.snapshot_filename) {
+            this.intruderSnapshotUrl.set(`/api/v1/agent-gateway/security/snapshot/${res.snapshot_filename}`);
+          }
+        }).catch(() => {});
       }
     }
+
+    if (this.failedPasswordAttempts >= 2) {
+      this.passError.set(`Invalid operator passcode (Attempt ${this.failedPasswordAttempts}). Security snapshot logged.`);
+      this.statusMessage.set('🚨 Security incident logged: Incorrect credentials entered.');
+    } else {
+      this.passError.set('Invalid operator passcode. Access denied.');
+    }
+    this.speechVoice.speak('Access denied. Invalid credentials.');
   }
 
   // --- Three.js Holographic Face Scene ---

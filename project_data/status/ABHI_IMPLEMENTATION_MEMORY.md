@@ -1,6 +1,109 @@
 # ABHI System Implementation Memory
 
-## Verified Architecture & Implementation Status (2026-11-14)
+## Verified Architecture & Implementation Status (2026-11-25)
+
+### Milestone 64. Master Home Screen Cockpit Upgrade & Floating Action Polish (2026-11-25)
+- **Home Master Command Cockpit**:
+  - Integrated prominent cybernetic natural language command bar right into the top Hero Cockpit:
+    - Glowing quantum prompt badge, live keyboard input (`transcriptionInput`), STT microphone button, and one-click `RUN ↵` execute trigger.
+  - Expanded Quick Action Deck from 4 to 6 tactile high-impact glass buttons with hover glow and directional arrows:
+    - 🩺 **System Health** (`Check system health and diagnostics` via PSUtil)
+    - 📝 **Open Notepad** (`Open notepad` via Win32 UIAutomation)
+    - 💻 **Terminal** (`Open windows terminal` via PowerShell)
+    - 🌐 **Run Browser Test** (`Run Playwright browser automation test` via CDP)
+    - 🛡️ **AST Code Audit** (`Run AST code audit and verification`)
+    - 🛑 **Emergency Stop** (`triggerEmergencyStop()` revoking all leases)
+- **Floating Action Menu UI Polish (Fix for Screenshot `media_1795608631894_2e91c0f6.png`)**:
+  - Eliminated the white background box and pale highlighted button issue.
+  - Implemented deep cybernetic glass container (`#090d16`, 28px blur, neon cyan border `rgba(0, 240, 255, 0.4)`, 60px shadow).
+  - High-contrast text: pure white `#f8fafc` titles, crisp `#94a3b8` subtitles.
+  - Vibrantly colored category badges with luminous borders (`badge-cyan`, `badge-violet`, `badge-emerald`, `badge-amber`, `badge-coral`).
+  - Added direct quick action shortcuts: `Chat with ABHI`, `3D Workspace Swarm`, `System Diagnostic`, `Open Notepad`, `AST Code Audit`, `Emergency Stop`.
+- **Top Navigation Bar Polish**:
+  - Cleaned up navigation rail to the 6 core non-overlapping destinations with active under-pip indicators and glowing route badges.
+- **Physical Verification Proof**:
+  - Frontend production build (`npm --prefix frontend run build`): **0 errors in 42.39s (100% SUCCESS)**.
+  - Acceptance suite (`backend/tests/test_business_sectors_and_autonomy.py`): **7 / 7 PASSED in 16.35s (100%)**.
+
+### Milestone 63. Command Palette Modal Fix, Deep Theme Isolation & Navigation Streamlining (2026-11-25)
+- **Root Cause & Modal Spotlight Fix**:
+  - Identified root cause of UI bleed shown in user screenshot: `CommandPaletteComponent` used Tailwind classes (`fixed inset-0 bg-black/80 z-50`) without a Tailwind compiler, and `<app-command-palette>` was mounted unconditionally in `app-shell.component.html`.
+  - Wrapped `<app-command-palette>` inside `@if (stateService.commandPaletteOpen())` so the modal is never present in the DOM when closed.
+  - Implemented pure, rock-solid BEM CSS in `command-palette.component.css`: fixed backdrop with `position: fixed; inset: 0; width: 100vw; height: 100vh; background: rgba(3, 7, 18, 0.82); backdrop-filter: blur(20px); z-index: 999999;` and glassmorphic centered modal card (`.command-palette-modal`) with smooth entry animation.
+- **Global Dark Obsidian Background Isolation**:
+  - Overrode Bootstrap 5 light background default in `styles.css`: `html, body { min-height: 100vh; background-color: var(--bg-primary, #0b0f19) !important; color: var(--text-primary, #f8fafc) !important; }`.
+  - Ensured `:host` and `.abhi-app-shell` in `app-shell.component.css` enforce `background: var(--bg-primary, #0b0f19)` to completely eliminate pale/washed-out screen leaks.
+- **Route Streamlining & Redundant Component Decoupling**:
+  - Removed redundant `/system`, `/automation`, and `/intelligence` links from `ContextualTopbarComponent` center rail.
+  - Streamlined primary navigation to 6 core non-overlapping destinations:
+    - `Home` (`/home`)
+    - `Core` (`/core` — Protected 3D Neural Space)
+    - `Workspace` (`/workspace` — Protected 3D Colony Space)
+    - `Messages` (`/messages`)
+    - `Business` (`/business`)
+    - `Architecture` (`/architecture`)
+  - Configured clean redirects in `frontend/src/app/app.routes.ts`:
+    - `/system` ➔ `/home`
+    - `/automation` ➔ `/workspace`
+    - `/intelligence` ➔ `/core`
+    - Secondary developer/legacy routes redirected cleanly to respective core modules.
+- **Windows 11 Packaged App Launcher Resilience**:
+  - Updated `backend/app/cognitive/verification/verifier.py` to handle Windows 10/11 packaged/UWP applications (e.g. `notepad.exe`) where the initial launcher PID exits immediately after delegating to the AppX container. The verifier now searches running process table by app name before failing verification.
+- **Physical Verification Proof**:
+  - Frontend production build (`npm --prefix frontend run build`): **0 compilation errors in 23.72s**.
+  - E2E acceptance suite (`tests/acceptance/test_e2e_autonomous_integration.py`): **9 / 9 PASSED in 39.74s (100%)**.
+  - Business sector autonomy suite (`backend/tests/test_business_sectors_and_autonomy.py`): **7 / 7 PASSED in 6.04s (100%)**.
+  - Cumulative tests: **16 / 16 PASSED (100%)**.
+
+### Milestone 62. Sidebar-Free Next-Gen Floating Architecture & Multi-Color System (2026-11-25)
+- **Sidebar-Free Interaction System**:
+  - Permanently removed all static sidebars, 64px icon rails, and 240px drawers from `AppShellComponent`.
+  - Application canvas now occupies 100% of viewport width without permanent navigation columns.
+- **Global Floating Action Menu (`FloatingActionMenuComponent`)**:
+  - 56px circular floating trigger with dual counter-rotating orbital rings and glowing ambient pulse.
+  - Frosted floating glass surface with route-specific contextual actions for `/home`, `/workspace`, `/messages`, `/business`, `/architecture`, and universal defaults.
+  - Outside-click dismiss, Escape key dismiss, and route-change auto-closing.
+- **Horizontal Top Navigation Rail (`ContextualTopbarComponent`)**:
+  - Exposes all registered top-level routes (`Home`, `Core`, `Workspace`, `Messages`, `Business`, `Architecture`, `Automation`, `Intelligence`, `System`).
+  - Animated `More ▾` overflow dropdown for secondary studios (`Applications`, `Media`, `Agent Office`, `Hub & Spoke`, `Decision Pipeline`, `Memory`).
+  - Integrated `🔍 Search (Ctrl+K)` trigger button opening the Command Palette.
+- **4 Master Multi-Color Themes (`ThemeService`)**:
+  - Theme A: Aurora Obsidian (Default Sovereign: deep navy, electric cyan, violet, emerald, amber).
+  - Theme B: Midnight Indigo (deep indigo, blue, violet, cyan highlights).
+  - Theme C: Graphite Emerald (graphite surfaces, emerald, teal, muted gold).
+  - Theme D: Porcelain Light (off-white, navy typography, blue, teal, violet).
+- **Recomposed Adaptive Home Page Cockpit**:
+  - Added compact Welcome Hero Strip with greeting, live weather chip, and system uptime.
+  - Fluid asymmetric grid with zero empty regions and no clipping.
+- **Strict Protection of Core & Workspace**:
+  - Core (`/core`) and Workspace (`/workspace`) remain 100% intact with their existing Three.js scene, Arc Reactor core, 8-pod hub, and control integrations untouched.
+- **Physical Verification Proof**:
+  - Frontend production build (`npm --prefix frontend run build`): **0 compilation errors in 17.11s**.
+  - Acceptance pytest suite (`tests/acceptance/test_e2e_autonomous_integration.py` + `backend/tests/test_business_sectors_and_autonomy.py`): **16 / 16 PASSED in 61.64s (100%)**.
+
+### Milestone 61. Master Application Transformation & UX Refinement (2026-11-25)
+- **Hybrid Navigation Architecture**:
+  - `AppSidebarComponent` integrated alongside `AppShellComponent` with persistent collapsible modes:
+    - 240px expanded navigation rail with high-contrast icon badges and clear uppercase titles.
+    - 64px compact icon rail with accessible tooltips and operator cluster.
+    - Mobile sliding drawer (< 992px) with click-outside backdrop dismiss.
+    - `localStorage` state persistence via `SidebarService` (`abhi_sidebar_state`).
+  - Top `ContextualTopbarComponent` streamlined for global workspace breadcrumbs, live model status, language selector, and quick sidebar toggle.
+- **Spatial Workspace Floating Action Dock**:
+  - Compact contextual floating action dock (`.spatial-floating-dock`) docked at bottom-right of the 3D WebGL Colony canvas.
+  - Quick action controls: `[🎙️ Voice | ⚡ Command | ◈ Live DAG | 🔒 Leases | 🛑 E-Stop]`.
+  - Added dedicated Leases Modal (`showLeasesModal()`) displaying active Win32/Audio/Memory locks and TTL, plus Quick Command Modal (`showQuickCommandModal()`) to dispatch natural supervisor commands.
+- **Dual-Mode Messages Workspace**:
+  - Tab A (🤖 ABHI AI & Agent Chat): Local Ollama persistent streaming conversations, markdown code copy, model attribution badges (`abhi:latest` / `qwen3:8b`).
+  - Tab B (📱 Personal Communication Hub): Connected channels (WhatsApp, Gmail, SMS, Bank/OTP, Calls), 4-mode smart reply suggestions (`MANUAL`, `DRAFT`, `APPROVAL`, `AUTHORIZED AUTOMATION`), automation safeguards (Emergency Kill Switch, Quiet Hours, Sensitive-Topic Exclusions for Banking/OTP/Legal, 5/min rate limits).
+- **Home Page Cockpit Refinement & Sensitive Privacy Masking**:
+  - Compact 3-column layout: bounded `.tasks-list-scroll` (max-height: 250px) and `.conversations-list-scroll` (max-height: 220px) preventing vertical runaway.
+  - Sovereign Treasury card privacy masking by default (`SBI ****5649`, `SBIN002****`, `ayy****@ybl`) with an interactive `👁️ REVEAL / 🙈 HIDE` toggle.
+- **Architecture Full-Canvas (100% Viewport)**:
+  - 100% viewport canvas across 5 stages (`Gateway & Perception` ➔ `Supervisor & DAG` ➔ `Cognition & Models` ➔ `Memory & Tools` ➔ `Actuation & Verifier`), 18 component node cards with 1-click copyable paths, collapsible technical inspector dock, and live event stream.
+- **Physical Verification Proof**:
+  - Frontend production build (`npm --prefix frontend run build`): **0 errors in 39.96s**.
+  - Acceptance pytest suite (`tests/acceptance/test_e2e_autonomous_integration.py` + `backend/tests/test_business_sectors_and_autonomy.py`): **16 / 16 PASSED in 66.64s (100%)**.
 
 ### Milestone 60. Active Living Screen Bot, Screen Perception & GSAP Micro-Interactions (2026-11-14)
 - **Active Living Screen Bot Component (`LivingScreenBotComponent`)**:
@@ -831,3 +934,54 @@ pm run build: 0 TypeScript errors).
   - Pytest: 14/14 tests PASSED (code 0)
   - Frontend Build: `ng build` passed with code 0
   - Live End-to-End: `GET /api/v1/health/system-location` returns Vijayawada, Andhra Pradesh, India (Jio 5G).
+
+
+## Milestone 2.5: Cross-Application Autonomous Workflows & Permissioned Personal AI
+- **Date:** 2026-11-24 17:30:00
+- **Branch:** `feature/unified-personal-ai` (base: `v_2`)
+- **Objective:** Establish a context-aware, general-purpose personal AI capable of safely coordinating complex tasks across Windows, browsers, local project files, background workers, and persistent memory.
+- **Key Enhancements:**
+  1. **General-Purpose Cross-App Workflow Engine (`cross_app_workflow.py`):**
+     - Workflow A: Autonomous research on local AI agents, comparison synthesis, markdown generation at `project_data/reports/*.md`, and physical file existence verification (>200 bytes).
+     - Workflow B: Desktop screen inspection, window enumeration via Win32, open browser tab query via Playwright, dialogue state synthesis, and polite ambient prompt ("What would you like to do next, Mamu?").
+     - Workflow C: Local project repository audit, 10 active test suites count, architectural verification, credential scrubbing, and markdown audit summary.
+     - Workflow D: Multi-app coordinated workflow combining browser research, document generation, and physical launch via `os_control_engine.open_file(doc_path)` with dual-state postcondition verification.
+     - Workflow E: Long-running background task with persistent state, worker heartbeat registration, step delay progress emissions, cooperative cancellation checks, and operator completion notification.
+  2. **Permissioned Proactivity Architecture (`proactivity.py`):**
+     - Three-tier hierarchy: Observation (passive awareness), Recommendation (proactive advice), Execution (autonomous actions).
+     - Operational modes: `CONSERVATIVE`, `SUPERVISED`, `AUTONOMOUS`.
+     - Hard consent gates on file deletion, communication dispatch, and credential alterations, requiring explicit operator consent before proceeding.
+  3. **Acceptance Test Battery & Consolidated Regression:**
+     - 15/15 acceptance tests passing in `tests/acceptance/test_milestone2_5_cross_app_workflows.py`.
+     - 94/94 total regression tests passing across all 10 suites in 144.44s.
+     - Clean Angular 22 production bundle generated with zero errors in 12.60s.
+- **Verification:**
+  - `pytest`: 94/94 PASSED (100% success rate across 10 suites)
+  - `npm --prefix frontend run build`: 0 errors
+
+
+## Master Mission: Multi-LLM Collaborative Intelligence, Autonomous Agent Swarm & Unified Personal AI
+- **Date:** 2026-11-24 17:45:00
+- **Branch:** `feature/unified-personal-ai` (base: `v_2`)
+- **Objective:** Transform ABHI into a unified, collaborative multi-LLM personal AI where multiple models (abhi:latest, qwen3:8b, all-minilm:latest) negotiate, plan, critique, execute, and verify tasks concurrently.
+- **Key Enhancements:**
+  1. **Dynamic Model Capability Registry (`model_registry.py`):**
+     - Discovers local Ollama models (`abhi:latest`, `qwen3:8b`, `all-minilm:latest`).
+     - Binds specialist roles: `MASTER_MODEL`, `REASONING_MODEL`, `CODING_MODEL`, `RESEARCH_MODEL`, `VERIFICATION_MODEL`, `EMBEDDING_MODEL`.
+     - Maps benchmarked capability profiles across multilingual conversation, complex reasoning, coding, and embeddings.
+  2. **Multi-Model Negotiation & Consensus Council (`model_negotiation.py`, `council.py`):**
+     - Structured negotiation protocol: `TASK_PROPOSAL` -> `PLAN` -> `EVIDENCE` -> `CRITIQUE` -> `REVISION` -> `APPROVAL` -> `FINAL_DECISION`.
+     - Zero raw chain-of-thought exposure; concise conclusions and evidence citations.
+     - CentralSupervisor arbitration with bounded rounds (max 3 rounds, 8s timeout).
+  3. **Shared Voice & Multimodal Perception Pipeline (`shared_pipeline.py`):**
+     - Unified input gateway receiving Voice, Text, Screen OCR, and Gestures into one authoritative stream.
+     - Multilingual canonicalization for Telugu, Hindi, Tamil, and English.
+     - 8-second dialogue state carryover and demonstrative pronoun resolution (`it`, `that`).
+  4. **Shared Event Bus & Real-Time Telemetry Bridge (`event_bus.py`, `telemetry.py`):**
+     - Pub/Sub across 9 event categories with 500-event durable ring buffer.
+     - Direct bridge forwarding all internal `ABHIEvent`s to connected frontend clients over WebSocket `/ws/telemetry`.
+  5. **Swarm API Router (`backend/app/api/v1/swarm.py`):**
+     - `/api/v1/swarm/models`, `/council/deliberate`, `/input`, `/events`, `/emergency-stop`.
+  6. **Acceptance Verification:**
+     - 8/8 targeted acceptance tests passing in 1.72s (`test_master_multi_llm_swarm.py`).
+     - Angular 22 clean production build in 15.13s (0 errors).

@@ -170,14 +170,14 @@
       class="action-btn remove-face-btn"
       (click)="startRemoveFlow()"
       [disabled]="scanStage() === 'PASS_1_FRONTAL' || scanStage() === 'PASS_2_VERIFICATION'"
-      title="Remove enrolled face lock using Master Password (143)"
+      title="Remove enrolled face lock using Operator Credentials"
     >
       <span class="btn-icon">🗑️</span>
       <span>REMOVE FACE LOCK</span>
     </button>
   </div>
 
-  <!-- Master Password 143 Security Gate Modal -->
+  <!-- Operator Credentials Security Gate Modal -->
   @if (showAuthModal()) {
     <div class="auth-modal-backdrop">
       <div class="auth-modal-box">
@@ -193,8 +193,8 @@
 
         <p class="auth-modal-desc">
           {{ authAction() === 'ENROLL'
-            ? 'An existing Face Lock is registered. To replace with a new face, the registered operator must be recognized or Master Password (143) entered.'
-            : 'Enter Master Password (143) to remove Face Lock biometrics and reset system authentication.' }}
+            ? 'An existing Face Lock is registered. To replace with a new face, the registered operator must be recognized or Operator Passcode entered.'
+            : 'Enter Operator Passcode to remove Face Lock biometrics and reset system authentication.' }}
         </p>
 
         <div class="auth-input-group">
@@ -203,12 +203,12 @@
             class="auth-password-input"
             [(ngModel)]="authPasswordInput"
             (keyup.enter)="submitAuthAction()"
-            placeholder="Enter Master Password (143)"
+            placeholder="Enter Operator Passcode"
             autocomplete="off"
             autofocus
           />
           <button type="button" class="auth-confirm-btn" (click)="submitAuthAction()">
-            AUTHORIZE (143)
+            AUTHORIZE
           </button>
         </div>
 

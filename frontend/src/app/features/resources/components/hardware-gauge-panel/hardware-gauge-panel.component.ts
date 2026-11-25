@@ -14,21 +14,29 @@ import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-i
         <div class="gauge-header">
           <span class="gauge-label">Processor (CPU)</span>
           <span class="abhi-badge abhi-badge-cyan">
-            {{ inventory()?.cpu_logical_cores || 16 }}T / {{ inventory()?.cpu_physical_cores || 8 }}C
+            @if (inventory()?.cpu_logical_cores != null && inventory()?.cpu_physical_cores != null) {
+              {{ inventory()!.cpu_logical_cores }}T / {{ inventory()!.cpu_physical_cores }}C
+            } @else {
+              N/A
+            }
           </span>
         </div>
         <div class="gauge-metric">
           <div class="gauge-value">
-            {{ inventory()?.cpu_utilization_percent || 0 | number:'1.0-1' }}%
+            @if (inventory()?.cpu_utilization_percent != null) {
+              {{ inventory()!.cpu_utilization_percent | number:'1.0-1' }}%
+            } @else {
+              N/A
+            }
           </div>
           <div class="gauge-subtext" [title]="inventory()?.cpu_model || ''">
-            {{ inventory()?.cpu_model || 'AMD Ryzen 7' }}
+            {{ inventory()?.cpu_model || 'N/A' }}
           </div>
         </div>
         <div class="progress-track">
           <div
             class="progress-fill fill-cyan"
-            [style.width.%]="inventory()?.cpu_utilization_percent || 5"
+            [style.width.%]="inventory()?.cpu_utilization_percent ?? 0"
           ></div>
         </div>
       </div>
@@ -38,21 +46,33 @@ import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-i
         <div class="gauge-header">
           <span class="gauge-label">System Memory (RAM)</span>
           <span class="abhi-badge abhi-badge-cyan">
-            {{ (inventory()?.ram_total_mb || 24425) / 1024 | number:'1.1-1' }} GB Total
+            @if (inventory()?.ram_total_mb != null) {
+              {{ inventory()!.ram_total_mb / 1024 | number:'1.1-1' }} GB Total
+            } @else {
+              N/A
+            }
           </span>
         </div>
         <div class="gauge-metric">
           <div class="gauge-value">
-            {{ (inventory()?.ram_used_mb || 8425) / 1024 | number:'1.1-1' }} <span class="gauge-unit">/ {{ (inventory()?.ram_total_mb || 24425) / 1024 | number:'1.1-1' }} GB</span>
+            @if (inventory()?.ram_used_mb != null && inventory()?.ram_total_mb != null) {
+              {{ inventory()!.ram_used_mb / 1024 | number:'1.1-1' }} <span class="gauge-unit">/ {{ inventory()!.ram_total_mb / 1024 | number:'1.1-1' }} GB</span>
+            } @else {
+              N/A
+            }
           </div>
           <div class="gauge-subtext">
-            Free: {{ (inventory()?.ram_available_mb || 16000) / 1024 | number:'1.1-1' }} GB
+            @if (inventory()?.ram_available_mb != null) {
+              Free: {{ inventory()!.ram_available_mb / 1024 | number:'1.1-1' }} GB
+            } @else {
+              Free: N/A
+            }
           </div>
         </div>
         <div class="progress-track">
           <div
             class="progress-fill fill-blue"
-            [style.width.%]="ramUsagePercent()"
+            [style.width.%]="ramUsagePercent() ?? 0"
           ></div>
         </div>
       </div>
@@ -62,21 +82,25 @@ import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-i
         <div class="gauge-header">
           <span class="gauge-label">Discrete GPU & VRAM</span>
           <span class="abhi-badge abhi-badge-success">
-            CUDA {{ inventory()?.gpu_cuda_version || '13.1' }}
+            CUDA {{ inventory()?.gpu_cuda_version || 'N/A' }}
           </span>
         </div>
         <div class="gauge-metric">
           <div class="gauge-value">
-            {{ (inventory()?.gpu_vram_used_mb || 1200) / 1024 | number:'1.1-1' }} <span class="gauge-unit">/ {{ (inventory()?.gpu_vram_total_mb || 8151) / 1024 | number:'1.1-1' }} GB</span>
+            @if (inventory()?.gpu_vram_used_mb != null && inventory()?.gpu_vram_total_mb != null) {
+              {{ inventory()!.gpu_vram_used_mb / 1024 | number:'1.1-1' }} <span class="gauge-unit">/ {{ inventory()!.gpu_vram_total_mb / 1024 | number:'1.1-1' }} GB</span>
+            } @else {
+              N/A
+            }
           </div>
           <div class="gauge-subtext">
-            {{ inventory()?.gpu_model || 'NVIDIA RTX' }} ({{ inventory()?.gpu_temperature_c || 48 }}°C)
+            {{ inventory()?.gpu_model || 'N/A' }} ({{ inventory()?.gpu_temperature_c != null ? inventory()!.gpu_temperature_c + '°C' : 'N/A' }})
           </div>
         </div>
         <div class="progress-track">
           <div
             class="progress-fill fill-emerald"
-            [style.width.%]="vramUsagePercent()"
+            [style.width.%]="vramUsagePercent() ?? 0"
           ></div>
         </div>
       </div>
@@ -89,19 +113,23 @@ import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-i
             class="abhi-badge"
             [ngClass]="inventory()?.npu_status === 'USABLE' ? 'abhi-badge-success' : 'abhi-badge-warning'"
           >
-            NPU: {{ inventory()?.npu_status || 'UNSUPPORTED' }}
+            NPU: {{ inventory()?.npu_status || 'N/A' }}
           </span>
         </div>
         <div class="gauge-metric">
           <div class="gauge-value">
-            {{ (inventory()?.storage_primary_free_mb || 326450) / 1024 | number:'1.0-0' }} GB Free
+            @if (inventory()?.storage_primary_free_mb != null) {
+              {{ inventory()!.storage_primary_free_mb / 1024 | number:'1.0-0' }} GB Free
+            } @else {
+              N/A
+            }
           </div>
           <div class="gauge-subtext">
             Primary SSD Headroom (C: drive)
           </div>
         </div>
         <div class="progress-track">
-          <div class="progress-fill fill-cyan" style="width: 70%"></div>
+          <div class="progress-fill fill-cyan" [style.width.%]="inventory()?.storage_primary_free_mb != null ? 100 : 0"></div>
         </div>
       </div>
     </div>
@@ -179,7 +207,7 @@ import { AnimeInteractiveDirective } from '../../../../shared/directives/anime-i
 })
 export class HardwareGaugePanelComponent {
   inventory = input<HardwareInventoryDTO | null>(null);
-  ramUsagePercent = input<number>(35);
-  vramUsagePercent = input<number>(20);
+  ramUsagePercent = input<number>(0);
+  vramUsagePercent = input<number>(0);
 }
 

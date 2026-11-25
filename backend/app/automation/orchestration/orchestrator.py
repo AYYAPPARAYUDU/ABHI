@@ -27,7 +27,7 @@ from backend.app.automation.models.actions import (
     GroundingLevel,
     ObservedState
 )
-from backend.app.automation.models.errors import AutomationError, AutomationErrorCode
+from backend.app.automation.models.errors import AutomationError, AutomationErrorCode, AutomationException
 from backend.app.automation.orchestration.models import (
     ExecutionAuditRecord,
     OrchestrationExecutionContext,
@@ -50,6 +50,8 @@ from backend.app.automation.orchestration.strategy_selector import (
 )
 from backend.app.automation.policy.safety_policy import safety_policy, SafetyPolicyEngine
 from backend.app.automation.verification.action_verifier import action_verifier, ActionVerifier
+from backend.app.automation.orchestration.worker_lifecycle import worker_lifecycle_manager, WorkerLifecycleManager
+from backend.app.core.event_bus import ABHIEvent, EventCategory, event_bus
 from backend.app.core.logging import logger
 from backend.app.services.memory.repository import memory_repo
 
@@ -72,16 +74,37 @@ class SupervisorOrchestrator:
         self.leases = leases or lease_manager
         self.strategy_selector = selector or grounding_strategy_selector
         self.windows_worker = win_worker or windows_worker
-        self.browser_worker = web_worker or browser_worker
+        self.browser_worker = web_worker or playwright_browser_worker
         self.verifier = verifier or action_verifier
         self.journal = journal or execution_journal
         self.recovery_engine = recovery_engine or execution_recovery_engine
+        self.worker_lifecycle = worker_lifecycle_manager
+
+        # Auto-register default workers if not already present
+        try:
+            self.worker_lifecycle.register_worker(
+                worker_id="windows_desktop_worker",
+                name="Windows Desktop OS Worker",
+                worker_type="desktop_os",
+                capabilities=["ui_automation", "keyboard", "mouse", "hwnd", "screen_ocr"]
+            )
+            self.worker_lifecycle.register_worker(
+                worker_id="playwright_browser_worker",
+                name="Playwright Browser Worker",
+                worker_type="browser",
+                capabilities=["web_navigation", "dom_interaction", "media_playback", "youtube_control"]
+            )
+        except Exception:
+            pass
 
         # Active tasks state tracking
         self._active_tasks: Dict[str, OrchestrationTaskResult] = {}
         self._pending_consents: Dict[str, asyncio.Event] = {}
         self._pause_events: Dict[str, asyncio.Event] = {}
         self._executed_action_hashes: Set[str] = set()
+        self.is_emergency_locked: bool = False
+        self.emergency_stop_reason: Optional[str] = None
+        self.emergency_stop_timestamp: Optional[float] = None
 
     async def _emit_event(self, task_id: str, event_type: str, payload: Dict[str, Any]):
         """Emit authoritative structured telemetry event and record in persistent audit journal."""
@@ -98,6 +121,27 @@ class SupervisorOrchestrator:
 
         task_res = self._active_tasks.get(task_id)
         exec_id = task_res.execution_id if task_res else "unknown"
+
+        try:
+            if event_type.startswith("VERIFICATION_"):
+                category = EventCategory.VERIFICATION
+            elif event_type.startswith(("POLICY_", "CONSENT_")) or event_type == "TASK_EMERGENCY_STOPPED":
+                category = EventCategory.SECURITY
+            else:
+                category = EventCategory.AUTOMATION
+
+            await event_bus.publish(
+                ABHIEvent(
+                    category=category,
+                    event_type=event_type,
+                    source="SupervisorOrchestrator",
+                    correlation_id=task_id,
+                    data={"task_id": task_id, "execution_id": exec_id, **payload},
+                )
+            )
+        except Exception as e:
+            logger.debug(f"Event bus publish warning: {e}")
+
         self.journal.record_audit(ExecutionAuditRecord(
             task_id=task_id,
             execution_id=exec_id,
@@ -106,7 +150,12 @@ class SupervisorOrchestrator:
         ))
 
     async def create_task(self, goal: str, task_id: Optional[str] = None) -> OrchestrationTaskResult:
-        """Create and initialize a new orchestrated execution task."""
+        """Create and initialize a new orchestrated execution task with safety lock verification."""
+        if self.is_emergency_locked:
+            raise AutomationException(AutomationError(
+                error_code=AutomationErrorCode.EMERGENCY_STOPPED,
+                message=f"Orchestration blocked: System locked in EMERGENCY_STOP state ({self.emergency_stop_reason or 'Emergency Stop Override'}). Operator reauthorization required."
+            ))
         tid = task_id or f"task_{uuid.uuid4().hex[:12]}"
         exec_id = f"exec_{uuid.uuid4().hex[:8]}"
 
@@ -174,7 +223,7 @@ class SupervisorOrchestrator:
             "action_type": action_type.value
         })
 
-        # 2. ACQUIRING LEASE
+        # 2. ACQUIRING LEASE & WORKER
         task_res.state = OrchestrationState.ACQUIRING_LEASE
         lease = self.leases.acquire_lease(
             task_id=task_id,
@@ -182,7 +231,13 @@ class SupervisorOrchestrator:
             agent_id="os_desktop_agent",
             risk_tier=risk_tier
         )
-        await self._emit_event(task_id, "LEASE_ACQUIRED", {"lease_id": lease.lease_id, "ttl": lease.initial_ttl_seconds})
+        cancel_token = self.worker_lifecycle.create_cancellation_token(task_id)
+        acquired_worker = self.worker_lifecycle.acquire_worker(worker_type="desktop_os", task_id=task_id)
+        await self._emit_event(task_id, "LEASE_ACQUIRED", {
+            "lease_id": lease.lease_id,
+            "ttl": lease.initial_ttl_seconds,
+            "worker_id": acquired_worker.worker_id if acquired_worker else None,
+        })
 
         # Synchronize lease & policy with worker
         self.windows_worker.leases = self.leases
@@ -233,9 +288,25 @@ class SupervisorOrchestrator:
                     await self._emit_event(task_id, "CONSENT_REQUIRED", {"action_id": action_id, "tier": risk_tier})
                     event = asyncio.Event()
                     self._pending_consents[task_id] = event
-                    await event.wait()
-                    del self._pending_consents[task_id]
-                    if task_res.state in [OrchestrationState.CANCELLED, OrchestrationState.EMERGENCY_STOPPED]:
+                    try:
+                        await asyncio.wait_for(event.wait(), timeout=120.0)
+                    except asyncio.TimeoutError:
+                        self._pending_consents.pop(task_id, None)
+                        task_res.state = OrchestrationState.FAILED
+                        task_res.is_success = False
+                        task_res.error = AutomationError(
+                            error_code=AutomationErrorCode.CONSENT_REQUIRED,
+                            message="User consent timed out after 120.0s.",
+                            action_id=action_id,
+                            task_id=task_id,
+                        )
+                        decision_trace.final_state = OrchestrationState.FAILED.value
+                        task_res.decision_traces.append(decision_trace)
+                        self.journal.persist_task(task_res)
+                        await self._emit_event(task_id, "TASK_FAILED", {"error": task_res.error.message})
+                        return task_res
+                    self._pending_consents.pop(task_id, None)
+                    if cancel_token.is_cancelled or task_res.state in [OrchestrationState.CANCELLED, OrchestrationState.EMERGENCY_STOPPED]:
                         return task_res
                     user_consent_granted = True
                     await self._emit_event(task_id, "CONSENT_GRANTED", {"action_id": action_id})
@@ -253,12 +324,27 @@ class SupervisorOrchestrator:
             current_evidence = evidence
 
             while retry_count <= max_retries:
-                if task_res.state in [OrchestrationState.CANCELLED, OrchestrationState.EMERGENCY_STOPPED]:
+                if cancel_token.is_cancelled or task_res.state in [OrchestrationState.CANCELLED, OrchestrationState.EMERGENCY_STOPPED]:
                     break
 
                 # Check Pause state
                 if task_id in self._pause_events:
-                    await self._pause_events[task_id].wait()
+                    try:
+                        await asyncio.wait_for(self._pause_events[task_id].wait(), timeout=120.0)
+                    except asyncio.TimeoutError:
+                        task_res.state = OrchestrationState.CANCELLED
+                        task_res.is_success = False
+                        task_res.error = AutomationError(
+                            error_code=AutomationErrorCode.ACTION_CANCELLED,
+                            message="Paused task timed out after 120.0s.",
+                            action_id=action_id,
+                            task_id=task_id,
+                        )
+                        decision_trace.final_state = OrchestrationState.CANCELLED.value
+                        task_res.decision_traces.append(decision_trace)
+                        self.journal.persist_task(task_res)
+                        await self._emit_event(task_id, "TASK_CANCELLED", {"reason": "Pause Timeout"})
+                        break
 
                 action_id = f"act_{uuid.uuid4().hex[:8]}"
 
@@ -449,8 +535,10 @@ class SupervisorOrchestrator:
                         break
 
         finally:
-            # Cleanly release lease
+            # Cleanly release lease and worker
             self.leases.release_lease(lease.lease_id, task_id)
+            if acquired_worker:
+                self.worker_lifecycle.release_worker(acquired_worker.worker_id, success=task_res.is_success)
             duration_ms = int((time.perf_counter() - start_ts) * 1000)
             task_res.duration_ms = duration_ms
 
@@ -511,7 +599,7 @@ class SupervisorOrchestrator:
             "action_type": action_type.value
         })
 
-        # 2. ACQUIRING LEASE
+        # 2. ACQUIRING LEASE & WORKER
         task_res.state = OrchestrationState.ACQUIRING_LEASE
         lease = self.leases.acquire_lease(
             task_id=task_id,
@@ -519,7 +607,13 @@ class SupervisorOrchestrator:
             agent_id="browser_agent",
             risk_tier=risk_tier
         )
-        await self._emit_event(task_id, "LEASE_ACQUIRED", {"lease_id": lease.lease_id, "ttl": lease.initial_ttl_seconds})
+        cancel_token = self.worker_lifecycle.create_cancellation_token(task_id)
+        acquired_worker = self.worker_lifecycle.acquire_worker(worker_type="browser", task_id=task_id)
+        await self._emit_event(task_id, "LEASE_ACQUIRED", {
+            "lease_id": lease.lease_id,
+            "ttl": lease.initial_ttl_seconds,
+            "worker_id": acquired_worker.worker_id if acquired_worker else None,
+        })
 
         # Synchronize lease & policy with worker
         self.browser_worker.leases = self.leases
@@ -570,9 +664,25 @@ class SupervisorOrchestrator:
                     await self._emit_event(task_id, "CONSENT_REQUIRED", {"action_id": action_id, "tier": risk_tier})
                     event = asyncio.Event()
                     self._pending_consents[task_id] = event
-                    await event.wait()
-                    del self._pending_consents[task_id]
-                    if task_res.state in [OrchestrationState.CANCELLED, OrchestrationState.EMERGENCY_STOPPED]:
+                    try:
+                        await asyncio.wait_for(event.wait(), timeout=120.0)
+                    except asyncio.TimeoutError:
+                        self._pending_consents.pop(task_id, None)
+                        task_res.state = OrchestrationState.FAILED
+                        task_res.is_success = False
+                        task_res.error = AutomationError(
+                            error_code=AutomationErrorCode.CONSENT_REQUIRED,
+                            message="User consent timed out after 120.0s.",
+                            action_id=action_id,
+                            task_id=task_id,
+                        )
+                        decision_trace.final_state = OrchestrationState.FAILED.value
+                        task_res.decision_traces.append(decision_trace)
+                        self.journal.persist_task(task_res)
+                        await self._emit_event(task_id, "TASK_FAILED", {"error": task_res.error.message})
+                        return task_res
+                    self._pending_consents.pop(task_id, None)
+                    if cancel_token.is_cancelled or task_res.state in [OrchestrationState.CANCELLED, OrchestrationState.EMERGENCY_STOPPED]:
                         return task_res
                     user_consent_granted = True
                     await self._emit_event(task_id, "CONSENT_GRANTED", {"action_id": action_id})
@@ -590,12 +700,27 @@ class SupervisorOrchestrator:
             current_evidence = evidence
 
             while retry_count <= max_retries:
-                if task_res.state in [OrchestrationState.CANCELLED, OrchestrationState.EMERGENCY_STOPPED]:
+                if cancel_token.is_cancelled or task_res.state in [OrchestrationState.CANCELLED, OrchestrationState.EMERGENCY_STOPPED]:
                     break
 
                 # Check Pause state
                 if task_id in self._pause_events:
-                    await self._pause_events[task_id].wait()
+                    try:
+                        await asyncio.wait_for(self._pause_events[task_id].wait(), timeout=120.0)
+                    except asyncio.TimeoutError:
+                        task_res.state = OrchestrationState.CANCELLED
+                        task_res.is_success = False
+                        task_res.error = AutomationError(
+                            error_code=AutomationErrorCode.ACTION_CANCELLED,
+                            message="Paused task timed out after 120.0s.",
+                            action_id=action_id,
+                            task_id=task_id,
+                        )
+                        decision_trace.final_state = OrchestrationState.CANCELLED.value
+                        task_res.decision_traces.append(decision_trace)
+                        self.journal.persist_task(task_res)
+                        await self._emit_event(task_id, "TASK_CANCELLED", {"reason": "Pause Timeout"})
+                        break
 
                 action_id = f"act_{uuid.uuid4().hex[:8]}"
 
@@ -786,6 +911,8 @@ class SupervisorOrchestrator:
 
         finally:
             self.leases.release_lease(lease.lease_id, task_id)
+            if acquired_worker:
+                self.worker_lifecycle.release_worker(acquired_worker.worker_id, success=task_res.is_success)
             duration_ms = int((time.perf_counter() - start_ts) * 1000)
             task_res.duration_ms = duration_ms
 
@@ -850,11 +977,19 @@ class SupervisorOrchestrator:
         await self._emit_event(task_id, "TASK_RESUMED", {})
         return True
 
-    async def emergency_stop(self, task_id: Optional[str] = None) -> bool:
-        """Immediately revoke all active execution leases and halt automation."""
+    async def emergency_stop(self, task_id: Optional[str] = None, reason: str = "Operator Override or Open Palm") -> bool:
+        """Immediately revoke all active execution leases, halt automation workers, and engage safety lockout."""
+        from backend.app.core.security import security_audit
+        self.is_emergency_locked = True
+        self.emergency_stop_reason = reason
+        self.emergency_stop_timestamp = time.time()
+
+        # Invalidate all active leases deterministically
+        revoked_count = self.leases.invalidate_all_leases(reason=f"EMERGENCY_STOP: {reason}")
+        self.worker_lifecycle.emergency_stop_all(reason=reason)
+        logger.critical(f"EMERGENCY STOP engaged! Revoked {revoked_count} active execution leases.")
+
         target_tasks = [self._active_tasks[task_id]] if task_id and task_id in self._active_tasks else list(self._active_tasks.values())
-        if not target_tasks:
-            return False
 
         for task_res in target_tasks:
             tid = task_res.task_id
@@ -863,7 +998,7 @@ class SupervisorOrchestrator:
             task_res.is_success = False
             task_res.error = AutomationError(
                 error_code=AutomationErrorCode.EMERGENCY_STOPPED,
-                message="Immediate emergency stop triggered by operator or open palm gesture."
+                message=f"Immediate emergency stop triggered: {reason}."
             )
 
             if tid in self._pending_consents:
@@ -872,8 +1007,33 @@ class SupervisorOrchestrator:
                 self._pause_events[tid].set()
 
             self.journal.persist_task(task_res)
-            await self._emit_event(tid, "TASK_EMERGENCY_STOPPED", {"reason": "Operator Override"})
+            await self._emit_event(tid, "TASK_EMERGENCY_STOPPED", {"reason": reason, "revoked_leases": revoked_count})
 
+        security_audit.log_event(
+            event_type="EMERGENCY_STOP_ACTIVATED",
+            actor="SYSTEM_SAFETY",
+            endpoint="/tasks/emergency-stop",
+            status="LOCKED",
+            details={"reason": reason, "revoked_leases": revoked_count, "tasks_stopped": len(target_tasks)}
+        )
+        return True
+
+    def emergency_reset(self, actor: str = "OPERATOR") -> bool:
+        """Reset emergency lockout and allow new task creation after verified operator clearance."""
+        from backend.app.core.security import security_audit
+        self.is_emergency_locked = False
+        prev_reason = self.emergency_stop_reason
+        self.emergency_stop_reason = None
+        self.emergency_stop_timestamp = None
+        self.worker_lifecycle.emergency_reset()
+        security_audit.log_event(
+            event_type="EMERGENCY_LOCKOUT_RESET",
+            actor=actor,
+            endpoint="/tasks/emergency-reset",
+            status="REARMED",
+            details={"previous_reason": prev_reason}
+        )
+        logger.info("SupervisorOrchestrator: Emergency stop lockout reset and rearmed successfully.")
         return True
 
     async def cancel_task(self, task_id: str) -> bool:
@@ -883,6 +1043,7 @@ class SupervisorOrchestrator:
             return False
 
         logger.warning(f"Cancellation requested for task '{task_id}'")
+        self.worker_lifecycle.cancel_task(task_id, reason="User Request")
         task_res.state = OrchestrationState.CANCELLED
         task_res.is_success = False
         task_res.error = AutomationError(

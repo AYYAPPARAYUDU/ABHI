@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, of } from 'rxjs';
+import { Observable, tap, catchError, of, map } from 'rxjs';
 import {
   BusinessApproval,
   BusinessOpportunity,
@@ -76,6 +76,7 @@ export class BusinessService {
     objective: string;
     autonomy_level: number;
     budget_limit_usd: number;
+    autopilot_mode?: string;
   }): Observable<BusinessProject | null> {
     return this.http.post<BusinessProject>(`${this.baseUrl}/projects`, payload).pipe(
       tap((newProj) => {
@@ -159,6 +160,16 @@ export class BusinessService {
         ifsc_code: "SBIN0020507",
         upi_id: "ayyapparayudu.5@ybl"
       }))
+    );
+  }
+
+  fetchTreasuryLedger(limit = 50): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/treasury/ledger?limit=${limit}`).pipe(
+      catchError(() =>
+        this.fetchTreasuryOverview().pipe(
+          map((overview) => (Array.isArray(overview?.recent_settlements) ? overview.recent_settlements : []))
+        )
+      )
     );
   }
 

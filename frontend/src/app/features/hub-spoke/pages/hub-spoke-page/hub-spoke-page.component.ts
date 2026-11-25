@@ -20,14 +20,30 @@ import { getApiUrl } from '../../../../core/config/api-config';
 import { SpeechVoiceService } from '../../../../core/services/speech-voice.service';
 import { BusinessService } from '../../../business/services/business.service';
 import { ThemeService } from '../../../../core/services/theme.service';
+import { slidePill, landCards } from '../../../../core/motion';
+
+export interface PodTool {
+  name: string;
+  letter: string;
+  protocol: string;
+  avatarBg?: string;
+}
+
+export interface PodSkill {
+  name: string;
+  progress: number;
+}
 
 export interface PodDefinition {
   id: string;
   name: string;
+  teamTitle?: string;
+  icon?: string;
   badge: string;
   color: string;
   hexColor: number;
   agentsCount: number;
+  runningCount?: number;
   statusText: string;
   angleDeg: number;
   x: number;
@@ -35,6 +51,12 @@ export interface PodDefinition {
   role: string;
   departmentKey: string;
   leadAgent: string;
+  leadRole?: string;
+  tasksToday?: number;
+  tasksTrend?: string;
+  turnaround?: string;
+  connectedTools?: PodTool[];
+  skills?: PodSkill[];
   realMetrics: { label: string; value: string }[];
   description: string;
   meshGroup?: THREE.Group;
@@ -61,6 +83,7 @@ export interface HubFeedMessage {
 })
 export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('hubCanvas') hubCanvasRef?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('podPill') podPillRef?: ElementRef<HTMLDivElement>;
 
   private readonly http = inject(HttpClient);
   private readonly speechVoice = inject(SpeechVoiceService);
@@ -69,82 +92,171 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Top Nav State
   readonly activeNavTab = signal<'office' | 'feed' | 'brain'>('office');
-  readonly totalAgentsCount = signal<number>(31);
-  readonly runningAgentsCount = signal<number>(12);
+  readonly totalAgentsCount = signal<number | null>(null);
+  readonly runningAgentsCount = signal<number | null>(null);
   readonly searchQuery = signal<string>('');
 
-  // Selected Pod Inspector
+  // Selected Pod Inspector (defaulted to Research Team)
   readonly selectedPod = signal<PodDefinition | null>(null);
+
+  get primaryPods(): PodDefinition[] {
+    return this.pods.slice(0, 6);
+  }
 
   // Real Business & System Data
   readonly sbiSettledTotalInr = signal<number>(0);
   readonly sbiTransactionsCount = signal<number>(0);
-  readonly vectorIndexedDocsCount = signal<number>(574);
-  readonly systemCpuPct = signal<number>(12);
-  readonly systemRamPct = signal<number>(44);
+  readonly vectorIndexedDocsCount = signal<number | null>(null);
+  readonly systemCpuPct = signal<number | null>(null);
+  readonly systemRamPct = signal<number | null>(null);
 
   // Task Command Dispatch
   taskCommandInput = '';
   readonly isDispatching = signal<boolean>(false);
 
-  // 8 Color-Coded Department Pods (Exact match to Bexruz Khamidullaev Agents Office v3)
+  // 8 Color-Coded Department Pods (Exact match to Reference 8-Pod Hub & Bexruz Architecture)
   readonly pods: PodDefinition[] = [
     {
       id: 'research',
-      name: 'Research & Intelligence',
+      name: 'Research',
+      teamTitle: 'Research Team',
+      icon: '🔍',
       badge: 'Research',
-      color: '#3b82f6',
-      hexColor: 0x3b82f6,
-      agentsCount: 4,
-      statusText: '4 agents · 574 docs',
+      color: '#38bdf8',
+      hexColor: 0x38bdf8,
+      agentsCount: 3,
+      runningCount: 2,
+      statusText: '3 agents · 2 running',
       angleDeg: 0,
       x: 0,
       z: -16,
-      role: 'Vector RAG Search & Document Embeddings',
+      role: 'Vector RAG Search & Deep Document Synthesis',
       departmentKey: 'KNOWLEDGE_ENGINE',
       leadAgent: 'Leo (Senior Researcher)',
+      leadRole: 'Deep Learning Scientist',
+      tasksToday: 18,
+      tasksTrend: '+24%',
+      turnaround: '14m',
+      connectedTools: [
+        { name: 'ArXiv Scholar', letter: 'A', protocol: 'Connected · MCP', avatarBg: 'rgba(56, 189, 248, 0.25)' },
+        { name: 'Perplexity API', letter: 'P', protocol: 'Connected · MCP', avatarBg: 'rgba(59, 130, 246, 0.25)' },
+        { name: 'Chrome Browser', letter: 'C', protocol: 'Connected · DevTools', avatarBg: 'rgba(16, 185, 129, 0.25)' }
+      ],
+      skills: [
+        { name: 'paper-synthesis', progress: 89 },
+        { name: 'competitive-audit', progress: 74 }
+      ],
       realMetrics: [
         { label: 'VECTOR CHUNKS', value: '574 Docs' },
         { label: 'SEARCH ENGINE', value: 'BM25 + Dense' },
         { label: 'EMBEDDING DIM', value: '384 Float' }
       ],
-      description: 'Hybrid retrieval engine operating over project documents, schemas, and API definitions.'
+      description: 'Autonomous research cluster generating synthesis reports from scientific literature and local embeddings.'
     },
     {
       id: 'scripts',
-      name: 'Scripts & Content Studio',
+      name: 'Scripts',
+      teamTitle: 'Scripts Team',
+      icon: '📁',
       badge: 'Scripts',
       color: '#f59e0b',
       hexColor: 0xf59e0b,
       agentsCount: 3,
-      statusText: '3 agents · Comms & TTS',
+      runningCount: 1,
+      statusText: '3 agents · 1 running',
       angleDeg: 45,
       x: 11.3,
       z: -11.3,
-      role: 'Acoustic Voice Listener & Media Synthesis',
+      role: 'Acoustic Voice Listener & Python OS Automation',
       departmentKey: 'MEDIA_STUDIO',
       leadAgent: 'Friday (Voice Comms)',
+      leadRole: 'Automation Systems Engineer',
+      tasksToday: 14,
+      tasksTrend: '+18%',
+      turnaround: '8m',
+      connectedTools: [
+        { name: 'Win32 OS Automation', letter: 'W', protocol: 'Connected · Native', avatarBg: 'rgba(245, 158, 11, 0.25)' },
+        { name: 'Python 3.14 Shell', letter: 'P', protocol: 'Connected · Async', avatarBg: 'rgba(59, 130, 246, 0.25)' },
+        { name: 'Playwright Engine', letter: 'P', protocol: 'Connected · Browser', avatarBg: 'rgba(16, 185, 129, 0.25)' }
+      ],
+      skills: [
+        { name: 'script-execution', progress: 95 },
+        { name: 'workflow-scheduler', progress: 82 }
+      ],
       realMetrics: [
         { label: 'AUDIO STREAM', value: '16kHz Float32' },
         { label: 'VOICE SYNTHESIS', value: 'pyttsx3 Neural' },
         { label: 'MEDIA CHANNELS', value: 'YouTube / Audio' }
       ],
-      description: 'Manages conversational companionship, voice recognition, and real-time audio playback.'
+      description: 'Manages conversational companionship, voice recognition, and real-time automation scripts.'
     },
     {
-      id: 'design',
-      name: 'Spatial UI & VisionOS',
-      badge: 'Design',
-      color: '#ec4899',
-      hexColor: 0xec4899,
-      agentsCount: 3,
-      statusText: '3 agents · 60fps HUD',
+      id: 'social',
+      name: 'Social',
+      teamTitle: 'Social Team',
+      icon: '🏢',
+      badge: 'Social',
+      color: '#a855f7',
+      hexColor: 0xa855f7,
+      agentsCount: 2,
+      runningCount: 2,
+      statusText: '2 agents · 2 running',
       angleDeg: 90,
       x: 16,
       z: 0,
-      role: '3D Spatial Ergonomics & Glassmorphism',
+      role: 'Omnichannel Communications & Engagement Dispatch',
+      departmentKey: 'SOCIAL_COMMS',
+      leadAgent: 'Alex (Comms Strategist)',
+      leadRole: 'Public Relations Architect',
+      tasksToday: 12,
+      tasksTrend: '+31%',
+      turnaround: '11m',
+      connectedTools: [
+        { name: 'Telegram Gateway', letter: 'T', protocol: 'Connected · Bot', avatarBg: 'rgba(168, 85, 247, 0.25)' },
+        { name: 'Speech Voice VAD', letter: 'S', protocol: 'Connected · WebAudio', avatarBg: 'rgba(56, 189, 248, 0.25)' },
+        { name: 'Discord Webhook', letter: 'D', protocol: 'Connected · REST', avatarBg: 'rgba(59, 130, 246, 0.25)' }
+      ],
+      skills: [
+        { name: 'sentiment-analysis', progress: 91 },
+        { name: 'omnichannel-broadcast', progress: 88 }
+      ],
+      realMetrics: [
+        { label: 'ACTIVE CHANNELS', value: '5 Squads' },
+        { label: 'RESPONSE LATENCY', value: '140ms' },
+        { label: 'SPEECH ENGINE', value: 'Dual-Channel' }
+      ],
+      description: 'Dispatches real-time broadcast telemetry and manages community and team multi-channel threads.'
+    },
+    {
+      id: 'creative',
+      name: 'Creative',
+      teamTitle: 'Creative Team',
+      icon: '🎬',
+      badge: 'Creative',
+      color: '#ec4899',
+      hexColor: 0xec4899,
+      agentsCount: 3,
+      runningCount: 3,
+      statusText: '3 agents · 3 running',
+      angleDeg: 135,
+      x: 11.3,
+      z: 11.3,
+      role: '3D Spatial Ergonomics, Shaders & Motion Physics',
       departmentKey: 'SPATIAL_DESIGN',
       leadAgent: 'Mia (Creative Director)',
+      leadRole: 'Principal Spatial Designer',
+      tasksToday: 21,
+      tasksTrend: '+45%',
+      turnaround: '16m',
+      connectedTools: [
+        { name: 'Three.js 186 WebGL', letter: 'T', protocol: 'Connected · GPU', avatarBg: 'rgba(236, 72, 153, 0.25)' },
+        { name: 'GSAP Motion Physics', letter: 'G', protocol: 'Connected · Core', avatarBg: 'rgba(245, 158, 11, 0.25)' },
+        { name: 'GLSL Hologram Shaders', letter: 'S', protocol: 'Connected · Shaders', avatarBg: 'rgba(168, 85, 247, 0.25)' }
+      ],
+      skills: [
+        { name: 'spatial-rendering', progress: 96 },
+        { name: 'elastic-pill-motion', progress: 94 }
+      ],
       realMetrics: [
         { label: 'RENDER ENGINE', value: 'Three.js 186' },
         { label: 'FRAME RATE', value: '60 FPS Native' },
@@ -153,19 +265,109 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
       description: 'Architects real-time isometric 3D spaces, holographic overlays, and interactive visual state.'
     },
     {
+      id: 'analytics',
+      name: 'Analytics',
+      teamTitle: 'Analytics Team',
+      icon: '📊',
+      badge: 'Analytics',
+      color: '#10b981',
+      hexColor: 0x10b981,
+      agentsCount: 2,
+      runningCount: 1,
+      statusText: '2 agents · 1 running',
+      angleDeg: 180,
+      x: 0,
+      z: 16,
+      role: 'Database WAL Integrity, System Metrics & Quant Models',
+      departmentKey: 'SYSTEM_ANALYTICS',
+      leadAgent: 'Atlas (Site Reliability Architect)',
+      leadRole: 'Senior Data Scientist',
+      tasksToday: 11,
+      tasksTrend: '+15%',
+      turnaround: '7m',
+      connectedTools: [
+        { name: 'SQLite WAL Memory', letter: 'S', protocol: 'Connected · DB', avatarBg: 'rgba(16, 185, 129, 0.25)' },
+        { name: 'Ollama Qwen3 8B', letter: 'O', protocol: 'Connected · Local', avatarBg: 'rgba(56, 189, 248, 0.25)' },
+        { name: 'Telemetry Inspector', letter: 'T', protocol: 'Connected · OS', avatarBg: 'rgba(245, 158, 11, 0.25)' }
+      ],
+      skills: [
+        { name: 'telemetry-stream', progress: 92 },
+        { name: 'performance-eval', progress: 85 }
+      ],
+      realMetrics: [
+        { label: 'DATABASE WAL', value: 'Zero Latency' },
+        { label: 'UPTIME SLA', value: '99.98%' },
+        { label: 'CPU MONITOR', value: '12% Nominal' }
+      ],
+      description: 'Monitors real-time CPU, RAM, database WAL metrics, and quantitative system telemetry.'
+    },
+    {
+      id: 'tbx-shop',
+      name: 'TBX Shop',
+      teamTitle: 'TBX Shop Team',
+      icon: '🛒',
+      badge: 'TBX Shop',
+      color: '#ef4444',
+      hexColor: 0xef4444,
+      agentsCount: 3,
+      runningCount: 1,
+      statusText: '3 agents · 1 running',
+      angleDeg: 225,
+      x: -11.3,
+      z: 11.3,
+      role: 'Real Commercial Settlement & SHA-256 Receipts Vault',
+      departmentKey: 'COMMERCIAL_SHOP',
+      leadAgent: 'Veronica (Commercial Lead)',
+      leadRole: 'FinTech Settlement Specialist',
+      tasksToday: 16,
+      tasksTrend: '+28%',
+      turnaround: '10m',
+      connectedTools: [
+        { name: 'SBI Gateway', letter: 'S', protocol: 'Connected · Real', avatarBg: 'rgba(59, 130, 246, 0.25)' },
+        { name: 'Receipts Crypt Vault', letter: 'R', protocol: 'Connected · AES', avatarBg: 'rgba(16, 185, 129, 0.25)' },
+        { name: 'Dual-Currency Ledger', letter: 'L', protocol: 'Connected · INR', avatarBg: 'rgba(239, 68, 68, 0.25)' }
+      ],
+      skills: [
+        { name: 'ledger-reconciliation', progress: 97 },
+        { name: 'sha256-sealing', progress: 93 }
+      ],
+      realMetrics: [
+        { label: 'SETTLED INR', value: '₹18.42L Confirmed' },
+        { label: 'GATEWAY', value: 'SBI Direct' },
+        { label: 'RECEIPTS', value: 'SHA-256 Immutable' }
+      ],
+      description: 'Issues authentic sealed commercial invoices and receipts for multi-agent deliverables.'
+    },
+    {
       id: 'creators',
-      name: 'Creators & Multi-Agent Swarm',
+      name: 'Creators',
+      teamTitle: 'Creators Pod',
+      icon: '⚡',
       badge: 'Creators',
       color: '#8b5cf6',
       hexColor: 0x8b5cf6,
       agentsCount: 4,
+      runningCount: 2,
       statusText: '4 agents · Swarm Active',
-      angleDeg: 135,
-      x: 11.3,
-      z: 11.3,
-      role: 'Autonomous Agentic Deliberation & Swarm Sync',
+      angleDeg: 270,
+      x: -16,
+      z: 0,
+      role: 'Autonomous Agentic Deliberation & Swarm Consensus',
       departmentKey: 'SWARM_FABRIC',
       leadAgent: 'Jarvis Jr (Swarm Lead)',
+      leadRole: 'Multi-Agent Coordinator',
+      tasksToday: 24,
+      tasksTrend: '+35%',
+      turnaround: '12m',
+      connectedTools: [
+        { name: 'Agent Swarm Bus', letter: 'A', protocol: 'Connected · IPC', avatarBg: 'rgba(139, 92, 246, 0.25)' },
+        { name: 'DeepSeek R1 Model', letter: 'D', protocol: 'Connected · Ollama', avatarBg: 'rgba(56, 189, 248, 0.25)' },
+        { name: 'Consensus Arbiter', letter: 'C', protocol: 'Connected · Engine', avatarBg: 'rgba(245, 158, 11, 0.25)' }
+      ],
+      skills: [
+        { name: 'swarm-consensus', progress: 99 },
+        { name: 'conflict-arbitration', progress: 91 }
+      ],
       realMetrics: [
         { label: 'CONSENSUS SCORE', value: '99.4%' },
         { label: 'COGNITIVE MODEL', value: 'DeepSeek-R1 Distill' },
@@ -174,75 +376,15 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
       description: 'Autonomous multi-persona deliberation hub resolving conflicting objectives through consensus.'
     },
     {
-      id: 'infrastructure',
-      name: 'Cloud Infrastructure & DevOps',
-      badge: 'Cloud / DevOps',
-      color: '#14b8a6',
-      hexColor: 0x14b8a6,
-      agentsCount: 4,
-      statusText: '4 agents · High-Availability',
-      angleDeg: 180,
-      x: 0,
-      z: 16,
-      role: 'Cloud Engine, Containers & Network Reliability',
-      departmentKey: 'INFRASTRUCTURE_DEVOPS',
-      leadAgent: 'Atlas (Site Reliability Architect)',
-      realMetrics: [
-        { label: 'CONTAINERS', value: '12 Active' },
-        { label: 'HEALTH', value: '99.98% SLA' },
-        { label: 'LATENCY', value: '1.2ms' }
-      ],
-      description: 'Zero-downtime microservices, container topology, network routing, and automated system failover.'
-    },
-    {
-      id: 'tech',
-      name: 'Win32 OS & Tech Automation',
-      badge: 'Tech / OS',
-      color: '#ef4444',
-      hexColor: 0xef4444,
-      agentsCount: 5,
-      statusText: '5 agents · 0ms Win32',
-      angleDeg: 225,
-      x: -11.3,
-      z: 11.3,
-      role: 'Native Windows OS Controller & Window Grounding',
-      departmentKey: 'OS_AUTOMATION',
-      leadAgent: 'Karen (OS Supervisor)',
-      realMetrics: [
-        { label: 'DISPATCH LATENCY', value: '0ms Native' },
-        { label: 'WIN32 APIS', value: 'user32 / pywin32' },
-        { label: 'APP GROUNDING', value: 'Active Window Sync' }
-      ],
-      description: 'Controls mouse, keyboard, applications, volume, browser tabs, and local processes.'
-    },
-    {
-      id: 'sales',
-      name: 'Commercial Sales & Billing',
-      badge: 'Sales',
-      color: '#10b981',
-      hexColor: 0x10b981,
-      agentsCount: 4,
-      statusText: '4 agents · 14 Clients',
-      angleDeg: 270,
-      x: -16,
-      z: 0,
-      role: 'Enterprise Contracts, Invoicing & Receipts',
-      departmentKey: 'CLIENT_SALES',
-      leadAgent: 'Veronica (Commercial Lead)',
-      realMetrics: [
-        { label: 'CLIENT PORTFOLIO', value: '14 Enterprises' },
-        { label: 'TAX INVOICES', value: 'GST / Dual-Currency' },
-        { label: 'SETTLED TRANSACTIONS', value: '14 Completed' }
-      ],
-      description: 'Issues SHA-256 sealed commercial invoices for AI multi-agent clusters and cloud development.'
-    },
-    {
       id: 'ops',
-      name: 'Executive Operations & Sprints',
+      name: 'Operations',
+      teamTitle: 'Executive Operations',
+      icon: '👔',
       badge: 'Operations',
       color: '#ea580c',
       hexColor: 0xea580c,
       agentsCount: 5,
+      runningCount: 2,
       statusText: '5 agents · Sprint Active',
       angleDeg: 315,
       x: -11.3,
@@ -250,6 +392,19 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
       role: 'Project Orchestration & DAG Task Decomposition',
       departmentKey: 'EXECUTIVE_OPS',
       leadAgent: 'Olivia (Operations Lead)',
+      leadRole: 'Executive Operations Director',
+      tasksToday: 28,
+      tasksTrend: '+50%',
+      turnaround: '9m',
+      connectedTools: [
+        { name: 'DAG Task Planner', letter: 'D', protocol: 'Connected · Core', avatarBg: 'rgba(234, 88, 12, 0.25)' },
+        { name: 'SQLite Task Registry', letter: 'S', protocol: 'Connected · WAL', avatarBg: 'rgba(16, 185, 129, 0.25)' },
+        { name: 'Milestone Verifier', letter: 'M', protocol: 'Connected · DualState', avatarBg: 'rgba(56, 189, 248, 0.25)' }
+      ],
+      skills: [
+        { name: 'dag-decomposition', progress: 98 },
+        { name: 'dual-state-verification', progress: 95 }
+      ],
       realMetrics: [
         { label: 'DAG EXECUTION', value: 'Async Directed Graph' },
         { label: 'WORKFLOW ENGINE', value: 'Adaptive Planner' },
@@ -339,8 +494,8 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
-    // Select Treasury Pod by default to showcase real commercial settlement
-    this.selectedPod.set(this.pods[4]);
+    // Select Research Pod by default matching Reference 8-Pod Hub Architecture (Image 4)
+    this.selectedPod.set(this.pods[0]);
 
     // Load real-world business and telemetry data
     this.loadRealBusinessData();
@@ -348,6 +503,17 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initHubThreeScene();
+
+    setTimeout(() => {
+      const activeChip = document.querySelector('.pod-select-chip.active') as HTMLElement;
+      if (this.podPillRef?.nativeElement && activeChip) {
+        slidePill(this.podPillRef.nativeElement, activeChip, { borderRadius: 12, leadDuration: 0.1, trailDuration: 0.1 });
+      }
+      const cards = document.querySelectorAll('.floating-team-card, .metric-mini-card, .connected-tool-item');
+      if (cards.length > 0) {
+        landCards(cards, { y: 22, stagger: 0.05, duration: 0.7 });
+      }
+    }, 150);
   }
 
   ngOnDestroy(): void {
@@ -359,6 +525,21 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     if (this.controls) {
       this.controls.dispose();
+    }
+    if (this.scene) {
+      this.scene.traverse((obj) => {
+        if ((obj as THREE.Mesh).geometry) {
+          (obj as THREE.Mesh).geometry.dispose();
+        }
+        if ((obj as THREE.Mesh).material) {
+          const mat = (obj as THREE.Mesh).material;
+          if (Array.isArray(mat)) {
+            mat.forEach((m) => m.dispose());
+          } else {
+            mat.dispose();
+          }
+        }
+      });
     }
     if (this.renderer) {
       this.renderer.dispose();
@@ -375,9 +556,10 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
           const count = res.financial.settled_transactions_count || 0;
           this.sbiSettledTotalInr.set(rev);
           this.sbiTransactionsCount.set(count);
-          // Update pod metric in array
-          this.pods[4].realMetrics[0].value = `₹${rev.toLocaleString('en-IN')}`;
-          this.pods[4].statusText = rev > 0 ? `SBI ****5649 · ₹${(rev / 100000).toFixed(2)}L` : 'SBI ****5649 · Ready';
+          // Update TBX Shop pod metric with authoritative treasury
+          const tbxPod = this.pods.find((p) => p.id === 'tbx-shop') || this.pods[5];
+          tbxPod.realMetrics[0].value = `₹${rev.toLocaleString('en-IN')}`;
+          tbxPod.statusText = rev > 0 ? `SBI ****5649 · ₹${(rev / 100000).toFixed(2)}L` : 'SBI ****5649 · Ready';
           this.cdr.markForCheck();
         }
       },
@@ -390,12 +572,39 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
     const healthUrl = getApiUrl('/api/v1/health');
     this.http.get<any>(healthUrl).subscribe({
       next: (h) => {
-        if (h?.status === 'healthy') {
-          this.systemCpuPct.set(14);
-          this.systemRamPct.set(42);
-          this.cdr.markForCheck();
+        const res = h?.subsystems?.system_resources;
+        if (typeof res?.cpu_percent === 'number') {
+          this.systemCpuPct.set(res.cpu_percent);
         }
+        if (typeof res?.ram_percent === 'number') {
+          this.systemRamPct.set(res.ram_percent);
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.systemCpuPct.set(null);
+        this.systemRamPct.set(null);
       }
+    });
+
+    // Authoritative Workspace Telemetry
+    const telemetryUrl = getApiUrl('/api/v1/agent/workspace/telemetry');
+    this.http.get<any>(telemetryUrl).subscribe({
+      next: (t) => {
+        if (typeof t?.total_agents === 'number') this.totalAgentsCount.set(t.total_agents);
+        if (typeof t?.running_agents === 'number') this.runningAgentsCount.set(t.running_agents);
+        if (typeof t?.shared_notes === 'number') this.vectorIndexedDocsCount.set(t.shared_notes);
+        if (typeof t?.cpu_percent === 'number') {
+          this.systemCpuPct.set(t.cpu_percent);
+          const analyticsPod = this.pods.find((p) => p.id === 'analytics');
+          if (analyticsPod && analyticsPod.realMetrics[2]) {
+            analyticsPod.realMetrics[2].value = `${t.cpu_percent}%`;
+          }
+        }
+        if (typeof t?.ram_percent === 'number') this.systemRamPct.set(t.ram_percent);
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.debug('Workspace telemetry fetch notice:', err)
     });
   }
 
@@ -451,25 +660,25 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
         this.taskCommandInput = '';
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err) => {
         this.isDispatching.set(false);
         this.dataPulses.forEach((p) => (p.speed = 0.015));
 
+        const errMsg = err?.error?.detail || err?.message || 'Backend gateway unreachable';
         this.appendFeedMessage(
           targetPod.id,
           targetPod.badge,
           targetPod.leadAgent.split(' ')[0],
           targetPod.color,
-          `Directive processed and synchronized with local sovereign core.`,
-          'status'
+          `Directive failed: ${errMsg}`,
+          'system'
         );
-        this.taskCommandInput = '';
         this.cdr.markForCheck();
       }
     });
   }
 
-  // --- Focus 3D Camera on Clicked Pod ---
+  // --- Focus 3D Camera on Clicked Pod with GSAP Elastic Motion ---
   selectPod(pod: PodDefinition): void {
     this.selectedPod.set(pod);
     const target = new THREE.Vector3(pod.x, 0, pod.z);
@@ -477,6 +686,21 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cameraTargetLookAt = target.clone().add(new THREE.Vector3(0, 1.2, 0));
     // Offset camera nicely for isometric inspection
     this.cameraTargetPos = target.clone().add(new THREE.Vector3(7, 7, 7));
+
+    setTimeout(() => {
+      const cards = document.querySelectorAll('.floating-team-card, .metric-mini-card, .connected-tool-item, .skill-progress-item');
+      if (cards.length > 0) {
+        landCards(cards, { y: 18, stagger: 0.04, duration: 0.6 });
+      }
+    }, 40);
+  }
+
+  selectPodWithAnimation(pod: PodDefinition, btn?: any): void {
+    const btnEl = btn as HTMLElement;
+    if (this.podPillRef?.nativeElement && btnEl) {
+      slidePill(this.podPillRef.nativeElement, btnEl, { borderRadius: 12 });
+    }
+    this.selectPod(pod);
   }
 
   // --- Reset to Full Hub Overview ---
@@ -499,7 +723,7 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
     sender: string,
     color: string,
     text: string,
-    type: 'directive' | 'status' | 'settlement' | 'intel'
+    type: 'directive' | 'status' | 'settlement' | 'intel' | 'system'
   ): void {
     const list = [...this.feedMessages()];
     const d = new Date();
@@ -619,7 +843,7 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
     this.scene.add(brainLight);
   }
 
-  // --- Build Central "THE BRAIN" Hologram ---
+  // --- Build Central "THE BRAIN" Hologram Platform ---
   private buildBrainHolographicCore(): void {
     if (!this.scene) return;
 
@@ -630,10 +854,10 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
     const ringMat1 = new THREE.MeshBasicMaterial({
       color: 0x00f0ff,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.6,
       wireframe: true
     });
-    const ring1 = new THREE.Mesh(new THREE.RingGeometry(3.2, 3.28, 48), ringMat1);
+    const ring1 = new THREE.Mesh(new THREE.RingGeometry(3.6, 3.68, 64), ringMat1);
     ring1.rotation.x = -Math.PI / 2;
     ring1.position.y = 0.05;
     coreGroup.add(ring1);
@@ -642,104 +866,109 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
     const ringMat2 = new THREE.MeshBasicMaterial({
       color: 0x38bdf8,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.4,
       wireframe: true
     });
-    const ring2 = new THREE.Mesh(new THREE.RingGeometry(4.4, 4.46, 64), ringMat2);
+    const ring2 = new THREE.Mesh(new THREE.RingGeometry(4.8, 4.86, 64), ringMat2);
     ring2.rotation.x = -Math.PI / 2;
     ring2.position.y = 0.04;
     coreGroup.add(ring2);
     this.brainRings.push(ring2);
 
-    const ringMat3 = new THREE.MeshBasicMaterial({
-      color: 0x0ea5e9,
-      transparent: true,
-      opacity: 0.35,
-      wireframe: true
-    });
-    const ring3 = new THREE.Mesh(new THREE.RingGeometry(5.6, 5.68, 64), ringMat3);
-    ring3.rotation.x = -Math.PI / 2;
-    ring3.position.y = 0.03;
-    coreGroup.add(ring3);
-    this.brainRings.push(ring3);
-
-    // 2. Hexagonal Obsidian Holographic Pedestal
+    // 2. Stepped Circular Pedestal Disc (Matches Reference Image 1)
     const baseMat = new THREE.MeshStandardMaterial({
-      color: 0x0f172a,
-      roughness: 0.3,
-      metalness: 0.8
+      color: 0x091428,
+      roughness: 0.4,
+      metalness: 0.7
     });
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(2.0, 2.3, 0.8, 6), baseMat);
-    base.position.y = 0.4;
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.4, 0.45, 48), baseMat);
+    base.position.y = 0.22;
     base.castShadow = true;
     base.receiveShadow = true;
     coreGroup.add(base);
 
-    // Neon Edge Trim on Pedestal
+    // Glowing Cyan Trim along Upper Rim
     const edgeMat = new THREE.MeshStandardMaterial({
       color: 0x00f0ff,
       emissive: 0x00f0ff,
-      emissiveIntensity: 0.85
+      emissiveIntensity: 1.1
     });
-    const edgeRing = new THREE.Mesh(new THREE.TorusGeometry(2.02, 0.05, 8, 6), edgeMat);
+    const edgeRing = new THREE.Mesh(new THREE.TorusGeometry(3.22, 0.05, 12, 48), edgeMat);
     edgeRing.rotation.x = Math.PI / 2;
-    edgeRing.position.y = 0.8;
+    edgeRing.position.y = 0.45;
     coreGroup.add(edgeRing);
 
-    // 3. Central Glowing Hologram Orb
-    const orbMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8,
-      emissive: 0x00f0ff,
-      emissiveIntensity: 1.2,
-      roughness: 0.1,
-      metalness: 0.5,
-      transparent: true,
-      opacity: 0.88
+    // Inner Elevated Core Platform
+    const innerCoreMat = new THREE.MeshStandardMaterial({
+      color: 0x0f2347,
+      roughness: 0.3,
+      metalness: 0.5
     });
-    this.brainOrb = new THREE.Mesh(new THREE.SphereGeometry(0.85, 24, 24), orbMat);
-    this.brainOrb.position.y = 1.9;
-    coreGroup.add(this.brainOrb);
+    const innerCore = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.5, 0.25, 48), innerCoreMat);
+    innerCore.position.y = 0.55;
+    coreGroup.add(innerCore);
 
-    // 4. Vertical Light Beam Rising into Sky
-    const beamGeo = new THREE.CylinderGeometry(0.5, 0.9, 14, 24, 1, true);
-    const beamMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0ff,
-      transparent: true,
-      opacity: 0.22,
-      side: THREE.DoubleSide
+    // 3. Miniature Avatar Pegs Standing Around Perimeter (Matches Reference Image 1)
+    const pegColors = [
+      0x8b5cf6, // Purple
+      0x06b6d4, // Cyan
+      0xf43f5e, // Red
+      0x10b981, // Teal
+      0xf59e0b, // Amber
+      0x3b82f6, // Blue
+      0xeab308, // Yellow
+      0xec4899  // Pink
+    ];
+    pegColors.forEach((colorHex, idx) => {
+      const angle = (idx * Math.PI * 2) / pegColors.length;
+      const pegGroup = new THREE.Group();
+      const px = Math.cos(angle) * 2.85;
+      const pz = Math.sin(angle) * 2.85;
+      pegGroup.position.set(px, 0.45, pz);
+
+      // Body (cylinder)
+      const bodyMat = new THREE.MeshStandardMaterial({ color: colorHex, roughness: 0.5 });
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.18, 0.5, 16), bodyMat);
+      body.position.y = 0.25;
+      pegGroup.add(body);
+
+      // Head (sphere)
+      const headMat = new THREE.MeshStandardMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.3 });
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 16, 16), headMat);
+      head.position.y = 0.58;
+      pegGroup.add(head);
+
+      coreGroup.add(pegGroup);
     });
-    this.brainVerticalBeam = new THREE.Mesh(beamGeo, beamMat);
-    this.brainVerticalBeam.position.y = 8.0;
-    coreGroup.add(this.brainVerticalBeam);
 
-    // 5. Overhead 3D Billboard Label: "THE BRAIN"
+    // 4. Overhead 3D Billboard Label: "THE BRAIN - 1,842 notes · shared memory"
     const labelCanvas = document.createElement('canvas');
     labelCanvas.width = 512;
     labelCanvas.height = 140;
     const ctx = labelCanvas.getContext('2d');
     if (ctx) {
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-      ctx.roundRect(8, 8, 496, 124, 18);
+      ctx.fillStyle = 'rgba(9, 16, 32, 0.92)';
+      ctx.roundRect(8, 8, 496, 124, 20);
       ctx.fill();
       ctx.strokeStyle = '#00f0ff';
-      ctx.lineWidth = 4;
-      ctx.roundRect(8, 8, 496, 124, 18);
+      ctx.lineWidth = 3;
+      ctx.roundRect(8, 8, 496, 124, 20);
       ctx.stroke();
 
       ctx.fillStyle = '#f8fafc';
-      ctx.font = 'bold 36px sans-serif';
+      ctx.font = 'bold 36px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('THE BRAIN', 256, 56);
+      ctx.fillText('THE BRAIN', 256, 52);
 
       ctx.fillStyle = '#38bdf8';
-      ctx.font = '600 22px monospace';
-      ctx.fillText('574 Vector Docs · SBI ****5649', 256, 96);
+      ctx.font = '600 20px monospace';
+      ctx.fillText('1,842 notes · shared memory', 256, 92);
     }
     const labelTex = new THREE.CanvasTexture(labelCanvas);
     const spriteMat = new THREE.SpriteMaterial({ map: labelTex, transparent: true });
     const labelSprite = new THREE.Sprite(spriteMat);
-    labelSprite.position.set(0, 3.4, 0);
-    labelSprite.scale.set(3.8, 1.1, 1);
+    labelSprite.position.set(0, 1.8, 0);
+    labelSprite.scale.set(4.2, 1.15, 1);
     coreGroup.add(labelSprite);
 
     this.scene.add(coreGroup);
@@ -757,11 +986,11 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
       const lookAngle = Math.atan2(-pod.x, -pod.z);
       podGroup.rotation.y = lookAngle;
 
-      // 1. Floating Floor Platform (Beveled rectangular room: 5.4 x 4.6)
+      // 1. Floating Floor Platform in Pod Vibrant Accent Color (Matches Reference Image 1)
       const floorMat = new THREE.MeshStandardMaterial({
-        color: 0x1e293b,
-        roughness: 0.6,
-        metalness: 0.1
+        color: pod.hexColor,
+        roughness: 0.5,
+        metalness: 0.15
       });
       const floor = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.35, 4.8), floorMat);
       floor.position.y = 0.18;
@@ -792,48 +1021,51 @@ export class HubSpokePageComponent implements OnInit, OnDestroy, AfterViewInit {
       bEast.position.set(2.8, 0.38, 0);
       podGroup.add(bEast);
 
-      // 3. Interior Walls (Low cutaway glass/solid walls on back and sides)
+      // 3. Interior Walls (Tinted translucent walls in Pod Color)
       const wallMat = new THREE.MeshStandardMaterial({
-        color: 0x334155,
-        roughness: 0.7
+        color: pod.hexColor,
+        transparent: true,
+        opacity: 0.6,
+        roughness: 0.3
       });
       // Back wall
-      const backWall = new THREE.Mesh(new THREE.BoxGeometry(5.6, 2.0, 0.25), wallMat);
-      backWall.position.set(0, 1.2, -2.3);
+      const backWall = new THREE.Mesh(new THREE.BoxGeometry(5.6, 2.2, 0.18), wallMat);
+      backWall.position.set(0, 1.3, -2.3);
       podGroup.add(backWall);
 
       // Side wall Left
-      const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.0, 4.6), wallMat);
-      leftWall.position.set(-2.7, 1.2, 0);
+      const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.2, 4.6), wallMat);
+      leftWall.position.set(-2.7, 1.3, 0);
       podGroup.add(leftWall);
 
       // Side wall Right
-      const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.0, 4.6), wallMat);
-      rightWall.position.set(2.7, 1.2, 0);
+      const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.2, 4.6), wallMat);
+      rightWall.position.set(2.7, 1.3, 0);
       podGroup.add(rightWall);
 
-      // 4. Desks with Dual Glowing Screens in Pod Color
-      const deskMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.4 });
-      const desk = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.15, 1.5), deskMat);
-      desk.position.set(0, 1.0, -0.6);
+      // 4. Sleek White Desk with Glowing Laptop Screen (Matches Reference Image 1)
+      const deskMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.25 });
+      const desk = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.12, 1.3), deskMat);
+      desk.position.set(0, 0.9, -0.6);
       desk.castShadow = true;
       podGroup.add(desk);
 
-      // Dual Monitors
-      const scrMat = new THREE.MeshStandardMaterial({
-        color: pod.hexColor,
-        emissive: pod.hexColor,
-        emissiveIntensity: 0.95
-      });
-      const m1 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 0.05), scrMat);
-      m1.position.set(-0.6, 1.55, -0.9);
-      m1.rotation.y = 0.12;
-      podGroup.add(m1);
+      // Laptop Base
+      const lapBaseMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4 });
+      const laptopBase = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.03, 0.55), lapBaseMat);
+      laptopBase.position.set(0, 0.98, -0.6);
+      podGroup.add(laptopBase);
 
-      const m2 = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.6, 0.05), scrMat);
-      m2.position.set(0.6, 1.55, -0.9);
-      m2.rotation.y = -0.12;
-      podGroup.add(m2);
+      // Glowing Blue Laptop Screen
+      const lapScreenMat = new THREE.MeshStandardMaterial({
+        color: 0x38bdf8,
+        emissive: 0x38bdf8,
+        emissiveIntensity: 1.2
+      });
+      const laptopScreen = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.52, 0.03), lapScreenMat);
+      laptopScreen.position.set(0, 1.26, -0.85);
+      laptopScreen.rotation.x = -0.18;
+      podGroup.add(laptopScreen);
 
       // 5. Stylized Low-Poly Humanoid Agent Figures (2 per pod)
       const agent1 = this.createMiniAgent(pod.hexColor);

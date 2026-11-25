@@ -1,10 +1,11 @@
 """Task Dispatch, Status & Consent API Endpoints."""
 
 from typing import Any, Dict, Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel, Field
-from backend.app.cognitive.supervisor.supervisor import TaskStatusResponse, central_supervisor
+from backend.app.cognitive.supervisor.supervisor import SupervisorState, TaskStatusResponse, central_supervisor
 from backend.app.services.memory.repository import memory_repo
+from backend.app.core.security import verify_operator_access
 
 router = APIRouter(prefix="/tasks", tags=["Tasks & Cognitive Orchestration"])
 
@@ -12,6 +13,7 @@ router = APIRouter(prefix="/tasks", tags=["Tasks & Cognitive Orchestration"])
 class SubmitGoalRequest(BaseModel):
     goal: str = Field(..., min_length=1, description="Natural language goal for the AI system")
     task_id: Optional[str] = Field(default=None, description="Optional custom task UUID")
+    use_gateway: bool = Field(default=False, description="Route through AgentGateway perception & context pipeline")
 
 
 class ConsentRequest(BaseModel):
@@ -22,6 +24,24 @@ class ConsentRequest(BaseModel):
 @router.post("", response_model=TaskStatusResponse)
 async def submit_task(request: SubmitGoalRequest):
     """Submit a high-level user goal for planning and execution."""
+    if request.use_gateway:
+        from backend.app.cognitive.gateway.agent_gateway import agent_gateway
+        from backend.app.cognitive.gateway.models import AgentCommandRequest
+
+        cmd_resp = await agent_gateway.process_command(
+            AgentCommandRequest(text=request.goal)
+        )
+        if cmd_resp.task_id:
+            sup_status = central_supervisor.get_task_status(cmd_resp.task_id)
+            if sup_status:
+                return sup_status
+        return TaskStatusResponse(
+            task_id=cmd_resp.task_id or cmd_resp.command_id,
+            goal=request.goal,
+            state=SupervisorState.COMPLETED if cmd_resp.status.value == "COMPLETED" else SupervisorState.PLANNING,
+            summary=cmd_resp.message,
+            created_at_ts=cmd_resp.created_at,
+        )
     return await central_supervisor.submit_goal(goal=request.goal, task_id=request.task_id)
 
 
@@ -82,13 +102,55 @@ async def get_task_status(task_id: str):
 
 
 @router.post("/emergency-stop")
-async def emergency_stop_all():
-    """Trigger immediate emergency stop across all active cognitive & physical execution tasks."""
+async def emergency_stop_all(reason: str = Query("Operator Override or Open Palm")):
+    """Trigger immediate deterministic emergency stop across all active cognitive & physical execution tasks."""
     from backend.app.automation.orchestration.orchestrator import supervisor_orchestrator
-    await supervisor_orchestrator.emergency_stop()
-    for tid in list(central_supervisor._active_tasks.keys()):
-        await central_supervisor.cancel_task(tid)
-    return {"status": "emergency_stopped", "success": True}
+    from backend.app.automation.leases.lease_manager import lease_manager
+    from backend.app.core.security import security_audit
+
+    # 1. Invalidate all automation leases
+    revoked_leases = lease_manager.invalidate_all_leases(reason=f"EMERGENCY_STOP: {reason}")
+
+    # 2. Halt supervisor orchestrator
+    await supervisor_orchestrator.emergency_stop(reason=reason)
+
+    # 3. Halt central cognitive supervisor and all active tasks
+    await central_supervisor.emergency_stop()
+
+    # 4. Audit log event
+    security_audit.log_event(
+        event_type="EMERGENCY_STOP_TRIGGERED",
+        actor="SAFETY_CONTROLLER",
+        endpoint="/api/v1/tasks/emergency-stop",
+        status="LOCKED",
+        details={"reason": reason, "revoked_leases": revoked_leases}
+    )
+
+    return {
+        "status": "emergency_stopped",
+        "success": True,
+        "revoked_leases": revoked_leases,
+        "lockout_active": True,
+        "message": f"Deterministic emergency stop activated: {reason}. All execution leases revoked."
+    }
+
+
+@router.post("/emergency-reset")
+async def emergency_reset(
+    _auth: str = Depends(verify_operator_access)
+):
+    """Clear emergency stop lockout and re-arm automation execution (Requires Operator Authorization)."""
+    from backend.app.automation.orchestration.orchestrator import supervisor_orchestrator
+
+    supervisor_orchestrator.emergency_reset(actor="OPERATOR")
+    central_supervisor.emergency_reset()
+
+    return {
+        "status": "rearmed",
+        "success": True,
+        "lockout_active": False,
+        "message": "System successfully re-armed for automation execution."
+    }
 
 
 @router.post("/{task_id}/consent")
@@ -209,13 +271,19 @@ async def generate_plan_preview(request: PlanPreviewRequest):
 
 @router.post("/{task_id}/cancel")
 async def cancel_task(task_id: str):
-    """Cancel an active task."""
+    """Cancel an active task, revoke its leases, and trigger its lifecycle cancellation token."""
+    from backend.app.automation.leases.lease_manager import lease_manager
     from backend.app.automation.orchestration.orchestrator import supervisor_orchestrator
+    from backend.app.automation.orchestration.worker_lifecycle import worker_lifecycle_manager
+
     success1 = await central_supervisor.cancel_task(task_id)
     success2 = await supervisor_orchestrator.cancel_task(task_id)
+    worker_lifecycle_manager.cancel_task(task_id, reason="Task Cancelled via API")
+    revoked_leases = lease_manager.revoke_all_for_task(task_id, reason="Task Cancelled via API")
+
     if not success1 and not success2:
         raise HTTPException(status_code=404, detail=f"Active task '{task_id}' not found.")
-    return {"status": "cancelled", "task_id": task_id}
+    return {"status": "cancelled", "task_id": task_id, "revoked_leases": revoked_leases}
 
 
 

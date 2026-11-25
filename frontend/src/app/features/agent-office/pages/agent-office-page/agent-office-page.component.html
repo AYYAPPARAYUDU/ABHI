@@ -2,221 +2,123 @@
   <!-- Central 3D Interactive WebGL Canvas Viewport -->
   <div class="office-viewport-canvas-wrapper">
     <canvas #officeCanvas class="office-three-canvas"></canvas>
-
-    <!-- Camera Navigation Quick-Bar (Bottom Center Floating) -->
-    <div class="camera-presets-bar">
-      <button
-        type="button"
-        class="cam-btn"
-        (click)="setCameraPreset('isometric')"
-        title="Full Isometric Office View"
-      >
-        <span>📐</span> Isometric
-      </button>
-      <button
-        type="button"
-        class="cam-btn"
-        (click)="setCameraPreset('bullpen')"
-        title="Focus on Bullpen Workstations"
-      >
-        <span>💻</span> Bullpen
-      </button>
-      <button
-        type="button"
-        class="cam-btn"
-        (click)="setCameraPreset('lounge')"
-        title="Focus on Coffee Bar & Lounge"
-      >
-        <span>☕</span> Lounge
-      </button>
-      <button
-        type="button"
-        class="cam-btn"
-        (click)="setCameraPreset('manager')"
-        title="Focus on Executive Manager Office"
-      >
-        <span>👔</span> Manager
-      </button>
-    </div>
   </div>
 
-  <!-- FLOATING LEFT HUD PANEL (Matches Reference Image media_1794747941448_71e02e55.jpg) -->
-  <aside class="office-left-panel" aria-label="Team Operations & Activity">
-    <!-- 1. Quad Metric KPI Cards (2x2 Grid) -->
-    <div class="quad-kpi-grid">
-      <div class="kpi-card">
-        <span class="kpi-label">ACTIVE AGENTS</span>
-        <div class="kpi-value text-green">
-          {{ activeAgentsCount() }}/{{ totalAgentsCount() }}
+  <!-- FLOATING LEFT HUD: Research Team Card + Sam QA Pill (Matches Reference Image 5) -->
+  <aside class="office-left-floating-hud" aria-label="Team Operations & Activity">
+    <div class="floating-team-card" [style.--pod-accent]="'#38bdf8'">
+      <div class="team-card-header">
+        <div class="team-avatar-badge" style="background-color: rgba(56, 189, 248, 0.15); border-color: #38bdf8;">
+          <span class="team-avatar-icon" style="color: #38bdf8;">🔍</span>
         </div>
-      </div>
-
-      <div class="kpi-card">
-        <span class="kpi-label">RUNNING TASKS</span>
-        <div class="kpi-value">
-          {{ runningTasksCount() }}
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <span class="kpi-label">COMPLETED TASKS</span>
-        <div class="kpi-value">
-          {{ completedTasksCount() }}
-        </div>
-      </div>
-
-      <div class="kpi-card">
-        <span class="kpi-label">PROJECT PROGRESS</span>
-        <div class="kpi-value text-blue">
-          {{ projectProgress() }}%
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. Active Project Bar -->
-    <div class="active-project-card">
-      <div class="project-info">
-        <span class="project-name">{{ activeProjectTitle() }}</span>
-        <span
-          class="project-status-pill"
-          [class.idle]="activeProjectStatus() === 'IDLE'"
-          [class.active]="activeProjectStatus() === 'IN PROGRESS'"
-          [class.completed]="activeProjectStatus() === 'COMPLETED'"
-        >
-          {{ activeProjectStatus() }}
-        </span>
-      </div>
-      @if (activeProjectStatus() === 'IN PROGRESS') {
-        <div class="project-progress-bar-track">
-          <div class="project-progress-bar-fill" [style.width.%]="projectProgress()"></div>
-        </div>
-      }
-    </div>
-
-    <!-- 3. New Task For The Team -->
-    <div class="new-task-section">
-      <h3 class="section-heading">NEW TASK FOR THE TEAM</h3>
-      <div class="task-input-wrapper">
-        <input
-          type="text"
-          class="team-task-input"
-          placeholder="e.g. Create a modern e-commerce website"
-          [(ngModel)]="teamTaskInput"
-          (keydown.enter)="startTeamTask()"
-          [disabled]="isExecutingTeamTask()"
-        />
-        <button
-          type="button"
-          class="task-start-btn"
-          (click)="startTeamTask()"
-          [disabled]="isExecutingTeamTask() || !teamTaskInput.trim()"
-        >
-          @if (isExecutingTeamTask()) {
-            <span class="spinner-dot"></span>
-          } @else {
-            ▶ Start
-          }
-        </button>
-      </div>
-
-      <!-- Quick Preset Suggestions -->
-      <div class="preset-suggestions">
-        <button
-          type="button"
-          class="preset-chip-btn"
-          (click)="setPresetTask('Create a modern e-commerce website')"
-        >
-          Create a modern e-commerce website
-        </button>
-        <button
-          type="button"
-          class="preset-chip-btn"
-          (click)="setPresetTask('Build an analytics dashboard with charts')"
-        >
-          Build an analytics dashboard with charts
-        </button>
-        <button
-          type="button"
-          class="preset-chip-btn"
-          (click)="setPresetTask('Landing page for a coffee brand')"
-        >
-          Landing page for a coffee brand
-        </button>
-      </div>
-    </div>
-
-    <!-- 4. Agent Activity List -->
-    <div class="agent-activity-section">
-      <h3 class="section-heading">AGENT ACTIVITY</h3>
-      <div class="agent-list">
-        @for (agent of agents; track agent.id) {
-          <div
-            class="agent-activity-card"
-            [class.selected]="selectedAgent()?.id === agent.id"
-            (click)="focusAgent(agent)"
-            [title]="'Click to focus 3D camera on ' + agent.name + '\'s desk'"
-          >
-            <div class="agent-avatar" [style.backgroundColor]="agent.avatarBg">
-              {{ agent.avatarLetter }}
-            </div>
-            <div class="agent-details">
-              <div class="agent-name-role">
-                <span class="name">{{ agent.name }}</span>
-                <span class="role-sep">·</span>
-                <span class="role">{{ agent.role }}</span>
-              </div>
-              <div class="agent-current-action">
-                {{ agent.currentAction }}
-              </div>
-            </div>
-            <div
-              class="agent-status-pill"
-              [class.idle]="agent.status === 'Idle'"
-              [class.active]="agent.status === 'Active'"
-            >
-              <span class="status-dot"></span>
-              {{ agent.status }}
-            </div>
+        <div class="team-identity">
+          <div class="team-title-row">
+            <h3 class="team-title">Research Team</h3>
           </div>
-        }
+          <p class="team-lead-meta">
+            <span class="lead-dot" style="background-color: #38bdf8;"></span>
+            {{ totalAgentsCount() ?? '—' }} agents · lead: Deep Learning Scientist
+          </p>
+        </div>
+        <button type="button" class="team-close-btn" title="Close Panel">✕</button>
       </div>
-    </div>
 
-    <!-- 5. Task Timeline -->
-    <div class="task-timeline-section">
-      <h3 class="section-heading">TASK TIMELINE</h3>
-      @if (taskTimeline().length === 0) {
-        <p class="timeline-empty-msg">
-          Tasks appear here once the manager splits the project
-        </p>
-      } @else {
-        <div class="timeline-stepper">
-          @for (step of taskTimeline(); track step.step) {
-            <div class="timeline-step-row" [class]="'step-' + step.status">
-              <div class="step-indicator">
-                <div class="step-circle">{{ step.step }}</div>
-                <div class="step-connector"></div>
+      <!-- 3 Stats Cards in a Row -->
+      <div class="team-metrics-row">
+        <div class="metric-mini-card">
+          <span class="metric-mini-label">Tasks today</span>
+          <div class="metric-mini-val-row">
+            <span class="metric-mini-val font-monospace">{{ tasksTodayCount() ?? '—' }}</span>
+          </div>
+        </div>
+
+        <div class="metric-mini-card">
+          <span class="metric-mini-label">Running</span>
+          <div class="metric-mini-val-row">
+            <span class="metric-mini-val font-monospace">{{ activeAgentsCount() ?? '—' }}</span>
+            <span class="metric-mini-badge text-cyan">● Active</span>
+          </div>
+        </div>
+
+        <div class="metric-mini-card">
+          <span class="metric-mini-label">Avg. turnaround</span>
+          <div class="metric-mini-val-row">
+            <span class="metric-mini-val font-monospace">{{ avgTurnaroundLabel() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connected Tools -->
+      <div class="team-section">
+        <div class="team-section-header">
+          <span class="team-section-label">CONNECTED TOOLS</span>
+          <span class="team-section-badge font-monospace">{{ connectedTools().length }} live</span>
+        </div>
+        <div class="connected-tools-list">
+          @for (tool of connectedTools(); track tool.name) {
+            <div class="connected-tool-item">
+              <div class="tool-icon-avatar" [style.backgroundColor]="tool.color">{{ tool.letter }}</div>
+              <div class="tool-meta">
+                <span class="tool-name">{{ tool.name }}</span>
+                <span class="tool-status">● {{ tool.protocol }}</span>
               </div>
-              <div class="step-body">
-                <div class="step-header">
-                  <span class="step-title">{{ step.title }}</span>
-                  <span class="step-owner-tag font-monospace">{{ step.owner }}</span>
-                </div>
-                <p class="step-desc">{{ step.detail }}</p>
+            </div>
+          } @empty {
+            <div class="connected-tool-item">
+              <div class="tool-meta">
+                <span class="tool-status">No live tools reported</span>
               </div>
             </div>
           }
         </div>
-      }
+      </div>
+
+      <!-- Skills -->
+      <div class="team-section">
+        <div class="team-section-header">
+          <span class="team-section-label">SKILLS</span>
+          <span class="team-section-badge font-monospace">{{ activeSkills().length }} active</span>
+        </div>
+        <div class="skills-progress-list">
+          @for (skill of activeSkills(); track skill.name) {
+            <div class="skill-progress-item">
+              <div class="skill-info-row">
+                <span class="skill-dot" style="background-color: #38bdf8;"></span>
+                <span class="skill-name">{{ skill.name }}</span>
+                <span class="skill-pct font-monospace">{{ skill.progress }}%</span>
+              </div>
+              <div class="skill-bar-track">
+                <div class="skill-bar-fill" [style.width.%]="skill.progress" style="background-color: #38bdf8;"></div>
+              </div>
+            </div>
+          } @empty {
+            <div class="skill-progress-item">
+              <div class="skill-info-row">
+                <span class="skill-name text-secondary">No active skills reported</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Sam · QA Status Pill (Matches Image 5) -->
+    <div class="agent-status-pill-card">
+      <div class="agent-pill-avatar">SA</div>
+      <div class="agent-pill-info">
+        <span class="agent-pill-name">Sam · QA</span>
+        <span class="agent-pill-desc">Coffee break at lounge</span>
+      </div>
+      <span class="agent-pill-tag">Coffee</span>
     </div>
   </aside>
 
-  <!-- FLOATING RIGHT HUD PANEL: AGENT COMMUNICATION (Matches Reference Image) -->
+  <!-- FLOATING RIGHT HUD PANEL: AGENT COMMUNICATION (Matches Reference Image 5) -->
   <aside class="office-right-panel" aria-label="Agent Communication Feed">
     <div class="comm-header">
       <h3 class="comm-title">AGENT COMMUNICATION</h3>
       <span class="comm-channel">
-        <span class="channel-dot"></span> team channel
+        <span class="channel-dot"></span> team-channel
       </span>
     </div>
 
@@ -225,7 +127,7 @@
         <div class="comm-message-row">
           <div class="msg-author-row">
             <span class="msg-sender" [style.color]="msg.color">{{ msg.sender }}</span>
-            <span class="msg-time">{{ msg.time }}</span>
+            <span class="msg-time font-monospace">{{ msg.time }}</span>
           </div>
           <div class="msg-body">
             {{ msg.message }}

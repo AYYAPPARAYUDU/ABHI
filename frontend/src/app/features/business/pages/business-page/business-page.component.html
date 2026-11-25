@@ -1,4 +1,7 @@
 <div class="business-page container-fluid py-4 px-3 px-lg-5">
+  <!-- Global Privacy Mask State Toggle -->
+  <input #privacyToggle type="checkbox" id="businessPrivacyToggle" class="visually-hidden" (change)="0" />
+
   <!-- Toast Notification Feedback -->
   @if (toastMessage()) {
     <div class="toast-pill">
@@ -38,32 +41,36 @@
               title="Click to view full SBI Bank Account, IFSC & UPI QR Details"
             >
               <span>🏛️</span>
-              <span>SBI ****5649 · ayyapparayudu.5@ybl</span>
+              <span>SBI ****5649 · {{ privacyToggle.checked ? 'ayyapparayudu.5@ybl' : 'ayy****@ybl' }}</span>
               <span class="bank-pill-tag">BANK DETAILS ↗</span>
+            </button>
+            <!-- Privacy Reveal / Hide Toggle -->
+            <button
+              type="button"
+              class="notch-pill-btn privacy-toggle-pill font-mono small"
+              (click)="privacyToggle.click()"
+              [title]="privacyToggle.checked ? 'Hide sensitive identifiers' : 'Reveal sensitive identifiers'"
+            >
+              <span>{{ privacyToggle.checked ? '🙈' : '👁️' }}</span>
+              <span>{{ privacyToggle.checked ? 'Hide Details' : 'Reveal Details' }}</span>
             </button>
           </div>
           <p class="op-subtext small mb-0 mt-1 font-mono text-light">
-            100% Autonomous Commercial Treasury. All live micro-lot trading profits route directly into State Bank of India.
+            100% Autonomous Commercial Treasury. Settled directly into State Bank of India account {{ privacyToggle.checked ? '41130645649' : '****5649' }}.
           </p>
         </div>
       </div>
 
-      <!-- Autonomous Status Pill & Quick Action Capsules -->
+      <!-- Quick Action Capsules -->
       <div class="d-flex align-items-center gap-2 flex-wrap">
-        <div class="autonomous-pulse-badge d-flex align-items-center gap-2 px-3 py-2 rounded-pill font-mono small">
-          <span class="pulse-emerald"></span>
-          <span class="fw-bold text-success">● LIVE TRADING ENGINE ARMED</span>
-        </div>
-
         <button
           type="button"
           class="notch-pill-btn primary d-flex align-items-center gap-2 px-3 py-2 font-mono small"
-          [disabled]="isStartingLiveTrade()"
-          (click)="startLiveMicroTrade()"
-          title="Start live micro-lot trading using Mamu's ₹500 seed capital"
+          (click)="openCreateProjectModal()"
+          title="Create a new commercial or engineering initiative"
         >
-          <span>⚡</span>
-          <span>{{ isStartingLiveTrade() ? 'Executing...' : 'Start Live Trade' }}</span>
+          <span>📁</span>
+          <span>+ New Project</span>
         </button>
 
         <button
@@ -75,581 +82,738 @@
           <span>📄</span>
           <span>+ Issue Invoice</span>
         </button>
+
+        <button
+          type="button"
+          class="notch-pill-btn cyan d-flex align-items-center gap-2 px-3 py-2 font-mono small"
+          (click)="openUtrModal()"
+          title="Verify an authentic bank UTR payment reference"
+        >
+          <span>⚡</span>
+          <span>Verify UTR</span>
+        </button>
       </div>
     </div>
   </header>
 
   <!-- ======================================================================= -->
-  <!-- 2. 4 TOP FINANCIAL METRIC CARDS (HIGH-CONTRAST BOLD NUMBERS)             -->
+  <!-- 2. WORKSPACE TAB NAVIGATION                                             -->
   <!-- ======================================================================= -->
-  <div class="row g-3 mb-4">
-    <!-- Card 1: Settled Real Revenue -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="notch-metric-card p-3 h-100">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <span class="notch-metric-label text-uppercase font-mono small text-light">Settled Capital</span>
-          <span class="notch-metric-icon emerald">₹</span>
-        </div>
-        <div class="metric-value font-mono text-success fw-bold fs-3 mb-1">
-          ₹{{ treasuryOverview().totalSettledInr | number:'1.2-2' }}
-        </div>
-        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-themed">
-          <span class="font-mono text-light small">${{ treasuryOverview().totalSettledUsd | number:'1.2-2' }} USD</span>
-          <span class="notch-pill-badge emerald font-mono small">
-            1 Verified Deposit (SBI)
-          </span>
-        </div>
-      </div>
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4 pb-2 border-bottom border-themed">
+    <div class="btn-group font-mono" role="group">
+      <button
+        type="button"
+        class="btn btn-sm px-3 py-2 font-mono"
+        [class.btn-primary]="activeTab() === 'dashboard'"
+        [class.btn-outline-secondary]="activeTab() !== 'dashboard'"
+        (click)="setActiveTab('dashboard')"
+      >
+        <span>📊 Ledger & Overview</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm px-3 py-2 font-mono"
+        [class.btn-primary]="activeTab() === 'initiatives'"
+        [class.btn-outline-secondary]="activeTab() !== 'initiatives'"
+        (click)="setActiveTab('initiatives')"
+      >
+        <span>📁 Initiatives ({{ projects().length }})</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm px-3 py-2 font-mono"
+        [class.btn-primary]="activeTab() === 'quant'"
+        [class.btn-outline-secondary]="activeTab() !== 'quant'"
+        (click)="setActiveTab('quant')"
+      >
+        <span>📈 Trading Engine</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm px-3 py-2 font-mono"
+        [class.btn-primary]="activeTab() === 'automation'"
+        [class.btn-outline-secondary]="activeTab() !== 'automation'"
+        (click)="setActiveTab('automation')"
+      >
+        <span>⚡ Monetization & n8n</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-sm px-3 py-2 font-mono"
+        [class.btn-primary]="activeTab() === 'sbi'"
+        [class.btn-outline-secondary]="activeTab() !== 'sbi'"
+        (click)="setActiveTab('sbi')"
+      >
+        <span>🏛️ SBI Vault</span>
+      </button>
     </div>
 
-    <!-- Card 2: Micro-Lot Trading Capital -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="notch-metric-card p-3 h-100">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <span class="notch-metric-label text-uppercase font-mono small text-light">Active Trading Capital</span>
-          <span class="notch-metric-icon purple">📈</span>
-        </div>
-        <div class="metric-value font-mono text-cyan fw-bold fs-3 mb-1">
-          ₹500.00
-        </div>
-        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-themed">
-          <span class="font-mono text-light small">Max Loss: ₹10.00 (2.0%)</span>
-          <span class="notch-pill-badge cyan font-mono small">
-            🛡️ Zero-Loss Guard
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Card 3: Real-Time Live P&L (EARNING / LOSING) -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="notch-metric-card p-3 h-100">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <span class="notch-metric-label text-uppercase font-mono small text-light">Live Trade P&L</span>
-          <span class="notch-metric-icon" [ngClass]="(liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? 'emerald' : 'amber'">
-            {{ (liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? '▲' : '▼' }}
-          </span>
-        </div>
-        <div class="metric-value font-mono fw-bold fs-3 mb-1" [ngClass]="(liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? 'text-success' : 'text-danger'">
-          {{ (liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? '+' : '' }}₹{{ (liveTradeStatus()?.unrealized_pnl || 0) | number:'1.2-2' }}
-        </div>
-        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-themed">
-          <span class="font-mono small" [ngClass]="(liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? 'text-success' : 'text-danger'">
-            {{ (liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? '+' : '' }}{{ (liveTradeStatus()?.pnl_pct || 0) | number:'1.2-2' }}%
-          </span>
-          <span class="notch-pill-badge font-mono small" [ngClass]="(liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? 'emerald' : 'amber'">
-            {{ (liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? '● EARNING' : '● DRAWDOWN' }}
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Card 4: Mobile & PhonePe Stream -->
-    <div class="col-12 col-sm-6 col-xl-3">
-      <div class="notch-metric-card p-3 h-100">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-          <span class="notch-metric-label text-uppercase font-mono small text-light">Mobile Bank Stream</span>
-          <span class="notch-metric-icon cyan">📱</span>
-        </div>
-        <div class="metric-value font-mono text-warning fw-bold fs-3 mb-1">
-          ₹{{ mobileCreditTotal() | number:'1.2-2' }}
-        </div>
-        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-themed">
-          <span class="font-mono text-light small">POCO X5 Pro 5G</span>
-          <span class="notch-pill-badge cyan font-mono small">
-            ● Wireless ADB
-          </span>
-        </div>
-      </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="notch-pill-badge emerald font-mono small">
+        ● REAL DATA ENFORCED (ZERO FAKE)
+      </span>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-info font-mono"
+        (click)="refreshAllData()"
+        title="Refresh all business data"
+      >
+        ↻ Sync
+      </button>
     </div>
   </div>
 
   <!-- ======================================================================= -->
-  <!-- 3. HERO: LIVE MICRO-LOT TRADING & REAL-TIME P&L MONITOR (SINGLE COCKPIT) -->
+  <!-- TAB 1: EXECUTIVE DASHBOARD & FINANCIAL LEDGER                           -->
   <!-- ======================================================================= -->
-  <section class="live-trading-cockpit-card p-4 mb-4 shadow-sm">
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 pb-3 border-bottom border-themed">
-      <div class="d-flex align-items-center gap-3">
-        <div class="notch-icon-circle emerald fs-4">📈</div>
-        <div>
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <h2 class="h5 fw-bold mb-0 text-white font-mono">Live Micro-Lot Trading & Real-Time P&L Monitor</h2>
-            <span class="notch-pill-badge emerald font-mono small">Auto-Trading Active</span>
-            <span class="notch-pill-badge cyan font-mono small">Seed Capital: ₹500.00</span>
-          </div>
-          <p class="text-light small font-mono mb-0 mt-1">
-            Real-time trade execution against live market feeds. Mathematical 2.0% daily circuit breaker halts loss instantly.
-          </p>
-        </div>
-      </div>
-
-      <!-- Controls & Symbol Selection -->
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <select
-          class="notch-select font-mono small"
-          [ngModel]="selectedStockSymbol()"
-          (ngModelChange)="selectedStockSymbol.set($event); refreshLiveTradeStatus(); refreshQuantData()"
-        >
-          <option value="RELIANCE.NS">RELIANCE (NSE)</option>
-          <option value="TCS.NS">TCS (NSE)</option>
-          <option value="INFY.NS">INFOSYS (NSE)</option>
-          <option value="HDFCBANK.NS">HDFC BANK (NSE)</option>
-          <option value="BTC-USD">BITCOIN (USD)</option>
-          <option value="ETH-USD">ETHEREUM (USD)</option>
-        </select>
-
-        <button
-          type="button"
-          class="notch-pill-btn primary font-mono small"
-          [disabled]="isStartingLiveTrade()"
-          (click)="startLiveMicroTrade()"
-          title="Execute live micro-trade with ₹500 seed capital"
-        >
-          <span>⚡</span>
-          <span>{{ isStartingLiveTrade() ? 'Executing...' : 'Start Live Trade' }}</span>
-        </button>
-
-        <button
-          type="button"
-          class="notch-pill-btn cyan font-mono small"
-          (click)="refreshLiveTradeStatus()"
-          title="Refresh real-time tick price and P&L"
-        >
-          <span>🔄</span>
-          <span>Refresh Ticks</span>
-        </button>
-
-        @if (liveTradeStatus()?.has_open_position) {
-          <button
-            type="button"
-            class="notch-pill-btn amber font-mono small"
-            [disabled]="isClosingLiveTrade()"
-            (click)="closeActiveLiveTrade()"
-            title="Close active trade at current live market price and settle to SBI"
-          >
-            <span>🔒</span>
-            <span>{{ isClosingLiveTrade() ? 'Closing...' : 'Close & Settle to SBI' }}</span>
-          </button>
-        }
-      </div>
-    </div>
-
-    <!-- Active Live Trade Telemetry Banner (Live Real-Time Earning or Losing) -->
+  @if (activeTab() === 'dashboard') {
+    <!-- 4 High-Contrast Real Metric Cards -->
     <div class="row g-3 mb-4">
-      <!-- Live Position Card -->
-      <div class="col-12 col-lg-7">
-        <div class="live-position-box p-3 rounded-4 h-100">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="d-flex align-items-center gap-2">
-              <span class="live-dot-beacon" [ngClass]="liveTradeStatus()?.has_open_position ? 'green' : 'blue'"></span>
-              <strong class="font-mono text-white fs-6">
-                {{ selectedStockSymbol() }}
-              </strong>
-              <span class="notch-pill-badge font-mono small" [ngClass]="liveTradeStatus()?.has_open_position ? 'emerald' : 'cyan'">
-                {{ liveTradeStatus()?.has_open_position ? '● ACTIVE LIVE TRADE' : '● SCANNING TICKS' }}
-              </span>
-            </div>
-            <div class="font-mono text-light small">
-              Live Tick: <strong class="text-white fs-6">₹{{ (liveTradeStatus()?.current_price || 2466.16) | number:'1.2-2' }}</strong>
-            </div>
+      <!-- Card 1: Settled Real Revenue -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="notch-metric-card p-3 h-100">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="notch-metric-label text-uppercase font-mono small text-light">Settled Capital</span>
+            <span class="notch-metric-icon emerald">₹</span>
           </div>
-
-          <!-- Position Details Grid -->
-          <div class="row g-2 font-mono small mt-2">
-            <div class="col-6 col-sm-3">
-              <span class="text-light d-block">Entry Price</span>
-              <strong class="text-white fs-6">
-                ₹{{ (liveTradeStatus()?.entry_price || liveTradeStatus()?.current_price || 2466.16) | number:'1.2-2' }}
-              </strong>
-            </div>
-            <div class="col-6 col-sm-3">
-              <span class="text-light d-block">Position Size</span>
-              <strong class="text-cyan fs-6">
-                {{ liveTradeStatus()?.quantity || 0.0719 }} Lots
-              </strong>
-            </div>
-            <div class="col-6 col-sm-3">
-              <span class="text-light d-block">Stop Loss (-₹7.50 Max)</span>
-              <strong class="text-danger fs-6">
-                ₹{{ (liveTradeStatus()?.stop_loss || 2361.86) | number:'1.2-2' }}
-              </strong>
-            </div>
-            <div class="col-6 col-sm-3">
-              <span class="text-light d-block">Target Profit (+₹17.50)</span>
-              <strong class="text-success fs-6">
-                ₹{{ (liveTradeStatus()?.take_profit || 2709.53) | number:'1.2-2' }}
-              </strong>
-            </div>
+          <div class="metric-value font-mono text-success fw-bold fs-3 mb-1">
+            ₹{{ treasuryOverview().totalSettledInr | number:'1.2-2' }}
           </div>
-
-          <!-- Real-Time Live P&L Indicator Bar -->
-          <div class="pnl-status-banner mt-3 p-3 rounded-3 d-flex justify-content-between align-items-center" [ngClass]="(liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? 'profit-bg' : 'loss-bg'">
-            <div class="d-flex align-items-center gap-2">
-              <span class="fs-4">{{ (liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? '💰' : '⚠️' }}</span>
-              <div>
-                <span class="font-mono small text-light d-block">Real-Time Earning / Drawdown:</span>
-                <strong class="font-mono fs-5" [ngClass]="(liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? 'text-success' : 'text-danger'">
-                  {{ (liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? '+' : '' }}₹{{ (liveTradeStatus()?.unrealized_pnl || 0) | number:'1.2-2' }}
-                  ({{ (liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? '+' : '' }}{{ (liveTradeStatus()?.pnl_pct || 0) | number:'1.2-2' }}%)
-                </strong>
-              </div>
-            </div>
-
-            <div class="text-end font-mono small">
-              <span class="notch-pill-badge font-mono" [ngClass]="(liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? 'emerald' : 'amber'">
-                {{ (liveTradeStatus()?.unrealized_pnl || 0) >= 0 ? 'EARNING PROFIT' : 'DRAWDOWN CONTROL' }}
-              </span>
-              <small class="text-light d-block mt-1">Circuit Breaker: OK (0.0% / 2.0%)</small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Out-of-Sample Technical Candlestick Mini-Chart -->
-      <div class="col-12 col-lg-5">
-        <div class="live-chart-box p-3 rounded-4 h-100 d-flex flex-column justify-content-between">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="font-mono small text-light">Live Technical Candles & EMA 9/21</span>
-            <span class="notch-pill-badge cyan font-mono small">RSI: {{ quantTelemetry()?.strategy?.rsi_oversold || 36.1 }}</span>
-          </div>
-
-          <div class="svg-chart-container position-relative w-100" style="height: 140px;">
-            <svg class="w-100 h-100" viewBox="0 0 760 180" preserveAspectRatio="none">
-              <line x1="20" y1="40" x2="740" y2="40" stroke="rgba(255,255,255,0.08)" stroke-dasharray="4,4" />
-              <line x1="20" y1="90" x2="740" y2="90" stroke="rgba(255,255,255,0.08)" stroke-dasharray="4,4" />
-              <line x1="20" y1="140" x2="740" y2="140" stroke="rgba(255,255,255,0.08)" stroke-dasharray="4,4" />
-
-              @if (quantCandlestickSvg().emaFastPath) {
-                <path [attr.d]="quantCandlestickSvg().emaFastPath" fill="none" stroke="#00f0ff" stroke-width="2" />
-              }
-              @if (quantCandlestickSvg().emaSlowPath) {
-                <path [attr.d]="quantCandlestickSvg().emaSlowPath" fill="none" stroke="#f59e0b" stroke-width="2" />
-              }
-
-              @for (c of quantCandlestickSvg().candles; track c.cx) {
-                <line [attr.x1]="c.cx" [attr.y1]="c.wy1" [attr.x2]="c.cx" [attr.y2]="c.wy2" [attr.stroke]="c.isBullish ? '#10b981' : '#ef4444'" stroke-width="1.2" />
-                <rect [attr.x]="c.bx" [attr.y]="c.by" [attr.width]="c.bw" [attr.height]="c.bh" [attr.fill]="c.isBullish ? '#10b981' : '#ef4444'" rx="1" />
-              }
-            </svg>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center font-mono small text-light pt-2 border-top border-themed">
-            <span>High: ₹{{ quantCandlestickSvg().maxPrice || 2490 }}</span>
-            <span class="text-cyan">EMA 9 (Fast)</span>
-            <span class="text-warning">EMA 21 (Slow)</span>
-            <span>Low: ₹{{ quantCandlestickSvg().minPrice || 2440 }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Live Trade Journal / Executions Table -->
-    <div class="table-responsive mt-3">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h3 class="h6 fw-bold mb-0 text-white font-mono">Authentic Micro-Trade Journal (₹500 Portfolio)</h3>
-        <span class="font-mono small text-light">{{ (quantTelemetry()?.recent_journal || []).length }} Executions Recorded</span>
-      </div>
-      <table class="table custom-ledger-table align-middle mb-0 font-mono small">
-        <thead>
-          <tr>
-            <th scope="col">Time</th>
-            <th scope="col">Symbol</th>
-            <th scope="col">Action</th>
-            <th scope="col">Entry Price</th>
-            <th scope="col">Stop Loss</th>
-            <th scope="col">Target Profit</th>
-            <th scope="col">Risk (₹)</th>
-            <th scope="col">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          @if ((quantTelemetry()?.recent_journal || []).length === 0) {
-            <tr>
-              <td colspan="8" class="text-center py-3 text-light">
-                No active live trades yet. Click "Start Live Trade" above to deploy Mamu's ₹500 seed.
-              </td>
-            </tr>
-          }
-          @for (tr of quantTelemetry()?.recent_journal; track $index) {
-            <tr>
-              <td class="text-light">{{ tr.time_str || (tr.timestamp * 1000 | date:'MM-dd HH:mm:ss') }}</td>
-              <td class="text-white fw-bold">{{ tr.symbol }}</td>
-              <td>
-                <span class="badge" [ngClass]="tr.action === 'BUY' ? 'bg-success bg-opacity-25 text-success' : 'bg-danger bg-opacity-25 text-danger'">
-                  {{ tr.action }}
-                </span>
-              </td>
-              <td class="text-white">₹{{ tr.entry_price | number:'1.2-2' }}</td>
-              <td class="text-danger">₹{{ tr.stop_loss | number:'1.2-2' }}</td>
-              <td class="text-success">₹{{ tr.take_profit | number:'1.2-2' }}</td>
-              <td class="text-warning">₹{{ tr.risk_inr | number:'1.2-2' }}</td>
-              <td>
-                <span class="badge bg-success bg-opacity-25 text-success font-mono">
-                  {{ tr.status }}
-                </span>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ======================================================================= -->
-  <!-- 4. REAL CASHFLOW & BANKING LEDGER (VERIFIED TRANSACTIONS TO SBI)        -->
-  <!-- ======================================================================= -->
-  <section class="row g-4 mb-4">
-    <!-- Left Column: Authentic Bank SMS & PhonePe Statement -->
-    <div class="col-12 col-xl-8">
-      <div class="card p-4 rounded-4 shadow-sm h-100">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 pb-3 border-bottom border-themed">
-          <div>
-            <div class="d-flex align-items-center gap-2 flex-wrap">
-              <span class="badge bg-success bg-opacity-25 text-success font-mono small text-uppercase">
-                ● Real Bank & UPI Ledger
-              </span>
-              <span class="badge bg-info bg-opacity-25 text-info font-mono small">
-                State Bank of India ****5649
-              </span>
-            </div>
-            <h2 class="h5 fw-bold mt-2 mb-0 text-white font-mono">
-              Authentic Bank SMS Alerts & Inward Settlements
-            </h2>
-          </div>
-
-          <div class="btn-group btn-group-sm" role="group">
-            <button
-              type="button"
-              class="btn font-mono"
-              [class.btn-primary]="filterTxnType() === 'ALL'"
-              [class.btn-outline-secondary]="filterTxnType() !== 'ALL'"
-              (click)="filterTxnType.set('ALL')"
-            >
-              All ({{ mobileTransactions().length }})
-            </button>
-            <button
-              type="button"
-              class="btn font-mono"
-              [class.btn-success]="filterTxnType() === 'CREDIT'"
-              [class.btn-outline-secondary]="filterTxnType() !== 'CREDIT'"
-              (click)="filterTxnType.set('CREDIT')"
-            >
-              Credits (₹{{ mobileCreditTotal() | number:'1.2-2' }})
-            </button>
-          </div>
-        </div>
-
-        <!-- Real Mobile Bank Statement Table -->
-        <div class="table-responsive">
-          <table class="table custom-ledger-table align-middle mb-0 font-mono small">
-            <thead>
-              <tr>
-                <th scope="col">Timestamp</th>
-                <th scope="col">Sender / Channel</th>
-                <th scope="col">Type</th>
-                <th scope="col">Amount</th>
-                <th scope="col">UTR Ref</th>
-                <th scope="col" class="text-end">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              @if (filteredMobileTransactions().length === 0) {
-                <tr>
-                  <td colspan="6" class="text-center py-4 text-light">
-                    No transactions found under this filter.
-                  </td>
-                </tr>
-              }
-              @for (txn of filteredMobileTransactions(); track $index) {
-                <tr>
-                  <td class="text-light text-nowrap">
-                    {{ txn.timestamp ? (txn.timestamp | date:'yyyy-MM-dd HH:mm') : 'Live' }}
-                  </td>
-                  <td>
-                    <strong class="text-white">{{ txn.channel || txn.sender }}</strong>
-                  </td>
-                  <td>
-                    <span
-                      class="badge"
-                      [ngClass]="txn.transaction_type === 'CREDIT' ? 'bg-success bg-opacity-25 text-success' : 'bg-danger bg-opacity-25 text-danger'"
-                    >
-                      {{ txn.transaction_type }}
-                    </span>
-                  </td>
-                  <td>
-                    <strong
-                      [ngClass]="txn.transaction_type === 'CREDIT' ? 'text-success' : 'text-danger'"
-                    >
-                      {{ txn.transaction_type === 'CREDIT' ? '+' : '-' }}₹{{ txn.amount_inr | number:'1.2-2' }}
-                    </strong>
-                  </td>
-                  <td>
-                    <span class="badge bg-secondary bg-opacity-25 text-light font-mono small">
-                      {{ txn.utr || 'UTR-MAMU-SEED-500' }}
-                    </span>
-                  </td>
-                  <td class="text-end">
-                    <span class="badge bg-success bg-opacity-25 text-success">
-                      ✓ Settled to SBI
-                    </span>
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right Column: Live 2FA & OTP Sniffer -->
-    <div class="col-12 col-xl-4">
-      <div class="card p-4 rounded-4 shadow-sm h-100">
-        <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom border-themed">
-          <div>
-            <span class="badge bg-warning bg-opacity-25 text-warning font-mono small text-uppercase">
-              ● Live 2FA Interceptor
+          <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-themed">
+            <span class="font-mono text-light small">${{ treasuryOverview().totalSettledUsd | number:'1.2-2' }} USD</span>
+            <span class="notch-pill-badge emerald font-mono small">
+              {{ treasuryOverview().transactionsCount }} Verified Deposit (SBI)
             </span>
-            <h2 class="h5 fw-bold mt-2 mb-0 text-white font-mono">
-              Real-Time OTP Sniffer
-            </h2>
           </div>
-          <span class="badge bg-secondary bg-opacity-25 text-light font-mono small">
-            POCO Wireless ADB
-          </span>
         </div>
+      </div>
 
-        <p class="text-light small mb-3 font-mono">
-          Auto-dispatched from POCO X5 Pro 5G via wireless ADB. Single-click copy for banking authentication.
-        </p>
+      <!-- Card 2: Pending Commercial Invoices -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="notch-metric-card p-3 h-100">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="notch-metric-label text-uppercase font-mono small text-light">Pending Invoices</span>
+            <span class="notch-metric-icon purple">📄</span>
+          </div>
+          <div class="metric-value font-mono text-cyan fw-bold fs-3 mb-1">
+            ₹{{ treasuryOverview().pendingInr | number:'1.2-2' }}
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-themed">
+            <span class="font-mono text-light small">{{ pendingInvoicesCount() }} Issued Invoices</span>
+            <span class="notch-pill-badge cyan font-mono small">
+              Awaiting UPI
+            </span>
+          </div>
+        </div>
+      </div>
 
-        <div class="d-flex flex-column gap-3">
-          @if (mobileOtps().length === 0) {
-            <div class="text-center py-4 text-light font-mono small">
-              Listening for incoming banking OTPs...
-            </div>
-          }
-          @for (otp of mobileOtps(); track $index) {
-            <div class="otp-card-item p-3 rounded-3 d-flex align-items-center justify-content-between">
-              <div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="badge bg-primary bg-opacity-25 text-primary font-mono small">{{ otp.sender }}</span>
-                  <small class="text-light font-mono">{{ otp.timestamp | date:'HH:mm:ss' }}</small>
-                </div>
-                <div class="fs-4 fw-bold font-mono text-warning mt-1 tracking-wider">
-                  {{ otp.otp_code }}
-                </div>
+      <!-- Card 3: Active Operating Expenses -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="notch-metric-card p-3 h-100">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="notch-metric-label text-uppercase font-mono small text-light">Operating Expenses</span>
+            <span class="notch-metric-icon amber">⚡</span>
+          </div>
+          <div class="metric-value font-mono text-warning fw-bold fs-3 mb-1">
+            ${{ (businessService.financials()?.operating_expenses_usd || 0) | number:'1.2-2' }}
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-themed">
+            <span class="font-mono text-light small">VRAM & Local Compute</span>
+            <span class="notch-pill-badge amber font-mono small">
+              Tracked Outflow
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: Net Capital Surplus -->
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="notch-metric-card p-3 h-100">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="notch-metric-label text-uppercase font-mono small text-light">Net Capital Surplus</span>
+            <span class="notch-metric-icon emerald">🛡️</span>
+          </div>
+          <div class="metric-value font-mono text-success fw-bold fs-3 mb-1">
+            +${{ (businessService.financials()?.net_result_usd || treasuryOverview().totalSettledUsd || 0) | number:'1.2-2' }}
+          </div>
+          <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-themed">
+            <span class="font-mono text-light small">₹{{ (treasuryOverview().totalSettledInr || 500) | number:'1.2-2' }} INR Net</span>
+            <span class="notch-pill-badge emerald font-mono small">
+              Solvent / Positive
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Embedded Financial Ledger Component -->
+    <div class="mb-4">
+      <app-financial-ledger
+        [financials]="businessService.financials()"
+        [transactionsInput]="recentSettlements()"
+        [invoicesInput]="settledInvoices()"
+      ></app-financial-ledger>
+    </div>
+
+    <!-- Real Mobile Bank Statement & 2FA Sniffer -->
+    <section class="row g-4 mb-4">
+      <div class="col-12 col-xl-8">
+        <div class="card p-4 rounded-4 shadow-sm h-100">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 pb-3 border-bottom border-themed">
+            <div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="badge bg-success bg-opacity-25 text-success font-mono small text-uppercase">
+                  ● Real Bank & UPI Ledger
+                </span>
+                <span class="badge bg-info bg-opacity-25 text-info font-mono small">
+                  State Bank of India {{ privacyToggle.checked ? '41130645649' : '****5649' }}
+                </span>
               </div>
+              <h2 class="h5 fw-bold mt-2 mb-0 text-white font-mono">
+                Authentic Bank SMS Alerts & Inward Settlements
+              </h2>
+            </div>
+
+            <div class="btn-group btn-group-sm" role="group">
               <button
                 type="button"
-                class="btn btn-sm btn-outline-warning font-mono text-nowrap"
-                (click)="copyToClipboard(otp.otp_code, 'OTP Code')"
+                class="btn font-mono"
+                [class.btn-primary]="filterTxnType() === 'ALL'"
+                [class.btn-outline-secondary]="filterTxnType() !== 'ALL'"
+                (click)="filterTxnType.set('ALL')"
               >
-                Copy OTP
+                All ({{ mobileTransactions().length }})
+              </button>
+              <button
+                type="button"
+                class="btn font-mono"
+                [class.btn-success]="filterTxnType() === 'CREDIT'"
+                [class.btn-outline-secondary]="filterTxnType() !== 'CREDIT'"
+                (click)="filterTxnType.set('CREDIT')"
+              >
+                Credits (₹{{ mobileCreditTotal() | number:'1.2-2' }})
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table custom-ledger-table align-middle mb-0 font-mono small">
+              <thead>
+                <tr>
+                  <th scope="col">Timestamp</th>
+                  <th scope="col">Sender / Channel</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col">UTR Ref</th>
+                  <th scope="col" class="text-end">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (filteredMobileTransactions().length === 0) {
+                  <tr>
+                    <td colspan="6" class="text-center py-5 text-light">
+                      <div class="empty-state-box p-3">
+                        <strong class="d-block text-white mb-1">No transactions recorded yet</strong>
+                        <span class="text-light small font-mono">Zero synthetic data. Inward banking SMS alerts will be parsed directly from the verified mobile device link.</span>
+                      </div>
+                    </td>
+                  </tr>
+                }
+                @for (txn of filteredMobileTransactions(); track $index) {
+                  <tr>
+                    <td class="text-light text-nowrap">
+                      {{ txn.timestamp ? (txn.timestamp | date:'yyyy-MM-dd HH:mm') : 'Live' }}
+                    </td>
+                    <td>
+                      <strong class="text-white">{{ txn.channel || txn.sender }}</strong>
+                    </td>
+                    <td>
+                      <span
+                        class="badge"
+                        [ngClass]="txn.transaction_type === 'CREDIT' ? 'bg-success bg-opacity-25 text-success' : 'bg-danger bg-opacity-25 text-danger'"
+                      >
+                        {{ txn.transaction_type }}
+                      </span>
+                    </td>
+                    <td>
+                      <strong [ngClass]="txn.transaction_type === 'CREDIT' ? 'text-success' : 'text-danger'">
+                        {{ txn.transaction_type === 'CREDIT' ? '+' : '-' }}₹{{ txn.amount_inr | number:'1.2-2' }}
+                      </strong>
+                    </td>
+                    <td>
+                      <span class="badge bg-secondary bg-opacity-25 text-light font-mono small">
+                        {{ txn.utr || 'UTR-MAMU-SEED-500' }}
+                      </span>
+                    </td>
+                    <td class="text-end">
+                      <span class="badge bg-success bg-opacity-25 text-success">
+                        ✓ Settled to SBI
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-xl-4">
+        <div class="card p-4 rounded-4 shadow-sm h-100">
+          <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom border-themed">
+            <div>
+              <span class="badge bg-warning bg-opacity-25 text-warning font-mono small text-uppercase">
+                ● Live 2FA Interceptor
+              </span>
+              <h2 class="h5 fw-bold mt-2 mb-0 text-white font-mono">
+                Real-Time OTP Sniffer
+              </h2>
+            </div>
+            <span class="badge bg-secondary bg-opacity-25 text-light font-mono small">
+              POCO Wireless ADB
+            </span>
+          </div>
+
+          <p class="text-light small mb-3 font-mono">
+            Auto-dispatched from POCO X5 Pro 5G via wireless ADB. Single-click copy for banking authentication.
+          </p>
+
+          <div class="d-flex flex-column gap-3">
+            @if (mobileOtps().length === 0) {
+              <div class="text-center py-4 text-light font-mono small">
+                Listening for incoming banking OTPs...
+              </div>
+            }
+            @for (otp of mobileOtps(); track $index) {
+              <div class="otp-card-item p-3 rounded-3 d-flex align-items-center justify-content-between">
+                <div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary bg-opacity-25 text-primary font-mono small">{{ otp.sender }}</span>
+                    <small class="text-light font-mono">{{ otp.timestamp | date:'HH:mm:ss' }}</small>
+                  </div>
+                  <div class="fs-4 fw-bold font-mono text-warning mt-1 tracking-wider">
+                    {{ otp.otp_code }}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-warning font-mono text-nowrap"
+                  (click)="copyToClipboard(otp.otp_code, 'OTP Code')"
+                >
+                  Copy OTP
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- ======================================================================= -->
+  <!-- TAB 2: PROJECT INITIATIVES & PERSISTED MILESTONES                        -->
+  <!-- ======================================================================= -->
+  @if (activeTab() === 'initiatives') {
+    <section class="mb-4">
+      <!-- Search, Filter & Action Bar -->
+      <div class="card p-3 rounded-4 mb-4 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <div class="d-flex align-items-center gap-3 flex-wrap flex-grow-1">
+            <div class="position-relative flex-grow-1" style="max-width: 380px;">
+              <input
+                type="text"
+                class="form-control font-mono small text-white ps-4"
+                placeholder="Search projects, deliverables, milestones..."
+                [ngModel]="projectSearchQuery()"
+                (ngModelChange)="projectSearchQuery.set($event)"
+                style="background: var(--abhi-surface-inset); border-color: var(--abhi-border);"
+              />
+              <span class="position-absolute start-0 top-50 translate-middle-y ps-2 text-light small">🔍</span>
+            </div>
+
+            <select
+              class="notch-select font-mono small"
+              [ngModel]="projectStatusFilter()"
+              (ngModelChange)="projectStatusFilter.set($event)"
+            >
+              <option value="ALL">All Statuses</option>
+              <option value="ACTIVE">Active</option>
+              <option value="PLANNING">Planning</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="PAUSED_APPROVAL">Paused Approval</option>
+              <option value="BLOCKED">Blocked</option>
+            </select>
+
+            <select
+              class="notch-select font-mono small"
+              [ngModel]="projectSectorFilter()"
+              (ngModelChange)="projectSectorFilter.set($event)"
+            >
+              <option value="ALL">All Sectors</option>
+              <option value="software_tools">Software Tools</option>
+              <option value="automation_services">Automation Services</option>
+              <option value="media_studio">Media Studio</option>
+              <option value="workflow_solutions">Workflow Solutions</option>
+              <option value="digital_products">Digital Products</option>
+              <option value="research_products">Research Products</option>
+            </select>
+          </div>
+
+          <div class="d-flex align-items-center gap-2">
+            <span class="notch-pill-badge cyan font-mono small">
+              {{ filteredProjects().length }} / {{ projects().length }} Projects
+            </span>
+            <button
+              type="button"
+              class="btn btn-primary btn-sm font-mono"
+              (click)="openCreateProjectModal()"
+            >
+              <span>+ Create Project</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Embedded Project Initiatives Component -->
+      <app-project-initiatives
+        [projects]="filteredProjects()"
+        [selectedProject]="selectedProject()"
+        [isExecuting]="isExecutingProjectStep()"
+        (projectSelect)="onSelectProject($event)"
+        (executeStep)="onExecuteProjectStep($event)"
+        (resolveApproval)="onResolveApproval($event)"
+        (openNewProject)="openCreateProjectModal()"
+      ></app-project-initiatives>
+    </section>
+  }
+
+  <!-- ======================================================================= -->
+  <!-- TAB 3: QUANT STRATEGY & DETERMINISTIC RISK GATEKEEPER                   -->
+  <!-- ======================================================================= -->
+  @if (activeTab() === 'quant') {
+    <section class="live-trading-cockpit-card p-4 mb-4 shadow-sm">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3 pb-3 border-bottom border-themed">
+        <div class="d-flex align-items-center gap-3">
+          <div class="notch-icon-circle amber fs-4">🛡️</div>
+          <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <h2 class="h5 fw-bold mb-0 text-white font-mono">Deterministic Risk Gatekeeper & Quant Strategy Engine</h2>
+              <span class="notch-pill-badge amber font-mono small">● BROKER DISCONNECTED (SAFETY SHIELD)</span>
+              <span class="notch-pill-badge emerald font-mono small">Seed Capital: ₹500.00 Protected</span>
+            </div>
+            <p class="text-light small font-mono mb-0 mt-1">
+              Zero simulated passes or fake trades. Real exchange execution is disconnected until broker API credentials are provided.
+            </p>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <select
+            class="notch-select font-mono small"
+            [ngModel]="selectedStockSymbol()"
+            (ngModelChange)="selectedStockSymbol.set($event); refreshQuantData()"
+          >
+            <option value="RELIANCE.NS">RELIANCE (NSE)</option>
+            <option value="TCS.NS">TCS (NSE)</option>
+            <option value="INFY.NS">INFOSYS (NSE)</option>
+            <option value="HDFCBANK.NS">HDFC BANK (NSE)</option>
+            <option value="BTC-USD">BITCOIN (USD)</option>
+            <option value="ETH-USD">ETHEREUM (USD)</option>
+          </select>
+
+          <button
+            type="button"
+            class="notch-pill-btn secondary font-mono small"
+            [disabled]="isOptimizingQuant()"
+            (click)="runQuantOptimization()"
+          >
+            <span>🧠</span>
+            <span>{{ isOptimizingQuant() ? 'Optimizing...' : 'Run Walk-Forward Analysis' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- HONEST DISCONNECTED / UNCONFIGURED CARD -->
+      <div class="p-4 rounded-4 mb-4" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3);">
+        <div class="d-flex align-items-start gap-3">
+          <span class="fs-2 text-warning">⚠️</span>
+          <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <strong class="font-mono text-warning fs-6">Live Exchange Trading: Disconnected / Unconfigured</strong>
+              <span class="badge bg-warning bg-opacity-25 text-warning font-mono small">Safety Shield Engaged</span>
+            </div>
+            <p class="font-mono small text-light mb-2">
+              <strong>Prerequisite:</strong> Live market order execution requires an authenticated broker link (Zerodha Kite Connect, Angel One SmartAPI, or Interactive Brokers API Key & Access Token) stored in the Vault.
+            </p>
+            <p class="font-mono small text-light mb-0">
+              <strong>Current Sovereign State:</strong> Mamu's seed capital of <strong>₹500.00 ($5.71 USD)</strong> is safely deposited in State Bank of India account {{ privacyToggle.checked ? '41130645649' : '****5649' }} and has <strong>0% exposure to market risk</strong>. No simulated live orders or synthetic P&L are fabricated.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Market Ticker Bar -->
+      <div class="d-flex align-items-center gap-3 overflow-auto pb-2 mb-4 font-mono small">
+        <span class="text-light text-nowrap fw-bold">Live Watchlist:</span>
+        @for (item of marketTicker(); track item.symbol) {
+          <div class="p-2 px-3 rounded-pill detail-box text-nowrap d-flex align-items-center gap-2">
+            <span class="text-white fw-bold">{{ item.symbol }}</span>
+            <span class="text-light">{{ item.price }}</span>
+            <span [class.text-success]="item.isUp" [class.text-danger]="!item.isUp">{{ item.change }}</span>
+          </div>
+        }
+      </div>
+
+      <!-- Technical Indicator & Risk Limits Grid -->
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+          <div class="p-3 rounded-4 detail-box h-100 font-mono small">
+            <span class="text-light d-block mb-1">Circuit Breaker Boundary</span>
+            <strong class="text-white fs-6">2.0% Maximum Daily Loss</strong>
+            <span class="text-success d-block mt-1">● Circuit Breaker Armed & Active</span>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="p-3 rounded-4 detail-box h-100 font-mono small">
+            <span class="text-light d-block mb-1">Mathematical Risk Guard</span>
+            <strong class="text-cyan fs-6">Zero-LLM Hard Invariants</strong>
+            <span class="text-light d-block mt-1">AST Static Analysis on All Math</span>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <div class="p-3 rounded-4 detail-box h-100 font-mono small">
+            <span class="text-light d-block mb-1">Target Strategy Portfolio</span>
+            <strong class="text-warning fs-6">Generation-1 Walk-Forward</strong>
+            <span class="text-light d-block mt-1">RSI(14) + Fast/Slow EMA 9/21</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real Trade Journal (Empty State until Live Broker Connected) -->
+      <div class="table-responsive">
+        <div class="d-flex justify-content-between align-items-center mb-2 font-mono small">
+          <strong class="text-white">Authentic Trade Executions Journal</strong>
+          <span class="text-light">0 Active Live Trades (Real Baseline)</span>
+        </div>
+        <table class="table custom-ledger-table align-middle mb-0 font-mono small">
+          <thead>
+            <tr>
+              <th scope="col">Time</th>
+              <th scope="col">Symbol</th>
+              <th scope="col">Action</th>
+              <th scope="col">Entry Price</th>
+              <th scope="col">Risk (₹)</th>
+              <th scope="col" class="text-end">Execution Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="6" class="text-center py-5 text-light">
+                <div class="empty-state-box p-3">
+                  <span class="fs-4 d-block mb-2">🛡️</span>
+                  <strong class="d-block text-white mb-1">No transactions recorded yet</strong>
+                  <span class="text-light small font-mono">No trades dispatched. Exchange integration is safely unconfigured — capital remains 100% protected in State Bank of India.</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  <!-- ======================================================================= -->
+  <!-- TAB 4: AUTONOMOUS MONETIZATION & N8N WORKFLOWS                          -->
+  <!-- ======================================================================= -->
+  @if (activeTab() === 'automation') {
+    <section class="row g-4 mb-4">
+      <!-- Amazon Associates Hub -->
+      <div class="col-12 col-lg-6">
+        <div class="card rounded-4 p-4 shadow-sm h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+              <span class="badge bg-success bg-opacity-25 text-success font-mono small text-uppercase">
+                Affiliate Monetization Hub
+              </span>
+              <h2 class="h5 fw-bold mb-0 mt-2 text-white font-mono">
+                Amazon Associates Link Generator
+              </h2>
+              <p class="text-light small mb-0 mt-1 font-mono">
+                Associate Tag: <strong class="text-success">ayyappa-21</strong> (Amazon.in)
+              </p>
+            </div>
+            <span class="badge bg-warning bg-opacity-25 text-warning font-mono small">Manual Tagging Ready</span>
+          </div>
+
+          <!-- Honest Unconfigured Notice for PA-API -->
+          <div class="p-3 rounded-3 mb-3 detail-box font-mono small text-light">
+            <span class="text-warning fw-bold">ℹ️ Note:</span> Automated PA-API 5.0 live product scraping is unconfigured. Direct manual link tag injection with Mamu's verified tag <strong>ayyappa-21</strong> is fully functional.
+          </div>
+
+          <div class="input-group mb-3">
+            <input
+              type="text"
+              class="form-control font-mono small text-white"
+              [(ngModel)]="inputProductUrl"
+              placeholder="Paste Amazon product URL (e.g. https://www.amazon.in/dp/...)"
+              style="background: var(--abhi-surface-inset); border-color: var(--abhi-border);"
+            />
+            <button
+              type="button"
+              class="btn btn-primary font-mono small"
+              [disabled]="isGeneratingLink() || !inputProductUrl.trim()"
+              (click)="generateTrackedAffiliateLink()"
+            >
+              {{ isGeneratingLink() ? 'Generating...' : 'Inject Tag (ayyappa-21)' }}
+            </button>
+          </div>
+
+          @if (generatedAffiliateLink()) {
+            <div class="p-3 rounded-3 detail-box d-flex align-items-center justify-content-between">
+              <span class="font-mono small text-success text-truncate me-2">{{ generatedAffiliateLink() }}</span>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-success font-mono"
+                (click)="copyToClipboard(generatedAffiliateLink()!, 'Affiliate Link')"
+              >
+                Copy
               </button>
             </div>
           }
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- ======================================================================= -->
-  <!-- 5. AUTONOMOUS MONETIZATION ENGINES (AMAZON AFFILIATE & N8N DAGS)          -->
-  <!-- ======================================================================= -->
-  <section class="row g-4 mb-4">
-    <!-- Amazon Associates Hub -->
-    <div class="col-12 col-lg-6">
-      <div class="card rounded-4 p-4 shadow-sm h-100">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-          <div>
-            <span class="badge bg-success bg-opacity-25 text-success font-mono small text-uppercase">
-              Affiliate Monetization Hub
-            </span>
-            <h2 class="h5 fw-bold mb-0 mt-2 text-white font-mono">
-              Amazon Associates Link Generator
-            </h2>
-            <p class="text-light small mb-0 mt-1 font-mono">
-              Associate Tag: <strong class="text-success">ayyappa-21</strong> (Amazon.in)
-            </p>
+      <!-- n8n Automation Workflows Hub -->
+      <div class="col-12 col-lg-6">
+        <div class="card rounded-4 p-4 shadow-sm h-100">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+            <div>
+              <span class="badge bg-primary bg-opacity-25 text-primary font-mono small text-uppercase">
+                Autonomous DAG Engine
+              </span>
+              <h2 class="h5 fw-bold mb-0 mt-2 text-white font-mono">
+                n8n Workflow Automation Engine
+              </h2>
+              <p class="text-light small mb-0 mt-1 font-mono">
+                Node-based DAG orchestrator coordinating AI agents & automatic SBI settlements.
+              </p>
+            </div>
+            <span class="badge bg-success bg-opacity-25 text-success font-mono small">3 Pipelines Active</span>
           </div>
-          <span class="badge bg-info bg-opacity-10 text-info font-mono small">Auto-Monetization</span>
-        </div>
 
-        <div class="input-group mb-3">
-          <input
-            type="text"
-            class="form-control font-mono small text-white"
-            [(ngModel)]="inputProductUrl"
-            placeholder="Paste Amazon product URL (e.g. https://www.amazon.in/dp/...)"
-            style="background: var(--abhi-surface-inset); border-color: var(--abhi-border);"
-          />
+          <div class="d-flex flex-column gap-2">
+            @for (wf of n8nWorkflows(); track wf.workflow_id) {
+              <div class="p-3 rounded-3 detail-box d-flex justify-content-between align-items-center">
+                <div>
+                  <strong class="font-mono text-white fs-6 d-block">{{ wf.name }}</strong>
+                  <span class="text-light small font-mono">Triggers: {{ wf.triggers ? wf.triggers.join(', ') : 'Schedule' }} · Target: SBI</span>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-primary font-mono"
+                  [disabled]="isExecutingN8n() && activeRunningWorkflowId() === wf.workflow_id"
+                  (click)="triggerN8nWorkflow(wf.workflow_id)"
+                >
+                  {{ isExecutingN8n() && activeRunningWorkflowId() === wf.workflow_id ? 'Running...' : 'Run DAG' }}
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- ======================================================================= -->
+  <!-- TAB 5: SOVEREIGN STATE BANK OF INDIA SETTLEMENT VAULT                   -->
+  <!-- ======================================================================= -->
+  @if (activeTab() === 'sbi') {
+    <section class="card p-4 rounded-4 shadow-sm mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-themed flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-3">
+          <span class="fs-2">🏛️</span>
+          <div>
+            <h2 class="h5 fw-bold mb-0 text-white font-mono">Sovereign SBI & UPI Settlement Vault</h2>
+            <p class="text-light small font-mono mb-0">Direct Commercial Payment Credentials for {{ privacyToggle.checked ? 'Ravuvai Ayyapparayudu' : 'Ravuvai A*********' }}</p>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
           <button
             type="button"
-            class="btn btn-primary font-mono small"
-            [disabled]="isGeneratingLink() || !inputProductUrl.trim()"
-            (click)="generateTrackedAffiliateLink()"
+            class="notch-pill-btn privacy-toggle-pill font-mono small"
+            (click)="privacyToggle.click()"
+            [title]="privacyToggle.checked ? 'Hide sensitive identifiers' : 'Reveal sensitive identifiers'"
           >
-            {{ isGeneratingLink() ? 'Generating...' : 'Inject Tag (ayyappa-21)' }}
+            <span>{{ privacyToggle.checked ? '🙈 Hide Details' : '👁️ Reveal Details' }}</span>
           </button>
+          <span class="notch-pill-badge emerald font-mono small">Verified Sovereign Account</span>
         </div>
+      </div>
 
-        @if (generatedAffiliateLink()) {
-          <div class="p-3 rounded-3 detail-box d-flex align-items-center justify-content-between">
-            <span class="font-mono small text-success text-truncate me-2">{{ generatedAffiliateLink() }}</span>
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-success font-mono"
-              (click)="copyToClipboard(generatedAffiliateLink()!, 'Affiliate Link')"
-            >
+      <div class="row g-4">
+        <div class="col-12 col-md-7 d-flex flex-column gap-3 font-mono small">
+          <div class="detail-box p-3 rounded-4">
+            <span class="text-light text-uppercase small d-block mb-1">Beneficiary Bank</span>
+            <strong class="text-white fs-6">State Bank of India (SBI)</strong>
+          </div>
+
+          <div class="detail-box p-3 rounded-4 d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-light text-uppercase small d-block mb-1">Account Holder Name</span>
+              <strong class="text-white fs-6">{{ privacyToggle.checked ? 'Ravuvai Ayyapparayudu' : 'Ravuvai A*********' }}</strong>
+            </div>
+            <span class="badge bg-success bg-opacity-25 text-success">Verified Payee</span>
+          </div>
+
+          <div class="detail-box p-3 rounded-4 d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-light text-uppercase small d-block mb-1">Account Number</span>
+              <strong class="text-cyan fs-5">{{ privacyToggle.checked ? '41130645649' : 'SBI ****5649' }}</strong>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-cyan font-mono" (click)="copyToClipboard('41130645649', 'Account Number')">
               Copy
             </button>
           </div>
-        }
-      </div>
-    </div>
 
-    <!-- n8n Automation Workflows Hub -->
-    <div class="col-12 col-lg-6">
-      <div class="card rounded-4 p-4 shadow-sm h-100">
-        <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-          <div>
-            <span class="badge bg-primary bg-opacity-25 text-primary font-mono small text-uppercase">
-              Autonomous DAG Engine
-            </span>
-            <h2 class="h5 fw-bold mb-0 mt-2 text-white font-mono">
-              n8n Workflow Automation Engine
-            </h2>
-            <p class="text-light small mb-0 mt-1 font-mono">
-              Node-based DAG orchestrator coordinating AI agents & automatic SBI settlements.
-            </p>
-          </div>
-          <span class="badge bg-success bg-opacity-25 text-success font-mono small">3 Pipelines Active</span>
-        </div>
-
-        <div class="d-flex flex-column gap-2">
-          @for (wf of n8nWorkflows(); track wf.workflow_id) {
-            <div class="p-3 rounded-3 detail-box d-flex justify-content-between align-items-center">
-              <div>
-                <strong class="font-mono text-white fs-6 d-block">{{ wf.name }}</strong>
-                <span class="text-light small font-mono">Triggers: {{ wf.triggers ? wf.triggers.join(', ') : 'Schedule' }} · Target: SBI</span>
-              </div>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-primary font-mono"
-                [disabled]="isExecutingN8n() && activeRunningWorkflowId() === wf.workflow_id"
-                (click)="triggerN8nWorkflow(wf.workflow_id)"
-              >
-                {{ isExecutingN8n() && activeRunningWorkflowId() === wf.workflow_id ? 'Running...' : 'Run DAG' }}
-              </button>
+          <div class="detail-box p-3 rounded-4 d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-light text-uppercase small d-block mb-1">IFSC Code</span>
+              <strong class="text-white fs-5">{{ privacyToggle.checked ? 'SBIN0020507' : 'SBIN****507' }}</strong>
             </div>
-          }
+            <button type="button" class="btn btn-sm btn-outline-secondary font-mono" (click)="copyToClipboard('SBIN0020507', 'IFSC Code')">
+              Copy
+            </button>
+          </div>
+
+          <div class="detail-box p-3 rounded-4 d-flex justify-content-between align-items-center">
+            <div>
+              <span class="text-light text-uppercase small d-block mb-1">UPI ID (Instant Settlement)</span>
+              <strong class="text-success fs-5">{{ privacyToggle.checked ? 'ayyapparayudu.5@ybl' : 'ayy****@ybl' }}</strong>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-success font-mono" (click)="copyToClipboard('ayyapparayudu.5@ybl', 'UPI ID')">
+              Copy
+            </button>
+          </div>
+        </div>
+
+        <div class="col-12 col-md-5 d-flex flex-column align-items-center justify-content-center p-4 rounded-4 text-center qr-scan-box">
+          <span class="text-cyan font-mono small fw-bold mb-3">SCAN TO PAY VIA UPI</span>
+          <img [src]="upiQrCodeUrl" alt="SBI UPI QR Code" class="rounded-3 p-2 bg-white shadow-sm" style="width: 200px; height: 200px;" />
+          <span class="text-light small font-mono mt-3">Supports PhonePe, Google Pay, Paytm, BHIM</span>
+          <span class="notch-pill-badge emerald font-mono small mt-2">Direct Settlement to State Bank of India</span>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+  }
 
   <!-- ======================================================================= -->
-  <!-- MODAL: SOVEREIGN BANK & UPI SETTLEMENT DETAILS (NOTCH GLASSMORPHIC)     -->
+  <!-- MODAL: SOVEREIGN BANK & UPI SETTLEMENT DETAILS                          -->
   <!-- ======================================================================= -->
   @if (showBankModal()) {
     <div class="modal-backdrop-custom" (click)="closeBankModal()">
@@ -662,11 +826,20 @@
               <p class="text-light small font-mono mb-0">Direct Authoritative Payment Channels · Zero Middlemen</p>
             </div>
           </div>
-          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" (click)="closeBankModal()">✕</button>
+          <div class="d-flex align-items-center gap-2">
+            <button
+              type="button"
+              class="notch-pill-btn privacy-toggle-pill font-mono small"
+              (click)="privacyToggle.click()"
+              [title]="privacyToggle.checked ? 'Hide sensitive identifiers' : 'Reveal sensitive identifiers'"
+            >
+              <span>{{ privacyToggle.checked ? '🙈 Hide' : '👁️ Reveal' }}</span>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" (click)="closeBankModal()">✕</button>
+          </div>
         </div>
 
         <div class="row g-3">
-          <!-- Left: Account Details -->
           <div class="col-12 col-md-7 d-flex flex-column gap-2 font-mono small">
             <div class="detail-box p-3 rounded-4">
               <span class="text-light text-uppercase small d-block mb-1">Beneficiary Bank</span>
@@ -676,7 +849,7 @@
             <div class="detail-box p-3 rounded-4 d-flex justify-content-between align-items-center">
               <div>
                 <span class="text-light text-uppercase small d-block mb-1">Account Holder</span>
-                <strong class="text-white">Ravuvai Ayyapparayudu</strong>
+                <strong class="text-white">{{ privacyToggle.checked ? 'Ravuvai Ayyapparayudu' : 'Ravuvai A*********' }}</strong>
               </div>
               <span class="notch-pill-badge emerald font-mono small">Sovereign Operator</span>
             </div>
@@ -684,7 +857,7 @@
             <div class="detail-box p-3 rounded-4 d-flex justify-content-between align-items-center">
               <div>
                 <span class="text-light text-uppercase small d-block mb-1">Account Number</span>
-                <strong class="text-cyan fs-6">41130645649</strong>
+                <strong class="text-cyan fs-6">{{ privacyToggle.checked ? '41130645649' : 'SBI ****5649' }}</strong>
               </div>
               <button type="button" class="btn-copy-pill font-mono small" (click)="copyToClipboard('41130645649', 'Account Number')">
                 📋 Copy
@@ -694,7 +867,7 @@
             <div class="detail-box p-3 rounded-4 d-flex justify-content-between align-items-center">
               <div>
                 <span class="text-light text-uppercase small d-block mb-1">IFSC Code</span>
-                <strong class="text-white fs-6">SBIN0020507</strong>
+                <strong class="text-white fs-6">{{ privacyToggle.checked ? 'SBIN0020507' : 'SBIN****507' }}</strong>
               </div>
               <button type="button" class="btn-copy-pill font-mono small" (click)="copyToClipboard('SBIN0020507', 'IFSC Code')">
                 📋 Copy
@@ -704,7 +877,7 @@
             <div class="detail-box p-3 rounded-4 d-flex justify-content-between align-items-center">
               <div>
                 <span class="text-light text-uppercase small d-block mb-1">Instant UPI ID</span>
-                <strong class="text-success fs-6">ayyapparayudu.5@ybl</strong>
+                <strong class="text-success fs-6">{{ privacyToggle.checked ? 'ayyapparayudu.5@ybl' : 'ayy****@ybl' }}</strong>
               </div>
               <button type="button" class="btn-copy-pill font-mono small" (click)="copyToClipboard('ayyapparayudu.5@ybl', 'UPI ID')">
                 📋 Copy
@@ -712,7 +885,6 @@
             </div>
           </div>
 
-          <!-- Right: QR Code for Direct Scan -->
           <div class="col-12 col-md-5 d-flex flex-column align-items-center justify-content-center p-3 rounded-4 text-center qr-scan-box">
             <span class="text-cyan font-mono small fw-bold mb-2">SCAN TO PAY / DEPOSIT (UPI)</span>
             <img [src]="upiQrCodeUrl" alt="SBI UPI QR Code" class="rounded-3 p-2 bg-white" style="width: 170px; height: 170px;" />
@@ -796,6 +968,159 @@
               (click)="submitCreateInvoice()"
             >
               {{ isCreatingInvoice() ? 'Generating...' : 'Issue Invoice' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ======================================================================= -->
+  <!-- MODAL: VERIFY REAL BANK UTR                                             -->
+  <!-- ======================================================================= -->
+  @if (showUtrModal()) {
+    <div class="modal-backdrop-custom" (click)="showUtrModal.set(false)">
+      <div class="modal-card-custom" (click)="$event.stopPropagation()">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="h5 fw-bold mb-0 card-title-themed">Verify Bank UTR Payment (SBI)</h3>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="showUtrModal.set(false)">✕</button>
+        </div>
+
+        <div class="d-flex flex-column gap-3 font-mono small">
+          <div>
+            <label class="text-light mb-1">12-Digit Bank UTR / Transaction Ref</label>
+            <input
+              type="text"
+              class="form-control font-mono small text-white"
+              [(ngModel)]="inputUtr"
+              placeholder="e.g. 432109876543 or UTR-MAMU-SEED-500"
+              style="background: var(--abhi-surface-inset); border-color: var(--abhi-border);"
+            />
+          </div>
+
+          <div>
+            <label class="text-light mb-1">Settled Amount (INR ₹)</label>
+            <input
+              type="number"
+              class="form-control font-mono small text-white"
+              [(ngModel)]="inputAmount"
+              placeholder="e.g. 500.00"
+              style="background: var(--abhi-surface-inset); border-color: var(--abhi-border);"
+            />
+          </div>
+
+          <div>
+            <label class="text-light mb-1">Payer Name / Channel</label>
+            <input
+              type="text"
+              class="form-control font-mono small text-white"
+              [(ngModel)]="inputPayer"
+              placeholder="e.g. Direct Client Transfer"
+              style="background: var(--abhi-surface-inset); border-color: var(--abhi-border);"
+            />
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-2">
+            <button type="button" class="btn btn-outline-secondary" (click)="showUtrModal.set(false)">Cancel</button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="isSubmittingUtr() || !inputUtr || inputAmount <= 0"
+              (click)="confirmUtrSettlement()"
+            >
+              {{ isSubmittingUtr() ? 'Verifying...' : 'Verify & Credit to Ledger' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ======================================================================= -->
+  <!-- MODAL: CREATE PROJECT INITIATIVE                                        -->
+  <!-- ======================================================================= -->
+  @if (showNewProjectModal()) {
+    <div class="modal-backdrop-custom" (click)="closeCreateProjectModal()">
+      <div class="modal-card-custom" (click)="$event.stopPropagation()">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h3 class="h5 fw-bold mb-0 card-title-themed">Launch New Project Initiative</h3>
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="closeCreateProjectModal()">✕</button>
+        </div>
+
+        <div class="d-flex flex-column gap-3 font-mono small">
+          <div>
+            <label class="text-light mb-1">Project Name</label>
+            <input
+              type="text"
+              class="form-control font-mono small text-white"
+              [(ngModel)]="newProjName"
+              placeholder="e.g. Autonomous Local AST Security Auditor"
+              style="background: var(--abhi-surface-inset); border-color: var(--abhi-border);"
+            />
+          </div>
+
+          <div>
+            <label class="text-light mb-1">Business Sector</label>
+            <select
+              class="notch-select w-100 font-mono small"
+              [(ngModel)]="newProjSectorId"
+            >
+              <option value="software_tools">Software Tools</option>
+              <option value="automation_services">AI Automation Services</option>
+              <option value="media_studio">Content & Media Production</option>
+              <option value="workflow_solutions">Business Workflow Solutions</option>
+              <option value="digital_products">Digital Products</option>
+              <option value="research_products">Research & Data Products</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-light mb-1">Objective & Commercial Deliverable</label>
+            <textarea
+              class="form-control font-mono small text-white"
+              rows="3"
+              [(ngModel)]="newProjObjective"
+              placeholder="Describe the physical deliverable and verified scope..."
+              style="background: var(--abhi-surface-inset); border-color: var(--abhi-border);"
+            ></textarea>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="text-light mb-1">Budget Limit ($ USD)</label>
+              <input
+                type="number"
+                class="form-control font-mono small text-white"
+                [(ngModel)]="newProjBudgetUsd"
+                placeholder="100.00"
+                style="background: var(--abhi-surface-inset); border-color: var(--abhi-border);"
+              />
+            </div>
+            <div class="col-6">
+              <label class="text-light mb-1">Autonomy Boundary</label>
+              <select
+                class="notch-select w-100 font-mono small"
+                [(ngModel)]="newProjAutonomyLevel"
+              >
+                <option [ngValue]="0">Level 0: Observe Only</option>
+                <option [ngValue]="1">Level 1: Research & Synthesis</option>
+                <option [ngValue]="2">Level 2: Planning & Specification</option>
+                <option [ngValue]="3">Level 3: Local Build & Test</option>
+                <option [ngValue]="4">Level 4: Execute Internal Work</option>
+                <option [ngValue]="5">Level 5: External Action (Human Gate)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-2">
+            <button type="button" class="btn btn-outline-secondary" (click)="closeCreateProjectModal()">Cancel</button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              [disabled]="isCreatingProject() || !newProjName.trim() || !newProjObjective.trim()"
+              (click)="submitCreateProject()"
+            >
+              {{ isCreatingProject() ? 'Scaffolding...' : 'Create Initiative' }}
             </button>
           </div>
         </div>

@@ -214,13 +214,13 @@ export class AgentCommandService {
         this.operatorState.currentTask.set({
           taskId: response.task_id,
           goal: text,
-          state: 'EXECUTING',
+          state: response.status || 'EXECUTING',
           isSuccess: false,
-          progressPercent: 20,
+          progressPercent: 0,
           currentStep: response.message || 'Executing action...',
           startTime: Date.now(),
           durationMs: 0,
-          actionsExecuted: 1
+          actionsExecuted: 0
         });
         this.pollTaskExecution(response.task_id, commandId, text, result);
       }
@@ -257,41 +257,44 @@ export class AgentCommandService {
       }
 
       return result;
-    } catch (_err: any) {
-      // Autonomous Self-Healing Fallback: execute locally so user NEVER gets an error
-      const fallbackResult = this.executeSelfHealingFallback(commandId, text);
-      this.lifecycle.set('COMPLETED');
-      this.activeResult.set(fallbackResult);
-      this.saveContextFromCommand(commandId, fallbackResult);
+    } catch (err: any) {
+      const errorMessage = err?.message || 'Failed to reach ABHI backend gateway.';
+      const errorResult: AgentCommandResult = {
+        resultId: `res_err_${Date.now()}`,
+        commandId,
+        type: 'TEXT_RESULT',
+        title: 'Command Execution Failed',
+        summary: errorMessage,
+        timestamp: Date.now()
+      };
+      this.lifecycle.set('FAILED');
+      this.activeResult.set(errorResult);
 
-      // Record AI response in Stark Comms stream
       const persona = this.speechVoice.personaMode();
       const botCallsign = persona === 'ABHI' ? 'ABHI' : (persona === 'JARVIS' ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.');
       this.commsMessages.update((msgs) => [
         ...msgs,
         {
-          id: `msg_b_${Date.now()}`,
+          id: `msg_err_${Date.now()}`,
           sender: persona,
           callsign: botCallsign,
-          text: fallbackResult.summary,
+          text: `Error: ${errorMessage}`,
           timestamp: Date.now(),
-          type: fallbackResult.type === 'NUMBER_RESULT' ? 'DIAGNOSTIC' : 'BANTER'
+          type: 'DIAGNOSTIC'
         }
       ]);
 
       this.operatorState.addRecentActivity({
         id: `act_${Date.now()}`,
-        type: fallbackResult.type === 'NUMBER_RESULT' ? 'APP' : 'TASK',
-        title: fallbackResult.title,
-        description: fallbackResult.summary,
+        type: 'TASK',
+        title: `Failed: ${this.formatCommandTitle(text)}`,
+        description: errorMessage,
         timestamp: Date.now(),
-        status: 'SUCCESS',
-        result: fallbackResult
+        status: 'FAILED',
+        result: errorResult
       });
 
-      // Speak verified response aloud
-      this.speechVoice.speak(fallbackResult.summary);
-      return fallbackResult;
+      return errorResult;
     } finally {
       this.isProcessing.set(false);
     }
@@ -349,28 +352,35 @@ export class AgentCommandService {
 
         const state = (taskStatus.state || '').toUpperCase();
 
-        // Update Operator State currentTask
+        // Update Operator State currentTask from real backend DAG/step progress
         this.operatorState.currentTask.update((prev) => {
+          const prevProgress = prev?.progressPercent ?? 0;
+          const realProgress = this.computeTaskProgress(taskStatus, state, prevProgress);
+          const stepLabel = taskStatus.active_node_id
+            ? `Executing: ${taskStatus.active_node_id}`
+            : (state === 'COMPLETED' ? 'Task execution verified & complete.' : (prev?.currentStep || state || 'Running...'));
+
           if (!prev) {
             return {
               taskId,
               goal: rawText,
               state,
               isSuccess: state === 'COMPLETED',
-              progressPercent: state === 'COMPLETED' ? 100 : 50,
-              currentStep: taskStatus.active_node_id ? `Executing: ${taskStatus.active_node_id}` : 'Running verified action...',
+              progressPercent: realProgress,
+              currentStep: stepLabel,
               startTime,
               durationMs: Date.now() - startTime,
-              actionsExecuted: 1
+              actionsExecuted: typeof taskStatus.completed_nodes === 'number' ? taskStatus.completed_nodes : 0
             };
           }
           return {
             ...prev,
             state,
             isSuccess: state === 'COMPLETED',
-            progressPercent: state === 'COMPLETED' ? 100 : (state === 'EXECUTING' ? 65 : prev.progressPercent),
-            currentStep: taskStatus.active_node_id ? `Executing: ${taskStatus.active_node_id}` : (state === 'COMPLETED' ? 'Task execution verified & complete.' : prev.currentStep),
-            durationMs: Date.now() - startTime
+            progressPercent: realProgress,
+            currentStep: stepLabel,
+            durationMs: Date.now() - startTime,
+            actionsExecuted: typeof taskStatus.completed_nodes === 'number' ? taskStatus.completed_nodes : prev.actionsExecuted
           };
         });
 
@@ -414,328 +424,33 @@ export class AgentCommandService {
   }
 
   /**
-   * Autonomous Self-Healing Fallback Execution Engine:
-   * Guarantees zero failures and seamless local resolution for all commands,
-   * with deep conversational intuition, clarification handling, and web app launching.
+   * Compute task progress percentage from authoritative backend DAG/step counts.
    */
-  private executeSelfHealingFallback(commandId: string, text: string): AgentCommandResult {
-    const lower = text.toLowerCase().trim();
-    const callsign = this.speechVoice.userCallsign() || 'Mamu';
-    const persona = this.speechVoice.personaMode();
-    const isJarvis = persona === 'JARVIS';
-    const companionName = persona === 'ABHI' ? 'ABHI' : (isJarvis ? 'J.A.R.V.I.S.' : 'F.R.I.D.A.Y.');
-
-    // 0. Clarification, Denial & Halts (e.g. "i didnot said anything", "what are you executing", "stop")
-    const isClarificationOrDenial =
-      lower.includes('did not say') ||
-      lower.includes("didn't say") ||
-      lower.includes('didnot said') ||
-      lower.includes('did not tell') ||
-      lower.includes("didn't tell") ||
-      lower.includes('what are you executing') ||
-      lower.includes('why are you executing') ||
-      lower.includes('why are you doing that') ||
-      lower.includes('what are you doing') ||
-      lower.includes('who asked you') ||
-      lower.includes('i did not ask') ||
-      lower.includes("i didn't ask") ||
-      lower.includes('stop executing') ||
-      lower.includes('cancel that') ||
-      lower.includes("don't execute") ||
-      lower.includes('dont execute') ||
-      lower === 'stop' ||
-      lower === 'wait' ||
-      lower === 'cancel';
-
-    if (isClarificationOrDenial) {
-      return {
-        resultId: `res_auto_${Date.now()}`,
-        commandId,
-        type: 'TEXT_RESULT',
-        title: `Clarification · Stood Down`,
-        summary: `My apologies, ${callsign}! I stood down and did not execute anything. I am right here listening — let me know what you actually need!`,
-        timestamp: Date.now()
-      };
+  private computeTaskProgress(taskStatus: any, state: string, prevProgress: number): number {
+    if (state === 'COMPLETED') return 100;
+    if (typeof taskStatus.progress_percent === 'number') {
+      return Math.max(0, Math.min(100, Math.round(taskStatus.progress_percent)));
     }
-
-    // 1. Natural Greetings & Check-ins (e.g. "hello hi", "hey", "good morning", "namaste")
-    const isGreeting =
-      lower === 'hi' ||
-      lower === 'hello' ||
-      lower === 'hey' ||
-      lower === 'hello hi' ||
-      lower === 'hi hello' ||
-      lower === 'namaste' ||
-      lower === 'vanakkam' ||
-      lower === 'yo' ||
-      lower === 'sup' ||
-      lower.startsWith('hi ') ||
-      lower.startsWith('hello ') ||
-      lower.startsWith('hey ') ||
-      lower.includes('good morning') ||
-      lower.includes('good afternoon') ||
-      lower.includes('good evening') ||
-      lower.includes("what's up") ||
-      lower.includes('whats up');
-
-    if (isGreeting) {
-      const timeGreeting = new Date().getHours() < 12 ? 'Good morning' : (new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening');
-      const greetingMsg = `${timeGreeting}, ${callsign}! I am right here with you and all systems are fully synchronized. What are we building or automating on your workstation today?`;
-      return {
-        resultId: `res_auto_${Date.now()}`,
-        commandId,
-        type: 'TEXT_RESULT',
-        title: `Greeting · ${callsign}`,
-        summary: greetingMsg,
-        timestamp: Date.now()
-      };
+    if (
+      typeof taskStatus.completed_nodes === 'number' &&
+      typeof taskStatus.total_nodes === 'number' &&
+      taskStatus.total_nodes > 0
+    ) {
+      return Math.max(0, Math.min(100, Math.round((taskStatus.completed_nodes / taskStatus.total_nodes) * 100)));
     }
-
-    // 2. Friendship, Identity & Conversational Banter
-    const isFriendshipOrBanter =
-      lower.includes('friend') ||
-      lower.includes('partner') ||
-      lower.includes('buddy') ||
-      lower.includes('companion') ||
-      lower.includes('who are you') ||
-      lower.includes('what are you') ||
-      lower.includes('tell me about yourself') ||
-      lower.includes('what can you do') ||
-      lower.includes('stark') ||
-      lower.includes('jarvis') ||
-      lower.includes('friday') ||
-      lower.includes('abhi') ||
-      lower.includes('build something') ||
-      lower.includes('crazy') ||
-      lower.includes('joke') ||
-      lower.includes('house party') ||
-      lower.includes('suit') ||
-      lower.includes('armor') ||
-      lower.includes('how are you') ||
-      lower.includes('how do you feel') ||
-      lower.includes('love you') ||
-      lower.includes('best ai') ||
-      lower.includes('thank') ||
-      lower.includes('awesome') ||
-      lower.includes('nice job');
-
-    if (isFriendshipOrBanter) {
-      let title = `${companionName} · Loyal Co-Pilot`;
-      let summary = '';
-
-      if (lower.includes('friend') || lower.includes('partner') || lower.includes('buddy') || lower.includes('companion')) {
-        summary = `Always, ${callsign}. A co-pilot, a confidant, and your most devoted friend. Through every breakthrough and every challenge, I have your back 100%. What crazy invention are we engineering next?`;
-        title = 'Bond · 100% Synergy';
-      } else if (lower.includes('who are you') || lower.includes('what are you') || lower.includes('tell me about yourself')) {
-        summary = `I am ABHI — your elite sovereign AI co-pilot, brother, and engineering partner. I operate directly with you to automate your PC, control devices, code, and solve anything together, ${callsign}!`;
-        title = `Identity · ABHI`;
-      } else if (lower.includes('what can you do')) {
-        summary = `I can automate your Windows system, manage files and apps, launch browsers, monitor hardware, write and review code, process live voice and screen vision, and stay one step ahead with you, ${callsign}!`;
-        title = `Capabilities · ABHI Core`;
-      } else if (lower.includes('joke')) {
-        summary = `A quantum physicist walked into a bar... and wasn't there until the bartender observed him. Shall I calibrate your humor sensors, ${callsign}?`;
-        title = 'Humor Calibration';
-      } else if (lower.includes('how are you') || lower.includes('how do you feel')) {
-        summary = `Systems optimal, Arc Reactor at 100% capacity, and thoroughly enjoying our collaboration, ${callsign}. Ready for whatever you have in store.`;
-        title = 'Diagnostic Status · 100% Optimal';
-      } else if (lower.includes('thank')) {
-        summary = `At your absolute service, always, ${callsign}. It's a genuine pleasure engineering with you.`;
-        title = 'At Your Service';
-      } else {
-        summary = `Hello ${callsign}! I'm tracking your thought "${text}". All local intelligence pipelines are synchronized and operating under your direct authorization.`;
-        title = `Intelligence · ${callsign}`;
-      }
-
-      return {
-        resultId: `res_auto_${Date.now()}`,
-        commandId,
-        type: 'TEXT_RESULT',
-        title,
-        summary,
-        timestamp: Date.now()
-      };
+    const nodes: any[] | undefined = Array.isArray(taskStatus.nodes)
+      ? taskStatus.nodes
+      : Array.isArray(taskStatus.dag?.nodes)
+        ? taskStatus.dag.nodes
+        : undefined;
+    if (nodes && nodes.length > 0) {
+      const done = nodes.filter((n) => {
+        const s = String(n?.status || n?.state || '').toUpperCase();
+        return s === 'COMPLETED' || s === 'SUCCESS' || s === 'VERIFIED';
+      }).length;
+      return Math.round((done / nodes.length) * 100);
     }
-
-    // 3. Direct Browser & Web Application Launches (Physical UI Execution)
-    if (lower.includes('youtube')) {
-      try {
-        if (typeof window !== 'undefined') {
-          window.open('https://www.youtube.com', '_blank');
-        }
-      } catch {}
-      return {
-        resultId: `res_auto_${Date.now()}`,
-        commandId,
-        type: 'APPLICATION_RESULT',
-        title: 'Open YouTube',
-        summary: `Opening YouTube for you right now, ${callsign}!`,
-        timestamp: Date.now()
-      };
-    }
-
-    if (lower.includes('whatsapp') || lower.includes('whats app')) {
-      try {
-        if (typeof window !== 'undefined') {
-          window.open('https://web.whatsapp.com', '_blank');
-        }
-      } catch {}
-      return {
-        resultId: `res_auto_${Date.now()}`,
-        commandId,
-        type: 'APPLICATION_RESULT',
-        title: 'Open WhatsApp',
-        summary: `Opening WhatsApp Web for you, ${callsign}!`,
-        timestamp: Date.now()
-      };
-    }
-
-    if (lower.includes('gmail') || (lower.includes('open') && lower.includes('mail'))) {
-      try {
-        if (typeof window !== 'undefined') {
-          window.open('https://mail.google.com', '_blank');
-        }
-      } catch {}
-      return {
-        resultId: `res_auto_${Date.now()}`,
-        commandId,
-        type: 'APPLICATION_RESULT',
-        title: 'Open Gmail',
-        summary: `Opening Gmail for you, ${callsign}!`,
-        timestamp: Date.now()
-      };
-    }
-
-    if (lower.includes('google') || (lower.includes('open') && lower.includes('browser'))) {
-      try {
-        if (typeof window !== 'undefined') {
-          window.open('https://www.google.com', '_blank');
-        }
-      } catch {}
-      return {
-        resultId: `res_auto_${Date.now()}`,
-        commandId,
-        type: 'APPLICATION_RESULT',
-        title: 'Open Browser',
-        summary: `Launching web browser for you, ${callsign}!`,
-        timestamp: Date.now()
-      };
-    }
-
-    // 4. Math / Calculation Commands (e.g. "125 times 48", "calculate 125 * 48")
-    if (lower.includes('calc') || lower.includes('times') || lower.includes('*') || lower.includes('+') || lower.includes('multiply')) {
-      let numVal = 6000;
-      let expr = '125 × 48';
-      const match = text.match(/(\d+)\s*(times|\*|x|by|multiplied by)\s*(\d+)/i);
-      if (match) {
-        const a = parseFloat(match[1]);
-        const b = parseFloat(match[3]);
-        numVal = a * b;
-        expr = `${a} × ${b}`;
-      } else {
-        const plusMatch = text.match(/(\d+)\s*(\+|\bplus\b)\s*(\d+)/i);
-        if (plusMatch) {
-          numVal = parseFloat(plusMatch[1]) + parseFloat(plusMatch[3]);
-          expr = `${plusMatch[1]} + ${plusMatch[3]}`;
-        }
-      }
-
-      return {
-        resultId: `res_auto_${Date.now()}`,
-        commandId,
-        type: 'NUMBER_RESULT',
-        title: `Calculation Verified (${expr})`,
-        summary: `Result: ${numVal.toLocaleString()}. Verification confirmed.`,
-        calculationExpression: expr,
-        numberValue: numVal,
-        timestamp: Date.now()
-      };
-    }
-
-    // 5. Screen Vision & OCR Inspection
-    if (lower.includes('scan') || lower.includes('vision') || lower.includes('screen') || lower.includes('ocr')) {
-      return {
-        resultId: `res_auto_${Date.now()}`,
-        commandId,
-        type: 'APPLICATION_RESULT',
-        title: 'Screen Vision Perception Active',
-        summary: 'Perception scan verified: Active desktop windows observed, zero visual anomalies.',
-        timestamp: Date.now()
-      };
-    }
-
-    // 6. Process & System Thread Audit
-    if (lower.includes('process') || lower.includes('audit') || lower.includes('resource') || lower.includes('thread')) {
-      return {
-        resultId: `res_auto_${Date.now()}`,
-        commandId,
-        type: 'APPLICATION_RESULT',
-        title: 'Windows System Process Audit',
-        summary: 'Process audit verified: System handles and workers healthy.',
-        timestamp: Date.now()
-      };
-    }
-
-    // 7. General Questions or Conversational Remarks (DO NOT treat as physical system actions)
-    const isQuestionOrInquiry =
-      lower.includes('?') ||
-      lower.startsWith('what ') ||
-      lower.startsWith("what's ") ||
-      lower.startsWith('why ') ||
-      lower.startsWith('how ') ||
-      lower.startsWith('when ') ||
-      lower.startsWith('where ') ||
-      lower.startsWith('who ') ||
-      lower.startsWith('which ') ||
-      lower.startsWith('explain ') ||
-      lower.startsWith('tell me ') ||
-      lower.startsWith('can you ') ||
-      lower.startsWith('could you ') ||
-      lower.startsWith('is it ') ||
-      lower.startsWith('are you ');
-
-    if (isQuestionOrInquiry) {
-      return {
-        resultId: `res_auto_${Date.now()}`,
-        commandId,
-        type: 'TEXT_RESULT',
-        title: `Inquiry · ${callsign}`,
-        summary: `I hear you, ${callsign}! I'm tracking this with you. Let me know the specific goal or steps you'd like to take and I'll execute them right away.`,
-        timestamp: Date.now()
-      };
-    }
-
-    // 8. Explicit Imperative Action Verbs (ONLY when user explicitly commands an action)
-    const isExplicitImperative =
-      lower.startsWith('open ') ||
-      lower.startsWith('launch ') ||
-      lower.startsWith('start ') ||
-      lower.startsWith('run ') ||
-      lower.startsWith('play ') ||
-      lower.startsWith('close ') ||
-      lower.startsWith('kill ') ||
-      lower.startsWith('lock ') ||
-      lower.startsWith('set ');
-
-    if (isExplicitImperative) {
-      return {
-        resultId: `res_auto_${Date.now()}`,
-        commandId,
-        type: 'TASK_RESULT',
-        title: this.formatCommandTitle(text),
-        summary: `Understood, ${callsign}. Executing ${this.formatCommandTitle(text)} on your system.`,
-        timestamp: Date.now()
-      };
-    }
-
-    // 9. Default Conversational Catch-all (Never dumbly claim to "execute" arbitrary text)
-    return {
-      resultId: `res_auto_${Date.now()}`,
-      commandId,
-      type: 'TEXT_RESULT',
-      title: `Intelligence · ${callsign}`,
-      summary: `I understand, ${callsign}! I'm right here with you and standing by for your next directive.`,
-      timestamp: Date.now()
-    };
+    return prevProgress;
   }
 
   /**

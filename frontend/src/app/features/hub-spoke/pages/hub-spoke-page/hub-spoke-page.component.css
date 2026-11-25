@@ -20,64 +20,96 @@
 }
 
 /* =========================================================================
-   1. Top Navigation Bar (Matches Bexruz Khamidullaev UI)
+   1. Top Pod Category Selector Row (Matches Reference Image 4)
    ========================================================================= */
-.hub-top-navbar {
+.hub-pod-selector-row {
   position: absolute;
-  top: 14px;
-  left: 20px;
-  right: 20px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--abhi-surface-raised, rgba(15, 23, 42, 0.88));
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--abhi-border, rgba(51, 65, 85, 0.55));
-  border-radius: 9999px;
-  padding: 0 16px;
-  z-index: 20;
-  box-shadow: var(--abhi-raised-shadow, 0 12px 28px rgba(0, 0, 0, 0.5));
-}
-
-.nav-left-brand {
-  display: flex;
-  align-items: center;
-}
-
-.brand-pill {
+  top: 66px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-
-.brand-pill:hover {
-  opacity: 0.85;
-}
-
-.brand-icon {
-  font-size: 1.1rem;
-  color: var(--abhi-cyan, #38bdf8);
-}
-
-.brand-title {
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--abhi-text-primary, #f8fafc);
-  letter-spacing: -0.01em;
-}
-
-.brand-badge {
-  font-size: 0.68rem;
-  font-family: ui-monospace, SFMono-Regular, monospace;
-  background: rgba(56, 189, 248, 0.15);
-  color: var(--abhi-cyan, #38bdf8);
-  border: 1px solid var(--abhi-border, rgba(56, 189, 248, 0.3));
-  padding: 2px 7px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 9999px;
+  padding: 4px 8px;
+  z-index: 25;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  max-width: 95vw;
+  overflow-x: auto;
+}
+
+.hub-pod-selector-row::-webkit-scrollbar {
+  display: none;
+}
+
+.pod-sliding-pill-indicator {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 9999px;
+  background: rgba(56, 189, 248, 0.16);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+  z-index: 1;
+}
+
+.pod-select-chip {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.pod-select-chip:hover {
+  color: #f8fafc;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.pod-select-chip.active {
+  color: #ffffff;
+  border-color: var(--pod-color, #38bdf8);
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 0 14px var(--pod-color, rgba(56, 189, 248, 0.4));
+}
+
+.pod-chip-icon {
+  font-size: 13px;
+}
+
+.pod-chip-text {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.pod-chip-name {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.pod-chip-agents {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.1;
+}
+
+.pod-select-chip.active .pod-chip-agents {
+  color: var(--pod-color, #38bdf8);
 }
 
 /* Center Nav Pills */
@@ -442,134 +474,259 @@
 }
 
 /* =========================================================================
-   5. Selected Pod Inspector Drawer
+   5. Floating Left Team Inspector Card (Matches Reference Image 4)
    ========================================================================= */
-.hub-pod-inspector {
+.floating-team-card {
   position: absolute;
-  bottom: 24px;
+  top: 76px;
   left: 24px;
-  width: 340px;
-  background: var(--abhi-surface-raised);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1.5px solid var(--abhi-border);
-  border-radius: 16px;
-  padding: 14px;
-  z-index: 15;
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
+  width: 320px;
+  max-width: 90vw;
+  background: rgba(10, 16, 29, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 16px;
+  z-index: 20;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  animation: slide-in 0.2s ease-out;
+  gap: 14px;
+  animation: card-appear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes slide-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+@keyframes card-appear {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.inspector-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.pod-identity {
+.team-card-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.pod-color-box {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-}
-
-.pod-badge-row {
+.team-avatar-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.15);
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.pod-badge-title {
-  font-size: 0.85rem;
+.team-avatar-icon {
+  font-size: 16px;
+}
+
+.team-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.team-title {
+  font-size: 14.5px;
   font-weight: 700;
-  color: var(--abhi-text-primary);
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.2;
 }
 
-.pod-agent-count {
-  font-size: 0.68rem;
-}
-
-.pod-role-subtitle {
-  font-size: 0.72rem;
-  color: var(--abhi-text-secondary);
+.team-lead-meta {
+  font-size: 10.5px;
+  color: #94a3b8;
   margin: 2px 0 0;
-}
-
-.inspector-actions {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
-.action-btn {
-  background: var(--abhi-surface-inset);
-  border: 1px solid var(--abhi-cyan);
-  color: var(--abhi-cyan);
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
+.lead-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.team-close-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 14px;
   cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
   transition: all 0.2s ease;
 }
 
-.action-btn:hover {
-  background: var(--abhi-cyan);
-  color: var(--abhi-bg);
+.team-close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
 }
 
-.close-btn {
-  background: transparent;
-  border: none;
-  color: var(--abhi-text-secondary);
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-.inspector-metrics-grid {
+/* 3 Mini Stats Cards Row */
+.team-metrics-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
-  border-top: 1px solid var(--abhi-border);
-  padding-top: 8px;
 }
 
-.metric-card {
+.metric-mini-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
 }
 
-.metric-label {
-  font-size: 0.62rem;
+.metric-mini-label {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+
+.metric-mini-val-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.metric-mini-val {
+  font-size: 16px;
   font-weight: 700;
+  color: #ffffff;
+}
+
+.metric-mini-badge {
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.text-green { color: #34d399; }
+.text-cyan { color: #38bdf8; }
+.text-amber { color: #fbbf24; }
+
+/* Sections */
+.team-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.team-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.team-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--abhi-text-secondary);
 }
 
-.metric-val {
-  font-size: 0.78rem;
+.team-section-badge {
+  font-size: 9.5px;
+  color: #94a3b8;
+}
+
+/* Connected Tools List */
+.connected-tools-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.connected-tool-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 7px 10px;
+}
+
+.tool-icon-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
   font-weight: 700;
+  color: #38bdf8;
+  flex-shrink: 0;
 }
 
-.pod-description {
-  font-size: 0.72rem;
-  color: var(--abhi-text-secondary);
-  margin: 0;
-  line-height: 1.35;
+.tool-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.tool-name {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #f1f5f9;
+  line-height: 1.2;
+}
+
+.tool-status {
+  font-size: 9.5px;
+  color: #64748b;
+}
+
+/* Skills Progress List */
+.skills-progress-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skill-progress-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.skill-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.skill-name {
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+.skill-pct {
+  color: #94a3b8;
+  font-size: 10px;
+}
+
+.skill-bar-track {
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.skill-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
 }
 
 /* =========================================================================

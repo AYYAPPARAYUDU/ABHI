@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from typing import List
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from backend.app.core.logging import logger
+from backend.app.core.event_bus import event_bus, ABHIEvent
 
 router = APIRouter(tags=["WebSockets"])
 
@@ -28,7 +29,7 @@ class ConnectionManager:
     async def broadcast(self, message: dict):
         """Broadcast a message to all connected clients."""
         payload_str = json.dumps(message)
-        for connection in self.active_connections:
+        for connection in list(self.active_connections):
             try:
                 await connection.send_text(payload_str)
             except Exception as e:
@@ -36,6 +37,23 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
+
+
+async def _forward_event_bus_to_websocket(evt: ABHIEvent) -> None:
+    """Stream all internal ABHIEvent instances to connected frontend clients."""
+    if manager.active_connections:
+        await manager.broadcast({
+            "type": f"EVENT_{evt.category.value}",
+            "event_id": evt.event_id,
+            "category": evt.category.value,
+            "event_type": evt.event_type,
+            "source": evt.source,
+            "timestamp": evt.timestamp,
+            "correlation_id": evt.correlation_id,
+            "data": evt.data
+        })
+
+event_bus.subscribe(None, _forward_event_bus_to_websocket)
 
 
 @router.websocket("/ws/telemetry")

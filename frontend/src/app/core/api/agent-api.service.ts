@@ -252,12 +252,15 @@ export class AgentApiService {
   }
 
   /**
-   * Remove registered Face Lock from SQLite WAL using Master Password (143).
+   * Remove registered Face Lock from SQLite WAL using verified Operator credentials.
    */
-  async removeBiometrics(masterPassword: string = '143'): Promise<any> {
+  async removeBiometrics(masterPassword: string): Promise<any> {
     const response = await fetch(`${this.baseUrl}/api/v1/agent-gateway/biometrics/remove`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': masterPassword
+      },
       body: JSON.stringify({ master_password: masterPassword })
     });
     if (!response.ok) {

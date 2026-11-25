@@ -86,3 +86,72 @@ export function getWsUrl(endpoint: string): string {
   const host = hostname || '127.0.0.1';
   return `${wsProto}//${host}:8000${cleanEndpoint}`;
 }
+
+let activeSessionToken: string | null = null;
+
+export function setSessionToken(token: string | null): void {
+  activeSessionToken = token;
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      if (token) {
+        sessionStorage.setItem('ABHI_SESSION_TOKEN', token);
+      } else {
+        sessionStorage.removeItem('ABHI_SESSION_TOKEN');
+      }
+    }
+  } catch {
+    // Ignore storage restriction errors
+  }
+}
+
+export function getSessionToken(): string | null {
+  if (activeSessionToken) return activeSessionToken;
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      return sessionStorage.getItem('ABHI_SESSION_TOKEN');
+    }
+  } catch {
+    // Ignore storage restriction errors
+  }
+  return null;
+}
+
+/**
+ * Returns authoritative authorization headers for authenticated backend communication.
+ * Dynamically resolves session tokens without any hardcoded credentials.
+ */
+export function getApiHeaders(customHeaders: Record<string, string> = {}): Record<string, string> {
+  const headers: Record<string, string> = { ...customHeaders };
+  const token = getSessionToken();
+  if (token) {
+    headers['X-API-Key'] = token;
+  }
+  return headers;
+}
+
+/**
+ * Bootstraps local session dynamically from backend gateway without embedded secrets.
+ */
+export async function bootstrapSession(): Promise<string | null> {
+  const existing = getSessionToken();
+  if (existing) return existing;
+
+  try {
+    const url = getApiUrl('/api/v1/auth/bootstrap');
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include'
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.session_token) {
+        setSessionToken(data.session_token);
+        return data.session_token;
+      }
+    }
+  } catch (e) {
+    console.debug('[AUTH] Session bootstrap deferred:', e);
+  }
+  return null;
+}

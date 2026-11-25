@@ -27,24 +27,32 @@ export class TelemetryPanelComponent {
     const events: TelemetryEvent[] = this.rawEvents();
 
     return events.filter((e: TelemetryEvent) => {
+      const evtAny = e as TelemetryEvent & { category?: string; source?: string };
+      const category = (evtAny.category || e.channel || '').toUpperCase();
+      const source = evtAny.source || e.component || '';
+
       // Category filter
       if (cat !== 'ALL') {
         const type = (e.type || '').toUpperCase();
-        if (cat === 'ORCHESTRATION' && !type.includes('TASK') && !type.includes('PLAN') && !type.includes('STEP')) return false;
-        if (cat === 'WORKER' && !type.includes('WORKER') && !type.includes('ACTION') && !type.includes('DISPATCH')) return false;
-        if (cat === 'GROUNDING' && !type.includes('GROUNDING') && !type.includes('OCR') && !type.includes('UIA')) return false;
-        if (cat === 'VERIFICATION' && !type.includes('VERIF') && !type.includes('OBSERVATION')) return false;
-        if (cat === 'RECOVERY' && !type.includes('RECOV') && !type.includes('INTERRUPT') && !type.includes('RECONCIL')) return false;
-        if (cat === 'SAFETY' && !type.includes('SAFETY') && !type.includes('POLICY') && !type.includes('LEASE') && !type.includes('CONSENT') && !type.includes('STOP')) return false;
+        const catMatches = category === cat;
+        if (!catMatches) {
+          if (cat === 'ORCHESTRATION' && !type.includes('TASK') && !type.includes('PLAN') && !type.includes('STEP')) return false;
+          if (cat === 'WORKER' && !type.includes('WORKER') && !type.includes('ACTION') && !type.includes('DISPATCH')) return false;
+          if (cat === 'GROUNDING' && !type.includes('GROUNDING') && !type.includes('OCR') && !type.includes('UIA')) return false;
+          if (cat === 'VERIFICATION' && !type.includes('VERIF') && !type.includes('OBSERVATION')) return false;
+          if (cat === 'RECOVERY' && !type.includes('RECOV') && !type.includes('INTERRUPT') && !type.includes('RECONCIL')) return false;
+          if (cat === 'SAFETY' && !type.includes('SAFETY') && !type.includes('POLICY') && !type.includes('LEASE') && !type.includes('CONSENT') && !type.includes('STOP')) return false;
+        }
       }
 
       // Text search
       if (text) {
         const typeMatch = (e.type || '').toLowerCase().includes(text);
-        const compMatch = (e.component || '').toLowerCase().includes(text);
+        const catMatch = category.toLowerCase().includes(text);
+        const compMatch = source.toLowerCase().includes(text);
         const statusMatch = (e.status || '').toLowerCase().includes(text);
         const payloadMatch = JSON.stringify(e.payload || {}).toLowerCase().includes(text);
-        return typeMatch || compMatch || statusMatch || payloadMatch;
+        return typeMatch || catMatch || compMatch || statusMatch || payloadMatch;
       }
 
       return true;
@@ -70,7 +78,19 @@ export class TelemetryPanelComponent {
   }
 
   getEventJson(evt: TelemetryEvent): string {
-    return JSON.stringify(evt.payload || {}, null, 2);
+    const evtAny = evt as TelemetryEvent & { category?: string; source?: string };
+    return JSON.stringify(
+      {
+        id: evt.id,
+        type: evt.type,
+        category: evtAny.category || evt.channel || 'telemetry',
+        source: evtAny.source || evt.component || 'unknown',
+        task_id: evt.task_id,
+        payload: evt.payload || {}
+      },
+      null,
+      2
+    );
   }
 
   clearBuffer(): void {

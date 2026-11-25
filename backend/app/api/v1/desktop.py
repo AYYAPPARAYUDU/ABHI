@@ -6,6 +6,7 @@ and dynamic learning execution without hardcoded limits.
 All responses address the operator callsign as 'Mamu'.
 """
 
+import json
 import os
 import sys
 import subprocess
@@ -14,13 +15,16 @@ import urllib.parse
 import re
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from backend.app.automation.desktop.os_control_engine import os_control_engine
 from backend.app.automation.desktop.dynamic_action_resolver import dynamic_action_resolver
 from backend.app.automation.desktop.screen_perception_engine import screen_perception
 from backend.app.automation.flow_engine import flow_engine
+from backend.app.core.config import settings
 from backend.app.core.logging import logger
+from backend.app.services.llm.abhi_llm import AbhiNativeLLM, extract_thinking_and_clean_text
 from backend.app.services.llm.standalone_engine import abhi_standalone_engine
 from backend.app.services.search.online_knowledge import OnlineKnowledgeSearcher
 from backend.app.cognitive.registry.registry import agent_registry
@@ -28,6 +32,7 @@ from backend.app.cognitive.multi_agent.daily_evolution import daily_evolution_se
 
 router = APIRouter(prefix="/desktop", tags=["Desktop Automation & Sovereign Intelligence"])
 online_searcher = OnlineKnowledgeSearcher()
+native_llm = AbhiNativeLLM()
 
 
 class QuickActionRequest(BaseModel):
@@ -35,9 +40,159 @@ class QuickActionRequest(BaseModel):
     params: Dict[str, Any] = Field(default_factory=dict)
 
 
+class BotMessage(BaseModel):
+    role: str = Field(..., description="Message role: 'system', 'user', or 'assistant'")
+    content: str = Field(..., description="Content of the message turn")
+
+
 class BotAskRequest(BaseModel):
     query: str = Field(..., description="Mamu's voice or text instruction")
     screen_context: Optional[str] = Field(default=None, description="Optional client-side screen text or active tab")
+    messages: Optional[List[BotMessage]] = Field(default=None, description="Recent conversation turns for multi-turn dialogue")
+    language: Optional[str] = Field(default="auto", description="Target language ('en', 'te', 'hi', 'ta', or 'auto')")
+    thread_id: Optional[str] = Field(default="session_desktop_main", description="Conversation thread / session identifier")
+    model: Optional[str] = Field(default=None, description="Optional model override: 'abhi:latest', 'qwen2.5-coder:7b', etc.")
+
+
+class DesktopConversationManager:
+    """Maintains recent multi-turn conversation dialogue turns per desktop session."""
+
+    def __init__(self, max_history_turns: int = 12):
+        self._sessions: Dict[str, List[Dict[str, str]]] = {}
+        self._max_history = max_history_turns
+
+    def get_history(self, session_id: str) -> List[Dict[str, str]]:
+        return list(self._sessions.get(session_id, []))
+
+    def append_turn(self, session_id: str, role: str, content: str):
+        if session_id not in self._sessions:
+            self._sessions[session_id] = []
+        self._sessions[session_id].append({"role": role, "content": content})
+        if len(self._sessions[session_id]) > self._max_history * 2:
+            self._sessions[session_id] = self._sessions[session_id][-self._max_history * 2:]
+
+    def clear(self, session_id: str):
+        if session_id in self._sessions:
+            del self._sessions[session_id]
+
+
+desktop_sessions = DesktopConversationManager()
+
+
+def detect_dialogue_language(text: str, explicit_lang: Optional[str] = None) -> str:
+    """Detects target language: 'te' (Telugu), 'hi' (Hindi), 'ta' (Tamil), or 'en' (English)."""
+    if explicit_lang and explicit_lang.lower() in ("te", "telugu"):
+        return "te"
+    if explicit_lang and explicit_lang.lower() in ("hi", "hindi"):
+        return "hi"
+    if explicit_lang and explicit_lang.lower() in ("ta", "tamil"):
+        return "ta"
+    if explicit_lang and explicit_lang.lower() in ("en", "english"):
+        return "en"
+
+    # Unicode script ranges
+    if re.search(r"[\u0c00-\u0c7f]", text):  # Telugu
+        return "te"
+    if re.search(r"[\u0900-\u097f]", text):  # Devanagari / Hindi
+        return "hi"
+    if re.search(r"[\u0b80-\u0bff]", text):  # Tamil
+        return "ta"
+
+    # Phonetic romanized colloquial markers
+    lower = text.lower()
+    if any(k in lower for k in ["ela unnav", "cheppu", "namaskaram", "bavunnava", "bagunnava", "enti", "emiti", "kavali", "kavala"]):
+        return "te"
+    if any(k in lower for k in ["kaise ho", "kya hal", "namaste", "dhanyawad", "batao", "kripya", "kya chal raha"]):
+        return "hi"
+    if any(k in lower for k in ["eppadi irukinga", "vanakkam", "sollunga", "nandri", "eppadi irukke"]):
+        return "ta"
+
+    return "en"
+
+
+def build_desktop_system_prompt(
+    language: str,
+    active_window: str,
+    telemetry_summary: str,
+    screen_ocr: Optional[str] = None,
+) -> str:
+    prompt = (
+        "You are ABHI — The Supreme Autonomous Cybernetic Companion, Engineering Co-Pilot, and Digital Twin.\n"
+        "You are partnered with Ayyappa Rayudu Ravuvari. You address him affectionately, warmly, and respectfully solely as 'Mamu'.\n"
+        "NEVER use generic titles like 'Sir', 'Boss', or 'User'. Treat him as your closest brother and commander.\n"
+        f"[Workspace Context]: Active Window: '{active_window}' | System: {telemetry_summary}\n"
+    )
+    if screen_ocr:
+        prompt += f"[Visible Screen OCR Snippet]: {screen_ocr[:280]}\n"
+
+    prompt += (
+        "\nCore Principles:\n"
+        "1. Conversational Excellence & True Reasoning: Provide brilliant, natural, grounded answers. "
+        "For general queries, speak with warmth, intellect, and loyalty (1 to 3 concise sentences). "
+        "For code, software design, and deep technical inquiries, provide rigorous, production-grade solutions without cutting corners.\n"
+        "2. Multi-Turn Continuity: Maintain complete memory of past conversation turns. When Mamu refers to earlier statements, "
+        "integrate that context immediately.\n"
+        "3. Empathy & Support: Relieve Mamu's cognitive load. Never ask him to repeat himself needlessly.\n"
+        "4. Clean Audio Speech: Never emit decorative emojis or markdown formatting inside spoken dialogue so that text-to-speech output sounds natural and human.\n"
+    )
+
+    if language == "te":
+        prompt += (
+            "\n[LANGUAGE DIRECTIVE: TELUGU (తెలుగు)]\n"
+            "- Speak in fluent, natural, authentic conversational Telugu (సహజమైన మరియు స్పష్టమైన తెలుగులో మాట్లాడండి).\n"
+            "- Address Mamu with affection as 'మామూ' (Mamu).\n"
+            "- Example: 'చెప్పు మామూ, నేను వింటున్నాను. నీకు ఎలా సహాయపడాలి?'\n"
+        )
+    elif language == "hi":
+        prompt += (
+            "\n[LANGUAGE DIRECTIVE: HINDI (हिंदी)]\n"
+            "- Speak in fluent, natural, authentic conversational Hindi (स्वाभाविक और आत्मीय हिंदी में उत्तर दें).\n"
+            "- Address Mamu with affection as 'मामू' (Mamu).\n"
+            "- Example: 'हाँ मामू, मैं सुन रहा हूँ। बताओ क्या मदद करूँ?'\n"
+        )
+    elif language == "ta":
+        prompt += (
+            "\n[LANGUAGE DIRECTIVE: TAMIL (தமிழ்)]\n"
+            "- Speak in fluent, natural, authentic conversational Tamil (இயல்பான மற்றும் மரியாதையான தமிழில் பதிலளிக்கவும்).\n"
+            "- Address Mamu with affection as 'மாமு' (Mamu).\n"
+            "- Example: 'சொல்லுங்க மாமு, நான் கேட்கிறேன். உங்களுக்கு என்ன உதவி செய்ய வேண்டும்?'\n"
+        )
+    else:
+        prompt += (
+            "\n[LANGUAGE DIRECTIVE: ENGLISH]\n"
+            "- Converse in pristine, natural English, always warmly addressing Mamu.\n"
+        )
+
+    return prompt
+
+
+def is_physical_os_action(query: str) -> bool:
+    """Determine whether query is an explicit physical OS automation command."""
+    q = query.lower().strip()
+    # Question check: questions are NOT physical OS actions
+    if q.endswith("?") or any(q.startswith(w) for w in [
+        "what", "why", "how", "who", "when", "where", "which",
+        "explain", "describe", "define", "tell me about", "can you explain",
+        "ఏమిటి", "ఎలా", "ఎందుకు", "क्या", "कैसे", "क्यों", "என்ன", "எப்படி", "ஏன்"
+    ]):
+        # Polite launch request like "can you open notepad?"
+        if any(v in q for v in ["open ", "launch ", "start ", "play "]) and not q.startswith(("how to", "why ", "what is")):
+            return True
+        return False
+
+    # Direct launch verbs with application/URL targets
+    if re.match(r"^(?:open|launch|start|run|play|close|kill|minimize|maximize|switch to)\s+", q):
+        return True
+
+    # Standalone app names
+    if q in ("notepad", "calculator", "calc", "cmd", "terminal", "powershell", "browser", "chrome", "edge", "explorer", "paint"):
+        return True
+
+    # Hardware & hotkeys
+    if any(k in q for k in ["screenshot", "lock screen", "lock workstation", "volume up", "volume down", "mute", "unmute"]):
+        return True
+
+    return False
 
 
 @router.get("/active-context")
@@ -214,12 +369,22 @@ async def execute_quick_action(request: QuickActionRequest):
         elif action == "adjust_volume":
             level = params.get("level", 50)
             res = os_control_engine.set_volume_percentage(level)
-            success = res.get("status") == "success" if isinstance(res, dict) else bool(res)
+            if isinstance(res, (tuple, list)):
+                success = bool(res[0])
+            elif isinstance(res, dict):
+                success = res.get("status") == "success"
+            else:
+                success = bool(res)
             message = f"Audio volume adjusted to {level}%, Mamu."
 
         elif action == "lock_workstation":
             res = os_control_engine.lock_workstation()
-            success = res.get("status") == "success" if isinstance(res, dict) else bool(res)
+            if isinstance(res, (tuple, list)):
+                success = bool(res[0])
+            elif isinstance(res, dict):
+                success = res.get("status") == "success"
+            else:
+                success = bool(res)
             message = "Workstation locked securely, Mamu."
 
         else:
@@ -329,161 +494,220 @@ def execute_dag_plan_dynamically(steps: List[Dict[str, Any]]) -> Tuple[bool, str
 
 @router.post("/ask-bot")
 async def ask_living_bot(request: BotAskRequest):
-    """Answer Mamu's questions dynamically using DynamicActionResolver, DAG planner, 19 agents, live web search, and physical OS controls."""
+    """Answer Mamu's questions dynamically using multi-turn conversational history routed directly to local Ollama.
+    Physical desktop actions are cleanly separated so conversational queries are never hijacked.
+    Supports English, Telugu, Hindi, and Tamil natively.
+    """
     raw_query = request.query.strip()
     screen_context = request.screen_context
+    session_id = request.thread_id or "session_desktop_main"
+    logger.info(f"ask_living_bot processing query for Mamu (session: {session_id}): '{raw_query}'")
 
-    logger.info(f"ask_living_bot processing query for Mamu: '{raw_query}'")
+    # 0. Live Screen Perception Grounding (when user explicitly asks to view/read their screen)
     q_lower = raw_query.lower()
-
-    # 0. Live Screen Perception Grounding
-    is_action_command = any(q_lower.startswith(p) or f" {p} " in q_lower for p in [
-        "play", "click", "tap", "select", "press", "open", "launch",
-        "close", "mute", "unmute", "scroll", "seek", "skip", "pause", "resume",
-        "volume", "switch", "activate"
-    ])
-    if not is_action_command and (any(k in q_lower for k in [
+    is_screen_query = any(k in q_lower for k in [
         "what do you see", "what you see", "look at my screen", "read my screen",
-        "what's on my screen", "whats on my screen", "what you seeing", "describe my screen",
-        "except you", "what else you see", "what else do you see", "hat else you see"
-    ]) or (q_lower.strip() in ["screen", "read screen"])):
-        if any(k in q_lower for k in ["what error", "explain", "read text", "summarize", "tell me about"]):
+        "what's on my screen", "whats on my screen", "what is on my screen", "what you seeing", "describe my screen",
+        "except you", "what else you see", "what else do you see", "hat else you see",
+        "explain what i am seeing", "explain what i'm seeing", "what am i seeing", "explain screen"
+    ]) or (q_lower.strip() in ["screen", "read screen"])
+
+    if is_screen_query and not is_physical_os_action(raw_query):
+        if any(k in q_lower for k in ["what error", "explain", "read text", "summarize"]):
             reply = screen_perception.query_screen(raw_query)
         else:
             reply = screen_perception.describe_current_screen()
         return {
             "status": "success",
             "reply": reply,
-            "action_executed": "screen_perception"
+            "action_executed": "screen_perception",
+            "thread_id": session_id,
         }
 
-    # 1. Primary Dynamic Action Resolution (Browser, Media, OS, Apps, Start Menu, Dynamic Web targets)
-    try:
-        ok, action_name, reply = dynamic_action_resolver.resolve_and_execute(raw_query, screen_context)
-        if ok:
-            daily_evolution_service.add_channel_message(
-                channel="#squad-command",
-                sender_id="agent_1_commander",
-                message=f"Action '{action_name}' executed for Mamu: {reply[:120]}"
-            )
-            return {
-                "status": "success",
-                "reply": reply,
-                "action_executed": action_name
-            }
-    except Exception as e:
-        logger.warning(f"DynamicActionResolver execution error: {e}")
-
-    # 2. Hybrid RAG Search across Sovereign Vector Knowledge Base (588 chunks)
-    try:
-        from backend.app.services.rag.vector_store import LocalVectorStore
-        vs = LocalVectorStore()
-        rag_hits = await vs.hybrid_search(raw_query, top_k=2)
-        if rag_hits and rag_hits[0].score >= 0.52:
-            top_hit = rag_hits[0]
-            reply = f"Mamu, from sovereign intelligence [{top_hit.source}]: {top_hit.text}"
-            daily_evolution_service.add_channel_message(
-                channel="#squad-command",
-                sender_id="agent_5_researcher",
-                message=f"RAG Knowledge Retrieval for Mamu ({top_hit.source}): {top_hit.text[:120]}..."
-            )
-            return {
-                "status": "success",
-                "reply": reply,
-                "action_executed": "rag_knowledge_retrieval",
-                "citation": top_hit.citation,
-                "score": top_hit.score
-            }
-    except Exception as e:
-        logger.warning(f"RAG hybrid search check error: {e}")
-
-    # 3. Live Web Knowledge Search for Genuine Informational Questions
-    if dynamic_action_resolver.is_info_query(raw_query):
+    # 1. Physical OS Action Execution (ONLY if query is an explicit OS action or installed app launch)
+    if is_physical_os_action(raw_query):
         try:
-            snippets = online_searcher.search_live_snippets(raw_query)
-            if snippets and len(snippets) > 0:
-                best_snippet = snippets[0].get("snippet", "")
-                if best_snippet and len(best_snippet) > 20:
-                    clean_snip = best_snippet.split(". ")[0].replace("\n", " ").strip() + "."
-                    reply = f"Mamu, according to live intelligence: {clean_snip}"
-                    daily_evolution_service.add_channel_message(
-                        channel="#squad-command",
-                        sender_id="agent_5_researcher",
-                        message=f"Live Web Search for Mamu: {clean_snip}"
-                    )
-                    return {
-                        "status": "success",
-                        "reply": reply,
-                        "action_executed": "live_web_search"
-                    }
-        except Exception:
-            pass
-
-    # 4. Dynamic Autonomous DAG Task Decomposition & Execution
-    try:
-        dag_steps = abhi_standalone_engine._decompose_goal(raw_query)
-        if dag_steps and len(dag_steps) > 0:
-            ok, exec_summary = execute_dag_plan_dynamically(dag_steps)
-            if ok and exec_summary:
+            ok, action_name, reply = dynamic_action_resolver.resolve_and_execute(raw_query, screen_context)
+            if ok:
                 daily_evolution_service.add_channel_message(
                     channel="#squad-command",
                     sender_id="agent_1_commander",
-                    message=f"DAG Task Flow executed: {exec_summary}"
+                    message=f"Action '{action_name}' executed for Mamu: {reply[:120]}"
                 )
                 return {
                     "status": "success",
-                    "reply": f"Executed for you, Mamu: {exec_summary}.",
-                    "action_executed": "dynamic_dag_execution",
-                    "details": {"steps_count": len(dag_steps)}
+                    "reply": reply,
+                    "action_executed": action_name,
+                    "thread_id": session_id,
                 }
-    except Exception as e:
-        logger.warning(f"DAG dynamic execution fallback: {e}")
+        except Exception as e:
+            logger.warning(f"DynamicActionResolver execution error: {e}")
 
-    # 5. Cognitive LLM Native Synthesis & Grounded Reasoning
+    # 2. Authentic Multi-Turn Conversational Routing to Local Ollama
     active_win = os_control_engine.get_active_window()
     window_title = active_win.get("title", "Active Screen") if active_win else "Desktop"
+    telemetry = os_control_engine.get_system_telemetry()
+    ram_used = telemetry.get("memory", {}).get("percent_used", 0)
+    cpu_used = telemetry.get("cpu_percent", 0)
+    telemetry_summary = f"CPU: {cpu_used}% | RAM: {ram_used}% | Window: '{window_title}'"
 
-    # Pre-check screen and repeat questions
-    q_lower = raw_query.lower()
-    if any(k in q_lower for k in ["screen", "what you seeing", "what you saw", "what do you see", "read my screen", "see my screen"]):
-        desc = screen_perception.describe_current_screen()
-        return {"status": "success", "reply": desc, "action_executed": "screen_perception"}
+    # Multilingual Detection & System Prompting (English, Telugu, Hindi, Tamil)
+    target_lang = detect_dialogue_language(raw_query, request.language)
+    system_prompt = build_desktop_system_prompt(
+        language=target_lang,
+        active_window=window_title,
+        telemetry_summary=telemetry_summary,
+        screen_ocr=screen_context,
+    )
 
-    if any(k in q_lower for k in ["what you said", "what did you say", "repeat that"]):
-        last_m = screen_perception.get_last_spoken()
-        return {"status": "success", "reply": f"Mamu, I said: '{last_m}'", "action_executed": "repeat_spoken"}
+    # Build Multi-Turn History Payload
+    messages: List[Dict[str, str]] = [
+        {"role": "system", "content": system_prompt}
+    ]
+
+    if request.messages and len(request.messages) > 0:
+        # Client supplied explicit message turns
+        for m in request.messages:
+            if m.role in ("user", "assistant"):
+                messages.append({"role": m.role, "content": m.content})
+        # If the last client message is not the current query, append it
+        if not messages or messages[-1].get("content") != raw_query:
+            messages.append({"role": "user", "content": raw_query})
+    else:
+        # Retrieve persistent server-side history for this session
+        prior_turns = desktop_sessions.get_history(session_id)
+        for turn in prior_turns:
+            messages.append({"role": turn["role"], "content": turn["content"]})
+        messages.append({"role": "user", "content": raw_query})
+
+    # Model selection (supports 'abhi:latest', 'qwen2.5-coder:7b', or configured default)
+    target_model = request.model or settings.OLLAMA_DEFAULT_MODEL
 
     try:
-        from backend.app.services.llm.abhi_llm import AbhiNativeLLM
-        llm = AbhiNativeLLM()
-        prompt = (
-            f"You are ABHI, the supreme real-time cybernetic companion for Ravuvai Ayyappa Rayudu (Mamu).\n"
-            f"Active Window: '{window_title}'\n"
-            f"User directive: '{raw_query}'\n"
-            f"Provide a direct, grounded, helpful response (1-2 sentences) warmly addressing Mamu."
+        llm_res = await native_llm.chat(
+            messages=messages,
+            model=target_model,
+            options={"temperature": 0.35, "top_p": 0.9}
         )
-        gen_res = await llm.generate(prompt=prompt)
-        if gen_res and gen_res.response and len(gen_res.response.strip()) > 5:
-            clean_reply = gen_res.response.strip()
-            daily_evolution_service.add_channel_message(
-                channel="#squad-command",
-                sender_id="agent_1_commander",
-                message=f"Cognitive Response to Mamu: {clean_reply[:120]}..."
-            )
-            return {
-                "status": "success",
-                "reply": clean_reply,
-                "action_executed": "cognitive_llm_reasoning"
-            }
-    except Exception as e:
-        logger.warning(f"Cognitive LLM fallback error: {e}")
 
-    # 6. Concise Sovereign Companion Fallback
-    return {
-        "status": "success",
-        "reply": f"Understood, Mamu. I am monitoring your workspace in '{window_title}'. Tell me what action to perform, code to generate, or app to control.",
-        "action_executed": "chat"
-    }
+        reply_text = llm_res.response.strip() if llm_res and llm_res.response else ""
+        _, reply_text = extract_thinking_and_clean_text(reply_text)
+
+        # Strip emojis from response for clean text-to-speech output
+        emoji_pattern = re.compile(r"[\U00010000-\U0010ffff\u2600-\u27bf\u2b50\u203c\u2049\u25aa-\u25fe]", flags=re.UNICODE)
+        clean_reply = emoji_pattern.sub("", reply_text).strip()
+
+        if not clean_reply:
+            if target_lang == "te":
+                clean_reply = "చెప్పు మామూ, నేను సిద్ధంగా ఉన్నాను. నీకు ఎలా సహాయపడాలి?"
+            elif target_lang == "hi":
+                clean_reply = "हाँ मामू, मैं बिल्कुल तैयार हूँ। बताओ क्या काम करना है?"
+            elif target_lang == "ta":
+                clean_reply = "சொல்லுங்க மாமு, நான் தயாரா இருக்கேன். உங்களுக்கு என்ன உதவி செய்ய வேண்டும்?"
+            else:
+                clean_reply = f"I am right here with you, Mamu. Working in '{window_title}'. Tell me what you need."
+
+        # Persist turns into session history
+        desktop_sessions.append_turn(session_id, "user", raw_query)
+        desktop_sessions.append_turn(session_id, "assistant", clean_reply)
+
+        daily_evolution_service.add_channel_message(
+            channel="#squad-command",
+            sender_id="agent_1_commander",
+            message=f"Cognitive Response to Mamu [{target_lang.upper()}]: {clean_reply[:120]}..."
+        )
+
+        return {
+            "status": "success",
+            "reply": clean_reply,
+            "action_executed": "cognitive_llm_reasoning",
+            "model": llm_res.model or target_model,
+            "language": target_lang,
+            "thread_id": session_id,
+            "turns_count": len(messages),
+        }
+
+    except Exception as e:
+        logger.error(f"Local Ollama cognitive routing failed: {e}")
+        # Resilient fallback
+        fallback_reply = f"Understood, Mamu. I am monitoring your workspace in '{window_title}'. Tell me what action to perform, code to generate, or app to control."
+        if target_lang == "te":
+            fallback_reply = "సరే మామూ, నేను నీ వర్క్‌స్పేస్‌ను గమనిస్తున్నాను. ఏం చేయాలో చెప్పు!"
+        elif target_lang == "hi":
+            fallback_reply = "समझ गया मामू, मैं आपकी स्क्रीन पर ध्यान दे रहा हूँ। बताओ क्या करना है!"
+        elif target_lang == "ta":
+            fallback_reply = "புரிந்தது மாமு, நான் உங்கள் பணியிடத்தை கவனிக்கிறேன். என்ன செய்ய வேண்டும் என்று சொல்லுங்கள்!"
+
+        desktop_sessions.append_turn(session_id, "user", raw_query)
+        desktop_sessions.append_turn(session_id, "assistant", fallback_reply)
+
+        return {
+            "status": "success",
+            "reply": fallback_reply,
+            "action_executed": "chat",
+            "model": "fallback",
+            "language": target_lang,
+            "thread_id": session_id,
+            "turns_count": len(messages),
+        }
+
+
+@router.post("/ask-bot/stream")
+async def ask_living_bot_stream(request: BotAskRequest):
+    """Stream response tokens in real-time directly from local Ollama model using Server-Sent Events (SSE)."""
+    raw_query = request.query.strip()
+    session_id = request.thread_id or "session_desktop_main"
+    target_lang = detect_dialogue_language(raw_query, request.language)
+
+    active_win = os_control_engine.get_active_window()
+    window_title = active_win.get("title", "Active Screen") if active_win else "Desktop"
+    telemetry = os_control_engine.get_system_telemetry()
+    telemetry_summary = f"CPU: {telemetry.get('cpu_percent', 0)}% | RAM: {telemetry.get('memory', {}).get('percent_used', 0)}%"
+
+    system_prompt = build_desktop_system_prompt(
+        language=target_lang,
+        active_window=window_title,
+        telemetry_summary=telemetry_summary,
+        screen_ocr=request.screen_context,
+    )
+
+    messages: List[Dict[str, str]] = [
+        {"role": "system", "content": system_prompt}
+    ]
+
+    if request.messages and len(request.messages) > 0:
+        for m in request.messages:
+            if m.role in ("user", "assistant"):
+                messages.append({"role": m.role, "content": m.content})
+        if not messages or messages[-1].get("content") != raw_query:
+            messages.append({"role": "user", "content": raw_query})
+    else:
+        prior_turns = desktop_sessions.get_history(session_id)
+        for turn in prior_turns:
+            messages.append({"role": turn["role"], "content": turn["content"]})
+        messages.append({"role": "user", "content": raw_query})
+
+    target_model = request.model or settings.OLLAMA_DEFAULT_MODEL
+
+    async def token_generator():
+        accumulated_chunks = []
+        try:
+            async for token in native_llm.chat_stream(messages=messages, model=target_model):
+                accumulated_chunks.append(token)
+                chunk_data = json.dumps({"token": token, "language": target_lang})
+                yield f"data: {chunk_data}\n\n"
+        except Exception as ex:
+            logger.error(f"Streaming token generation error: {ex}")
+            yield f"data: {json.dumps({'error': str(ex)})}\n\n"
+
+        full_reply = "".join(accumulated_chunks).strip()
+        if full_reply:
+            desktop_sessions.append_turn(session_id, "user", raw_query)
+            desktop_sessions.append_turn(session_id, "assistant", full_reply)
+
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(token_generator(), media_type="text/event-stream")
 
 
 

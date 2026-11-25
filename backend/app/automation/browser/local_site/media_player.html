@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ABHI Sovereign Media Hub - Interactive Video Player</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            margin: 0;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .player-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 720px;
+            width: 100%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .video-viewport {
+            background: #000;
+            border-radius: 8px;
+            height: 360px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #38bdf8;
+        }
+        .video-viewport video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .video-overlay {
+            position: absolute;
+            color: #38bdf8;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            pointer-events: none;
+            background: rgba(15, 23, 42, 0.7);
+            padding: 12px 24px;
+            border-radius: 8px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 12px;
+            background: #334155;
+            color: #94a3b8;
+        }
+        .status-badge.playing {
+            background: #059669;
+            color: #ecfdf5;
+        }
+        .status-badge.paused {
+            background: #d97706;
+            color: #fffbeb;
+        }
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #0284c7;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #0369a1;
+        }
+        .description-box {
+            margin-top: 20px;
+            padding: 16px;
+            background: #0f172a;
+            border-radius: 8px;
+            border-left: 4px solid #38bdf8;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="player-card" id="media_container" data-playing="false" data-current-track="ABHI Sovereign Autonomous Intelligence Demo">
+        <h1 id="track_title" style="margin-top: 0; color: #38bdf8;">ABHI Sovereign Autonomous Intelligence Demo</h1>
+        <div class="video-viewport" id="viewport">
+            <video id="main_video" preload="metadata" playsinline>
+                <!-- Canvas-generated fallback or blank stream -->
+                <source src="data:video/mp4;base64,AAAA" type="video/mp4">
+            </video>
+            <div class="video-overlay" id="video_overlay_text">READY TO PLAY</div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div id="video_status" class="status-badge">STOPPED</div>
+            <div id="time_display" style="font-family: monospace; font-size: 14px; color: #94a3b8;">
+                <span id="current_time">0:00</span> / <span id="duration">3:45</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="play_btn" onclick="playMedia()">Play</button>
+            <button id="pause_btn" onclick="pauseMedia()">Pause</button>
+            <button id="next_btn" onclick="nextTrack()">Next Video</button>
+            <button id="prev_btn" onclick="prevTrack()">Previous</button>
+            <button id="skip_fwd_btn" onclick="skipForward(10)">Skip +10s</button>
+            <button id="mute_btn" onclick="toggleMute()">Mute</button>
+        </div>
+
+        <div class="description-box" id="video_description">
+            <strong>About this video:</strong> This video demonstrates ABHI's real-time local-first AI system controlling Windows OS, executing autonomous browser tasks, and verifying physical system states without hallucination.
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('main_video');
+        const container = document.getElementById('media_container');
+        const statusBadge = document.getElementById('video_status');
+        const overlayText = document.getElementById('video_overlay_text');
+        const trackTitle = document.getElementById('track_title');
+        const currentTimeSpan = document.getElementById('current_time');
+        const descriptionBox = document.getElementById('video_description');
+
+        let isPlaying = false;
+        let currentTimeSec = 0;
+        const totalDurationSec = 225; // 3:45
+
+        const playlist = [
+            {
+                title: "ABHI Sovereign Autonomous Intelligence Demo",
+                description: "This video demonstrates ABHI's real-time local-first AI system controlling Windows OS, executing autonomous browser tasks, and verifying physical system states without hallucination."
+            },
+            {
+                title: "Next Generation Neural Planning & DAG Execution",
+                description: "A deep dive into topological dependency ordering, parallel agent dispatch, and fail-closed emergency stop semantics in ABHI."
+            },
+            {
+                title: "Devara Trailer — Official Telugu 4K",
+                description: "High-octane action thriller starring Jr NTR, Janhvi Kapoor, and Saif Ali Khan directed by Koratala Siva."
+            }
+        ];
+        let currentTrackIdx = 0;
+
+        window.ABHI_MEDIA_STATE = {
+            playing: false,
+            title: playlist[0].title,
+            currentTime: 0,
+            duration: totalDurationSec,
+            description: playlist[0].description
+        };
+
+        function updateUIState() {
+            container.setAttribute('data-playing', isPlaying ? 'true' : 'false');
+            container.setAttribute('data-current-track', playlist[currentTrackIdx].title);
+            statusBadge.className = 'status-badge ' + (isPlaying ? 'playing' : 'paused');
+            statusBadge.textContent = isPlaying ? 'PLAYING' : 'PAUSED';
+            overlayText.textContent = isPlaying ? 'PLAYING: ' + playlist[currentTrackIdx].title : 'PAUSED';
+            trackTitle.textContent = playlist[currentTrackIdx].title;
+            descriptionBox.innerHTML = '<strong>About this video:</strong> ' + playlist[currentTrackIdx].description;
+            
+            const mins = Math.floor(currentTimeSec / 60);
+            const secs = Math.floor(currentTimeSec % 60);
+            currentTimeSpan.textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+
+            window.ABHI_MEDIA_STATE.playing = isPlaying;
+            window.ABHI_MEDIA_STATE.title = playlist[currentTrackIdx].title;
+            window.ABHI_MEDIA_STATE.currentTime = currentTimeSec;
+            window.ABHI_MEDIA_STATE.description = playlist[currentTrackIdx].description;
+        }
+
+        function playMedia() {
+            isPlaying = true;
+            try { video.play(); } catch(e) {}
+            updateUIState();
+        }
+
+        function pauseMedia() {
+            isPlaying = false;
+            try { video.pause(); } catch(e) {}
+            updateUIState();
+        }
+
+        function togglePlay() {
+            if (isPlaying) pauseMedia();
+            else playMedia();
+        }
+
+        function nextTrack() {
+            currentTrackIdx = (currentTrackIdx + 1) % playlist.length;
+            currentTimeSec = 0;
+            isPlaying = true;
+            updateUIState();
+        }
+
+        function prevTrack() {
+            currentTrackIdx = (currentTrackIdx - 1 + playlist.length) % playlist.length;
+            currentTimeSec = 0;
+            isPlaying = true;
+            updateUIState();
+        }
+
+        function skipForward(sec) {
+            currentTimeSec = Math.min(totalDurationSec, currentTimeSec + sec);
+            updateUIState();
+        }
+
+        function toggleMute() {
+            video.muted = !video.muted;
+        }
+
+        // Global hotkey listener (Space, k, Shift+N, j, l)
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.key === 'k' || e.key === 'K') {
+                e.preventDefault();
+                togglePlay();
+            } else if (e.shiftKey && (e.key === 'N' || e.key === 'n')) {
+                e.preventDefault();
+                nextTrack();
+            } else if (e.key === 'l' || e.key === 'L') {
+                skipForward(10);
+            }
+        });
+
+        // Simulating playback timer
+        setInterval(() => {
+            if (isPlaying) {
+                currentTimeSec += 1;
+                if (currentTimeSec >= totalDurationSec) {
+                    nextTrack();
+                } else {
+                    updateUIState();
+                }
+            }
+        }, 1000);
+
+        updateUIState();
+    </script>
+</body>
+</html>

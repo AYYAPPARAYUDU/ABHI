@@ -379,7 +379,7 @@ class FaceTracker:
         if not is_verified:
             status_str = "AUTHENTICATION_REQUIRED"
             name_str = "Unrecognized Operator"
-            msg = f"Biometric signature not recognized ({round(match_score * 100, 1)}% match). Enter Master Password (143) to unlock."
+            msg = f"Biometric signature not recognized ({round(match_score * 100, 1)}% match). Operator credentials required to unlock."
         else:
             status_str = "OPERATOR_VERIFIED"
             name_str = target_name
@@ -404,10 +404,29 @@ class FaceTracker:
         )
 
 
+    def _verify_master_credentials(self, pwd: Optional[str]) -> bool:
+        """Verify operator credentials using constant-time comparison against configured secrets."""
+        if not pwd:
+            return False
+        import hmac
+        from backend.app.core.config import settings
+        return (
+            hmac.compare_digest(pwd, settings.LOCAL_API_KEY)
+            or hmac.compare_digest(pwd, settings.APP_SECRET_KEY)
+        )
+
     def remove_enrolled_biometrics(self, master_password: Optional[str] = None) -> Tuple[bool, str]:
-        """Remove enrolled operator biometrics from SQLite WAL database."""
-        if master_password not in ("143", "abhi", "jarvis", "admin", "1234"):
-            return False, "Invalid Master Password. Master Password '143' required to remove Face Lock."
+        """Remove enrolled operator biometrics from SQLite WAL database with verified operator credentials."""
+        from backend.app.core.security import security_audit
+        if not self._verify_master_credentials(master_password):
+            security_audit.log_event(
+                event_type="BIOMETRIC_REMOVAL_DENIED",
+                actor="unknown",
+                endpoint="/perception/face/biometrics",
+                status="DENIED",
+                details={"reason": "Invalid or missing operator credentials"}
+            )
+            return False, "Authentication failed: Valid operator credentials required."
 
         db_path = self._root / "database" / "relational" / "system.db"
         try:
@@ -421,6 +440,13 @@ class FaceTracker:
 
         self._enrolled_feature = None
         self._enrolled_name = "Unenrolled Operator"
+        security_audit.log_event(
+            event_type="BIOMETRIC_REMOVED",
+            actor="OPERATOR",
+            endpoint="/perception/face/biometrics",
+            status="SUCCESS",
+            details={"action": "Operator biometrics cleared"}
+        )
         logger.info("FaceTracker: Enrolled operator biometrics removed successfully.")
         return True, "Face Lock removed successfully. System biometrics reset."
 
@@ -584,15 +610,15 @@ class FaceTracker:
         aligned = self._recognizer.alignCrop(frame, face)
         feature = self._recognizer.feature(aligned)
 
-        # Security Gate: If a face is already enrolled, old face MUST be recognized OR password 143 provided!
+        # Security Gate: If a face is already enrolled, old face MUST be recognized OR verified operator credentials provided
         if self._enrolled_feature is not None:
             raw_match = float(self._recognizer.match(
                 self._enrolled_feature, feature, cv2.FaceRecognizerSF_FR_COSINE
             ))
             old_face_verified = raw_match >= 0.22
-            pwd_verified = master_password in ("143", "abhi", "jarvis", "admin", "laxmi1", "1234")
+            pwd_verified = self._verify_master_credentials(master_password)
             if not old_face_verified and not pwd_verified:
-                return False, "Security Gate: To replace existing face lock, the registered operator's face must be recognized or Master Password (143) entered.", {
+                return False, "Security Gate: To replace existing face lock, the registered operator's face must be recognized or valid operator credentials provided.", {
                     "requires_auth": True,
                     "old_match_score": round(max(0.0, raw_match), 4)
                 }
